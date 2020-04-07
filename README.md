@@ -1,8 +1,7 @@
-# dfusebox
+# dfuse for EOSIO
 
-All [dfuse](https://dfuse.io) services, running from your laptop, as a single binary.
+All [dfuse](https://dfuse.io) services for EOSIO, running from your laptop, as a single binary.
 
-This initial release covers EOSIO chains only.
 
 ## Getting started
 
@@ -32,16 +31,16 @@ of the standard `EOSIO` software. On **Mac OS X**, you can simply do:
 For other platforms, check the [Prebuilt Binaries Instructions](#dfuse-Instrumented-EOSIO-Prebuilt-Binaries)
 section for installation details.
 
-Initialize a new `dfusebox.yaml` config file (answer 'y' for a quick start) with:
+Initialize a new `dfuse.yaml` config file (answer 'y' for a quick start) with:
 
-    dfusebox init
+    dfuseeos init
 
 The created file will contain the private and public keys generated
 for the booted chain.
 
 Boot your instance with:
 
-    dfusebox start
+    dfuseeos start
 
 If you answered 'y', this will boot a producer node, a reader node,
 both communicating together, boot all dfuse services and expose a
