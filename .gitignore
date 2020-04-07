@@ -1,0 +1,14 @@
+.idea
+.idea/*
+.envrc
+/dist
+/dfusebox*
+/dfuse
+dashboard/client/.npmrc
+.DS_Store
+/tools/output.log
+/dfusebox.yaml
+/dfusebox-data
+rice-box.go
+/dist
+*SOURCE_ME.sh*

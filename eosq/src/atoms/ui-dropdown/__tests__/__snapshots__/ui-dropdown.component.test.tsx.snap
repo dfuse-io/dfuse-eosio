@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UiDropdown default render should render properly 1`] = `
+<Styled(WithStyles(FormControl))>
+  <Styled(WithStyles(WithFormControlContext(Select)))
+    IconComponent={[Function]}
+    MenuProps={
+      Object {
+        "PaperProps": Object {
+          "style": Object {
+            "backgroundColor": undefined,
+          },
+        },
+      }
+    }
+    SelectDisplayProps={
+      Object {
+        "style": Object {
+          "paddingLeft": "12px",
+        },
+      }
+    }
+    disableUnderline={true}
+    inputProps={
+      Object {
+        "id": "id",
+        "name": "id",
+        "style": Object {
+          "paddingRight": "30px",
+        },
+      }
+    }
+    onChange={[Function]}
+    style={
+      Object {
+        "border": "1px solid #d3d7dd !important",
+      }
+    }
+    value=""
+  >
+    <WithStyles(MenuItem)
+      key="value 1"
+      value="value 1"
+    >
+      <Styled(div)
+        color="text"
+        fontFamily="'Roboto Condensed', sans-serif;"
+        fontSize="16px"
+      >
+        label 1
+      </Styled(div)>
+    </WithStyles(MenuItem)>
+    <WithStyles(MenuItem)
+      key="value 2"
+      value="value 2"
+    >
+      <Styled(div)
+        color="text"
+        fontFamily="'Roboto Condensed', sans-serif;"
+        fontSize="16px"
+      >
+        label 2
+      </Styled(div)>
+    </WithStyles(MenuItem)>
+  </Styled(WithStyles(WithFormControlContext(Select)))>
+</Styled(WithStyles(FormControl))>
+`;

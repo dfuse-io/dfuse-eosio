@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>eosq: High-Precision Block Explorer</title>
+
+    <meta charset="utf-8" />
+
+    <meta name="author" content="EOS Canada" />
+    <meta
+      name="keywords"
+      content="EOS, eosq, Block Explorer, Query, Blockchain, votes, block producers, EOS transactions, EOS Vote, EOS Network, EOS actions, EOS mainnet, EOSIO, EOS account, explorer, search"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta
+      name="description"
+      content="eosq is a high-precision block explorer that provides access to detailed, accurate, actionable data about accounts, actions, Block Producers, and more on the EOS mainnet"
+    />
+
+    <meta property="og:title" content="eosq: High-Precision Block Explorer" />
+    <meta property="og:type" content="article" />
+    <meta property="og:image" content="https://eosq.app/images/favicon-144x144px.png" />
+    <meta property="og:url" content="https://eosq.app" />
+    <meta
+      property="og:description"
+      content="eosq is a high-precision block explorer that provides access to detailed, accurate, actionable data about accounts, actions, Block Producers, and more on the EOS mainnet."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="eosq: High-Precision Block Explorer" />
+    <meta
+      name="twitter:description"
+      content="eosq is a high-precision block explorer that provides access to detailed, accurate, actionable data about accounts, actions, Block Producers, and more on the EOS mainnet."
+    />
+    <meta name="twitter:image" content="https://eosq.app/images/favicon-144x144px.png" />
+    <meta name="baidu-site-verification" content="ByjRlhOH2m" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.1.1/css/all.css"
+      integrity="sha384-O8whS3fhG2OnA5Kas0Y9l3cfpmYjapjI0E4theH4iuMD+pLhbf6JI0jIMfYcK3yZ"
+      crossorigin="anonymous"
+    />
+
+    <script>
+      window.TopLevelConfig = --== json . ==--;
+    </script>
+
+    <script>
+      !(function() {
+        if (window.TopLevelConfig.disable_segments) {
+          return
+        }
+
+        let analytics = (window.analytics = window.analytics || [])
+        if (!analytics.initialize)
+          if (analytics.invoked)
+            window.console && console.error && console.error("Segment snippet included twice.")
+          else {
+            analytics.invoked = !0
+            analytics.methods = [
+              "trackSubmit",
+              "trackClick",
+              "trackLink",
+              "trackForm",
+              "pageview",
+              "identify",
+              "reset",
+              "group",
+              "track",
+              "ready",
+              "alias",
+              "debug",
+              "page",
+              "once",
+              "off",
+              "on"
+            ]
+            analytics.factory = function(t) {
+              return function() {
+                var e = Array.prototype.slice.call(arguments)
+                e.unshift(t)
+                analytics.push(e)
+                return analytics
+              }
+            }
+            for (var t = 0; t < analytics.methods.length; t++) {
+              var e = analytics.methods[t]
+              analytics[e] = analytics.factory(e)
+            }
+            analytics.load = function(t, e) {
+              var n = document.createElement("script")
+              n.type = "text/javascript"
+              n.async = !0
+              n.src =
+                ("https:" === document.location.protocol ? "https://" : "http://") +
+                "cdn.segment.com/analytics.js/v1/" +
+                t +
+                "/analytics.min.js"
+              var o = document.getElementsByTagName("script")[0]
+              o.parentNode.insertBefore(n, o)
+              analytics._loadOptions = e
+            }
+            analytics.SNIPPET_VERSION = "4.1.0"
+            if (window.navigator.userAgent.indexOf("HeadlessChrome") === -1) {
+              analytics.load("M00Vi9qTGuoEjY5SWBUige7Wmqzj0quD")
+              analytics.page()
+            }
+          }
+      })()
+    </script>
+  </head>
+
+  <body>
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+  </body>
+</html>

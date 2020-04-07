@@ -1,0 +1,121 @@
+// Copyright 2019 dfuse Platform Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package dashboard;
+
+option go_package = "dashboard";
+
+import "google/protobuf/timestamp.proto";
+
+service Dashboard {
+    rpc AppsList (AppsListRequest) returns (AppsListResponse);
+    rpc AppsInfo (AppsInfoRequest) returns (stream AppsInfoResponse);
+    rpc AppsMetrics(AppsMetricsRequest) returns (stream AppMetricsResponse);
+    rpc Dmesh(DmeshRequest) returns (DmeshResponse);
+    rpc StartApp(StartAppRequest) returns (StartAppResponse);
+    rpc StopApp(StopAppRequest) returns (StopAppResponse);
+}
+
+message AppsListRequest {}
+
+message AppsListResponse {
+    repeated AppInfo Apps = 1;
+}
+
+message AppsInfoRequest {
+  string filter_app_id = 1; // if string is "" blank it return all apps
+}
+
+message AppsInfoResponse {
+  repeated AppInfo Apps = 1;
+}
+
+message AppInfo {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  AppStatus status = 4;
+}
+
+enum AppStatus {
+  NOTFOUND = 0;
+  CREATED = 1;
+  RUNNING = 2;
+  WARNING = 3;
+  STOPPED = 4;
+}
+
+message AppsMetricsRequest {
+    string filter_app_id = 1; // if string is "" blank it return all apps
+}
+
+message AppMetricsResponse {
+    string id = 1;
+    repeated Metric metrics = 2;
+    string title = 3;
+}
+
+message Metric {
+    google.protobuf.Timestamp timestamp = 1;
+    float value = 2;
+    MetricType type = 3;
+}
+
+enum MetricType {
+    HEAD_BLOCK_TIME_DRIFT = 0;
+    HEAD_BLOCK_NUMBER = 1;
+}
+
+message StartAppRequest {
+    string app_id = 1;
+}
+
+message StartAppResponse {
+}
+
+message StopAppRequest {
+    string app_id = 1;
+}
+
+message StopAppResponse {
+}
+
+message DmeshRequest {
+
+}
+
+message DmeshResponse {
+    repeated DmeshClient clients = 1;
+}
+
+
+message DmeshClient {
+    string host = 1;
+    bool ready = 2;
+    google.protobuf.Timestamp boot = 3;
+    bool serves_resolveForks = 4;
+    bool serves_reversible = 5;
+    bool has_moving_head = 6;
+    bool has_moving_tail = 7;
+    uint64 shard_size = 8;
+    uint32 tier_level = 9;
+    uint64 tail_block_num = 10;
+    string tail_block_id = 11;
+    uint64 irr_block_num = 12;
+    string irr_block_id = 13;
+    uint64 head_block_num = 14;
+    string head_block_id = 15;
+}

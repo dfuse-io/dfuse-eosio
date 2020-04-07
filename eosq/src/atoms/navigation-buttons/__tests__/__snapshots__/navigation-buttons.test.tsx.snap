@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NavigationButtons default render should render properly 1`] = `
+<Styled(div)>
+  <Styled(div)
+    display="inline-block"
+    p={1}
+  >
+    <NavigationButton
+      direction="first"
+      onClick={[Function]}
+    />
+  </Styled(div)>
+  <Styled(div)
+    display="inline-block"
+    p={1}
+  >
+    <NavigationButton
+      direction="previous"
+      onClick={[Function]}
+    />
+  </Styled(div)>
+  <Styled(div)
+    display="inline-block"
+    p={1}
+  >
+    <NavigationButton
+      direction="next"
+      onClick={[Function]}
+    />
+  </Styled(div)>
+</Styled(div)>
+`;

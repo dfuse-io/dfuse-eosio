@@ -1,0 +1,28 @@
+# Copied straight from .gitignore file
+# misc
+.DS_Store
+.envrc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+/eosws
+issue_api_keys/env.sh
+.idea/
+vendor/
+
+# VSCode
+project.code-workspace
+package-lock.json
+
+# Editors
+*~
+
+# Data
+/testdata/mainnet-tx
+
+# Custom modifications
+.gcloudignore
+.git
+!vendor/
+fixtures/

@@ -1,0 +1,962 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <ForwardRef(render)
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+      >
+        <Trans
+          components={
+            Array [
+              <ForwardRef(render)
+                color="text"
+                display="inline-block"
+                fontSize={
+                  Array [
+                    1,
+                  ]
+                }
+                fontWeight="bold"
+                mr={
+                  Array [
+                    1,
+                  ]
+                }
+              >
+                Message:
+              </ForwardRef(render)>,
+            ]
+          }
+          i18nKey="pillTemplates.tweet.summary"
+          values={
+            Object {
+              "message": "msg",
+            }
+          }
+        />
+      </ForwardRef(render)>
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BaseForumPostPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="certify: certify content: content json_metadata: {} post_uuid: uuid poster: poster reply_to_post_uuid: uuid reply_to_poster: poster"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BaseForumProposePillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="expires_at: 2018/20/01 proposal_json: {} proposal_name: testing proposer: eoscanadacom title: title"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BaseResolveBetPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="bet_id: bet_id sig: sig"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BaseSetcodePillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <ForwardRef(render)
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+      >
+        SHA256[ 
+        <b>
+          7941cb07924fdc7b710e11d98d82850e89566e1c3cb980517ffe4b430f86dfd5
+        </b>
+         ] set for account
+         
+        <MonospaceTextLink
+          fontSize={
+            Array [
+              1,
+            ]
+          }
+          to="/account/account"
+        >
+          account
+        </MonospaceTextLink>
+      </ForwardRef(render)>
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BetReceiptPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "account",
+              "type": "accountLink",
+              "value": undefined,
+            },
+            Object {
+              "name": "EOSAmount",
+              "type": "bold",
+              "value": "31.000 EOS",
+            },
+            Object {
+              "name": "roll",
+              "type": "bold",
+              "value": undefined,
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.betReceipt.summaryWon"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BuyRamBytesPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "payer",
+              "type": "accountLink",
+              "value": "payer",
+            },
+            Object {
+              "name": "bytes",
+              "type": "bold",
+              "value": "150 B",
+            },
+            Object {
+              "name": "receiver",
+              "type": "accountLink",
+              "value": "receiver",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.buyrambytes.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates BuyRamPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "payer",
+              "type": "accountLink",
+              "value": "payer",
+            },
+            Object {
+              "name": "amountEOS",
+              "type": "bold",
+              "value": "20.0000 EOS",
+            },
+            Object {
+              "name": "receiver",
+              "type": "accountLink",
+              "value": "receiver",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.buyram.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates ClaimRewardsPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="owner: owner"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates DelegateBandwidthPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "from",
+              "type": "accountLink",
+              "value": "from",
+            },
+            Object {
+              "name": "amountCPU",
+              "type": "bold",
+              "value": "20.0000 EOS",
+            },
+            Object {
+              "name": "amountNET",
+              "type": "bold",
+              "value": "10.0000 EOS",
+            },
+            Object {
+              "name": "to",
+              "type": "accountLink",
+              "value": "receiver",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.delegatebw.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates GenericPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="random_field: random_field other_field: other_field"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates GenericPillComponent should render properly when no data and no hex data present 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content=""
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates GenericPillComponent should render properly when no data but hex data present 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="hex_data"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates IssuePillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <TransferBox
+      amount="10.0000 EOS"
+      from="eosio"
+      to="eoscanadacom"
+    />
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates LinkAuthPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "account",
+              "type": "accountLink",
+              "value": "eoscanadacom",
+            },
+            Object {
+              "name": "requirement",
+              "type": "bold",
+              "value": "requirement",
+            },
+            Object {
+              "name": "type",
+              "type": "bold",
+              "value": "type",
+            },
+            Object {
+              "name": "code",
+              "type": "accountLink",
+              "value": undefined,
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.linkauth.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates NewAccountPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "creator",
+              "type": "accountLink",
+              "value": "eoscanadacom",
+            },
+            Object {
+              "name": "name",
+              "type": "accountLink",
+              "value": "newaccount",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.newaccount.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates RefundPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <KeyValueFormatEllipsis
+        content="owner: newaccount"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates RegProxyPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "account",
+              "type": "accountLink",
+              "value": "testing",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.regProxy.summaryUnreg"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates TransferPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionSendBackground"
+  colorVariantHeader="#33333"
+  content={
+    <TransferBox
+      amount="2.000 EOS"
+      from="from"
+      to="to"
+    />
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates UnDelegateBandwidthPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "from",
+              "type": "accountLink",
+              "value": "from",
+            },
+            Object {
+              "name": "amountCPU",
+              "type": "bold",
+              "value": "2.000 EOS",
+            },
+            Object {
+              "name": "amountNET",
+              "type": "bold",
+              "value": "1.000 EOS",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.undelegatebw.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates UpdateAuthPillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "account",
+              "type": "accountLink",
+              "value": undefined,
+            },
+            Object {
+              "name": "permission",
+              "type": "bold",
+              "value": "permission",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.updateauth.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;
+
+exports[`Templates VotePillComponent should render properly 1`] = `
+<Pill
+  colorVariant="traceActionGenericBackground"
+  colorVariantHeader="#33333"
+  content={
+    <ForwardRef(render)
+      alignItems="center"
+      fontSize={
+        Array [
+          1,
+        ]
+      }
+      minHeight="26px"
+      minWidth="10px"
+      mx={
+        Array [
+          2,
+        ]
+      }
+    >
+      <Translate(BaseFormattedText)
+        fields={
+          Array [
+            Object {
+              "name": "account",
+              "type": "accountLink",
+              "value": "voter",
+            },
+          ]
+        }
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        i18nKey="pillTemplates.voteForBp.summary"
+      />
+    </ForwardRef(render)>
+  }
+  headerHoverTitle="hovetTitle"
+  headerText="text"
+  renderExpandedContent={[Function]}
+  renderInfo={[Function]}
+  title="title"
+/>
+`;

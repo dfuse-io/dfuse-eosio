@@ -1,0 +1,160 @@
+# Copyright 2019 dfuse Platform Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+keys:
+  ephemeral: 5JbVep8Gf5idYKTi3CiyKyoN15a4YBL9tQZj5qfBVVjV5MXvpv9   #  EOS6jBVvGM3LLGDsbprLS3xGr2R7rMUgkiVVVUJTfBibMCeQkhj35
+
+contents:
+  - name: eosio.bios.abi
+    url: ./contracts/eosio.bios-1.0.2.abi
+  - name: eosio.bios.wasm
+    url: ./contracts/eosio.bios-1.0.2.wasm
+
+  - name: eosio.system.abi
+    url: ./contracts/eosio.system-1.0.2.abi
+  - name: eosio.system.wasm
+    url: ./contracts/eosio.system-1.0.2.wasm
+
+  - name: eosio.msig.abi
+    url: ./contracts/eosio.msig-1.0.2.abi
+  - name: eosio.msig.wasm
+    url: ./contracts/eosio.msig-1.0.2.wasm
+
+  - name: eosio.token.abi
+    url: ./contracts/eosio.token-1.0.2.abi
+  - name: eosio.token.wasm
+    url: ./contracts/eosio.token-1.0.2.wasm
+
+################################# BOOT SEQUENCE ###################################
+boot_sequence:
+- op: system.setcode
+  label: Setting eosio.bios code for account eosio
+  data:
+    account: eosio
+    contract_name_ref: eosio.bios
+
+- op: system.newaccount
+  label: Create account eosio2
+  data:
+    creator: eosio
+    new_account: eosio2
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio3
+  data:
+    creator: eosio
+    new_account: eosio3
+    pubkey: ephemeral
+
+- op: system.newaccount
+  label: Create account eosio.msig (on-chain multi-signature helper)
+  data:
+    creator: eosio
+    new_account: eosio.msig
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.token (main multi-currency contract, including EOS)
+  data:
+    creator: eosio
+    new_account: eosio.token
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.ram (where buyram proceeds go)
+  data:
+    creator: eosio
+    new_account: eosio.ram
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.ramfee (where buyram fees go)
+  data:
+    creator: eosio
+    new_account: eosio.ramfee
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.names (where bidname revenues go)
+  data:
+    creator: eosio
+    new_account: eosio.names
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.stake (where delegated stakes go)
+  data:
+    creator: eosio
+    new_account: eosio.stake
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.saving (unallocated inflation)
+  data:
+    creator: eosio
+    new_account: eosio.saving
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.bpay (fund per-block bucket)
+  data:
+    creator: eosio
+    new_account: eosio.bpay
+    pubkey: ephemeral
+- op: system.newaccount
+  label: Create account eosio.vpay (fund per-vote bucket)
+  data:
+    creator: eosio
+    new_account: eosio.vpay
+    pubkey: ephemeral
+- op: system.setpriv
+  label: Setting privileged account for eosio.msig
+  data:
+    account: eosio.msig
+- op: system.setcode
+  label: Setting eosio.msig code for account eosio.msig
+  data:
+    account: eosio.msig
+    contract_name_ref: eosio.msig
+- op: system.setcode
+  label: Setting eosio.token code for account eosio.token
+  data:
+    account: eosio.token
+    contract_name_ref: eosio.token
+- op: token.create
+  label: Creating the EOS currency symbol
+  data:
+    account: eosio
+    amount: 10000000000.0000 EOS  # Should work with 5% inflation, for the next 50 years (end of uint32 block_num anyway)
+- op: token.issue
+  label: Issuing initial EOS monetary base
+  data:
+    account: eosio
+    amount: 1000011821.0000 EOS  # 1B coins, as per distribution model + gift of RAM to new users.
+    memo: "Creation of EOS. Credits and Acknowledgments: eosacknowledgments.io"
+
+- op: system.setcode
+  label: Replacing eosio account from eosio.bios contract to eosio.system
+  data:
+    account: eosio
+    contract_name_ref: eosio.system
+
+- op: system.resign_accounts
+  label: Disabling authorization for system accounts, pointing `eosio` to the `eosio.prods` account.
+  data:
+    accounts:
+    #- eosio
+    - eosio.msig
+    - eosio.token
+    - eosio.ram
+    - eosio.ramfee
+    - eosio.stake
+    - eosio.names
+    - eosio.saving
+    - eosio.bpay
+    - eosio.vpay
+

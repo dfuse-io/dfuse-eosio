@@ -1,0 +1,64 @@
+project_name: dfusebox
+release:
+  github:
+    owner: eoscanada
+    name: dfuse
+  name_template: '{{.Tag}}'
+before:
+  hooks:
+    # Requires `rice` to be installed: go get github.com/GeertJohan/go.rice/rice
+    - go generate ./dashboard
+    - go generate ./eosq
+builds:
+- env:
+  - CGO_ENABLED=0
+  main: ./cmd/dfusebox
+  ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+  binary: dfusebox
+  goos:
+    - linux
+    - darwin
+  goarch:
+    - amd64
+  hooks:
+    post: ./scripts/remove_rice_boxes.sh
+archives:
+- replacements:
+    darwin: macOS
+    linux: linux
+    386: i386
+    amd64: x86_64
+  files:
+  - LICENSE*
+  - README*
+  - CHANGELOG*
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+signs:
+  - cmd: keybase
+    args:
+      - sign
+      - --infile
+      - $artifact
+      - --binary
+      - --outfile
+      - $signature
+      - --detached
+    signature: ${artifact}.sig
+    artifacts: checksum
+env_files:
+  github_token: ~/.config/goreleaser/github_token
+# brew:
+#   github:
+#     owner: dfuse-io
+#     name: homebrew-tap
+#   homepage: "https://eosc.app/"
+#   description: "Cross-platform EOS command-line swiss-army-knife"

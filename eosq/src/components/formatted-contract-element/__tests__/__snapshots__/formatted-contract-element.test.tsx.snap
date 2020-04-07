@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`formatted-contract-element correctly renders date when type is string as number in milliseconds 1`] = `
+<Styled(div)
+  color="text"
+>
+  06 Sep 2018 07:28
+</Styled(div)>
+`;
+
+exports[`formatted-contract-element correctly renders date when type is string as number in seconds 1`] = `
+<Styled(div)
+  color="text"
+>
+  06 Sep 2018 07:27
+</Styled(div)>
+`;
+
+exports[`formatted-contract-element correctly renders date when type is time_point 1`] = `
+<Styled(div)
+  color="text"
+>
+  2018-07-30T12:52:54 UTC
+</Styled(div)>
+`;
+
+exports[`formatted-contract-element correctly renders date when type is time_point_sec 1`] = `
+<Styled(div)
+  color="text"
+>
+  2018-07-30T12:52:54 UTC
+</Styled(div)>
+`;

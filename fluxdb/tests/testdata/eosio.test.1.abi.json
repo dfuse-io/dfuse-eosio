@@ -1,0 +1,23 @@
+{
+  "version": "eosio::abi/1.0",
+  "structs": [
+    {
+      "name": "value",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        }
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "rows",
+      "type": "value"
+    }
+  ],
+  "ricardian_clauses": [],
+  "abi_extensions": []
+}
