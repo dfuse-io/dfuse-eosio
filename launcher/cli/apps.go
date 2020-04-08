@@ -25,12 +25,12 @@ import (
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	dgraphqlEosioApp "github.com/dfuse-io/dgraphql/app/eosio"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
@@ -40,6 +40,8 @@ import (
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -185,28 +187,31 @@ to find how to install it.`)
 		Description: "Serves blocks as a stream, with a buffer",
 		MetricsID:   "relayer",
 		Logger:      newLoggerDef("github.com/dfuse-io/relayer.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "storage", "merged-blocks"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Listening address for gRPC service serving blocks")
+			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of blockstream sources to connect to for live block feeds (repeat flag as needed)")
+			cmd.Flags().String("relayer-merger-addr", MergerServingAddr, "Address for grpc merger service")
+			cmd.Flags().Int("relayer-buffer-size", 300, "number of blocks that will be kept and sent immediately on connection")
+			cmd.Flags().Duration("relayer-max-drift", 300*time.Second, "max delay between live blocks before we die in hope of a better world")
+			cmd.Flags().Uint64("relayer-min-start-offset", 120, "number of blocks before HEAD where we want to start for faster buffer filling (missing blocks come from files/merger)")
+			cmd.Flags().Duration("relayer-max-source-latency", 1*time.Minute, "max latency tolerated to connect to a source")
+			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
+			cmd.Flags().String("relayer-source-store", "storage/merged-blocks", "Store path url to read batch files from")
 			return nil
 		},
 		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
 			return relayerApp.New(&relayerApp.Config{
-				SourcesAddr:          []string{config.MindreaderGRPCAddr},
-				GRPCListenAddr:       config.RelayerServingAddr,
-				MergerAddr:           config.MergerServingAddr,
-				BufferSize:           300,
-				MaxDrift:             300 * time.Second,
-				MaxSourceLatency:     1 * time.Minute,
-				SourceStoreURL:       filepath.Join(config.DataDir, "storage", "merged-blocks"),
-				Protocol:             config.Protocol,
-				InitTime:             1 * time.Minute,
-				MinStartOffset:       120,
+				SourcesAddr:          viper.GetStringSlice("relayer-source"),
+				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
+				MergerAddr:           viper.GetString("relayer-merger-addr"),
+				BufferSize:           viper.GetInt("relayer-buffer-size"),
+				MaxDrift:             viper.GetDuration("relayer-max-drift"),
+				MaxSourceLatency:     viper.GetDuration("relayer-max-source-latency"),
+				InitTime:             viper.GetDuration("relayer-init-time"),
+				MinStartOffset:       viper.GetUint64("relayer-min-start-offset"),
+				Protocol:             Protocol,
 				EnableReadinessProbe: true,
+				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
 			})
 		},
 	})
