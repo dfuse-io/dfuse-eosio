@@ -26,12 +26,13 @@ import (
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
+	dgraphqlApp "github.com/dfuse-io/dfuse-eosio/dgraphql/app/dgraphql"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	dgraphqlEosioApp "github.com/dfuse-io/dgraphql/app/eosio"
+	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
@@ -201,17 +202,17 @@ to find how to install it.`)
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return relayerApp.New(&relayerApp.Config{
-				SourcesAddr:          viper.GetStringSlice("relayer-source"),
-				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
-				MergerAddr:           viper.GetString("relayer-merger-addr"),
-				BufferSize:           viper.GetInt("relayer-buffer-size"),
-				MaxDrift:             viper.GetDuration("relayer-max-drift"),
-				MaxSourceLatency:     viper.GetDuration("relayer-max-source-latency"),
-				InitTime:             viper.GetDuration("relayer-init-time"),
-				MinStartOffset:       viper.GetUint64("relayer-min-start-offset"),
+				SourcesAddr:          viper.GetStringSlice("start-cmd-relayer-source"),
+				GRPCListenAddr:       viper.GetString("start-cmd-relayer-grpc-listen-addr"),
+				MergerAddr:           viper.GetString("start-cmd-relayer-merger-addr"),
+				BufferSize:           viper.GetInt("start-cmd-relayer-buffer-size"),
+				MaxDrift:             viper.GetDuration("start-cmd-relayer-max-drift"),
+				MaxSourceLatency:     viper.GetDuration("start-cmd-relayer-max-source-latency"),
+				InitTime:             viper.GetDuration("start-cmd-relayer-init-time"),
+				MinStartOffset:       viper.GetUint64("start-cmd-relayer-min-start-offset"),
 				Protocol:             Protocol,
 				EnableReadinessProbe: true,
-				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
+				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("start-cmd-relayer-source-store")),
 			})
 		},
 	})
@@ -560,19 +561,38 @@ to find how to install it.`)
 		Description: "Serves GraphQL queries to clients",
 		MetricsID:   "dgraphql",
 		Logger:      newLoggerDef("github.com/dfuse-io/dgraphql.*", nil),
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
-			return dgraphqlEosioApp.New(&dgraphqlEosioApp.Config{
-				HTTPListenAddr:  config.DgraphqlHTTPServingAddr,
-				GRPCListenAddr:  config.DgraphqlGrpcServingAddr,
-				SearchAddr:      config.RouterServingAddr,
-				ABICodecAddr:    config.AbiServingAddr,
-				BlockMetaAddr:   config.BlockmetaServingAddr,
-				TokenmetaAddr:   config.TokenmetaServingAddr,
-				KVDBDSN:         config.KvdbDSN,
-				NetworkID:       config.NetworkID,
-				AuthPlugin:      "null://",
-				MeteringPlugin:  "null://",
-				OverrideTraceID: false,
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
+			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
+			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
+			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
+			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaServingAddr, "Base URL tokenmeta service")
+			cmd.Flags().String("dgraphql-search-addr-v2", "", "Base URL for search service")
+			cmd.Flags().String("dgraphql-kvdb-dsn", "bigtable://dev.dev/test", "Bigtable database connection information") // Used on EOSIO right now, eventually becomes the reference.
+			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
+			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
+			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")
+			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0*time.Millisecond, "delay before shutting down, after the health endpoint returns unhealthy")
+			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
+			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
+			return nil
+		},
+		InitFunc: nil,
+		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+			return dgraphqlApp.New(&dgraphqlApp.Config{
+				HTTPListenAddr:  viper.GetString("start-cmd-dgraphql-http-addr"),
+				GRPCListenAddr:  viper.GetString("start-cmd-dgraphql-grpc-addr"),
+				SearchAddr:      viper.GetString("start-cmd-dgraphql-search-addr"),
+				SearchAddrV2:    viper.GetString("start-cmd-dgraphql-search-addr-v2"),
+				KVDBDSN:         viper.GetString("start-cmd-dgraphql-kvdb-dsn"),
+				NetworkID:       viper.GetString("start-cmd-dgraphql-network-id"),
+				AuthPlugin:      viper.GetString("start-cmd-dgraphql-auth-plugin"),
+				MeteringPlugin:  viper.GetString("start-cmd-dgraphql-metering-plugin"),
+				ABICodecAddr:    viper.GetString("start-cmd-dgraphql-abi-addr"),
+				BlockMetaAddr:   viper.GetString("start-cmd-dgraphql-block-meta-addr"),
+				TokenmetaAddr:   viper.GetString("start-cmd-dgraphql-tokenmeta-addr"),
+				OverrideTraceID: viper.GetBool("start-cmd-dgraphql-override-trace-id"),
 			})
 		},
 	})
@@ -588,7 +608,7 @@ to find how to install it.`)
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: config.DashboardHTTPListenAddr,
-				HttpListenAddr:          config.EosqHTTPServingAddress,
+				HttpListenAddr:          config.EosqHTTPServingAddr,
 			})
 		},
 	})

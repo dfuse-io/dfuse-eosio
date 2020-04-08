@@ -29,6 +29,7 @@ const (
 	DgraphqlGrpcServingAddr  string             = ":13025"
 	DashboardGrpcServingAddr string             = ":13726"
 	EoswsHTTPServingAddr     string             = ":13027"
+	FluxDBServingAddr        string             = ":13028"
 	DashboardHTTPListenAddr  string             = ":8080"
-	EosqHTTPServingAddress   string             = ":8081"
+	EosqHTTPServingAddr      string             = ":8081"
 )

@@ -19,17 +19,17 @@ import (
 	"fmt"
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dstore"
-	eosgo "github.com/eoscanada/eos-go"
-	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
+	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/kvdb/eosdb"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	"github.com/dfuse-io/shutter"
+	eosgo "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 

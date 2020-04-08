@@ -88,29 +88,30 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		ShardSize:                200,
 		NodeosAPIAddr:            ":8888", // This is the address where the nodeos is serving its API. it is defined in config.ini
 		MindreaderNodeosAPIAddr:  ":9888", // This is the address where the dm-nodeos is serving its API. it is defined in config.ini
-		EosManagerHTTPAddr:       ":13008",
-		EosMindreaderHTTPAddr:    ":13009",
-		MindreaderGRPCAddr:       ":13010",
-		RelayerServingAddr:       ":13011",
-		MergerServingAddr:        ":13012",
-		AbiServingAddr:           ":13013",
-		TokenmetaServingAddr:     ":9001", // Not implemented yet, present for booting purposes, does not work!
-		BlockmetaServingAddr:     ":13015",
-		ArchiveServingAddr:       ":13016",
-		LiveServingAddr:          ":13017",
-		RouterServingAddr:        ":13018",
-		DashboardHTTPListenAddr:  ":8080",
-		DgraphqlHTTPServingAddr:  ":13019",
-		DgraphqlGrpcServingAddr:  ":13020",
-		DashboardGrpcServingAddr: ":13731",
-		IndexerServingAddr:       ":13024",
-		IndexerHTTPServingAddr:   ":13025",
-		ArchiveHTTPServingAddr:   ":13026",
-		RouterHTTPServingAddr:    ":13027",
-		KvdbHTTPServingAddr:      ":13028",
-		EoswsHTTPServingAddr:     ":13029",
-		EosqHTTPServingAddress:   ":8081",
-		FluxDBServingAddr:        ":13030",
+		EosManagerHTTPAddr:       EosManagerHTTPAddr,
+		EosMindreaderHTTPAddr:    EosMindreaderHTTPAddr,
+		MindreaderGRPCAddr:       MindreaderGRPCAddr,
+		RelayerServingAddr:       RelayerServingAddr,
+		MergerServingAddr:        MergerServingAddr,
+		AbiServingAddr:           AbiServingAddr,
+		BlockmetaServingAddr:     BlockmetaServingAddr,
+		ArchiveServingAddr:       ArchiveServingAddr,
+		ArchiveHTTPServingAddr:   ArchiveHTTPServingAddr,
+		LiveServingAddr:          LiveServingAddr,
+		RouterServingAddr:        RouterServingAddr,
+		RouterHTTPServingAddr:    RouterHTTPServingAddr,
+		KvdbHTTPServingAddr:      KvdbHTTPServingAddr,
+		IndexerServingAddr:       IndexerServingAddr,
+		IndexerHTTPServingAddr:   IndexerHTTPServingAddr,
+		TokenmetaServingAddr:     TokenmetaServingAddr, // Not implemented yet, present for booting purposes, does not work!
+		DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
+		DgraphqlGrpcServingAddr:  DgraphqlGrpcServingAddr,
+		DashboardGrpcServingAddr: DashboardGrpcServingAddr,
+		EoswsHTTPServingAddr:     EoswsHTTPServingAddr,
+		FluxDBServingAddr:        FluxDBServingAddr,
+		DashboardHTTPListenAddr:  DashboardHTTPListenAddr,
+		EosqHTTPServingAddr:      EosqHTTPServingAddr,
+
 		// TODO: clean this one up...
 		//KvdbDSN: fmt.Sprintf("sqlite3://%s/kvdb_db.db?cache=shared&mode=memory&createTables=true", filepath.Join(dataDirAbs, "kvdb")),
 		KvdbDSN: fmt.Sprintf("badger://%s/kvdb_badger.db?compression=zstd", filepath.Join(dataDirAbs, "kvdb")),
@@ -174,6 +175,6 @@ Your instance should be ready in a few seconds, here some relevant links:
 		Eosq: http://localhost%s
 `, "\n")
 
-	userLog.Printf(message, config.DashboardHTTPListenAddr, config.DashboardHTTPListenAddr, config.EosqHTTPServingAddress)
+	userLog.Printf(message, config.DashboardHTTPListenAddr, config.DashboardHTTPListenAddr, config.EosqHTTPServingAddr)
 
 }

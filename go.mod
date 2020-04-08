@@ -20,6 +20,7 @@ require (
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
 	github.com/dfuse-io/dgraphql v0.0.0-20200407193015-bde97a9ec1c3
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
+	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200407045015-ea4e41ecdb6c
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
@@ -42,11 +43,13 @@ require (
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
+	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
 	github.com/hidal-go/hidalgo v0.0.0-20190814174001-42e03f3b5eaa
 	github.com/improbable-eng/grpc-web v0.12.0
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c

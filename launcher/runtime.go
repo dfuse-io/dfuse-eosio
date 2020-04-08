@@ -41,7 +41,6 @@ type RuntimeConfig struct {
 	DgraphqlGrpcServingAddr  string
 	DashboardGrpcServingAddr string
 	DashboardHTTPListenAddr  string
-	EosqHTTPServingAddress   string
 	KvdbDSN                  string
 	FluxDSN                  string
 	Protocol                 pbbstream.Protocol
@@ -56,5 +55,6 @@ type RuntimeConfig struct {
 	NodeosShutdownDelay      time.Duration
 	NodeosExtraArgs          []string
 	KvdbHTTPServingAddr      string
+	EosqHTTPServingAddr      string
 	NetworkID                string
 }
