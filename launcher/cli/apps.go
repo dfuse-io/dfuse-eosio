@@ -48,13 +48,13 @@ import (
 
 func init() {
 	// Manager
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "manager",
 		Title:       "Producer node",
 		Description: "Block producing node",
 		MetricsID:   "manager",
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
 
@@ -79,7 +79,7 @@ func init() {
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			if config.BoxConfig.RunProducer {
 				return nodeosManagerApp.New(&nodeosManagerApp.Config{
 					ManagerAPIAddress:   config.EosManagerHTTPAddr,
@@ -115,13 +115,13 @@ func init() {
 	})
 
 	// Mindreader
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
 		Title:       "Reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "manager",
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "mindreadernode", "config"),
 				filepath.Join(config.DataDir, "mindreadernode", "data"),
@@ -144,7 +144,7 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
 				ManagerAPIAddress:          config.EosMindreaderHTTPAddr,
 				NodeosAPIAddress:           config.NodeosAPIAddr,
@@ -181,7 +181,7 @@ to find how to install it.`)
 	})
 
 	// Relayer
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "relayer",
 		Title:       "Relayer",
 		Description: "Serves blocks as a stream, with a buffer",
@@ -199,7 +199,7 @@ to find how to install it.`)
 			cmd.Flags().String("relayer-source-store", "storage/merged-blocks", "Store path url to read batch files from")
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:          viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
@@ -217,13 +217,13 @@ to find how to install it.`)
 	})
 
 	// Merger
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "merger",
 		Title:       "Merger",
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
 		Logger:      newLoggerDef("github.com/dfuse-io/merger.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "storage", "merged-blocks"),
 				filepath.Join(config.DataDir, "storage", "one-blocks"),
@@ -234,7 +234,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return mergerApp.New(&mergerApp.Config{
 				StartBlockNum:           config.StartBlock,
 				Live:                    true,
@@ -255,13 +255,13 @@ to find how to install it.`)
 	})
 
 	// fluxdb
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "fluxdb",
 		Title:       "FluxDB",
 		Description: "Temporal chain state store",
 		MetricsID:   "fluxdb",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "fluxdb"),
 				filepath.Join(config.DataDir, "storage", "merged-blocks"),
@@ -271,7 +271,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode: true,
 				EnableInjectMode: true,
@@ -290,13 +290,13 @@ to find how to install it.`)
 	})
 
 	// KVDB Loader
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "kvdb-loader",
 		Title:       "DB loader",
 		Description: "Main blocks and transactions database",
 		MetricsID:   "kvdb-loader",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/kvdb-loader.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "kvdb"),
 				filepath.Join(config.DataDir, "storage", "merged-blocks"),
@@ -306,7 +306,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:               "",
 				ProcessingType:        "live",
@@ -322,13 +322,13 @@ to find how to install it.`)
 	})
 
 	// Search Indexer
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
 		MetricsID:   "indexer",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "storage", "indexes"),
 				filepath.Join(config.DataDir, "storage", "merged-blocks"),
@@ -339,7 +339,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return indexerApp.New(&indexerApp.Config{
 				IndexesStoreURL:       filepath.Join(config.DataDir, "storage", "indexes"),
 				GRPCListenAddr:        config.IndexerServingAddr,
@@ -361,13 +361,13 @@ to find how to install it.`)
 	})
 
 	// Blockmeta
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "blockmeta",
 		Title:       "Blockmeta",
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
 		Logger:      newLoggerDef("github.com/dfuse-io/blockmeta.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "storage", "merged-blocks"),
 			})
@@ -376,7 +376,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return blockmetaApp.New(&blockmetaApp.Config{
 				KvdbDSN:                 config.KvdbDSN,
 				BlocksStore:             filepath.Join(config.DataDir, "storage", "merged-blocks"),
@@ -392,13 +392,13 @@ to find how to install it.`)
 	})
 
 	// Abicodec
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "abicodec",
 		Title:       "ABI codec",
 		Description: "Decodes binary data against ABIs for different contracts",
 		MetricsID:   "abicodec",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "storage", "abicache"),
 			})
@@ -407,7 +407,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       config.AbiServingAddr,
 				SearchAddr:           config.RouterServingAddr,
@@ -421,13 +421,13 @@ to find how to install it.`)
 	})
 
 	// Search Router
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "router",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return routerApp.New(&routerApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
 				Protocol:             config.Protocol,
@@ -441,13 +441,13 @@ to find how to install it.`)
 	})
 
 	// Search Archive
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
 		MetricsID:   "archive",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := makeDirs([]string{
 				filepath.Join(config.DataDir, "storage", "indexes"),
 				filepath.Join(config.DataDir, "search", "archiver"),
@@ -457,7 +457,7 @@ to find how to install it.`)
 			}
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return archiveApp.New(&archiveApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
 				Protocol:             config.Protocol,
@@ -481,13 +481,13 @@ to find how to install it.`)
 		},
 	})
 
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
 		MetricsID:   "live",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(live|app/live).*", nil),
-		InitFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) error {
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			err := os.RemoveAll(filepath.Join(config.DataDir, "search", "live"))
 			if err != nil {
 				return err
@@ -503,7 +503,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
 				Protocol:                 config.Protocol,
@@ -523,13 +523,13 @@ to find how to install it.`)
 	})
 
 	// eosWS (deprecated app, scheduled to be dismantled and features migrated to dgraphql)
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosws",
 		Title:       "EOSWS",
 		Description: "Serves websocket and http queries to clients",
 		MetricsID:   "eosws",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              config.EoswsHTTPServingAddr,
 				SearchAddr:                  config.RouterServingAddr,
@@ -554,13 +554,13 @@ to find how to install it.`)
 	})
 
 	// dGraphql
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dgraphql",
 		Title:       "GraphQL",
 		Description: "Serves GraphQL queries to clients",
 		MetricsID:   "dgraphql",
 		Logger:      newLoggerDef("github.com/dfuse-io/dgraphql.*", nil),
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return dgraphqlEosioApp.New(&dgraphqlEosioApp.Config{
 				HTTPListenAddr:  config.DgraphqlHTTPServingAddr,
 				GRPCListenAddr:  config.DgraphqlGrpcServingAddr,
@@ -578,14 +578,14 @@ to find how to install it.`)
 	})
 
 	// eosq
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosq",
 		Title:       "Eosq",
 		Description: "EOSIO Block Explorer",
 		MetricsID:   "eosq",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: config.DashboardHTTPListenAddr,
 				HttpListenAddr:          config.EosqHTTPServingAddress,
@@ -594,14 +594,14 @@ to find how to install it.`)
 	})
 
 	// dashboard
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
 		Description: "Main dfusebox dashboard",
 		MetricsID:   "dashboard",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return dashboard.New(&dashboard.Config{
 				DmeshClient:              modules.SearchDmeshClient,
 				ManagerCommandURL:        config.EosManagerHTTPAddr,
@@ -644,12 +644,12 @@ func makeDirs(directories []string) error {
 	return nil
 }
 
-func newLoggerDef(regex string, levels []zapcore.Level) *core.LoggingDef {
+func newLoggerDef(regex string, levels []zapcore.Level) *launcher.LoggingDef {
 	if len(levels) == 0 {
 		levels = []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}
 	}
 
-	return &core.LoggingDef{
+	return &launcher.LoggingDef{
 		Levels: levels,
 		Regex:  regex,
 	}

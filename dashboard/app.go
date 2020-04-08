@@ -15,10 +15,10 @@
 package dashboard
 
 import (
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshCli "github.com/dfuse-io/dmesh/client"
+	"github.com/dfuse-io/shutter"
 )
 
 type Config struct {
@@ -28,7 +28,7 @@ type Config struct {
 	DgraphqlHTTPServingAddr  string
 	EoswsHTTPServingAddr     string
 	NodeosAPIHTTPServingAddr string
-	Launcher                 *core.Launcher
+	Launcher                 *launcher.Launcher
 	MetricManager            *metrics.Manager
 	DmeshClient              dmeshCli.SearchClient
 }
@@ -36,7 +36,7 @@ type Config struct {
 type App struct {
 	*shutter.Shutter
 	config   *Config
-	launcher *core.Launcher
+	launcher *launcher.Launcher
 	Ready    chan interface{}
 	ready    bool
 }

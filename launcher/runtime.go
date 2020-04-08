@@ -1,11 +1,11 @@
-package core
+package launcher
 
 import (
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 )
 
 type RuntimeModules struct {

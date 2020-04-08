@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	_ "github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
@@ -30,6 +29,7 @@ import (
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -52,7 +52,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	nodeosPath := viper.GetString("global-nodeos-path")
 
-	boxConfig, err := core.ReadConfig(configFile)
+	boxConfig, err := launcher.ReadConfig(configFile)
 	if err != nil {
 		userLog.Error("dfusebox not initialized. Please run 'dfusebox init'")
 		return nil
@@ -76,7 +76,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	// construct root config used by dfuse app, passed down to be used by all sub apps
-	config := &core.RuntimeConfig{
+	config := &launcher.RuntimeConfig{
 		BoxConfig:                boxConfig,
 		DmeshServiceVersion:      "v1",
 		DmeshNamespace:           "local",
@@ -123,12 +123,12 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		NodeosExtraArgs:       make([]string, 0),
 	}
 
-	modules := &core.RuntimeModules{
+	modules := &launcher.RuntimeModules{
 		SearchDmeshClient: dmeshClient.NewLocalClient(),
-		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, core.GetMetricAppMeta()),
+		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta()),
 	}
 
-	launcher := core.NewLauncher(config, modules)
+	launcher := launcher.NewLauncher(config, modules)
 	userLog.Debug("launcher created")
 
 	apps := []string{}
@@ -165,7 +165,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-func printWelcomeMessage(config *core.RuntimeConfig) {
+func printWelcomeMessage(config *launcher.RuntimeConfig) {
 	message := strings.TrimLeft(`
 Your instance should be ready in a few seconds, here some relevant links:
 
