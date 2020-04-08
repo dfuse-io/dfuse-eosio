@@ -31,6 +31,7 @@ const (
 	EoswsHTTPServingAddr        string             = ":13027"
 	ForkresolverServingAddr     string             = ":13028"
 	ForkresolverHTTPServingAddr string             = ":13029"
+	FluxDBServingAddr           string             = ":13030"
 	DashboardHTTPListenAddr     string             = ":8080"
-	EosqHTTPServingAddress      string             = ":8081"
+	EosqHTTPServingAddr         string             = ":8081"
 )

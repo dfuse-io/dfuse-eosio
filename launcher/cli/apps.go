@@ -32,7 +32,6 @@ import (
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
@@ -411,7 +410,7 @@ to find how to install it.`)
 			cmd.Flags().String("search-indexer-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return indexerApp.New(&indexerApp.Config{
 				Protocol:                            Protocol,
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
@@ -444,7 +443,6 @@ to find how to install it.`)
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "router",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-router-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-router-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to validate cursors that are passed LIB and forked out")
@@ -544,10 +542,6 @@ to find how to install it.`)
 		Description: "Serves live search queries",
 		MetricsID:   "live",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(live|app/live).*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := os.RemoveAll(filepath.Join(config.DataDir, "search", "live"))
-			if err != nil {
-				return err
 		RegisterFlags: func(cmd *cobra.Command) error {
 			if cmd.Flag("search-mesh-store-addr") == nil {
 				cmd.Flags().String("search-mesh-store-addr", "", "address of the backing etcd cluster for mesh service discovery")
@@ -600,7 +594,7 @@ to find how to install it.`)
 	})
 
 	// Search Fork Resolver
-	core.RegisterApp(&core.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "forkresolver",
 		Title:       "Search fork resolver",
 		Description: "Search forks",
@@ -628,7 +622,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return forkresolverApp.New(&forkresolverApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
 				Protocol:                 Protocol,
@@ -700,7 +694,7 @@ to find how to install it.`)
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			return nil
 		},
-		FactoryFunc: func(config *core.RuntimeConfig, modules *core.RuntimeModules) core.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return dgraphqlApp.New(&dgraphqlApp.Config{
 				HTTPListenAddr:  viper.GetString("start-cmd-dgraphql-http-addr"),
 				GRPCListenAddr:  viper.GetString("start-cmd-dgraphql-grpc-addr"),
