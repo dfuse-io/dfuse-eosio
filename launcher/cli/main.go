@@ -17,6 +17,7 @@ package cli
 import (
 	"github.com/abourget/viperbind"
 	"github.com/dfuse-io/derr"
+	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +40,8 @@ func Main() {
 	RootCmd.PersistentFlags().StringP("config-file", "c", "./dfusebox.yaml", "dfusebox configuration file to use")
 	RootCmd.PersistentFlags().String("nodeos-path", "nodeos", "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
 	RootCmd.PersistentFlags().CountP("verbose", "v", "Enables verbose output (-vvvv for max verbosity)")
+
+	derr.Check("registering application flags", core.RegisterFlags(startCmd))
 
 	RootCmd.AddCommand(startCmd)
 	RootCmd.AddCommand(purgeCmd)

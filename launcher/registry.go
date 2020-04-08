@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/dfuse-io/dfuse-eosio/metrics"
+	"github.com/spf13/cobra"
 )
 
 var AppRegistry = map[string]*AppDef{}
@@ -19,4 +20,16 @@ func GetMetricAppMeta() map[string]*metrics.AppMeta {
 		}
 	}
 	return mapping
+}
+
+func RegisterFlags(cmd *cobra.Command) error {
+	for _, appDef := range AppRegistry {
+		if appDef.RegisterFlags != nil {
+			err := appDef.RegisterFlags(cmd)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
