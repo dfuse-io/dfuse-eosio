@@ -1,0 +1,213 @@
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=2 -max-batch-size=15 |grep got.row|wc -l
+real	0m5.799s
+real	0m5.572s
+real	0m5.809s
+real	0m5.664s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=1 -max-batch-size=15 |grep got.row|wc -l
+real	0m8.870s
+real	0m8.272s
+real	0m10.630s
+real	0m9.132s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=15 -max-batch-size=1 |grep got.row|wc -l
+real	0m3.075s
+real	0m3.148s
+real	0m2.891s
+real	0m3.032s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=15 -max-batch-size=5 |grep got.row|wc -l
+real	0m1.943s
+real	0m1.838s
+real	0m2.261s
+real	0m2.193s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=5 -max-batch-size=15 |grep got.row|wc -l
+real	0m2.956s
+real	0m2.887s
+real	0m2.987s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=15 -max-batch-size=15 |grep got.row|wc -l
+real	0m1.655s
+real	0m1.607s
+real	0m1.741s
+real	0m1.708s
+
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=100 -max-batch-size=15 |grep got.row|wc -l
+real	0m1.212s
+real	0m1.226s
+real	0m1.227s
+real	0m1.247s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=1 -max-batch-size=1000 |grep got.row|wc -l
+real	0m9.201s
+real	0m8.884s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=2 -max-batch-size=1000 |grep got.row|wc -l
+real	0m5.325s
+real	0m5.298s
+
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=1 -max-batch-size=1 |grep got.row|wc -l
+real	0m18.347s
+real	0m20.334s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=25 -max-batch-size=30 |grep got.row|wc -l
+real	0m1.344s
+real	0m1.519s
+real	0m1.351s
+real	0m1.441s
+real	0m1.702s
+
+time head -n 10000 trxs-50M | ./perftest -concurrent-batches=10 -max-batch-size=1000 |grep got.row|wc -l
+real	0m1.760s
+real	0m1.671s
+real	0m1.631s
+
+
+
+
+# 100000 trxs (note: if not cached, first query is double that time...)
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=10 -max-batch-size=1000 |grep got.row|wc -l
+real	0m16.853s
+real	0m11.245s
+real	0m12.185s
+real	0m12.470s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=1000 -max-batch-size=10 |grep got.row|wc -l
+real	0m10.025s
+real	0m9.986s
+real	0m9.622s
+real	0m9.143s
+
+time tail -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l
+real	0m8.386s
+real	0m8.108s
+real	0m10.635s
+real	0m9.180s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=10 -max-batch-size=40 >/dev/null
+real	0m15.293s
+real	0m16.307s
+
+###double 50M##
+real	0m18.353s
+real	0m18.306s
+
+
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=100 |grep got.row|wc -l
+real	0m9.980s
+real	0m9.151s
+real	0m9.638s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=40 |grep got.row|wc -l
+real	0m9.885s
+real	0m8.885s
+real	0m8.592s
+real	0m8.328s
+real	0m10.009s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l
+real	0m9.699s
+real	0m9.577s
+real	0m9.329s
+real	0m9.733s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=10 |grep got.row|wc -l
+real	0m9.840s
+real	0m9.533s
+real	0m9.301s
+
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=1 |grep got.row|wc -l
+real	0m14.774s
+real	0m15.653s
+real	0m14.777s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=2 |grep got.row|wc -l
+real	0m14.227s
+real	0m13.680s
+
+time head -n 100000 trxs-50M | ./perftest -concurrent-batches=30 -max-batch-size=5 |grep got.row|wc -l
+real	0m11.460s
+real	0m12.038s
+real	0m11.786s
+
+
+
+
+
+
+
+######## trxs-89.9M #################
+
+## 10000
+
+time head -n 10000 trxs-89.9M | ./perftest -concurrent-batches=1 -max-batch-size=1 |grep got.row|wc -l
+real	0m27.683s
+real	0m28.080s
+
+
+time head -n 10000 trxs-89.9M | ./perftest -concurrent-batches=15 -max-batch-size=15 |grep got.row|wc -l
+real	0m3.130s
+real	0m3.023s
+real	0m3.148s
+
+time head -n 10000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l
+real	0m3.287s
+real	0m3.340s
+real	0m3.182s
+
+## 100000
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=1 -max-batch-size=1 |grep got.row|wc -l
+real	4m2.335s
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l
+real	0m28.674s
+real	0m27.631s
+real	0m27.920s
+real	0m28.070s
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=1 |grep got.row|wc -l
+real	0m34.083s
+real	0m33.261s
+real	0m33.865s
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=10 -max-batch-size=40 |grep got.row|wc -l
+real	0m25.447s
+real	0m25.434s
+
+
+## 100000 but two in parallel:
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l ## with `tail` on the other instance
+
+real	0m53.785s  real	0m52.941s
+real	0m54.060s  real	0m52.853s
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=40 |grep got.row|wc -l
+real	0m55.517s  real	0m55.126s
+real	0m55.631s  real	0m52.281s
+
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=10 -max-batch-size=40 |grep got.row|wc -l
+real	0m46.037s real	0m44.002s
+real	0m43.211s real	0m41.153s
+real	0m44.088s real	0m43.184s
+real	0m45.233s real	0m44.751s
+real	0m43.667s real	0m42.280s
+
+time head -n 100000 trxs-89.9M | ./perftest -concurrent-batches=30 -max-batch-size=20 |grep got.row|wc -l
+real	0m53.199s real	0m49.585s
+real	0m54.346s real	0m52.269s
+
+20, 40
+real	0m52.291s real	0m50.750s
+
+
+
+
+
+

@@ -30,7 +30,7 @@ type PriceResp struct {
 		Variation   float64   `json:"variation"`
 		LastUpdated time.Time `json:"last_updated"`
 	} `json:"data"`
-	metadata struct {
+	Metadata struct {
 		Timestamp int   `json:"timestamp"`
 		Error     error `json:"error"`
 	} `json:"metadata"`

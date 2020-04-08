@@ -12,20 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package launcher
+package eos
 
 import (
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"testing"
+
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/eos/resolvers"
+	"github.com/dfuse-io/dgraphql"
+	"github.com/stretchr/testify/assert"
 )
 
-var userLog = zapbox.NewCLILogger(zap.NewNop())
+func TestSchema(t *testing.T) {
+	resolver := resolvers.NewRoot(nil, nil, nil, nil, nil)
 
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/launcher", userLog.LoggerReference())
-}
+	// This makes the necessary parsing of all schemas to ensure resolver correctly
+	// resolves the full schema.
+	_, err := dgraphql.NewSchemas(resolver, CommonSchema(), AlphaSchema())
 
-func UserLog() *zapbox.CLILogger {
-	return userLog
+	if err != nil {
+		message := "EOS invalid schema nor resolver"
+		assert.NoError(t, err, message)
+	}
 }

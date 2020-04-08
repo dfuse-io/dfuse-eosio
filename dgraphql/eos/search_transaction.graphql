@@ -1,0 +1,80 @@
+#
+#  Responses for Query
+#
+
+type SearchTransactionsForwardResponse {
+"This is a chain-wide cursor, indicating the progress of a search. You can pass it back to the different search methods to continue fetching more results, in *either directions* (even in the reverse direction). A `null` cursor means the end of range has been reached."
+cursor: String
+
+results: [SearchTransactionForwardResponse!]
+}
+
+type SearchTransactionsBackwardResponse {
+cursor: String!
+
+results: [SearchTransactionBackwardResponse!]
+}
+
+
+
+#
+# Responses for Query and Subscriptions
+#
+
+"""
+A single transaction trace response, matching a forward search query.
+
+WARNING: do NOT forget to include the `undo` field to determine if the message is actually a REVERSAL of the transaction.
+
+NOTE: always check the value of `trace.status` to make sure it is `executed` if you want to make sure a transaction made it to the chain.
+
+"""
+type SearchTransactionForwardResponse {
+"""Whether this response is an UNDO operation of a previously sent response.
+
+In a forward search, make sure you catch this and always verify its value.. as to not double or triple count transactions.
+"""
+undo: Boolean!
+
+"""Chain-wide cursor, allowing you to continue querying when connection is interrupted"""
+cursor: String!
+
+"""Whether the block represented here is irreversible"""
+isIrreversible: Boolean!
+
+"""The last known irreversible block when processing this transaction.  This number can be equal to the current block num (under `trace.block.num`), in which case, `isIrreversible` is true.  In the reversible segment of the chain, this number will be drifting away by the number of blocks separating head block and LIB."""
+irreversibleBlockNum: Uint32!
+
+block: BlockHeader!
+
+    """Traces of execution of the transaction containing matching actions.
+
+Check `matchingActions` below to limit the response to only actions matching your search query. Although, all actions from the transactions are available (see `executedActions`).
+"""
+trace: TransactionTrace
+}
+
+"""
+A single transaction trace response, matching a backward search query.
+
+NOTE: always check the value of `trace.status` to make sure it is `executed` if you want to make sure a transaction made it to the chain.
+"""
+type SearchTransactionBackwardResponse {
+"""Chain-wide cursor, allowing you to continue querying when connection is interrupted"""
+cursor: String!
+
+"""Whether the block represented here is irreversible"""
+isIrreversible: Boolean!
+
+
+"""The last known irreversible block when processing this transaction.  This number can be equal to the current block num (under `trace.block.num`), in which case, `isIrreversible` is true.  In the reversible segment of the chain, this number will be drifting away by the number of blocks separating head block and LIB."""
+irreversibleBlockNum: Uint32!
+
+block: BlockHeader!
+
+"""Traces of execution of the transaction containing matching actions.
+
+Check `matchingActions` below to limit the response to only actions matching your search query. Although, all actions from the transactions are available (see `executedActions`).
+"""
+trace: TransactionTrace
+}

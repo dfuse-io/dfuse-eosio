@@ -25,10 +25,10 @@ import (
 	"time"
 
 	rice "github.com/GeertJohan/go.rice"
-	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbdashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
+	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/shutter"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/gorilla/handlers"
@@ -224,17 +224,17 @@ func (s *server) AppsMetrics(req *pbdashboard.AppsMetricsRequest, stream pbdashb
 
 func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.Dashboard_AppsInfoServer) error {
 	zlog.Info("app info by name", zap.String("app_id", req.FilterAppId))
-	launcher := s.config.Launcher
+	l := s.config.Launcher
 
 	// when first called, stream latest status of one or all apps depending on FilterAppId
 	if req.FilterAppId == "" {
-		appIDs := launcher.GetAppIDs()
+		appIDs := l.GetAppIDs()
 		resp := &pbdashboard.AppsInfoResponse{}
 		for _, appID := range appIDs {
 			if appDef, found := core.AppRegistry[appID]; found {
 				resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
 					Id:     appDef.ID,
-					Status: launcher.GetAppStatus(appDef.ID),
+					Status: l.GetAppStatus(appDef.ID),
 				})
 			}
 			// TODO: should we handle this case? error?
@@ -245,7 +245,7 @@ func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.D
 		if appDef, found := core.AppRegistry[req.FilterAppId]; found {
 			resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
 				Id:     appDef.ID,
-				Status: launcher.GetAppStatus(appDef.ID),
+				Status: l.GetAppStatus(appDef.ID),
 			})
 		}
 		// TODO: should we handle this case? error?
@@ -254,19 +254,19 @@ func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.D
 
 	for {
 		select {
-		case newAppStatus := <-launcher.AppStatusStream:
+		case newAppStatus := <-l.AppStatusStream:
 			resp := &pbdashboard.AppsInfoResponse{}
 			if req.FilterAppId != "" {
 				if req.FilterAppId == newAppStatus.GetId() {
 					resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
 						Id:     newAppStatus.GetId(),
-						Status: launcher.GetAppStatus(newAppStatus.GetId()),
+						Status: l.GetAppStatus(newAppStatus.GetId()),
 					})
 				}
 			} else {
 				resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
 					Id:     newAppStatus.GetId(),
-					Status: launcher.GetAppStatus(newAppStatus.GetId()),
+					Status: l.GetAppStatus(newAppStatus.GetId()),
 				})
 			}
 

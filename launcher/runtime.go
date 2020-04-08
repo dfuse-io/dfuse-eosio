@@ -1,11 +1,11 @@
-package core
+package launcher
 
 import (
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 )
 
 type RuntimeModules struct {
@@ -41,7 +41,6 @@ type RuntimeConfig struct {
 	DgraphqlGrpcServingAddr  string
 	DashboardGrpcServingAddr string
 	DashboardHTTPListenAddr  string
-	EosqHTTPServingAddress   string
 	KvdbDSN                  string
 	FluxDSN                  string
 	Protocol                 pbbstream.Protocol
@@ -56,5 +55,6 @@ type RuntimeConfig struct {
 	NodeosShutdownDelay      time.Duration
 	NodeosExtraArgs          []string
 	KvdbHTTPServingAddr      string
+	EosqHTTPServingAddr      string
 	NetworkID                string
 }

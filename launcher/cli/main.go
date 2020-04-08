@@ -42,9 +42,7 @@ func Main() {
 
 	derr.Check("registering application flags", core.RegisterFlags(startCmd))
 
-	RootCmd.AddCommand(startCmd)
-	RootCmd.AddCommand(purgeCmd)
-	RootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(startCmd, purgeCmd, initCmd)
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setup()

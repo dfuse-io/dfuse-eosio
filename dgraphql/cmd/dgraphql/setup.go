@@ -12,20 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package launcher
+package main
 
 import (
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
-	"github.com/dfuse-io/logging"
+	"net/http"
+
 	"go.uber.org/zap"
 )
 
-var userLog = zapbox.NewCLILogger(zap.NewNop())
+func setup() {
+	setupLogger()
+	setupTracing()
 
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/launcher", userLog.LoggerReference())
-}
+	go func() {
+		listenAddr := "localhost:6060"
+		err := http.ListenAndServe(listenAddr, nil)
+		if err != nil {
+			zlog.Error("unable to start profiling server", zap.Error(err), zap.String("listen_addr", listenAddr))
+		}
+	}()
 
-func UserLog() *zapbox.CLILogger {
-	return userLog
 }

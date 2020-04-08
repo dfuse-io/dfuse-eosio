@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package launcher
 
 import (
 	"fmt"
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/shutter"
 	pbdashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
+	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
 

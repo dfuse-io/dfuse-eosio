@@ -12,20 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package launcher
+package resolvers
 
-import (
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
-)
-
-var userLog = zapbox.NewCLILogger(zap.NewNop())
-
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/launcher", userLog.LoggerReference())
-}
-
-func UserLog() *zapbox.CLILogger {
-	return userLog
+type PageInfo struct {
+	StartCursor     string
+	EndCursor       string
+	HasNextPage     bool
+	HasPreviousPage bool
 }

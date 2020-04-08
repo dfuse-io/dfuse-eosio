@@ -1,0 +1,60 @@
+type Subscription {
+    """
+    Search the blockchain forward for transaction *execution traces* based on `query`.
+
+    WARN: always consider the `undo` field in forward searches, which signal that the matching element
+    was in fact REMOVED from the chain because of blocks reorganization.
+    """
+    searchTransactionsForward(
+        "dfuse Search Query Language string"
+        query: String!
+
+        "Lower block num boundary, inclusively. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+        lowBlockNum: Int64
+
+        "Higher block num boundary, inclusively. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`). A `null` value means no higher limits, therefore searching into the future of the chain."
+        highBlockNum: Int64
+
+        "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
+        cursor: String
+
+        "Limit the number of results streamed back."
+        limit: Int64 = 0
+
+        "When true, only stream back results once they pass the irreversibility boundary. Otherwise, allow fetching results up to the head block."
+        irreversibleOnly: Boolean = false
+
+        """If non-zero, indicates you want to mark the stream when reaching live blocks. A marker is a response with a `trace` equal to `null`, which will be sent at each `liveMarkerInterval` blocks. The first `trace` to be equal to `null` in a stream indicates you are now processing live blocks.
+
+        The value for `liveMarkerInterval` is a number of blocks.
+        """
+        liveMarkerInterval: Uint32 = 0
+
+    ): SearchTransactionForwardResponse!
+
+    """
+    Search the blockchain backward for transaction execution traces based on `query`.
+
+    NOTE: The `undo` field is not used in backwards search.
+    """
+    searchTransactionsBackward(
+        "dfuse Search Query Language string"
+        query: String!
+
+        "Lower block num boundary, inclusively. The absence of a value, or a value of 0 means the beginning of the chain. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+        lowBlockNum: Int64
+
+        "Higher block num boundary, inclusively. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`), -1 being the head block."
+        highBlockNum: Int64
+
+        "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
+        cursor: String
+
+        "Limit the number of results streamed back."
+        limit: Int64 = 0
+
+        "When true, only stream back results that have passed the irreversibility boundary. Otherwise, allow fetching results up to the head block."
+        irreversibleOnly: Boolean = false
+    ): SearchTransactionBackwardResponse!
+
+}

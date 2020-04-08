@@ -1,4 +1,4 @@
-package core
+package launcher
 
 import (
 	"github.com/spf13/cobra"

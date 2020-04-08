@@ -12,20 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package launcher
+package main
 
 import (
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dtracing"
+	"go.opencensus.io/trace"
 )
 
-var userLog = zapbox.NewCLILogger(zap.NewNop())
-
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/launcher", userLog.LoggerReference())
-}
-
-func UserLog() *zapbox.CLILogger {
-	return userLog
+func setupTracing() {
+	err := dtracing.SetupTracing("dgraphql", trace.ProbabilitySampler(1/20.0))
+	derr.Check("unable to setup tracing correctly", err)
 }

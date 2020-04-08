@@ -48,7 +48,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	newConfig := &core.BoxConfig{RunProducer: runProducer, Version: "v1"}
+	newConfig := &launcher.BoxConfig{RunProducer: runProducer, Version: "v1"}
 	newConfig.ReaderNodeVersion = "v2.0.3-dm"
 
 	if newConfig.RunProducer {
@@ -84,7 +84,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func initRemoteBox(conf *core.BoxConfig) (err error) {
+func initRemoteBox(conf *launcher.BoxConfig) (err error) {
 	genesisFilePath := viper.GetString("genesis-file")
 	if genesisFilePath == "" {
 		genesisFilePath, err = askGenesisPath()
@@ -147,7 +147,7 @@ func peersListConfigEntry(peers []string) string {
 	return strings.Join(entries, "\n")
 }
 
-func mkdirAllFolders(folders *core.EOSFolderStructure) error {
+func mkdirAllFolders(folders *launcher.EOSFolderStructure) error {
 	var directories []string
 	directories = append(directories, folders.ConfigDirs()...)
 	directories = append(directories, folders.DataDirs()...)

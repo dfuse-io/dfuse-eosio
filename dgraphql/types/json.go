@@ -12,20 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package launcher
+package types
 
 import (
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"encoding/json"
+	"errors"
 )
 
-var userLog = zapbox.NewCLILogger(zap.NewNop())
+type JSON []byte
 
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/launcher", userLog.LoggerReference())
+func (t JSON) ImplementsGraphQLType(name string) bool {
+	return name == "JSON"
 }
 
-func UserLog() *zapbox.CLILogger {
-	return userLog
+func (t *JSON) UnmarshalGraphQL(input interface{}) error {
+	var err error
+	switch input := input.(type) {
+	case []byte:
+		*t = input
+	case json.RawMessage:
+		*t = []byte(input)
+	case string:
+		*t = []byte(input)
+	default:
+		err = errors.New("wrong type")
+	}
+	return err
+}
+
+func (t JSON) MarshalJSON() ([]byte, error) {
+	return []byte(t), nil
 }
