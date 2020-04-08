@@ -21,8 +21,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	_ "github.com/dfuse-io/dfuse-eosio/kvdb-loader/eos"
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
 	"github.com/dfuse-io/logging"
 	"github.com/spf13/viper"

@@ -52,7 +52,7 @@ func dfusePurgeE(cmd *cobra.Command, args []string) error {
 }
 
 func confirmPurgeAll(dataDir string) (bool, error) {
-	if viper.GetBool("purge-cmd-force") {
+	if viper.GetBool("force") {
 		return true, nil
 	}
 

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	_ "github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
@@ -30,6 +29,7 @@ import (
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
