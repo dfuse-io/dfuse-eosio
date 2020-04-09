@@ -19,10 +19,9 @@ import (
 	"encoding/hex"
 	"strings"
 
-	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
-	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
+	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
@@ -35,7 +34,7 @@ import (
 )
 
 type QueryBlockRequest struct {
-	Num *types.Uint32
+	Num *commonTypes.Uint32
 	Id  *string
 }
 
@@ -142,12 +141,12 @@ func (b *Block) ID() string {
 	return b.blkWithRefs.Block.Id
 }
 
-func (b *Block) Num() types.Uint32 {
-	return types.Uint32(b.blkWithRefs.Block.Number)
+func (b *Block) Num() commonTypes.Uint32 {
+	return commonTypes.Uint32(b.blkWithRefs.Block.Number)
 }
 
-func (b *Block) DposLIBNum() types.Uint32 {
-	return types.Uint32(b.blkWithRefs.Block.DposIrreversibleBlocknum)
+func (b *Block) DposLIBNum() commonTypes.Uint32 {
+	return commonTypes.Uint32(b.blkWithRefs.Block.DposIrreversibleBlocknum)
 }
 
 func (b *Block) Irreversible() bool {
@@ -155,16 +154,16 @@ func (b *Block) Irreversible() bool {
 }
 
 func (b *Block) Header() *BlockHeader {
-	return newBlockHeader(b.blkWithRefs.Block.Id, types.Uint32(b.blkWithRefs.Block.Number), b.blkWithRefs.Block.Header)
+	return newBlockHeader(b.blkWithRefs.Block.Id, commonTypes.Uint32(b.blkWithRefs.Block.Number), b.blkWithRefs.Block.Header)
 }
 
-func (b *Block) ExecutedTransactionCount() types.Uint32 {
-	return types.Uint32(b.blkWithRefs.Block.TransactionCount)
+func (b *Block) ExecutedTransactionCount() commonTypes.Uint32 {
+	return commonTypes.Uint32(b.blkWithRefs.Block.TransactionCount)
 }
 
 type TransactionTracesReq struct {
-	First  *types.Uint32
-	Last   *types.Uint32
+	First  *commonTypes.Uint32
+	Last   *commonTypes.Uint32
 	Before *string
 	After  *string
 }
@@ -178,7 +177,7 @@ func (b *Block) TransactionTraces(ctx context.Context, req *TransactionTracesReq
 		return newEmptyTransactionTraceConnection(), nil
 	}
 
-	paginator, err := dgraphqlEosio.NewPaginator(req.First, req.Last, req.Before, req.After, 100, func() proto.Message {
+	paginator, err := dgraphql.NewPaginator(req.First, req.Last, req.Before, req.After, 100, func() proto.Message {
 		return &pbgraphql.TransactionCursor{}
 	})
 	if err != nil {
@@ -287,10 +286,10 @@ func (p PagineableTransactionTraceRefs) trxTraceIds() (out []string) {
 	return out
 }
 
-func (p PagineableTransactionTraceRefs) Append(slice dgraphqlEosio.Pagineable, index int) dgraphqlEosio.Pagineable {
+func (p PagineableTransactionTraceRefs) Append(slice dgraphql.Pagineable, index int) dgraphql.Pagineable {
 	if slice == nil {
-		return dgraphqlEosio.Pagineable(PagineableTransactionTraceRefs([][]byte{p[index]}))
+		return dgraphql.Pagineable(PagineableTransactionTraceRefs([][]byte{p[index]}))
 	} else {
-		return dgraphqlEosio.Pagineable(append(slice.(PagineableTransactionTraceRefs), p[index]))
+		return dgraphql.Pagineable(append(slice.(PagineableTransactionTraceRefs), p[index]))
 	}
 }

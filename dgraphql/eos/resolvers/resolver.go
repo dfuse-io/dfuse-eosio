@@ -25,10 +25,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/dfuse-io/bstream/codecs/deos"
-	gtype "github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
 	"github.com/dfuse-io/dgraphql/metrics"
+	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/kvdb/eosdb"
@@ -72,9 +73,9 @@ func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockM
 type SearchArgs struct {
 	Query            string
 	SortDesc         bool
-	LowBlockNum      *gtype.Int64
-	HighBlockNum     *gtype.Int64
-	Limit            gtype.Int64
+	LowBlockNum      *types.Int64
+	HighBlockNum     *types.Int64
+	Limit            types.Int64
 	Cursor           *string
 	IrreversibleOnly bool
 }
@@ -294,12 +295,12 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 // CAREFUL - this mirrored in the BigQuery schema - if you change this, make sure to be backwards compatible
 type StreamSearchArgs struct {
 	Query              string
-	LowBlockNum        *gtype.Int64
-	HighBlockNum       *gtype.Int64
+	LowBlockNum        *types.Int64
+	HighBlockNum       *types.Int64
 	Cursor             *string
-	Limit              gtype.Int64
+	Limit              types.Int64
 	IrreversibleOnly   bool
-	LiveMarkerInterval gtype.Uint32
+	LiveMarkerInterval commonTypes.Uint32
 }
 
 func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
@@ -647,8 +648,8 @@ func (t *SearchTransactionBackwardResponse) Cursor() string {
 	return c
 }
 
-func (t *SearchTransactionBackwardResponse) IrreversibleBlockNum() gtype.Uint32 {
-	return gtype.Uint32(t.irreversibleBlockNum)
+func (t *SearchTransactionBackwardResponse) IrreversibleBlockNum() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.irreversibleBlockNum)
 }
 func (t *SearchTransactionBackwardResponse) IsIrreversible() bool {
 	return t.irreversibleBlockNum == eos.BlockNum(t.blockID)
@@ -661,7 +662,7 @@ func (t *SearchTransactionBackwardResponse) Block() *BlockHeader {
 	// attached already, because it was included in live search results.
 	return &BlockHeader{
 		blockID:  t.blockID,
-		blockNum: gtype.Uint32(eos.BlockNum(t.blockID)),
+		blockNum: commonTypes.Uint32(eos.BlockNum(t.blockID)),
 		h:        t.blockHeader,
 	}
 }
@@ -700,9 +701,9 @@ func newTransactionTrace(trace *pbdeos.TransactionTrace, blockHeader *pbdeos.Blo
 	return tr
 }
 
-func (t *TransactionTrace) ID() string              { return t.t.Id }
-func (t *TransactionTrace) blockNum() gtype.Uint32  { return gtype.Uint32(t.t.BlockNum) }
-func (t *TransactionTrace) producerBlockID() string { return t.t.ProducerBlockId }
+func (t *TransactionTrace) ID() string                   { return t.t.Id }
+func (t *TransactionTrace) blockNum() commonTypes.Uint32 { return commonTypes.Uint32(t.t.BlockNum) }
+func (t *TransactionTrace) producerBlockID() string      { return t.t.ProducerBlockId }
 func (t *TransactionTrace) Block() *BlockHeader {
 	return &BlockHeader{
 		blockID:  t.producerBlockID(),
@@ -718,8 +719,8 @@ func (t *TransactionTrace) Status() string {
 func (t *TransactionTrace) Receipt() *TransactionReceiptHeader {
 	return &TransactionReceiptHeader{h: t.t.Receipt}
 }
-func (t *TransactionTrace) Elapsed() gtype.Int64   { return gtype.Int64(t.t.Elapsed) }
-func (t *TransactionTrace) NetUsage() gtype.Uint64 { return gtype.Uint64(t.t.NetUsage) }
+func (t *TransactionTrace) Elapsed() types.Int64   { return types.Int64(t.t.Elapsed) }
+func (t *TransactionTrace) NetUsage() types.Uint64 { return types.Uint64(t.t.NetUsage) }
 func (t *TransactionTrace) Scheduled() bool        { return t.t.Scheduled }
 
 func (t *TransactionTrace) flattenActions() (out []*ActionTrace) {
@@ -761,13 +762,13 @@ func (t *TransactionTrace) MatchingActions() (out []*ActionTrace) {
 	return
 }
 
-func (t *TransactionTrace) ExceptJSON() (*gtype.JSON, error) {
+func (t *TransactionTrace) ExceptJSON() (*commonTypes.JSON, error) {
 	if t.t.Exception != nil {
 		data, err := json.Marshal(t.t.Exception)
 		if err != nil {
 			return nil, err
 		}
-		j := gtype.JSON(data)
+		j := commonTypes.JSON(data)
 		return &j, nil
 	}
 	return nil, nil
@@ -775,11 +776,11 @@ func (t *TransactionTrace) ExceptJSON() (*gtype.JSON, error) {
 
 type BlockHeader struct {
 	blockID  string
-	blockNum gtype.Uint32
+	blockNum commonTypes.Uint32
 	h        *pbdeos.BlockHeader
 }
 
-func newBlockHeader(blockID string, blockNum gtype.Uint32, blockHeader *pbdeos.BlockHeader) *BlockHeader {
+func newBlockHeader(blockID string, blockNum commonTypes.Uint32, blockHeader *pbdeos.BlockHeader) *BlockHeader {
 	return &BlockHeader{
 		blockID:  blockID,
 		blockNum: blockNum,
@@ -788,14 +789,16 @@ func newBlockHeader(blockID string, blockNum gtype.Uint32, blockHeader *pbdeos.B
 }
 
 func (t BlockHeader) ID() string                    { return t.blockID }
-func (t BlockHeader) Num() gtype.Uint32             { return t.blockNum }
+func (t BlockHeader) Num() commonTypes.Uint32       { return t.blockNum }
 func (t BlockHeader) Timestamp() graphql.Time       { return toTime(t.h.Timestamp) }
 func (t BlockHeader) Producer() string              { return t.h.Producer }
 func (t BlockHeader) Previous() string              { return t.h.Previous }
 func (t BlockHeader) TransactionMRoot() string      { return hex.EncodeToString(t.h.TransactionMroot) }
 func (t BlockHeader) ActionMRoot() string           { return hex.EncodeToString(t.h.ActionMroot) }
-func (t BlockHeader) Confirmed() gtype.Uint32       { return gtype.Uint32(t.h.Confirmed) }
-func (t BlockHeader) ScheduleVersion() gtype.Uint32 { return gtype.Uint32(t.h.ScheduleVersion) }
+func (t BlockHeader) Confirmed() commonTypes.Uint32 { return commonTypes.Uint32(t.h.Confirmed) }
+func (t BlockHeader) ScheduleVersion() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.h.ScheduleVersion)
+}
 func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 	// On EOSIO 2.x, when this field is `nil`, it means the actual producer schedule change is in the block header extensions
 	if t.h.NewProducersV1 == nil {
@@ -859,7 +862,7 @@ type ProducerSchedule struct {
 	s *pbdeos.ProducerAuthoritySchedule
 }
 
-func (s *ProducerSchedule) Version() gtype.Uint32 { return gtype.Uint32(s.s.Version) }
+func (s *ProducerSchedule) Version() commonTypes.Uint32 { return commonTypes.Uint32(s.s.Version) }
 func (s *ProducerSchedule) Producers() (out []*ProducerKey) {
 	for _, k := range s.s.Producers {
 		out = append(out, &ProducerKey{k: k})
@@ -896,11 +899,11 @@ type TransactionReceiptHeader struct {
 func (h *TransactionReceiptHeader) Status() string {
 	return strings.ToUpper(deos.TransactionStatusToEOS(h.h.Status).String())
 }
-func (h *TransactionReceiptHeader) CPUUsageMicroSeconds() gtype.Uint32 {
-	return gtype.Uint32(h.h.CpuUsageMicroSeconds)
+func (h *TransactionReceiptHeader) CPUUsageMicroSeconds() commonTypes.Uint32 {
+	return commonTypes.Uint32(h.h.CpuUsageMicroSeconds)
 }
-func (h *TransactionReceiptHeader) NetUsageWords() gtype.Uint32 {
-	return gtype.Uint32(h.h.NetUsageWords)
+func (h *TransactionReceiptHeader) NetUsageWords() commonTypes.Uint32 {
+	return commonTypes.Uint32(h.h.NetUsageWords)
 }
 
 type ActionTrace struct {
@@ -921,16 +924,16 @@ func newActionTrace(blockNum uint64, actionTrace *pbdeos.ActionTrace, trxTrace *
 	}
 }
 
-func (t *ActionTrace) Seq() gtype.Uint64 {
+func (t *ActionTrace) Seq() types.Uint64 {
 	if t.actionTrace.Receipt == nil {
-		return gtype.Uint64(0)
+		return types.Uint64(0)
 	}
 
-	return gtype.Uint64(t.actionTrace.Receipt.GlobalSequence)
+	return types.Uint64(t.actionTrace.Receipt.GlobalSequence)
 }
 
-func (t *ActionTrace) ExecutionIndex() gtype.Uint32 {
-	return gtype.Uint32(t.actionTrace.ExecutionIndex)
+func (t *ActionTrace) ExecutionIndex() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.actionTrace.ExecutionIndex)
 }
 func (t *ActionTrace) Receipt() *ActionReceipt {
 	if t.actionTrace.Receipt == nil {
@@ -944,21 +947,21 @@ func (t *ActionTrace) Action() *Action                         { return &Action{
 func (t *ActionTrace) Account() string                         { return t.actionTrace.Account() }
 func (t *ActionTrace) Name() string                            { return t.actionTrace.Name() }
 func (t *ActionTrace) Authorization() (out []*PermissionLevel) { return t.Action().Authorization() }
-func (t *ActionTrace) Data() *gtype.JSON                       { return t.Action().Data() }
-func (t *ActionTrace) JSON() *gtype.JSON                       { return t.Action().JSON() }
+func (t *ActionTrace) Data() *commonTypes.JSON                 { return t.Action().Data() }
+func (t *ActionTrace) JSON() *commonTypes.JSON                 { return t.Action().JSON() }
 func (t *ActionTrace) HexData() string                         { return t.Action().HexData() }
 
 func (t *ActionTrace) Console() string       { return t.actionTrace.Console }
 func (t *ActionTrace) ContextFree() bool     { return t.actionTrace.ContextFree }
 func (t *ActionTrace) IsMatchingQuery() bool { return t.matched }
-func (t *ActionTrace) Elapsed() gtype.Int64  { return gtype.Int64(t.actionTrace.Elapsed) }
-func (t *ActionTrace) ExceptJSON() (*gtype.JSON, error) {
+func (t *ActionTrace) Elapsed() types.Int64  { return types.Int64(t.actionTrace.Elapsed) }
+func (t *ActionTrace) ExceptJSON() (*commonTypes.JSON, error) {
 	if t.actionTrace.Exception != nil {
 		data, err := json.Marshal(t.actionTrace.Exception)
 		if err != nil {
 			return nil, err
 		}
-		j := gtype.JSON(data)
+		j := commonTypes.JSON(data)
 		return &j, nil
 	}
 
@@ -1075,34 +1078,34 @@ type ActionReceipt struct {
 
 func (r *ActionReceipt) Receiver() string             { return r.r.Receiver }
 func (r *ActionReceipt) Digest() string               { return r.r.Digest }
-func (r *ActionReceipt) GlobalSequence() gtype.Uint64 { return gtype.Uint64(r.r.GlobalSequence) }
-func (r *ActionReceipt) RecvSequence() gtype.Uint64   { return gtype.Uint64(r.r.RecvSequence) }
-func (r *ActionReceipt) CodeSequence() gtype.Uint64   { return gtype.Uint64(r.r.CodeSequence) }
-func (r *ActionReceipt) ABISequence() gtype.Uint64    { return gtype.Uint64(r.r.AbiSequence) }
+func (r *ActionReceipt) GlobalSequence() types.Uint64 { return types.Uint64(r.r.GlobalSequence) }
+func (r *ActionReceipt) RecvSequence() types.Uint64   { return types.Uint64(r.r.RecvSequence) }
+func (r *ActionReceipt) CodeSequence() types.Uint64   { return types.Uint64(r.r.CodeSequence) }
+func (r *ActionReceipt) ABISequence() types.Uint64    { return types.Uint64(r.r.AbiSequence) }
 
 // Not exported until asked for.. we can do the full unpacking
 // then.. and not ship a half-baked struct.
-func (r *ActionReceipt) authSequence() gtype.JSON { return nil }
+func (r *ActionReceipt) authSequence() commonTypes.JSON { return nil }
 
 type Transaction struct {
 	t *pbdeos.SignedTransaction
 }
 
 func (t *Transaction) Expiration() graphql.Time { return toTime(t.t.Transaction.Header.Expiration) }
-func (t *Transaction) RefBlockNum() gtype.Uint32 {
-	return gtype.Uint32(t.t.Transaction.Header.RefBlockNum)
+func (t *Transaction) RefBlockNum() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.t.Transaction.Header.RefBlockNum)
 }
-func (t *Transaction) RefBlockPrefix() gtype.Uint32 {
-	return gtype.Uint32(t.t.Transaction.Header.RefBlockPrefix)
+func (t *Transaction) RefBlockPrefix() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.t.Transaction.Header.RefBlockPrefix)
 }
-func (t *Transaction) MaxNetUsageWords() gtype.Uint32 {
-	return gtype.Uint32(t.t.Transaction.Header.MaxNetUsageWords)
+func (t *Transaction) MaxNetUsageWords() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.t.Transaction.Header.MaxNetUsageWords)
 }
-func (t *Transaction) MaxCPUUsageMS() gtype.Uint32 {
-	return gtype.Uint32(t.t.Transaction.Header.MaxCpuUsageMs)
+func (t *Transaction) MaxCPUUsageMS() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.t.Transaction.Header.MaxCpuUsageMs)
 }
-func (t *Transaction) DelaySec() gtype.Uint32 {
-	return gtype.Uint32(t.t.Transaction.Header.DelaySec)
+func (t *Transaction) DelaySec() commonTypes.Uint32 {
+	return commonTypes.Uint32(t.t.Transaction.Header.DelaySec)
 }
 func (t *Transaction) ContextFreeActions() (out []*Action) {
 	for _, cfa := range t.t.Transaction.ContextFreeActions {
@@ -1138,16 +1141,16 @@ func fixUtf(r rune) rune {
 	return r
 }
 
-func (a *Action) Data() *gtype.JSON {
+func (a *Action) Data() *commonTypes.JSON {
 	return a.JSON()
 }
 
-func (a *Action) JSON() *gtype.JSON {
+func (a *Action) JSON() *commonTypes.JSON {
 	if a.a.JsonData == "" {
 		return nil
 	}
 
-	json := gtype.JSON(strings.Map(fixUtf, a.a.JsonData))
+	json := commonTypes.JSON(strings.Map(fixUtf, a.a.JsonData))
 	return &json
 }
 func (a *Action) HexData() string { return hex.EncodeToString(a.a.RawData) }

@@ -22,7 +22,8 @@ import (
 	"time"
 
 	"github.com/dfuse-io/derr"
-	gtype "github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/logging"
 	abicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
@@ -41,8 +42,8 @@ func (o *RAMOp) Operation() string {
 }
 
 func (o *RAMOp) Payer() string       { return o.op.Payer }
-func (o *RAMOp) Delta() gtype.Int64  { return gtype.Int64(o.op.Delta) }
-func (o *RAMOp) Usage() gtype.Uint64 { return gtype.Uint64(o.op.Usage) }
+func (o *RAMOp) Delta() types.Int64  { return types.Int64(o.op.Delta) }
+func (o *RAMOp) Usage() types.Uint64 { return types.Uint64(o.op.Usage) }
 
 type DTrxOp struct {
 	op *pbdeos.DTrxOp
@@ -92,11 +93,11 @@ func (t *TableOpKey) Scope(args struct{ Encoding string }) string {
 }
 
 type DecodedObject struct {
-	object *gtype.JSON
+	object *commonTypes.JSON
 	err    string
 }
 
-func (t *DecodedObject) Object() *gtype.JSON { return t.object }
+func (t *DecodedObject) Object() *commonTypes.JSON { return t.object }
 func (t *DecodedObject) Error() *string {
 	if t.err == "" {
 		return nil
@@ -158,7 +159,7 @@ func (o *DBOp) NewJSON(ctx context.Context) *DecodedObject {
 
 func (o *DBOp) Key() *DBOpKey { return o.key }
 
-func (o *DBOp) decode(ctx context.Context, data string) (*gtype.JSON, error) {
+func (o *DBOp) decode(ctx context.Context, data string) (*commonTypes.JSON, error) {
 	if data == "" {
 		return nil, nil
 	}
@@ -187,7 +188,7 @@ func (o *DBOp) decode(ctx context.Context, data string) (*gtype.JSON, error) {
 		return nil, fmt.Errorf(`failed to decode code '%s' table '%s' data '%s' at block '%d': %s`, o.key.scope, o.key.table, data, o.blockNum, err.Error())
 	}
 
-	j := gtype.JSON([]byte(resp.JsonPayload))
+	j := commonTypes.JSON([]byte(resp.JsonPayload))
 
 	zlogger.Debug("dbops decoded", zap.Duration("in", time.Since(start)))
 	return &j, nil
