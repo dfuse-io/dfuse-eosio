@@ -73,7 +73,10 @@ func (l *Launcher) Launch(appNames []string) error {
 
 		l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_CREATED)
 		userLog.Debug("creating application", zap.String("app", appID))
-		app := appDef.FactoryFunc(l.config, l.modules)
+		app, err := appDef.FactoryFunc(l.config, l.modules)
+		if err != nil {
+			return fmt.Errorf("unable to create app %q: %w", appID, err)
+		}
 		l.OnTerminating(func(err error) {
 			go app.Shutdown(err)
 		})

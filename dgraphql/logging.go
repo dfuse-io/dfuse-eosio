@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package dgraphql
 
 import (
 	"github.com/dfuse-io/logging"
@@ -21,7 +21,6 @@ import (
 
 var zlog *zap.Logger
 
-func setupLogger() {
-	logging.Register("main", &zlog)
-	logging.Set(logging.MustCreateLoggerWithServiceName("dgraphql"))
+func init() {
+	logging.Register("github.com/dfuse-io/dfuse-eosio/dgraphql/app/dgraphql", &zlog)
 }

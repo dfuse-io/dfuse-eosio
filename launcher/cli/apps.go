@@ -27,12 +27,13 @@ import (
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
-	dgraphqlApp "github.com/dfuse-io/dfuse-eosio/dgraphql/app/dgraphql"
+	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
@@ -81,7 +82,7 @@ func init() {
 			}
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			if config.BoxConfig.RunProducer {
 				return nodeosManagerApp.New(&nodeosManagerApp.Config{
 					ManagerAPIAddress:   config.EosManagerHTTPAddr,
@@ -109,10 +110,10 @@ func init() {
 					NodeosExtraArgs:     config.NodeosExtraArgs,
 					LogToZap:            true,
 					ForceProduction:     true,
-				})
+				}), nil
 			}
 			// Can we detect a nil interface
-			return nil
+			return nil, nil
 		},
 	})
 
@@ -146,7 +147,7 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
 				ManagerAPIAddress:          config.EosMindreaderHTTPAddr,
 				NodeosAPIAddress:           config.NodeosAPIAddr,
@@ -178,7 +179,7 @@ at https://github.com/dfuse-io/dfuse-eosio#dfuse-Instrumented-EOSIO-Prebuilt-Bin
 to find how to install it.`)
 					os.Exit(1)
 				},
-			})
+			}), nil
 		},
 	})
 
@@ -202,7 +203,7 @@ to find how to install it.`)
 			cmd.Flags().Bool("relayer-enable-readiness-probe", true, "Enable relayer's app readiness probe")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:          viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
@@ -215,7 +216,7 @@ to find how to install it.`)
 				Protocol:             Protocol,
 				EnableReadinessProbe: viper.GetBool("relayer-enable-readiness-probe"),
 				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
-			})
+			}), nil
 		},
 	})
 
@@ -244,7 +245,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return mergerApp.New(&mergerApp.Config{
 				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")),
 				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")),
@@ -262,7 +263,7 @@ to find how to install it.`)
 				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
 				Protocol:                     Protocol,
 				EnableReadinessProbe:         true,
-			})
+			}), nil
 		},
 	})
 
@@ -289,7 +290,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
@@ -301,7 +302,7 @@ to find how to install it.`)
 				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
 				ThreadsNum:         2,
 				NetworkID:          NetworkID,
-			})
+			}), nil
 		},
 	})
 
@@ -326,7 +327,7 @@ to find how to install it.`)
 			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
@@ -341,7 +342,7 @@ to find how to install it.`)
 				HTTPListenAddr:            viper.GetString("kvdb-loader-http-listen-addr"),
 				Protocol:                  Protocol.String(),
 				ParallelFileDownloadCount: 2,
-			})
+			}), nil
 		},
 	})
 
@@ -363,7 +364,7 @@ to find how to install it.`)
 			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdb database connection information")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return blockmetaApp.New(&blockmetaApp.Config{
 				Protocol:                Protocol,
 				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
@@ -374,7 +375,7 @@ to find how to install it.`)
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
 				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), viper.GetString("global-data-dir")),
-			})
+			}), nil
 		},
 	})
 
@@ -395,7 +396,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
@@ -404,7 +405,7 @@ to find how to install it.`)
 				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
 				EnableReadinessProbe: true,
-			})
+			}), nil
 		},
 	})
 
@@ -437,7 +438,7 @@ to find how to install it.`)
 			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return indexerApp.New(&indexerApp.Config{
 				Protocol:                            Protocol,
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
@@ -459,7 +460,7 @@ to find how to install it.`)
 				EnableReadinessProbe:                viper.GetBool("search-indexer-enable-readiness-probe"),
 				IndicesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
 				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
-			})
+			}), nil
 		},
 	})
 
@@ -479,7 +480,7 @@ to find how to install it.`)
 			cmd.Flags().Bool("search-router-enable-readiness-probe", true, "Enable search router's app readiness probe")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
 				Protocol:             Protocol,
@@ -489,7 +490,7 @@ to find how to install it.`)
 				LibDelayTolerance:    viper.GetUint64("search-router-lib-delay-tolerance"),
 				EnableReadinessProbe: viper.GetBool("search-router-enable-readiness-probe"),
 				EnableRetry:          viper.GetBool("search-router-enable-retry"),
-			})
+			}), nil
 		},
 	})
 
@@ -534,7 +535,7 @@ to find how to install it.`)
 			cmd.Flags().String(p+"writable-path", "search/archiver", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return archiveApp.New(&archiveApp.Config{
 				Dmesh:                   modules.SearchDmeshClient,
 				Protocol:                Protocol,
@@ -559,7 +560,7 @@ to find how to install it.`)
 				EnableReadinessProbe:    viper.GetBool("search-archive-enable-readiness-probe"),
 				IndexesStoreURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-indices-store")),
 				IndexesPath:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-writable-path")),
-			})
+			}), nil
 		},
 	})
 	// Search Live
@@ -596,7 +597,7 @@ to find how to install it.`)
 			cmd.Flags().String("search-live-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
 				Protocol:                 Protocol,
@@ -616,7 +617,7 @@ to find how to install it.`)
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 				IndexingRestrictionsJSON: viper.GetString("search-live-indexing-restrictions-json"),
 				DfuseHooksActionName:     viper.GetString("search-live-dfuse-hooks-action-name"),
-			})
+			}), nil
 		},
 	})
 
@@ -649,7 +650,7 @@ to find how to install it.`)
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return forkresolverApp.New(&forkresolverApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
 				Protocol:                 Protocol,
@@ -662,7 +663,7 @@ to find how to install it.`)
 				DfuseHooksActionName:     viper.GetString("search-forkresolver-dfuse-hooks-action-name"),
 				IndexingRestrictionsJSON: viper.GetString("search-forkresolver-indexing-restrictions-json"),
 				EnableReadinessProbe:     viper.GetBool("search-forkresolver-enable-readiness-probe"),
-			})
+			}), nil
 		},
 	})
 
@@ -694,7 +695,7 @@ to find how to install it.`)
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
@@ -713,7 +714,7 @@ to find how to install it.`)
 				BlocksBufferSize:            viper.GetInt("eosws-blocks-buffer-size"),
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
 				DataIntegrityProofSecret:    "boo",
-			})
+			}), nil
 		},
 	})
 
@@ -739,22 +740,30 @@ to find how to install it.`)
 			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0*time.Millisecond, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
+			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
-			return dgraphqlApp.New(&dgraphqlApp.Config{
-				HTTPListenAddr:  viper.GetString("dgraphql-http-addr"),
-				GRPCListenAddr:  viper.GetString("dgraphql-grpc-addr"),
-				SearchAddr:      viper.GetString("dgraphql-search-addr"),
-				SearchAddrV2:    viper.GetString("dgraphql-search-addr-v2"),
-				KVDBDSN:         viper.GetString("dgraphql-kvdb-dsn"),
-				NetworkID:       viper.GetString("dgraphql-network-id"),
-				AuthPlugin:      viper.GetString("dgraphql-auth-plugin"),
-				MeteringPlugin:  viper.GetString("dgraphql-metering-plugin"),
-				ABICodecAddr:    viper.GetString("dgraphql-abi-addr"),
-				BlockMetaAddr:   viper.GetString("dgraphql-block-meta-addr"),
-				TokenmetaAddr:   viper.GetString("dgraphql-tokenmeta-addr"),
-				OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
+		InitFunc: nil,
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
+				// eos specifc configs
+				SearchAddr:    viper.GetString("dgraphql-search-addr"),
+				SearchAddrV2:  viper.GetString("dgraphql-search-addr-v2"),
+				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
+				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
+				TokenmetaAddr: viper.GetString("dgraphql-tokenmeta-addr"),
+				KVDBDSN:       viper.GetString("dgraphql-kvdb-dsn"),
+				Config: dgraphqlApp.Config{
+					// base dgraphql configs
+					// need to be passed this way because promoted fields
+					HTTPListenAddr:  viper.GetString("dgraphql-http-addr"),
+					GRPCListenAddr:  viper.GetString("dgraphql-grpc-addr"),
+					NetworkID:       viper.GetString("dgraphql-network-id"),
+					AuthPlugin:      viper.GetString("dgraphql-auth-plugin"),
+					MeteringPlugin:  viper.GetString("dgraphql-metering-plugin"),
+					OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
+					Protocol:        viper.GetString("dgraphql-protocol"),
+				},
 			})
 		},
 	})
@@ -767,11 +776,11 @@ to find how to install it.`)
 		MetricsID:   "eosq",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: config.DashboardHTTPListenAddr,
 				HttpListenAddr:          config.EosqHTTPServingAddr,
-			})
+			}), nil
 		},
 	})
 
@@ -783,7 +792,7 @@ to find how to install it.`)
 		MetricsID:   "dashboard",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
+		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
 				DmeshClient:              modules.SearchDmeshClient,
 				ManagerCommandURL:        config.EosManagerHTTPAddr,
@@ -794,7 +803,7 @@ to find how to install it.`)
 				NodeosAPIHTTPServingAddr: config.MindreaderNodeosAPIAddr,
 				Launcher:                 modules.Launcher,
 				MetricManager:            modules.MetricManager,
-			})
+			}), nil
 		},
 	})
 

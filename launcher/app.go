@@ -13,7 +13,7 @@ type AppDef struct {
 	Logger        *LoggingDef
 	RegisterFlags func(cmd *cobra.Command) error
 	InitFunc      func(config *RuntimeConfig, modules *RuntimeModules) error
-	FactoryFunc   func(config *RuntimeConfig, modules *RuntimeModules) App
+	FactoryFunc   func(config *RuntimeConfig, modules *RuntimeModules) (App, error)
 }
 
 type LoggingDef struct {
