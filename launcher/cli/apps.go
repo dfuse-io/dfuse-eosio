@@ -355,7 +355,7 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "GRPC listen on this port")
 			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
-			cmd.Flags().String("blockmeta-blocks-store", "storage/merged-blocks", "URL to source store")
+			cmd.Flags().String("blockmeta-blocks-store", MergedBlocksFilesPath, "URL to source store")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not, defaults to true")
 			cmd.Flags().Bool("blockmeta-enable-readiness-probe", true, "Enable blockmeta's app readiness probe")
 			cmd.Flags().StringSlice("blockmeta-eos-api-upstream-addr", []string{NodeosAPIAddr}, "EOS API address to fetch info from running chain, must be in-sync")
@@ -433,8 +433,8 @@ to find how to install it.`)
 			cmd.Flags().String("search-indexer-indexing-restrictions-json", "", "json-formatted array of items to skip from indexing")
 			cmd.Flags().String("search-indexer-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			cmd.Flags().String("search-indexer-writable-path", "search/indexer", "Writable base path for storing index files")
-			cmd.Flags().String("search-indexer-indices-store", "storage/indexes", "Indices path to read or write index shards")
-			cmd.Flags().String("search-indexer-blocks-store", "storage/merged-blocks", "Path to read blocks files")
+			cmd.Flags().String("search-indexer-indices-store", IndicesFilePath, "Indices path to read or write index shards")
+			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
@@ -457,7 +457,7 @@ to find how to install it.`)
 				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
 				EnableReadinessProbe:                viper.GetBool("search-indexer-enable-readiness-probe"),
-				IndexesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
+				IndicesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
 				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
 			})
 		},
@@ -530,7 +530,7 @@ to find how to install it.`)
 			cmd.Flags().Duration(p+"shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().String(p+"warmup-filepath", "", "Optional filename containing queries to warm-up the search")
 			cmd.Flags().Bool(p+"enable-readiness-probe", true, "Enable search archive's app readiness probe")
-			cmd.Flags().String(p+"indices-store", "storage/indexes", "GS path to read or write index shards")
+			cmd.Flags().String(p+"indices-store", IndicesFilePath, "GS path to read or write index shards")
 			cmd.Flags().String(p+"writable-path", "search/archiver", "Writable base path for storing index files")
 			return nil
 		},

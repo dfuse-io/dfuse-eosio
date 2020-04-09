@@ -9,6 +9,7 @@ const (
 	BlockmetaDSN                string             = "badger://%s/kvdb_badger.db?compression=zstd"
 	KVBDDSN                     string             = "badger://%s/kvdb_badger.db?compression=zstd" //%s will be replace by data-dir
 	MergedBlocksFilesPath       string             = "storage/merged-blocks"
+	IndicesFilePath             string             = "storage/indexes"
 	OneBlockFilesPath           string             = "storage/one-blocks"
 	DmeshServiceVersion         string             = "v1"
 	DmeshNamespace              string             = "local"
