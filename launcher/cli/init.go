@@ -60,7 +60,6 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		newConfig.ProducerConfigIni = managerLocalConfigIni
 		newConfig.ProducerNodeVersion = "v2.0.3-dm"
 		newConfig.GenesisJSON = localGenesisJSON
-		newConfig.NodeosAPIAddr = "http://localhost:8888"
 	} else {
 		err := initRemoteBox(newConfig)
 		if err != nil {
@@ -110,13 +109,6 @@ func initRemoteBox(conf *launcher.BoxConfig) (err error) {
 	}
 
 	conf.ReaderConfigIni = fmt.Sprintf(mindreaderRemoteConfigIniFormat, peersListConfigEntry(peers))
-
-	api, err := askAPI()
-	if err != nil {
-		return err
-	}
-
-	conf.NodeosAPIAddr = api
 
 	return nil
 }
@@ -195,32 +187,6 @@ func askGenesisPath() (string, error) {
 		Label:    "Path to genesis file",
 		Validate: validate,
 		Default:  defaultPath,
-	}
-
-	result, err := prompt.Run()
-
-	if err != nil {
-		return "", err
-	}
-
-	return result, nil
-}
-
-func askAPI() (string, error) {
-	validate := func(input string) error {
-		if len(input) < 8 {
-			return errors.New("Invalid peer api, should start with http:// and be a bit longer...")
-		}
-		return nil
-	}
-
-	defaultAPI := "http://127.0.0.1:8888"
-	label := "API address to connect to (useful to get your chain head info)"
-
-	prompt := promptui.Prompt{
-		Label:    label,
-		Validate: validate,
-		Default:  defaultAPI,
 	}
 
 	result, err := prompt.Run()

@@ -21,7 +21,6 @@ type BoxConfig struct {
 
 	ReaderConfigIni   string `yaml:"reader_config_ini"`
 	ReaderNodeVersion string `yaml:"reader_node_version"`
-	NodeosAPIAddr     string `yaml:"nodeos_api_addr,omitempty"`
 	Version           string `yaml:"version"` // to determine if you need to dfusebox init again
 }
 

@@ -64,7 +64,6 @@ func main() {
 	rootCmd.PersistentFlags().String("network-id", "dev", "Network ID (for tracing purposes)")
 	rootCmd.PersistentFlags().String("dipp-secret", "this is a long-assed string that will sign our proof requests, once set, do not change it", "Data Integrity Proof Protocol secret")
 	rootCmd.PersistentFlags().String("healthz-secret", "dfuse", "healthz endpoint secret")
-
 	rootCmd.PersistentFlags().Bool("authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
 
 	derr.Check("running merger", rootCmd.Execute())

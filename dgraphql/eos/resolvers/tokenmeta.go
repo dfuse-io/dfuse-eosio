@@ -20,9 +20,9 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
-	types "github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dgraphql"
+	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dmetering"
 	pbtokenmeta "github.com/dfuse-io/pbgo/dfuse/tokenmeta/v1"
 	eosgo "github.com/eoscanada/eos-go"
@@ -48,7 +48,7 @@ type TokensRequest struct {
 	TokenSymbols   *[]string
 	TokenContracts *[]string
 	Cursor         *string
-	Limit          *types.Uint32
+	Limit          *commonTypes.Uint32
 	SortField      TokensRequestSortField
 	SortOrder      SortOrder
 }
@@ -88,7 +88,7 @@ func (r *Root) QueryTokens(ctx context.Context, args *TokensRequest) (*TokenConn
 		return newEmptyTokenConnection(), nil
 	}
 
-	paginator, err := dgraphqlEosio.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
 		return &pbtokenmeta.TokenCursor{}
 	})
 	if err != nil {
@@ -170,7 +170,7 @@ type AccountBalancesRequest struct {
 	TokenSymbols   *[]string
 	TokenContracts *[]string
 	Cursor         *string
-	Limit          *types.Uint32
+	Limit          *commonTypes.Uint32
 	Options        *[]AccountBalanceOption
 	SortField      AccountBalancesRequestSortField
 	SortOrder      SortOrder
@@ -222,7 +222,7 @@ func (r *Root) QueryAccountBalances(ctx context.Context, args *AccountBalancesRe
 		return newEmptyAccountBalanceConnection(), nil
 	}
 
-	paginator, err := dgraphqlEosio.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
 		return &pbtokenmeta.AccountBalanceCursor{}
 	})
 	if err != nil {
@@ -299,7 +299,7 @@ type TokenBalancesRequest struct {
 	Symbol       string
 	TokenHolders *[]string
 	Cursor       *string
-	Limit        *types.Uint32
+	Limit        *commonTypes.Uint32
 	Options      *[]AccountBalanceOption
 	SortField    TokenBalancesRequestSortField
 	SortOrder    SortOrder
@@ -343,7 +343,7 @@ func (r *Root) QueryTokenBalances(ctx context.Context, args *TokenBalancesReques
 		return newEmptyAccountBalanceConnection(), nil
 	}
 
-	paginator, err := dgraphqlEosio.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
 		return &pbtokenmeta.AccountBalanceCursor{}
 	})
 	if err != nil {
@@ -488,11 +488,11 @@ func newToken(t *pbtokenmeta.EOSToken) *Token {
 	}
 }
 
-func (t *Token) Contract() string        { return t.t.Contract }
-func (t *Token) Symbol() string          { return t.t.Symbol }
-func (t *Token) Precision() types.Uint32 { return types.Uint32(t.t.Precision) }
-func (t *Token) Issuer() string          { return t.t.Issuer }
-func (t *Token) Holders() types.Uint64   { return types.Uint64(t.t.Holders) }
+func (t *Token) Contract() string              { return t.t.Contract }
+func (t *Token) Symbol() string                { return t.t.Symbol }
+func (t *Token) Precision() commonTypes.Uint32 { return commonTypes.Uint32(t.t.Precision) }
+func (t *Token) Issuer() string                { return t.t.Issuer }
+func (t *Token) Holders() types.Uint64         { return types.Uint64(t.t.Holders) }
 func (t *Token) MaximumSupply(args *AssetArgs) string {
 	return assetToString(t.t.MaximumSupply, t.t.Precision, t.t.Symbol, args)
 }
@@ -556,11 +556,11 @@ func newAccountBalance(a *pbtokenmeta.EOSAccountBalance) *AccountBalance {
 	}
 }
 
-func (a *AccountBalance) Contract() string        { return a.a.TokenContract }
-func (a *AccountBalance) Account() string         { return a.a.Account }
-func (a *AccountBalance) Amount() types.Uint64    { return types.Uint64(a.a.Amount) }
-func (a *AccountBalance) Symbol() string          { return a.a.Symbol }
-func (a *AccountBalance) Precision() types.Uint32 { return types.Uint32(a.a.Precision) }
+func (a *AccountBalance) Contract() string              { return a.a.TokenContract }
+func (a *AccountBalance) Account() string               { return a.a.Account }
+func (a *AccountBalance) Amount() types.Uint64          { return types.Uint64(a.a.Amount) }
+func (a *AccountBalance) Symbol() string                { return a.a.Symbol }
+func (a *AccountBalance) Precision() commonTypes.Uint32 { return commonTypes.Uint32(a.a.Precision) }
 func (a *AccountBalance) Balance(args *AssetArgs) string {
 	return assetToString(a.a.Amount, a.a.Precision, a.a.Symbol, args)
 }
@@ -574,12 +574,12 @@ func (e PagineableEOSTokens) IsEqual(index int, key string) bool {
 	return e[index].Key() == key
 }
 
-func (e PagineableEOSTokens) Append(slice dgraphqlEosio.Pagineable, index int) dgraphqlEosio.Pagineable {
+func (e PagineableEOSTokens) Append(slice dgraphql.Pagineable, index int) dgraphql.Pagineable {
 	if slice == nil {
 		var arr PagineableEOSTokens = []*pbtokenmeta.EOSToken{e[index]}
-		return dgraphqlEosio.Pagineable(arr)
+		return dgraphql.Pagineable(arr)
 	} else {
-		return dgraphqlEosio.Pagineable(append(slice.(PagineableEOSTokens), e[index]))
+		return dgraphql.Pagineable(append(slice.(PagineableEOSTokens), e[index]))
 	}
 }
 
@@ -593,12 +593,12 @@ func (p PagineableAcccountBalances) IsEqual(index int, key string) bool {
 	return p[index].Key() == key
 }
 
-func (p PagineableAcccountBalances) Append(slice dgraphqlEosio.Pagineable, index int) dgraphqlEosio.Pagineable {
+func (p PagineableAcccountBalances) Append(slice dgraphql.Pagineable, index int) dgraphql.Pagineable {
 	if slice == nil {
 		var arr PagineableAcccountBalances = []*pbtokenmeta.EOSAccountBalance{p[index]}
-		return dgraphqlEosio.Pagineable(arr)
+		return dgraphql.Pagineable(arr)
 	} else {
-		return dgraphqlEosio.Pagineable(append(slice.(PagineableAcccountBalances), p[index]))
+		return dgraphql.Pagineable(append(slice.(PagineableAcccountBalances), p[index]))
 	}
 }
 

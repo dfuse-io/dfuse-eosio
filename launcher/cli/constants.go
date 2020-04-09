@@ -7,6 +7,9 @@ import (
 const (
 	Protocol                    pbbstream.Protocol = pbbstream.Protocol_EOS
 	BlockmetaDSN                string             = "badger://%s/kvdb_badger.db?compression=zstd"
+	KVBDDSN                     string             = "badger://%s/kvdb_badger.db?compression=zstd" //%s will be replace by data-dir
+	MergedBlocksFilesPath       string             = "storage/merged-blocks"
+	OneBlockFilesPath           string             = "storage/one-blocks"
 	DmeshServiceVersion         string             = "v1"
 	DmeshNamespace              string             = "local"
 	NetworkID                   string             = "eos-local"

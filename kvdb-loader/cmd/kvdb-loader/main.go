@@ -24,8 +24,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{Use: "kvdb-loader", Short: "Operate the kvdb loader"}
-var initCmd = &cobra.Command{Use: "eosio", Short: "Init kvdb loader", RunE: runKvdbLoaderInitE}
-var runCmd = &cobra.Command{Use: "eth", Short: "Run kvdb loader", RunE: runKvdbLoaderRunE}
+var initCmd = &cobra.Command{Use: "init", Short: "Init kvdb loader", RunE: runKvdbLoaderInitE}
 
 func main() {
 	cobra.OnInitialize(func() {
@@ -37,7 +36,6 @@ func main() {
 	rootCmd.PersistentFlags().String("protocol", "", "Protocol to load, EOS or ETH")
 
 	rootCmd.AddCommand(initCmd)
-	rootCmd.AddCommand(runCmd)
 
 	derr.Check("running kvdb-loader", rootCmd.Execute())
 

@@ -20,9 +20,9 @@ import (
 	"time"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
+	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
@@ -182,8 +182,8 @@ func (r *BlockIDResponse) ID() string {
 	return r.blockID
 }
 
-func (r *BlockIDResponse) Num() types.Uint32 {
-	return types.Uint32(eos.BlockNum(r.blockID))
+func (r *BlockIDResponse) Num() commonTypes.Uint32 {
+	return commonTypes.Uint32(eos.BlockNum(r.blockID))
 }
 
 func (r *BlockIDResponse) Time() graphql.Time {
