@@ -29,13 +29,13 @@ func init() {
 	runCmd.PersistentFlags().String("source-store", "gs://example/blocks", "GS path to read batch files from")
 	runCmd.PersistentFlags().String("block-stream-addr", "localhost:9000", "[LIVE] Address of grpc endpoint")
 	runCmd.PersistentFlags().Uint64("batch-size", 100, "DB batch size")
-	runCmd.PersistentFlags().Bool("exit-after-create-tables", false, "Wheter or not the loader should immediately exit after table creation")
+	//runCmd.PersistentFlags().Bool("exit-after-create-tables", false, "Wheter or not the loader should immediately exit after table creation")
 	runCmd.PersistentFlags().Uint64("start-block-num", 0, "[BATCH] Block number where we start processing")
 	runCmd.PersistentFlags().Uint64("stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
 	runCmd.PersistentFlags().Uint64("num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
 	runCmd.PersistentFlags().Int("parallel-file-download-count", 12, "Number of threads of parallel file download")
 	runCmd.PersistentFlags().Bool("allow-live-on-empty-table", false, "[LIVE] force pipeline creation if live request and table is empty")
-	runCmd.PersistentFlags().String("http-listen-addr", ":8080", "Listen address for /healthz endpoint")
+	runCmd.PersistentFlags()
 }
 
 func runKvdbLoaderRunE(cmd *cobra.Command, args []string) (err error) {

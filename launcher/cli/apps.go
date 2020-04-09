@@ -17,6 +17,7 @@ package cli
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path"
 	"path/filepath"
@@ -226,8 +227,8 @@ to find how to install it.`)
 		MetricsID:   "merger",
 		Logger:      newLoggerDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("merger-storage-merged-block-path", "storage/merged-blocks", "URL of storage to read one-block-files from")
-			cmd.Flags().String("merger-storage-one-block-path", "storage/one-blocks", "URL of storage to write 100-block-files to")
+			cmd.Flags().String("merger-merged-block-path", "storage/merged-blocks", "URL of storage to write merged-block-files to")
+			cmd.Flags().String("merger-one-block-path", "storage/one-blocks", "URL of storage to read one-block-files from")
 			cmd.Flags().Duration("merger-store-timeout", 2*time.Minute, "max time to to allow for each store operation")
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
 			cmd.Flags().String("merger-grpc-serving-addr", MergerServingAddr, "gRPC listen address to serve merger endpoints")
@@ -245,8 +246,8 @@ to find how to install it.`)
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return mergerApp.New(&mergerApp.Config{
-				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-storage-merged-block-path")),
-				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-storage-one-block-path")),
+				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")),
+				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")),
 				StoreOperationTimeout:        viper.GetDuration("merger-store-timeout"),
 				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
 				GRPCListenAddr:               viper.GetString("merger-grpc-serving-addr"),
@@ -307,27 +308,35 @@ to find how to install it.`)
 		Description: "Main blocks and transactions database",
 		MetricsID:   "kvdb-loader",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/kvdb-loader.*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "kvdb"),
-				filepath.Join(config.DataDir, "storage", "merged-blocks"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
+			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
+			cmd.Flags().String("kvdb-loader-merged-block-path", "storage/merged-blocks", "URL of storage to read one-block-files from")
+			cmd.Flags().String("kvdb-loader-kvdb-dsn", "badger://%s/kvdb_badger.db?compression=zstd", "kvdb connection string")
+			cmd.Flags().String("kvdb-loader-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
+			cmd.Flags().Uint64("kvdb-loader-batch-size", 1, "number of blocks batched together for database write")
+			cmd.Flags().Uint64("kvdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
+			cmd.Flags().Uint64("kvdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
+			cmd.Flags().Uint64("kvdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
+			cmd.Flags().String("kvdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
+			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
-				ChainId:               "",
-				ProcessingType:        "live",
-				BlockStoreURL:         filepath.Join(config.DataDir, "storage", "merged-blocks"),
-				BlockStreamAddr:       config.RelayerServingAddr,
-				KvdbDsn:               config.KvdbDSN,
-				BatchSize:             1,
-				AllowLiveOnEmptyTable: true,
-				Protocol:              config.Protocol.String(),
-				HTTPListenAddr:        config.KvdbHTTPServingAddr,
+				ChainId:                   viper.GetString("chain-id"),
+				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
+				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-merged-block-path")),
+				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), viper.GetString("global-data-dir")),
+				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
+				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
+				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
+				StopBlockNum:              viper.GetUint64("kvdb-loader-stop-block-num"),
+				NumBlocksBeforeStart:      viper.GetUint64("kvdb-loader-num-blocks-before-start"),
+				AllowLiveOnEmptyTable:     viper.GetBool("kvdb-loader-allow-live-on-empty-table"),
+				HTTPListenAddr:            viper.GetString("kvdb-loader-http-listen-addr"),
+				Protocol:                  Protocol.String(),
+				ParallelFileDownloadCount: 2,
 			})
 		},
 	})
