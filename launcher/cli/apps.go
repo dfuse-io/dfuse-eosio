@@ -273,30 +273,34 @@ to find how to install it.`)
 		Description: "Temporal chain state store",
 		MetricsID:   "fluxdb",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "fluxdb"),
-				filepath.Join(config.DataDir, "storage", "merged-blocks"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enable dev mode")
+			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enable dev mode")
+			cmd.Flags().String("fluxdb-kvdb-store-dsn", "badger://%s/flux.db", "Storage connection string")
+			cmd.Flags().String("fluxdb-kvdb-grpc-serving-addr", FluxDBServingAddr, "Storage connection string")
+			cmd.Flags().Duration("fluxdb-db-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
+			cmd.Flags().String("fluxdb-db-blocks-store", "gs://example/blocks", "dbin blocks store")
+			cmd.Flags().String("fluxdb-db-block-stream-addr", "localhost:9001", "gRPC endpoint to get real-time blocks")
+			cmd.Flags().Int("fluxdb-db-threads", 2, "Number of threads of parallel processing")
+			cmd.Flags().Bool("fluxdb-db-live", true, "Also connect to a live source, can be turn off when doing re-processing")
+			cmd.Flags().String("fluxdb-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
+			cmd.Flags().String("fluxdb-merger-blocks-files-path", "storage/merged-blocks", "Store path url to read batch files from")
+			cmd.Flags().Bool("fluxdb-enable-dev-mode", false, "Enable dev mode")
+
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return fluxdbApp.New(&fluxdbApp.Config{
-				EnableServerMode: true,
-				EnableInjectMode: true,
-				StoreDSN:         fmt.Sprintf("badger://%s/flux.db", filepath.Join(config.DataDir, "fluxdb")),
-				//StoreDSN:           "tikv://pd0:2379?keyPrefix=02000001",
-				//StoreDSN:           "bigkv://dev.dev/flux?createTable=true",
-				NetworkID:          config.NetworkID,
-				EnableLivePipeline: true,
-				BlockStreamAddr:    config.RelayerServingAddr,
+				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
+				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
+				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), filepath.Join(config.DataDir, "fluxdb")),
+				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
+				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
+				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
+				HTTPListenAddr:     viper.GetString("fluxdb-kvdb-grpc-serving-addr"),
+				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
 				ThreadsNum:         2,
-				HTTPListenAddr:     config.FluxDBServingAddr,
-				EnableDevMode:      false,
-				BlockStoreURL:      filepath.Join(config.DataDir, "storage", "merged-blocks"),
+				NetworkID:          NetworkID,
 			})
 		},
 	})
