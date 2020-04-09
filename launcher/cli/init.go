@@ -85,7 +85,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func initRemoteBox(conf *launcher.BoxConfig) (err error) {
-	genesisFilePath := viper.GetString("init-cmd-genesis-file")
+	genesisFilePath := viper.GetString("genesis-file")
 	if genesisFilePath == "" {
 		genesisFilePath, err = askGenesisPath()
 		if err != nil {
@@ -122,7 +122,7 @@ func initRemoteBox(conf *launcher.BoxConfig) (err error) {
 }
 
 func askPeers() (peers []string, err error) {
-	peers = viper.GetStringSlice("init-cmd-peer")
+	peers = viper.GetStringSlice("peer")
 	if len(peers) == 0 {
 		for {
 			peer, err := askPeer(len(peers) == 0)

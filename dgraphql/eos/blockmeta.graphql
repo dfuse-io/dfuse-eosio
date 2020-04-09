@@ -1,0 +1,31 @@
+type BlockIDResponse {
+    """
+    "true" if a block id was found
+    """
+    time: Time!
+
+    """
+    """
+    num: Uint32!
+
+    """
+    """
+    id: String!
+}
+
+enum COMPARATOR {
+  "Greater-than or equal to"
+  GTE
+
+  "Greater-than"
+  GT
+
+  "Less-than or equal to"
+  LTE
+
+  "Less-than"
+  LT
+
+  "Equal to"
+  EQ
+}

@@ -15,7 +15,6 @@
 package cli
 
 import (
-	"github.com/abourget/viperbind"
 	"github.com/dfuse-io/derr"
 	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/spf13/cobra"
@@ -33,7 +32,7 @@ func init() {
 
 func Main() {
 	cobra.OnInitialize(func() {
-		viperbind.AutoBind(RootCmd, "DFUSEEOS")
+		autoBind(RootCmd, "DFUSEEOS")
 	})
 
 	RootCmd.PersistentFlags().StringP("data-dir", "d", "./dfusebox-data", "Path to data storage for all components of dfuse")
@@ -43,9 +42,7 @@ func Main() {
 
 	derr.Check("registering application flags", core.RegisterFlags(startCmd))
 
-	RootCmd.AddCommand(startCmd)
-	RootCmd.AddCommand(purgeCmd)
-	RootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(startCmd, purgeCmd, initCmd)
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setup()
