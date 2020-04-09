@@ -223,33 +223,42 @@ to find how to install it.`)
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
 		Logger:      newLoggerDef("github.com/dfuse-io/merger.*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "storage", "merged-blocks"),
-				filepath.Join(config.DataDir, "storage", "one-blocks"),
-				filepath.Join(config.DataDir, "merger"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("merger-storage-merged-block-path", "storage/merged-blocks", "URL of storage to read one-block-files from")
+			cmd.Flags().String("merger-storage-one-block-path", "storage/one-blocks", "URL of storage to write 100-block-files to")
+			cmd.Flags().Duration("merger-store-timeout", 2*time.Minute, "max time to to allow for each store operation")
+			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
+			cmd.Flags().String("merger-grpc-serving-addr", MergerServingAddr, "gRPC listen address to serve merger endpoints")
+			cmd.Flags().Bool("merger-process-live-blocks", true, "Ignore --start-.. and --stop-.. blocks, and process only live blocks")
+			cmd.Flags().Uint64("merger-start-block-num", 0, "FOR REPROCESSING: if >= 0, Set the block number where we should start processing")
+			cmd.Flags().Uint64("merger-stop-block-num", 0, "FOR REPROCESSING: if > 0, Set the block number where we should stop processing (and stop the process)")
+			cmd.Flags().String("merger-progress-filename", "", "FOR REPROCESSING: If non-empty, will update progress in this file and start right there on restart")
+			cmd.Flags().Uint64("merger-minimal-block-num", 0, "FOR LIVE: Set the minimal block number where we should start looking at the destination storage to figure out where to start")
+			cmd.Flags().Duration("merger-writers-leeway", 10*time.Second, "how long we wait after seeing the upper boundary, to ensure that we get as many blocks as possible in a bundle")
+			cmd.Flags().String("merger-seen-blocks-file", "merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
+			cmd.Flags().Uint64("merger-max-fixable-fork", 10000, "after that number of blocks, a block belonging to another fork will be discarded (DELETED depending on flagDeleteBlocksBefore) instead of being inserted in last bundle")
+			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of one-block files when prior to the currently processed bundle (to avoid long file listings)")
+
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return mergerApp.New(&mergerApp.Config{
-				StartBlockNum:           config.StartBlock,
-				Live:                    true,
-				GRPCListenAddr:          config.MergerServingAddr,
-				Protocol:                config.Protocol,
-				MinimalBlockNum:         0,
-				StopBlockNum:            0,
-				StoragePathDest:         filepath.Join(config.DataDir, "storage", "merged-blocks"),
-				StoragePathSource:       filepath.Join(config.DataDir, "storage", "one-blocks"),
-				TimeBetweenStoreLookups: 200 * time.Millisecond,
-				WritersLeewayDuration:   10 * time.Second,
-				SeenBlocksFile:          filepath.Join(config.DataDir, "merger", "merger.seen.gob"),
-				MaxFixableFork:          10000,
-				DeleteBlocksBefore:      true,
-				EnableReadinessProbe:    true,
+				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-storage-merged-block-path")),
+				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-storage-one-block-path")),
+				StoreOperationTimeout:        viper.GetDuration("merger-store-timeout"),
+				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
+				GRPCListenAddr:               viper.GetString("merger-grpc-serving-addr"),
+				Live:                         viper.GetBool("merger-process-live-blocks"),
+				StartBlockNum:                viper.GetUint64("merger-start-block-num"),
+				StopBlockNum:                 viper.GetUint64("merger-stop-block-num"),
+				ProgressFilename:             viper.GetString("merger-progress-filename"),
+				MinimalBlockNum:              viper.GetUint64("merger-minimal-block-num"),
+				WritersLeewayDuration:        viper.GetDuration("merger-writers-leeway"),
+				SeenBlocksFile:               buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")),
+				MaxFixableFork:               viper.GetUint64("merger-max-fixable-fork"),
+				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
+				Protocol:                     Protocol,
+				EnableReadinessProbe:         true,
 			})
 		},
 	})
