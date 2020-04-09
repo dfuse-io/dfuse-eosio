@@ -383,23 +383,24 @@ to find how to install it.`)
 		Description: "Decodes binary data against ABIs for different contracts",
 		MetricsID:   "abicodec",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "storage", "abicache"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("abicodec-grpc-listen-addr", ":9000", "TCP Listener addr for gRPC")
+			cmd.Flags().String("abicodec-search-addr", ":7004", "Base URL for search service")
+			cmd.Flags().String("abicodec-kvdb-dsn", "badger://%s/kvdb_badger.db?compression=zstd", "kvdb connection string")
+			cmd.Flags().String("abicodec-cache-base-url", "storage/abicahe", "path where the cache store is state")
+			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
+			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
+
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return abicodecApp.New(&abicodecApp.Config{
-				GRPCListenAddr:       config.AbiServingAddr,
-				SearchAddr:           config.RouterServingAddr,
-				KvdbDSN:              config.KvdbDSN,
-				ExportCache:          false,
-				CacheBaseURL:         "file://" + filepath.Join(config.DataDir, "storage", "abicache"),
-				CacheStateName:       "abicodec_cache.bin",
+				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
+				SearchAddr:           viper.GetString("abicodec-search-addr"),
+				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), viper.GetString("global-data-dir")),
+				ExportCache:          viper.GetBool("abicodec-export-cache"),
+				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
+				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
 				EnableReadinessProbe: true,
 			})
 		},

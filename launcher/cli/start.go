@@ -138,8 +138,9 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	if config.BoxConfig.RunProducer {
 		apps = append(apps, "manager")
 	}
-	//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb")
-	apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
+	apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "abicodec")
+
+	//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
 
 	userLog.Printf("Launching all applications...")
 	launcher.Launch(apps)
