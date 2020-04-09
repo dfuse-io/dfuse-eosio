@@ -193,6 +193,8 @@ github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f h1:U5y3Y5UE0w7amNe
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFMt8koVQZ6WFms69WAsDWr2XsYL3Hkl7jkoLE=
 github.com/dfuse-io/blockmeta v0.0.0-20200407195344-1ee4f765b1a5 h1:BtRUSts3gP0wfH2hyuN+f7ad0JKvJD0QhJN3t/L279A=
 github.com/dfuse-io/blockmeta v0.0.0-20200407195344-1ee4f765b1a5/go.mod h1:uv/9BgaIY6rtg6zLnmp2SqlgeQscXS1UIW8KYHt+NHs=
+github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e h1:ZbBkWru2wmhg++aZjJRLW84xCKdJOpvaYJL6y9NqPD0=
+github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e/go.mod h1:uv/9BgaIY6rtg6zLnmp2SqlgeQscXS1UIW8KYHt+NHs=
 github.com/dfuse-io/bstream v0.0.0-20200406220134-fe85c256872f h1:XyT4h7ze6y9f3AtjWo2akGha/HwwwgoI8L32ji0g1cg=
 github.com/dfuse-io/bstream v0.0.0-20200406220134-fe85c256872f/go.mod h1:F0M5wqDW9RtZwpPaBM8cZhUvYEyMtzuEWM+FU6z5n8Q=
 github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627 h1:57Lzw/oFw7/U6dG5yp9QiknMJEP9v/uuOgNNw5lteVE=

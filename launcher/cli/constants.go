@@ -6,6 +6,7 @@ import (
 
 const (
 	Protocol                    pbbstream.Protocol = pbbstream.Protocol_EOS
+	BlockmetaDSN                string             = "badger://%s/kvdb_badger.db?compression=zstd"
 	DmeshServiceVersion         string             = "v1"
 	DmeshNamespace              string             = "local"
 	NetworkID                   string             = "eos-local"
@@ -34,4 +35,6 @@ const (
 	FluxDBServingAddr           string             = ":13030"
 	DashboardHTTPListenAddr     string             = ":8080"
 	EosqHTTPServingAddr         string             = ":8081"
+	MindreaderNodeosAPIAddr     string             = ":9888"
+	NodeosAPIAddr               string             = ":8888"
 )

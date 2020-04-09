@@ -330,26 +330,28 @@ to find how to install it.`)
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
 		Logger:      newLoggerDef("github.com/dfuse-io/blockmeta.*", nil),
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "storage", "merged-blocks"),
-			})
-			if err != nil {
-				return err
-			}
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "GRPC listen on this port")
+			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
+			cmd.Flags().String("blockmeta-blocks-store", "storage/merged-blocks", "URL to source store")
+			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not, defaults to true")
+			cmd.Flags().Bool("blockmeta-enable-readiness-probe", true, "Enable blockmeta's app readiness probe")
+			cmd.Flags().StringSlice("blockmeta-eos-api-upstream-addr", []string{NodeosAPIAddr}, "EOS API address to fetch info from running chain, must be in-sync")
+			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
+			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdb database connection information")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
 			return blockmetaApp.New(&blockmetaApp.Config{
-				KvdbDSN:                 config.KvdbDSN,
-				BlocksStore:             filepath.Join(config.DataDir, "storage", "merged-blocks"),
-				BlockStreamAddr:         config.RelayerServingAddr,
-				ListenAddr:              config.BlockmetaServingAddr,
-				Protocol:                config.Protocol,
-				LiveSource:              true,
-				EnableReadinessProbe:    true,
-				EOSAPIUpstreamAddresses: []string{config.BoxConfig.NodeosAPIAddr},
-				EOSAPIExtraAddresses:    []string{config.MindreaderNodeosAPIAddr},
+				Protocol:                Protocol,
+				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
+				GRPCListenAddr:          viper.GetString("blockmeta-grpc-listen-addr"),
+				BlocksStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("blockmeta-blocks-store")),
+				LiveSource:              viper.GetBool("blockmeta-live-source"),
+				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
+				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
+				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
+				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), viper.GetString("global-data-dir")),
 			})
 		},
 	})
@@ -405,9 +407,11 @@ to find how to install it.`)
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Bool("search-indexer-enable-readiness-probe", true, "Enable search indexer's app readiness probe")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
-			cmd.Flags().String("search-indexer-writable-path", "search/indexer", "Writable base path for storing index files")
 			cmd.Flags().String("search-indexer-indexing-restrictions-json", "", "json-formatted array of items to skip from indexing")
 			cmd.Flags().String("search-indexer-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
+			cmd.Flags().String("search-indexer-writable-path", "search/indexer", "Writable base path for storing index files")
+			cmd.Flags().String("search-indexer-indices-store", "storage/indexes", "Indices path to read or write index shards")
+			cmd.Flags().String("search-indexer-blocks-store", "storage/merged-blocks", "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) launcher.App {
@@ -415,8 +419,6 @@ to find how to install it.`)
 				Protocol:                            Protocol,
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
-				IndexesStoreURL:                     filepath.Join(config.DataDir, "storage", "indexes"),
-				BlocksStoreURL:                      filepath.Join(config.DataDir, "storage", "merged-blocks"),
 				BlockstreamAddr:                     viper.GetString("search-indexer-block-stream-addr"),
 				DfuseHooksActionName:                viper.GetString("search-indexer-dfuse-hooks-action-name"),
 				IndexingRestrictionsJSON:            viper.GetString("search-indexer-indexing-restrictions-json"),
@@ -432,6 +434,8 @@ to find how to install it.`)
 				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
 				EnableReadinessProbe:                viper.GetBool("search-indexer-enable-readiness-probe"),
+				IndexesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
+				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
 			})
 		},
 	})
@@ -503,7 +507,7 @@ to find how to install it.`)
 			cmd.Flags().Duration(p+"shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().String(p+"warmup-filepath", "", "Optional filename containing queries to warm-up the search")
 			cmd.Flags().Bool(p+"enable-readiness-probe", true, "Enable search archive's app readiness probe")
-			cmd.Flags().String(p+"indexes-store", "storage/indexes", "GS path to read or write index shards")
+			cmd.Flags().String(p+"indices-store", "storage/indexes", "GS path to read or write index shards")
 			cmd.Flags().String(p+"writable-path", "search/archiver", "Writable base path for storing index files")
 			return nil
 		},
@@ -530,11 +534,12 @@ to find how to install it.`)
 				ShutdownDelay:           viper.GetDuration("search-archive-shutdown-delay"),
 				WarmupFilepath:          viper.GetString("search-archive-warmup-filepath"),
 				EnableReadinessProbe:    viper.GetBool("search-archive-enable-readiness-probe"),
-				IndexesStoreURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-indexes-store")),
+				IndexesStoreURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-indices-store")),
 				IndexesPath:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-writable-path")),
 			})
 		},
 	})
+
 	// Search Live
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "live",
