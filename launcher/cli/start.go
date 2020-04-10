@@ -15,7 +15,9 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -154,6 +156,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		userLog.Printf("Received termination signal, quitting")
 	case <-launcher.Terminating():
 		userLog.Printf("One of the applications shutdown unexpectedly, quitting")
+		err = errors.New("unexpected termination")
 	}
 
 	// all sub apps will be shut down by launcher when dfuse shut down
@@ -163,6 +166,14 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	launcher.WaitForTermination()
 
 	userLog.Printf("Goodbye")
+
+	// At this point, everything is terminated, if we got an error
+	// we exit right away with status code 1. If we let the error go
+	// up on Cobra, it prints the error message.
+	if err != nil {
+		os.Exit(1)
+	}
+
 	return
 }
 

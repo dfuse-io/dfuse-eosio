@@ -7,8 +7,8 @@ var commit = ""
 
 func init() {
 	cli.RootCmd.Version = version + "-" + commit
-
 }
+
 func main() {
 	cli.Main()
 }
