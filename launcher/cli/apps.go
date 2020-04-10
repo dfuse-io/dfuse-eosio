@@ -245,6 +245,27 @@ to find how to install it.`)
 
 			return nil
 		},
+		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
+		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
+		//        init flow and call init after the factory and giving it the instantiated app...
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
+			err := mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")))
+			if err != nil {
+				return err
+			}
+
+			err = mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")))
+			if err != nil {
+				return err
+			}
+
+			err = mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")))
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return mergerApp.New(&mergerApp.Config{
 				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")),
@@ -290,6 +311,9 @@ to find how to install it.`)
 
 			return nil
 		},
+		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
+			return makeDirs([]string{filepath.Join(config.DataDir, "fluxdb")})
+		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
@@ -328,11 +352,16 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
+
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
 				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-merged-block-path")),
-				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
 				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
@@ -365,6 +394,11 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
+
 			return blockmetaApp.New(&blockmetaApp.Config{
 				Protocol:                Protocol,
 				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
@@ -374,7 +408,7 @@ to find how to install it.`)
 				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
-				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir),
 			}), nil
 		},
 	})
@@ -397,10 +431,15 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
+
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
-				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), absDataDir),
 				ExportCache:          viper.GetBool("abicodec-export-cache"),
 				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),

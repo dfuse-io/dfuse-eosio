@@ -8,6 +8,7 @@ require (
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/abourget/llerrgroup v0.2.0
 	github.com/abourget/viperbind v0.1.0
+	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
@@ -18,7 +19,7 @@ require (
 	github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
-	github.com/dfuse-io/dgraphql v0.0.0-20200407193015-bde97a9ec1c3
+	github.com/dfuse-io/dgraphql v0.0.0-20200409211726-1e94df6b62a0
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -46,6 +47,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
+	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
