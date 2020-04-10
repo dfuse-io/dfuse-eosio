@@ -34,6 +34,9 @@ func TestCli(t *testing.T) {
 		t.Skip("You must set environment variable 'E2E_TESTS=true' to run this test for now")
 	}
 
+	// FIXME: Need to find a way to ensure the binary is built and at the latest version, maybe
+	//        we could invoke from the test directly the `go build -o somewhere ./cmd/dfuseeos`
+	//        ourself?
 	binaryPath, err := filepath.Abs("../dfuseeos")
 	require.NoError(t, err)
 
