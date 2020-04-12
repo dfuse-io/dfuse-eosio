@@ -21,6 +21,14 @@ Get a release from the _Releases_ tab in GitHub. Install the binary in your `PAT
 
 Also, install our instrumented `nodeos` node in the section below.
 
+### Build from source
+
+```
+git clone git@github.com:dfuse-io/dfuse-eosio
+cd dfuse-eosio
+go install -v ./cmd/dfuseeos
+```
+
 ### Usage
 
 Make sure you have our dfuse instrumented `nodeos` binary on your machine, a fork
