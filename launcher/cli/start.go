@@ -144,7 +144,11 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
 
 	userLog.Printf("Launching all applications...")
-	launcher.Launch(apps)
+	err = launcher.Launch(apps)
+	if err != nil {
+		userLog.Error("unable to launch", zap.Error(err))
+		os.Exit(1)
+	}
 
 	go modules.MetricManager.Launch()
 

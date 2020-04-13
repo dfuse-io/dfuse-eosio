@@ -94,10 +94,19 @@ func init() {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
 			if config.BoxConfig.RunProducer {
+				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+				if strings.HasPrefix(managerConfigDir, "/") {
+					err := makeDirs([]string{
+						managerConfigDir,
+					})
+					if err != nil {
+						return err
+					}
+				}
 				if config.BoxConfig.ProducerConfigIni == "" {
 					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
 				}
-				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+
 				if err := writeGenesisAndConfig(config.BoxConfig.ProducerConfigIni, config.BoxConfig.GenesisJSON, managerConfigDir, "producer"); err != nil {
 					return err
 				}
@@ -183,6 +192,15 @@ func init() {
 		},
 		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
+			if strings.HasPrefix(nodeosConfigDir, "/") {
+				err := makeDirs([]string{
+					nodeosConfigDir,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			if config.BoxConfig.ReaderConfigIni == "" {
 				// TODO: considering this can eventually run the mindreader application solely, instead of returning
 				// an error we may want to assume that config.ini file would already be at that place on disk
