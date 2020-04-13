@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
@@ -128,7 +129,7 @@ func init() {
 					ForceProduction:         viper.GetBool("manager-force-production"),
 					NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
 					BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
-					BootstrapDataURL:        viper.GetString("manager-snapshot-store-url"),
+					BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
 					DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
 					LogToZap:                viper.GetBool("manager-log-to-zap"),
 					AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
