@@ -57,26 +57,48 @@ func init() {
 		Description: "Block producing node",
 		MetricsID:   "manager",
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("manager-api-addr", EosManagerHTTPAddr, "eos-manager API address")
+			cmd.Flags().String("manager-nodeos-api-addr", NodeosAPIAddr, "Target API address")
+			cmd.Flags().Bool("manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
+			cmd.Flags().String("manager-config-dir", "manager/config", "Directory for config files")
+			cmd.Flags().String("manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
+			cmd.Flags().String("manager-data-dir", "managernode/data", "Directory for data (blocks)")
+			cmd.Flags().String("manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
+			cmd.Flags().String("manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
+			cmd.Flags().Duration("manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
+			cmd.Flags().String("manager-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
+			cmd.Flags().String("manager-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
+			cmd.Flags().String("manager-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
+			cmd.Flags().Bool("manager-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
+			cmd.Flags().Bool("manager-auto-restore", false, "Enables restore from the latest backup on boot if there is no block logs or if nodeos cannot start at all. Do not use on a single BP node")
+			cmd.Flags().String("manager-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
+			cmd.Flags().String("manager-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
+			cmd.Flags().Duration("manager-shutdown-delay", 0*time.Second, "Delay before shutting manager when sigterm received")
+			cmd.Flags().String("manager-backup-tag", "default", "tag to identify the backup")
+			cmd.Flags().Bool("manager-disable-profiler", true, "Disables the manageos profiler")
+			cmd.Flags().StringSlice("manager-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
+			cmd.Flags().Bool("manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
+			cmd.Flags().Int("manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
+			cmd.Flags().Duration("manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
+			cmd.Flags().Int("manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
+			cmd.Flags().Duration("manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
+			cmd.Flags().String("manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
+			cmd.Flags().Duration("manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
+			cmd.Flags().Int("manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
+			cmd.Flags().String("manager-target-volume-snapshot-specific", "", "Comma-separated list of block numbers where volume snapshots will be done automatically")
+			cmd.Flags().Bool("manager-force-production", true, "Forces the production of blocks")
+			return nil
+		},
 		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "managernode", "config"),
-				filepath.Join(config.DataDir, "storage", "snapshots"),
-				filepath.Join(config.DataDir, "managernode", "data"),
-				filepath.Join(config.DataDir, "storage", "pitreos"),
-			})
-			if err != nil {
-				return err
-			}
-
 			if config.BoxConfig.RunProducer {
 				if config.BoxConfig.ProducerConfigIni == "" {
 					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
 				}
-
-				if err := writeGenesisAndConfig(config.BoxConfig.ProducerConfigIni, config.BoxConfig.GenesisJSON, filepath.Join(config.DataDir, "managernode", "config"), "producer"); err != nil {
+				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+				if err := writeGenesisAndConfig(config.BoxConfig.ProducerConfigIni, config.BoxConfig.GenesisJSON, managerConfigDir, "producer"); err != nil {
 					return err
 				}
 			}
@@ -85,31 +107,33 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			if config.BoxConfig.RunProducer {
 				return nodeosManagerApp.New(&nodeosManagerApp.Config{
-					ManagerAPIAddress:   config.EosManagerHTTPAddr,
-					NodeosAPIAddress:    config.NodeosAPIAddr,
-					ConnectionWatchdog:  false,
-					NodeosConfigDir:     filepath.Join(config.DataDir, "managernode", "config"),
-					NodeosBinPath:       config.NodeExecutable,
-					NodeosDataDir:       filepath.Join(config.DataDir, "managernode", "data"),
-					TrustedProducer:     config.NodeosTrustedProducer,
-					ReadinessMaxLatency: 5 * time.Second,
-					BackupStoreURL:      filepath.Join(config.DataDir, "storage", "pitreos"),
-					BootstrapDataURL:    config.BootstrapDataURL,
-					DebugDeepMind:       false,
-					AutoRestoreLatest:   false,
-					RestoreBackupName:   "",
-					RestoreSnapshotName: "",
-					SnapshotStoreURL:    filepath.Join(config.DataDir, "storage", "snapshots"),
-					ShutdownDelay:       config.NodeosShutdownDelay,
-					BackupTag:           "default",
-					AutoBackupModulo:    0,
-					AutoBackupPeriod:    0,
-					AutoSnapshotModulo:  0,
-					AutoSnapshotPeriod:  0,
-					DisableProfiler:     true,
-					NodeosExtraArgs:     config.NodeosExtraArgs,
-					LogToZap:            true,
-					ForceProduction:     true,
+					ManagerAPIAddress:       viper.GetString("manager-api-addr"),
+					NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
+					ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
+					NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
+					NodeosBinPath:           viper.GetString("manager-nodeos-path"),
+					NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
+					ProducerHostname:        viper.GetString("manager-producer-hostname"),
+					TrustedProducer:         viper.GetString("manager-trusted-producer"),
+					ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
+					ForceProduction:         viper.GetBool("manager-force-production"),
+					NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
+					BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
+					BootstrapDataURL:        viper.GetString("manager-snapshot-store-url"),
+					DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
+					LogToZap:                viper.GetBool("manager-log-to-zap"),
+					AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
+					RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
+					RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
+					SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
+					ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
+					BackupTag:               viper.GetString("manager-backup-tag"),
+					AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
+					AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
+					AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
+					AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
+					DisableProfiler:         viper.GetBool("manager-disable-profiler"),
+					StartFailureHandlerFunc: nil,
 				}), nil
 			}
 			// Can we detect a nil interface
@@ -124,61 +148,103 @@ func init() {
 		Description: "Blocks reading node",
 		MetricsID:   "manager",
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
+			cmd.Flags().String("mindreader-api-addr", NodeosAPIAddr, "Target API address")
+			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
+			cmd.Flags().String("mindreader-config-dir", "mindreadernode/config", "Directory for config files. ")
+			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
+			cmd.Flags().String("mindreader-data-dir", "mindreadernode/data", "Directory for data (blocks)")
+			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
+			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
+			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
+			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the manageos profiler")
+			cmd.Flags().String("mindreader-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
+			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
+			cmd.Flags().String("mindreader-oneblock-store-url", OneBlockFilesPath, "Storage bucket with path prefix to write one-block file to")
+			cmd.Flags().String("mindreader-working-dir", "mindreader", "Path where mindreader will stores its files")
+			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
+			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "gRPC listening address for stream of blocks and transactions")
+			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
+			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
+			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown nodeos/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
+			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
+			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
+			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
+			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
+			cmd.Flags().Bool("mindreader-auto-restore", false, "Enables restore from the latest backup on boot if there is no block logs or if nodeos cannot start at all. Do not use on a single BP node")
+			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
+			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
+			cmd.Flags().Duration("mindreader-shutdown-delay", 0*time.Second, "Delay before shutting manager when sigterm received")
+			cmd.Flags().String("mindreader-merged-blocks-store-url", MergedBlocksFilesPath, "USE FOR REPROCESSING ONLY. Storage bucket with path prefix to write merged blocks logs to (in conjunction with --merge-and-upload-directly)")
+			cmd.Flags().Bool("mindreader-merge-and-upload-directly", false, "USE FOR REPROCESSING ONLY. When enabled, do not write one-block files, sidestep the merger and write the merged 100-blocks logs directly to --merged-blocks-store-url")
+			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
+			return nil
+		},
 		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			err := makeDirs([]string{
-				filepath.Join(config.DataDir, "mindreadernode", "config"),
-				filepath.Join(config.DataDir, "mindreadernode", "data"),
-				filepath.Join(config.DataDir, "storage", "pitreos"),
-				filepath.Join(config.DataDir, "storage", "snapshots"),
-				filepath.Join(config.DataDir, "storage", "one-blocks"),
-				filepath.Join(config.DataDir, "mindreader"),
-			})
-			if err != nil {
-				return err
-			}
-
+			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
 			if config.BoxConfig.ReaderConfigIni == "" {
+				// TODO: considering this can eventually run the mindreader application solely, instead of returning
+				// an error we may want to assume that config.ini file would already be at that place on disk
 				return fmt.Errorf("readerConfigIni empty")
 			}
 
-			if err := writeGenesisAndConfig(config.BoxConfig.ReaderConfigIni, config.BoxConfig.GenesisJSON, filepath.Join(config.DataDir, "mindreadernode", "config"), "reader"); err != nil {
+			if err := writeGenesisAndConfig(config.BoxConfig.ReaderConfigIni, config.BoxConfig.GenesisJSON, nodeosConfigDir, "reader"); err != nil {
 				return err
 			}
-
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				ManagerAPIAddress:          config.EosMindreaderHTTPAddr,
-				NodeosAPIAddress:           config.NodeosAPIAddr,
-				NodeosConfigDir:            filepath.Join(config.DataDir, "mindreadernode", "config"),
-				NodeosDataDir:              filepath.Join(config.DataDir, "mindreadernode", "data"),
-				BackupStoreURL:             filepath.Join(config.DataDir, "storage", "pitreos"),
-				SnapshotStoreURL:           filepath.Join(config.DataDir, "storage", "snapshots"),
-				ArchiveStoreURL:            filepath.Join(config.DataDir, "storage", "one-blocks"),
-				WorkingDir:                 filepath.Join(config.DataDir, "mindreader"),
-				ConnectionWatchdog:         false,
-				NodeosBinPath:              config.NodeExecutable,
-				ReadinessMaxLatency:        5 * time.Second,
-				BackupTag:                  "default",
-				GRPCAddr:                   config.MindreaderGRPCAddr,
-				StartBlockNum:              config.StartBlock,
-				StopBlockNum:               config.StopBlock,
-				MindReadBlocksChanCapacity: 100,
-				LogToZap:                   true,
-				DisableProfiler:            true,
-				StartFailureHandlerFunc: func() {
-					userLog.Error(`*********************************************************************************
-* Mindreader failed to start nodeos process
-* To see nodeos logs...
-* DEBUG=\"github.com/dfuse-io/manageos.*\" dfusebox start
-*********************************************************************************
+			archiveStoreURL := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-oneblock-store-url"))
+			if viper.GetBool("mindreader-merge-and-upload-directly") {
+				archiveStoreURL = buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-merged-blocks-store-url"))
+			}
 
-Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
-at https://github.com/dfuse-io/dfuse-eosio#dfuse-Instrumented-EOSIO-Prebuilt-Binaries
-to find how to install it.`)
+			var startUpFunc func()
+			if viper.GetBool("mindreader-start-failure-handler") {
+				startUpFunc = func() {
+					userLog.Error(`*********************************************************************************
+									* Mindreader failed to start nodeos process
+									* To see nodeos logs...
+									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfusebox start
+									*********************************************************************************
+
+									Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
+									at https://github.com/dfuse-io/dfuse-eosio#dfuse-Instrumented-EOSIO-Prebuilt-Binaries
+									to find how to install it.`)
 					os.Exit(1)
-				},
+				}
+			}
+			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
+				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:           viper.GetString("mindreader-api-addr"),
+				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
+				NodeosConfigDir:            buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir")),
+				NodeosBinPath:              viper.GetString("mindreader-nodeos-path"),
+				NodeosDataDir:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-data-dir")),
+				ProducerHostname:           viper.GetString("mindreader-producer-hostname"),
+				TrustedProducer:            viper.GetString("mindreader-trusted-producer"),
+				ReadinessMaxLatency:        viper.GetDuration("mindreader-readiness-max-latency"),
+				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
+				BackupStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-backup-store-url")),
+				BackupTag:                  viper.GetString("mindreader-backup-tag"),
+				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
+				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
+				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
+				AutoRestoreLatest:          viper.GetBool("mindreader-auto-restore"),
+				RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
+				RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
+				SnapshotStoreURL:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-snapshot-store-url")),
+				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
+				ArchiveStoreURL:            archiveStoreURL,
+				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-upload-directly"),
+				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
+				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
+				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
+				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
+				WorkingDir:                 buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-working-dir")),
+				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
+				StartFailureHandlerFunc:    startUpFunc,
 			}), nil
 		},
 	})
