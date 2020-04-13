@@ -80,9 +80,6 @@ type TransactionTrace {
   exceptJSON: JSON
 }
 
-
-
-
 scalar JSON
 scalar Uint64
 scalar Int64

@@ -20,30 +20,8 @@ package eos
 
 import "github.com/dfuse-io/dgraphql"
 
-// String reads the .graphql schema files from the generated _bindata.go file, concatenating the
-// files together into one string.
-//
-// If this method complains about not finding functions AssetNames() or MustAsset(),
-// run `go generate` against this package to generate the functions.
-//
-// We concatenate various versions of the schema that are served based on certain
-// contexts (specific HTTP headers, Authentication status, etc).
-
-func CommonSchema() *string {
-	return dgraphql.BuildSchemaString("common", collectAssetNames(dgraphql.IsCommonAssetName), MustAsset)
-}
-
-func AlphaSchema() *string {
-	return dgraphql.BuildSchemaString("alpha", collectAssetNames(dgraphql.IsAlphaAssetName), MustAsset)
-}
-
-func collectAssetNames(isIncluded func(name string) bool) []string {
-	var assetNames []string
+func init() {
 	for _, name := range AssetNames() {
-		if isIncluded(name) {
-			assetNames = append(assetNames, name)
-		}
+		dgraphql.RegisterSchema("dfuse_eosio", name, (MustAsset(name)))
 	}
-
-	return assetNames
 }

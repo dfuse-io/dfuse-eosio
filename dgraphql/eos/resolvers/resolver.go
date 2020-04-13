@@ -39,11 +39,19 @@ import (
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	pbtokenmeta "github.com/dfuse-io/pbgo/dfuse/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/graph-gophers/graphql-go"
 	"go.uber.org/zap"
 )
+
+type PrivateResolver struct {
+	Root
+	foo string
+}
+
+func (pr *PrivateResolver) Test() string {
+	return pr.foo
+}
 
 // Root is the root resolver.
 type Root struct {
@@ -54,10 +62,9 @@ type Root struct {
 	blockmetaClient          *pbblockmeta.Client
 	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
 	abiCodecClient           pbabicodec.DecoderClient
-	tokenmetaClient          pbtokenmeta.EOSClient
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, tokenmetaClient pbtokenmeta.EOSClient) *Root {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient) *Root {
 	return &Root{
 		searchClient:    searchClient,
 		trxsReader:      dbReader,
@@ -65,7 +72,6 @@ func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockM
 		accountsReader:  dbReader,
 		blockmetaClient: blockMetaClient,
 		abiCodecClient:  abiCodecClient,
-		tokenmetaClient: tokenmetaClient,
 	}
 }
 
