@@ -17,7 +17,6 @@ package dgraphql
 import (
 	"fmt"
 
-	"github.com/dfuse-io/derr"
 	eos "github.com/dfuse-io/dfuse-eosio/dgraphql/eos"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/eos/resolvers"
 	"github.com/dfuse-io/dgraphql"
@@ -28,13 +27,11 @@ import (
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	pbtokenmeta "github.com/dfuse-io/pbgo/dfuse/tokenmeta/v1"
-	"go.uber.org/zap"
 )
 
 type Config struct {
 	dgraphqlApp.Config
 	SearchAddr    string
-	SearchAddrV2  string
 	ABICodecAddr  string
 	BlockMetaAddr string
 	TokenmetaAddr string
@@ -44,7 +41,6 @@ type Config struct {
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	schemas, err := SetupSchemas(&Config{
 		SearchAddr:    config.SearchAddr,
-		SearchAddrV2:  config.SearchAddrV2,
 		ABICodecAddr:  config.ABICodecAddr,
 		BlockMetaAddr: config.BlockMetaAddr,
 		TokenmetaAddr: config.TokenmetaAddr,
@@ -94,7 +90,12 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	tokenmetaClient := pbtokenmeta.NewEOSClient(tokenmetaConn)
 
 	zlog.Info("creating search grpc client")
-	searchRouterClient := mustSetupSearchClient(config.SearchAddr, config.SearchAddrV2)
+
+	searchConn, err := dgrpc.NewInternalClient(config.SearchAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting search grpc client: %w", err)
+	}
+	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
 	zlog.Info("configuring resolver and parsing schemas")
 	resolver := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, tokenmetaClient)
@@ -104,24 +105,4 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	}
 
 	return schemas, nil
-}
-
-func mustSetupSearchClient(SearchAddr string, SearchAddrV2 string) pbsearch.RouterClient {
-	var searchRouterClient pbsearch.RouterClient
-
-	searchConn, err := dgrpc.NewInternalClient(SearchAddr)
-	derr.Check("failed getting abi grpc client", err)
-	searchClientV1 := pbsearch.NewRouterClient(searchConn)
-
-	if SearchAddrV2 != "" {
-		searchConnv2, err := dgrpc.NewInternalClient(SearchAddrV2)
-		if err != nil {
-			zlog.Warn("failed getting abi grpc client", zap.Error(err))
-		}
-		searchClientV2 := pbsearch.NewRouterClient(searchConnv2)
-		searchRouterClient = dgraphql.NewMultiRouterClient(searchClientV1, searchClientV2)
-	} else {
-		searchRouterClient = searchClientV1
-	}
-	return searchRouterClient
 }
