@@ -207,8 +207,8 @@ github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb h1:yrE/Ncb9PAjdN7w5I
 github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
 github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1 h1:ejixSugMZ417KvnJhk4cZJu/VW4ql0AlL+seE4jh1Kc=
 github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1/go.mod h1:JW/hUKChGd6ytDtvwx4JFo57m1pnFvMxaq9WbDAb2fQ=
-github.com/dfuse-io/dgraphql v0.0.0-20200409211726-1e94df6b62a0 h1:8Jh1WeccCISxZs3R6UMl+U76uJrQgARRGWPjb/m8f1I=
-github.com/dfuse-io/dgraphql v0.0.0-20200409211726-1e94df6b62a0/go.mod h1:8kIlkUa/SMhAZ2g1gt4yAYUEuFdnf3ac7RiitJqUzYQ=
+github.com/dfuse-io/dgraphql v0.0.0-20200413182955-46b5777006c2 h1:COzOPXTLApnGHbJ6QEwga7fxiHjEsfKgP7xwhRFfUdk=
+github.com/dfuse-io/dgraphql v0.0.0-20200413182955-46b5777006c2/go.mod h1:8kIlkUa/SMhAZ2g1gt4yAYUEuFdnf3ac7RiitJqUzYQ=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c h1:ebrUj1rR2g1ErpCMjQUmTON3T3MNi22wf/vYJ/zSkXI=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1 h1:HPRgnmMbQw3P6H2bJlM+4gLBKipf6ojJuzx4v5gbCPA=
