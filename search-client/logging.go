@@ -11,7 +11,7 @@ var traceEnabled = false
 var zlog = zap.NewNop()
 
 func init() {
-	logging.Register("github.com/dfuse-io/search-client", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/search-client", &zlog)
 
 	if os.Getenv("TRACE") == "true" {
 		traceEnabled = true

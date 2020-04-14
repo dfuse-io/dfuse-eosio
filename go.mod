@@ -34,15 +34,17 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
-	github.com/dfuse-io/manageos v0.0.0-20200414171931-0e43eed11a2a
+	github.com/dfuse-io/manageos v0.0.0-20200414173559-7946045b7139
 	github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
 	github.com/dfuse-io/relayer v0.0.0-20200408161021-6c7af0ee655f
 	github.com/dfuse-io/search v0.0.0-20200409173607-5e4cd768c281
+	github.com/dfuse-io/search-client v0.0.0-20200414173833-158fa435efed
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
+	github.com/eoscanada/search-client v0.0.0-20200323154051-cf7a500d435c // indirect
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/go-sql-driver/mysql v1.5.0

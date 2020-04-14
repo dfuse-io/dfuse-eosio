@@ -22,5 +22,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/blockmeta/app/blockmeta", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/app/blockmeta", &zlog)
 }

@@ -288,7 +288,10 @@ func init() {
 				WorkingDir:                 buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-working-dir")),
 				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
 				StartFailureHandlerFunc:    startUpFunc,
-			}, &nodeosMindreaderApp.Modules{}), nil
+			}, &nodeosMindreaderApp.Modules{
+				ConsoleReaderFactory:     consoleReaderFactory,
+				ConsoleReaderTransformer: consoleReaderBlockTransformer,
+			}), nil
 		},
 	})
 

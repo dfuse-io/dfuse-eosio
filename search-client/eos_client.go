@@ -10,12 +10,13 @@ import (
 	"github.com/dfuse-io/logging"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	searchclient "github.com/dfuse-io/search-client"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
 type EOSClient struct {
-	*commonClient
+	*searchclient.CommonClient
 
 	dbReader eosdb.DBReader
 }
@@ -34,14 +35,14 @@ type EOSSearchMatch struct {
 }
 
 func NewEOSClient(cc *grpc.ClientConn, dbReader eosdb.DBReader) *EOSClient {
-	return &EOSClient{newCommonClient(cc), dbReader}
+	return &EOSClient{searchclient.NewCommonClient(cc), dbReader}
 }
 
 func (e *EOSClient) StreamMatches(callerCtx context.Context, req *pbsearch.RouterRequest) (EOSStreamMatchesClient, error) {
 	hammer := dhammer.NewHammer(30, 20, e.hammerBatchProcessor)
 	hammer.Start(callerCtx)
 
-	go e.streamSearchToHammer(callerCtx, hammer, req)
+	go e.StreamSearchToHammer(callerCtx, hammer, req)
 
 	esm := &eosStreamMatches{
 		ctx:     callerCtx,
@@ -49,7 +50,7 @@ func (e *EOSClient) StreamMatches(callerCtx context.Context, req *pbsearch.Route
 		matches: make(chan *EOSSearchMatch),
 	}
 
-	go e.hammerToConsumer(callerCtx, hammer, esm.onItem, esm.onError)
+	go e.HammerToConsumer(callerCtx, hammer, esm.onItem, esm.onError)
 
 	return esm, nil
 }
@@ -58,7 +59,7 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("processing hammer batch", zap.Int("item_count", len(items)))
 
-	prefixes, prefixToIndex := gatherTransactionPrefixesToFetch(items, isIrreversibleEOSMatch)
+	prefixes, prefixToIndex := searchclient.GatherTransactionPrefixesToFetch(items, isIrreversibleEOSMatch)
 
 	var rows [][]*pbdeos.TransactionEvent
 	if len(prefixes) > 0 {
