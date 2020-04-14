@@ -16,7 +16,7 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e
+	github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd
 	github.com/dfuse-io/bstream v0.0.0-20200414143250-37af9e88b389
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
@@ -34,7 +34,7 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
-	github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027
+	github.com/dfuse-io/manageos v0.0.0-20200414171931-0e43eed11a2a
 	github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
@@ -94,5 +94,3 @@ replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/dfuse-io/blockmeta => /Users/cbillett/devel/dfuse/go/blockmeta

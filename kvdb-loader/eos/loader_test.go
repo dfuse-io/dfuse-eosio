@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/bstream/forkable"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/jsonpb"
 	_ "github.com/dfuse-io/kvdb/eosdb/sql"

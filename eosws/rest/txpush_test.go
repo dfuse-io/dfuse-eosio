@@ -20,12 +20,12 @@ import (
 
 	"context"
 
+	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/bstream/hub"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dstore"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
-	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dstore"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"

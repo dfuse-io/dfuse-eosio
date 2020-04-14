@@ -198,6 +198,8 @@ github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f h1:U5y3Y5UE0w7amNe
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFMt8koVQZ6WFms69WAsDWr2XsYL3Hkl7jkoLE=
 github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e h1:ZbBkWru2wmhg++aZjJRLW84xCKdJOpvaYJL6y9NqPD0=
 github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e/go.mod h1:uv/9BgaIY6rtg6zLnmp2SqlgeQscXS1UIW8KYHt+NHs=
+github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd h1:zCcy0yIZiLvVsw9t7w2KBVz8uqbBLS3Nj4TMj03i7Mc=
+github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd/go.mod h1:0k3XRo8HQnHy6tyGd1kNgKRbi6sC6bY8jgQ9ra0YsfI=
 github.com/dfuse-io/bstream v0.0.0-20200406220134-fe85c256872f/go.mod h1:F0M5wqDW9RtZwpPaBM8cZhUvYEyMtzuEWM+FU6z5n8Q=
 github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627 h1:57Lzw/oFw7/U6dG5yp9QiknMJEP9v/uuOgNNw5lteVE=
 github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627/go.mod h1:f1Nbm3kpk3fbcUl244zjyMbhdIGnDUvGxYkx8YAPQvU=
@@ -244,6 +246,8 @@ github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af h1:eh9e9gPlX+pMYc
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027 h1:LgkAFZOBD6ed+9MoVqfzfBeLS+iSzgBi/kDMaHGFy9I=
 github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027/go.mod h1:ORcyOuaHrGG7hJ89e/lTiUkzmNUhAdd3GLY7x622MN4=
+github.com/dfuse-io/manageos v0.0.0-20200414171931-0e43eed11a2a h1:kaCVu/zolPrLqzMTDWJSZKccFAKWqqa2JqeVbzgM3lQ=
+github.com/dfuse-io/manageos v0.0.0-20200414171931-0e43eed11a2a/go.mod h1:ORcyOuaHrGG7hJ89e/lTiUkzmNUhAdd3GLY7x622MN4=
 github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec h1:6JW/GH5xX1LRjU2qKDw/yilvDxHcUlJkpuBj6zpj+Hw=
 github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec/go.mod h1:nrWp+c40pfr0YqnRW6cFKM678+A+BoYB0tSZtDZFyyA=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=

@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"os"
@@ -23,6 +24,12 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/dfuse-io/bstream"
+	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/manageos/mindreader"
 
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
@@ -236,7 +243,21 @@ func init() {
 									to find how to install it.`)
 					os.Exit(1)
 				}
+
 			}
+			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
+				return deos.NewConsoleReader(reader)
+			}
+			//
+			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
+				blk, ok := obj.(*pbdeos.Block)
+				if !ok {
+					return nil, fmt.Errorf("expected *pbdeos.Block, got %T", obj)
+				}
+
+				return deos.BlockFromProto(blk)
+			}
+
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
 				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
 				NodeosAPIAddress:           viper.GetString("mindreader-api-addr"),
@@ -267,7 +288,7 @@ func init() {
 				WorkingDir:                 buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-working-dir")),
 				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
 				StartFailureHandlerFunc:    startUpFunc,
-			}), nil
+			}, &nodeosMindreaderApp.Modules{}), nil
 		},
 	})
 
@@ -501,7 +522,6 @@ func init() {
 				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
-				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir),
 			}, db), nil
 		},
 	})
