@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eos
+package kvdb_loader
 
 import (
-	eosgo "github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
 )
 
-type systemGeneratedTransaction struct {
-	trxID             string
-	signedTransaction *eosgo.SignedTransaction
+var zlog *zap.Logger
+
+func init() {
+	logging.Register("github.com/dfuse-io/dfuse-eosio/kvdb-loader", &zlog)
 }
