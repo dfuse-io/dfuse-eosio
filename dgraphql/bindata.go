@@ -10,7 +10,7 @@
 // transactions.graphql
 // DO NOT EDIT!
 
-package eos
+package dgraphql
 
 import (
 	"bytes"
@@ -287,14 +287,14 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"block.graphql": blockGraphql,
-	"blockmeta.graphql": blockmetaGraphql,
-	"query.graphql": queryGraphql,
-	"query_alpha.graphql": query_alphaGraphql,
-	"schema.graphql": schemaGraphql,
+	"block.graphql":              blockGraphql,
+	"blockmeta.graphql":          blockmetaGraphql,
+	"query.graphql":              queryGraphql,
+	"query_alpha.graphql":        query_alphaGraphql,
+	"schema.graphql":             schemaGraphql,
 	"search_transaction.graphql": search_transactionGraphql,
-	"subscription.graphql": subscriptionGraphql,
-	"transactions.graphql": transactionsGraphql,
+	"subscription.graphql":       subscriptionGraphql,
+	"transactions.graphql":       transactionsGraphql,
 }
 
 // AssetDir returns the file names below a certain
@@ -336,15 +336,16 @@ type bintree struct {
 	Func     func() (*asset, error)
 	Children map[string]*bintree
 }
+
 var _bintree = &bintree{nil, map[string]*bintree{
-	"block.graphql": &bintree{blockGraphql, map[string]*bintree{}},
-	"blockmeta.graphql": &bintree{blockmetaGraphql, map[string]*bintree{}},
-	"query.graphql": &bintree{queryGraphql, map[string]*bintree{}},
-	"query_alpha.graphql": &bintree{query_alphaGraphql, map[string]*bintree{}},
-	"schema.graphql": &bintree{schemaGraphql, map[string]*bintree{}},
+	"block.graphql":              &bintree{blockGraphql, map[string]*bintree{}},
+	"blockmeta.graphql":          &bintree{blockmetaGraphql, map[string]*bintree{}},
+	"query.graphql":              &bintree{queryGraphql, map[string]*bintree{}},
+	"query_alpha.graphql":        &bintree{query_alphaGraphql, map[string]*bintree{}},
+	"schema.graphql":             &bintree{schemaGraphql, map[string]*bintree{}},
 	"search_transaction.graphql": &bintree{search_transactionGraphql, map[string]*bintree{}},
-	"subscription.graphql": &bintree{subscriptionGraphql, map[string]*bintree{}},
-	"transactions.graphql": &bintree{transactionsGraphql, map[string]*bintree{}},
+	"subscription.graphql":       &bintree{subscriptionGraphql, map[string]*bintree{}},
+	"transactions.graphql":       &bintree{transactionsGraphql, map[string]*bintree{}},
 }}
 
 // RestoreAsset restores an asset under the given directory
@@ -393,4 +394,3 @@ func _filePath(dir, name string) string {
 	cannonicalName := strings.Replace(name, "\\", "/", -1)
 	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
-

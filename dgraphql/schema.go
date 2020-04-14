@@ -16,7 +16,7 @@
 // a binary format.
 //
 //go:generate go-bindata -ignore=\.go -ignore=testdata/.* -pkg=eos -o=bindata.go ./...
-package eos
+package dgraphql
 
 import "github.com/dfuse-io/dgraphql"
 

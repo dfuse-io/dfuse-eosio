@@ -17,8 +17,7 @@ package dgraphql
 import (
 	"fmt"
 
-	_ "github.com/dfuse-io/dfuse-eosio/dgraphql/eos" // register schemas
-	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/eos/resolvers"
+	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
