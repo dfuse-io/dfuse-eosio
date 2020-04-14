@@ -1,7 +1,9 @@
 name: Build and Test
 
-# This workflow will run on master branch and on any pull requests targeting master
-on: [push]
+on:
+  push:
+  branches:
+    - feature/checks
   
 jobs:
 
@@ -21,47 +23,47 @@ jobs:
       - name: Run Unit tests.
         run: go test ./...
 
-  build:
-    name: Build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # os: [ubuntu-16.04, macos-latest, windows-latest]
-        os: [ubuntu-16.04]
-    needs: [test]
-    steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-      - name: Check out code
-        uses: actions/checkout@v1
-      - name: Build
-        run: go build -o dfuseeos ./cmd/dfuseeos
-      - name: Upload binary
-        uses: actions/upload-artifact@v1
-        with:
-          name: files
-          path: dfuseeos
+  # build:
+  #   name: Build
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       # os: [ubuntu-16.04, macos-latest, windows-latest]
+  #       os: [ubuntu-16.04]
+  #   needs: [test]
+  #   steps:
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #     - name: Check out code
+  #       uses: actions/checkout@v1
+  #     - name: Build
+  #       run: go build -o dfuseeos ./cmd/dfuseeos
+  #     - name: Upload binary
+  #       uses: actions/upload-artifact@v1
+  #       with:
+  #         name: files
+  #         path: dfuseeos
 
-  smoke:
-    name: Smoke Test
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-      os: [ubuntu-16.04]
-    needs: [build]
-    steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-      - name: Check out code
-        uses: actions/checkout@v1
-      - name: Download artifacts from build step
-        uses: actions/download-artifact@v1
-        with:
-          name: files
-      - name: Smoke Test Time
-        run: mv files/dfuseeos . && cwd tests && DEBUG=true E2E_TESTS=true go test
+  # smoke:
+  #   name: Smoke Test
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #     os: [ubuntu-16.04]
+  #   needs: [build]
+  #   steps:
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #     - name: Check out code
+  #       uses: actions/checkout@v1
+  #     - name: Download artifacts from build step
+  #       uses: actions/download-artifact@v1
+  #       with:
+  #         name: files
+  #     - name: Smoke Test Time
+  #       run: mv files/dfuseeos . && cwd tests && DEBUG=true E2E_TESTS=true go test
   
