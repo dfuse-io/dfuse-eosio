@@ -67,6 +67,6 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: files
-        - name: Smoke Test Time
-          run: mv files/dfuseeos . && cwd tests && DEBUG=true E2E_TESTS=true go test
+      - name: Smoke Test Time
+        run: mv files/dfuseeos . && cwd tests && DEBUG=true E2E_TESTS=true go test
   
