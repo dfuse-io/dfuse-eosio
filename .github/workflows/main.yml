@@ -1,12 +1,7 @@
 name: Build and Test
 
 # This workflow will run on master branch and on any pull requests targeting master
-on:
-  push:
-  branches:
-    - feature/checks
-  tags: []
-  pull_request:
+on: [push]
   
 jobs:
 
