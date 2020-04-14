@@ -13,8 +13,8 @@ import (
 
 	"github.com/andreyvit/diff"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	"github.com/eoscanada/doh/jsonpb"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/eoscanada/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
