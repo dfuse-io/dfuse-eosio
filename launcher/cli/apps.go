@@ -24,6 +24,9 @@ import (
 	"strings"
 	"time"
 
+	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
@@ -484,6 +487,11 @@ func init() {
 				return nil, err
 			}
 
+			eosDBClient, err := eosdb.New(fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
+			db := &dblockmeta.EOSBlockmetaDB{
+				Driver: eosDBClient,
+			}
+
 			return blockmetaApp.New(&blockmetaApp.Config{
 				Protocol:                Protocol,
 				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
@@ -494,7 +502,7 @@ func init() {
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
 				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir),
-			}), nil
+			}, db), nil
 		},
 	})
 

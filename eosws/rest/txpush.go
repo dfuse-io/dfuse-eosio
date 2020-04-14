@@ -25,14 +25,14 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/eosws"
+	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/eoserr"
-	"github.com/dfuse-io/dfuse-eosio/eosws"
-	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )

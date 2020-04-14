@@ -22,8 +22,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dhammer"
-	"github.com/dfuse-io/kvdb/eosdb"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 )
 

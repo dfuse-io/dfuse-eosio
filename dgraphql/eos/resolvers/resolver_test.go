@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"testing"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dtracing"
-	"github.com/dfuse-io/kvdb/eosdb"
+	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

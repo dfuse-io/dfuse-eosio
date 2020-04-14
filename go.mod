@@ -9,6 +9,7 @@ require (
 	github.com/abourget/llerrgroup v0.2.0
 	github.com/abourget/viperbind v0.1.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
+	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
@@ -16,8 +17,9 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e
-	github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627
+	github.com/dfuse-io/bstream v0.0.0-20200414143250-37af9e88b389
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
+	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
 	github.com/dfuse-io/dgraphql v0.0.0-20200409211726-1e94df6b62a0
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
@@ -30,7 +32,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200407191956-e3308ad697fc
+	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
 	github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027
 	github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec
@@ -38,12 +40,12 @@ require (
 	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
 	github.com/dfuse-io/relayer v0.0.0-20200408161021-6c7af0ee655f
 	github.com/dfuse-io/search v0.0.0-20200409173607-5e4cd768c281
-	github.com/dfuse-io/search-client v0.0.0-20200408140718-84eca6793059
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
@@ -57,7 +59,9 @@ require (
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/manifoldco/promptui v0.7.0
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/minio/highwayhash v1.0.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
 	github.com/spf13/cobra v0.0.7
@@ -90,3 +94,5 @@ replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/dfuse-io/blockmeta => /Users/cbillett/devel/dfuse/go/blockmeta

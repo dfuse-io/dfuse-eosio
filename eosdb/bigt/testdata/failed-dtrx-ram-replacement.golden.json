@@ -1,0 +1,121 @@
+{
+  "Accounts": null,
+  "Blocks": [
+    {
+      "Key": "fffffffda",
+      "FamilyColumn": "block:proto",
+      "Value": {
+        "dposIrreversibleBlocknum": 1,
+        "header": {
+          "previous": "00000001a",
+          "producer": "tester",
+          "timestamp": "2006-01-02T15:04:05.500Z"
+        },
+        "id": "00000002a",
+        "number": 2
+      }
+    },
+    {
+      "Key": "fffffffda",
+      "FamilyColumn": "trxs:traceRefsProto",
+      "Value": {
+        "hashes": [
+          "a1",
+          "a2",
+          "a3"
+        ]
+      }
+    },
+    {
+      "Key": "fffffffda",
+      "FamilyColumn": "trxs:trxRefsProto",
+      "Value": {}
+    }
+  ],
+  "Timeline": null,
+  "Transactions": [
+    {
+      "Key": "a1:00000002a",
+      "FamilyColumn": "meta:blockheader",
+      "Value": {
+        "previous": "00000001a",
+        "producer": "tester",
+        "timestamp": "2006-01-02T15:04:05.500Z"
+      }
+    },
+    {
+      "Key": "a1:00000002a",
+      "FamilyColumn": "meta:written",
+      "Value": "\u0001"
+    },
+    {
+      "Key": "a1:00000002a",
+      "FamilyColumn": "trace:proto",
+      "Value": {
+        "id": "a1",
+        "ramOps": [
+          {
+            "action": "ACTION_REMOVE",
+            "namespace": "NAMESPACE_DEFERRED_TRX"
+          }
+        ]
+      }
+    },
+    {
+      "Key": "a2:00000002a",
+      "FamilyColumn": "meta:blockheader",
+      "Value": {
+        "previous": "00000001a",
+        "producer": "tester",
+        "timestamp": "2006-01-02T15:04:05.500Z"
+      }
+    },
+    {
+      "Key": "a2:00000002a",
+      "FamilyColumn": "meta:written",
+      "Value": "\u0001"
+    },
+    {
+      "Key": "a2:00000002a",
+      "FamilyColumn": "trace:proto",
+      "Value": {
+        "failedDtrxTrace": {
+          "id": "a1",
+          "ramOps": [
+            {
+              "action": "ACTION_REMOVE",
+              "namespace": "NAMESPACE_DEFERRED_TRX"
+            }
+          ]
+        },
+        "id": "a2",
+        "ramOps": [
+          {
+            "actionIndex": 2
+          }
+        ]
+      }
+    },
+    {
+      "Key": "a3:00000002a",
+      "FamilyColumn": "meta:blockheader",
+      "Value": {
+        "previous": "00000001a",
+        "producer": "tester",
+        "timestamp": "2006-01-02T15:04:05.500Z"
+      }
+    },
+    {
+      "Key": "a3:00000002a",
+      "FamilyColumn": "meta:written",
+      "Value": "\u0001"
+    },
+    {
+      "Key": "a3:00000002a",
+      "FamilyColumn": "trace:proto",
+      "Value": {
+        "id": "a3"
+      }
+    }
+  ]
+}

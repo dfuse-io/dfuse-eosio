@@ -25,14 +25,14 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/kvdb"
-	"github.com/dfuse-io/kvdb/eosdb"
 	"github.com/dfuse-io/logging"
+	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 

@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	kvdbloader "github.com/dfuse-io/dfuse-eosio/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/eos"
 	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
-	"github.com/dfuse-io/kvdb/eosdb"
+	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
 

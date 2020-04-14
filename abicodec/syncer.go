@@ -23,15 +23,15 @@ import (
 	"math"
 	"time"
 
+	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dgrpc"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dgrpc"
 	"github.com/eoscanada/eos-go"
-	"github.com/dfuse-io/kvdb/eosdb"
-	"github.com/dfuse-io/search-client"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +41,7 @@ type ABISyncer struct {
 	*shutter.Shutter
 
 	cache        Cache
-	client       *search.EOSClient
+	client       *searchclient.EOSClient
 	isLive       bool
 	onLive       func()
 	syncCtx      context.Context
@@ -59,7 +59,7 @@ func NewSyncer(cache Cache, dbReader eosdb.DBReader, searchAddr string, onLive f
 	syncer := &ABISyncer{
 		Shutter:      shutter.New(),
 		cache:        cache,
-		client:       search.NewEOSClient(searchConn, dbReader),
+		client:       searchclient.NewEOSClient(searchConn, dbReader),
 		onLive:       onLive,
 		syncCtx:      syncCtx,
 		cancelSyncer: cancelSyncer,
