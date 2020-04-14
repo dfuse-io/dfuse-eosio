@@ -28,7 +28,7 @@ import (
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/andreyvit/diff"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/jsonpb"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"

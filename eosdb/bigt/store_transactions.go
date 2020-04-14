@@ -17,7 +17,7 @@ package bigt
 import (
 	"fmt"
 
-	//"github.com/dfuse-io/bstream/codecs/deos"
+	//"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 )

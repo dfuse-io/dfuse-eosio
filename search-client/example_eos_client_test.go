@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/kvdb/eosdb"
-	_ "github.com/dfuse-io/kvdb/eosdb/bigt"
 	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"go.uber.org/zap"

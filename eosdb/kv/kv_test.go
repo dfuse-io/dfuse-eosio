@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	"github.com/dfuse-io/kvdb/eosdb/eosdbtest"
+	"github.com/dfuse-io/dfuse-eosio/eosdb/eosdbtest"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	"github.com/dfuse-io/logging"
 	"github.com/stretchr/testify/require"

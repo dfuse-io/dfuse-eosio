@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfuse-io/bstream/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/jsonpb"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"

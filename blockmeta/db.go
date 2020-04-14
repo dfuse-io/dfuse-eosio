@@ -18,6 +18,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/dfuse-io/blockmeta"
+
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"go.uber.org/zap"
@@ -63,7 +65,7 @@ func (db *EOSBlockmetaDB) GetForkPreviousBlocks(ctx context.Context, forkTop bst
 				zap.String("next_id", next.ID()),
 				zap.Uint64("next_num", next.Num()),
 			)
-			return nil, ErrNotFound
+			return nil, blockmeta.ErrNotFound
 		}
 		rows, err := db.Driver.ListBlocks(ctx, uint32(next.Num()), window)
 		if err != nil {
@@ -77,7 +79,7 @@ func (db *EOSBlockmetaDB) GetForkPreviousBlocks(ctx context.Context, forkTop bst
 				zap.Uint64("row_num", row.Block.Num()),
 			)
 			if row.Block.Num() < next.Num() {
-				return nil, ErrNotFound
+				return nil, blockmeta.ErrNotFound
 			}
 			if row.Block.ID() == next.ID() {
 				if row.Irreversible {

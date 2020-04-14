@@ -20,8 +20,8 @@ import (
 
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/eosdb/eosdbtest"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/kvdb/eosdb/eosdbtest"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
 )
