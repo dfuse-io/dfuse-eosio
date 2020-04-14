@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	bstream.AddBlockDecoder(pbbstream.Protocol_EOS, bstream.BlockDecoderFunc(BlockDecoder))
+	bstream.GetBlockDecoder = bstream.BlockDecoderFunc(BlockDecoder)
 }
 
 // BlockDecoder transforms a `bstream.Block` payload into a proper `deth.Block` value

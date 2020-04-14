@@ -22,5 +22,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/bstream/codecs/deos", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/codecs/deos", &zlog)
 }

@@ -25,7 +25,7 @@ import (
 )
 
 func init() {
-	bstream.AddBlockReaderFactory(pbbstream.Protocol_EOS, bstream.BlockReaderFactoryFunc(blockReaderFactory))
+	bstream.GetBlockReaderFactory = bstream.BlockReaderFactoryFunc(blockReaderFactory)
 }
 
 func blockReaderFactory(reader io.Reader) (bstream.BlockReader, error) {

@@ -15,9 +15,8 @@ require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
-	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e
-	github.com/dfuse-io/bstream v0.0.0-20200414143250-37af9e88b389
+	github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd
+	github.com/dfuse-io/bstream v0.0.0-20200414181649-ccb26f680c4a
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
@@ -34,7 +33,7 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
-	github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027
+	github.com/dfuse-io/manageos v0.0.0-20200414173559-7946045b7139
 	github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
@@ -49,7 +48,6 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
-	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
@@ -72,7 +70,6 @@ require (
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.5.0
 	github.com/tidwall/sjson v1.0.4
-	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
 	go.uber.org/automaxprocs v1.3.0
