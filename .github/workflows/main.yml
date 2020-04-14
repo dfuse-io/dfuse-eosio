@@ -10,6 +10,8 @@ on:
 jobs:
   lint:
     name: Build
+    env:
+      GOPRIVATE: github.com/dfuse-io/*
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
