@@ -60,24 +60,6 @@ func newDgraphqlResponse(trxID string, idx int) *SearchTransactionForwardRespons
 		},
 	}
 }
-
-func TestPrivateResoler(t *testing.T) {
-	pr := &PrivateResolver{
-		Root: Root{
-			searchClient:             nil,
-			trxsReader:               nil,
-			blocksReader:             nil,
-			accountsReader:           nil,
-			blockmetaClient:          nil,
-			chainDiscriminatorClient: nil,
-			abiCodecClient:           nil,
-		},
-		foo: "boo",
-	}
-
-	assert.Equal(t, "boo", pr.Test())
-	pr.QueryBlock()
-}
 func TestSubscriptionSearchForward(t *testing.T) {
 	ctx := dtracing.NewFixedTraceIDInContext(context.Background(), "00000000000000000000000000000000")
 

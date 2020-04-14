@@ -23,11 +23,11 @@ import (
 )
 
 func TestSchema(t *testing.T) {
-	resolver := resolvers.NewRoot(nil, nil, nil, nil, nil)
+	resolver := resolvers.NewRoot(nil, nil, nil, nil)
 
 	// This makes the necessary parsing of all schemas to ensure resolver correctly
 	// resolves the full schema.
-	_, err := dgraphql.NewSchemas(resolver, CommonSchema(), AlphaSchema())
+	_, err := dgraphql.NewSchemas(resolver)
 
 	if err != nil {
 		message := "EOS invalid schema nor resolver"

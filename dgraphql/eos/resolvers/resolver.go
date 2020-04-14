@@ -44,15 +44,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type PrivateResolver struct {
-	Root
-	foo string
-}
-
-func (pr *PrivateResolver) Test() string {
-	return pr.foo
-}
-
 // Root is the root resolver.
 type Root struct {
 	searchClient             pbsearch.RouterClient
