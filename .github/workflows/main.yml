@@ -22,11 +22,14 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v1
+      
+      - name: Granting private modules access
+        run: |
+          git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}:x-oauth-basic@github.com/dfuse-io".insteadOf "https://github.com/dfuse-io" 
 
       - name: Build dfuseeos
         run: |
-          # git config --global --add url."git@github.com:".insteadOf "https://github.com/"
-          # go get -x
+          go get -x
           go build -o dfuseeos ./cmd/dfuseeos
   
 # jobs:
