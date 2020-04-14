@@ -9,7 +9,7 @@ on:
   
 jobs:
   lint:
-    name: Test
+    name: Build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -23,9 +23,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Test Go Code
+      - name: Build dfuseeos
         run: |
-          go test ./...
+          go build -o dfuseeos ./cmd/dfuseeos
   
 # jobs:
 
