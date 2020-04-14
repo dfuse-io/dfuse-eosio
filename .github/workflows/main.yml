@@ -25,8 +25,6 @@ jobs:
 
       - name: Test Go Code
         run: |
-          export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-          go get -u golang.org/x/lint/golint 
           go test ./...
   
 # jobs:
