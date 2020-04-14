@@ -105,7 +105,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		KvdbHTTPServingAddr:      KvdbHTTPServingAddr,
 		IndexerServingAddr:       IndexerServingAddr,
 		IndexerHTTPServingAddr:   IndexerHTTPServingAddr,
-		TokenmetaServingAddr:     TokenmetaServingAddr, // Not implemented yet, present for booting purposes, does not work!
 		DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
 		DgraphqlGrpcServingAddr:  DgraphqlGrpcServingAddr,
 		DashboardGrpcServingAddr: DashboardGrpcServingAddr,
