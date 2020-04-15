@@ -488,7 +488,7 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 			// decoding just to check if the block payload is present.
 			eosMatch, err := searchSpecificMatchToEOSMatch(m.match)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("hammer func: %w", err)
 			}
 
 			if eosMatch.Block == nil {
@@ -530,9 +530,13 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 		defer hammer.Close()
 		for {
 			match, err := streamCli.Recv()
-			if err == io.EOF {
-				return
+			if err != nil {
+				if err == io.EOF {
+					return
+				}
+				err = fmt.Errorf("hammer search result: %w", err)
 			}
+
 			out := &matchOrError{
 				match: match,
 				err:   err, // we send non-EOF errors back to the client

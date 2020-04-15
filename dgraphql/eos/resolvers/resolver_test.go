@@ -19,39 +19,46 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
+
+	"go.uber.org/zap"
+
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dtracing"
+	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/gogo/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	//if os.Getenv("TEST_LOG") != "" {
+	zlog = logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel))
+	logging.Set(zlog)
+	//}
+}
+
 func newSearchMatchArchive(trxID string) *pbsearch.SearchMatch {
-	data, err := proto.Marshal(&pbsearcheos.Match{})
+	cs, err := ptypes.MarshalAny(&pbsearcheos.Match{})
 	if err != nil {
 		panic(err)
 	}
 	return &pbsearch.SearchMatch{
-		TrxIdPrefix: trxID,
-		BlockNum:    0,
-		Index:       0,
-		Cursor:      "",
-		ChainSpecific: &any.Any{
-			TypeUrl: "dfuse://eos.search.match",
-			Value:   data,
-		},
-		Undo:        false,
-		IrrBlockNum: 0,
+		TrxIdPrefix:   trxID,
+		BlockNum:      0,
+		Index:         0,
+		Cursor:        "",
+		ChainSpecific: cs,
+		Undo:          false,
+		IrrBlockNum:   0,
 	}
 }
 
 func newSearchMatchLive(trxID string, idx int) *pbsearch.SearchMatch {
-	data, err := proto.Marshal(&pbsearcheos.Match{
+	cs, err := ptypes.MarshalAny(&pbsearcheos.Match{
 		Block: &pbsearcheos.BlockTrxPayload{
 			Trace: &pbeos.TransactionTrace{Index: uint64(idx)},
 		},
@@ -61,11 +68,8 @@ func newSearchMatchLive(trxID string, idx int) *pbsearch.SearchMatch {
 	}
 
 	return &pbsearch.SearchMatch{
-		TrxIdPrefix: trxID,
-		ChainSpecific: &any.Any{
-			TypeUrl: "dfuse://eos.search.match",
-			Value:   data,
-		},
+		TrxIdPrefix:   trxID,
+		ChainSpecific: cs,
 	}
 }
 
@@ -165,7 +169,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				var expect []*SearchTransactionForwardResponse
 				for el := range res {
 					if el.err != nil {
-
+						require.NoError(t, el.err)
 					}
 					expect = append(expect, el)
 				}
