@@ -35,8 +35,8 @@ func Main() {
 		autoBind(RootCmd, "DFUSEEOS")
 	})
 
-	RootCmd.PersistentFlags().StringP("data-dir", "d", "./dfusebox-data", "Path to data storage for all components of dfuse")
-	RootCmd.PersistentFlags().StringP("config-file", "c", "./dfusebox.yaml", "dfusebox configuration file to use")
+	RootCmd.PersistentFlags().StringP("data-dir", "d", "./dfuse-data", "Path to data storage for all components of dfuse")
+	RootCmd.PersistentFlags().StringP("config-file", "c", "./dfuse.yaml", "dfuse configuration file to use")
 	RootCmd.PersistentFlags().String("nodeos-path", "nodeos", "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
 	RootCmd.PersistentFlags().CountP("verbose", "v", "Enables verbose output (-vvvv for max verbosity)")
 
@@ -48,5 +48,5 @@ func Main() {
 		setup()
 	}
 
-	derr.Check("dfusebox", RootCmd.Execute())
+	derr.Check("dfuse", RootCmd.Execute())
 }

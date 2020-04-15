@@ -61,7 +61,7 @@ A terminal prompt will list the graphical interfaces with their relevant links:
     Eosq: http://localhost:8081
 
 The **Dashboard** is a diagnostic tool to monitor the status of each
-component of dfusebox. It also provides a graph to visualize how far
+component of dfuse for EOSIO. It also provides a graph to visualize how far
 their head block has drifted from the current block.
 
 To run the dashboard in dev mode:
@@ -164,7 +164,7 @@ Please read [CONTRIBUTING.md] for details on our Code of Conduct, [CONVENTIONS.m
 
 ## Debugging
 
-It's possible to debug `dfusebox` by providing multiple times the
+It's possible to debug `dfuseeos` by providing multiple times the
 verbosity flags, like `-vvv` which enables debugging verbosity level
 3 (default is 0).
 
@@ -178,8 +178,8 @@ each log line has contextual information to help debugging.
 
 Level:
 
-- INFO `github.com/dfuse-io/dfusebox`
-- INFO `github.com/dfuse-io/dfusebox/cmd/dfusebox`
+- INFO `github.com/dfuse-io/dfuse-eosio`
+- INFO `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
 - <Hidden> All others
 
 Formatting:
@@ -193,8 +193,8 @@ Formatting:
 
 Level:
 
-- INFO `github.com/dfuse-io/dfusebox`
-- INFO `github.com/dfuse-io/dfusebox/cmd/dfusebox`
+- INFO `github.com/dfuse-io/dfuse-eosio`
+- INFO `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
 - WARN `github.com/dfuse-io/manageos.*`
 - INFO All others
 
@@ -209,8 +209,8 @@ Formatting:
 
 Level:
 
-- DEBUG `github.com/dfuse-io/dfusebox`
-- DEBUG `github.com/dfuse-io/dfusebox/cmd/dfusebox`
+- DEBUG `github.com/dfuse-io/dfuse-eosio`
+- DEBUG `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
 - INFO `github.com/dfuse-io/manageos.*`
 - INFO All others
 
@@ -253,7 +253,7 @@ Overrides behavior of verbosity for packages matching the `<regexp>` value
 as well as changing the formatting rules. For example, you can run:
 
 ```
-DEBUG="github.com/dfuse-io/bstream.*" dfusebox start
+DEBUG="github.com/dfuse-io/bstream.*" dfuseeos start
 ```
 
 Which will keep the level behavior of verbosity 0 but will set all loggers

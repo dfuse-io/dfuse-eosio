@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var purgeCmd = &cobra.Command{Use: "purge", Short: "Purges dfusebox's local data", RunE: dfusePurgeE}
+var purgeCmd = &cobra.Command{Use: "purge", Short: "Purges dfuse's local data", RunE: dfusePurgeE}
 
 func init() {
 	purgeCmd.Flags().BoolP("force", "f", false, "Force purging of data without user intervention")
@@ -46,7 +46,7 @@ func dfusePurgeE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	userLog.Printf("Purged data. Start a fresh instance with 'dfusebox start'")
+	userLog.Printf("Purged data. Start a fresh instance with 'dfuseeos start'")
 
 	return nil
 }

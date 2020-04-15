@@ -29,7 +29,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var initCmd = &cobra.Command{Use: "init", Short: "Initializes dfusebox's local environment", RunE: dfuseInitE}
+var initCmd = &cobra.Command{Use: "init", Short: "Initializes dfuse's local environment", RunE: dfuseInitE}
 
 func init() {
 	initCmd.Flags().StringP("genesis-file", "g", "", "Valid only for 'remote' mode, the genesis file needed to sync with remote peer, if empty (default), asked interactively")
@@ -79,7 +79,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("writing config file %s: %w", configFile, err)
 	}
 
-	userLog.Printf("Your dfusebox has been initialized correctly, run 'dfusebox start' to start your environment")
+	userLog.Printf("Your 'dfuse for EOSIO' instance has been initialized correctly, run 'dfuseeos start' to start your environment")
 	return nil
 }
 
@@ -155,13 +155,13 @@ func mkdirAllFolders(folders *launcher.EOSFolderStructure) error {
 }
 
 func askProducer() (bool, error) {
-	userLog.Printf(`dfusebox can run a local test node configured for block production,
+	userLog.Printf(`'dfuse for EOSIO' can run a local test node configured for block production,
 similar to what you use in development, with a clean blank chain and no contracts.
 
-Alternatively, dfusebox can connect to an already existing network.`)
+Alternatively, 'dfuse for EOSIO' can connect to an already existing network.`)
 
 	prompt := promptui.Prompt{
-		Label:     "Do you want dfusebox to run a producing node for you",
+		Label:     "Do you want 'dfuse for EOSIO' to run a producing node for you",
 		IsConfirm: true,
 	}
 

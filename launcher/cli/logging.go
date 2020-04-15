@@ -40,8 +40,8 @@ var commongLoggingDef = &launcher.LoggingDef{
 	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 }
 
-var dfuseboxLoggingDef = &launcher.LoggingDef{
-	Title:  "dfusebox",
+var dfuseLoggingDef = &launcher.LoggingDef{
+	Title:  "dfuse",
 	Levels: []zl{zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/dfuse-eosio(/metrics|/cmd/dfuseeos)?$",
 }
@@ -71,7 +71,7 @@ func setupLogger() {
 	for _, appDef := range launcher.AppRegistry {
 		logging.Set(createLogger(appDef.ID, appDef.Logger, verbosity, logFileWriter, logStdoutWriter), appDef.Logger.Regex)
 	}
-	logging.Set(createLogger("dfusebox", dfuseboxLoggingDef, verbosity, logFileWriter, logStdoutWriter), dfuseboxLoggingDef.Regex)
+	logging.Set(createLogger("dfuse", dfuseLoggingDef, verbosity, logFileWriter, logStdoutWriter), dfuseLoggingDef.Regex)
 	logging.Set(createLogger("bstream", bstreamLoggingDef, verbosity, logFileWriter, logStdoutWriter), bstreamLoggingDef.Regex)
 
 	// Fine-grain customization
@@ -120,7 +120,7 @@ func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, 
 func changeLoggersLevel(inputs string, level zapcore.Level) {
 	for _, input := range strings.Split(inputs, ",") {
 		normalizeInput := strings.Trim(input, " ")
-		if normalizeInput == "bstream" || normalizeInput == "dfusebox" || launcher.AppRegistry[normalizeInput] != nil {
+		if normalizeInput == "bstream" || normalizeInput == "dfuse" || launcher.AppRegistry[normalizeInput] != nil {
 			changeAppLogLevel(normalizeInput, level)
 		} else {
 			// Assumes it's a regex, we use the unnormalized input, just in case it had some spaces
@@ -161,10 +161,10 @@ func appLoggerLevel(levels []zl, verbosity int) zapcore.Level {
 func createLogFileWriter(dataDir string) zapcore.WriteSyncer {
 	_ = os.Mkdir(dataDir, 0755)
 
-	logFile := filepath.Join(dataDir, "dfusebox.log.json")
+	logFile := filepath.Join(dataDir, "dfuse.log.json")
 	writer, _, err := zap.Open(logFile)
 	if err != nil {
-		tempLogFile := filepath.Join(os.TempDir(), "dfusebox.log.json")
+		tempLogFile := filepath.Join(os.TempDir(), "dfuse.log.json")
 		fmt.Printf("Unable to use %q for logging purposes, trying with %q instead (error: %s)\n", logFile, tempLogFile, err)
 		writer, _, err := zap.Open(logFile)
 		if err != nil {
