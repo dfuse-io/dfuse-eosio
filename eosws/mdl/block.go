@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
 )
 
@@ -36,7 +36,7 @@ type BlockSummary struct {
 	DPoSLIBNum       uint32                `json:"dpos_lib_num"`
 }
 
-func ToV1BlockSummary(in *pbeos.BlockWithRefs) (*BlockSummary, error) {
+func ToV1BlockSummary(in *pbcodec.BlockWithRefs) (*BlockSummary, error) {
 	summary := &BlockSummary{
 		ID:               in.Id,
 		Irreversible:     in.Irreversible,
@@ -61,26 +61,26 @@ func ToV1BlockSummary(in *pbeos.BlockWithRefs) (*BlockSummary, error) {
 	return summary, nil
 }
 
-func downgradeActiveScheduleV2ToV1(in *pbeos.ProducerAuthoritySchedule) (*pbeos.ProducerSchedule, error) {
-	newProducers := make([]*pbeos.ProducerKey, len(in.Producers))
+func downgradeActiveScheduleV2ToV1(in *pbcodec.ProducerAuthoritySchedule) (*pbcodec.ProducerSchedule, error) {
+	newProducers := make([]*pbcodec.ProducerKey, len(in.Producers))
 	for i, producer := range in.Producers {
 		pubKey, err := extractFirstPublicKeyFromAuthority(producer.BlockSigningAuthority)
 		if err != nil {
 			return nil, fmt.Errorf("failed to downgrade schedule: %w", err)
 		}
-		newProducers[i] = &pbeos.ProducerKey{
+		newProducers[i] = &pbcodec.ProducerKey{
 			AccountName:     producer.AccountName,
 			BlockSigningKey: pubKey,
 		}
 	}
 
-	return &pbeos.ProducerSchedule{
+	return &pbcodec.ProducerSchedule{
 		Version:   in.Version,
 		Producers: newProducers,
 	}, nil
 }
 
-func extractFirstPublicKeyFromAuthority(in *pbeos.BlockSigningAuthority) (string, error) {
+func extractFirstPublicKeyFromAuthority(in *pbcodec.BlockSigningAuthority) (string, error) {
 	if in.GetV0() == nil {
 		return "", fmt.Errorf("only knowns how to deal with BlockSigningAuthority_V0 type, got %t", in.Variant)
 	}

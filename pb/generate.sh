@@ -19,11 +19,7 @@ current_dir="`pwd`"
 trap "cd \"$current_dir\"" EXIT
 pushd "$ROOT/pb" &> /dev/null
 
-protoc -I$ROOT/pb dfuse/codecs/eos/eos.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/eosdb/kv/v1/kv.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/funnel/v1/funnel.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/search/eos/v1/search.proto --go_out=plugins=grpc,paths=source_relative:.
-
-echo "generate.sh - `date` - `whoami`" > last_generate.txt
-echo -n "service-definitions revision: " >> last_generate.txt
-GIT_DIR=$ROOT/.git git rev-parse HEAD >> last_generate.txt
+protoc -I$ROOT/pb dfuse/eosio/codec/v1/codec.proto --go_out=plugins=grpc,paths=source_relative:.
+protoc -I$ROOT/pb dfuse/eosio/eosdb/v1/eosdb.proto --go_out=plugins=grpc,paths=source_relative:.
+protoc -I$ROOT/pb dfuse/eosio/funnel/v1/funnel.proto --go_out=plugins=grpc,paths=source_relative:.
+protoc -I$ROOT/pb dfuse/eosio/search/v1/search.proto --go_out=plugins=grpc,paths=source_relative:.

@@ -17,32 +17,32 @@ package eosdb
 import (
 	"context"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
 type TestTransactionsReader struct {
-	content map[string][]*pbeos.TransactionEvent
+	content map[string][]*pbcodec.TransactionEvent
 }
 
-func NewTestTransactionsReader(content map[string][]*pbeos.TransactionEvent) *TestTransactionsReader {
+func NewTestTransactionsReader(content map[string][]*pbcodec.TransactionEvent) *TestTransactionsReader {
 	return &TestTransactionsReader{content: content}
 }
 
-func (r *TestTransactionsReader) GetTransactionTraces(ctx context.Context, idPrefix string) ([]*pbeos.TransactionEvent, error) {
+func (r *TestTransactionsReader) GetTransactionTraces(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error) {
 	return r.content[idPrefix], nil
 }
 
-func (r *TestTransactionsReader) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbeos.TransactionEvent, err error) {
+func (r *TestTransactionsReader) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
 	for _, prefix := range idPrefixes {
 		out = append(out, r.content[prefix])
 	}
 	return
 }
 
-func (r *TestTransactionsReader) GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbeos.TransactionEvent, error) {
+func (r *TestTransactionsReader) GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error) {
 	panic("not implemented")
 }
 
-func (r *TestTransactionsReader) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbeos.TransactionEvent, error) {
+func (r *TestTransactionsReader) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error) {
 	panic("not implemented")
 }

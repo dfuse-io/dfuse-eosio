@@ -18,12 +18,12 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/proto"
 )
 
-func BlockFromProto(b *pbeos.Block) (*bstream.Block, error) {
+func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {
 	content, err := proto.Marshal(b)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal to binary form: %s", err)

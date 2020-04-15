@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/andreyvit/diff"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	eos "github.com/eoscanada/eos-go"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
+	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +24,7 @@ import (
 func TestPreprocessTokenization_EOS(t *testing.T) {
 	tests := []struct {
 		name  string
-		block *pbeos.Block
+		block *pbcodec.Block
 	}{
 		{"standard-block", deosTestBlock(t, "00000001a", nil,
 			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
@@ -186,16 +186,16 @@ func fromFixture(t *testing.T, path string) string {
 	return string(cnt)
 }
 
-func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbeos.Block), trxTraceJSONs ...string) *pbeos.Block {
-	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
+func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.Block), trxTraceJSONs ...string) *pbcodec.Block {
+	trxTraces := make([]*pbcodec.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbeos.TransactionTrace)
+		trxTrace := new(pbcodec.TransactionTrace)
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbeos.Block{
+	pbblock := &pbcodec.Block{
 		Id:                id,
 		Number:            eos.BlockNum(id),
 		TransactionTraces: trxTraces,
@@ -208,7 +208,7 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbeos.Bl
 	require.NoError(t, err)
 
 	pbblock.DposIrreversibleBlocknum = pbblock.Number - 1
-	pbblock.Header = &pbeos.BlockHeader{
+	pbblock.Header = &pbcodec.BlockHeader{
 		Previous:  fmt.Sprintf("%08d%s", pbblock.Number-1, id[8:]),
 		Producer:  "tester",
 		Timestamp: blockTimestamp,

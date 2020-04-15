@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package dfuse.search.eos.v1;
+package dfuse.eosio.search.v1;
 
-option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1;pbsearcheos";
+option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1;pbsearcheos";
 
-import "dfuse/codecs/eos/eos.proto";
+import "dfuse/eosio/codec/v1/codec.proto";
 
 message DocumentID {
   uint64 blockNum = 1;
@@ -20,6 +20,6 @@ message Match {
 
 message BlockTrxPayload {
   string blockID = 1;
-  dfuse.codecs.eos.BlockHeader blockHeader = 2;
-  dfuse.codecs.eos.TransactionTrace trace = 3;
+  dfuse.eosio.codec.v1.BlockHeader blockHeader = 2;
+  dfuse.eosio.codec.v1.TransactionTrace trace = 3;
 }

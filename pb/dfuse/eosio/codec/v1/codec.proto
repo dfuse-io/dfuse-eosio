@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package dfuse.codecs.eos;
+package dfuse.eosio.codec.v1;
 
-option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos;pbeos";
+option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1;pbcodec";
 
 import "google/protobuf/timestamp.proto";
 

@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +30,7 @@ import (
 )
 
 func Benchmark_ToV1TransactionTrace(b *testing.B) {
-	transactionTrace := &pbeos.TransactionTrace{}
+	transactionTrace := &pbcodec.TransactionTrace{}
 	unmarshalFromFixture(filepath.Join("testdata", "01-trx-block-v2.json"), transactionTrace)
 
 	b.ReportAllocs()
@@ -42,7 +42,7 @@ func Benchmark_ToV1TransactionTrace(b *testing.B) {
 }
 
 func TestToV1ActionTraceEmptyNoPanic(t *testing.T) {
-	ToV1ActionTrace(&pbeos.ActionTrace{}) // should not panic
+	ToV1ActionTrace(&pbcodec.ActionTrace{}) // should not panic
 }
 
 // func TestConvertEOSToDEOS(t *testing.T) {
@@ -63,7 +63,7 @@ func TestToTransactionV1Lifecycle(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			transactionTrace := &pbeos.TransactionTrace{}
+			transactionTrace := &pbcodec.TransactionTrace{}
 			protoJSONUnmarshal(t, fromFixture(filepath.Join("testdata", test.fixture)), transactionTrace)
 
 			convertedTrace, err := ToV1TransactionTrace(transactionTrace)
@@ -96,7 +96,7 @@ func TestToActionTraceRaw(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			transactionTrace := &pbeos.TransactionTrace{}
+			transactionTrace := &pbcodec.TransactionTrace{}
 			protoJSONUnmarshal(t, fromFixture(filepath.Join("testdata", test.fixture)), transactionTrace)
 
 			actionTraces := transactionTrace.ActionTraces

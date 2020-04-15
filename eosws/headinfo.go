@@ -22,7 +22,7 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
@@ -67,7 +67,7 @@ func (h *HeadInfoHub) Launch(ctx context.Context) {
 	handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		fObj := obj.(*forkable.ForkableObject)
 		if fObj.Step == forkable.StepNew {
-			blk := block.ToNative().(*pbeos.Block)
+			blk := block.ToNative().(*pbcodec.Block)
 
 			headInfo := &wsmsg.HeadInfo{}
 			headInfo.Data = &wsmsg.HeadInfoData{

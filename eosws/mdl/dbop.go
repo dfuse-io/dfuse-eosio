@@ -19,18 +19,18 @@ import (
 
 	v0 "github.com/dfuse-io/eosws-go/mdl/v0"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 )
 
-func ToV1DBOps(in []*pbeos.DBOp) (out []*v1.DBOp) {
+func ToV1DBOps(in []*pbcodec.DBOp) (out []*v1.DBOp) {
 	for _, inOp := range in {
 		out = append(out, ToV1DBOp(inOp))
 	}
 	return out
 }
 
-func ToV1DBOp(in *pbeos.DBOp) *v1.DBOp {
+func ToV1DBOp(in *pbcodec.DBOp) *v1.DBOp {
 	out := &v1.DBOp{
 		Op:          in.LegacyOperation(),
 		ActionIndex: int(in.ActionIndex),
@@ -45,14 +45,14 @@ func ToV1DBOp(in *pbeos.DBOp) *v1.DBOp {
 
 }
 
-func ToV0DBOps(in []*pbeos.DBOp) (out []*v0.DBOp) {
+func ToV0DBOps(in []*pbcodec.DBOp) (out []*v0.DBOp) {
 	for _, inOp := range in {
 		out = append(out, ToV0DBOp(inOp))
 	}
 	return out
 }
 
-func ToV0DBOp(in *pbeos.DBOp) *v0.DBOp {
+func ToV0DBOp(in *pbcodec.DBOp) *v0.DBOp {
 	out := &v0.DBOp{
 		Operation:   in.LegacyOperation(),
 		ActionIndex: int(in.ActionIndex),

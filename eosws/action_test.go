@@ -35,7 +35,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -45,8 +45,8 @@ import (
 )
 
 func TestOnGetActionsTraces(t *testing.T) {
-	statusExecuted := pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
-	statusHardFail := pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
+	statusExecuted := pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
+	statusHardFail := pbcodec.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
 
 	rand.Seed(time.Now().UnixNano())
 	actionTracesMsg := func(reqID string, data string) string {
@@ -383,15 +383,15 @@ func encode(t *testing.T, i interface{}) []byte {
 	return buf.Bytes()
 }
 
-func acceptedBlockWithActions(t *testing.T, blockID string, status pbeos.TransactionStatus, actionTriplets ...string) []byte {
+func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.TransactionStatus, actionTriplets ...string) []byte {
 	t.Helper()
 
-	var actTraces []*pbeos.ActionTrace
+	var actTraces []*pbcodec.ActionTrace
 	for _, actionTriplet := range actionTriplets {
 		parts := strings.Split(actionTriplet, ":")
-		actTraces = append(actTraces, &pbeos.ActionTrace{
+		actTraces = append(actTraces, &pbcodec.ActionTrace{
 			Receiver: parts[0],
-			Action: &pbeos.Action{
+			Action: &pbcodec.Action{
 				Account: parts[1],
 				Name:    parts[2],
 			},
@@ -401,17 +401,17 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbeos.Transac
 	stamp, _ := ptypes.TimestampProto(time.Time{})
 
 	ref := bstream.BlockRefFromID(blockID)
-	blk := &pbeos.Block{
+	blk := &pbcodec.Block{
 		Id:     blockID,
 		Number: uint32(ref.Num()),
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Previous:  fmt.Sprintf("%08d", ref.Num()-1) + ref.ID()[8:],
 			Timestamp: stamp,
 		},
-		TransactionTraces: []*pbeos.TransactionTrace{
+		TransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "trx.1",
-				Receipt: &pbeos.TransactionReceiptHeader{
+				Receipt: &pbcodec.TransactionReceiptHeader{
 					Status: status,
 				},
 				ActionTraces: actTraces,
@@ -419,10 +419,10 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbeos.Transac
 		},
 	}
 
-	return pbeosBlockToFile(t, blk)
+	return pbcodecBlockToFile(t, blk)
 }
 
-func pbeosBlockToFile(t *testing.T, in *pbeos.Block) []byte {
+func pbcodecBlockToFile(t *testing.T, in *pbcodec.Block) []byte {
 	t.Helper()
 
 	var buf bytes.Buffer

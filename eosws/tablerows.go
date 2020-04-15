@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
@@ -175,7 +175,7 @@ func tableDeltasFromBlock(block *bstream.Block, msg *wsmsg.GetTableRows, abi *eo
 	zlog.Debug("about to stream table deltas from block", zap.Stringer("block", block), zap.String("step", step.String()))
 	var deltas []*wsmsg.TableDelta
 
-	blk := block.ToNative().(*pbeos.Block)
+	blk := block.ToNative().(*pbcodec.Block)
 	for _, trxTrace := range blk.TransactionTraces {
 		for _, dbOp := range trxTrace.DbOps {
 			if dbOp.Code != string(msg.Data.Code) || dbOp.TableName != string(msg.Data.TableName) || dbOp.Scope != string(*msg.Data.Scope) {

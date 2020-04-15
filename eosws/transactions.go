@@ -24,12 +24,12 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
 )
 
 func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransaction) {
-	var srcTx *pbeos.TransactionLifecycle
+	var srcTx *pbcodec.TransactionLifecycle
 	var err error
 
 	startBlockID, err := ws.db.GetLastWrittenBlockID(ctx)
@@ -78,7 +78,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 				waitForIrreversible = true
 			}
 
-			blk := block.ToNative().(*pbeos.Block)
+			blk := block.ToNative().(*pbcodec.Block)
 
 			transactionIds := make([]string, len(blk.TransactionTraces))
 			for i, transaction := range blk.TransactionTraces {

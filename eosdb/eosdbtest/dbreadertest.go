@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,7 +48,7 @@ func TestAllDbReader(t *testing.T, driverName string, driverFactory DriverFactor
 func TestGetBlock(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		block         *pbeos.Block
+		block         *pbcodec.Block
 		blockId       string
 		expectErr     error
 		expectBlockId string
@@ -91,14 +91,14 @@ func TestGetBlock(t *testing.T, driverFactory DriverFactory) {
 func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name           string
-		blocks         []*pbeos.Block
+		blocks         []*pbcodec.Block
 		blockNum       uint32
 		expectErr      error
 		expectBlockIds []string
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000003aa"),
 				TestBlock(t, "00000004aa", "00000004aa"),
@@ -108,7 +108,7 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "block does not exist",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 			},
 			blockNum:  3,
@@ -116,7 +116,7 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "return multiple blocks with same number",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000002dd", "00000001aa"),
 			},
@@ -155,15 +155,15 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		blocks        []*pbeos.Block
-		irrBlock      []*pbeos.Block
+		blocks        []*pbcodec.Block
+		irrBlock      []*pbcodec.Block
 		blockNum      uint32
 		expectBlockId string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -171,7 +171,7 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 				TestBlock(t, "00000007aa", "00000006aa"),
 				TestBlock(t, "00000008aa", "00000007aa"),
 			},
-			irrBlock: []*pbeos.Block{
+			irrBlock: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -181,7 +181,7 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 		},
 		{
 			name: "no irr blocks",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -195,7 +195,7 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 		},
 		{
 			name: "looking for irr block",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -203,7 +203,7 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 				TestBlock(t, "00000007aa", "00000006aa"),
 				TestBlock(t, "00000008aa", "00000007aa"),
 			},
-			irrBlock: []*pbeos.Block{
+			irrBlock: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000004aa", "00000003aa"),
@@ -243,13 +243,13 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 func TestGetLastWrittenBlockID(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		blocks        []*pbeos.Block
+		blocks        []*pbcodec.Block
 		expectBlockId string
 		expectError   error
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -261,7 +261,7 @@ func TestGetLastWrittenBlockID(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name:          "not found",
-			blocks:        []*pbeos.Block{},
+			blocks:        []*pbcodec.Block{},
 			expectBlockId: "",
 			expectError:   kvdb.ErrNotFound,
 		},
@@ -294,15 +294,15 @@ func TestGetLastWrittenBlockID(t *testing.T, driverFactory DriverFactory) {
 func TestGetIrreversibleIDAtBlockID(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		blocks        []*pbeos.Block
-		irrBlock      []*pbeos.Block
+		blocks        []*pbcodec.Block
+		irrBlock      []*pbcodec.Block
 		blockID       string
 		expectBlockId string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -310,7 +310,7 @@ func TestGetIrreversibleIDAtBlockID(t *testing.T, driverFactory DriverFactory) {
 				TestBlock(t, "00000007aa", "00000006aa"),
 				TestBlock(t, "00000008aa", "00000007aa"),
 			},
-			irrBlock: []*pbeos.Block{
+			irrBlock: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),
@@ -322,7 +322,7 @@ func TestGetIrreversibleIDAtBlockID(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "no irr blocks",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				TestBlock(t, "00000002aa", "00000001aa"),
 				TestBlock(t, "00000003aa", "00000002aa"),
 				TestBlock(t, "00000005aa", "00000004aa"),

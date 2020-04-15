@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -30,9 +30,9 @@ SELECT account, blockId, blockNum, blockTime, creator, trxId
     FROM accts
 `
 
-func (db *DB) scanAccountRows(rows *sql.Rows) (out []*pbeos.AccountCreationRef, err error) {
+func (db *DB) scanAccountRows(rows *sql.Rows) (out []*pbcodec.AccountCreationRef, err error) {
 	for rows.Next() {
-		account := &pbeos.AccountCreationRef{
+		account := &pbcodec.AccountCreationRef{
 			Account:       "",
 			Creator:       "",
 			BlockNum:      0,
@@ -61,7 +61,7 @@ func (db *DB) scanAccountRows(rows *sql.Rows) (out []*pbeos.AccountCreationRef, 
 	return
 }
 
-func (db *DB) putNewAccount(blk *pbeos.Block, trace *pbeos.TransactionTrace, act *pbeos.ActionTrace) error {
+func (db *DB) putNewAccount(blk *pbcodec.Block, trace *pbcodec.TransactionTrace, act *pbcodec.ActionTrace) error {
 	// TODO: do we ALWAYS have the decoded data for `newaccount`, even at the beginning of the chain? Do we have an ABI set during the boot sequence?
 	_, err := db.db.Exec(INSERT_IGNORE+"INTO accts (account, blockId, blockNum, blockTime, creator, trxId) VALUES (?, ?, ?, ?, ?, ?)",
 		act.GetData("name").String(),
@@ -77,7 +77,7 @@ func (db *DB) putNewAccount(blk *pbeos.Block, trace *pbeos.TransactionTrace, act
 	return nil
 }
 
-func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbeos.AccountCreationRef, error) {
+func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error) {
 	q := accountSelectFields + `WHERE accts.account = ?`
 	rows, err := db.db.QueryContext(ctx, q, accountName)
 	if err != nil {

@@ -23,13 +23,13 @@ import (
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/stretchr/testify/require"
 )
 
 type e2eTester func(ctx context.Context, t *testing.T, feedBlocks blocksFeeder, e *httpexpect.Expect)
-type blocksFeeder func(blocks ...*pbeos.Block)
+type blocksFeeder func(blocks ...*pbcodec.Block)
 
 func e2eTest(t *testing.T, storeFactory StoreFactory, tester e2eTester) {
 	ctx := context.Background()
@@ -49,7 +49,7 @@ func e2eTest(t *testing.T, storeFactory StoreFactory, tester e2eTester) {
 
 	server := server.New(":25678", db)
 
-	runSource := func(blocks ...*pbeos.Block) {
+	runSource := func(blocks ...*pbcodec.Block) {
 		source := bstream.NewMockSource(bstreamBlocks(t, blocks...), bstream.NewPreprocessor(fluxdb.PreprocessBlock, forkable.New(handler)))
 		source.Run()
 

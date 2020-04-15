@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pbeos
+package pbcodec
 
 import (
 	"encoding/json"
@@ -108,7 +108,7 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 // since we need a standalone loop here because call after the
 // fact.
 //
-// This is actual used on in `pbeos.Block.ToNative` function to
+// This is actual used on in `pbcodec.Block.ToNative` function to
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
 func (b *Block) PopulateActionAndTransactionCount() {

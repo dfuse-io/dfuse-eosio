@@ -21,7 +21,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
 )
@@ -36,12 +36,12 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		return nil, derr.Wrapf(err, "unable to decode block ID %q", rawBlk.ID())
 	}
 
-	blk := rawBlk.ToNative().(*pbeos.Block)
+	blk := rawBlk.ToNative().(*pbcodec.Block)
 
-	lastDbOpForRowPath := map[string]*pbeos.DBOp{}
+	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
 	lastKeyAccountOpForRowPath := map[string]*keyAccountOp{}
-	lastTableOpForTablePath := map[string]*pbeos.TableOp{}
+	lastTableOpForTablePath := map[string]*pbcodec.TableOp{}
 
 	req := &WriteRequest{
 		BlockNum: uint32(rawBlk.Num()),
@@ -50,18 +50,18 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 	for _, trx := range blk.TransactionTraces {
 		for _, dbOp := range trx.DbOps {
-			if dbOp.Operation == pbeos.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {
+			if dbOp.Operation == pbcodec.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {
 				continue
 			}
 
 			path := tableDataRowPath(dbOp)
 
 			lastOp := lastDbOpForRowPath[path]
-			if lastOp == nil && dbOp.Operation == pbeos.DBOp_OPERATION_INSERT {
+			if lastOp == nil && dbOp.Operation == pbcodec.DBOp_OPERATION_INSERT {
 				firstDbOpWasInsert[path] = true
 			}
 
-			if dbOp.Operation == pbeos.DBOp_OPERATION_REMOVE && firstDbOpWasInsert[path] {
+			if dbOp.Operation == pbcodec.DBOp_OPERATION_REMOVE && firstDbOpWasInsert[path] {
 				delete(firstDbOpWasInsert, path)
 				delete(lastDbOpForRowPath, path)
 			} else {
@@ -119,25 +119,25 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 	return req, nil
 }
 
-func permOpToKeyAccountOps(permOp *pbeos.PermOp) []*keyAccountOp {
+func permOpToKeyAccountOps(permOp *pbcodec.PermOp) []*keyAccountOp {
 	switch permOp.Operation {
-	case pbeos.PermOp_OPERATION_INSERT:
+	case pbcodec.PermOp_OPERATION_INSERT:
 		return permOpDataToKeyAccountOps(keyAccountOperationInsert, permOp.NewPerm)
-	case pbeos.PermOp_OPERATION_UPDATE:
+	case pbcodec.PermOp_OPERATION_UPDATE:
 		var ops []*keyAccountOp
 
 		ops = append(ops, permOpDataToKeyAccountOps(keyAccountOperationRemove, permOp.OldPerm)...)
 		ops = append(ops, permOpDataToKeyAccountOps(keyAccountOperationInsert, permOp.NewPerm)...)
 
 		return ops
-	case pbeos.PermOp_OPERATION_REMOVE:
+	case pbcodec.PermOp_OPERATION_REMOVE:
 		return permOpDataToKeyAccountOps(keyAccountOperationRemove, permOp.OldPerm)
 	}
 
 	panic(fmt.Errorf("unknown perm op %s", permOp.Operation))
 }
 
-func permOpDataToKeyAccountOps(operation keyAccountOperation, perm *pbeos.PermissionObject) []*keyAccountOp {
+func permOpDataToKeyAccountOps(operation keyAccountOperation, perm *pbcodec.PermissionObject) []*keyAccountOp {
 	account := perm.Owner
 	permission := perm.Name
 
@@ -163,7 +163,7 @@ func permOpDataToKeyAccountOps(operation keyAccountOperation, perm *pbeos.Permis
 	return ops
 }
 
-func dbOpsToWritableRows(latestDbOps map[string]*pbeos.DBOp) (rows []*TableDataRow, err error) {
+func dbOpsToWritableRows(latestDbOps map[string]*pbcodec.DBOp) (rows []*TableDataRow, err error) {
 	for _, op := range latestDbOps {
 		rows = append(rows, &TableDataRow{
 			Account:  N(op.Code),
@@ -171,7 +171,7 @@ func dbOpsToWritableRows(latestDbOps map[string]*pbeos.DBOp) (rows []*TableDataR
 			Table:    N(op.TableName),
 			PrimKey:  N(op.PrimaryKey),
 			Payer:    N(op.NewPayer),
-			Deletion: op.Operation == pbeos.DBOp_OPERATION_REMOVE,
+			Deletion: op.Operation == pbcodec.DBOp_OPERATION_REMOVE,
 			Data:     op.NewData,
 		})
 	}
@@ -192,21 +192,21 @@ func keyAccountOpsToWritableRows(latestKeyAccountOps map[string]*keyAccountOp) (
 	return
 }
 
-func tableOpsToWritableRows(latestTableOps map[string]*pbeos.TableOp) (rows []*TableScopeRow) {
+func tableOpsToWritableRows(latestTableOps map[string]*pbcodec.TableOp) (rows []*TableScopeRow) {
 	for _, op := range latestTableOps {
 		rows = append(rows, &TableScopeRow{
 			Account:  N(op.Code),
 			Scope:    N(op.Scope),
 			Table:    N(op.TableName),
 			Payer:    N(op.Payer),
-			Deletion: op.Operation == pbeos.TableOp_OPERATION_REMOVE,
+			Deletion: op.Operation == pbcodec.TableOp_OPERATION_REMOVE,
 		})
 	}
 
 	return
 }
 
-func extractABIRow(blockNum uint32, action *pbeos.Action) (*ABIRow, error) {
+func extractABIRow(blockNum uint32, action *pbcodec.Action) (*ABIRow, error) {
 	var setABI *system.SetABI
 	if err := action.UnmarshalData(&setABI); err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func extractABIRow(blockNum uint32, action *pbeos.Action) (*ABIRow, error) {
 	}, nil
 }
 
-func extractLinkAuthLinkRow(action *pbeos.Action) (*AuthLinkRow, error) {
+func extractLinkAuthLinkRow(action *pbcodec.Action) (*AuthLinkRow, error) {
 	var linkAuth *system.LinkAuth
 	if err := action.UnmarshalData(&linkAuth); err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func extractLinkAuthLinkRow(action *pbeos.Action) (*AuthLinkRow, error) {
 	}, nil
 }
 
-func extractUnlinkAuthLinkRow(action *pbeos.Action) (*AuthLinkRow, error) {
+func extractUnlinkAuthLinkRow(action *pbcodec.Action) (*AuthLinkRow, error) {
 	var unlinkAuth *system.UnlinkAuth
 	if err := action.UnmarshalData(&unlinkAuth); err != nil {
 		return nil, err
@@ -247,18 +247,18 @@ func extractUnlinkAuthLinkRow(action *pbeos.Action) (*AuthLinkRow, error) {
 	}, nil
 }
 
-func tableDataRowPath(op *pbeos.DBOp) string {
+func tableDataRowPath(op *pbcodec.DBOp) string {
 	return op.Code + "/" + op.Scope + "/" + op.TableName + "/" + op.PrimaryKey
 }
 
-func tableRowPath(op *pbeos.TableOp) string {
+func tableRowPath(op *pbcodec.TableOp) string {
 	return op.Code + "/" + op.Scope + "/" + op.TableName
 }
 
-// Represents a smaller transformation of a `pbeos.PermOp` to an operation
+// Represents a smaller transformation of a `pbcodec.PermOp` to an operation
 // that added or deleted an account/permission pair for a given public key.
 //
-// This is done because a single `pbeos.PermOp` can results into multiple
+// This is done because a single `pbcodec.PermOp` can results into multiple
 // account/permission pair being added or removed for a given public key.
 type keyAccountOperation int
 

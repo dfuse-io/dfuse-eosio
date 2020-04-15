@@ -38,7 +38,7 @@ import (
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
@@ -237,9 +237,9 @@ func init() {
 			}
 			//
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
-				blk, ok := obj.(*pbeos.Block)
+				blk, ok := obj.(*pbcodec.Block)
 				if !ok {
-					return nil, fmt.Errorf("expected *pbeos.Block, got %T", obj)
+					return nil, fmt.Errorf("expected *pbcodec.Block, got %T", obj)
 				}
 
 				return codec.BlockFromProto(blk)

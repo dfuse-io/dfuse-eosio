@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pbeos
+package pbcodec
 
 func NewTestAddEvent(idx int) *TransactionEvent_Addition {
 	return &TransactionEvent_Addition{Addition: &TransactionEvent_Added{

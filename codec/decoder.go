@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/proto"
 )
@@ -33,7 +33,7 @@ func BlockDecoder(blk *bstream.Block) (interface{}, error) {
 		return nil, fmt.Errorf("this decoder only knows about version 1, got %d", blk.Version())
 	}
 
-	block := new(pbeos.Block)
+	block := new(pbcodec.Block)
 	err := proto.Unmarshal(blk.Payload(), block)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode payload: %s", err)

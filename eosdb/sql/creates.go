@@ -87,7 +87,7 @@ var createBlocksBlksNumIndexesStmt = `
 	CREATE INDEX blks_num ON blks (number);
 `
 
-// TODO: add an `accountCreationSummary` in `pbeos` and use that here instead of
+// TODO: add an `accountCreationSummary` in `pbcodec` and use that here instead of
 //       creationJson.
 // Eventually EXPOSE IT in GraphQL (!!!)
 // TODO: this needs a `blockId` to be navigated, and use the irreversible one

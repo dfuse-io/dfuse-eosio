@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pbeos
+package pbcodec
 
 import (
 	"fmt"
@@ -132,7 +132,7 @@ func sortEvents(events []*TransactionEvent) []*TransactionEvent {
 
 // This should replace, or we assign it at the end inside the Lifecycle.TransactionStatus
 func getTransactionLifeCycleStatus(lifeCycle *TransactionLifecycle) TransactionStatus {
-	// FIXME: this function belongs to the sample place as the stitcher, probably in `pbeos`
+	// FIXME: this function belongs to the sample place as the stitcher, probably in `pbcodec`
 	// alongside the rest.
 	if lifeCycle.CanceledBy != nil {
 		return TransactionStatus_TRANSACTIONSTATUS_CANCELED

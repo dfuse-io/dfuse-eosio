@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -51,7 +51,7 @@ func (m *EOSSearchMatch) FillProtoSpecific(match *pbsearch.SearchMatch, block *b
 }
 
 func (m *EOSSearchMatch) buildBlockTrxPayload(block *bstream.Block) *pbsearcheos.BlockTrxPayload {
-	blk := block.ToNative().(*pbeos.Block)
+	blk := block.ToNative().(*pbcodec.Block)
 
 	if m.TrxIDPrefix == "" {
 		return &pbsearcheos.BlockTrxPayload{

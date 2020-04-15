@@ -27,8 +27,8 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
 	"github.com/dfuse-io/dgraphql/metrics"
@@ -264,7 +264,7 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 			// This ensures that we have Irreversible Traces events, even if `kvdb` didn't load
 			// it fast enough.  If we can't validate it with the `inCanonicalChain` call,
 			// then we hard-fail.
-			lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool {
+			lifecycle := pbcodec.MergeTransactionEvents(events, func(id string) bool {
 				// Query blockmetaClient.Ge
 				resp, err := r.blockmetaClient.ChainDiscriminatorClient().InLongestChain(ctx, &pbblockmeta.InLongestChainRequest{
 					BlockID: id,
@@ -329,7 +329,7 @@ type matchOrError struct {
 	err   error
 }
 
-func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int, abiCodecClient pbabicodec.DecoderClient) (*SearchTransactionForwardResponse, error) {
+func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbcodec.TransactionEvent, rowMap map[string]int, abiCodecClient pbabicodec.DecoderClient) (*SearchTransactionForwardResponse, error) {
 	if m.err != nil {
 		return &SearchTransactionForwardResponse{
 			err: dgraphql.UnwrapError(ctx, m.err),
@@ -400,7 +400,7 @@ func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbeos.T
 	// choice, return that Only ONE thing guarantees it: it's that
 	// Trace corresponds to a block in the canonical chain.  Query a
 	// block meta, to know if the block_id is in canonical chain.
-	lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool { return true })
+	lifecycle := pbcodec.MergeTransactionEvents(events, func(id string) bool { return true })
 
 	out.blockHeader = lifecycle.ExecutionBlockHeader
 	out.blockID = lifecycle.ExecutionTrace.ProducerBlockId
@@ -499,7 +499,7 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 		// use it if its irreversible, or if its the only one we have, otherwise, you better
 		// have a chain discriminator nearby to know if its in the longest chain.
 
-		var rows [][]*pbeos.TransactionEvent
+		var rows [][]*pbcodec.TransactionEvent
 		if len(prefixesToLookupInKvdb) != 0 {
 			rows, err = r.trxsReader.GetTransactionTracesBatch(ctx, prefixesToLookupInKvdb)
 			if err != nil {
@@ -650,8 +650,8 @@ type SearchTransactionBackwardResponse struct {
 	abiCodecClient pbabicodec.DecoderClient
 	cursor         string
 	trxIDPrefix    string
-	blockHeader    *pbeos.BlockHeader
-	trxTrace       *pbeos.TransactionTrace
+	blockHeader    *pbcodec.BlockHeader
+	trxTrace       *pbcodec.TransactionTrace
 
 	irreversibleBlockNum  uint32
 	matchingActionIndexes []uint32
@@ -704,8 +704,8 @@ func (t *SearchTransactionBackwardResponse) Trace() *TransactionTrace {
 }
 
 type TransactionTrace struct {
-	t                     *pbeos.TransactionTrace
-	blockHeader           *pbeos.BlockHeader
+	t                     *pbcodec.TransactionTrace
+	blockHeader           *pbcodec.BlockHeader
 	matchingActionIndexes []uint32
 
 	abiCodecClient pbabicodec.DecoderClient
@@ -713,7 +713,7 @@ type TransactionTrace struct {
 	memoizedFlattenActionTraces *[]*ActionTrace
 }
 
-func newTransactionTrace(trace *pbeos.TransactionTrace, blockHeader *pbeos.BlockHeader, matchingActionIndexes []uint32, abiCodecClient pbabicodec.DecoderClient) *TransactionTrace {
+func newTransactionTrace(trace *pbcodec.TransactionTrace, blockHeader *pbcodec.BlockHeader, matchingActionIndexes []uint32, abiCodecClient pbabicodec.DecoderClient) *TransactionTrace {
 	tr := &TransactionTrace{
 		abiCodecClient:        abiCodecClient,
 		t:                     trace,
@@ -800,10 +800,10 @@ func (t *TransactionTrace) ExceptJSON() (*commonTypes.JSON, error) {
 type BlockHeader struct {
 	blockID  string
 	blockNum commonTypes.Uint32
-	h        *pbeos.BlockHeader
+	h        *pbcodec.BlockHeader
 }
 
-func newBlockHeader(blockID string, blockNum commonTypes.Uint32, blockHeader *pbeos.BlockHeader) *BlockHeader {
+func newBlockHeader(blockID string, blockNum commonTypes.Uint32, blockHeader *pbcodec.BlockHeader) *BlockHeader {
 	return &BlockHeader{
 		blockID:  blockID,
 		blockNum: blockNum,
@@ -841,16 +841,16 @@ func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 	return &ProducerSchedule{s: upgradeToProducerAuthoritySchedule(t.h.NewProducersV1)}, nil
 }
 
-func upgradeToProducerAuthoritySchedule(old *pbeos.ProducerSchedule) *pbeos.ProducerAuthoritySchedule {
-	producers := make([]*pbeos.ProducerAuthority, len(old.Producers))
+func upgradeToProducerAuthoritySchedule(old *pbcodec.ProducerSchedule) *pbcodec.ProducerAuthoritySchedule {
+	producers := make([]*pbcodec.ProducerAuthority, len(old.Producers))
 	for i, oldProducer := range old.Producers {
-		producers[i] = &pbeos.ProducerAuthority{
+		producers[i] = &pbcodec.ProducerAuthority{
 			AccountName: oldProducer.AccountName,
-			BlockSigningAuthority: &pbeos.BlockSigningAuthority{
-				Variant: &pbeos.BlockSigningAuthority_V0{
-					V0: &pbeos.BlockSigningAuthorityV0{
+			BlockSigningAuthority: &pbcodec.BlockSigningAuthority{
+				Variant: &pbcodec.BlockSigningAuthority_V0{
+					V0: &pbcodec.BlockSigningAuthorityV0{
 						Threshold: 1,
-						Keys: []*pbeos.KeyWeight{
+						Keys: []*pbcodec.KeyWeight{
 							{Weight: 1, PublicKey: oldProducer.BlockSigningKey},
 						},
 					},
@@ -859,7 +859,7 @@ func upgradeToProducerAuthoritySchedule(old *pbeos.ProducerSchedule) *pbeos.Prod
 		}
 	}
 
-	return &pbeos.ProducerAuthoritySchedule{
+	return &pbcodec.ProducerAuthoritySchedule{
 		Version:   old.Version,
 		Producers: producers,
 	}
@@ -882,7 +882,7 @@ func (t BlockHeader) findProducerScheduleChangeExtension() (*eos.ProducerSchedul
 }
 
 type ProducerSchedule struct {
-	s *pbeos.ProducerAuthoritySchedule
+	s *pbcodec.ProducerAuthoritySchedule
 }
 
 func (s *ProducerSchedule) Version() commonTypes.Uint32 { return commonTypes.Uint32(s.s.Version) }
@@ -894,7 +894,7 @@ func (s *ProducerSchedule) Producers() (out []*ProducerKey) {
 }
 
 type ProducerKey struct {
-	k *pbeos.ProducerAuthority
+	k *pbcodec.ProducerAuthority
 }
 
 func (k *ProducerKey) ProducerName() string { return k.k.AccountName }
@@ -902,7 +902,7 @@ func (k *ProducerKey) BlockSigningKey() string {
 	return extractFirstPublicKeyFromAuthority(k.k.BlockSigningAuthority)
 }
 
-func extractFirstPublicKeyFromAuthority(in *pbeos.BlockSigningAuthority) string {
+func extractFirstPublicKeyFromAuthority(in *pbcodec.BlockSigningAuthority) string {
 	if in.GetV0() == nil {
 		panic(fmt.Errorf("only knowns how to deal with BlockSigningAuthority_V0 type, got %t", in.Variant))
 	}
@@ -916,7 +916,7 @@ func extractFirstPublicKeyFromAuthority(in *pbeos.BlockSigningAuthority) string 
 }
 
 type TransactionReceiptHeader struct {
-	h *pbeos.TransactionReceiptHeader
+	h *pbcodec.TransactionReceiptHeader
 }
 
 func (h *TransactionReceiptHeader) Status() string {
@@ -931,14 +931,14 @@ func (h *TransactionReceiptHeader) NetUsageWords() commonTypes.Uint32 {
 
 type ActionTrace struct {
 	blockNum    uint64
-	actionTrace *pbeos.ActionTrace
+	actionTrace *pbcodec.ActionTrace
 	trxTrace    *TransactionTrace
 	matched     bool
 
 	abiCodecClient pbabicodec.DecoderClient
 }
 
-func newActionTrace(blockNum uint64, actionTrace *pbeos.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
+func newActionTrace(blockNum uint64, actionTrace *pbcodec.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
 	return &ActionTrace{
 		abiCodecClient: abiCodecClient,
 		blockNum:       blockNum,
@@ -1096,7 +1096,7 @@ func (t *ActionTrace) TableOps() (out []*TableOp) {
 }
 
 type ActionReceipt struct {
-	r *pbeos.ActionReceipt
+	r *pbcodec.ActionReceipt
 }
 
 func (r *ActionReceipt) Receiver() string             { return r.r.Receiver }
@@ -1111,7 +1111,7 @@ func (r *ActionReceipt) ABISequence() types.Uint64    { return types.Uint64(r.r.
 func (r *ActionReceipt) authSequence() commonTypes.JSON { return nil }
 
 type Transaction struct {
-	t *pbeos.SignedTransaction
+	t *pbcodec.SignedTransaction
 }
 
 func (t *Transaction) Expiration() graphql.Time { return toTime(t.t.Transaction.Header.Expiration) }
@@ -1144,7 +1144,7 @@ func (t *Transaction) Actions() (out []*Action) {
 }
 
 type Action struct {
-	a *pbeos.Action
+	a *pbcodec.Action
 }
 
 func (a *Action) Account() string { return a.a.Account }
@@ -1179,7 +1179,7 @@ func (a *Action) JSON() *commonTypes.JSON {
 func (a *Action) HexData() string { return hex.EncodeToString(a.a.RawData) }
 
 type PermissionLevel struct {
-	pl *pbeos.PermissionLevel
+	pl *pbcodec.PermissionLevel
 }
 
 func (t *PermissionLevel) Actor() string      { return t.pl.Actor }

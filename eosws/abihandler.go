@@ -21,7 +21,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 )
 
@@ -51,7 +51,7 @@ func NewABIChangeHandler(abiGetter ABIGetter, blockNum uint32, code eos.AccountN
 }
 
 func (h *ABIChangeHandler) ProcessBlock(block *bstream.Block, obj interface{}) error {
-	blk := block.ToNative().(*pbeos.Block)
+	blk := block.ToNative().(*pbcodec.Block)
 	abi, err := abiFromBlock(blk, h.code)
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func (s ABIStack) Peek() *eos.ABI {
 	return popABI
 }
 
-func abiFromBlock(blk *pbeos.Block, code eos.AccountName) (*eos.ABI, error) {
+func abiFromBlock(blk *pbcodec.Block, code eos.AccountName) (*eos.ABI, error) {
 	for _, trxTrace := range blk.TransactionTraces {
 		for _, actionTrace := range trxTrace.ActionTraces {
 			if actionTrace.FullName() == "eosio:eosio:setabi" {

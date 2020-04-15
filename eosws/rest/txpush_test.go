@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	eos "github.com/eoscanada/eos-go"
@@ -183,16 +183,16 @@ type dummySource struct {
 func (s *dummySource) Run() {}
 
 func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstream.Block {
-	pbblock := &pbeos.Block{
+	pbblock := &pbcodec.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Previous:  previousID,
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},
 		},
-		TransactionTraces: []*pbeos.TransactionTrace{
-			&pbeos.TransactionTrace{
+		TransactionTraces: []*pbcodec.TransactionTrace{
+			&pbcodec.TransactionTrace{
 				Id: trxID,
 			},
 		},
