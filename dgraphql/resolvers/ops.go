@@ -23,10 +23,10 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	abicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/logging"
-	abicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	"github.com/graph-gophers/graphql-go"
 	"go.uber.org/zap"
 )

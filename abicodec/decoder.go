@@ -18,8 +18,8 @@ import (
 	"context"
 	"encoding/json"
 
-	pbabicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	"github.com/dfuse-io/derr"
+	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

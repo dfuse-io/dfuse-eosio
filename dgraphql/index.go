@@ -19,10 +19,10 @@ import (
 
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
-	pbabicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 )

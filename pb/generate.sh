@@ -19,6 +19,7 @@ current_dir="`pwd`"
 trap "cd \"$current_dir\"" EXIT
 pushd "$ROOT/pb" &> /dev/null
 
+protoc -I$ROOT/pb dfuse/eosio/abicodec/v1/abicodec.proto --go_out=plugins=grpc,paths=source_relative:.
 protoc -I$ROOT/pb dfuse/eosio/codec/v1/codec.proto --go_out=plugins=grpc,paths=source_relative:.
 protoc -I$ROOT/pb dfuse/eosio/eosdb/v1/eosdb.proto --go_out=plugins=grpc,paths=source_relative:.
 protoc -I$ROOT/pb dfuse/eosio/funnel/v1/funnel.proto --go_out=plugins=grpc,paths=source_relative:.
