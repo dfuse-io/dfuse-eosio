@@ -108,7 +108,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 			expect: []*SearchTransactionForwardResponse{
 				newDgraphqlResponse("trx123", 5),
 				{
-					err: dgraphql.Errorf(ctx, "failed"),
+					err: dgraphql.Errorf(ctx, "hammer search result: failed"),
 				},
 			},
 
@@ -168,9 +168,6 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				require.NoError(t, err)
 				var expect []*SearchTransactionForwardResponse
 				for el := range res {
-					if el.err != nil {
-						require.NoError(t, el.err)
-					}
 					expect = append(expect, el)
 				}
 
