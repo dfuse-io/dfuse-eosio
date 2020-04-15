@@ -81,8 +81,14 @@ See [eosq README](eosq/README.md) for build instructions
 
 ## Overview
 
+
 Here's a quick map of this repository:
 
+The glue:
+* The [dfuseeos](./cmd/dfuseeos) binary.
+* The [launcher](./launcher) which starts all the internal services
+
+The EOSIO-specific services:
 * [abicodec](./abicodec): ABI encoding and decoding service
 * [fluxdb](./fluxdb): the **dfuse State** database for EOSIO, with all tables at any block height
 * [kvdb-loader](./kvdb-loader): service that loads data into the `kvdb` storage
@@ -90,8 +96,8 @@ Here's a quick map of this repository:
 * [eosq](./eosq): the famous https://eosq.app block explorer
 * [eosws](./eosws): the REST, Websocket service, push guarantee, chain pass-through service.
 
-EOSIO-specifics hooks for the different products:
-* [search plugin](./search), object mappers, EOSIO-specific indexer, results mapper
+dfuse Products's EOSIO-specific hooks and plugins:
+* [search plugin](./search), object mappers, EOSIO-specific indexer, results mapper (along with the [search client](./search-client).
 * [dgraphql resolvers](./dgraphql), with all data schemas for EOSIO
 * [blockmeta plugin](./blockmeta), for EOS-specific `kvdb` bridge.
 
