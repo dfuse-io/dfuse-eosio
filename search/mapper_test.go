@@ -120,7 +120,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper := NewEOSBlockMapper("dfuseiohooks:event", nil)
+			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -236,11 +236,11 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbeos.Bl
 func TestParseRestrictionsJSON(t *testing.T) {
 	// very shallow test, but we dont want to test actual golang JSON unmarshalling,
 	// just the general format of our restrictions
-	emptyRests, err := ParseRestrictionsJSON("")
+	emptyRests, err := parseRestrictionsJSON("")
 	assert.NoError(t, err)
 	require.Len(t, emptyRests, 0)
 
-	rests, err := ParseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
+	rests, err := parseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
 	require.NoError(t, err)
 	assert.Len(t, rests, 4)
 }
@@ -248,13 +248,13 @@ func TestParseRestrictionsJSON(t *testing.T) {
 func TestRestrictions(t *testing.T) {
 	tests := []struct {
 		name         string
-		restriction  *Restriction
+		restriction  *restriction
 		message      map[string]interface{}
 		expectedPass bool
 	}{
 		{
 			"let pass eosio transfer",
-			&Restriction{
+			&restriction{
 				"account":   "eosio.token",
 				"data.from": "badguy",
 			},
@@ -269,7 +269,7 @@ func TestRestrictions(t *testing.T) {
 		},
 		{
 			"prevent eosio transfer to eidosonecoin",
-			&Restriction{
+			&restriction{
 				"account": "eosio.token",
 				"data.to": "eidosonecoin",
 			},
@@ -284,7 +284,7 @@ func TestRestrictions(t *testing.T) {
 		},
 		{
 			"block receiver",
-			&Restriction{
+			&restriction{
 				"receiver": "badguy",
 			},
 			map[string]interface{}{
@@ -294,7 +294,7 @@ func TestRestrictions(t *testing.T) {
 		},
 		{
 			"pass with data restriction on no data",
-			&Restriction{
+			&restriction{
 				"account":   "badacct",
 				"data.from": "badguy",
 			},

@@ -23,14 +23,21 @@ type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interfa
 
 type EOSBlockMapper struct {
 	hooksActionName string
-	restrictions    []*Restriction
+	restrictions    []*restriction
 }
 
-func NewEOSBlockMapper(hooksActionName string, restrictions []*Restriction) *EOSBlockMapper {
+func NewEOSBlockMapper(hooksActionName string, res string) (*EOSBlockMapper, error) {
+	restrictions, err := parseRestrictionsJSON(res)
+	if err != nil {
+		return nil, fmt.Errorf("failed parsing restrictions JSON")
+	}
+	if len(restrictions) > 0 {
+		zlog.Info("applying restrictions on indexing", zap.Reflect("restrictions", restrictions))
+	}
 	return &EOSBlockMapper{
 		hooksActionName: hooksActionName,
 		restrictions:    restrictions,
-	}
+	}, nil
 }
 
 func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
@@ -118,8 +125,8 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	return docsList, nil
 }
 
-func ParseRestrictionsJSON(JSONStr string) ([]*Restriction, error) {
-	var restrictions []*Restriction
+func parseRestrictionsJSON(JSONStr string) ([]*restriction, error) {
+	var restrictions []*restriction
 	if JSONStr == "" {
 		return nil, nil
 	}
@@ -130,9 +137,9 @@ func ParseRestrictionsJSON(JSONStr string) ([]*Restriction, error) {
 
 // example: `{"account":"eosio.token","data.to":"someaccount"}` will not Pass()
 // true for an action that matches EXACTLY those two conditions
-type Restriction map[string]string
+type restriction map[string]string
 
-func (r Restriction) Pass(actionWrapper map[string]interface{}) bool {
+func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
 	actionData, _ := actionWrapper["data"].(map[string]interface{})
 
 	for k, v := range r {
