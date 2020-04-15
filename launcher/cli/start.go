@@ -22,12 +22,12 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/derr"
+	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
-	_ "github.com/dfuse-io/kvdb/eosdb/kv"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
@@ -105,7 +105,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		KvdbHTTPServingAddr:      KvdbHTTPServingAddr,
 		IndexerServingAddr:       IndexerServingAddr,
 		IndexerHTTPServingAddr:   IndexerHTTPServingAddr,
-		TokenmetaServingAddr:     TokenmetaServingAddr, // Not implemented yet, present for booting purposes, does not work!
 		DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
 		DgraphqlGrpcServingAddr:  DgraphqlGrpcServingAddr,
 		DashboardGrpcServingAddr: DashboardGrpcServingAddr,

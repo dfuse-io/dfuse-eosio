@@ -1,0 +1,36 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "eosio",
+      "action": "transfer",
+      "auth": null,
+      "block_num": 1,
+      "data": {
+        "to": "eosio"
+      },
+      "input": true,
+      "notif": true,
+      "receiver": "battlefield1",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  },
+  {
+    "trx_id": "a2",
+    "data": {
+      "account": "account",
+      "action": "random",
+      "auth": null,
+      "block_num": 1,
+      "data": {
+        "proposer": "eosio"
+      },
+      "input": true,
+      "notif": true,
+      "receiver": "other",
+      "scheduled": false,
+      "trx_idx": 1
+    }
+  }
+]

@@ -26,29 +26,28 @@ import (
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth"
 	dauthMiddleware "github.com/dfuse-io/dauth/middleware"
 	_ "github.com/dfuse-io/dauth/null" // auth plugin
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dipp"
-	"github.com/dfuse-io/dmetering"
-	"github.com/dfuse-io/dstore"
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
-	"github.com/dfuse-io/kvdb/eosdb"
+	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dipp"
+	"github.com/dfuse-io/dmetering"
+	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
+	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
+	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/dfuse-io/shutter"
+	"github.com/eoscanada/eos-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.opencensus.io/plugin/ochttp"
@@ -174,7 +173,7 @@ func (a *App) Run() error {
 
 	buffer := bstream.NewBuffer("sub-hub")
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(pbbstream.Protocol_EOS, blocksStore, startBlockNum, 1, nil, h)
+		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
 		return src
 	})
 
@@ -234,7 +233,6 @@ func (a *App) Run() error {
 		tailManager.TailLock,
 		fileSourceFactory,
 		liveSourceFactory,
-		hub.WithProtocolOptimisations(pbbstream.Protocol_EOS),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create subscription hub: %w", err)

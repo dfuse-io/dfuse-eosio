@@ -131,7 +131,7 @@ package eosws
 // 				require.NoError(t, err)
 // 				var keys []string
 // 				for _, tx := range lst.Transactions {
-// 					lifecycle, _ := pbdeos.MergeTransactionEvents(tx, chainDiscriminator)
+// 					lifecycle, _ := pbeos.MergeTransactionEvents(tx, chainDiscriminator)
 // 					keys = append(keys, transactionLifecycleKey(lifecycle))
 // 				}
 // 				assert.Equal(t, test.expectedKeys, keys)

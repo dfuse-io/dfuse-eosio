@@ -20,12 +20,12 @@ import (
 
 	"context"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/bstream/hub"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/shutter"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"
@@ -183,16 +183,16 @@ type dummySource struct {
 func (s *dummySource) Run() {}
 
 func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstream.Block {
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  previousID,
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
-			&pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
+			&pbeos.TransactionTrace{
 				Id: trxID,
 			},
 		},

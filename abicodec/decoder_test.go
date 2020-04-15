@@ -32,7 +32,7 @@ func TestDecoder_DecodeAction(t *testing.T) {
 	err := json.Unmarshal([]byte(ABI_TRANSFER), &abi)
 	require.NoError(t, err)
 
-	store, err := dstore.NewSimpleStore("file:///tmp/cache/")
+	store, err := dstore.NewSimpleStore("file:///tmp/cache")
 	require.NoError(t, err)
 	cache, err := NewABICache(store, "test_cache.bin")
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestDecoder_DecodeTable(t *testing.T) {
 	err := json.Unmarshal([]byte(ABI_TRANSFER), &abi)
 	require.NoError(t, err)
 
-	store, err := dstore.NewSimpleStore("file:///tmp/cache/")
+	store, err := dstore.NewSimpleStore("file:///tmp/cache")
 	require.NoError(t, err)
 	cache, err := NewABICache(store, "test_cache.bin")
 	require.NoError(t, err)

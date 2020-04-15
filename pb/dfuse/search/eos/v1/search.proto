@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package dfuse.search.eos.v1;
+
+option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1;pbsearcheos";
+
+import "dfuse/codecs/eos/eos.proto";
+
+message DocumentID {
+  uint64 blockNum = 1;
+  uint64 actionIndex = 2;
+  uint64 transactionIndex = 3;
+  bytes transactionIDPrefix = 4;
+}
+
+message Match {
+  repeated uint32 actionIndexes = 1;
+  BlockTrxPayload block = 2;
+}
+
+message BlockTrxPayload {
+  string blockID = 1;
+  dfuse.codecs.eos.BlockHeader blockHeader = 2;
+  dfuse.codecs.eos.TransactionTrace trace = 3;
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "trxIdPrefix": "trx4",
+    "blockNum": 5,
+    "cursor": "1:5::trx4",
+    "chainSpecific": {
+      "type_url": "type.googleapis.com/dfuse.search.eos.v1.Match",
+      "value": "CgEA"
+    },
+    "irrBlockNum": 5
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "eosio",
+      "action": "transfer",
+      "auth": null,
+      "block_num": 1,
+      "data": {
+        "auth": {
+          "accounts": [],
+          "keys": [
+            {
+              "key": "EOS6j4hqTnuXdmpcePV9AHr2Av4fxrf3kFiRKJpEbTYbP6ZwJi62h",
+              "weight": 1
+            }
+          ],
+          "threshold": 1,
+          "waits": []
+        }
+      },
+      "input": true,
+      "notif": true,
+      "receiver": "battlefield1",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  }
+]

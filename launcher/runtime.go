@@ -24,7 +24,6 @@ type RuntimeConfig struct {
 	AbiServingAddr           string
 	RelayerServingAddr       string
 	BlockmetaServingAddr     string
-	TokenmetaServingAddr     string
 	ShardSize                uint64
 	StartBlock               uint64
 	StopBlock                uint64

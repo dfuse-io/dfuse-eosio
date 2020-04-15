@@ -18,7 +18,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/dfuse-io/kvdb/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"go.uber.org/zap"
 )
 

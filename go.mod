@@ -9,17 +9,20 @@ require (
 	github.com/abourget/llerrgroup v0.2.0
 	github.com/abourget/viperbind v0.1.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
+	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
+	github.com/blevesearch/bleve v0.8.0
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200409172812-87e56220619e
-	github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627
+	github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca
+	github.com/dfuse-io/bstream v0.0.0-20200415033255-07f5a4237424
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
+	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
-	github.com/dfuse-io/dgraphql v0.0.0-20200409211726-1e94df6b62a0
+	github.com/dfuse-io/dgraphql v0.0.0-20200413182955-46b5777006c2
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -30,24 +33,27 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200407191956-e3308ad697fc
+	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
-	github.com/dfuse-io/manageos v0.0.0-20200407194603-dc845b98b027
-	github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec
+	github.com/dfuse-io/manageos v0.0.0-20200414173559-7946045b7139
+	github.com/dfuse-io/merger v0.0.0-20200415110734-afa95bd5597e
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
-	github.com/dfuse-io/relayer v0.0.0-20200408161021-6c7af0ee655f
-	github.com/dfuse-io/search v0.0.0-20200414193211-0fdf9348a7a4
-	github.com/dfuse-io/search-client v0.0.0-20200408140718-84eca6793059
+	github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c
+	github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14
+	github.com/dfuse-io/search v0.0.0-20200415134128-cf518e6c7257
+	github.com/dfuse-io/search-client v0.0.0-20200415123319-d713350a5d3f
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
+	github.com/eoscanada/jsonpb v0.0.0-20191003191457-98439e8ce04b
+	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
+	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
-	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
@@ -57,13 +63,16 @@ require (
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/manifoldco/promptui v0.7.0
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/minio/highwayhash v1.0.0
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.4.0
+	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.5.0

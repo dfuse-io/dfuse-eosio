@@ -21,8 +21,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dfuse-io/dstore"
-	"github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/logging"
+	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -138,7 +138,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
-			store, err := dstore.NewSimpleStore("file:///tmp/cache/")
+			store, err := dstore.NewSimpleStore("file:///tmp/cache")
 			require.NoError(t, err)
 			cache, err := NewABICache(store, "test_cache.bin")
 			require.NoError(t, err)
@@ -212,7 +212,7 @@ func TestDefaultCache_ABIAtBlockNum(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
-			store, err := dstore.NewSimpleStore("file:///tmp/cache/")
+			store, err := dstore.NewSimpleStore("file:///tmp/cache")
 			require.NoError(t, err)
 			cache, err := NewABICache(store, "test_cache.bin")
 			require.NoError(t, err)
@@ -288,7 +288,7 @@ func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
-			store, err := dstore.NewSimpleStore("file:///tmp/cache/")
+			store, err := dstore.NewSimpleStore("file:///tmp/cache")
 			require.NoError(t, err)
 			cache, err := NewABICache(store, "test_cache.bin")
 			require.NoError(t, err)
@@ -308,7 +308,7 @@ func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 func TestDefaultCache_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
 
-	store, err := dstore.NewSimpleStore("file:///tmp/")
+	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
 	exist, err := store.FileExists(cacheName)
@@ -356,7 +356,7 @@ func TestDefaultCache_Save_Load(t *testing.T) {
 func TestDefaultCache_Large_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
 
-	store, err := dstore.NewSimpleStore("file:///tmp/")
+	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
 	exist, err := store.FileExists(cacheName)
