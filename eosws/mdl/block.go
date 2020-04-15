@@ -17,7 +17,7 @@ package mdl
 import (
 	"fmt"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eos "github.com/eoscanada/eos-go"
 )
@@ -40,7 +40,7 @@ func ToV1BlockSummary(in *pbeos.BlockWithRefs) (*BlockSummary, error) {
 	summary := &BlockSummary{
 		ID:               in.Id,
 		Irreversible:     in.Irreversible,
-		Header:           deos.BlockHeaderToEOS(in.Block.Header),
+		Header:           codec.BlockHeaderToEOS(in.Block.Header),
 		TransactionCount: int(in.Block.TransactionCount),
 		BlockNum:         in.Block.Number,
 		DPoSLIBNum:       in.Block.DposIrreversibleBlocknum,
@@ -53,9 +53,9 @@ func ToV1BlockSummary(in *pbeos.BlockWithRefs) (*BlockSummary, error) {
 		if err != nil {
 			return nil, err
 		}
-		summary.ActiveSchedule = deos.ProducerScheduleToEOS(downgradedSchedule)
+		summary.ActiveSchedule = codec.ProducerScheduleToEOS(downgradedSchedule)
 	} else if in.Block.ActiveScheduleV1 != nil {
-		summary.ActiveSchedule = deos.ProducerScheduleToEOS(in.Block.ActiveScheduleV1)
+		summary.ActiveSchedule = codec.ProducerScheduleToEOS(in.Block.ActiveScheduleV1)
 	}
 
 	return summary, nil

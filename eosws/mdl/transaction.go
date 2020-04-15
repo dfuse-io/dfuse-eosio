@@ -21,7 +21,7 @@ import (
 	"sort"
 	"strings"
 
-	deos "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosdb/mdl"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	v0 "github.com/dfuse-io/eosws-go/mdl/v0"
@@ -53,11 +53,11 @@ func ToV1TransactionLifecycle(in *pbeos.TransactionLifecycle) (*v1.TransactionLi
 
 	var eosSignedTransaction *eos.SignedTransaction
 	if in.Transaction != nil {
-		eosSignedTransaction = deos.SignedTransactionToEOS(in.Transaction)
+		eosSignedTransaction = codec.SignedTransactionToEOS(in.Transaction)
 	}
 
 	out := &v1.TransactionLifecycle{
-		TransactionStatus: deos.TransactionStatusToEOS(in.TransactionStatus).String(),
+		TransactionStatus: codec.TransactionStatusToEOS(in.TransactionStatus).String(),
 		ID:                in.Id,
 		Transaction:       eosSignedTransaction,
 		// DTrxOps:                 ToV1DTrxOps(in.DtrxOps),
@@ -65,7 +65,7 @@ func ToV1TransactionLifecycle(in *pbeos.TransactionLifecycle) (*v1.TransactionLi
 		// DBOps:                   ToV1DBOps(in.DbOps),
 		// RAMOps:                  ToV1RAMOps(in.RamOps),
 		// TableOps:                ToV1TableOps(in.TableOps),
-		PubKeys:                 deos.PublicKeysToEOS(in.PublicKeys),
+		PubKeys:                 codec.PublicKeysToEOS(in.PublicKeys),
 		CreatedBy:               createdBy,
 		CanceledBy:              canceledBy,
 		ExecutionIrreversible:   in.ExecutionIrreversible,
@@ -90,7 +90,7 @@ func ToV1TransactionLifecycle(in *pbeos.TransactionLifecycle) (*v1.TransactionLi
 	}
 
 	if in.ExecutionBlockHeader != nil {
-		out.ExecutionBlockHeader = deos.BlockHeaderToEOS(in.ExecutionBlockHeader)
+		out.ExecutionBlockHeader = codec.BlockHeaderToEOS(in.ExecutionBlockHeader)
 	}
 
 	return out, nil
@@ -199,7 +199,7 @@ func ToV1ExtDTrxOp(in *pbeos.ExtDTrxOp) (*v1.ExtDTrxOp, error) {
 		SourceTransactionID: in.SourceTransactionId,
 		BlockNum:            uint32(in.BlockNum),
 		BlockID:             in.BlockId,
-		BlockTime:           deos.TimestampToBlockTimestamp(in.BlockTime),
+		BlockTime:           codec.TimestampToBlockTimestamp(in.BlockTime),
 	}
 	op, err := ToV1DTrxOp(in.DtrxOp)
 	if err != nil {
@@ -219,7 +219,7 @@ func ToV0DTrxOp(in *pbeos.DTrxOp) *v0.DTrxOp {
 	if in == nil {
 		return nil
 	}
-	trx := deos.SignedTransactionToEOS(in.Transaction)
+	trx := codec.SignedTransactionToEOS(in.Transaction)
 	out := &v0.DTrxOp{
 		Operation:     strings.ToLower(in.LegacyOperation()),
 		ActionIndex:   int(in.ActionIndex),
@@ -239,7 +239,7 @@ func ToV1DTrxOp(in *pbeos.DTrxOp) (*v1.DTrxOp, error) {
 	if in == nil {
 		return nil, nil
 	}
-	trx := deos.SignedTransactionToEOS(in.Transaction)
+	trx := codec.SignedTransactionToEOS(in.Transaction)
 	rawTrx, err := json.Marshal(trx)
 	if err != nil {
 
@@ -284,7 +284,7 @@ func ToV1TransactionTrace(in *pbeos.TransactionTrace) (*v1.TransactionTrace, err
 	if in == nil {
 		return nil, nil
 	}
-	rawExcept, _ := json.Marshal(deos.ExceptionToEOS(in.Exception))
+	rawExcept, _ := json.Marshal(codec.ExceptionToEOS(in.Exception))
 	actionTrace, err := ToV1ActionTraces(in.ActionTraces)
 	if err != nil {
 		return nil, fmt.Errorf("transaction trace: action trace: %w", err)
@@ -292,7 +292,7 @@ func ToV1TransactionTrace(in *pbeos.TransactionTrace) (*v1.TransactionTrace, err
 	out := &v1.TransactionTrace{
 		ID:              in.Id,
 		BlockNum:        uint32(in.BlockNum),
-		BlockTime:       deos.TimestampToBlockTimestamp(in.BlockTime),
+		BlockTime:       codec.TimestampToBlockTimestamp(in.BlockTime),
 		ProducerBlockID: in.ProducerBlockId,
 		Elapsed:         in.Elapsed,
 		NetUsage:        in.NetUsage,
@@ -301,7 +301,7 @@ func ToV1TransactionTrace(in *pbeos.TransactionTrace) (*v1.TransactionTrace, err
 		Except:          json.RawMessage(rawExcept),
 	}
 	if in.Receipt != nil {
-		out.Receipt = *(deos.TransactionReceiptHeaderToEOS(in.Receipt))
+		out.Receipt = *(codec.TransactionReceiptHeaderToEOS(in.Receipt))
 	}
 
 	if in.FailedDtrxTrace != nil {
@@ -399,7 +399,7 @@ func ToV1ActionTraceRaw(parentAction *pbeos.ActionTrace, actions []*pbeos.Action
 		rawChildTraces = append(rawChildTraces, ']')
 	}
 
-	trace := deos.ActionTraceToEOS(parentAction)
+	trace := codec.ActionTraceToEOS(parentAction)
 	rawTrace, err := json.Marshal(trace)
 	if err != nil {
 		return nil, fmt.Errorf("marshaling action traces %v: %w", trace, err)
@@ -426,7 +426,7 @@ func ToV1ActionTrace(in *pbeos.ActionTrace) (*v1.ActionTrace, error) {
 		return nil, nil
 	}
 
-	rawExcept, err := json.Marshal(deos.ExceptionToEOS(in.Exception))
+	rawExcept, err := json.Marshal(codec.ExceptionToEOS(in.Exception))
 	if err != nil {
 		return nil, fmt.Errorf("marshaling action exception %v: %w", in.Exception, err)
 	}
@@ -434,14 +434,14 @@ func ToV1ActionTrace(in *pbeos.ActionTrace) (*v1.ActionTrace, error) {
 	out := &v1.ActionTrace{}
 	out.Receipt = ToV1ActionReceipt(string(in.Receiver), in.Receipt)
 	if in.Action != nil {
-		out.Action = *(deos.ActionToEOS(in.Action))
+		out.Action = *(codec.ActionToEOS(in.Action))
 	}
 	out.ContextFree = in.ContextFree
 	out.Elapsed = in.Elapsed
 	out.Console = in.Console
 	out.TransactionID = in.TransactionId
 	out.BlockNum = uint32(in.BlockNum)
-	out.BlockTime = deos.TimestampToBlockTimestamp(in.BlockTime)
+	out.BlockTime = codec.TimestampToBlockTimestamp(in.BlockTime)
 	out.ProducerBlockID = &in.ProducerBlockId
 	out.AccountRAMDeltas = ToV1AccountRAMDeltas(in.AccountRamDeltas)
 	out.Except = json.RawMessage(rawExcept)
@@ -459,7 +459,7 @@ func ToV1ActionReceipt(receiver string, in *pbeos.ActionReceipt) v1.ActionReceip
 
 	authSeqs := make([]json.RawMessage, 0)
 	for _, authSeq := range in.AuthSequence {
-		cnt, _ := json.Marshal(deos.AuthSequenceToEOS(authSeq))
+		cnt, _ := json.Marshal(codec.AuthSequenceToEOS(authSeq))
 		authSeqs = append(authSeqs, json.RawMessage(cnt))
 	}
 	out := v1.ActionReceipt{

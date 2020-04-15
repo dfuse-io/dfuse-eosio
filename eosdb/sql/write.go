@@ -19,13 +19,11 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
-
-	"go.uber.org/zap"
-
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	"go.uber.org/zap"
 )
 
 func (db *DB) prepareStatements() error {
@@ -113,14 +111,14 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbeos.Block) error {
 			continue
 		}
 
-		signedTransaction, err := deos.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
+		signedTransaction, err := codec.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
 		if err != nil {
 			return fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %s", err)
 		}
 
-		signedTrx := deos.SignedTransactionToDEOS(signedTransaction)
+		signedTrx := codec.SignedTransactionToDEOS(signedTransaction)
 		pubKeyProto := &pbeos.PublicKeys{
-			PublicKeys: deos.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
+			PublicKeys: codec.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
 		}
 
 		// trxKey := eosdb.Keys.Transaction(trxReceipt.Id, blk.ID())

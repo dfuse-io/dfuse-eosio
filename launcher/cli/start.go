@@ -22,8 +22,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
@@ -128,6 +129,12 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	modules := &launcher.RuntimeModules{
 		SearchDmeshClient: dmeshClient.NewLocalClient(),
 		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta()),
+	}
+
+	err = bstream.ValidateRegistry()
+	if err != nil {
+		userLog.Error("Protocol specific hooks not configured correctly", zap.Error(err))
+		os.Exit(1)
 	}
 
 	launcher := launcher.NewLauncher(config, modules)

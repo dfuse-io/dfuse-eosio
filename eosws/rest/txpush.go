@@ -27,7 +27,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
@@ -205,7 +205,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case trxTrace := <-trxTraceFoundChan:
 		blockID := trxTrace.ProducerBlockId
 
-		eosTrace := deos.TransactionTraceToEOS(trxTrace)
+		eosTrace := codec.TransactionTraceToEOS(trxTrace)
 
 		resp := &PushResponse{
 			BlockID:       blockID,

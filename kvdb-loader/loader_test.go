@@ -25,7 +25,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/sql"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
@@ -81,7 +81,7 @@ func TestBigtableLoader(t *testing.T) {
 	block := testBlock(t, "00000002a")
 	block.Header.Previous = previousRef.ID()
 
-	blk, err := deos.BlockFromProto(block)
+	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
 	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
@@ -106,7 +106,7 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	block := testBlock(t, "00000002a")
 	block.Header.Previous = previousRef.ID()
 
-	blk, err := deos.BlockFromProto(block)
+	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
 	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))

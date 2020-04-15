@@ -28,7 +28,7 @@ import (
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/andreyvit/diff"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/jsonpb"
@@ -75,7 +75,7 @@ func TestBigtableWriter(t *testing.T) {
 	block := testBlock(t, "00000002a")
 	block.Header.Previous = previousRef.ID()
 
-	blk, err := deos.BlockFromProto(block)
+	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
 	require.NoError(t, db.PutBlock(ctx, block))

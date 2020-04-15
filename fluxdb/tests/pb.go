@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/eoscanada/eos-go"
@@ -80,7 +80,7 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 func bstreamBlocks(t *testing.T, pbBlocks ...*pbeos.Block) []*bstream.Block {
 	blocks := make([]*bstream.Block, len(pbBlocks))
 	for i, pbBlock := range pbBlocks {
-		block, err := deos.BlockFromProto(pbBlock)
+		block, err := codec.BlockFromProto(pbBlock)
 		require.NoError(t, err)
 
 		blocks[i] = block

@@ -22,7 +22,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
@@ -198,7 +198,7 @@ func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstr
 		},
 	}
 
-	block, err := deos.BlockFromProto(pbblock)
+	block, err := codec.BlockFromProto(pbblock)
 	require.NoError(t, err)
 
 	return block

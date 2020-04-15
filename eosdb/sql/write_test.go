@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/eoscanada/eos-go"
@@ -107,7 +107,7 @@ func testBlock1() *pbeos.Block {
 			Timestamp: blockTimestamp,
 		},
 		Transactions: []*pbeos.TransactionReceipt{
-			deos.TransactionReceiptToDEOS(receipt),
+			codec.TransactionReceiptToDEOS(receipt),
 		},
 		ImplicitTransactionOps: []*pbeos.TrxOp{
 			{
@@ -183,7 +183,7 @@ func TestReadBlock(t *testing.T) {
 	require.NoError(t, db.UpdateNowIrreversibleBlock(ctx, in))
 	//require.NoError(t, db.FlushAllMutations(ctx))
 
-	_, err := deos.BlockFromProto(in)
+	_, err := codec.BlockFromProto(in)
 	require.NoError(t, err)
 
 	// Block data

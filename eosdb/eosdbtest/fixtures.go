@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/eoscanada/eos-go"
@@ -61,7 +61,7 @@ func testBlock1() *pbeos.Block {
 			Timestamp: blockTimestamp,
 		},
 		Transactions: []*pbeos.TransactionReceipt{
-			deos.TransactionReceiptToDEOS(receipt),
+			codec.TransactionReceiptToDEOS(receipt),
 		},
 		ImplicitTransactionOps: []*pbeos.TrxOp{
 			{

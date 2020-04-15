@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
-	eos "github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,7 +48,7 @@ func TrashTestReconstructBlock(t *testing.T) {
 			require.NoError(t, fmt.Errorf("failed, found row with prev block id %s while looking for previous block id %s", row.BlockHeader.Previous, block.Block.Header.Previous))
 		}
 
-		signed := deos.SignedTransactionToEOS(row.Transaction)
+		signed := codec.SignedTransactionToEOS(row.Transaction)
 		packed, err := signed.Pack(eos.CompressionNone)
 		require.NoError(t, err)
 

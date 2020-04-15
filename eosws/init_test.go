@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/logging"
@@ -70,7 +70,7 @@ func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trx
 		zlog.Debug("created test block", zap.Any("block", normalizedOut))
 	}
 
-	block, err := deos.BlockFromProto(pbblock)
+	block, err := codec.BlockFromProto(pbblock)
 	require.NoError(t, err)
 
 	return block

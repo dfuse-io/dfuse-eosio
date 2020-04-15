@@ -26,6 +26,7 @@ import (
 
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/dfuse-io/bstream"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/hidalgo"

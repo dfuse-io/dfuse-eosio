@@ -17,8 +17,7 @@ package bigt
 import (
 	"fmt"
 
-	//"github.com/dfuse-io/dfuse-eosio/codecs/deos"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 )
 
@@ -39,14 +38,14 @@ func (db *EOSDatabase) storeTransactions(blk *pbeos.Block) (map[string]bool, err
 			continue
 		}
 
-		signedTransaction, err := deos.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
+		signedTransaction, err := codec.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
 		if err != nil {
 			return nil, fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %s", err)
 		}
 
 		trxKey := Keys.Transaction(trxReceipt.Id, blockID)
-		db.Transactions.PutTrx(trxKey, deos.SignedTransactionToDEOS(signedTransaction))
-		db.Transactions.PutPublicKeys(trxKey, deos.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction))
+		db.Transactions.PutTrx(trxKey, codec.SignedTransactionToDEOS(signedTransaction))
+		db.Transactions.PutPublicKeys(trxKey, codec.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction))
 
 		transactionKeys[trxKey] = true
 	}

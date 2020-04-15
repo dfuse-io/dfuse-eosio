@@ -24,7 +24,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
@@ -831,7 +831,7 @@ func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 		}
 
 		if extension != nil {
-			return &ProducerSchedule{s: deos.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
+			return &ProducerSchedule{s: codec.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
 		}
 
 		// We really don't have any schedule change for this
@@ -920,7 +920,7 @@ type TransactionReceiptHeader struct {
 }
 
 func (h *TransactionReceiptHeader) Status() string {
-	return strings.ToUpper(deos.TransactionStatusToEOS(h.h.Status).String())
+	return strings.ToUpper(codec.TransactionStatusToEOS(h.h.Status).String())
 }
 func (h *TransactionReceiptHeader) CPUUsageMicroSeconds() commonTypes.Uint32 {
 	return commonTypes.Uint32(h.h.CpuUsageMicroSeconds)

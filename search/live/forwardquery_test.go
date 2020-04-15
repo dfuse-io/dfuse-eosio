@@ -23,7 +23,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
@@ -37,10 +37,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func init() {
-	search.GetMatchCollector = search.TestMatchCollector
-}
 
 func Test_forwardProcessBlock(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")

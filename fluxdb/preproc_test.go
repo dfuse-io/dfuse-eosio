@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/eoscanada/eos-go"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
@@ -40,7 +40,7 @@ func TestPreprocessBlock_TableOps(t *testing.T) {
 		{Operation: pbeos.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "another", Code: "another", Scope: "scope1", TableName: "table1"},
 	}
 
-	bstreamBlock, err := deos.BlockFromProto(blk)
+	bstreamBlock, err := codec.BlockFromProto(blk)
 	require.NoError(t, err)
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)
@@ -168,7 +168,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 			blk := newBlock("0000003a", []string{"1", "2"})
 			blk.TransactionTraces[0].DbOps = test.input
 
-			bstreamBlock, err := deos.BlockFromProto(blk)
+			bstreamBlock, err := codec.BlockFromProto(blk)
 			require.NoError(t, err)
 
 			req, err := PreprocessBlock(bstreamBlock)
@@ -222,7 +222,7 @@ func TestPreprocessBlock_PermOps(t *testing.T) {
 		newPermOp("INS", 0, nil, newPermOpData("eosio", "owner", []string{"k3"})),
 	}
 
-	bstreamBlock, err := deos.BlockFromProto(blk)
+	bstreamBlock, err := codec.BlockFromProto(blk)
 	require.NoError(t, err)
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)

@@ -32,7 +32,7 @@ import (
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
@@ -427,8 +427,8 @@ func pbeosBlockToFile(t *testing.T, in *pbeos.Block) []byte {
 
 	var buf bytes.Buffer
 
-	w, _ := deos.NewBlockWriter(&buf)
-	blk, err := deos.BlockFromProto(in)
+	w, _ := codec.NewBlockWriter(&buf)
+	blk, err := codec.BlockFromProto(in)
 	require.NoError(t, err)
 
 	err = w.Write(blk)

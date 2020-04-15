@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/bstream"
-	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/dfuse-io/search"
@@ -32,10 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
-
-func init() {
-	search.GetMatchCollector = Collect
-}
 
 func TestPreIndexerRunSingleIndexQuery(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")

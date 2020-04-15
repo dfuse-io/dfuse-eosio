@@ -30,8 +30,7 @@ import (
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
-	eosCodec "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
@@ -48,14 +47,11 @@ import (
 	"github.com/dfuse-io/manageos/mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
-	"github.com/dfuse-io/search"
 	archiveApp "github.com/dfuse-io/search/app/archive"
 	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
-	searchArchive "github.com/dfuse-io/search/archive"
-	"github.com/dfuse-io/search/querylang"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -63,27 +59,6 @@ import (
 )
 
 func init() {
-	// Hooking up EOS specific configurations
-	search.GetMatchCollector = eosSearch.Collect
-	search.GetSearchMatchFactory = func() search.SearchMatch {
-		return &eosSearch.EOSSearchMatch{}
-	}
-	search.GetBleveQueryFactory = func(rawQuery string) *search.BleveQuery {
-		return &search.BleveQuery{
-			Raw:              rawQuery,
-			FieldTransformer: querylang.NoOpFieldTransformer,
-			Validator:        &eosSearch.EOSBleveQueryValidator{},
-		}
-	}
-	eosSearch.InitEOSIndexedFields()
-	search.GetIndexedFieldsMap = eosSearch.GetEOSIndexedFieldsMap
-	livenessQuery, _ := search.NewParsedQuery("receiver:999")
-	searchArchive.LivenessQuery = livenessQuery
-
-	bstream.GetBlockReaderFactory = bstream.BlockReaderFactoryFunc(eosCodec.BlockReaderFactory)
-	bstream.GetBlockDecoder = bstream.BlockDecoderFunc(eosCodec.BlockDecoder)
-	bstream.GetProtocolFirstBlock = 2
-
 	// Manager
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "manager",
@@ -269,7 +244,7 @@ func init() {
 
 			}
 			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
-				return deos.NewConsoleReader(reader)
+				return codec.NewConsoleReader(reader)
 			}
 			//
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
@@ -278,7 +253,7 @@ func init() {
 					return nil, fmt.Errorf("expected *pbeos.Block, got %T", obj)
 				}
 
-				return deos.BlockFromProto(blk)
+				return codec.BlockFromProto(blk)
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
@@ -417,7 +392,6 @@ func init() {
 				SeenBlocksFile:               buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")),
 				MaxFixableFork:               viper.GetUint64("merger-max-fixable-fork"),
 				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
-				Protocol:                     Protocol,
 				EnableReadinessProbe:         true,
 			}), nil
 		},
