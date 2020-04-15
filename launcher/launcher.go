@@ -27,7 +27,7 @@ import (
 type Launcher struct {
 	*shutter.Shutter
 
-	config               *RuntimeConfig
+	config               *BoxConfig
 	modules              *RuntimeModules
 	apps                 map[string]App
 	appStatus            map[string]pbdashboard.AppStatus
@@ -36,7 +36,7 @@ type Launcher struct {
 	shutdownFatalLogOnce sync.Once
 }
 
-func NewLauncher(config *RuntimeConfig, modules *RuntimeModules) *Launcher {
+func NewLauncher(config *BoxConfig, modules *RuntimeModules) *Launcher {
 	l := &Launcher{
 		Shutter:         shutter.New(),
 		apps:            make(map[string]App),

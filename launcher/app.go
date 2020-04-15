@@ -12,8 +12,8 @@ type AppDef struct {
 	MetricsID     string
 	Logger        *LoggingDef
 	RegisterFlags func(cmd *cobra.Command) error
-	InitFunc      func(config *RuntimeConfig, modules *RuntimeModules) error
-	FactoryFunc   func(config *RuntimeConfig, modules *RuntimeModules) (App, error)
+	InitFunc      func(config *BoxConfig, modules *RuntimeModules) error
+	FactoryFunc   func(config *BoxConfig, modules *RuntimeModules) (App, error)
 }
 
 type LoggingDef struct {
