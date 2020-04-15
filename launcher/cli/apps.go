@@ -22,7 +22,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
@@ -104,13 +103,8 @@ func init() {
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
 			if config.RunProducer {
 				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-				if strings.HasPrefix(managerConfigDir, "/") {
-					err := makeDirs([]string{
-						managerConfigDir,
-					})
-					if err != nil {
-						return err
-					}
+				if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
+					return err
 				}
 				if config.ProducerConfigIni == "" {
 					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
@@ -201,13 +195,8 @@ func init() {
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
-			if strings.HasPrefix(nodeosConfigDir, "/") {
-				err := makeDirs([]string{
-					nodeosConfigDir,
-				})
-				if err != nil {
-					return err
-				}
+			if err := mkdirStorePathIfLocal(nodeosConfigDir); err != nil {
+				return err
 			}
 
 			if config.ReaderConfigIni == "" {
@@ -422,7 +411,7 @@ func init() {
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			fluxDBWorkingDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-			return makeDirs([]string{fluxDBWorkingDir})
+			return mkdirStorePathIfLocal(fluxDBWorkingDir + "/fluxdb")
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return fluxdbApp.New(&fluxdbApp.Config{
