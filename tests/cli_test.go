@@ -66,7 +66,7 @@ func TestCli(t *testing.T) {
 
 	assertSuccess(t, cmd)
 	assertStdoutContains(t, cmd, "Dashboard: http://localhost:8080")
-	assertStdoutContains(t, cmd, "GraphiQL: http://localhost:8080/graphiql")
+	assertStdoutContains(t, cmd, "GraphiQL: http://localhost:13023/graphiql")
 	assertStdoutContains(t, cmd, "Eosq: http://localhost:8081")
 	assertStdoutContains(t, cmd, "Received termination signal, quitting")
 	assertStdoutContains(t, cmd, "Goodbye")

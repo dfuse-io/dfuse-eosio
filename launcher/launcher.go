@@ -27,23 +27,24 @@ import (
 type Launcher struct {
 	*shutter.Shutter
 
-	config               *BoxConfig
-	modules              *RuntimeModules
-	apps                 map[string]App
-	appStatus            map[string]pbdashboard.AppStatus
-	AppStatusStream      chan *pbdashboard.AppInfo
+	config  *BoxConfig
+	modules *RuntimeModules
+	apps    map[string]App
+
+	appStatus              map[string]pbdashboard.AppStatus
+	appStatusSubscriptions []*subscription
+
 	activeStatusLock     sync.RWMutex
 	shutdownFatalLogOnce sync.Once
 }
 
 func NewLauncher(config *BoxConfig, modules *RuntimeModules) *Launcher {
 	l := &Launcher{
-		Shutter:         shutter.New(),
-		apps:            make(map[string]App),
-		appStatus:       make(map[string]pbdashboard.AppStatus),
-		AppStatusStream: make(chan *pbdashboard.AppInfo, 200),
-		config:          config,
-		modules:         modules,
+		Shutter:   shutter.New(),
+		apps:      make(map[string]App),
+		appStatus: make(map[string]pbdashboard.AppStatus),
+		config:    config,
+		modules:   modules,
 	}
 	// TODO: this is weird should re-think this? Should the launcher be passed in every Factory App func instead?
 	// only the dashboard app that uses the launcher....
@@ -165,9 +166,13 @@ func (l *Launcher) StoreAndStreamAppStatus(appID string, status pbdashboard.AppS
 
 	l.appStatus[appID] = status
 
-	l.AppStatusStream <- &pbdashboard.AppInfo{
+	appInfo := &pbdashboard.AppInfo{
 		Id:     appID,
 		Status: status,
+	}
+
+	for _, sub := range l.appStatusSubscriptions {
+		sub.Push(appInfo)
 	}
 }
 
@@ -229,4 +234,36 @@ func (l *Launcher) WaitForTermination() {
 		}
 	}
 	userLog.Printf("All apps terminated gracefully")
+}
+
+func (l *Launcher) SubscribeAppStatus() *subscription {
+	chanSize := 500
+	sub := newSubscription(chanSize)
+
+	l.activeStatusLock.Lock()
+	defer l.activeStatusLock.Unlock()
+
+	l.appStatusSubscriptions = append(l.appStatusSubscriptions, sub)
+
+	userLog.Debug("App status subscribed")
+	return sub
+}
+
+func (l *Launcher) UnsubscribeAppStatus(sub *subscription) {
+	if sub == nil {
+		return
+	}
+
+	l.activeStatusLock.Lock()
+	defer l.activeStatusLock.Unlock()
+
+	var filtered []*subscription
+	for _, candidate := range l.appStatusSubscriptions {
+		// Pointer address comparison
+		if candidate != sub {
+			filtered = append(filtered, candidate)
+		}
+	}
+
+	l.appStatusSubscriptions = filtered
 }
