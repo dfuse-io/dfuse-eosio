@@ -41,11 +41,10 @@ require (
 	github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c
 	github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14
 	github.com/dfuse-io/search v0.0.0-20200415152212-a8acee5f288d
-	github.com/dfuse-io/search-client v0.0.0-20200415123319-d713350a5d3f
+	github.com/dfuse-io/search-client v0.0.0-20200415150146-6e9b323949c7
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca
-	github.com/eoscanada/jsonpb v0.0.0-20191003191457-98439e8ce04b
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/go-sql-driver/mysql v1.5.0
