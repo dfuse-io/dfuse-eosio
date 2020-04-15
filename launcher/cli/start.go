@@ -144,6 +144,6 @@ Your instance should be ready in a few seconds, here some relevant links:
 		Eosq: http://localhost%s
 `, "\n")
 
-	userLog.Printf(message, DashboardHTTPListenAddr, EosqHTTPServingAddr)
+	userLog.Printf(message, DashboardHTTPListenAddr, DgraphqlHTTPServingAddr, EosqHTTPServingAddr)
 
 }

@@ -130,7 +130,7 @@ func (s *Server) templatedIndex() (*bytes.Reader, error) {
 		"dfuse_io_endpoint":   "localhost" + s.config.DashboardHTTPListenAddr,
 		"dfuse_io_api_key":    "web_0123456789abcdef",
 		"dfuse_auth_endpoint": "http://localhost" + s.config.HttpListenAddr,
-		"display_price":       true,
+		"display_price":       false,
 		"price_ticker_name":   "EOS",
 		"available_networks":  []interface{}{},
 		"secure":              false,
