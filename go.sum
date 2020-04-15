@@ -240,6 +240,10 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3
 github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c h1:lfRo7VohqPM3q9qrlAtZyhWJu2aiT12f8Rrk43A7eCg=
 github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
 github.com/dfuse-io/relayer v0.0.0-20200408161021-6c7af0ee655f/go.mod h1:bhXtWga64eKyvLtOND0MFfQBXlg+cv7dJu93ueWFy+Y=
+github.com/dfuse-io/search v0.0.0-20200414193211-0fdf9348a7a4 h1:0JmNZWK6yzzlqS6RW/XYHP3im115FsAvBnip6gMyBBU=
+github.com/dfuse-io/search v0.0.0-20200414193211-0fdf9348a7a4/go.mod h1:5n9UPohiZvQb7fGzaYelyJk/X5+oMffYdZHD/pm6eAY=
+github.com/dfuse-io/search-client v0.0.0-20200408140718-84eca6793059 h1:cBnor0UkRGGyS9xETI+x7cS/7yT23Mq8q8aW5RVB+CY=
+github.com/dfuse-io/search-client v0.0.0-20200408140718-84eca6793059/go.mod h1:BiiRaYwK9xTSmVdj4/NmeHmUZ6oVj9LONad3lanTZiM=
 github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14 h1:J22vVLqH5d6GtT3YFt9IukAc7ChwcNQ0Yr4is/Aq924=
 github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14/go.mod h1:W+Cvb94hEEeoI9Kvh/rmaT1gXD+h419vuyzeNttuUc0=
 github.com/dfuse-io/search v0.0.0-20200409173607-5e4cd768c281/go.mod h1:r7ktO/brClkCNzNm7f6rt4RpRkBnnNHItjQQgEa0/ZY=
