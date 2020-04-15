@@ -396,7 +396,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enable dev mode")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enable dev mode")
-			cmd.Flags().String("fluxdb-kvdb-store-dsn", "badger://%s/flux.db", "Storage connection string")
+			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Storage connection string")
 			cmd.Flags().String("fluxdb-kvdb-grpc-serving-addr", FluxDBServingAddr, "Storage connection string")
 			cmd.Flags().Duration("fluxdb-db-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("fluxdb-db-blocks-store", "gs://example/blocks", "dbin blocks store")
@@ -410,14 +410,13 @@ func init() {
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
-			fluxDBWorkingDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-			return mkdirStorePathIfLocal(fluxDBWorkingDir + "/fluxdb")
+			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "flux"))
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return fluxdbApp.New(&fluxdbApp.Config{
-				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
+				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), filepath.Join(viper.GetString("global-data-dir"), "fluxdb")),
+				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), viper.GetString("global-data-dir")),
 				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
 				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
@@ -450,17 +449,15 @@ func init() {
 			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
+			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "kvdb"))
+		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
-			if err != nil {
-				return nil, err
-			}
-
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
 				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-merged-block-path")),
-				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
+				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), viper.GetString("global-data-dir")),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
 				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
@@ -534,15 +531,10 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
-			if err != nil {
-				return nil, err
-			}
-
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
-				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), absDataDir),
+				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), viper.GetString("global-data-dir")),
 				ExportCache:          viper.GetBool("abicodec-export-cache"),
 				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
@@ -849,7 +841,7 @@ func init() {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), filepath.Join(viper.GetString("global-data-dir"), "fluxdb")),
+				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), viper.GetString("global-data-dir")),
 				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
 				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
@@ -893,16 +885,12 @@ func init() {
 		},
 		InitFunc: nil,
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
-			if err != nil {
-				return nil, err
-			}
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
+				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), viper.GetString("global-data-dir")),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields
