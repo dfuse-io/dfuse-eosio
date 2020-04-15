@@ -20,21 +20,21 @@ func Test_buildStoreURL(t *testing.T) {
 	}{
 		{
 			name:           "google storage path",
-			dataDir:        "/Users/john/.dfusebox",
+			dataDir:        "/Users/john/dfuse-data",
 			storeURL:       "gs://test-bucket/eos-local/v1",
 			expectStoreURL: "gs://test-bucket/eos-local/v1",
 		},
 		{
 			name:           "absolute local path",
-			dataDir:        "/Users/john/.dfusebox",
-			storeURL:       "/Users/john/data/app",
-			expectStoreURL: "/Users/john/data/app",
+			dataDir:        "/Users/john/dfuse-data",
+			storeURL:       "/Users/john/nodeos",
+			expectStoreURL: "/Users/john/nodeos",
 		},
 		{
 			name:           "absolute local path",
-			dataDir:        "/Users/john/.dfusebox",
+			dataDir:        "/Users/john",
 			storeURL:       "app/storage/blocks",
-			expectStoreURL: "/Users/john/.dfusebox/app/storage/blocks",
+			expectStoreURL: "/Users/john/app/storage/blocks",
 		},
 	}
 

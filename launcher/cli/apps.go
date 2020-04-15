@@ -233,7 +233,7 @@ func init() {
 					userLog.Error(`*********************************************************************************
 									* Mindreader failed to start nodeos process
 									* To see nodeos logs...
-									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfusebox start
+									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
 									*********************************************************************************
 
 									Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
@@ -950,7 +950,7 @@ func init() {
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
-		Description: "Main dfusebox dashboard",
+		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
 		InitFunc:    nil,

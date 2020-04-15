@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+* renamed `dfusebox` to `dfuse for EOSIO`
+  * `dfusebox.yaml` to `dfuse.yaml`
+  * `dfusebox-data` to `dfuse-data`
+
 ## [v0.2.0] 2020-04-03
 
 ### Added

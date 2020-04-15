@@ -21,7 +21,7 @@ This alternate start assumes you have yarn and go installed on your system.
 
 * In your browser, connect to your instance via http://localhost:8001.
 
-## Build within dfusebox
+## Build as single binary within dfuse for EOSIO
 
 First, you will need to grab https://github.com/GeertJohan/go.rice with `go get github.com/GeertJohan/go.rice/rice`
 

@@ -38,7 +38,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var startCmd = &cobra.Command{Use: "start", Short: "Starts dfusebox's services all at once", RunE: dfuseStartE}
+var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE}
 
 func init() {
 	startCmd.Flags().Bool("send-to-bigquery", false, "Send data to big query")
@@ -48,7 +48,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	cmd.SilenceUsage = true
 
 	configFile := viper.GetString("global-config-file")
-	userLog.Printf("Starting dfusebox '%s'", configFile)
+	userLog.Printf("Starting dfuse for EOSIO '%s'", configFile)
 
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuse single binary started", zap.String("data_dir", dataDir))
@@ -57,12 +57,12 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	boxConfig, err := launcher.ReadConfig(configFile)
 	if err != nil {
-		userLog.Error("dfusebox not initialized. Please run 'dfusebox init'")
+		userLog.Error("dfuse for EOSIO not initialized. Please run 'dfuseeos init'")
 		return nil
 	}
 
 	if boxConfig.Version != "v1" {
-		userLog.Error("dfusebox not initialized with this version. Please run 'dfusebox init'")
+		userLog.Error("dfuse for EOSIO not initialized with this version. Please run 'dfuseeos init'")
 		return nil
 	}
 

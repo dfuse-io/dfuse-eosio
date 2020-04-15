@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Configuration extracted from the `dfusebox.yaml` file. User-driven.
+// Configuration extracted from the `dfuse.yaml` file. User-driven.
 type BoxConfig struct {
 	// Either GenesisJSON or GenesisFile
 	GenesisJSON string `yaml:"genesis_json"`
@@ -21,7 +21,7 @@ type BoxConfig struct {
 
 	ReaderConfigIni   string `yaml:"reader_config_ini"`
 	ReaderNodeVersion string `yaml:"reader_node_version"`
-	Version           string `yaml:"version"` // to determine if you need to dfusebox init again
+	Version           string `yaml:"version"` // to determine if you need to dfuseeos init again
 }
 
 // Load reads a YAML config, and returns the raw JSON plus a

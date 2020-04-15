@@ -21,8 +21,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/logging"
+	"github.com/eoscanada/eos-go"
 	"github.com/hidal-go/hidalgo/kv"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -174,9 +174,9 @@ func Test_parseDNS(t *testing.T) {
 		},
 		{
 			name:              "local dir",
-			dns:               "bbolt:///Users/john/.dfusebox/fluxdb/fluxdb.bbolt?createTables=true",
+			dns:               "bbolt:///Users/john/dfuse-data/fluxdb/fluxdb.bbolt?createTables=true",
 			expectError:       false,
-			expectPath:        "/Users/john/.dfusebox/fluxdb/fluxdb.bbolt",
+			expectPath:        "/Users/john/dfuse-data/fluxdb/fluxdb.bbolt",
 			expectCreateTable: true,
 		},
 	}
