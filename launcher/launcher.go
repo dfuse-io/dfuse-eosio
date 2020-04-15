@@ -27,7 +27,7 @@ import (
 type Launcher struct {
 	*shutter.Shutter
 
-	config               *RuntimeConfig
+	config               *BoxConfig
 	modules              *RuntimeModules
 	apps                 map[string]App
 	appStatus            map[string]pbdashboard.AppStatus
@@ -36,7 +36,7 @@ type Launcher struct {
 	shutdownFatalLogOnce sync.Once
 }
 
-func NewLauncher(config *RuntimeConfig, modules *RuntimeModules) *Launcher {
+func NewLauncher(config *BoxConfig, modules *RuntimeModules) *Launcher {
 	l := &Launcher{
 		Shutter:         shutter.New(),
 		apps:            make(map[string]App),
@@ -117,7 +117,7 @@ func (l *Launcher) Launch(appNames []string) error {
 			case <-app.Terminating():
 				userLog.Debug("app terminating", zap.String("app_id", appID))
 				if err := app.Err(); err != nil {
-					l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfusebox shutdown
+					l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
 						userLog.FatalAppError(appID, err)
 					})
 					userLog.Error("app terminating with error", zap.String("app_id", appID), zap.Error(err))

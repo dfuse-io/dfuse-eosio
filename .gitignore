@@ -8,8 +8,8 @@
 dashboard/client/.npmrc
 .DS_Store
 /tools/output.log
-/dfusebox.yaml
-/dfusebox-data
+/dfuse.yaml
+/dfuse-data
 rice-box.go
 /dist
 *SOURCE_ME.sh*

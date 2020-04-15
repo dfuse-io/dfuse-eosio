@@ -86,7 +86,7 @@ func waitForAllAppsToBeReady(t *testing.T, timeout time.Duration) (notReadyApps 
 	ctx := context.Background()
 	client := dashboard.NewDashboardClient(conn)
 
-	readyMap := collectApps(t, client)
+	readyMap := collectApps(t, client, timeout)
 
 	streamCtx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
@@ -129,8 +129,11 @@ func allAppsReady(readyMap map[string]bool) bool {
 	return true
 }
 
-func collectApps(t *testing.T, client dashboard.DashboardClient) (readyMap map[string]bool) {
-	appListResponse, err := client.AppsList(context.Background(), &dashboard.AppsListRequest{})
+func collectApps(t *testing.T, client dashboard.DashboardClient, timeout time.Duration) (readyMap map[string]bool) {
+	streamCtx, cancelTimeout := context.WithTimeout(context.Background(), timeout)
+	defer cancelTimeout()
+
+	appListResponse, err := client.AppsList(streamCtx, &dashboard.AppsListRequest{})
 	require.NoError(t, err)
 
 	readyMap = map[string]bool{}
@@ -195,7 +198,7 @@ func setupExecution(t *testing.T, testCase string, configFile string) (dataDir s
 	content, err := ioutil.ReadFile(configFile)
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(filepath.Join(dataDir, "dfusebox.yaml"), content, os.ModePerm)
+	err = ioutil.WriteFile(filepath.Join(dataDir, "dfuse.yaml"), content, os.ModePerm)
 	require.NoError(t, err)
 
 	return dataDir, func() {

@@ -17,12 +17,12 @@ package mdl
 import (
 	"time"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 )
 
-func ToV1Account(in *pbdeos.AccountCreationRef) *Account {
+func ToV1Account(in *pbeos.AccountCreationRef) *Account {
 	account := &Account{
 		AccountResp: &eos.AccountResp{},
 	}

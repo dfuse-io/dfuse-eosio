@@ -1,0 +1,491 @@
+
+"""
+Traces of the execution of a given transaction. This means the
+transaction was executed on the chain. You also get context about the
+block in which it was executed, and the status of the execution.
+
+WARN: Make sure to always check the `status` (in the `receipt`) to
+make sure you're not considering a failed transaction as if it was
+successful.
+"""
+type TransactionTrace {
+  id: String!
+
+  """
+  Block in which this transaction trace occurred
+  """
+  block: BlockHeader!
+
+  """
+  This is a short-hand for `receipt.status`.
+  """
+  status: TRANSACTION_STATUS!
+
+  """
+  Transaction execution receipt which is the consensus value propagated across the network.
+  """
+  receipt: TransactionReceiptHeader!
+
+  """
+  Amount of execution time in microseconds (µs) elapsed by this whole transaction. This
+  corresponds to the `transaction_trace.elapsed` field in the EOSIO software.
+
+  WARN: This is **not** the propagated consensus value. This value is from the EOSIO node
+  that replayed the transaction from the network. Use `receipt.cpuUsageMicroSeconds` in your
+  GraphQL operation instead to retrieve the consensus value.
+  """
+  elapsed: Int64!
+
+  """
+  Amount of network bandwidth consumed (for the sake of the rate limiting engine) by this whole transaction, in
+  bytes. This corresponds to the `transaction_trace.net_usage` field in the EOSIO software (which is usually
+  equivalent to `receipt.net_usage_words * 8`).
+
+  WARN: This is **not** the propagated consensus value. This value is from the EOSIO node
+  that replayed the transaction from the network. While there is no reason to not match the
+  consensus value, it still could be different.  Use `receipt.netUsageWords` in your
+  GraphQL operation instead to retrieve the consensus value (multiple it by 8 to get the amount of
+  bytes).
+  """
+  netUsage: Uint64!
+
+  """
+  Whether this transaction was originally a scheduled transaction.
+  """
+  scheduled: Boolean!
+
+  # Add "implicit" when they're implicit (like onerror and onblock)
+
+  # Add ramops that are transaction_trace level:
+  # * all the `DEFERRED_TRX` ram operations.
+
+  """
+  Lists all action traces, flattened and ordered by execution time.
+  """
+  executedActions: [ActionTrace!]!
+
+  """
+  Returns a flattened list of action traces, in _execution_ order, of only the matching transactions (from a search, or other filtering).
+  """
+  matchingActions: [ActionTrace!]!
+
+  "Traces of actions at depth=0, those part of the original Transaction. In `nodeos` version 1.7.0 and below, this corresponds to the `action_traces` field."
+  topLevelActions: [ActionTrace]!
+
+  # FIXME: implement this:
+  # failedDTrxTrace: TransactionTrace
+
+  # FIXME: eventually add `error_code`, which becomes native in 1.8.0
+
+  exceptJSON: JSON
+}
+
+scalar JSON
+scalar Uint64
+scalar Int64
+scalar Uint32
+
+"""Time is a representation of time in the RFC3339 format, optionally including milliseconds."""
+scalar Time
+
+type TransactionReceiptHeader {
+  status: TRANSACTION_STATUS!
+  cpuUsageMicroSeconds: Uint32!
+  netUsageWords: Uint32!
+}
+
+
+"""
+ActionTrace holds the traces of execution of a single action within a transaction.
+"""
+type ActionTrace {
+  """Global sequence ID for this action in this chain (shorthand for receipt.global_sequence). NOTE: if this is a failed action, seq will be 0."""
+  seq: Uint64!
+
+  """Zero-based index of this action within the transaction, in _execution_ order."""
+  executionIndex: Uint32!
+
+  """Action receipt (which differs from the Transaction receipt).
+
+  The receipt will be null when failures occur. Verify the `status`
+  field on the TransactionTrace object.
+
+  """
+  receipt: ActionReceipt
+
+  """
+  Account which code was executed to produce this execution trace.
+
+  Shorthand for receipt.receiver
+  """
+  receiver: String!
+
+
+  """Target method's account name.  This does *not* correspond to the contract code being executed, that is what `receiver` means.  This value namespaces your actions.
+
+  Shorthand for act.account in `nodeos` traces"""
+  account: String!
+
+  """Target method's action name. This value, combined with the `account`, determines which code path will be executed in the `receiver` contract code.
+
+  Shorthand for act.name in `nodeos` traces."""
+  name: String!
+
+  """Signatories required to execute this action.
+
+  Shorthand for `act.authorization` in `nodeos` traces."""
+  authorization: [PermissionLevel!]!
+
+  """Data payload. Might be a string or a JSON object, depending on whether it was possible to unpack it using an ABI.
+
+  Shorthand for `act.data` in `nodeos` traces."""
+  data: JSON
+
+  """JSON Object representing the action parameters, decoded through the ABI. Will be `null` if it wasn't possible to decode it.
+
+  Shorthand for action.json"""
+  json: JSON
+
+  """Hex-encoded string representing the raw data for the action.
+
+  Shorthand for `act.hex_data` in `nodeos` traces."""
+  hexData: String!
+
+  """A list of RAM mutation operations, produced by this transaction.
+
+  NOTE: the RAM ops on an action never include operations that are mutations of the transaction itself (like creation of a deferred, or removal of a deferred from RAM). For this, check `ramOps` on the TransactionTrace object.
+  """
+  ramOps: [RAMOp!]!
+
+  """A list of all operations affecting deferred transactions, like creation, deletion, modification, produced by this action."""
+  dtrxOps: [DTrxOp!]!
+
+  """A list of table mutation operations (creation or deletion of a _table_, not a _row_)."""
+  tableOps: [TableOp!]!
+
+  """A list of database operations produced by this action. Insertions, modifications and deletions of any table _rows_ in the scope of this action's `receiver`."""
+  dbOps(code:String table: String): [DBOp!]!
+
+  """Output of the action's `print()` statements from within the smart contract."""
+  console: String!
+
+  """Whether this action is a context-free action."""
+  contextFree: Boolean!
+
+  """
+  Elapsed time between the beginning of the execution of this action, relative to the time the whole transaction started to be processed
+  """
+  elapsed: Int64!
+
+  """If non-null, this action failed. The stack and reasons will be found within the raw JSON payload provided."""
+  exceptJSON: JSON
+
+  # In the future, we could structure `except` in there.
+
+  "Whether this action is a notification, meaning that it was triggered as a side effect rom another contract, and copied the exact same payload from the original transaction.  This happens when you call the `require_notify` method from the EOSIO intrinsics (from within a smart-contract)."
+  isNotify: Boolean!
+
+  "Whether or not this action matched the dfuse search query"
+  isMatchingQuery: Boolean!
+
+  "Traces of actions _created_ by this action. WARN: this doesn't infer that the operations were written to the blockchain in this order, only that it was created by this action. To obtain execution order, see `executedActions` on the TransactionTrace object."
+  createdActions(sort: ACTION_SORT_ORDER = EXECUTION): [ActionTrace]!
+
+  "Trace of the action that created this one, the one which _created_ this action. WARN: it is not necessarily the parent in execution order, but will reflect which smart contract did the creation of either the notification, action or context_free_action."
+  creatorAction: ActionTrace
+
+  """
+  Use this to rebuild the execution tree, using the `nodeos` dispatch algorithm of notifications, actions and context-free actions.
+
+  This is similar to what you would have gotten in `nodeos` prior to version 1.8.0.
+  """
+  closestUnnotifiedAncestorAction: ActionTrace
+}
+
+enum ACTION_SORT_ORDER {
+  """Execution sort order means you want to have the elemented sorted, in the order respecting the linear mutation of the state"""
+  EXECUTION
+
+  """Creation sort order means you want the actions sorted in the order they were scheduled by the parent action, respecting when `send`, `send_context_free` and `notify_recipient` were called. It might happen the state for each action was mutated in a different order."""
+  CREATION
+}
+
+"""Represents a change in consumption of RAM for a given account"""
+type RAMOp {
+  """What happened to justify this change in RAM."""
+  operation: RAM_OPERATION!
+
+  """The account being debited or credited RAM"""
+  payer: String!
+
+  """Number of bytes that were either consumed (positive) or released (negative)"""
+  delta: Int64!
+
+  """Number of bytes now used by the `payer` account, after applying this RAM operation.
+
+  To have a precise view of the RAM left on an account after this transaction was applied, go through all actions in execution order (`TransactionTrace.executedActions`) and use the last RAMOp for the given account.
+  """
+  usage: Uint64!
+}
+
+enum RAM_OPERATION {
+  "creation of a table"
+  CREATE_TABLE
+
+  "storing deferred transaction"
+  DEFERRED_TRX_ADD
+
+  "canceling deferred transaction"
+  DEFERRED_TRX_CANCEL
+
+  "creating deferred transaction"
+  DEFERRED_TRX_PUSHED
+
+  "executing deferred transaction. NOTE: that this one is the only one that is really scoped to the transaction, and not the action. You can ignore the value of action_idx when op is deferred_trx_removed."
+  DEFERRED_TRX_REMOVED
+
+  "deleting authority"
+  DELETEAUTH
+
+  "linking authority"
+  LINKAUTH
+
+  "creating new account"
+  NEWACCOUNT
+
+  "storing row (primary)"
+  PRIMARY_INDEX_ADD
+
+  "removing row (primary)"
+  PRIMARY_INDEX_REMOVE
+
+  "updating row (primary)"
+  PRIMARY_INDEX_UPDATE
+
+  "storing payer (primary)"
+  PRIMARY_INDEX_UPDATE_ADD_NEW_PAYER
+
+  "removing payer (primary)"
+  PRIMARY_INDEX_UPDATE_REMOVE_OLD_PAYER
+
+  "removing a table"
+  REMOVE_TABLE
+
+  "storing row (secondary)"
+  SECONDARY_INDEX_ADD
+
+  "removing row (secondary)"
+  SECONDARY_INDEX_REMOVE
+
+  "storing payer (secondary)"
+  SECONDARY_INDEX_UPDATE_ADD_NEW_PAYER
+
+  "removing payer (secondary)"
+  SECONDARY_INDEX_UPDATE_REMOVE_OLD_PAYER
+
+  "updating ABI for account"
+  SETABI
+
+  "updating contract for account"
+  SETCODE
+
+  "unlinking authority"
+  UNLINKAUTH
+
+  "creating new permission"
+  UPDATEAUTH_CREATE
+
+  "updating permission"
+  UPDATEAUTH_UPDATE
+}
+
+"""A change in deferred transactions in the chain's memory."""
+type DTrxOp {
+  """The source or cause of creation/modification/deletion of a deferred transaction"""
+  operation: DTRX_OPERATION!
+
+  sender: String
+  senderID: String
+
+  """The account being debited or credited to store this deferred transaction"""
+  payer: String
+
+  """The time this deferred was published at"""
+  publishedAt: Time
+
+  """The time at which Block Producers will start attempting to execute this transaction"""
+  delayUntil: Time
+
+  """The time at which Block Producers will evict this transaction from memory if it fails execution."""
+  expirationAt: Time
+
+  """The transaction ID of the `transaction`"""
+  trxID: String
+
+  """The deferred transaction payload itself."""
+  transaction: Transaction
+}
+
+enum DTRX_OPERATION {
+  "The deferred transaction was created by pushing it directly to the blockchain through /v1/chain/push_transaction, with a non-zero `delay_sec` field."
+  PUSH_CREATE
+
+  "The deferred transaction was created programmatically by a smart contract."
+  CREATE
+
+  "The deferred transaction was modified programmatically by a smart contract. This is the cancellation part, followed by a MODIFY_CREATE."
+  MODIFY_CANCEL
+
+  "The deferred transaction was modified programmatically by a smart contract. It is paired with the MODIFY_CANCEL that happens just before."
+  MODIFY_CREATE
+
+  "The deferred was canceled by a new transaction calling the native `eosio:canceldelay` action."
+  CANCEL
+}
+
+"""Creation or deletion of a table"""
+type TableOp {
+  operation: TABLE_OPERATION!
+  table: TableOpKey!
+  #tablePath: String!
+}
+
+enum TABLE_OPERATION {
+  """Table created"""
+  INS
+
+  """Table deleted"""
+  REM
+}
+
+"""Represents the mutation of a row, in a contract table."""
+type DBOp {
+  operation: DB_OPERATION!
+
+  """Previous paying account.  This is null in the case of an insertion."""
+  oldPayer: String
+  """New paying account.  This is null in the case of a deletion."""
+  newPayer: String
+  """Primary key of the row in the table."""
+  key: DBOpKey!
+  # keyPath: String!
+
+  """Contents (hex data) of the row before a REM or UPD operation."""
+  oldData: String  # hex data
+  """Contents (hex data) of the row after an INS or UPD operation."""
+  newData: String  # hex data
+
+  """Decoded version of oldData"""
+  oldJSON: DecodedObject!    # decoded object
+  """Decoded version of newData"""
+  newJSON: DecodedObject!    # decoded object
+
+}
+
+enum DB_OPERATION {
+  INS  # insertion
+  UPD  # update
+  REM  # removal / deletion
+}
+
+type DBOpKey {
+  code: String!  # name-encoded always
+  table: String!  # name-encoded always
+  scope(encoding: UINT64_ENCODING = NAME): String!  # defaults to name-encoding
+  key(encoding: UINT64_ENCODING = NAME): String!    # defaults to name-encoding
+}
+
+type TableOpKey {
+  code: String!  # name-encoded always
+  table: String!  # name-encoded always
+  scope(encoding: UINT64_ENCODING = NAME): String!  # defaults to name-encoding
+}
+
+enum UINT64_ENCODING {
+  NAME
+  DECIMAL
+  HEXADECIMAL  # withou the `0x`
+  SYMBOL  # includes precision
+  SYMBOL_CODE  # excludes precision
+}
+
+enum TRANSACTION_STATUS {
+    EXECUTED
+    SOFT_FAIL
+    HARD_FAIL
+    DELAYED
+    EXPIRED
+    UNKNOWN
+}
+
+"""Execution receipt for a given ActionTrace.
+
+The `nodeos` field `auth_sequence` is not yet present. Contact us if you need it.
+"""
+type ActionReceipt {
+  "Account for which code is being triggered. Beware that this might not be the same value as `account`, or the target account of the action, in the case of notifications. See documentation for `require_notify` in EOSIO contracts"
+  receiver: String!
+
+  "Hash of the action payload. Also known as `act_digest` from `nodeos`"
+  digest: String!
+
+  """Globally unique sequence number in all actions from the longest chain. This will never be reused, and is guaranteed to monotonically increment with each action.
+
+  This property can be relied on to keep track of forks in your database, at the action level.
+
+  WARNING: when micro-forks happens, global sequences from the different forks will be reused, but will be associated with other actions. This is why it's important to navigate forks properly.
+  """
+  globalSequence: Uint64!
+
+  # authSequence: JSON!  # This should be a list of things. Not sure we can represent it as GraphQL, unless we transform it as an object. Perhaps we can do that though :) And give each field a meaning and a name for once.
+  codeSequence: Uint64!
+  abiSequence: Uint64!
+}
+
+type Transaction {
+  expiration: Time!
+  """TaPoS reference block num.
+
+  This value holds only 16 bits of the blockNum (instead of 32).
+  The other 16 bits are in the current blockNum (unless overflown).
+  """
+  refBlockNum: Uint32! # is a uint16 in reality, should we implement it?!
+
+  """TaPoS block prefix (bytes 8-16 of the block ID), in order to identify the correct fork for a given block number."""
+  refBlockPrefix: Uint32!
+
+  maxNetUsageWords: Uint32!
+  maxCPUUsageMS: Uint32! # is a uint8 in reality
+  delaySec: Uint32! # in seconds
+
+  contextFreeActions: [Action!]!
+  actions: [Action!]!
+  # extensions: [Extension!]   # we won't do today
+}
+
+type Action {
+  account: String!
+  name: String!
+  authorization: [PermissionLevel]!
+
+  json: JSON
+  data: JSON
+  hexData: String!
+}
+
+type PermissionLevel {
+  actor: String!
+  permission: String!
+}
+
+# FIXME: can GraphQL represent lists of elements, of different types?
+# Perhaps this is better specified as just `JSON` and let people unpack it if they need?
+type AuthSequence {
+  account: String
+  sequence: Uint64!
+}
+
+type DecodedObject {
+    object: JSON
+    error: String
+}

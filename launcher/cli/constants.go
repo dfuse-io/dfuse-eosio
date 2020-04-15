@@ -6,8 +6,9 @@ import (
 
 const (
 	Protocol                    pbbstream.Protocol = pbbstream.Protocol_EOS
-	BlockmetaDSN                string             = "badger://%s/kvdb_badger.db?compression=zstd"
-	KVBDDSN                     string             = "badger://%s/kvdb_badger.db?compression=zstd" //%s will be replace by data-dir
+	BlockmetaDSN                string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replace by data-dir
+	KVDBDSN                     string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replace by `<data-dir>`
+	FluxDSN                     string             = "badger://%s/fluxdb/flux.db"                       //%s will be replace by `<data-dir>/<flux-data-dir>
 	MergedBlocksFilesPath       string             = "storage/merged-blocks"
 	IndicesFilePath             string             = "storage/indexes"
 	OneBlockFilesPath           string             = "storage/one-blocks"
@@ -32,14 +33,13 @@ const (
 	KvdbHTTPServingAddr         string             = ":13020"
 	IndexerServingAddr          string             = ":13021"
 	IndexerHTTPServingAddr      string             = ":13022"
-	TokenmetaServingAddr        string             = ":13023" // Not implemented yet, present for booting purposes, does not work
-	DgraphqlHTTPServingAddr     string             = ":13024"
-	DgraphqlGrpcServingAddr     string             = ":13025"
-	DashboardGrpcServingAddr    string             = ":13726"
-	EoswsHTTPServingAddr        string             = ":13027"
-	ForkresolverServingAddr     string             = ":13028"
-	ForkresolverHTTPServingAddr string             = ":13029"
-	FluxDBServingAddr           string             = ":13030"
+	DgraphqlHTTPServingAddr     string             = ":13023"
+	DgraphqlGrpcServingAddr     string             = ":13024"
+	DashboardGrpcServingAddr    string             = ":13725"
+	EoswsHTTPServingAddr        string             = ":13026"
+	ForkresolverServingAddr     string             = ":13027"
+	ForkresolverHTTPServingAddr string             = ":13028"
+	FluxDBServingAddr           string             = ":13029"
 	DashboardHTTPListenAddr     string             = ":8080"
 	EosqHTTPServingAddr         string             = ":8081"
 	MindreaderNodeosAPIAddr     string             = ":9888"

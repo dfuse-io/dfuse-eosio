@@ -1,0 +1,95 @@
+type Block {
+    """ID of this block. It is a unique pointer to this block."""
+    id: String!
+
+    """Sequential number of this block on the chain. Unlike the hash, it is not unique because of forked blocks."""
+    num: Uint32!
+
+    """The Last Irreversible Block number this chain is based at the DPoS consensus layer."""
+    dposLIBNum: Uint32!
+
+    """Indicates whether this block is irreversible."""
+    irreversible: Boolean!
+
+    """Header . It is a unique pointer to this block."""
+    header: BlockHeader!
+
+    """Number of transaction found in this blocks, this is the number of 'executed' transaction count."""
+    executedTransactionCount: Uint32!
+
+    """List of transactions contained in this block."""
+    transactionTraces(first: Uint32, last: Uint32, before: String, after: String) : TransactionTraceConnection!
+}
+
+"""
+BlockHeader is the header of a block, excluding the transactions in that block.
+"""
+type BlockHeader {
+    """The ID of this block in the chain."""
+    id: String!
+
+    """The block number in the chain."""
+    num: Uint32!
+
+    """Timestamp of this block, this is the actual time at which the block was procuded."""
+    timestamp: Time!
+
+    """The block producer who producer this block."""
+    producer: String!
+
+    """How may confirmations of verification this block has received from other block producers."""
+    confirmed: Uint32!
+
+    """The previous block ID in the block chain this block is based on."""
+    previous: String!
+
+    """The transaction receipt Merkle root node hash of this block, this is the 'transaction_mroot' in EOSIO."""
+    transactionMRoot: String!
+
+    """The action receipt Merkle root node hash of this block, this is the 'action_mroot' in EOSIO."""
+    actionMRoot: String!
+
+    """The producer schedule version this block is based on. The schedule is the list of active producer and their assigned block production slot."""
+    scheduleVersion: Uint32!
+    newProducers: ProducerSchedule
+}
+
+type ProducerSchedule {
+    version: Uint32!
+    producers: [ProducerKey!]!
+}
+
+type ProducerKey {
+    producerName: String!
+    blockSigningKey: String!
+}
+
+
+type TransactionTraceConnection {
+    "A list of edges to transaction traces"
+    edges: [TransactionTraceEdge]!
+
+    "Information to aid pagination"
+    pageInfo: PageInfo!
+}
+
+type TransactionTraceEdge {
+    """Trasaction trace cursor"""
+    cursor: String!
+
+    """Trasaction trace"""
+    node: TransactionTrace!
+}
+
+
+"""Cursors required to continue either forward or backwards from a list of paginated elements"""
+type PageInfo {
+    """cursor of the first element of the list, use it to search in the opposite direction"""
+    startCursor: String!
+    """cursor of the last element of the list, use it to continue"""
+    endCursor: String!
+    """indicates whether there is a next page"""
+    hasNextPage: Boolean!
+    """indicates whether there is a previous page"""
+    hasPreviousPage: Boolean!
+}

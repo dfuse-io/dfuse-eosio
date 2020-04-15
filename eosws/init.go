@@ -16,5 +16,5 @@ package eosws
 
 import (
 	// This registers various EOS interfaces (BlockReader, BlockWriter & BlockDecoder)
-	_ "github.com/dfuse-io/bstream/codecs/deos"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 )

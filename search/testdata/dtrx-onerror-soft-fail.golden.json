@@ -1,0 +1,26 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "eosio",
+      "action": "onerror",
+      "auth": null,
+      "block_num": 1,
+      "data": null,
+      "db": {
+        "key": [
+          "producers/eosio/eoshuobipool"
+        ],
+        "table": [
+          "producers",
+          "producers/eosio"
+        ]
+      },
+      "input": true,
+      "notif": true,
+      "receiver": "any",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  }
+]

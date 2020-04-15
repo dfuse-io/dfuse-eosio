@@ -25,14 +25,14 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	"github.com/eoscanada/eos-go"
-	"github.com/eoscanada/eos-go/eoserr"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	"github.com/eoscanada/eos-go"
+	"github.com/eoscanada/eos-go/eoserr"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )
@@ -128,7 +128,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return t.subscriptionHub.NewSource(handler, 10) // does not need joining
 	})
 
-	var trxTraceFoundChan <-chan *pbdeos.TransactionTrace
+	var trxTraceFoundChan <-chan *pbeos.TransactionTrace
 	var shutdownFunc func(error)
 	lib := nodeosInfo.LastIrreversibleBlockID.String()
 	expirationDelay := time.Minute * 2 //baseline for inblock inclusion
@@ -205,7 +205,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case trxTrace := <-trxTraceFoundChan:
 		blockID := trxTrace.ProducerBlockId
 
-		eosTrace := deos.TransactionTraceToEOS(trxTrace)
+		eosTrace := codec.TransactionTraceToEOS(trxTrace)
 
 		resp := &PushResponse{
 			BlockID:       blockID,
@@ -274,10 +274,10 @@ var runningPushInHandoffs int64
 
 // awaitTransactionPassedHandoffs starts a forkaware pipeline that awaits a number
 // of producer handoffs after which it sends back the transaction traces in a channel
-func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID string, requiredHandoffs int, subscriptionHub *hub.SubscriptionHub) (<-chan *pbdeos.TransactionTrace, func(error)) {
-	trxFound := make(chan *pbdeos.TransactionTrace)
+func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID string, requiredHandoffs int, subscriptionHub *hub.SubscriptionHub) (<-chan *pbeos.TransactionTrace, func(error)) {
+	trxFound := make(chan *pbeos.TransactionTrace)
 	var done bool
-	var seenTrxTraces *pbdeos.TransactionTrace
+	var seenTrxTraces *pbeos.TransactionTrace
 	var producers []string
 
 	atomic.AddInt64(&runningPushInHandoffs, 1)
@@ -291,7 +291,7 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 			return nil
 		}
 
-		blk := block.ToNative().(*pbdeos.Block)
+		blk := block.ToNative().(*pbeos.Block)
 		producer := blk.Header.Producer
 
 		switch fObj.Step {
@@ -343,11 +343,11 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 
 var runningPushInBlock int64
 
-func awaitTransactionInBlock(ctx context.Context, trxID string, sourceFactory bstream.SourceFactory) (<-chan *pbdeos.TransactionTrace, func(error)) {
+func awaitTransactionInBlock(ctx context.Context, trxID string, sourceFactory bstream.SourceFactory) (<-chan *pbeos.TransactionTrace, func(error)) {
 	atomic.AddInt64(&runningPushInBlock, 1)
 	zlog.Info("waiting for trx to appear in a block", zap.String("trxID", trxID), zap.Int64("count", atomic.LoadInt64(&runningPushInBlock)))
 
-	trxTraceFoundChan := make(chan *pbdeos.TransactionTrace)
+	trxTraceFoundChan := make(chan *pbeos.TransactionTrace)
 
 	source := sourceFactory(getTransactionCatcher(ctx, trxID, trxTraceFoundChan))
 	source.OnTerminating(func(e error) {
@@ -360,11 +360,11 @@ func awaitTransactionInBlock(ctx context.Context, trxID string, sourceFactory bs
 
 var runningIrreversible int64
 
-func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFactory bstream.SourceFactory) (<-chan *pbdeos.TransactionTrace, func(error)) {
+func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFactory bstream.SourceFactory) (<-chan *pbeos.TransactionTrace, func(error)) {
 	atomic.AddInt64(&runningIrreversible, 1)
 	zlog.Info("waiting for trx to appear in an irreversible block", zap.String("trxID", trxID), zap.Int64("count", atomic.LoadInt64(&runningIrreversible)))
 
-	trxTraceFoundChan := make(chan *pbdeos.TransactionTrace)
+	trxTraceFoundChan := make(chan *pbeos.TransactionTrace)
 
 	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithFilters(forkable.StepIrreversible))
 	source := sourceFactory(irrForkableHandler)
@@ -376,9 +376,9 @@ func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFacto
 	return trxTraceFoundChan, source.Shutdown
 }
 
-func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan chan *pbdeos.TransactionTrace) bstream.Handler {
+func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan chan *pbeos.TransactionTrace) bstream.Handler {
 	return bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
-		blk := block.ToNative().(*pbdeos.Block)
+		blk := block.ToNative().(*pbeos.Block)
 		trxTrace := traceExecutedInBlock(trxID, blk)
 		if trxTrace != nil {
 			select {
@@ -392,7 +392,7 @@ func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan 
 	})
 }
 
-func traceExecutedInBlock(trxID string, blk *pbdeos.Block) *pbdeos.TransactionTrace {
+func traceExecutedInBlock(trxID string, blk *pbeos.Block) *pbeos.TransactionTrace {
 	for _, trxTrace := range blk.TransactionTraces {
 		if trxTrace.Id == trxID {
 			return trxTrace

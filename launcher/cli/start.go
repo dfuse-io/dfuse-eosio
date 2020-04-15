@@ -16,28 +16,27 @@ package cli
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	_ "github.com/dfuse-io/bstream/codecs/deos"
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
+	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
-	_ "github.com/dfuse-io/kvdb/eosdb/kv"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
-var startCmd = &cobra.Command{Use: "start", Short: "Starts dfusebox's services all at once", RunE: dfuseStartE}
+var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE}
 
 func init() {
 	startCmd.Flags().Bool("send-to-bigquery", false, "Send data to big query")
@@ -47,21 +46,19 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	cmd.SilenceUsage = true
 
 	configFile := viper.GetString("global-config-file")
-	userLog.Printf("Starting dfusebox '%s'", configFile)
+	userLog.Printf("Starting dfuse for EOSIO '%s'", configFile)
 
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuse single binary started", zap.String("data_dir", dataDir))
 
-	nodeosPath := viper.GetString("global-nodeos-path")
-
 	boxConfig, err := launcher.ReadConfig(configFile)
 	if err != nil {
-		userLog.Error("dfusebox not initialized. Please run 'dfusebox init'")
+		userLog.Error("dfuse for EOSIO not initialized. Please run 'dfuseeos init'")
 		return nil
 	}
 
 	if boxConfig.Version != "v1" {
-		userLog.Error("dfusebox not initialized with this version. Please run 'dfusebox init'")
+		userLog.Error("dfuse for EOSIO not initialized with this version. Please run 'dfuseeos init'")
 		return nil
 	}
 
@@ -77,67 +74,24 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	// construct root config used by dfuse app, passed down to be used by all sub apps
-	config := &launcher.RuntimeConfig{
-		BoxConfig:                boxConfig,
-		DmeshServiceVersion:      "v1",
-		DmeshNamespace:           "local",
-		NetworkID:                "eos-local",
-		DataDir:                  dataDirAbs,
-		StartBlock:               0,
-		StopBlock:                0,
-		NodeExecutable:           nodeosPath,
-		ShardSize:                200,
-		NodeosAPIAddr:            ":8888", // This is the address where the nodeos is serving its API. it is defined in config.ini
-		MindreaderNodeosAPIAddr:  ":9888", // This is the address where the dm-nodeos is serving its API. it is defined in config.ini
-		EosManagerHTTPAddr:       EosManagerHTTPAddr,
-		EosMindreaderHTTPAddr:    EosMindreaderHTTPAddr,
-		MindreaderGRPCAddr:       MindreaderGRPCAddr,
-		RelayerServingAddr:       RelayerServingAddr,
-		MergerServingAddr:        MergerServingAddr,
-		AbiServingAddr:           AbiServingAddr,
-		BlockmetaServingAddr:     BlockmetaServingAddr,
-		ArchiveServingAddr:       ArchiveServingAddr,
-		ArchiveHTTPServingAddr:   ArchiveHTTPServingAddr,
-		LiveServingAddr:          LiveServingAddr,
-		RouterServingAddr:        RouterServingAddr,
-		RouterHTTPServingAddr:    RouterHTTPServingAddr,
-		KvdbHTTPServingAddr:      KvdbHTTPServingAddr,
-		IndexerServingAddr:       IndexerServingAddr,
-		IndexerHTTPServingAddr:   IndexerHTTPServingAddr,
-		TokenmetaServingAddr:     TokenmetaServingAddr, // Not implemented yet, present for booting purposes, does not work!
-		DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
-		DgraphqlGrpcServingAddr:  DgraphqlGrpcServingAddr,
-		DashboardGrpcServingAddr: DashboardGrpcServingAddr,
-		EoswsHTTPServingAddr:     EoswsHTTPServingAddr,
-		FluxDBServingAddr:        FluxDBServingAddr,
-		DashboardHTTPListenAddr:  DashboardHTTPListenAddr,
-		EosqHTTPServingAddr:      EosqHTTPServingAddr,
-
-		// TODO: clean this one up...
-		//KvdbDSN: fmt.Sprintf("sqlite3://%s/kvdb_db.db?cache=shared&mode=memory&createTables=true", filepath.Join(dataDirAbs, "kvdb")),
-		KvdbDSN: fmt.Sprintf("badger://%s/kvdb_badger.db?compression=zstd", filepath.Join(dataDirAbs, "kvdb")),
-		//KvdbDSN:               "tikv://pd0:2379?keyPrefix=01000001", // 01 = kvdb, 000001 = eos-mainnet
-		//KvdbDSN:               "bigkv://dev.dev/kvdb?createTable=true",
-		Protocol:              pbbstream.Protocol_EOS,
-		BootstrapDataURL:      "",
-		NodeosTrustedProducer: "",
-		NodeosShutdownDelay:   0 * time.Second,
-		NodeosExtraArgs:       make([]string, 0),
-	}
-
 	modules := &launcher.RuntimeModules{
 		SearchDmeshClient: dmeshClient.NewLocalClient(),
 		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta()),
 	}
 
-	launcher := launcher.NewLauncher(config, modules)
+	err = bstream.ValidateRegistry()
+	if err != nil {
+		userLog.Error("Protocol specific hooks not configured correctly", zap.Error(err))
+		os.Exit(1)
+	}
+
+	launcher := launcher.NewLauncher(boxConfig, modules)
 	userLog.Debug("launcher created")
 
 	apps := []string{}
 
 	// Producer node
-	if config.BoxConfig.RunProducer {
+	if boxConfig.RunProducer {
 		apps = append(apps, "manager")
 	}
 	//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "abicodec", "eosws")
@@ -152,7 +106,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	go modules.MetricManager.Launch()
 
-	printWelcomeMessage(config)
+	printWelcomeMessage()
 
 	signalHandler := derr.SetupSignalHandler(0 * time.Second)
 	select {
@@ -181,7 +135,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-func printWelcomeMessage(config *launcher.RuntimeConfig) {
+func printWelcomeMessage() {
 	message := strings.TrimLeft(`
 Your instance should be ready in a few seconds, here some relevant links:
 
@@ -190,6 +144,6 @@ Your instance should be ready in a few seconds, here some relevant links:
 		Eosq: http://localhost%s
 `, "\n")
 
-	userLog.Printf(message, config.DashboardHTTPListenAddr, config.DashboardHTTPListenAddr, config.EosqHTTPServingAddr)
+	userLog.Printf(message, DashboardHTTPListenAddr, DgraphqlHTTPServingAddr, EosqHTTPServingAddr)
 
 }

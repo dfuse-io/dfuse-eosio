@@ -17,8 +17,8 @@ package mdl
 import (
 	"fmt"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
-	"github.com/dfuse-io/bstream/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codec"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eos "github.com/eoscanada/eos-go"
 )
 
@@ -36,11 +36,11 @@ type BlockSummary struct {
 	DPoSLIBNum       uint32                `json:"dpos_lib_num"`
 }
 
-func ToV1BlockSummary(in *pbdeos.BlockWithRefs) (*BlockSummary, error) {
+func ToV1BlockSummary(in *pbeos.BlockWithRefs) (*BlockSummary, error) {
 	summary := &BlockSummary{
 		ID:               in.Id,
 		Irreversible:     in.Irreversible,
-		Header:           deos.BlockHeaderToEOS(in.Block.Header),
+		Header:           codec.BlockHeaderToEOS(in.Block.Header),
 		TransactionCount: int(in.Block.TransactionCount),
 		BlockNum:         in.Block.Number,
 		DPoSLIBNum:       in.Block.DposIrreversibleBlocknum,
@@ -53,34 +53,34 @@ func ToV1BlockSummary(in *pbdeos.BlockWithRefs) (*BlockSummary, error) {
 		if err != nil {
 			return nil, err
 		}
-		summary.ActiveSchedule = deos.ProducerScheduleToEOS(downgradedSchedule)
+		summary.ActiveSchedule = codec.ProducerScheduleToEOS(downgradedSchedule)
 	} else if in.Block.ActiveScheduleV1 != nil {
-		summary.ActiveSchedule = deos.ProducerScheduleToEOS(in.Block.ActiveScheduleV1)
+		summary.ActiveSchedule = codec.ProducerScheduleToEOS(in.Block.ActiveScheduleV1)
 	}
 
 	return summary, nil
 }
 
-func downgradeActiveScheduleV2ToV1(in *pbdeos.ProducerAuthoritySchedule) (*pbdeos.ProducerSchedule, error) {
-	newProducers := make([]*pbdeos.ProducerKey, len(in.Producers))
+func downgradeActiveScheduleV2ToV1(in *pbeos.ProducerAuthoritySchedule) (*pbeos.ProducerSchedule, error) {
+	newProducers := make([]*pbeos.ProducerKey, len(in.Producers))
 	for i, producer := range in.Producers {
 		pubKey, err := extractFirstPublicKeyFromAuthority(producer.BlockSigningAuthority)
 		if err != nil {
 			return nil, fmt.Errorf("failed to downgrade schedule: %w", err)
 		}
-		newProducers[i] = &pbdeos.ProducerKey{
+		newProducers[i] = &pbeos.ProducerKey{
 			AccountName:     producer.AccountName,
 			BlockSigningKey: pubKey,
 		}
 	}
 
-	return &pbdeos.ProducerSchedule{
+	return &pbeos.ProducerSchedule{
 		Version:   in.Version,
 		Producers: newProducers,
 	}, nil
 }
 
-func extractFirstPublicKeyFromAuthority(in *pbdeos.BlockSigningAuthority) (string, error) {
+func extractFirstPublicKeyFromAuthority(in *pbeos.BlockSigningAuthority) (string, error) {
 	if in.GetV0() == nil {
 		return "", fmt.Errorf("only knowns how to deal with BlockSigningAuthority_V0 type, got %t", in.Variant)
 	}

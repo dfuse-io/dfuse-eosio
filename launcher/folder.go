@@ -42,6 +42,7 @@ type EOSFolderStructure struct {
 	MindReaderWorkingDir string
 	MergerWorkingDir     string
 	KVDBWorkingDir       string
+	FluxWorkingDir       string
 	SearchWorkingDir     string
 }
 
@@ -63,6 +64,7 @@ func NewEOSFolderStructure(userBase string) *EOSFolderStructure {
 		MindReaderWorkingDir: filepath.Join(base, "mindreader"),
 		MergerWorkingDir:     filepath.Join(base, "merger"),
 		KVDBWorkingDir:       filepath.Join(base, "kvdb"),
+		FluxWorkingDir:       filepath.Join(base, "flux"),
 		SearchWorkingDir:     filepath.Join(base, "search"),
 		ManagerNode: &EOSNodeFolders{
 			Config: filepath.Join(managerNodeDir, "config"),
@@ -99,5 +101,6 @@ func (s EOSFolderStructure) DataDirs() []string {
 		s.SearchWorkingDir,
 		s.ManagerNode.Data,
 		s.MindreaderNode.Data,
+		s.FluxWorkingDir,
 	}
 }

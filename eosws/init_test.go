@@ -19,12 +19,12 @@ import (
 	"os"
 	"testing"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/codec"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/logging"
+	"github.com/eoscanada/eos-go"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"
@@ -39,19 +39,19 @@ func init() {
 }
 
 func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trxTraceJSONs ...string) *bstream.Block {
-	trxTraces := make([]*pbdeos.TransactionTrace, len(trxTraceJSONs))
+	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbdeos.TransactionTrace)
+		trxTrace := new(pbeos.TransactionTrace)
 
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  previousID,
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},
@@ -70,7 +70,7 @@ func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trx
 		zlog.Debug("created test block", zap.Any("block", normalizedOut))
 	}
 
-	block, err := deos.BlockFromProto(pbblock)
+	block, err := codec.BlockFromProto(pbblock)
 	require.NoError(t, err)
 
 	return block

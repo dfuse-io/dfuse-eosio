@@ -16,27 +16,34 @@ package cli
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"os"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
+	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
+	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
+	"github.com/dfuse-io/manageos/mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	archiveApp "github.com/dfuse-io/search/app/archive"
@@ -91,31 +98,26 @@ func init() {
 			cmd.Flags().Bool("manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if config.BoxConfig.RunProducer {
+			if config.RunProducer {
 				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-				if strings.HasPrefix(managerConfigDir, "/") {
-					err := makeDirs([]string{
-						managerConfigDir,
-					})
-					if err != nil {
-						return err
-					}
+				if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
+					return err
 				}
-				if config.BoxConfig.ProducerConfigIni == "" {
+				if config.ProducerConfigIni == "" {
 					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
 				}
 
-				if err := writeGenesisAndConfig(config.BoxConfig.ProducerConfigIni, config.BoxConfig.GenesisJSON, managerConfigDir, "producer"); err != nil {
+				if err := writeGenesisAndConfig(config.ProducerConfigIni, config.GenesisJSON, managerConfigDir, "producer"); err != nil {
 					return err
 				}
 			}
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			if config.BoxConfig.RunProducer {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			if config.RunProducer {
 				return nodeosManagerApp.New(&nodeosManagerApp.Config{
 					ManagerAPIAddress:       viper.GetString("manager-api-addr"),
 					NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
@@ -191,29 +193,24 @@ func init() {
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			return nil
 		},
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
-			if strings.HasPrefix(nodeosConfigDir, "/") {
-				err := makeDirs([]string{
-					nodeosConfigDir,
-				})
-				if err != nil {
-					return err
-				}
+			if err := mkdirStorePathIfLocal(nodeosConfigDir); err != nil {
+				return err
 			}
 
-			if config.BoxConfig.ReaderConfigIni == "" {
+			if config.ReaderConfigIni == "" {
 				// TODO: considering this can eventually run the mindreader application solely, instead of returning
 				// an error we may want to assume that config.ini file would already be at that place on disk
 				return fmt.Errorf("readerConfigIni empty")
 			}
 
-			if err := writeGenesisAndConfig(config.BoxConfig.ReaderConfigIni, config.BoxConfig.GenesisJSON, nodeosConfigDir, "reader"); err != nil {
+			if err := writeGenesisAndConfig(config.ReaderConfigIni, config.GenesisJSON, nodeosConfigDir, "reader"); err != nil {
 				return err
 			}
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			archiveStoreURL := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-oneblock-store-url"))
 			if viper.GetBool("mindreader-merge-and-upload-directly") {
 				archiveStoreURL = buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-merged-blocks-store-url"))
@@ -225,7 +222,7 @@ func init() {
 					userLog.Error(`*********************************************************************************
 									* Mindreader failed to start nodeos process
 									* To see nodeos logs...
-									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfusebox start
+									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
 									*********************************************************************************
 
 									Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
@@ -233,7 +230,21 @@ func init() {
 									to find how to install it.`)
 					os.Exit(1)
 				}
+
 			}
+			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
+				return codec.NewConsoleReader(reader)
+			}
+			//
+			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
+				blk, ok := obj.(*pbeos.Block)
+				if !ok {
+					return nil, fmt.Errorf("expected *pbeos.Block, got %T", obj)
+				}
+
+				return codec.BlockFromProto(blk)
+			}
+
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
 				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
 				NodeosAPIAddress:           viper.GetString("mindreader-api-addr"),
@@ -264,6 +275,9 @@ func init() {
 				WorkingDir:                 buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-working-dir")),
 				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
 				StartFailureHandlerFunc:    startUpFunc,
+			}, &nodeosMindreaderApp.Modules{
+				ConsoleReaderFactory:     consoleReaderFactory,
+				ConsoleReaderTransformer: consoleReaderBlockTransformer,
 			}), nil
 		},
 	})
@@ -288,7 +302,7 @@ func init() {
 			cmd.Flags().Bool("relayer-enable-readiness-probe", true, "Enable relayer's app readiness probe")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:          viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
@@ -333,7 +347,7 @@ func init() {
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
 		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
 		//        init flow and call init after the factory and giving it the instantiated app...
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			err := mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")))
 			if err != nil {
 				return err
@@ -351,7 +365,7 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return mergerApp.New(&mergerApp.Config{
 				StorageMergedBlocksFilesPath: buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")),
 				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")),
@@ -367,7 +381,6 @@ func init() {
 				SeenBlocksFile:               buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")),
 				MaxFixableFork:               viper.GetUint64("merger-max-fixable-fork"),
 				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
-				Protocol:                     Protocol,
 				EnableReadinessProbe:         true,
 			}), nil
 		},
@@ -383,7 +396,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enable dev mode")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enable dev mode")
-			cmd.Flags().String("fluxdb-kvdb-store-dsn", "badger://%s/flux.db", "Storage connection string")
+			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Storage connection string")
 			cmd.Flags().String("fluxdb-kvdb-grpc-serving-addr", FluxDBServingAddr, "Storage connection string")
 			cmd.Flags().Duration("fluxdb-db-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("fluxdb-db-blocks-store", "gs://example/blocks", "dbin blocks store")
@@ -396,14 +409,18 @@ func init() {
 
 			return nil
 		},
-		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			return makeDirs([]string{filepath.Join(config.DataDir, "fluxdb")})
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
+			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "fluxdb"))
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return fluxdbApp.New(&fluxdbApp.Config{
-				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
+				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), filepath.Join(config.DataDir, "fluxdb")),
+				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), absDataDir),
 				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
 				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
@@ -426,7 +443,7 @@ func init() {
 			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
 			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().String("kvdb-loader-merged-block-path", MergedBlocksFilesPath, "URL of storage to read one-block-files from")
-			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().String("kvdb-loader-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
 			cmd.Flags().Uint64("kvdb-loader-batch-size", 1, "number of blocks batched together for database write")
 			cmd.Flags().Uint64("kvdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
@@ -436,12 +453,14 @@ func init() {
 			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
+			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "kvdb"))
+		},
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
 			if err != nil {
 				return nil, err
 			}
-
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
@@ -478,10 +497,15 @@ func init() {
 			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdb database connection information")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
 			if err != nil {
 				return nil, err
+			}
+
+			eosDBClient, err := eosdb.New(fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
+			db := &dblockmeta.EOSBlockmetaDB{
+				Driver: eosDBClient,
 			}
 
 			return blockmetaApp.New(&blockmetaApp.Config{
@@ -493,8 +517,7 @@ func init() {
 				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
-				KVDBDSN:                 fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir),
-			}), nil
+			}, db), nil
 		},
 	})
 
@@ -506,16 +529,16 @@ func init() {
 		MetricsID:   "abicodec",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("abicodec-grpc-listen-addr", ":9000", "TCP Listener addr for gRPC")
-			cmd.Flags().String("abicodec-search-addr", ":7004", "Base URL for search service")
-			cmd.Flags().String("abicodec-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
+			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().String("abicodec-cache-base-url", "storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
 			if err != nil {
 				return nil, err
@@ -562,14 +585,15 @@ func init() {
 			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-indexer-dfuse-hooks-action-name"), viper.GetString("search-indexer-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
 			return indexerApp.New(&indexerApp.Config{
-				Protocol:                            Protocol,
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
 				BlockstreamAddr:                     viper.GetString("search-indexer-block-stream-addr"),
-				DfuseHooksActionName:                viper.GetString("search-indexer-dfuse-hooks-action-name"),
-				IndexingRestrictionsJSON:            viper.GetString("search-indexer-indexing-restrictions-json"),
 				ShardSize:                           viper.GetUint64("search-indexer-shard-size"),
 				StartBlock:                          int64(viper.GetInt("search-indexer-start-block")),
 				StopBlock:                           viper.GetUint64("search-indexer-stop-block"),
@@ -584,6 +608,8 @@ func init() {
 				WritablePath:                        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-writable-path")),
 				IndicesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
 				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
+			}, &indexerApp.Modules{
+				BlockMapper: mapper,
 			}), nil
 		},
 	})
@@ -604,10 +630,9 @@ func init() {
 			cmd.Flags().Bool("search-router-enable-readiness-probe", true, "Enable search router's app readiness probe")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
-				Protocol:             Protocol,
 				BlockmetaAddr:        viper.GetString("search-router-blockmeta-addr"),
 				GRPCListenAddr:       viper.GetString("search-router-listen-addr"),
 				HeadDelayTolerance:   viper.GetUint64("search-router-head-delay-tolerance"),
@@ -659,10 +684,9 @@ func init() {
 			cmd.Flags().String(p+"writable-path", "search/archiver", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return archiveApp.New(&archiveApp.Config{
 				Dmesh:                   modules.SearchDmeshClient,
-				Protocol:                Protocol,
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
 				ServiceVersion:          viper.GetString("search-mesh-service-version"),
@@ -721,10 +745,13 @@ func init() {
 			cmd.Flags().String("search-live-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-live-dfuse-hooks-action-name"), viper.GetString("search-live-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
-				Protocol:                 Protocol,
 				ServiceVersion:           viper.GetString("search-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
@@ -739,8 +766,8 @@ func init() {
 				EnableReadinessProbe:     viper.GetBool("search-live-enable-readiness-probe"),
 				PublishDuration:          viper.GetDuration("search-live-mesh-publish-polling-duration"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
-				IndexingRestrictionsJSON: viper.GetString("search-live-indexing-restrictions-json"),
-				DfuseHooksActionName:     viper.GetString("search-live-dfuse-hooks-action-name"),
+			}, &liveApp.Modules{
+				BlockMapper: mapper,
 			}), nil
 		},
 	})
@@ -774,19 +801,23 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-forkresolver-dfuse-hooks-action-name"), viper.GetString("search-forkresolver-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
+
 			return forkresolverApp.New(&forkresolverApp.Config{
-				Dmesh:                    modules.SearchDmeshClient,
-				Protocol:                 Protocol,
-				ServiceVersion:           viper.GetString("search-mesh-service-version"),
-				GRPCListenAddr:           viper.GetString("search-forkresolver-grpc-listen-addr"),
-				HttpListenAddr:           viper.GetString("search-forkresolver-http-listen-addr"),
-				PublishDuration:          viper.GetDuration("search-forkresolver-mesh-publish-polling-duration"),
-				IndicesPath:              viper.GetString("search-forkresolver-indices-path"),
-				BlocksStoreURL:           viper.GetString("search-forkresolver-blocks-store"),
-				DfuseHooksActionName:     viper.GetString("search-forkresolver-dfuse-hooks-action-name"),
-				IndexingRestrictionsJSON: viper.GetString("search-forkresolver-indexing-restrictions-json"),
-				EnableReadinessProbe:     viper.GetBool("search-forkresolver-enable-readiness-probe"),
+				Dmesh:                modules.SearchDmeshClient,
+				ServiceVersion:       viper.GetString("search-mesh-service-version"),
+				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
+				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
+				PublishDuration:      viper.GetDuration("search-forkresolver-mesh-publish-polling-duration"),
+				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
+				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
+				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
+			}, &forkresolverApp.Modules{
+				BlockMapper: mapper,
 			}), nil
 		},
 	})
@@ -803,7 +834,7 @@ func init() {
 			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
-			cmd.Flags().String("eosws-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().String("eosws-merged-block-files-path", MergedBlocksFilesPath, "path to merged blocks files")
@@ -819,17 +850,21 @@ func init() {
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
 			return nil
 		},
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), filepath.Join(config.DataDir, "fluxdb")),
+				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
 				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
 				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
-				SourceStoreURL:              buildStoreURL(config.DataDir, viper.GetString("eosws-merged-block-files-path")),
+				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-merged-block-files-path")),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
 				UseOpencensusStackdriver:    false,
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
@@ -855,26 +890,28 @@ func init() {
 			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
 			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
-			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaServingAddr, "Base URL tokenmeta service")
-			cmd.Flags().String("dgraphql-kvdb-dsn", "bigtable://dev.dev/test", "Bigtable database connection information") // Used on EOSIO right now, eventually becomes the reference.
+			cmd.Flags().String("dgraphql-kvdb-dsn", KVDBDSN, "KVDB connection information") // Used on EOSIO right now, eventually becomes the reference.
 			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
 			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
 			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")
-			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0*time.Millisecond, "delay before shutting down, after the health endpoint returns unhealthy")
+			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			return nil
 		},
 		InitFunc: nil,
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				TokenmetaAddr: viper.GetString("dgraphql-tokenmeta-addr"),
-				KVDBDSN:       viper.GetString("dgraphql-kvdb-dsn"),
+				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields
@@ -898,10 +935,10 @@ func init() {
 		MetricsID:   "eosq",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
-				DashboardHTTPListenAddr: config.DashboardHTTPListenAddr,
-				HttpListenAddr:          config.EosqHTTPServingAddr,
+				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
+				HttpListenAddr:          EosqHTTPServingAddr,
 			}), nil
 		},
 	})
@@ -910,19 +947,19 @@ func init() {
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
-		Description: "Main dfusebox dashboard",
+		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
 		InitFunc:    nil,
-		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
 				DmeshClient:              modules.SearchDmeshClient,
-				ManagerCommandURL:        config.EosManagerHTTPAddr,
-				GRPCListenAddr:           config.DashboardGrpcServingAddr,
-				HTTPListenAddr:           config.DashboardHTTPListenAddr,
-				EoswsHTTPServingAddr:     config.EoswsHTTPServingAddr,
-				DgraphqlHTTPServingAddr:  config.DgraphqlHTTPServingAddr,
-				NodeosAPIHTTPServingAddr: config.MindreaderNodeosAPIAddr,
+				ManagerCommandURL:        EosManagerHTTPAddr,
+				GRPCListenAddr:           DashboardGrpcServingAddr,
+				HTTPListenAddr:           DashboardHTTPListenAddr,
+				EoswsHTTPServingAddr:     EoswsHTTPServingAddr,
+				DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
+				NodeosAPIHTTPServingAddr: MindreaderNodeosAPIAddr,
 				Launcher:                 modules.Launcher,
 				MetricManager:            modules.MetricManager,
 			}), nil

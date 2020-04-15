@@ -42,7 +42,7 @@ reader_config_ini: |
   # General settings
   access-control-allow-origin = *
   http-server-address = 127.0.0.1:9888
-  agent-name = dfusebox
+  agent-name = dfuse for EOSIO
   p2p-server-address = 127.0.0.1:9877
   p2p-listen-endpoint  = 127.0.0.1:9877
   p2p-max-nodes-per-host = 2

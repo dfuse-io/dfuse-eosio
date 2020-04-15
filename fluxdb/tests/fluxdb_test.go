@@ -26,11 +26,12 @@ import (
 
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/dfuse-io/bstream"
+	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/hidalgo"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/logging"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -254,13 +255,13 @@ func testStateTableRowHeadJSON(ctx context.Context, t *testing.T, feedSourceWith
 	jsonValueEqual(t, `{"key":"SOE","payer":"eosio5","json":{"balance":"5.0000 SOE"}}`, response.Path("$.row"))
 }
 
-func tableBlocks(t *testing.T) []*pbdeos.Block {
+func tableBlocks(t *testing.T) []*pbeos.Block {
 	eosioTokenABI1 := readABI(t, "eosio.token.1.abi.json")
 	eosioTestABI1 := readABI(t, "eosio.test.1.abi.json")
 	eosioTestABI2 := readABI(t, "eosio.test.2.abi.json")
 	eosioNekotABI1 := readABI(t, "eosio.nekot.1.abi.json")
 
-	return []*pbdeos.Block{
+	return []*pbeos.Block{
 		// Block #2 | Sets ABI on `eosio.token` (v1) and `eosio.test` (v1)
 		testBlock(t, "00000002aa", "0000000000000000000000000000000000000000000000000000000000000000",
 			trxTrace(t, actionSetABI(t, "eosio.token", eosioTokenABI1)),

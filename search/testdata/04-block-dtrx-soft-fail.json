@@ -1,0 +1,303 @@
+{
+    "block": {
+      "id": "01ec9e8b105dfa97cf1c2ccd964f264385354d9af2c262ba1e857a2ffa4fd854",
+      "block_num": 32284299,
+      "header": {
+        "timestamp": "2018-12-15T20:58:23.500",
+        "producer": "eosbeijingbp",
+        "confirmed": 0,
+        "previous": "01ec9e8aab2b84a804346895b71a4eb155358cfd943903be7f8196f8dba580ca",
+        "transaction_mroot": "881632a5b2bd7297ebf1682c0f377f314362c0e1acf231dd51c9e8a8331296b7",
+        "action_mroot": "446852cb41ca6331f230be3eed4fa8d28995bf09beb04d06db037eada191bf78",
+        "schedule_version": 590,
+        "header_extensions": [],
+        "producer_signature": "SIG_K1_KaityJeYW7oQxEUzSkSDRzLg5NzKChskrphXFkv52aynNSLTFuC9Xbu2V3kXMh2cuNGaBL2MuiM3n18YR2Sw2LDzQb31eW"
+      },
+      "dpos_proposed_irreversible_blocknum": 32284131,
+      "dpos_irreversible_blocknum": 32283963,
+      "block": {
+        "timestamp": "2018-12-15T20:58:23.500",
+        "previous": "01ec9e8aab2b84a804346895b71a4eb155358cfd943903be7f8196f8dba580ca"
+      },
+      "transactions": [
+        {
+            "status": "soft_fail",
+            "cpu_usage_us": 190,
+            "net_usage_words": 0,
+            "trx": [
+              0,
+              "359c9d025e4dd05b666f29df7da67fc94ff23ab4077eef58c81548c2752bf9e9"
+            ]
+          }
+      ]
+    },
+    "transaction_traces": [
+        {
+            "id": "ab66c3aacd568cc845942b84300f1d418567511666904989ff79bf70742ecf33",
+            "block_num": 20858947,
+            "block_time": "2018-10-10T12:10:04.500",
+            "producer_block_id": "013e484327f289f4960fb4147a4ff05d4a117fd04bf9f8236b711f558f672fb6",
+            "receipt": {
+              "status": "soft_fail",
+              "cpu_usage_us": 190,
+              "net_usage_words": 0
+            },
+            "elapsed": 320,
+            "net_usage": 0,
+            "scheduled": false,
+            "action_traces": [
+              {
+                "receipt": {
+                  "receiver": "eosio.msig",
+                  "act_digest": "86cdb8e44015eeb011a5342debabe5d8054c92ed13f592363ff329770b3935be",
+                  "global_sequence": 562807926,
+                  "recv_sequence": 47599,
+                  "auth_sequence": [
+                    [
+                      "eosio.msig",
+                      736
+                    ]
+                  ],
+                  "code_sequence": 10,
+                  "abi_sequence": 11
+                },
+                "act": {
+                  "account": "eosio",
+                  "name": "onerror",
+                  "authorization": [
+                    {
+                      "actor": "eosio.msig",
+                      "permission": "active"
+                    }
+                  ],
+                  "data": {
+                    "sender_id": "0x904daa9aa93b3565b08c31c94c833055",
+                    "sent_trx": "1cecbd5b4148e408fd0800000000010000735802ea3055000000406d7a6b3501202932c94c83305500000000a8ed32322080a932d3e5a9d835a0b2495527a6eed4202932c94c83305500000000a8ed323200"
+                  },
+                  "hex_data": "904daa9aa93b3565b08c31c94c833055521cecbd5b4148e408fd0800000000010000735802ea3055000000406d7a6b3501202932c94c83305500000000a8ed32322080a932d3e5a9d835a0b2495527a6eed4202932c94c83305500000000a8ed323200"
+                },
+                "context_free": false,
+                "elapsed": 13,
+                "console": "",
+                "trx_id": "ab66c3aacd568cc845942b84300f1d418567511666904989ff79bf70742ecf33",
+                "block_num": 20858947,
+                "block_time": "2018-10-10T12:10:04.500",
+                "producer_block_id": "013e484327f289f4960fb4147a4ff05d4a117fd04bf9f8236b711f558f672fb6",
+                "account_ram_deltas": [],
+                "except": null,
+                "inline_traces": []
+              }
+            ],
+            "failed_dtrx_trace": {
+              "id": "359c9d025e4dd05b666f29df7da67fc94ff23ab4077eef58c81548c2752bf9e9",
+              "block_num": 20858947,
+              "block_time": "2018-10-10T12:10:04.500",
+              "producer_block_id": "013e484327f289f4960fb4147a4ff05d4a117fd04bf9f8236b711f558f672fb6",
+              "receipt": null,
+              "elapsed": 269,
+              "net_usage": 0,
+              "scheduled": true,
+              "action_traces": [
+                {
+                  "receipt": {
+                    "receiver": "eosio.msig",
+                    "act_digest": "05d32393df8e29af851d9382b807b0a1086ccf05d517dfcae258a172bdd42195",
+                    "global_sequence": 0,
+                    "recv_sequence": 0,
+                    "auth_sequence": [],
+                    "code_sequence": 0,
+                    "abi_sequence": 0
+                  },
+                  "act": {
+                    "account": "eosio.msig",
+                    "name": "approve",
+                    "authorization": [
+                      {
+                        "actor": "eoscanadacom",
+                        "permission": "active"
+                      }
+                    ],
+                    "data": {
+                      "proposer": "argentinaeos",
+                      "proposal_name": "unregdupdate",
+                      "level": {
+                        "actor": "eoscanadacom",
+                        "permission": "active"
+                      }
+                    },
+                    "hex_data": "80a932d3e5a9d835a0b2495527a6eed4202932c94c83305500000000a8ed3232"
+                  },
+                  "context_free": false,
+                  "elapsed": 196,
+                  "console": "",
+                  "trx_id": "359c9d025e4dd05b666f29df7da67fc94ff23ab4077eef58c81548c2752bf9e9",
+                  "block_num": 20858947,
+                  "block_time": "2018-10-10T12:10:04.500",
+                  "producer_block_id": "013e484327f289f4960fb4147a4ff05d4a117fd04bf9f8236b711f558f672fb6",
+                  "account_ram_deltas": [],
+                  "except": {
+                    "code": 3050003,
+                    "name": "eosio_assert_message_exception",
+                    "message": "eosio_assert_message assertion failure",
+                    "stack": [
+                      {
+                        "context": {
+                          "level": "error",
+                          "file": "wasm_interface.cpp",
+                          "line": 921,
+                          "method": "eosio_assert",
+                          "hostname": "",
+                          "thread_name": "thread-0",
+                          "timestamp": "2019-02-28T17:59:28.756"
+                        },
+                        "format": "assertion failure with message: ${s}",
+                        "data": {
+                          "s": "proposal not found"
+                        }
+                      },
+                      {
+                        "context": {
+                          "level": "warn",
+                          "file": "wavm.cpp",
+                          "line": 73,
+                          "method": "call",
+                          "hostname": "",
+                          "thread_name": "thread-0",
+                          "timestamp": "2019-02-28T17:59:28.756"
+                        },
+                        "format": "",
+                        "data": {}
+                      },
+                      {
+                        "context": {
+                          "level": "warn",
+                          "file": "apply_context.cpp",
+                          "line": 76,
+                          "method": "exec_one",
+                          "hostname": "",
+                          "thread_name": "thread-0",
+                          "timestamp": "2019-02-28T17:59:28.756"
+                        },
+                        "format": "pending console output: ${console}",
+                        "data": {
+                          "console": ""
+                        }
+                      }
+                    ]
+                  },
+                  "inline_traces": [
+                    {
+                        "receipt": {
+                          "receiver": "eosio.msig",
+                          "act_digest": "86cdb8e44015eeb011a5342debabe5d8054c92ed13f592363ff329770b3935be",
+                          "global_sequence": 562807926,
+                          "recv_sequence": 47599,
+                          "auth_sequence": [
+                            [
+                              "eosio.msig",
+                              736
+                            ]
+                          ],
+                          "code_sequence": 10,
+                          "abi_sequence": 11
+                        },
+                        "act": {
+                          "account": "eosio.token",
+                          "name": "transfer",
+                          "authorization": [
+                            {
+                              "actor": "eosio.msig",
+                              "permission": "active"
+                            }
+                          ],
+                          "data": {
+                            "from": "eosio.msig",
+                            "to": "eosio.token",
+                            "quantity": "1.0000 EOS",
+                            "memo": ""
+                          },
+                          "hex_data": "5530ea02587300005530ea033482a600000010000000000000"
+                        },
+                  "context_free": false,
+                  "elapsed": 13,
+                  "console": "",
+                  "trx_id": "359c9d025e4dd05b666f29df7da67fc94ff23ab4077eef58c81548c2752bf9e9",
+                  "block_num": 20858947,
+                  "block_time": "2018-10-10T12:10:04.500",
+                  "producer_block_id": "013e484327f289f4960fb4147a4ff05d4a117fd04bf9f8236b711f558f672fb6",
+                  "account_ram_deltas": [],
+                  "except": null,
+                  "inline_traces": []
+                }
+                  ]
+                }
+              ],
+              "except": {
+                "code": 3050003,
+                "name": "eosio_assert_message_exception",
+                "message": "eosio_assert_message assertion failure",
+                "stack": [
+                  {
+                    "context": {
+                      "level": "error",
+                      "file": "wasm_interface.cpp",
+                      "line": 921,
+                      "method": "eosio_assert",
+                      "hostname": "",
+                      "thread_name": "thread-0",
+                      "timestamp": "2019-02-28T17:59:28.756"
+                    },
+                    "format": "assertion failure with message: ${s}",
+                    "data": {
+                      "s": "proposal not found"
+                    }
+                  },
+                  {
+                    "context": {
+                      "level": "warn",
+                      "file": "wavm.cpp",
+                      "line": 73,
+                      "method": "call",
+                      "hostname": "",
+                      "thread_name": "thread-0",
+                      "timestamp": "2019-02-28T17:59:28.756"
+                    },
+                    "format": "",
+                    "data": {}
+                  },
+                  {
+                    "context": {
+                      "level": "warn",
+                      "file": "apply_context.cpp",
+                      "line": 76,
+                      "method": "exec_one",
+                      "hostname": "",
+                      "thread_name": "thread-0",
+                      "timestamp": "2019-02-28T17:59:28.756"
+                    },
+                    "format": "pending console output: ${console}",
+                    "data": {
+                      "console": ""
+                    }
+                  }
+                ]
+              }
+            },
+            "except": null
+          }
+    ],
+    "dbops": {
+    },
+    "ramops": {
+        "ab66c3aacd568cc845942b84300f1d418567511666904989ff79bf70742ecf33": [
+            {
+              "op": "deferred_trx_removed",
+              "action_idx": 0,
+              "payer": "eoscanadaaaa",
+              "delta": -354,
+              "usage": 3932
+            }
+          ]
+    },
+    "dtrxops": {}
+  }

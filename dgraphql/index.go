@@ -17,16 +17,14 @@ package dgraphql
 import (
 	"fmt"
 
-	eos "github.com/dfuse-io/dfuse-eosio/dgraphql/eos"
-	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/eos/resolvers"
+	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/kvdb/eosdb"
 	pbabicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	pbtokenmeta "github.com/dfuse-io/pbgo/dfuse/tokenmeta/v1"
 )
 
 type Config struct {
@@ -34,7 +32,6 @@ type Config struct {
 	SearchAddr    string
 	ABICodecAddr  string
 	BlockMetaAddr string
-	TokenmetaAddr string
 	KVDBDSN       string
 }
 
@@ -43,7 +40,6 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 		SearchAddr:    config.SearchAddr,
 		ABICodecAddr:  config.ABICodecAddr,
 		BlockMetaAddr: config.BlockMetaAddr,
-		TokenmetaAddr: config.TokenmetaAddr,
 		KVDBDSN:       config.KVDBDSN,
 	})
 	if err != nil {
@@ -60,6 +56,8 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 		Schemas:         schemas,
 	}), nil
 }
+
+var RootResolverFactory = eosResolver.NewRoot
 
 func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 
@@ -82,13 +80,6 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 		return nil, fmt.Errorf("failed creating blockmeta client: %w", err)
 	}
 
-	zlog.Info("creating tokenmeta grpc client")
-	tokenmetaConn, err := dgrpc.NewInternalClient(config.TokenmetaAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting token meta grpc client: %w", err)
-	}
-	tokenmetaClient := pbtokenmeta.NewEOSClient(tokenmetaConn)
-
 	zlog.Info("creating search grpc client")
 
 	searchConn, err := dgrpc.NewInternalClient(config.SearchAddr)
@@ -98,8 +89,8 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, tokenmetaClient)
-	schemas, err := dgraphql.NewSchemas(resolver, eos.CommonSchema(), eos.AlphaSchema())
+	resolver := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	schemas, err := dgraphql.NewSchemas(resolver)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse schema: %w", err)
 	}

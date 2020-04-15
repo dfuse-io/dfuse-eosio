@@ -22,14 +22,21 @@ func buildStoreURL(dataDir, storeURL string) string {
 	return filepath.Join(dataDir, storeURL)
 }
 
-func mkdirStorePathIfLocal(storeURL string) error {
+func mkdirStorePathIfLocal(storeURL string) (err error) {
+	userLog.Debug("creating directory and its parent(s)", zap.String("directory", storeURL))
+	if dirs := getDirsToMake(storeURL); len(dirs) > 0 {
+		err = makeDirs(dirs)
+	}
+	return
+}
+
+func getDirsToMake(storeURL string) []string {
 	parts := strings.Split(storeURL, "://")
 	if len(parts) > 1 {
 		if parts[0] != "file" {
 			// Not a local store, nothing to do
 			return nil
 		}
-
 		storeURL = parts[1]
 	}
 
@@ -40,6 +47,6 @@ func mkdirStorePathIfLocal(storeURL string) error {
 	}
 
 	// If we reach here, it's a local store path
-	userLog.Debug("creating directory and its parent(s)", zap.String("directory", storeURL))
-	return makeDirs([]string{storeURL})
+	return []string{storeURL}
+
 }

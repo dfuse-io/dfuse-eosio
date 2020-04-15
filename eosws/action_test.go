@@ -28,17 +28,16 @@ import (
 	"testing"
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth"
-	"github.com/dfuse-io/dstore"
-	eos "github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	"github.com/dfuse-io/dstore"
+	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
@@ -46,8 +45,8 @@ import (
 )
 
 func TestOnGetActionsTraces(t *testing.T) {
-	statusExecuted := pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
-	statusHardFail := pbdeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
+	statusExecuted := pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
+	statusHardFail := pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
 
 	rand.Seed(time.Now().UnixNano())
 	actionTracesMsg := func(reqID string, data string) string {
@@ -360,7 +359,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 	t.Helper()
 
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return bstream.NewFileSource(pbbstream.Protocol_EOS, archiveStore, 1, 1, nil, h)
+		return bstream.NewFileSource(archiveStore, 1, 1, nil, h)
 	})
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
@@ -384,15 +383,15 @@ func encode(t *testing.T, i interface{}) []byte {
 	return buf.Bytes()
 }
 
-func acceptedBlockWithActions(t *testing.T, blockID string, status pbdeos.TransactionStatus, actionTriplets ...string) []byte {
+func acceptedBlockWithActions(t *testing.T, blockID string, status pbeos.TransactionStatus, actionTriplets ...string) []byte {
 	t.Helper()
 
-	var actTraces []*pbdeos.ActionTrace
+	var actTraces []*pbeos.ActionTrace
 	for _, actionTriplet := range actionTriplets {
 		parts := strings.Split(actionTriplet, ":")
-		actTraces = append(actTraces, &pbdeos.ActionTrace{
+		actTraces = append(actTraces, &pbeos.ActionTrace{
 			Receiver: parts[0],
-			Action: &pbdeos.Action{
+			Action: &pbeos.Action{
 				Account: parts[1],
 				Name:    parts[2],
 			},
@@ -402,17 +401,17 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbdeos.Transa
 	stamp, _ := ptypes.TimestampProto(time.Time{})
 
 	ref := bstream.BlockRefFromID(blockID)
-	blk := &pbdeos.Block{
+	blk := &pbeos.Block{
 		Id:     blockID,
 		Number: uint32(ref.Num()),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  fmt.Sprintf("%08d", ref.Num()-1) + ref.ID()[8:],
 			Timestamp: stamp,
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
 			{
 				Id: "trx.1",
-				Receipt: &pbdeos.TransactionReceiptHeader{
+				Receipt: &pbeos.TransactionReceiptHeader{
 					Status: status,
 				},
 				ActionTraces: actTraces,
@@ -420,16 +419,16 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbdeos.Transa
 		},
 	}
 
-	return pbdeosBlockToFile(t, blk)
+	return pbeosBlockToFile(t, blk)
 }
 
-func pbdeosBlockToFile(t *testing.T, in *pbdeos.Block) []byte {
+func pbeosBlockToFile(t *testing.T, in *pbeos.Block) []byte {
 	t.Helper()
 
 	var buf bytes.Buffer
 
-	w, _ := deos.NewBlockWriter(&buf)
-	blk, err := deos.BlockFromProto(in)
+	w, _ := codec.NewBlockWriter(&buf)
+	blk, err := codec.BlockFromProto(in)
 	require.NoError(t, err)
 
 	err = w.Write(blk)
