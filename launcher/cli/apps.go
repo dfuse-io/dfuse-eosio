@@ -410,13 +410,17 @@ func init() {
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
-			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "flux"))
+			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "fluxdb"))
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), viper.GetString("global-data-dir")),
+				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), absDataDir),
 				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
 				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
@@ -439,7 +443,7 @@ func init() {
 			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
 			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().String("kvdb-loader-merged-block-path", MergedBlocksFilesPath, "URL of storage to read one-block-files from")
-			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().String("kvdb-loader-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
 			cmd.Flags().Uint64("kvdb-loader-batch-size", 1, "number of blocks batched together for database write")
 			cmd.Flags().Uint64("kvdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
@@ -453,11 +457,15 @@ func init() {
 			return mkdirStorePathIfLocal(buildStoreURL(viper.GetString("global-data-dir"), "kvdb"))
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
 				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-merged-block-path")),
-				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
 				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
@@ -523,7 +531,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "TCP Listener addr for gRPC")
 			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
-			cmd.Flags().String("abicodec-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().String("abicodec-cache-base-url", "storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
@@ -531,10 +539,15 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
+
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
-				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), absDataDir),
 				ExportCache:          viper.GetBool("abicodec-export-cache"),
 				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
@@ -821,7 +834,7 @@ func init() {
 			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
-			cmd.Flags().String("eosws-kvdb-dsn", KVBDDSN, "kvdb connection string")
+			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "kvdb connection string")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().String("eosws-merged-block-files-path", MergedBlocksFilesPath, "path to merged blocks files")
@@ -838,10 +851,14 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
 				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
 				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
@@ -873,11 +890,11 @@ func init() {
 			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
 			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
-			cmd.Flags().String("dgraphql-kvdb-dsn", KVBDDSN, "Bigtable database connection information") // Used on EOSIO right now, eventually becomes the reference.
+			cmd.Flags().String("dgraphql-kvdb-dsn", KVDBDSN, "KVDB connection information") // Used on EOSIO right now, eventually becomes the reference.
 			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
 			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
 			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")
-			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0*time.Millisecond, "delay before shutting down, after the health endpoint returns unhealthy")
+			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
@@ -885,12 +902,16 @@ func init() {
 		},
 		InitFunc: nil,
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), viper.GetString("global-data-dir")),
+				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields

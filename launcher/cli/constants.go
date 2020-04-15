@@ -7,7 +7,7 @@ import (
 const (
 	Protocol                    pbbstream.Protocol = pbbstream.Protocol_EOS
 	BlockmetaDSN                string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replace by data-dir
-	KVBDDSN                     string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replace by `<data-dir>`
+	KVDBDSN                     string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replace by `<data-dir>`
 	FluxDSN                     string             = "badger://%s/fluxdb/flux.db"                       //%s will be replace by `<data-dir>/<flux-data-dir>
 	MergedBlocksFilesPath       string             = "storage/merged-blocks"
 	IndicesFilePath             string             = "storage/indexes"
