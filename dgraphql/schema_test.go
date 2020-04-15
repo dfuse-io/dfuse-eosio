@@ -12,18 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eos
+package dgraphql
 
 import (
-	"os"
+	"testing"
 
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
+	"github.com/dfuse-io/dgraphql"
+	"github.com/stretchr/testify/assert"
 )
 
-func init() {
-	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") != "" {
-		logger, _ := zap.NewDevelopment()
-		logging.Set(logger)
+func TestSchema(t *testing.T) {
+	resolver := resolvers.NewRoot(nil, nil, nil, nil)
+
+	// This makes the necessary parsing of all schemas to ensure resolver correctly
+	// resolves the full schema.
+	_, err := dgraphql.NewSchemas(resolver)
+
+	if err != nil {
+		message := "EOS invalid schema nor resolver"
+		assert.NoError(t, err, message)
 	}
 }

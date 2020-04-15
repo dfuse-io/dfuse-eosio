@@ -81,3 +81,15 @@ type TransactionTraceEdge {
     node: TransactionTrace!
 }
 
+
+"""Cursors required to continue either forward or backwards from a list of paginated elements"""
+type PageInfo {
+    """cursor of the first element of the list, use it to search in the opposite direction"""
+    startCursor: String!
+    """cursor of the last element of the list, use it to continue"""
+    endCursor: String!
+    """indicates whether there is a next page"""
+    hasNextPage: Boolean!
+    """indicates whether there is a previous page"""
+    hasPreviousPage: Boolean!
+}

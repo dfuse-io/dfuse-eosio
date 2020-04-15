@@ -15,12 +15,15 @@
 package dgraphql
 
 import (
+	"os"
+
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
-var zlog *zap.Logger
-
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/dgraphql", &zlog)
+	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") != "" {
+		logger, _ := zap.NewDevelopment()
+		logging.Set(logger)
+	}
 }
