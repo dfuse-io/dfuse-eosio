@@ -181,7 +181,7 @@ func TestReadBlock(t *testing.T) {
 
 	require.NoError(t, db.PutBlock(ctx, in))
 	require.NoError(t, db.UpdateNowIrreversibleBlock(ctx, in))
-	//require.NoError(t, db.FlushAllMutations(ctx))
+	require.NoError(t, db.FlushAllMutations(ctx))
 
 	_, err := codec.BlockFromProto(in)
 	require.NoError(t, err)
