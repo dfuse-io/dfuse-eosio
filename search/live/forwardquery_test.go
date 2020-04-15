@@ -45,7 +45,8 @@ func init() {
 func Test_forwardProcessBlock(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	preIndexer := search.NewPreIndexer(eosSearch.NewEOSBlockMapper("dfuseiohooks:event", nil), tmpDir)
+	mapper, _ := eosSearch.NewEOSBlockMapper("dfuseiohooks:event", "")
+	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	cases := []struct {
 		name                  string

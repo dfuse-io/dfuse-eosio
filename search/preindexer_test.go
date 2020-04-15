@@ -40,7 +40,8 @@ func init() {
 func TestPreIndexerRunSingleIndexQuery(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	preIndexer := search.NewPreIndexer(NewEOSBlockMapper("dfuseiohooks:event", nil), tmpDir)
+	mapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "")
+	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	block, err := ToBStreamBlock(newBlock("00000001a", "00000000a", trxID(1), "eosio.token"))
 	require.NoError(t, err)

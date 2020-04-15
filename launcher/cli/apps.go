@@ -44,6 +44,7 @@ import (
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
@@ -594,12 +595,14 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-indexer-dfuse-hooks-action-name"), viper.GetString("search-indexer-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
 			return indexerApp.New(&indexerApp.Config{
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
 				BlockstreamAddr:                     viper.GetString("search-indexer-block-stream-addr"),
-				DfuseHooksActionName:                viper.GetString("search-indexer-dfuse-hooks-action-name"),
-				IndexingRestrictionsJSON:            viper.GetString("search-indexer-indexing-restrictions-json"),
 				ShardSize:                           viper.GetUint64("search-indexer-shard-size"),
 				StartBlock:                          int64(viper.GetInt("search-indexer-start-block")),
 				StopBlock:                           viper.GetUint64("search-indexer-stop-block"),
@@ -614,6 +617,8 @@ func init() {
 				WritablePath:                        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-writable-path")),
 				IndicesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
 				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
+			}, &indexerApp.Modules{
+				BlockMapper: mapper,
 			}), nil
 		},
 	})
@@ -750,6 +755,10 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-live-dfuse-hooks-action-name"), viper.GetString("search-live-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
 				ServiceVersion:           viper.GetString("search-mesh-service-version"),
@@ -766,10 +775,8 @@ func init() {
 				EnableReadinessProbe:     viper.GetBool("search-live-enable-readiness-probe"),
 				PublishDuration:          viper.GetDuration("search-live-mesh-publish-polling-duration"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
-				IndexingRestrictionsJSON: viper.GetString("search-live-indexing-restrictions-json"),
-				DfuseHooksActionName:     viper.GetString("search-live-dfuse-hooks-action-name"),
 			}, &liveApp.Modules{
-				BlockMapper: nil, //todo: blockmappper?
+				BlockMapper: mapper,
 			}), nil
 		},
 	})
@@ -804,19 +811,22 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-forkresolver-dfuse-hooks-action-name"), viper.GetString("search-forkresolver-indexing-restrictions-json"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
+
 			return forkresolverApp.New(&forkresolverApp.Config{
-				Dmesh:                    modules.SearchDmeshClient,
-				ServiceVersion:           viper.GetString("search-mesh-service-version"),
-				GRPCListenAddr:           viper.GetString("search-forkresolver-grpc-listen-addr"),
-				HttpListenAddr:           viper.GetString("search-forkresolver-http-listen-addr"),
-				PublishDuration:          viper.GetDuration("search-forkresolver-mesh-publish-polling-duration"),
-				IndicesPath:              viper.GetString("search-forkresolver-indices-path"),
-				BlocksStoreURL:           viper.GetString("search-forkresolver-blocks-store"),
-				DfuseHooksActionName:     viper.GetString("search-forkresolver-dfuse-hooks-action-name"),
-				IndexingRestrictionsJSON: viper.GetString("search-forkresolver-indexing-restrictions-json"),
-				EnableReadinessProbe:     viper.GetBool("search-forkresolver-enable-readiness-probe"),
+				Dmesh:                modules.SearchDmeshClient,
+				ServiceVersion:       viper.GetString("search-mesh-service-version"),
+				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
+				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
+				PublishDuration:      viper.GetDuration("search-forkresolver-mesh-publish-polling-duration"),
+				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
+				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
+				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
 			}, &forkresolverApp.Modules{
-				BlockMapper: nil, //todo block mapper
+				BlockMapper: mapper,
 			}), nil
 		},
 	})

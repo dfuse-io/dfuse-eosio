@@ -316,7 +316,8 @@ func appendTestIndex(t *testing.T, tmpDir string, typ string, pool *searchArchiv
 	}
 	require.NoError(t, err)
 
-	mapper := eosSearch.NewEOSBlockMapper("", nil).IndexMapping()
+	m, _ := eosSearch.NewEOSBlockMapper("", "")
+	mapper := m.IndexMapping()
 
 	// Analyze `content`, split in blocks, and FEED into the index in the SIMPLEST way possible.
 	// Make a batch with those documents, with an `id`.
