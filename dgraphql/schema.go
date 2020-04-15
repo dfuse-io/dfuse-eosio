@@ -15,7 +15,7 @@
 // Use `go generate` to pack all *.graphql files under this directory (and sub-directories) into
 // a binary format.
 //
-//go:generate go-bindata -ignore=\.go -ignore=testdata/.* -pkg=eos -o=bindata.go ./...
+//go:generate go-bindata -ignore=\.go -ignore=testdata/.* -pkg=dgraphql -o=bindata.go ./...
 package dgraphql
 
 import "github.com/dfuse-io/dgraphql"
