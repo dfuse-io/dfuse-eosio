@@ -198,12 +198,16 @@ github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f h1:U5y3Y5UE0w7amNe
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFMt8koVQZ6WFms69WAsDWr2XsYL3Hkl7jkoLE=
 github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd h1:zCcy0yIZiLvVsw9t7w2KBVz8uqbBLS3Nj4TMj03i7Mc=
 github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd/go.mod h1:0k3XRo8HQnHy6tyGd1kNgKRbi6sC6bY8jgQ9ra0YsfI=
+github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca h1:wfFrPxhxK2z7Jtp0En7YBF0x/dRBBOY32h5Llkr5tgE=
+github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca/go.mod h1:ri/5sq7zui/OmIewN5u6i4HlLyRT33ymTzKNexEdtX4=
 github.com/dfuse-io/bstream v0.0.0-20200406220134-fe85c256872f/go.mod h1:F0M5wqDW9RtZwpPaBM8cZhUvYEyMtzuEWM+FU6z5n8Q=
 github.com/dfuse-io/bstream v0.0.0-20200407175946-02835b21c627/go.mod h1:f1Nbm3kpk3fbcUl244zjyMbhdIGnDUvGxYkx8YAPQvU=
 github.com/dfuse-io/bstream v0.0.0-20200414181649-ccb26f680c4a h1:O0wdajYzyREODwgOvVVHCDWzR7jDOWiVrgszjU21IV0=
 github.com/dfuse-io/bstream v0.0.0-20200414181649-ccb26f680c4a/go.mod h1:f1Nbm3kpk3fbcUl244zjyMbhdIGnDUvGxYkx8YAPQvU=
 github.com/dfuse-io/bstream v0.0.0-20200414225043-302ba2b0a512 h1:yXiBoYYa0EozPNMsJBDGbgAwngFO5he20mnjmQw3xro=
 github.com/dfuse-io/bstream v0.0.0-20200414225043-302ba2b0a512/go.mod h1:f1Nbm3kpk3fbcUl244zjyMbhdIGnDUvGxYkx8YAPQvU=
+github.com/dfuse-io/bstream v0.0.0-20200415033255-07f5a4237424 h1:Ue4ndO2SMH1hjwq6Zgu85LdjfzvW1FGZPKdDfmNjvIE=
+github.com/dfuse-io/bstream v0.0.0-20200415033255-07f5a4237424/go.mod h1:f1Nbm3kpk3fbcUl244zjyMbhdIGnDUvGxYkx8YAPQvU=
 github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286 h1:qd49qPoLflezURhZJaPpDv3O6uAtEVBJXet77Q0N6+k=
 github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286/go.mod h1:obh8aJXWndrj0HSW+EYd/HQZiyLYg+fHdOWFMUUtyYM=
 github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb h1:yrE/Ncb9PAjdN7w5Ixx47Oy1kQQdluBfuv7c8D9UaPQ=

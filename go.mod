@@ -17,8 +17,8 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd
-	github.com/dfuse-io/bstream v0.0.0-20200414225043-302ba2b0a512
+	github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca
+	github.com/dfuse-io/bstream v0.0.0-20200415033255-07f5a4237424
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
