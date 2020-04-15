@@ -114,7 +114,6 @@ func (s *ABISyncer) streamABIChanges() error {
 
 	for {
 		match, err := stream.Recv()
-		zlog.Debug("received match")
 		if err != nil {
 			if err == io.EOF {
 				zlog.Error("received end of stream marker, but this should never happen")
@@ -129,7 +128,6 @@ func (s *ABISyncer) streamABIChanges() error {
 		}
 
 		blockRef := bstream.BlockRefFromID(match.BlockID)
-		zlog.Debug("receive block", zap.Uint64("block_num", blockRef.Num()))
 		if match.TransactionTrace == nil {
 			zlog.Debug("found a live marker")
 			s.handleLiveMaker(blockRef, match.Cursor)
@@ -192,7 +190,6 @@ func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, act
 
 func (s *ABISyncer) handleLiveMaker(blockRef bstream.BlockRef, cursor string) {
 	s.cache.SetCursor(cursor)
-	zlog.Debug("handle live maker", zap.Bool("live?", s.isLive))
 	if !s.isLive {
 		zlog.Info("received the first live maker, we are now receiving data from live block")
 		s.isLive = true
