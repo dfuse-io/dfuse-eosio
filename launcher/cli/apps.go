@@ -891,7 +891,7 @@ func init() {
 			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
 			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
-			cmd.Flags().String("dgraphql-kvdb-dsn", "bigtable://dev.dev/test", "Bigtable database connection information") // Used on EOSIO right now, eventually becomes the reference.
+			cmd.Flags().String("dgraphql-kvdb-dsn", KVBDDSN, "Bigtable database connection information") // Used on EOSIO right now, eventually becomes the reference.
 			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
 			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
 			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")
@@ -903,12 +903,17 @@ func init() {
 		},
 		InitFunc: nil,
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			if err != nil {
+				return nil, err
+			}
+
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				KVDBDSN:       viper.GetString("dgraphql-kvdb-dsn"),
+				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields
