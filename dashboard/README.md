@@ -1,3 +1,9 @@
+# The `dfuseeos` dashboard
+
+This is the UI available when you start `dfuseeos`
+
+## Development
+
 This package uses https://github.com/GeertJohan/go.rice to embed the
 static files within the Go binary.
 

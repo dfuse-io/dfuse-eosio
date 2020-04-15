@@ -1,15 +1,31 @@
-DEPRECATION NOTICE
-==================
+eosws - EOSIO websocket and REST service
+========================================
 
-The eosws project will be shutdown after its features are migrated to different projects (dgraphql, etc.).
-Do not expect features to be added and a high level of maintenance.
+EOSIO-specific websocket interface, REST interface, Push guarantee
+instrumented `/v1/chain/push_transaction` endpoint, and pass-through
+to [fluxdb](https://github.com/dfuse-io/dfuse-eosio/tree/develop/fluxdb).
 
+## *DEPRECATION NOTICE*
 
-EOSIO websocket streaming service
-=================================
+The features herein are scheduled to be migrated to separate REST
+service, push-guarantee service, some are to be moved to a better
+unified GraphQL interface.  The Websocket interface is to be carried
+over to [the GraphQL subscriptions](../dgraphql) eventually.
+
+New things are not to be built on this project.
+
+## Usage
+
+You can view rendered documentation for the REST and Websocket endpoints here:
+
+* Websocket messages: https://docs.dfuse.io/reference/eosio/websocket/
+* See _REST API_ under https://docs.dfuse.io/reference/eosio/rest/
+
+## Overview
 
 This service provides REST endpoints for:
 * transaction push guarantee
+* paginated search
 * websocket streaming services
-* pass-through to reach FluxDB (historical state database). See https://github.com/dfuse-io/dfuse-eosio/fluxdb
-* serves a few internal / undocumented services for `eosq` too
+* pass-through to `nodeos` nodes
+* pass-through to reach [FluxDB](../fluxdb/) (historical state database)
