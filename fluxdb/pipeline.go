@@ -27,7 +27,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dstore"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
@@ -46,7 +45,6 @@ func BuildReprocessingPipeline(handler bstream.Handler, blocksStore dstore.Store
 	}
 
 	source := bstream.NewFileSource(
-		pbbstream.Protocol_EOS,
 		blocksStore,
 		getBlocksFrom,
 		parallelDownloadCount,
@@ -79,7 +77,6 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			fs := bstream.NewFileSource(
-				pbbstream.Protocol_EOS,
 				blocksStore,
 				startBlock.Num(),
 				parallelDownloadCount,

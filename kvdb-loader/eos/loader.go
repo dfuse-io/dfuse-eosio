@@ -27,7 +27,6 @@ import (
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/dfuse-io/shutter"
 	eosgo "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
@@ -126,7 +125,6 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		})
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			fs := bstream.NewFileSource(
-				pbbstream.Protocol_EOS,
 				l.blocksStore,
 				blockNum,
 				l.parallelFileDownloadCount,
@@ -182,7 +180,6 @@ func (l *BigtableLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeS
 	}
 
 	fs := bstream.NewFileSource(
-		pbbstream.Protocol_EOS,
 		l.blocksStore,
 		getBlocksFrom,
 		l.parallelFileDownloadCount,

@@ -44,7 +44,6 @@ import (
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
@@ -174,7 +173,7 @@ func (a *App) Run() error {
 
 	buffer := bstream.NewBuffer("sub-hub")
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(pbbstream.Protocol_EOS, blocksStore, startBlockNum, 1, nil, h)
+		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
 		return src
 	})
 
@@ -234,7 +233,6 @@ func (a *App) Run() error {
 		tailManager.TailLock,
 		fileSourceFactory,
 		liveSourceFactory,
-		hub.WithProtocolOptimisations(pbbstream.Protocol_EOS),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create subscription hub: %w", err)

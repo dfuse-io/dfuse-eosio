@@ -249,6 +249,8 @@ github.com/dfuse-io/manageos v0.0.0-20200414173559-7946045b7139 h1:xdHsQ2982Hk1d
 github.com/dfuse-io/manageos v0.0.0-20200414173559-7946045b7139/go.mod h1:ORcyOuaHrGG7hJ89e/lTiUkzmNUhAdd3GLY7x622MN4=
 github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec h1:6JW/GH5xX1LRjU2qKDw/yilvDxHcUlJkpuBj6zpj+Hw=
 github.com/dfuse-io/merger v0.0.0-20200409094932-802c84c684ec/go.mod h1:nrWp+c40pfr0YqnRW6cFKM678+A+BoYB0tSZtDZFyyA=
+github.com/dfuse-io/merger v0.0.0-20200415110734-afa95bd5597e h1:ga/ONpyrDEBxpnb4OhpD7uPpmVY3RSfSmPNRqX24BII=
+github.com/dfuse-io/merger v0.0.0-20200415110734-afa95bd5597e/go.mod h1:5c14Ys09W/1goRi7Ue4OEpWFrFwxstz70fpK/6jy7jY=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/pbgo v0.0.5-0.20200227212028-16f6191c0826/go.mod h1:DtBEUZqYoNvFsoU+TBMPznX6VzFrG8WdZ4A9fGAT6MU=
