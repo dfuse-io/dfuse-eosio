@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dgrpc"
-
-	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
-
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
+	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"

@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/dfuse-io/blockmeta"
-
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"go.uber.org/zap"
