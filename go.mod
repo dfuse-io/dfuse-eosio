@@ -45,7 +45,6 @@ require (
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
-	github.com/eoscanada/jsonpb v0.0.0-20191003191457-98439e8ce04b
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/francoispqt/gojay v1.2.13
