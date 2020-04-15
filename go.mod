@@ -18,7 +18,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca
-	github.com/dfuse-io/bstream v0.0.0-20200415033255-07f5a4237424
+	github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
@@ -40,12 +40,11 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c
 	github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14
-	github.com/dfuse-io/search v0.0.0-20200415134128-cf518e6c7257
-	github.com/dfuse-io/search-client v0.0.0-20200415123319-d713350a5d3f
+	github.com/dfuse-io/search v0.0.0-20200415150057-e6b4d3086942
+	github.com/dfuse-io/search-client v0.0.0-20200415150146-6e9b323949c7
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
-	github.com/eoscanada/jsonpb v0.0.0-20191003191457-98439e8ce04b
+	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/francoispqt/gojay v1.2.13
