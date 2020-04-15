@@ -41,7 +41,7 @@ require (
 	github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c
 	github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14
 	github.com/dfuse-io/search v0.0.0-20200415165454-ed7333c50750
-	github.com/dfuse-io/search-client v0.0.0-20200415150146-6e9b323949c7
+	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca

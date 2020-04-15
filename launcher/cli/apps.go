@@ -521,8 +521,8 @@ func init() {
 		MetricsID:   "abicodec",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("abicodec-grpc-listen-addr", ":9000", "TCP Listener addr for gRPC")
-			cmd.Flags().String("abicodec-search-addr", ":7004", "Base URL for search service")
+			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("abicodec-kvdb-dsn", KVBDDSN, "kvdb connection string")
 			cmd.Flags().String("abicodec-cache-base-url", "storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")

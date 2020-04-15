@@ -49,6 +49,7 @@ type ABISyncer struct {
 }
 
 func NewSyncer(cache Cache, dbReader eosdb.DBReader, searchAddr string, onLive func()) (*ABISyncer, error) {
+	zlog.Info("initializing syncer", zap.String("search_addr", searchAddr))
 	searchConn, err := dgrpc.NewInternalClient(searchAddr)
 	if err != nil {
 		return nil, fmt.Errorf("unable to init gRPC search connection: %w", err)
@@ -93,6 +94,8 @@ func (s *ABISyncer) Sync() {
 }
 
 func (s *ABISyncer) streamABIChanges() error {
+	zlog.Debug("streaming abi changes", zap.String("cursor", s.cache.GetCursor()))
+
 	ctx, cancelSearch := context.WithCancel(s.syncCtx)
 	defer cancelSearch()
 
@@ -111,6 +114,7 @@ func (s *ABISyncer) streamABIChanges() error {
 
 	for {
 		match, err := stream.Recv()
+		zlog.Debug("received match")
 		if err != nil {
 			if err == io.EOF {
 				zlog.Error("received end of stream marker, but this should never happen")
@@ -125,7 +129,9 @@ func (s *ABISyncer) streamABIChanges() error {
 		}
 
 		blockRef := bstream.BlockRefFromID(match.BlockID)
+		zlog.Debug("receive block", zap.Uint64("block_num", blockRef.Num()))
 		if match.TransactionTrace == nil {
+			zlog.Debug("found a live marker")
 			s.handleLiveMaker(blockRef, match.Cursor)
 			continue
 		}
@@ -186,6 +192,7 @@ func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, act
 
 func (s *ABISyncer) handleLiveMaker(blockRef bstream.BlockRef, cursor string) {
 	s.cache.SetCursor(cursor)
+	zlog.Debug("handle live maker", zap.Bool("live?", s.isLive))
 	if !s.isLive {
 		zlog.Info("received the first live maker, we are now receiving data from live block")
 		s.isLive = true

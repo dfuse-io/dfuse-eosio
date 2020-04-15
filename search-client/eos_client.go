@@ -73,7 +73,7 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 	}
 
 	for _, v := range items {
-		m := v.(*matchOrError)
+		m := v.(*searchclient.MatchOrError)
 		resp, err := processEOSHammerItem(ctx, m, rows, prefixToIndex)
 		if err != nil {
 			return out, err
@@ -85,15 +85,15 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 	return out, nil
 }
 
-func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
-	if m.err != nil {
-		return nil, m.err
+func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
+	if m.Err != nil {
+		return nil, m.Err
 	}
 
-	trxIDPrefix := m.match.TrxIdPrefix
+	trxIDPrefix := m.Match.TrxIdPrefix
 
 	var eosMatchAny ptypes.DynamicAny
-	err := ptypes.UnmarshalAny(m.match.GetChainSpecific(), &eosMatchAny)
+	err := ptypes.UnmarshalAny(m.Match.GetChainSpecific(), &eosMatchAny)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbeos.
 	}
 
 	return &EOSSearchMatch{
-		SearchMatch:      m.match,
+		SearchMatch:      m.Match,
 		BlockID:          blockID,
 		BlockHeader:      blockHeader,
 		TransactionTrace: trace,
