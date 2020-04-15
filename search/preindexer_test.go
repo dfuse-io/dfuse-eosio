@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/bstream"
+	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/search"

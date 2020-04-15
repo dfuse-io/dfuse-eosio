@@ -6,11 +6,13 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/search"
+	searchArchive "github.com/dfuse-io/search/archive"
 	"github.com/dfuse-io/search/querylang"
 	"google.golang.org/grpc/codes"
 )
 
 func init() {
+	// initializing bleve query factory
 	search.GetBleveQueryFactory = func(rawQuery string) *search.BleveQuery {
 		return &search.BleveQuery{
 			Raw:              rawQuery,
@@ -18,6 +20,15 @@ func init() {
 			Validator:        &EOSBleveQueryValidator{},
 		}
 	}
+
+	// initializing indexed fields cache
+	InitEOSIndexedFields()
+	search.GetIndexedFieldsMap = GetEOSIndexedFieldsMap
+
+	// FIXME: Matt, this needs to become platform agnostic, what's the purpose of this exactly? Warm up?
+	livenessQuery, _ := search.NewParsedQuery("receiver:999")
+	searchArchive.LivenessQuery = livenessQuery
+
 }
 
 type EOSBleveQueryValidator struct{}

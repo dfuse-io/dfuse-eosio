@@ -6,7 +6,14 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/dfuse-io/search"
 )
+
+func init() {
+	search.GetSearchMatchFactory = func() search.SearchMatch {
+		return &EOSSearchMatch{}
+	}
+}
 
 type EOSSearchMatch struct {
 	TrxIDPrefix   string   `json:"prefix"` // ID prefix

@@ -26,11 +26,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func init() {
-	zlog.Info("initializing indexed fields cache")
-	InitEOSIndexedFields()
-}
-
 var fixedEOSIndexedFields = []search.IndexedField{
 	{"receiver", search.AccountType},
 	{"account", search.AccountType},
