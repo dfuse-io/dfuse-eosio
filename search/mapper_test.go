@@ -14,7 +14,7 @@ import (
 	"github.com/andreyvit/diff"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eos "github.com/eoscanada/eos-go"
-	"github.com/eoscanada/jsonpb"
+	"github.com/dfuse-io/jsonpb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
