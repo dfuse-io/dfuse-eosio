@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/derr"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/search"
 	searchLive "github.com/dfuse-io/search/live"
@@ -42,7 +42,7 @@ func Test_processSingleBlocks(t *testing.T) {
 
 	cases := []struct {
 		name                  string
-		block                 *pbdeos.Block
+		block                 *pbeos.Block
 		expectedMatchCount    int
 		expectedLastBlockRead uint64
 		cancelContext         bool

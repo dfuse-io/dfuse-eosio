@@ -21,9 +21,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/logging"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -39,19 +39,19 @@ func init() {
 }
 
 func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trxTraceJSONs ...string) *bstream.Block {
-	trxTraces := make([]*pbdeos.TransactionTrace, len(trxTraceJSONs))
+	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbdeos.TransactionTrace)
+		trxTrace := new(pbeos.TransactionTrace)
 
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  previousID,
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},

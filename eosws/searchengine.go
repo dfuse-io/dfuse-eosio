@@ -25,14 +25,16 @@ import (
 	"strings"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dtracing"
-	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/opaque"
+	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/golang/protobuf/ptypes"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
@@ -189,7 +191,13 @@ func (s *SearchEngine) fillSearchClientResponse(
 
 	var lastCursor string
 	for i, match := range matches {
-		eosMatch := match.GetEos()
+		var eosMatchAny ptypes.DynamicAny
+		err := ptypes.UnmarshalAny(match.GetChainSpecific(), &eosMatchAny)
+		if err != nil {
+			return nil, err
+		}
+
+		eosMatch := eosMatchAny.Message.(*pbsearcheos.Match)
 
 		actions[match.TrxIdPrefix] = eosMatch.ActionIndexes
 		trxIDS[i] = match.TrxIdPrefix

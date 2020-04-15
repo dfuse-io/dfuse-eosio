@@ -10,7 +10,7 @@ import (
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/dfuse-io/bstream"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/search"
 	"go.uber.org/zap"
 )
@@ -80,7 +80,7 @@ func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
 }
 
 func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Block) ([]*document.Document, error) {
-	blk := block.ToNative().(*pbdeos.Block)
+	blk := block.ToNative().(*pbeos.Block)
 
 	actionsCount := 0
 	var docsList []*document.Document
@@ -159,7 +159,7 @@ func (m *EOSBlockMapper) shouldIndexAction(actionWrapper map[string]interface{})
 
 }
 
-func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbdeos.Block, batchUpdater eosBatchActionUpdater) error {
+func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbeos.Block, batchUpdater eosBatchActionUpdater) error {
 	trxIndex := -1
 	for _, trxTrace := range blk.TransactionTraces {
 		trxIndex++
@@ -231,21 +231,21 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbdeos.Block, batchUpdater e
 	return nil
 }
 
-func isTrxTraceIndexable(trxTrace *pbdeos.TransactionTrace) bool {
+func isTrxTraceIndexable(trxTrace *pbeos.TransactionTrace) bool {
 	if trxTrace.Receipt == nil {
 		return false
 	}
 
 	status := trxTrace.Receipt.Status
-	if status == pbdeos.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL {
+	if status == pbeos.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL {
 		// We index `eosio:onerror` transaction that are in soft_fail state since it means a valid `onerror` handler execution
 		return len(trxTrace.ActionTraces) >= 1 && trxTrace.ActionTraces[0].SimpleName() == "eosio:onerror"
 	}
 
-	return status == pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
+	return status == pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
 }
 
-func (m *EOSBlockMapper) processRAMOps(ramOps []*pbdeos.RAMOp) map[string][]string {
+func (m *EOSBlockMapper) processRAMOps(ramOps []*pbeos.RAMOp) map[string][]string {
 	consumedRAM := make(map[string]bool)
 	releasedRAM := make(map[string]bool)
 	for _, ramop := range ramOps {
@@ -270,7 +270,7 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbdeos.RAMOp) map[string][]stri
 	return ramData
 }
 
-func (m *EOSBlockMapper) processDBOps(dbOps []*pbdeos.DBOp) map[string][]string {
+func (m *EOSBlockMapper) processDBOps(dbOps []*pbeos.DBOp) map[string][]string {
 	// db.key = []string{"accounts/eoscanadacom/.........eioh1"}
 	// db.table = []string{"accounts/eoscanadacom", "accounts"}
 	keys := make(map[string]bool)

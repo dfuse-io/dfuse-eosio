@@ -20,9 +20,9 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dtracing"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,7 @@ func newSearchMatchLive(trxID string, idx int) *pbsearch.SearchMatch {
 		Specific: &pbsearch.SearchMatch_Eos{
 			Eos: &pbsearch.EOSMatch{
 				Block: &pbsearch.EOSBlockTrxPayload{
-					Trace: &pbdeos.TransactionTrace{Index: uint64(idx)},
+					Trace: &pbeos.TransactionTrace{Index: uint64(idx)},
 				},
 			},
 		},
@@ -54,7 +54,7 @@ func newDgraphqlResponse(trxID string, idx int) *SearchTransactionForwardRespons
 	return &SearchTransactionForwardResponse{
 		SearchTransactionBackwardResponse: SearchTransactionBackwardResponse{
 			trxIDPrefix: trxID,
-			trxTrace: &pbdeos.TransactionTrace{
+			trxTrace: &pbeos.TransactionTrace{
 				Index: uint64(idx),
 			},
 		},
@@ -67,7 +67,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 	tests := []struct {
 		name        string
 		fromRouter  []interface{}
-		fromDB      map[string][]*pbdeos.TransactionEvent
+		fromDB      map[string][]*pbeos.TransactionEvent
 		expect      []*SearchTransactionForwardResponse
 		expectError error
 	}{
@@ -77,9 +77,9 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchArchive("trx123"),
 				fmt.Errorf("failed"),
 			},
-			fromDB: map[string][]*pbdeos.TransactionEvent{
-				"trx123": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx12399999999999999999", Event: pbdeos.NewTestExecEvent(5)},
+			fromDB: map[string][]*pbeos.TransactionEvent{
+				"trx123": []*pbeos.TransactionEvent{
+					&pbeos.TransactionEvent{Id: "trx12399999999999999999", Event: pbeos.NewTestExecEvent(5)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{
@@ -102,18 +102,18 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchLive("trx004", 9),
 				newSearchMatchLive("trx005", 10),
 			},
-			fromDB: map[string][]*pbdeos.TransactionEvent{
-				"trx000": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx000boo", Event: pbdeos.NewTestExecEvent(5)},
+			fromDB: map[string][]*pbeos.TransactionEvent{
+				"trx000": []*pbeos.TransactionEvent{
+					&pbeos.TransactionEvent{Id: "trx000boo", Event: pbeos.NewTestExecEvent(5)},
 				},
-				"trx001": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx001boo", Event: pbdeos.NewTestExecEvent(6)},
+				"trx001": []*pbeos.TransactionEvent{
+					&pbeos.TransactionEvent{Id: "trx001boo", Event: pbeos.NewTestExecEvent(6)},
 				},
-				"trx002": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx002boo", Event: pbdeos.NewTestExecEvent(7)},
+				"trx002": []*pbeos.TransactionEvent{
+					&pbeos.TransactionEvent{Id: "trx002boo", Event: pbeos.NewTestExecEvent(7)},
 				},
-				"trx022": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx022boo", Event: pbdeos.NewTestExecEvent(11)},
+				"trx022": []*pbeos.TransactionEvent{
+					&pbeos.TransactionEvent{Id: "trx022boo", Event: pbeos.NewTestExecEvent(11)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/manageos/mindreader"
@@ -250,9 +250,9 @@ func init() {
 			}
 			//
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
-				blk, ok := obj.(*pbdeos.Block)
+				blk, ok := obj.(*pbeos.Block)
 				if !ok {
-					return nil, fmt.Errorf("expected *pbdeos.Block, got %T", obj)
+					return nil, fmt.Errorf("expected *pbeos.Block, got %T", obj)
 				}
 
 				return deos.BlockFromProto(blk)

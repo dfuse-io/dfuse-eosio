@@ -23,8 +23,8 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dhammer"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 )
 
 var concurrentBatches = flag.Int("concurrent-batches", 2, "concurrent threads")
@@ -73,7 +73,7 @@ func main() {
 					close(doneReading)
 					return
 				}
-				evs := v.([]*pbdeos.TransactionEvent)
+				evs := v.([]*pbeos.TransactionEvent)
 				fmt.Println("got row: ", evs[0].Id, "events:", len(evs))
 			}
 		}

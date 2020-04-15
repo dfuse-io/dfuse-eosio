@@ -23,10 +23,10 @@ import (
 
 	deos "github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/eosdb/mdl"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	v0 "github.com/dfuse-io/eosws-go/mdl/v0"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/opaque"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang-collections/collections/stack"
 	"github.com/tidwall/sjson"
@@ -41,7 +41,7 @@ type TransactionList struct {
 	Transactions []*v1.TransactionLifecycle `json:"transactions"`
 }
 
-func ToV1TransactionLifecycle(in *pbdeos.TransactionLifecycle) (*v1.TransactionLifecycle, error) {
+func ToV1TransactionLifecycle(in *pbeos.TransactionLifecycle) (*v1.TransactionLifecycle, error) {
 	createdBy, err := ToV1ExtDTrxOp(in.CreatedBy)
 	if err != nil {
 		return nil, fmt.Errorf("trx lifecycle: createdBy: %w", err)
@@ -96,7 +96,7 @@ func ToV1TransactionLifecycle(in *pbdeos.TransactionLifecycle) (*v1.TransactionL
 	return out, nil
 }
 
-func ToV1TableOps(in []*pbdeos.TableOp) []*v1.TableOp {
+func ToV1TableOps(in []*pbeos.TableOp) []*v1.TableOp {
 
 	var out []*v1.TableOp
 
@@ -112,7 +112,7 @@ func ToV1TableOps(in []*pbdeos.TableOp) []*v1.TableOp {
 	}
 	return out
 }
-func ToV0TableOps(in []*pbdeos.TableOp) []*v0.TableOp {
+func ToV0TableOps(in []*pbeos.TableOp) []*v0.TableOp {
 
 	var out []*v0.TableOp
 
@@ -129,7 +129,7 @@ func ToV0TableOps(in []*pbdeos.TableOp) []*v0.TableOp {
 	return out
 }
 
-func ToV1CreationTree(in []*pbdeos.CreationFlatNode) v1.CreationFlatTree {
+func ToV1CreationTree(in []*pbeos.CreationFlatNode) v1.CreationFlatTree {
 	out := v1.CreationFlatTree{}
 	for idx, inNode := range in {
 		node := v1.CreationFlatNode([3]int{idx, int(inNode.CreatorActionIndex), int(inNode.ExecutionActionIndex)})
@@ -139,13 +139,13 @@ func ToV1CreationTree(in []*pbdeos.CreationFlatNode) v1.CreationFlatTree {
 	return out
 }
 
-func ToV1RAMOps(in []*pbdeos.RAMOp) (out []*v1.RAMOp) {
+func ToV1RAMOps(in []*pbeos.RAMOp) (out []*v1.RAMOp) {
 	for _, inOp := range in {
 		out = append(out, ToV1RAMOp(inOp))
 	}
 	return out
 }
-func ToV1RAMOp(in *pbdeos.RAMOp) *v1.RAMOp {
+func ToV1RAMOp(in *pbeos.RAMOp) *v1.RAMOp {
 	out := &v1.RAMOp{
 		Operation:   in.LegacyOperation(),
 		ActionIndex: int(in.ActionIndex),
@@ -156,13 +156,13 @@ func ToV1RAMOp(in *pbdeos.RAMOp) *v1.RAMOp {
 	return out
 }
 
-func ToV0RAMOps(in []*pbdeos.RAMOp) (out []*v0.RAMOp) {
+func ToV0RAMOps(in []*pbeos.RAMOp) (out []*v0.RAMOp) {
 	for _, inOp := range in {
 		out = append(out, ToV0RAMOp(inOp))
 	}
 	return out
 }
-func ToV0RAMOp(in *pbdeos.RAMOp) *v0.RAMOp {
+func ToV0RAMOp(in *pbeos.RAMOp) *v0.RAMOp {
 	out := &v0.RAMOp{
 		ActionIndex: int(in.ActionIndex),
 		EventID:     in.UniqueKey,
@@ -176,11 +176,11 @@ func ToV0RAMOp(in *pbdeos.RAMOp) *v0.RAMOp {
 	return out
 }
 
-func namespaceToFamily(ns pbdeos.RAMOp_Namespace) string {
+func namespaceToFamily(ns pbeos.RAMOp_Namespace) string {
 	return strings.ToLower(strings.TrimPrefix(ns.String(), "NAMESPACE_"))
 }
 
-func ToV1DTrxOps(in []*pbdeos.DTrxOp) (out []*v1.DTrxOp, err error) {
+func ToV1DTrxOps(in []*pbeos.DTrxOp) (out []*v1.DTrxOp, err error) {
 	for _, inOp := range in {
 		op, err := ToV1DTrxOp(inOp)
 		if err != nil {
@@ -191,7 +191,7 @@ func ToV1DTrxOps(in []*pbdeos.DTrxOp) (out []*v1.DTrxOp, err error) {
 	return out, nil
 }
 
-func ToV1ExtDTrxOp(in *pbdeos.ExtDTrxOp) (*v1.ExtDTrxOp, error) {
+func ToV1ExtDTrxOp(in *pbeos.ExtDTrxOp) (*v1.ExtDTrxOp, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -208,14 +208,14 @@ func ToV1ExtDTrxOp(in *pbdeos.ExtDTrxOp) (*v1.ExtDTrxOp, error) {
 	out.DTrxOp = *op
 	return out, nil
 }
-func ToV0DTrxOps(in []*pbdeos.DTrxOp) (out []*v0.DTrxOp) {
+func ToV0DTrxOps(in []*pbeos.DTrxOp) (out []*v0.DTrxOp) {
 	for _, inOp := range in {
 		out = append(out, ToV0DTrxOp(inOp))
 	}
 	return out
 }
 
-func ToV0DTrxOp(in *pbdeos.DTrxOp) *v0.DTrxOp {
+func ToV0DTrxOp(in *pbeos.DTrxOp) *v0.DTrxOp {
 	if in == nil {
 		return nil
 	}
@@ -235,7 +235,7 @@ func ToV0DTrxOp(in *pbdeos.DTrxOp) *v0.DTrxOp {
 
 	return out
 }
-func ToV1DTrxOp(in *pbdeos.DTrxOp) (*v1.DTrxOp, error) {
+func ToV1DTrxOp(in *pbeos.DTrxOp) (*v1.DTrxOp, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -262,14 +262,14 @@ func ToV1DTrxOp(in *pbdeos.DTrxOp) (*v1.DTrxOp, error) {
 	return out, nil
 }
 
-func ToV1AccountRAMDeltas(in []*pbdeos.AccountRAMDelta) (out []*v1.AccountRAMDelta) {
+func ToV1AccountRAMDeltas(in []*pbeos.AccountRAMDelta) (out []*v1.AccountRAMDelta) {
 	for _, inDelta := range in {
 		out = append(out, ToV1AccountRAMDelta(inDelta))
 	}
 	return out
 }
 
-func ToV1AccountRAMDelta(in *pbdeos.AccountRAMDelta) *v1.AccountRAMDelta {
+func ToV1AccountRAMDelta(in *pbeos.AccountRAMDelta) *v1.AccountRAMDelta {
 	if in == nil {
 		return nil
 	}
@@ -280,7 +280,7 @@ func ToV1AccountRAMDelta(in *pbdeos.AccountRAMDelta) *v1.AccountRAMDelta {
 	return out
 }
 
-func ToV1TransactionTrace(in *pbdeos.TransactionTrace) (*v1.TransactionTrace, error) {
+func ToV1TransactionTrace(in *pbeos.TransactionTrace) (*v1.TransactionTrace, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -313,8 +313,8 @@ func ToV1TransactionTrace(in *pbdeos.TransactionTrace) (*v1.TransactionTrace, er
 	return out, nil
 }
 
-func ToV1ActionTraces(in []*pbdeos.ActionTrace) (out []*v1.ActionTrace, err error) {
-	executionOrdinal := func(act *pbdeos.ActionTrace) uint64 {
+func ToV1ActionTraces(in []*pbeos.ActionTrace) (out []*v1.ActionTrace, err error) {
+	executionOrdinal := func(act *pbeos.ActionTrace) uint64 {
 		if act.Receipt == nil || act.Receipt.GlobalSequence == 0 {
 			return math.MaxUint64
 		}
@@ -322,13 +322,13 @@ func ToV1ActionTraces(in []*pbdeos.ActionTrace) (out []*v1.ActionTrace, err erro
 		return uint64(act.Receipt.GlobalSequence)
 	}
 
-	inByExecutionOrder := make([]*pbdeos.ActionTrace, len(in))
+	inByExecutionOrder := make([]*pbeos.ActionTrace, len(in))
 	copy(inByExecutionOrder, in)
 	sort.Slice(inByExecutionOrder, func(i, j int) bool {
 		return executionOrdinal(inByExecutionOrder[i]) < executionOrdinal(inByExecutionOrder[j])
 	})
 
-	var lastMDLActionTrace *pbdeos.ActionTrace
+	var lastMDLActionTrace *pbeos.ActionTrace
 	var lastV1ActionTrace *v1.ActionTrace
 	parentStack := &ExtendedStack{}
 
@@ -367,12 +367,12 @@ func ToV1ActionTraces(in []*pbdeos.ActionTrace) (out []*v1.ActionTrace, err erro
 	return out, nil
 }
 
-// ToV1ActionTraceRaw converts betwen `pbdeos.ActionWrap` format to the old v1 action traces format
+// ToV1ActionTraceRaw converts betwen `pbeos.ActionWrap` format to the old v1 action traces format
 // containing `inline_traces` object.
 //
 // **Warning** The `actions` parameter is expected to be sorted by execution order (the
 // default) for the algorithm to work correctly.
-func ToV1ActionTraceRaw(parentAction *pbdeos.ActionTrace, actions []*pbdeos.ActionTrace, withInlines bool) (json.RawMessage, error) {
+func ToV1ActionTraceRaw(parentAction *pbeos.ActionTrace, actions []*pbeos.ActionTrace, withInlines bool) (json.RawMessage, error) {
 	// Only elements that directly follow us on the flat list can be our children, limit to that
 	potentialChildren := actions[parentAction.ExecutionIndex+1:]
 
@@ -421,7 +421,7 @@ func ToV1ActionTraceRaw(parentAction *pbdeos.ActionTrace, actions []*pbdeos.Acti
 	return rawTrace, nil
 }
 
-func ToV1ActionTrace(in *pbdeos.ActionTrace) (*v1.ActionTrace, error) {
+func ToV1ActionTrace(in *pbeos.ActionTrace) (*v1.ActionTrace, error) {
 	if in == nil {
 		return nil, nil
 	}
@@ -449,7 +449,7 @@ func ToV1ActionTrace(in *pbdeos.ActionTrace) (*v1.ActionTrace, error) {
 	return out, nil
 }
 
-func ToV1ActionReceipt(receiver string, in *pbdeos.ActionReceipt) v1.ActionReceipt {
+func ToV1ActionReceipt(receiver string, in *pbeos.ActionReceipt) v1.ActionReceipt {
 	if in == nil {
 		return v1.ActionReceipt{
 			Receiver:     receiver,
@@ -488,7 +488,7 @@ func ToV1TransactionList(list *mdl.TransactionList) (*TransactionList, error) {
 	var outList []*v1.TransactionLifecycle
 	for _, tx := range list.Transactions {
 		// FIXME: which Chain Discriminator should we be using here?
-		lifecycle := pbdeos.MergeTransactionEvents(tx, func(id string) bool { return true })
+		lifecycle := pbeos.MergeTransactionEvents(tx, func(id string) bool { return true })
 		v1Lifecycle, err := ToV1TransactionLifecycle(lifecycle)
 		if err != nil {
 			return nil, fmt.Errorf("transaction list: %w", err)

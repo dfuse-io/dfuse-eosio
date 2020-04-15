@@ -26,9 +26,9 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
 	"github.com/dfuse-io/dgrpc"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
@@ -137,7 +137,7 @@ func (s *ABISyncer) streamABIChanges() error {
 	}
 }
 
-func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, actionTrace *pbdeos.ActionTrace, undo bool) error {
+func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, actionTrace *pbeos.ActionTrace, undo bool) error {
 	account := actionTrace.GetData("account").String()
 	hexABI := actionTrace.GetData("abi")
 

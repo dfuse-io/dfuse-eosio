@@ -7,14 +7,14 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/ecc"
 	"github.com/golang/protobuf/ptypes"
 )
 
-func testBlock1() *pbdeos.Block {
+func testBlock1() *pbeos.Block {
 	blockTime, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")
 	blockTimestamp, _ := ptypes.TimestampProto(blockTime)
 
@@ -51,51 +51,51 @@ func testBlock1() *pbdeos.Block {
 		},
 	}
 
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:                       "00000002aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 		Number:                   2,
 		DposIrreversibleBlocknum: 1,
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  "00000001aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			Producer:  "tester",
 			Timestamp: blockTimestamp,
 		},
-		Transactions: []*pbdeos.TransactionReceipt{
+		Transactions: []*pbeos.TransactionReceipt{
 			deos.TransactionReceiptToDEOS(receipt),
 		},
-		ImplicitTransactionOps: []*pbdeos.TrxOp{
+		ImplicitTransactionOps: []*pbeos.TrxOp{
 			{
-				Operation:     pbdeos.TrxOp_OPERATION_CREATE,
+				Operation:     pbeos.TrxOp_OPERATION_CREATE,
 				Name:          "onblock",
 				TransactionId: "abc999aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				Transaction: &pbdeos.SignedTransaction{
-					Transaction: &pbdeos.Transaction{},
+				Transaction: &pbeos.SignedTransaction{
+					Transaction: &pbeos.Transaction{},
 				},
 			},
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
 			{
 				Id: "00112233aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				DtrxOps: []*pbdeos.DTrxOp{
+				DtrxOps: []*pbeos.DTrxOp{
 					{
-						Operation:     pbdeos.DTrxOp_OPERATION_CREATE,
+						Operation:     pbeos.DTrxOp_OPERATION_CREATE,
 						TransactionId: "aaa777aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-						Transaction: &pbdeos.SignedTransaction{
-							Transaction: &pbdeos.Transaction{},
+						Transaction: &pbeos.SignedTransaction{
+							Transaction: &pbeos.Transaction{},
 						},
 					},
 					{
-						Operation:     pbdeos.DTrxOp_OPERATION_CANCEL,
+						Operation:     pbeos.DTrxOp_OPERATION_CANCEL,
 						TransactionId: "aaa888aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-						Transaction: &pbdeos.SignedTransaction{
-							Transaction: &pbdeos.Transaction{},
+						Transaction: &pbeos.SignedTransaction{
+							Transaction: &pbeos.Transaction{},
 						},
 					},
 				},
-				ActionTraces: []*pbdeos.ActionTrace{
+				ActionTraces: []*pbeos.ActionTrace{
 					{
 						Receiver: "eosio",
-						Action: &pbdeos.Action{
+						Action: &pbeos.Action{
 							Account:  "eosio",
 							Name:     "newaccount",
 							JsonData: `{"creator": "frankenstein", "name": "createdacct"}`,

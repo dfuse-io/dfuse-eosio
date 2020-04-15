@@ -21,13 +21,13 @@ import (
 	"sync"
 	"time"
 
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	"github.com/dfuse-io/dstore"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
@@ -191,7 +191,7 @@ func (p *FluxDBHandler) updateSpeculativeWrites(newHeadBlock bstream.BlockRef) {
 }
 
 func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error {
-	blk := rawBlk.ToNative().(*pbdeos.Block)
+	blk := rawBlk.ToNative().(*pbeos.Block)
 	blkRef := bstream.BlockRefFromID(rawBlk.ID())
 	if rawBlk.Num()%120 == 0 {
 		zlog.Info("processing block (1/120)", zap.Stringer("block", rawBlk))
@@ -299,7 +299,7 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 	return nil
 }
 
-func isNearRealtime(blk *pbdeos.Block, now time.Time) bool {
+func isNearRealtime(blk *pbeos.Block, now time.Time) bool {
 	tm, _ := ptypes.Timestamp(blk.Header.Timestamp)
 	return now.Add(-15 * time.Second).Before(tm)
 }

@@ -26,8 +26,8 @@ import (
 	"cloud.google.com/go/bigtable/bttest"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/kvdb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,7 +44,7 @@ func TestBlocks(t *testing.T) {
 	db, cleanup := newServer(t)
 	defer cleanup()
 
-	db.Blocks.PutBlock(Keys.Block("00000001deadbeef"), &pbdeos.Block{})
+	db.Blocks.PutBlock(Keys.Block("00000001deadbeef"), &pbeos.Block{})
 
 	require.NoError(t, db.Blocks.FlushMutations(context.Background()))
 }
@@ -52,7 +52,7 @@ func TestBlocks(t *testing.T) {
 func TestBigtable_ReconstructDeosBlockWithHeader(t *testing.T) {
 	blockID := "00000001deadbeef"
 	key := Keys.Block(blockID)
-	blk := &pbdeos.Block{Id: blockID, Header: &pbdeos.BlockHeader{Producer: "producer.1"}}
+	blk := &pbeos.Block{Id: blockID, Header: &pbeos.BlockHeader{Producer: "producer.1"}}
 	expectedProducer := blk.Header.Producer // "producer.1"
 
 	db, cleanup := newServer(t)
@@ -77,20 +77,20 @@ func TestBigtable_ReconstructDeosBlockWithHeader(t *testing.T) {
 func TestBigtable_StripTransactionsFromDeosBlock(t *testing.T) {
 	blockID := "00000001deadbeef"
 	key := Keys.Block(blockID)
-	putBlock := &pbdeos.Block{
+	putBlock := &pbeos.Block{
 		Id: blockID,
-		ImplicitTransactionOps: []*pbdeos.TrxOp{
-			&pbdeos.TrxOp{
+		ImplicitTransactionOps: []*pbeos.TrxOp{
+			&pbeos.TrxOp{
 				Name: "somebeef",
 			},
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
-			&pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
+			&pbeos.TransactionTrace{
 				Id: blockID,
 			},
 		},
-		Transactions: []*pbdeos.TransactionReceipt{
-			&pbdeos.TransactionReceipt{
+		Transactions: []*pbeos.TransactionReceipt{
+			&pbeos.TransactionReceipt{
 				Id: "beefbeef13371337",
 			},
 		},
@@ -116,8 +116,8 @@ func TestBigtable_GetBlock(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		putBlock         *pbdeos.Block
-		putHeader        *pbdeos.BlockHeader
+		putBlock         *pbeos.Block
+		putHeader        *pbeos.BlockHeader
 		putIrreversible  bool
 		fetchBlockID     string
 		putBlockID       string
@@ -128,8 +128,8 @@ func TestBigtable_GetBlock(t *testing.T) {
 		{
 			name:             "Sunny path",
 			putBlockID:       Keys.Block("00000001deadbeef"),
-			putBlock:         &pbdeos.Block{Id: "00000001deadbeef"},
-			putHeader:        &pbdeos.BlockHeader{Producer: "producer.1"},
+			putBlock:         &pbeos.Block{Id: "00000001deadbeef"},
+			putHeader:        &pbeos.BlockHeader{Producer: "producer.1"},
 			putIrreversible:  true,
 			fetchBlockID:     "00000001deadbeef",
 			expectedBlockID:  "00000001deadbeef",
@@ -139,8 +139,8 @@ func TestBigtable_GetBlock(t *testing.T) {
 		{
 			name:             "Not Found",
 			putBlockID:       Keys.Block("00000001deadbeef"),
-			putBlock:         &pbdeos.Block{Id: "00000001deadbeef"},
-			putHeader:        &pbdeos.BlockHeader{Producer: "producer.1"},
+			putBlock:         &pbeos.Block{Id: "00000001deadbeef"},
+			putHeader:        &pbeos.BlockHeader{Producer: "producer.1"},
 			putIrreversible:  true,
 			fetchBlockID:     "00000002deadbeef",
 			expectedBlockID:  "00000001deadbeef",
@@ -174,7 +174,7 @@ func TestBigtable_GetBlock(t *testing.T) {
 
 func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 	type blockPut struct {
-		block        *pbdeos.Block
+		block        *pbeos.Block
 		irreversible bool
 	}
 
@@ -192,11 +192,11 @@ func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 			name: "Sunny path",
 			putBlocks: []blockPut{
 				{
-					block:        &pbdeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
+					block:        &pbeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
 					irreversible: true,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
+					block:        &pbeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
 					irreversible: false,
 				},
 			},
@@ -209,11 +209,11 @@ func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 			name: "Inclusive closest, dpos-based for Block ID",
 			putBlocks: []blockPut{
 				{
-					block:        &pbdeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
+					block:        &pbeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
 					irreversible: true,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
+					block:        &pbeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
 					irreversible: true,
 				},
 			},
@@ -226,23 +226,23 @@ func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 			name: "Fork it up ! forked block 5, forked block 3",
 			putBlocks: []blockPut{
 				{
-					block:        &pbdeos.Block{Id: "0000000388888888", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "0000000388888888", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "0000000399999999", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "0000000399999999", DposIrreversibleBlocknum: 2},
 					irreversible: true,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
+					block:        &pbeos.Block{Id: "00000004aaaaaaaa", DposIrreversibleBlocknum: 3},
 					irreversible: true,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
+					block:        &pbeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 4},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deed1ee7", DposIrreversibleBlocknum: 3},
+					block:        &pbeos.Block{Id: "00000005deed1ee7", DposIrreversibleBlocknum: 3},
 					irreversible: false,
 				},
 			},
@@ -256,23 +256,23 @@ func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 			name: "No escape... missing irr",
 			putBlocks: []blockPut{
 				{
-					block:        &pbdeos.Block{Id: "0000000388888888", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "0000000388888888", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "0000000399999999", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "0000000399999999", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000004aaaaaaab", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "00000004aaaaaaab", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "00000005deadbeef", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 				{
-					block:        &pbdeos.Block{Id: "00000005deed1ee7", DposIrreversibleBlocknum: 2},
+					block:        &pbeos.Block{Id: "00000005deed1ee7", DposIrreversibleBlocknum: 2},
 					irreversible: false,
 				},
 			},
@@ -323,8 +323,8 @@ func TestBigtable_GetIrreversibleIDBlockNumAndID(t *testing.T) {
 func TestBigtable_GetBlockByNum(t *testing.T) {
 	testCases := []struct {
 		name             string
-		putBlock         *pbdeos.Block
-		putHeader        *pbdeos.BlockHeader
+		putBlock         *pbeos.Block
+		putHeader        *pbeos.BlockHeader
 		putIrreversible  bool
 		fetchBlockNum    uint32
 		putBlockID       string
@@ -335,8 +335,8 @@ func TestBigtable_GetBlockByNum(t *testing.T) {
 		{
 			name:             "Sunny path",
 			putBlockID:       Keys.Block("00000001deadbeef"),
-			putBlock:         &pbdeos.Block{Id: "00000001deadbeef"},
-			putHeader:        &pbdeos.BlockHeader{Producer: "producer.1"},
+			putBlock:         &pbeos.Block{Id: "00000001deadbeef"},
+			putHeader:        &pbeos.BlockHeader{Producer: "producer.1"},
 			putIrreversible:  true,
 			fetchBlockNum:    1,
 			expectedBlockID:  "00000001deadbeef",
@@ -346,8 +346,8 @@ func TestBigtable_GetBlockByNum(t *testing.T) {
 		{
 			name:          "Not Found",
 			putBlockID:    Keys.Block("00000001deadbeef"),
-			putBlock:      &pbdeos.Block{Id: "00000001deadbeef"},
-			putHeader:     &pbdeos.BlockHeader{Producer: "producer.1"},
+			putBlock:      &pbeos.Block{Id: "00000001deadbeef"},
+			putHeader:     &pbeos.BlockHeader{Producer: "producer.1"},
 			fetchBlockNum: 2,
 			expectedErr:   kvdb.ErrNotFound,
 		},
@@ -383,9 +383,9 @@ func TestBigtable_GetLastWrittenBlockID(t *testing.T) {
 	defer cleanup()
 	ctx := context.Background()
 
-	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbdeos.Block{})
-	db.Blocks.PutBlock(Keys.Block("00000002a"), &pbdeos.Block{})
-	db.Blocks.PutBlock(Keys.Block("00000003a"), &pbdeos.Block{})
+	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbeos.Block{})
+	db.Blocks.PutBlock(Keys.Block("00000002a"), &pbeos.Block{})
+	db.Blocks.PutBlock(Keys.Block("00000003a"), &pbeos.Block{})
 	db.BlocksLast.PutMetaWritten(Keys.Block("00000002a"))
 	require.NoError(t, db.FlushAllMutations(ctx))
 
@@ -402,13 +402,13 @@ func TestBigtable_GetClosestIrreversibleIDAtBlockNum_Dedupe(t *testing.T) {
 	defer cleanup()
 	ctx := context.Background()
 
-	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbdeos.Block{Id: "00000001a"})
+	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbeos.Block{Id: "00000001a"})
 	db.Blocks.PutMetaIrreversible(Keys.Block("00000001a"), true)
 	require.NoError(t, db.FlushAllMutations(ctx))
 
 	time.Sleep(10 * time.Millisecond)
 
-	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbdeos.Block{Id: "00000001a"})
+	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbeos.Block{Id: "00000001a"})
 	db.Blocks.PutMetaIrreversible(Keys.Block("00000001a"), true)
 	require.NoError(t, db.FlushAllMutations(ctx))
 
@@ -422,10 +422,10 @@ func TestBigtable_GetClosestIrreversibleIDAtBlockNum_AsLast(t *testing.T) {
 	defer cleanup()
 	ctx := context.Background()
 
-	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbdeos.Block{Id: "00000001a"})
-	db.Blocks.PutBlock(Keys.Block("00000002a"), &pbdeos.Block{Id: "00000002a"})
-	db.Blocks.PutBlock(Keys.Block("00000003a"), &pbdeos.Block{Id: "00000003a"})
-	db.Blocks.PutBlock(Keys.Block("00000004a"), &pbdeos.Block{Id: "00000004a"})
+	db.Blocks.PutBlock(Keys.Block("00000001a"), &pbeos.Block{Id: "00000001a"})
+	db.Blocks.PutBlock(Keys.Block("00000002a"), &pbeos.Block{Id: "00000002a"})
+	db.Blocks.PutBlock(Keys.Block("00000003a"), &pbeos.Block{Id: "00000003a"})
+	db.Blocks.PutBlock(Keys.Block("00000004a"), &pbeos.Block{Id: "00000004a"})
 	db.Blocks.PutMetaIrreversible(Keys.Block("00000001a"), true)
 	db.Blocks.PutMetaIrreversible(Keys.Block("00000002a"), true)
 	require.NoError(t, db.FlushAllMutations(ctx))
@@ -454,7 +454,7 @@ func TestBigtable_ListBlocks(t *testing.T) {
 
 	putBlock := func(id string, irr bool) {
 		key := Keys.Block(id)
-		db.Blocks.PutBlock(key, &pbdeos.Block{Id: id})
+		db.Blocks.PutBlock(key, &pbeos.Block{Id: id})
 		if irr {
 			db.Blocks.PutMetaIrreversible(key, true)
 		}
@@ -485,7 +485,7 @@ func TestBigtable_ListSiblingBlocks(t *testing.T) {
 
 	putBlock := func(id string, irr bool) {
 		key := Keys.Block(id)
-		db.Blocks.PutBlock(key, &pbdeos.Block{Id: id})
+		db.Blocks.PutBlock(key, &pbeos.Block{Id: id})
 		if irr {
 			db.Blocks.PutMetaIrreversible(key, true)
 		}
@@ -636,7 +636,7 @@ func TestListTransactionsForBlockID(t *testing.T) {
 				require.NoError(t, err)
 				require.Len(t, lst.Transactions, len(test.expectedKeys))
 				for index, expectedKey := range test.expectedKeys {
-					lifecycle := pbdeos.MergeTransactionEvents(lst.Transactions[index], chainDiscriminator)
+					lifecycle := pbeos.MergeTransactionEvents(lst.Transactions[index], chainDiscriminator)
 					assert.Equal(t, expectedKey, transactionLifecycleKey(lifecycle))
 				}
 			}
@@ -708,7 +708,7 @@ func TestGetTransaction(t *testing.T) {
 		name     string
 		id       string
 		rows     []DBInserter
-		asserter func(t *testing.T, responses []*pbdeos.TransactionLifecycle)
+		asserter func(t *testing.T, responses []*pbeos.TransactionLifecycle)
 	}{
 		{
 			name: "NotFound",
@@ -716,7 +716,7 @@ func TestGetTransaction(t *testing.T) {
 			rows: []DBInserter{
 				executeTransaction("01", "1", true),
 			},
-			asserter: func(t *testing.T, responses []*pbdeos.TransactionLifecycle) {
+			asserter: func(t *testing.T, responses []*pbeos.TransactionLifecycle) {
 				assert.Len(t, responses, 0)
 			},
 		},
@@ -857,7 +857,7 @@ func TestGetTransactionRowBatch(t *testing.T) {
 			respKeys := make(map[string]string)
 			for k, v := range responses {
 				fmt.Println("v is", k, v)
-				// lifecycle, err := pbdeos.MergeTransactionEvents(v)
+				// lifecycle, err := pbeos.MergeTransactionEvents(v)
 				// require.NoError(t, err)
 				// respKeys[k] = lifecycle.Id + ":" + lifecycle.BlockId
 			}
@@ -966,7 +966,7 @@ func newServer(t *testing.T) (db *EOSDatabase, cleanup func()) {
 	return db, cleanup
 }
 
-func transactionLifecycleKey(trxLifecycle *pbdeos.TransactionLifecycle) string {
+func transactionLifecycleKey(trxLifecycle *pbeos.TransactionLifecycle) string {
 	// We use the `Previous` field as the blockID part of the key. It's not intuitive, but
 	// when we build the executionTransaction, we use this field to save the blockID. See
 	// comment there on `putTransaction` for more info.
@@ -992,8 +992,8 @@ func mustDecodeString(s string) []byte {
 	return out
 }
 
-func trxIDsToTrxRefs(ids []string) *pbdeos.TransactionRefs {
-	out := &pbdeos.TransactionRefs{}
+func trxIDsToTrxRefs(ids []string) *pbeos.TransactionRefs {
+	out := &pbeos.TransactionRefs{}
 	for _, id := range ids {
 		out.Hashes = append(out.Hashes, mustDecodeString(id))
 	}
@@ -1015,12 +1015,12 @@ func putBlock(
 	blockID string,
 	producer string,
 	irreversible bool,
-	transactionRefs *pbdeos.TransactionRefs,
-	transactionTraceRefs *pbdeos.TransactionRefs,
+	transactionRefs *pbeos.TransactionRefs,
+	transactionTraceRefs *pbeos.TransactionRefs,
 ) {
 	key := Keys.Block(blockID)
 
-	db.Blocks.PutBlock(key, &pbdeos.Block{Id: blockID})
+	db.Blocks.PutBlock(key, &pbeos.Block{Id: blockID})
 	db.Blocks.PutMetaIrreversible(key, irreversible)
 
 	if transactionRefs != nil {
@@ -1035,16 +1035,16 @@ func putBlock(
 func putTransaction(db *EOSDatabase, id string, blockID string, irreversible bool) {
 	key := Keys.Transaction(id, blockID)
 
-	db.Transactions.PutTrx(key, &pbdeos.SignedTransaction{
-		Transaction: &pbdeos.Transaction{
-			Header: &pbdeos.TransactionHeader{DelaySec: 1},
+	db.Transactions.PutTrx(key, &pbeos.SignedTransaction{
+		Transaction: &pbeos.Transaction{
+			Header: &pbeos.TransactionHeader{DelaySec: 1},
 		},
 	})
-	db.Transactions.PutTrace(key, &pbdeos.TransactionTrace{
+	db.Transactions.PutTrace(key, &pbeos.TransactionTrace{
 		Id:       id,
 		BlockNum: uint64(eos.BlockNum(blockID)),
-		Receipt: &pbdeos.TransactionReceiptHeader{
-			Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+		Receipt: &pbeos.TransactionReceiptHeader{
+			Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 		},
 	})
 
@@ -1053,11 +1053,11 @@ func putTransaction(db *EOSDatabase, id string, blockID string, irreversible boo
 	// As such, in tests, we hijack the `Previous` field an put the `blockID` into. Later, we will be
 	// able to inspect the `TransactionLifecycle.ExecutionBlockHeader` and use the `Previous` as our
 	// trx block ID.
-	db.Transactions.PutBlockHeader(key, &pbdeos.BlockHeader{Previous: blockID, Producer: "eosio"})
+	db.Transactions.PutBlockHeader(key, &pbeos.BlockHeader{Previous: blockID, Producer: "eosio"})
 	db.Transactions.PutMetaIrreversible(key, irreversible)
 	db.Transactions.PutPublicKeys(key, []string{"any"})
-	db.Transactions.PutDTrxCreatedBy(key, &pbdeos.ExtDTrxOp{BlockId: blockID})
-	db.Transactions.PutDTrxCanceledBy(key, &pbdeos.ExtDTrxOp{BlockId: blockID})
+	db.Transactions.PutDTrxCreatedBy(key, &pbeos.ExtDTrxOp{BlockId: blockID})
+	db.Transactions.PutDTrxCanceledBy(key, &pbeos.ExtDTrxOp{BlockId: blockID})
 	db.Transactions.PutMetaWritten(key, true)
 }
 

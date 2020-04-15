@@ -24,9 +24,9 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/search"
 	searchLive "github.com/dfuse-io/search/live"
@@ -49,7 +49,7 @@ func Test_forwardProcessBlock(t *testing.T) {
 
 	cases := []struct {
 		name                  string
-		block                 *pbdeos.Block
+		block                 *pbeos.Block
 		expectedMatchCount    int
 		expectedLastBlockRead uint64
 		cancelContext         bool
@@ -148,7 +148,7 @@ func Test_forwardProcessBlock(t *testing.T) {
 func Test_processMatches(t *testing.T) {
 	cases := []struct {
 		name               string
-		block              *pbdeos.Block
+		block              *pbeos.Block
 		liveQuery          *searchLive.LiveQuery
 		matches            []search.SearchMatch
 		expectedMatchCount int
@@ -234,27 +234,27 @@ func Test_processMatches(t *testing.T) {
 
 }
 
-func newBlock(id, previous, trxID string, account string) *pbdeos.Block {
+func newBlock(id, previous, trxID string, account string) *pbeos.Block {
 
-	return &pbdeos.Block{
+	return &pbeos.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  previous,
 			Timestamp: &timestamp.Timestamp{Nanos: 0, Seconds: 0},
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
 			{
 				Id: trxID,
-				Receipt: &pbdeos.TransactionReceiptHeader{
-					Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				Receipt: &pbeos.TransactionReceiptHeader{
+					Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				},
-				ActionTraces: []*pbdeos.ActionTrace{
+				ActionTraces: []*pbeos.ActionTrace{
 					{
-						Receipt: &pbdeos.ActionReceipt{
+						Receipt: &pbeos.ActionReceipt{
 							Receiver: "receiver.1",
 						},
-						Action: &pbdeos.Action{
+						Action: &pbeos.Action{
 							Account: account,
 							Name:    "transfer",
 						},
@@ -265,7 +265,7 @@ func newBlock(id, previous, trxID string, account string) *pbdeos.Block {
 	}
 }
 
-func ToBStreamBlock(block *pbdeos.Block) (*bstream.Block, error) {
+func ToBStreamBlock(block *pbeos.Block) (*bstream.Block, error) {
 	time, _ := ptypes.Timestamp(block.Header.Timestamp)
 	payload, err := proto.Marshal(block)
 	if err != nil {

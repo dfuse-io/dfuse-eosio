@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package dfuse.funnel.v1;
+
+option go_package = "github.com/dfuse-io/dfuse-eosio/pb/dfuse/funnel/v1;pbfunnel";
+
+import "dfuse/codecs/eos/eos.proto";
+
+service Funnel {
+  rpc StreamBlocks(StreamBlockRequest) returns (stream StreamBlockResponse);
+}
+
+message StreamBlockRequest{
+  int64 fromBlockNum = 2;
+  bool irreversibleOnly = 3;
+}
+
+message StreamBlockResponse{
+  bool undo = 1;
+  dfuse.codecs.eos.Block block = 2;
+}

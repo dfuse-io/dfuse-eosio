@@ -21,14 +21,14 @@ import (
 	"strings"
 	"testing"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dstore"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/jsonpb"
+	eos "github.com/eoscanada/eos-go"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,7 +52,7 @@ func Test_onGetTableRows(t *testing.T) {
 		{
 			name: "sunny path",
 			lib:  1,
-			archiveFiles: []archiveFiles{{name: "0000000000", content: pbdeosBlockToFile(t, pbdeosBlockFromString(t, `{
+			archiveFiles: []archiveFiles{{name: "0000000000", content: pbeosBlockToFile(t, pbeosBlockFromString(t, `{
     "header": {
         "previous": "00000001a",
         "timestamp": "2019-09-09T00:00:00Z"
@@ -383,8 +383,8 @@ func protoJSONUnmarshal(t *testing.T, data []byte, into proto.Message) {
 	require.NoError(t, jsonpb.UnmarshalString(string(data), into))
 }
 
-func pbdeosBlockFromString(t *testing.T, in string) (out *pbdeos.Block) {
-	out = &pbdeos.Block{}
+func pbeosBlockFromString(t *testing.T, in string) (out *pbeos.Block) {
+	out = &pbeos.Block{}
 	require.NoError(t, jsonpb.UnmarshalString(in, out))
 	return
 }

@@ -51,7 +51,7 @@ func NewBlockWriter(writer io.Writer) (*BlockWriter, error) {
 
 func (w *BlockWriter) Write(block *bstream.Block) error {
 	// FIXME: We could probably store directly the `PayloadBuffer` and reconstruct
-	//        the `bstream.Block` from the payload directly (pbdeos, pbdeth, etc.).
+	//        the `bstream.Block` from the payload directly (pbeos, pbdeth, etc.).
 	//        This would shave a few bytes (around 74) per stored block that is
 	//        duplicated somewhere in the proto messsage already.
 	pbBlock, err := block.ToProto()

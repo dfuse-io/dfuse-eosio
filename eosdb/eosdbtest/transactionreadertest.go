@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -63,7 +63,7 @@ func TestReadTransactions(t *testing.T, driverFactory DriverFactory) {
 
 	for _, ev := range evs {
 		switch evt := ev.Event.(type) {
-		case *pbdeos.TransactionEvent_Addition:
+		case *pbeos.TransactionEvent_Addition:
 			additions++
 			assert.Equal(t, "00112233aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ev.Id)
 			assert.Equal(t, "00000002aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ev.BlockId)
@@ -80,7 +80,7 @@ func TestReadTransactions(t *testing.T, driverFactory DriverFactory) {
 			assert.Equal(t, "name", evt.Addition.Transaction.Transaction.Actions[0].Name)
 			assert.Equal(t, []string{"EOS7T3GcBYpYf2D63HGDG7qB9TiD56XT4m1hAQfkHWuV9LhMoQ1ZY"}, evt.Addition.PublicKeys.PublicKeys)
 
-		case *pbdeos.TransactionEvent_Execution:
+		case *pbeos.TransactionEvent_Execution:
 			executions++
 			assert.Equal(t, "00112233aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ev.Id)
 			assert.Equal(t, "00000002aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", ev.BlockId)
@@ -301,16 +301,16 @@ func putTransaction(t *testing.T, db eosdb.Driver, trxID string) {
 	// code fetch some transactions of different type: deferred (like
 	// this one), but also implicit, normal transactions and
 	// transaction traces.
-	blk.TransactionTraces = append(blk.TransactionTraces, &pbdeos.TransactionTrace{
+	blk.TransactionTraces = append(blk.TransactionTraces, &pbeos.TransactionTrace{
 		Id:       trxID,
 		BlockNum: 2,
-		DtrxOps: []*pbdeos.DTrxOp{
+		DtrxOps: []*pbeos.DTrxOp{
 			{
 				TransactionId: trxID, // FIXME: a dtrx that is created actually has a *different* transaction ID from the one creating it.
-				Operation:     pbdeos.DTrxOp_OPERATION_CREATE,
+				Operation:     pbeos.DTrxOp_OPERATION_CREATE,
 				ActionIndex:   0,
 				Payer:         "eoscanada1",
-				Transaction: &pbdeos.SignedTransaction{
+				Transaction: &pbeos.SignedTransaction{
 					Transaction:     nil,
 					Signatures:      []string{"signature"},
 					ContextFreeData: nil,

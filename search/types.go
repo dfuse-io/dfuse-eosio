@@ -4,9 +4,11 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/search"
+	"github.com/golang/protobuf/ptypes"
 )
 
 func init() {
@@ -38,29 +40,28 @@ func (m *EOSSearchMatch) SetIndex(index uint64) {
 	m.Index = index
 }
 
-func (m *EOSSearchMatch) FillProtoSpecific(match *pbsearch.SearchMatch, block *bstream.Block) error {
-	eosMatch := &pbsearch.EOSMatch{}
-	match.Specific = &pbsearch.SearchMatch_Eos{
-		Eos: eosMatch,
-	}
+func (m *EOSSearchMatch) FillProtoSpecific(match *pbsearch.SearchMatch, block *bstream.Block) (err error) {
+	eosMatch := &pbsearcheos.Match{}
 
 	if block != nil {
 		eosMatch.Block = m.buildBlockTrxPayload(block)
 		if m.TrxIDPrefix == "" {
-			return nil
+			match.ChainSpecific, err = ptypes.MarshalAny(eosMatch)
+			return err
 		}
 	}
 
 	eosMatch.ActionIndexes = uint16to32s(m.ActionIndexes)
 
-	return nil
+	match.ChainSpecific, err = ptypes.MarshalAny(eosMatch)
+	return err
 }
 
-func (m *EOSSearchMatch) buildBlockTrxPayload(block *bstream.Block) *pbsearch.EOSBlockTrxPayload {
-	blk := block.ToNative().(*pbdeos.Block)
+func (m *EOSSearchMatch) buildBlockTrxPayload(block *bstream.Block) *pbsearcheos.BlockTrxPayload {
+	blk := block.ToNative().(*pbeos.Block)
 
 	if m.TrxIDPrefix == "" {
-		return &pbsearch.EOSBlockTrxPayload{
+		return &pbsearcheos.BlockTrxPayload{
 			BlockHeader: blk.Header,
 			BlockID:     blk.ID(),
 		}
@@ -72,7 +73,7 @@ func (m *EOSSearchMatch) buildBlockTrxPayload(block *bstream.Block) *pbsearch.EO
 			continue
 		}
 
-		out := &pbsearch.EOSBlockTrxPayload{}
+		out := &pbsearcheos.BlockTrxPayload{}
 		out.BlockHeader = blk.Header
 		out.BlockID = blk.Id
 		out.Trace = trx

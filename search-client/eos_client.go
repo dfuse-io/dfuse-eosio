@@ -6,11 +6,13 @@ import (
 	"io"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/logging"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	searchclient "github.com/dfuse-io/search-client"
+	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -29,9 +31,9 @@ type EOSSearchMatch struct {
 	*pbsearch.SearchMatch
 
 	BlockID          string
-	BlockHeader      *pbdeos.BlockHeader
-	TransactionTrace *pbdeos.TransactionTrace
-	MatchingActions  []*pbdeos.ActionTrace
+	BlockHeader      *pbeos.BlockHeader
+	TransactionTrace *pbeos.TransactionTrace
+	MatchingActions  []*pbeos.ActionTrace
 }
 
 func NewEOSClient(cc *grpc.ClientConn, dbReader eosdb.DBReader) *EOSClient {
@@ -61,7 +63,7 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 
 	prefixes, prefixToIndex := searchclient.GatherTransactionPrefixesToFetch(items, isIrreversibleEOSMatch)
 
-	var rows [][]*pbdeos.TransactionEvent
+	var rows [][]*pbeos.TransactionEvent
 	if len(prefixes) > 0 {
 		zlogger.Debug("performing retrieval of transaction traces", zap.Int("prefix_count", len(prefixes)))
 		rows, err = e.dbReader.GetTransactionTracesBatch(ctx, prefixes)
@@ -83,17 +85,24 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 	return out, nil
 }
 
-func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbdeos.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
+func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
 
 	trxIDPrefix := m.match.TrxIdPrefix
-	eosMatch := m.match.GetEos()
+
+	var eosMatchAny ptypes.DynamicAny
+	err := ptypes.UnmarshalAny(m.match.GetChainSpecific(), &eosMatchAny)
+	if err != nil {
+		return nil, err
+	}
+
+	eosMatch := eosMatchAny.Message.(*pbsearcheos.Match)
 
 	var blockID string
-	var blockHeader *pbdeos.BlockHeader
-	var trace *pbdeos.TransactionTrace
+	var blockHeader *pbeos.BlockHeader
+	var trace *pbeos.TransactionTrace
 
 	if eosMatch.Block != nil {
 		blockID = eosMatch.Block.BlockID
@@ -113,7 +122,7 @@ func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbdeos
 		// If we are here, it must be because the result was irreversible (otherwise,
 		// the `eosMatch.Block != nil` would have been `true`). Hence, it's ok to not have
 		// a chain discriminator here.
-		lifecycle := pbdeos.MergeTransactionEvents(events, func(id string) bool { return true })
+		lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool { return true })
 		if lifecycle.ExecutionTrace == nil {
 			return nil, fmt.Errorf("unable to merge transaction events correctly")
 		}
@@ -123,9 +132,9 @@ func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbdeos
 		trace = lifecycle.ExecutionTrace
 	}
 
-	var matchingActions []*pbdeos.ActionTrace
+	var matchingActions []*pbeos.ActionTrace
 	if trace != nil {
-		matchingActions = make([]*pbdeos.ActionTrace, len(eosMatch.ActionIndexes))
+		matchingActions = make([]*pbeos.ActionTrace, len(eosMatch.ActionIndexes))
 		for i, callIndex := range eosMatch.ActionIndexes {
 			matchingActions[i] = trace.ActionTraces[callIndex]
 		}
@@ -141,7 +150,20 @@ func processEOSHammerItem(ctx context.Context, m *matchOrError, rows [][]*pbdeos
 }
 
 func isIrreversibleEOSMatch(match *pbsearch.SearchMatch) bool {
-	return match.GetEos().Block == nil
+	// This sucks really hard. This was before a simple check if a variable was nil, now, it requires
+	// a full decoding of the any message to the correct type. This is probably a performance hit here
+	// to do that.
+	//
+	// Instead, the standard search engine should let us know if this match comes from a reversible or
+	// an irreversible segment. That would make sense and would remove the need to perform some extra
+	// decoding just to check if the block payload is present.
+	var eosMatchAny ptypes.DynamicAny
+	err := ptypes.UnmarshalAny(match.GetChainSpecific(), &eosMatchAny)
+	if err != nil {
+		panic("this should be an EOS match object, it should already been validated at this point, this should not happen")
+	}
+
+	return eosMatchAny.Message.(*pbsearcheos.Match).Block == nil
 }
 
 type eosStreamMatches struct {

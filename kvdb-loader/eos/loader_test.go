@@ -28,8 +28,8 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/sql"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
@@ -133,16 +133,16 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbdeos.Block {
-	trxTraces := make([]*pbdeos.TransactionTrace, len(trxTraceJSONs))
+func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbeos.Block {
+	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbdeos.TransactionTrace)
+		trxTrace := new(pbeos.TransactionTrace)
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:                id,
 		Number:            eos.BlockNum(id),
 		TransactionTraces: trxTraces,
@@ -155,7 +155,7 @@ func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbdeos.Block {
 	require.NoError(t, err)
 
 	pbblock.DposIrreversibleBlocknum = pbblock.Number - 1
-	pbblock.Header = &pbdeos.BlockHeader{
+	pbblock.Header = &pbeos.BlockHeader{
 		Previous:  fmt.Sprintf("%08d%s", pbblock.Number-1, id[8:]),
 		Producer:  "tester",
 		Timestamp: blockTimestamp,

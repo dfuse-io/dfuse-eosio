@@ -14,7 +14,7 @@
 
 package bigt
 
-import pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+import pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 
 type TransactionRow struct {
 	// TODO: Replace Key usage by `ID` and `BlockID`.. Key is an intricacy
@@ -22,12 +22,12 @@ type TransactionRow struct {
 	// It contains: `trx_id:block_id` as per `Keyer.ReadTransaction`
 	Key string
 
-	Transaction      *pbdeos.SignedTransaction
-	TransactionTrace *pbdeos.TransactionTrace // really: ExecutionTrace
-	BlockHeader      *pbdeos.BlockHeader
+	Transaction      *pbeos.SignedTransaction
+	TransactionTrace *pbeos.TransactionTrace // really: ExecutionTrace
+	BlockHeader      *pbeos.BlockHeader
 	PublicKeys       []string
-	CreatedBy        *pbdeos.ExtDTrxOp
-	CanceledBy       *pbdeos.ExtDTrxOp
+	CreatedBy        *pbeos.ExtDTrxOp
+	CanceledBy       *pbeos.ExtDTrxOp
 	Irreversible     bool
 
 	// TODO: phase this out, who relies on this anyway?

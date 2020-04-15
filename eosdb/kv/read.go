@@ -20,10 +20,10 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	pbrows "github.com/dfuse-io/dfuse-eosio/eosdb/kv/pb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbkv "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosdb/kv/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/kvdb/store"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
@@ -44,7 +44,7 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 	return
 }
 
-func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbdeos.BlockWithRefs, err error) {
+func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbeos.BlockWithRefs, err error) {
 	value, err := db.store.Get(ctx, Keys.PackBlocksKey(id))
 
 	if err == store.ErrNotFound {
@@ -55,18 +55,18 @@ func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbdeos.BlockWithRef
 		return nil, fmt.Errorf("unable to get block: %w", err)
 	}
 
-	blockRow := &pbrows.BlockRow{}
+	blockRow := &pbkv.BlockRow{}
 	db.dec.MustInto(value, blockRow)
 	return db.blockRowToBlockWithRef(ctx, blockRow)
 }
 
-func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbeos.BlockWithRefs, err error) {
 	zlog.Debug("get block by num", zap.Uint32("block_num", num))
 	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(num), Keys.PackBlockNumPrefix(num-1), 0)
 	for it.Next() {
 		kv := it.Item()
 
-		blockRow := &pbrows.BlockRow{}
+		blockRow := &pbkv.BlockRow{}
 		db.dec.MustInto(kv.Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -84,8 +84,8 @@ func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbdeos.Bloc
 	return
 }
 
-func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbrows.BlockRow) (*pbdeos.BlockWithRefs, error) {
-	blk := &pbdeos.BlockWithRefs{
+func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbkv.BlockRow) (*pbeos.BlockWithRefs, error) {
+	blk := &pbeos.BlockWithRefs{
 		Id:                      blockRow.Block.Id,
 		Block:                   blockRow.Block,
 		ImplicitTransactionRefs: blockRow.ImplicitTrxRefs,
@@ -196,11 +196,11 @@ func (db *DB) blockIDAround(ctx context.Context, fwd bool, start time.Time, incl
 	return
 }
 
-func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (out []*pbeos.BlockWithRefs, err error) {
 	zlog.Debug("list blocks", zap.Uint32("high_block_num", highBlockNum), zap.Int("limit", limit))
 	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.EndOfBlocksTable(), limit)
 	for it.Next() {
-		blockRow := &pbrows.BlockRow{}
+		blockRow := &pbkv.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -215,13 +215,13 @@ func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (o
 	return
 }
 
-func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) (out []*pbeos.BlockWithRefs, err error) {
 	highBlockNum := blockNum + spread
 	lowBlockNum := blockNum - (spread + 1)
 	zlog.Debug("list sibling blocks", zap.Uint32("high_block_num", highBlockNum), zap.Uint32("low_block_num", lowBlockNum))
 	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.PackBlockNumPrefix(lowBlockNum), 0)
 	for it.Next() {
-		blockRow := &pbrows.BlockRow{}
+		blockRow := &pbkv.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -236,7 +236,7 @@ func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uin
 	return
 }
 
-func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbdeos.AccountCreationRef, error) {
+func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbeos.AccountCreationRef, error) {
 	value, err := db.store.Get(ctx, Keys.PackAccountKey(accountName))
 
 	if err == store.ErrNotFound {
@@ -247,9 +247,9 @@ func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbdeos.Accou
 		return nil, fmt.Errorf("unable to get account: %w", err)
 	}
 
-	acctRow := &pbrows.AccountRow{}
+	acctRow := &pbkv.AccountRow{}
 	db.dec.MustInto(value, acctRow)
-	return &pbdeos.AccountCreationRef{
+	return &pbeos.AccountCreationRef{
 		Account:       acctRow.Name,
 		Creator:       acctRow.Creator,
 		BlockNum:      uint64(eos.BlockNum(acctRow.BlockId)),
@@ -266,7 +266,7 @@ func (db *DB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) 
 
 	it := db.store.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), 0)
 	for it.Next() {
-		acctRow := &pbrows.AccountRow{}
+		acctRow := &pbkv.AccountRow{}
 		db.dec.MustInto(it.Item().Value, acctRow)
 		out = append(out, acctRow.Name)
 	}

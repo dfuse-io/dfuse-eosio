@@ -25,8 +25,8 @@ import (
 	"time"
 
 	"github.com/andreyvit/diff"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -50,8 +50,8 @@ func TestParseFromFile(t *testing.T) {
 
 			for {
 				out, err := cr.Read()
-				if out != nil && out.(*pbdeos.Block) != nil {
-					blk := out.(*pbdeos.Block)
+				if out != nil && out.(*pbeos.Block) != nil {
+					blk := out.(*pbeos.Block)
 
 					if len(buf.Bytes()) != 0 {
 						buf.Write([]byte("\n"))
@@ -112,8 +112,8 @@ func TestGeneratePBBlocks(t *testing.T) {
 
 	for {
 		out, err := cr.Read()
-		if out != nil && out.(*pbdeos.Block) != nil {
-			block := out.(*pbdeos.Block)
+		if out != nil && out.(*pbeos.Block) != nil {
+			block := out.(*pbeos.Block)
 
 			outputFile, err := os.Create(fmt.Sprintf("testdata/pbblocks/battlefield-block.%d.deos.pb", block.Number))
 			require.NoError(t, err)
@@ -156,39 +156,39 @@ func testReaderConsoleReader(t *testing.T, reader io.Reader, closer func()) *Con
 func Test_BlockRlimitOp(t *testing.T) {
 	tests := []struct {
 		line        string
-		expected    *pbdeos.RlimitOp
+		expected    *pbeos.RlimitOp
 		expectedErr error
 	}{
 		{
 			`RLIMIT_OP CONFIG INS {"cpu_limit_parameters":{"target":20000,"max":200000,"periods":120,"max_multiplier":1000,"contract_rate":{"numerator":99,"denominator":100},"expand_rate":{"numerator":1000,"denominator":999}},"net_limit_parameters":{"target":104857,"max":1048576,"periods":120,"max_multiplier":1000,"contract_rate":{"numerator":99,"denominator":100},"expand_rate":{"numerator":1000,"denominator":999}},"account_cpu_usage_average_window":172800,"account_net_usage_average_window":172800}`,
-			&pbdeos.RlimitOp{
-				Operation: pbdeos.RlimitOp_OPERATION_INSERT,
-				Kind: &pbdeos.RlimitOp_Config{
-					Config: &pbdeos.RlimitConfig{
-						CpuLimitParameters: &pbdeos.ElasticLimitParameters{
+			&pbeos.RlimitOp{
+				Operation: pbeos.RlimitOp_OPERATION_INSERT,
+				Kind: &pbeos.RlimitOp_Config{
+					Config: &pbeos.RlimitConfig{
+						CpuLimitParameters: &pbeos.ElasticLimitParameters{
 							Target:        20000,
 							Max:           200000,
 							Periods:       120,
 							MaxMultiplier: 1000,
-							ContractRate: &pbdeos.Ratio{
+							ContractRate: &pbeos.Ratio{
 								Numerator:   99,
 								Denominator: 100,
 							},
-							ExpandRate: &pbdeos.Ratio{
+							ExpandRate: &pbeos.Ratio{
 								Numerator:   1000,
 								Denominator: 999,
 							},
 						},
-						NetLimitParameters: &pbdeos.ElasticLimitParameters{
+						NetLimitParameters: &pbeos.ElasticLimitParameters{
 							Target:        104857,
 							Max:           1048576,
 							Periods:       120,
 							MaxMultiplier: 1000,
-							ContractRate: &pbdeos.Ratio{
+							ContractRate: &pbeos.Ratio{
 								Numerator:   99,
 								Denominator: 100,
 							},
-							ExpandRate: &pbdeos.Ratio{
+							ExpandRate: &pbeos.Ratio{
 								Numerator:   1000,
 								Denominator: 999,
 							},
@@ -202,16 +202,16 @@ func Test_BlockRlimitOp(t *testing.T) {
 		},
 		{
 			`RLIMIT_OP STATE INS {"average_block_net_usage":{"last_ordinal":1,"value_ex":2,"consumed":3},"average_block_cpu_usage":{"last_ordinal":4,"value_ex":5,"consumed":6},"pending_net_usage":7,"pending_cpu_usage":8,"total_net_weight":9,"total_cpu_weight":10,"total_ram_bytes":11,"virtual_net_limit":1048576,"virtual_cpu_limit":200000}`,
-			&pbdeos.RlimitOp{
-				Operation: pbdeos.RlimitOp_OPERATION_INSERT,
-				Kind: &pbdeos.RlimitOp_State{
-					State: &pbdeos.RlimitState{
-						AverageBlockNetUsage: &pbdeos.UsageAccumulator{
+			&pbeos.RlimitOp{
+				Operation: pbeos.RlimitOp_OPERATION_INSERT,
+				Kind: &pbeos.RlimitOp_State{
+					State: &pbeos.RlimitState{
+						AverageBlockNetUsage: &pbeos.UsageAccumulator{
 							LastOrdinal: 1,
 							ValueEx:     2,
 							Consumed:    3,
 						},
-						AverageBlockCpuUsage: &pbdeos.UsageAccumulator{
+						AverageBlockCpuUsage: &pbeos.UsageAccumulator{
 							LastOrdinal: 4,
 							ValueEx:     5,
 							Consumed:    6,
@@ -252,15 +252,15 @@ func Test_BlockRlimitOp(t *testing.T) {
 func Test_TraceRlimitOp(t *testing.T) {
 	tests := []struct {
 		line        string
-		expected    *pbdeos.RlimitOp
+		expected    *pbeos.RlimitOp
 		expectedErr error
 	}{
 		{
 			`RLIMIT_OP ACCOUNT_LIMITS INS {"owner":"eosio.ram","net_weight":-1,"cpu_weight":-1,"ram_bytes":-1}`,
-			&pbdeos.RlimitOp{
-				Operation: pbdeos.RlimitOp_OPERATION_INSERT,
-				Kind: &pbdeos.RlimitOp_AccountLimits{
-					AccountLimits: &pbdeos.RlimitAccountLimits{
+			&pbeos.RlimitOp{
+				Operation: pbeos.RlimitOp_OPERATION_INSERT,
+				Kind: &pbeos.RlimitOp_AccountLimits{
+					AccountLimits: &pbeos.RlimitAccountLimits{
 						Owner:     "eosio.ram",
 						NetWeight: -1,
 						CpuWeight: -1,
@@ -272,13 +272,13 @@ func Test_TraceRlimitOp(t *testing.T) {
 		},
 		{
 			`RLIMIT_OP ACCOUNT_USAGE UPD {"owner":"eosio","net_usage":{"last_ordinal":0,"value_ex":868696,"consumed":1},"cpu_usage":{"last_ordinal":0,"value_ex":572949,"consumed":101},"ram_usage":1181072}`,
-			&pbdeos.RlimitOp{
-				Operation: pbdeos.RlimitOp_OPERATION_UPDATE,
-				Kind: &pbdeos.RlimitOp_AccountUsage{
-					AccountUsage: &pbdeos.RlimitAccountUsage{
+			&pbeos.RlimitOp{
+				Operation: pbeos.RlimitOp_OPERATION_UPDATE,
+				Kind: &pbeos.RlimitOp_AccountUsage{
+					AccountUsage: &pbeos.RlimitAccountUsage{
 						Owner:    "eosio",
-						NetUsage: &pbdeos.UsageAccumulator{LastOrdinal: 0, ValueEx: 868696, Consumed: 1},
-						CpuUsage: &pbdeos.UsageAccumulator{LastOrdinal: 0, ValueEx: 572949, Consumed: 101},
+						NetUsage: &pbeos.UsageAccumulator{LastOrdinal: 0, ValueEx: 868696, Consumed: 1},
+						CpuUsage: &pbeos.UsageAccumulator{LastOrdinal: 0, ValueEx: 572949, Consumed: 101},
 						RamUsage: 1181072,
 					},
 				},
@@ -307,11 +307,11 @@ func Test_TraceRlimitOp(t *testing.T) {
 }
 
 func Test_readPermOp(t *testing.T) {
-	auth := &pbdeos.Authority{
+	auth := &pbeos.Authority{
 		Threshold: 1,
-		Accounts: []*pbdeos.PermissionLevelWeight{
+		Accounts: []*pbeos.PermissionLevelWeight{
 			{
-				Permission: &pbdeos.PermissionLevel{Actor: "eosio", Permission: "active"},
+				Permission: &pbeos.PermissionLevel{Actor: "eosio", Permission: "active"},
 				Weight:     1,
 			},
 		},
@@ -319,16 +319,16 @@ func Test_readPermOp(t *testing.T) {
 
 	tests := []struct {
 		line        string
-		expected    *pbdeos.PermOp
+		expected    *pbeos.PermOp
 		expectedErr error
 	}{
 		{
 			`PERM_OP INS 0 {"owner":"eosio.ins","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
-			&pbdeos.PermOp{
-				Operation:   pbdeos.PermOp_OPERATION_INSERT,
+			&pbeos.PermOp{
+				Operation:   pbeos.PermOp_OPERATION_INSERT,
 				ActionIndex: 0,
 				OldPerm:     nil,
-				NewPerm: &pbdeos.PermissionObject{
+				NewPerm: &pbeos.PermissionObject{
 					Owner:       "eosio.ins",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
@@ -339,16 +339,16 @@ func Test_readPermOp(t *testing.T) {
 		},
 		{
 			`PERM_OP UPD 0 {"old":{"owner":"eosio.old","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}},"new":{"owner":"eosio.new","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}}`,
-			&pbdeos.PermOp{
-				Operation:   pbdeos.PermOp_OPERATION_UPDATE,
+			&pbeos.PermOp{
+				Operation:   pbeos.PermOp_OPERATION_UPDATE,
 				ActionIndex: 0,
-				OldPerm: &pbdeos.PermissionObject{
+				OldPerm: &pbeos.PermissionObject{
 					Owner:       "eosio.old",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
 					Authority:   auth,
 				},
-				NewPerm: &pbdeos.PermissionObject{
+				NewPerm: &pbeos.PermissionObject{
 					Owner:       "eosio.new",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
@@ -359,10 +359,10 @@ func Test_readPermOp(t *testing.T) {
 		},
 		{
 			`PERM_OP REM 0 {"owner":"eosio.rem","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
-			&pbdeos.PermOp{
-				Operation:   pbdeos.PermOp_OPERATION_REMOVE,
+			&pbeos.PermOp{
+				Operation:   pbeos.PermOp_OPERATION_REMOVE,
 				ActionIndex: 0,
-				OldPerm: &pbdeos.PermissionObject{
+				OldPerm: &pbeos.PermissionObject{
 					Owner:       "eosio.rem",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),

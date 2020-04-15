@@ -17,13 +17,13 @@ package bigt
 import (
 	"encoding/json"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
 )
 
-func (db *EOSDatabase) storeNewAccount(blk *pbdeos.Block, trxTrace *pbdeos.TransactionTrace, actionTrace *pbdeos.ActionTrace) {
+func (db *EOSDatabase) storeNewAccount(blk *pbeos.Block, trxTrace *pbeos.TransactionTrace, actionTrace *pbeos.ActionTrace) {
 	var newAccount *system.NewAccount
 	err := eos.UnmarshalBinary(actionTrace.Action.GetRawData(), &newAccount)
 	if err != nil {

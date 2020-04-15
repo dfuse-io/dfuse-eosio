@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 )
 
 func (db *EOSDatabase) flushIfNeeded(ctx context.Context) error {
@@ -38,7 +38,7 @@ func (db *EOSDatabase) flushIfNeeded(ctx context.Context) error {
 
 // TODO we should lowercase all methods under db.Blocks or itself to prevent people from not getting the autoflush
 // TODO get context right here
-func (db *EOSDatabase) PutBlock(ctx context.Context, blk *pbdeos.Block) error {
+func (db *EOSDatabase) PutBlock(ctx context.Context, blk *pbeos.Block) error {
 	btKey := Keys.Block(blk.Id)
 
 	db.Blocks.PutBlock(btKey, blk)
@@ -61,7 +61,7 @@ func (db *EOSDatabase) PutBlock(ctx context.Context, blk *pbdeos.Block) error {
 	return nil
 }
 
-func (db *EOSDatabase) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbdeos.Block) error {
+func (db *EOSDatabase) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbeos.Block) error {
 	blockID := blk.ID()
 	blockTime := blk.MustTime()
 
@@ -112,7 +112,7 @@ func (db *EOSDatabase) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (
 	return db.GetClosestIrreversibleIDAtBlockNum(ctx, math.MaxUint32)
 }
 
-func getTransactionRefs(blk *pbdeos.Block) *pbdeos.TransactionRefs {
+func getTransactionRefs(blk *pbeos.Block) *pbeos.TransactionRefs {
 	var hashes [][]byte
 	for _, trxOp := range blk.ImplicitTransactionOps {
 		hashes = append(hashes, mustHexDecode(trxOp.TransactionId))
@@ -122,18 +122,18 @@ func getTransactionRefs(blk *pbdeos.Block) *pbdeos.TransactionRefs {
 		hashes = append(hashes, mustHexDecode(trxReceipt.Id))
 	}
 
-	return &pbdeos.TransactionRefs{
+	return &pbeos.TransactionRefs{
 		Hashes: hashes,
 	}
 }
 
-func getTransactionTraceRefs(blk *pbdeos.Block) *pbdeos.TransactionRefs {
+func getTransactionTraceRefs(blk *pbeos.Block) *pbeos.TransactionRefs {
 	var hashes [][]byte
 	for _, trxTrace := range blk.TransactionTraces {
 		hashes = append(hashes, mustHexDecode(trxTrace.Id))
 	}
 
-	return &pbdeos.TransactionRefs{
+	return &pbeos.TransactionRefs{
 		Hashes: hashes,
 	}
 }

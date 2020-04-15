@@ -22,8 +22,8 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/search"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
@@ -71,7 +71,7 @@ func trxID(num int) string {
 	}
 }
 
-func ToBStreamBlock(block *pbdeos.Block) (*bstream.Block, error) {
+func ToBStreamBlock(block *pbeos.Block) (*bstream.Block, error) {
 	time, _ := ptypes.Timestamp(block.Header.Timestamp)
 	payload, err := proto.Marshal(block)
 	if err != nil {
@@ -89,27 +89,27 @@ func ToBStreamBlock(block *pbdeos.Block) (*bstream.Block, error) {
 	}, nil
 }
 
-func newBlock(id, previous, trxID string, account string) *pbdeos.Block {
+func newBlock(id, previous, trxID string, account string) *pbeos.Block {
 
-	return &pbdeos.Block{
+	return &pbeos.Block{
 		Id:     id,
 		Number: eos.BlockNum(id),
-		Header: &pbdeos.BlockHeader{
+		Header: &pbeos.BlockHeader{
 			Previous:  previous,
 			Timestamp: &timestamp.Timestamp{Nanos: 0, Seconds: 0},
 		},
-		TransactionTraces: []*pbdeos.TransactionTrace{
+		TransactionTraces: []*pbeos.TransactionTrace{
 			{
 				Id: trxID,
-				Receipt: &pbdeos.TransactionReceiptHeader{
-					Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				Receipt: &pbeos.TransactionReceiptHeader{
+					Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				},
-				ActionTraces: []*pbdeos.ActionTrace{
+				ActionTraces: []*pbeos.ActionTrace{
 					{
-						Receipt: &pbdeos.ActionReceipt{
+						Receipt: &pbeos.ActionReceipt{
 							Receiver: "receiver.1",
 						},
-						Action: &pbdeos.Action{
+						Action: &pbeos.Action{
 							Account: account,
 							Name:    "transfer",
 						},

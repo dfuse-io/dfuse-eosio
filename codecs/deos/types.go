@@ -15,7 +15,7 @@
 package deos
 
 import (
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/eoscanada/eos-go"
 )
 
@@ -95,8 +95,8 @@ type permissionObject struct {
 	Auth        *eos.Authority  `json:"auth"`
 }
 
-func (p *permissionObject) ToProto() *pbdeos.PermissionObject {
-	return &pbdeos.PermissionObject{
+func (p *permissionObject) ToProto() *pbeos.PermissionObject {
+	return &pbeos.PermissionObject{
 		Owner:       string(p.Owner),
 		Name:        p.Name,
 		LastUpdated: mustProtoTimestamp(p.LastUpdated.Time),
@@ -117,9 +117,9 @@ type rlimitState struct {
 	VirtualCpuLimit      eos.Uint64        `json:"virtual_cpu_limit"`
 }
 
-func (s *rlimitState) ToProto() *pbdeos.RlimitOp_State {
-	return &pbdeos.RlimitOp_State{
-		State: &pbdeos.RlimitState{
+func (s *rlimitState) ToProto() *pbeos.RlimitOp_State {
+	return &pbeos.RlimitOp_State{
+		State: &pbeos.RlimitState{
 			AverageBlockNetUsage: s.AverageBlockNetUsage.ToProto(),
 			AverageBlockCpuUsage: s.AverageBlockCpuUsage.ToProto(),
 			PendingNetUsage:      uint64(s.PendingNetUsage),
@@ -141,9 +141,9 @@ type rlimitConfig struct {
 	AccountNetUsageAverageWindow uint32                 `json:"account_net_usage_average_window"`
 }
 
-func (c *rlimitConfig) ToProto() *pbdeos.RlimitOp_Config {
-	return &pbdeos.RlimitOp_Config{
-		Config: &pbdeos.RlimitConfig{
+func (c *rlimitConfig) ToProto() *pbeos.RlimitOp_Config {
+	return &pbeos.RlimitOp_Config{
+		Config: &pbeos.RlimitConfig{
 			CpuLimitParameters:           c.CPULimitParameters.ToProto(),
 			NetLimitParameters:           c.NetLimitParameters.ToProto(),
 			AccountCpuUsageAverageWindow: c.AccountCpuUsageAverageWindow,
@@ -159,9 +159,9 @@ type rlimitAccountLimits struct {
 	RamBytes  eos.Int64       `json:"ram_bytes"`
 }
 
-func (u *rlimitAccountLimits) ToProto() *pbdeos.RlimitOp_AccountLimits {
-	return &pbdeos.RlimitOp_AccountLimits{
-		AccountLimits: &pbdeos.RlimitAccountLimits{
+func (u *rlimitAccountLimits) ToProto() *pbeos.RlimitOp_AccountLimits {
+	return &pbeos.RlimitOp_AccountLimits{
+		AccountLimits: &pbeos.RlimitAccountLimits{
 			Owner:     string(u.Owner),
 			NetWeight: int64(u.NetWeight),
 			CpuWeight: int64(u.CpuWeight),
@@ -177,9 +177,9 @@ type rlimitAccountUsage struct {
 	RamUsage eos.Uint64        `json:"ram_usage"`
 }
 
-func (c *rlimitAccountUsage) ToProto() *pbdeos.RlimitOp_AccountUsage {
-	return &pbdeos.RlimitOp_AccountUsage{
-		AccountUsage: &pbdeos.RlimitAccountUsage{
+func (c *rlimitAccountUsage) ToProto() *pbeos.RlimitOp_AccountUsage {
+	return &pbeos.RlimitOp_AccountUsage{
+		AccountUsage: &pbeos.RlimitAccountUsage{
 			Owner:    string(c.Owner),
 			NetUsage: c.NetUsage.ToProto(),
 			CpuUsage: c.CpuUsage.ToProto(),
@@ -194,8 +194,8 @@ type usageAccumulator struct {
 	Consumed    eos.Uint64 `json:"consumed"`
 }
 
-func (a *usageAccumulator) ToProto() *pbdeos.UsageAccumulator {
-	return &pbdeos.UsageAccumulator{
+func (a *usageAccumulator) ToProto() *pbeos.UsageAccumulator {
+	return &pbeos.UsageAccumulator{
 		LastOrdinal: a.LastOrdinal,
 		ValueEx:     uint64(a.ValueEx),
 		Consumed:    uint64(a.Consumed),
@@ -211,8 +211,8 @@ type elasticLimitParameters struct {
 	ExpandRate    ratio      `json:"expand_rate"`
 }
 
-func (p *elasticLimitParameters) ToProto() *pbdeos.ElasticLimitParameters {
-	return &pbdeos.ElasticLimitParameters{
+func (p *elasticLimitParameters) ToProto() *pbeos.ElasticLimitParameters {
+	return &pbeos.ElasticLimitParameters{
 		Target:        uint64(p.Target),
 		Max:           uint64(p.Max),
 		Periods:       p.Periods,
@@ -227,8 +227,8 @@ type ratio struct {
 	Denominator eos.Uint64 `json:"denominator"`
 }
 
-func (r *ratio) ToProto() *pbdeos.Ratio {
-	return &pbdeos.Ratio{
+func (r *ratio) ToProto() *pbeos.Ratio {
+	return &pbeos.Ratio{
 		Numerator:   uint64(r.Numerator),
 		Denominator: uint64(r.Denominator),
 	}

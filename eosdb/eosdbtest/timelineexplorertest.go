@@ -19,8 +19,8 @@ import (
 	"testing"
 	"time"
 
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/kvdb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,25 +50,25 @@ func TestBlockIDAt(t *testing.T, driverFactory DriverFactory) {
 
 	tests := []struct {
 		name          string
-		blocks        []*pbdeos.Block
+		blocks        []*pbeos.Block
 		time          time.Time
 		expectBlockId string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -78,18 +78,18 @@ func TestBlockIDAt(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "no block that matches",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -99,7 +99,7 @@ func TestBlockIDAt(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name:      "no blocks",
-			blocks:    []*pbdeos.Block{},
+			blocks:    []*pbeos.Block{},
 			time:      fourpm,
 			expectErr: kvdb.ErrNotFound,
 		},
@@ -136,7 +136,7 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 
 	tests := []struct {
 		name          string
-		blocks        []*pbdeos.Block
+		blocks        []*pbeos.Block
 		time          time.Time
 		inclusive     bool
 		expectBlockId string
@@ -145,18 +145,18 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 	}{
 		{
 			name: "sunny path",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(fourpm),
 					},
 				},
@@ -167,18 +167,18 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "no block that matches",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -188,18 +188,18 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "should not match block when not inclusive",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -210,18 +210,18 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "should  match block when inclusive",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -233,7 +233,7 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name:      "no blocks",
-			blocks:    []*pbdeos.Block{},
+			blocks:    []*pbeos.Block{},
 			time:      fourpm,
 			expectErr: kvdb.ErrNotFound,
 		},
@@ -271,7 +271,7 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 
 	tests := []struct {
 		name          string
-		blocks        []*pbdeos.Block
+		blocks        []*pbeos.Block
 		time          time.Time
 		inclusive     bool
 		expectBlockId string
@@ -280,18 +280,18 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 	}{
 		{
 			name: "no block that matches",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(fourpm),
 					},
 				},
@@ -301,18 +301,18 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "sunny path",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(fourpm),
 					},
 				},
@@ -323,18 +323,18 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "should not match block when not inclusive",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000009aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -345,18 +345,18 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name: "should  match block when inclusive",
-			blocks: []*pbdeos.Block{
+			blocks: []*pbeos.Block{
 				{
 					Id:     "00000008aa",
 					Number: 8,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(noon),
 					},
 				},
 				{
 					Id:     "00000003aa",
 					Number: 3,
-					Header: &pbdeos.BlockHeader{
+					Header: &pbeos.BlockHeader{
 						Timestamp: toTimestamp(twopm),
 					},
 				},
@@ -368,7 +368,7 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		},
 		{
 			name:      "no blocks",
-			blocks:    []*pbdeos.Block{},
+			blocks:    []*pbeos.Block{},
 			time:      fourpm,
 			expectErr: kvdb.ErrNotFound,
 		},

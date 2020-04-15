@@ -21,8 +21,8 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/kvdb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 )
 
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
@@ -35,7 +35,7 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 	return id, nil
 }
 
-func (db *DB) GetBlock(ctx context.Context, id string) (*pbdeos.BlockWithRefs, error) {
+func (db *DB) GetBlock(ctx context.Context, id string) (*pbeos.BlockWithRefs, error) {
 	// TODO: did this function support prefix search on the block ID?  Is it important?
 	// if id is full length, then check for equality, otherwise for LIKE = '?%'
 	q := getBlockSelectFields + `WHERE blks.id = ? LIMIT 1`
@@ -62,9 +62,9 @@ SELECT blks.id, blks.block, blks.trxRefs, blks.traceRefs, blks.implicitTrxRefs, 
     LEFT JOIN irrblks ON (blks.id = irrblks.id)
 `
 
-func (db *DB) scanBlockRows(rows *sql.Rows) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) scanBlockRows(rows *sql.Rows) (out []*pbeos.BlockWithRefs, err error) {
 	for rows.Next() {
-		blk := &pbdeos.BlockWithRefs{}
+		blk := &pbeos.BlockWithRefs{}
 
 		var blockData, rawTrxRefs, rawTraceRefs, rawImplicitTrxRefs []byte
 		var irr *bool
@@ -77,7 +77,7 @@ func (db *DB) scanBlockRows(rows *sql.Rows) (out []*pbdeos.BlockWithRefs, err er
 
 		blk.Irreversible = eosdb.BoolPtr(irr)
 
-		blk.Block = &pbdeos.Block{}
+		blk.Block = &pbeos.Block{}
 		if err := db.dec.Into(blockData, blk.Block); err != nil {
 			return nil, fmt.Errorf("decode block: %w", err)
 		}
@@ -86,15 +86,15 @@ func (db *DB) scanBlockRows(rows *sql.Rows) (out []*pbdeos.BlockWithRefs, err er
 		// the dtrx and trx mixed in the refs saved in the DB.  In this Driver
 		// implementation, we split them in storage, so we can reconstruct the
 		// full block without losing any information.
-		blk.TransactionTraceRefs = &pbdeos.TransactionRefs{}
+		blk.TransactionTraceRefs = &pbeos.TransactionRefs{}
 		if err := db.dec.Into(rawTraceRefs, blk.TransactionTraceRefs); err != nil {
 			return nil, fmt.Errorf("decode trace refs: %w", err)
 		}
-		blk.TransactionRefs = &pbdeos.TransactionRefs{}
+		blk.TransactionRefs = &pbeos.TransactionRefs{}
 		if err := db.dec.Into(rawTrxRefs, blk.TransactionRefs); err != nil {
 			return nil, fmt.Errorf("decode trx refs: %w", err)
 		}
-		blk.ImplicitTransactionRefs = &pbdeos.TransactionRefs{}
+		blk.ImplicitTransactionRefs = &pbeos.TransactionRefs{}
 		if err := db.dec.Into(rawImplicitTrxRefs, blk.ImplicitTransactionRefs); err != nil {
 			return nil, fmt.Errorf("decode dtrxrefs: %w", err)
 		}
@@ -111,7 +111,7 @@ func (db *DB) scanBlockRows(rows *sql.Rows) (out []*pbdeos.BlockWithRefs, err er
 	return
 }
 
-func (db *DB) GetBlockByNum(ctx context.Context, num uint32) ([]*pbdeos.BlockWithRefs, error) {
+func (db *DB) GetBlockByNum(ctx context.Context, num uint32) ([]*pbeos.BlockWithRefs, error) {
 	q := getBlockSelectFields + `WHERE blks.number = ?`
 	rows, err := db.db.QueryContext(ctx, q, num)
 	if err != nil {
@@ -174,7 +174,7 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 	return ref, nil
 }
 
-func (db *DB) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) (out []*pbeos.BlockWithRefs, err error) {
 	q := getBlockSelectFields + `
 		WHERE blks.number <= ?
 		ORDER BY blks.number DESC
@@ -192,7 +192,7 @@ func (db *DB) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) (
 
 	return
 }
-func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) (out []*pbeos.BlockWithRefs, err error) {
 
 	startBlockNum := blockNum + spread
 	endBlockNum := blockNum - (spread + 1)

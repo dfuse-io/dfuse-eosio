@@ -23,16 +23,16 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/logging"
 	abicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/graph-gophers/graphql-go"
 	"go.uber.org/zap"
 )
 
 type RAMOp struct {
-	op *pbdeos.RAMOp
+	op *pbeos.RAMOp
 }
 
 func (o *RAMOp) Operation() string {
@@ -46,7 +46,7 @@ func (o *RAMOp) Delta() types.Int64  { return types.Int64(o.op.Delta) }
 func (o *RAMOp) Usage() types.Uint64 { return types.Uint64(o.op.Usage) }
 
 type DTrxOp struct {
-	op *pbdeos.DTrxOp
+	op *pbeos.DTrxOp
 }
 
 func (o *DTrxOp) Operation() string           { return o.op.LegacyOperation() }
@@ -64,7 +64,7 @@ func (o *DTrxOp) Transaction() *Transaction {
 }
 
 type TableOp struct {
-	op *pbdeos.TableOp
+	op *pbeos.TableOp
 }
 
 func (o *TableOp) Operation() string { return o.op.LegacyOperation() }
@@ -106,13 +106,13 @@ func (t *DecodedObject) Error() *string {
 }
 
 type DBOp struct {
-	op             *pbdeos.DBOp
+	op             *pbeos.DBOp
 	abiCodecClient abicodec.DecoderClient
 	blockNum       uint64
 	key            *DBOpKey
 }
 
-func newDBOp(op *pbdeos.DBOp, blockNum uint64, abiCodecClient abicodec.DecoderClient) *DBOp {
+func newDBOp(op *pbeos.DBOp, blockNum uint64, abiCodecClient abicodec.DecoderClient) *DBOp {
 	return &DBOp{
 		blockNum:       blockNum,
 		abiCodecClient: abiCodecClient,

@@ -22,8 +22,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbrows "github.com/dfuse-io/dfuse-eosio/eosdb/kv/pb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbkv "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosdb/kv/v1"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
@@ -40,7 +40,7 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 	return db.GetClosestIrreversibleIDAtBlockNum(ctx, math.MaxUint32)
 }
 
-func (db *DB) PutBlock(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) PutBlock(ctx context.Context, blk *pbeos.Block) error {
 	if err := db.putTransactions(ctx, blk); err != nil {
 		return fmt.Errorf("put block: unable to putTransactions: %w", err)
 	}
@@ -56,7 +56,7 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbdeos.Block) error {
 	return db.putBlock(ctx, blk)
 }
 
-func (db *DB) putTransactions(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) putTransactions(ctx context.Context, blk *pbeos.Block) error {
 	for _, trxReceipt := range blk.Transactions {
 		if trxReceipt.PackedTransaction == nil {
 			// This means we deal with a deferred transaction receipt, and that it has been handled through DtrxOps already
@@ -69,11 +69,11 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbdeos.Block) error {
 		}
 
 		signedTrx := deos.SignedTransactionToDEOS(signedTransaction)
-		pubKeyProto := &pbdeos.PublicKeys{
+		pubKeyProto := &pbeos.PublicKeys{
 			PublicKeys: deos.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
 		}
 
-		trxRow := &pbrows.TrxRow{
+		trxRow := &pbkv.TrxRow{
 			Receipt:    trxReceipt,
 			SignedTrx:  signedTrx,
 			PublicKeys: pubKeyProto,
@@ -91,14 +91,14 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbdeos.Block) error {
 	return nil
 }
 
-func (db *DB) putTransactionTraces(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) putTransactionTraces(ctx context.Context, blk *pbeos.Block) error {
 	for _, trxTrace := range blk.TransactionTraces {
 
 		// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
 		for _, dtrxOp := range trxTrace.DtrxOps {
 			extDtrxOp := dtrxOp.ToExtDTrxOp(blk, trxTrace)
 
-			dtrxRow := &pbrows.DtrxRow{}
+			dtrxRow := &pbkv.DtrxRow{}
 			if dtrxOp.IsCreateOperation() {
 				dtrxRow.SignedTrx = dtrxOp.Transaction
 				dtrxRow.CreatedBy = extDtrxOp
@@ -114,7 +114,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbdeos.Block) error
 			}
 		}
 
-		trxTraceRow := &pbrows.TrxTraceRow{
+		trxTraceRow := &pbkv.TrxTraceRow{
 			BlockHeader: blk.Header,
 			TrxTrace:    trxTrace,
 		}
@@ -128,13 +128,13 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbdeos.Block) error
 	return nil
 }
 
-func (db *DB) putNewAccount(ctx context.Context, blk *pbdeos.Block, trace *pbdeos.TransactionTrace, act *pbdeos.ActionTrace) error {
+func (db *DB) putNewAccount(ctx context.Context, blk *pbeos.Block, trace *pbeos.TransactionTrace, act *pbeos.ActionTrace) error {
 	t, err := ptypes.TimestampProto(blk.MustTime())
 	if err != nil {
 		return fmt.Errorf("block time to proto: %w", err)
 	}
 
-	acctRow := &pbrows.AccountRow{
+	acctRow := &pbkv.AccountRow{
 		Name:      act.GetData("name").String(),
 		Creator:   act.GetData("creator").String(),
 		BlockTime: t,
@@ -150,10 +150,10 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbdeos.Block, trace *pbdeo
 	return nil
 }
 
-func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbeos.Block) error {
 
 	for _, trxOp := range blk.ImplicitTransactionOps {
-		implTrxRow := &pbrows.ImplicitTrxRow{
+		implTrxRow := &pbkv.ImplicitTrxRow{
 			Name:      trxOp.Name,
 			SignedTrx: trxOp.Transaction,
 		}
@@ -169,18 +169,18 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbdeos.Block) er
 	return nil
 }
 
-func (db *DB) getRefs(blk *pbdeos.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbdeos.TransactionRefs) {
-	implicitTrxRefs = &pbdeos.TransactionRefs{}
+func (db *DB) getRefs(blk *pbeos.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbeos.TransactionRefs) {
+	implicitTrxRefs = &pbeos.TransactionRefs{}
 	for _, trxOp := range blk.ImplicitTransactionOps {
 		implicitTrxRefs.Hashes = append(implicitTrxRefs.Hashes, eosdb.MustHexDecode(trxOp.TransactionId))
 	}
 
-	trxRefs = &pbdeos.TransactionRefs{}
+	trxRefs = &pbeos.TransactionRefs{}
 	for _, trx := range blk.Transactions {
 		trxRefs.Hashes = append(trxRefs.Hashes, eosdb.MustHexDecode(trx.Id))
 	}
 
-	tracesRefs = &pbdeos.TransactionRefs{}
+	tracesRefs = &pbeos.TransactionRefs{}
 	for _, trx := range blk.TransactionTraces {
 		tracesRefs.Hashes = append(tracesRefs.Hashes, eosdb.MustHexDecode(trx.Id))
 	}
@@ -188,7 +188,7 @@ func (db *DB) getRefs(blk *pbdeos.Block) (implicitTrxRefs, trxRefs, tracesRefs *
 	return
 }
 
-func (db *DB) putBlock(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) putBlock(ctx context.Context, blk *pbeos.Block) error {
 	implicitTrxRefs, trxRefs, tracesRefs := db.getRefs(blk)
 
 	holdTransactions := blk.Transactions
@@ -199,7 +199,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbdeos.Block) error {
 	blk.Transactions = nil
 	blk.TransactionTraces = nil
 
-	blockRow := &pbrows.BlockRow{
+	blockRow := &pbkv.BlockRow{
 		Block:           blk,
 		ImplicitTrxRefs: implicitTrxRefs,
 		TrxRefs:         trxRefs,
@@ -221,7 +221,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbdeos.Block) error {
 
 var oneByte = []byte{0x01}
 
-func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbdeos.Block) error {
+func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbeos.Block) error {
 	blockTime := blk.MustTime()
 
 	if err := db.store.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {

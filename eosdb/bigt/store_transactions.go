@@ -19,10 +19,10 @@ import (
 
 	//"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 )
 
-func (db *EOSDatabase) storeTransactions(blk *pbdeos.Block) (map[string]bool, error) {
+func (db *EOSDatabase) storeTransactions(blk *pbeos.Block) (map[string]bool, error) {
 	blockID := blk.Id
 	transactionKeys := map[string]bool{}
 

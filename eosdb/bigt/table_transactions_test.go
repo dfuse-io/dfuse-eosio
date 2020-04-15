@@ -17,7 +17,7 @@ package bigt
 import (
 	"testing"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,7 +51,7 @@ func TestTransactionStitch(t *testing.T) {
 		name             string
 		rows             []*TransactionRow
 		inCanonicalChain func(blockID string) bool
-		expected         *pbdeos.TransactionLifecycle
+		expected         *pbeos.TransactionLifecycle
 	}{
 		{
 			name:     "1_Empty",
@@ -63,22 +63,22 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				executedTransactionRow(tbl, "trx_1", "1", true),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "trx_1",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -87,21 +87,21 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				executedTransactionRow(tbl, "trx_1", "1", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "trx_1",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: false,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -119,22 +119,22 @@ func TestTransactionStitch(t *testing.T) {
 				executedTransactionRow(tbl, "trx_1", "1a", true),
 				executedTransactionRow(tbl, "trx_1", "1b", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "trx_1",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -145,22 +145,22 @@ func TestTransactionStitch(t *testing.T) {
 				executedTransactionRow(tbl, "trx_1", "1a", true),
 				executedTransactionRow(tbl, "trx_1", "1b", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "trx_1",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -169,15 +169,15 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				createdByTransactionRow(tbl, "trx_1", "1", "trx_2", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1",
 				},
 				ExecutionIrreversible: false,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -196,14 +196,14 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1b", "trx_2", false),
 			},
 			inCanonicalChain: func(blockID string) bool { return blockID == "1a" },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1a",
 				},
-				TransactionStatus: pbdeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+				TransactionStatus: pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
 				PublicKeys:        []string{},
 			},
 		},
@@ -213,20 +213,20 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1", "trx_2", true),
 				canceledByTransactionRow(tbl, "trx_3", "3", "trx_2", true),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1",
 				},
-				CanceledBy: &pbdeos.ExtDTrxOp{
+				CanceledBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_3",
 					BlockId:             "3",
 				},
 				CreationIrreversible:    true,
 				CancelationIrreversible: true,
-				TransactionStatus:       pbdeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
+				TransactionStatus:       pbeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
 				PublicKeys:              []string{},
 			},
 		},
@@ -236,19 +236,19 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1", "trx_2", true),
 				canceledByTransactionRow(tbl, "trx_3", "3", "trx_2", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1",
 				},
-				CanceledBy: &pbdeos.ExtDTrxOp{
+				CanceledBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_3",
 					BlockId:             "3",
 				},
 				CreationIrreversible: true,
-				TransactionStatus:    pbdeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
+				TransactionStatus:    pbeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
 				PublicKeys:           []string{},
 			},
 		},
@@ -259,15 +259,15 @@ func TestTransactionStitch(t *testing.T) {
 				canceledByTransactionRow(tbl, "trx_3", "3", "trx_2", false),
 			},
 			inCanonicalChain: alwaysOutOfChain,
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1",
 				},
 				CreationIrreversible: true,
-				TransactionStatus:    pbdeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+				TransactionStatus:    pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
 				PublicKeys:           []string{},
 			},
 		},
@@ -278,19 +278,19 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1b", "trx_2", false),
 				canceledByTransactionRow(tbl, "trx_3", "3a", "trx_2", false),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1a",
 				},
-				CanceledBy: &pbdeos.ExtDTrxOp{
+				CanceledBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_3",
 					BlockId:             "3a",
 				},
 				CreationIrreversible: true,
-				TransactionStatus:    pbdeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
+				TransactionStatus:    pbeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED,
 				PublicKeys:           []string{},
 			},
 		},
@@ -300,15 +300,15 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1a", "trx_2", true),
 				{
 					Key:         Keys.Transaction("11", "2a"),
-					BlockHeader: &pbdeos.BlockHeader{},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					BlockHeader: &pbeos.BlockHeader{},
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "2a",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 						},
-						DtrxOps: []*pbdeos.DTrxOp{},
-						DbOps:   []*pbdeos.DBOp{},
-						RamOps:  []*pbdeos.RAMOp{},
+						DtrxOps: []*pbeos.DTrxOp{},
+						DbOps:   []*pbeos.DBOp{},
+						RamOps:  []*pbeos.RAMOp{},
 					},
 					Irreversible: true,
 					Written:      true,
@@ -316,26 +316,26 @@ func TestTransactionStitch(t *testing.T) {
 				canceledByTransactionRow(tbl, "trx_3", "3a", "trx_2", false),
 			},
 			inCanonicalChain: func(blockID string) bool { return blockID != "3a" },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				Transaction: &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "2a",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1a",
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -345,9 +345,9 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				{
 					Key:         Keys.Transaction("11", "1a"),
-					BlockHeader: &pbdeos.BlockHeader{},
-					Transaction: &pbdeos.SignedTransaction{},
-					CreatedBy: &pbdeos.ExtDTrxOp{
+					BlockHeader: &pbeos.BlockHeader{},
+					Transaction: &pbeos.SignedTransaction{},
+					CreatedBy: &pbeos.ExtDTrxOp{
 						SourceTransactionId: "10",
 						BlockId:             "1a",
 					},
@@ -356,47 +356,47 @@ func TestTransactionStitch(t *testing.T) {
 				},
 				{
 					Key:         Keys.Transaction("11", "2a"),
-					BlockHeader: &pbdeos.BlockHeader{},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					BlockHeader: &pbeos.BlockHeader{},
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "11",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 						},
 						Elapsed:      20,
-						DtrxOps:      []*pbdeos.DTrxOp{},
-						DbOps:        []*pbdeos.DBOp{{ActionIndex: 1}},
-						RamOps:       []*pbdeos.RAMOp{{ActionIndex: 2}},
-						TableOps:     []*pbdeos.TableOp{{ActionIndex: 3}},
-						CreationTree: []*pbdeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
+						DtrxOps:      []*pbeos.DTrxOp{},
+						DbOps:        []*pbeos.DBOp{{ActionIndex: 1}},
+						RamOps:       []*pbeos.RAMOp{{ActionIndex: 2}},
+						TableOps:     []*pbeos.TableOp{{ActionIndex: 3}},
+						CreationTree: []*pbeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
 					},
 					Irreversible: false,
 					Written:      true,
 				},
 			},
 			inCanonicalChain: func(blockID string) bool { return true },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "11",
-				Transaction: &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				Transaction: &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "11",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
 					Elapsed:      20,
-					DtrxOps:      []*pbdeos.DTrxOp{},
-					DbOps:        []*pbdeos.DBOp{{ActionIndex: 1}},
-					RamOps:       []*pbdeos.RAMOp{{ActionIndex: 2}},
-					TableOps:     []*pbdeos.TableOp{{ActionIndex: 3}},
-					CreationTree: []*pbdeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
+					DtrxOps:      []*pbeos.DTrxOp{},
+					DbOps:        []*pbeos.DBOp{{ActionIndex: 1}},
+					RamOps:       []*pbeos.RAMOp{{ActionIndex: 2}},
+					TableOps:     []*pbeos.TableOp{{ActionIndex: 3}},
+					CreationTree: []*pbeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
 				},
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "10",
 					BlockId:             "1a",
 				},
 				ExecutionIrreversible: false,
 				CreationIrreversible:  false,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -406,26 +406,26 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				{
 					Key:         Keys.Transaction("11", "1a"),
-					BlockHeader: &pbdeos.BlockHeader{},
-					Transaction: &pbdeos.SignedTransaction{},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					BlockHeader: &pbeos.BlockHeader{},
+					Transaction: &pbeos.SignedTransaction{},
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "11",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
 						},
 						Elapsed: 10,
-						DtrxOps: []*pbdeos.DTrxOp{{
-							Operation:     pbdeos.DTrxOp_OPERATION_PUSH_CREATE,
+						DtrxOps: []*pbeos.DTrxOp{{
+							Operation:     pbeos.DTrxOp_OPERATION_PUSH_CREATE,
 							TransactionId: "11",
 						}},
-						RamOps: []*pbdeos.RAMOp{{Operation: pbdeos.RAMOp_OPERATION_CREATE_TABLE}},
+						RamOps: []*pbeos.RAMOp{{Operation: pbeos.RAMOp_OPERATION_CREATE_TABLE}},
 
 						// Those are not actually possible in a real case, we put them here to ensure they do NOT cumulate with real execution ones
-						DbOps:        []*pbdeos.DBOp{{Operation: pbdeos.DBOp_OPERATION_INSERT}},
-						TableOps:     []*pbdeos.TableOp{{Operation: pbdeos.TableOp_OPERATION_INSERT}},
-						CreationTree: []*pbdeos.CreationFlatNode{{CreatorActionIndex: -1, ExecutionActionIndex: 0}},
+						DbOps:        []*pbeos.DBOp{{Operation: pbeos.DBOp_OPERATION_INSERT}},
+						TableOps:     []*pbeos.TableOp{{Operation: pbeos.TableOp_OPERATION_INSERT}},
+						CreationTree: []*pbeos.CreationFlatNode{{CreatorActionIndex: -1, ExecutionActionIndex: 0}},
 					},
-					CreatedBy: &pbdeos.ExtDTrxOp{
+					CreatedBy: &pbeos.ExtDTrxOp{
 						SourceTransactionId: "11",
 						BlockId:             "1a",
 					},
@@ -434,49 +434,49 @@ func TestTransactionStitch(t *testing.T) {
 				},
 				{
 					Key:         Keys.Transaction("11", "2a"),
-					BlockHeader: &pbdeos.BlockHeader{},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					BlockHeader: &pbeos.BlockHeader{},
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "11",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 						},
 						Elapsed:      20,
-						DtrxOps:      []*pbdeos.DTrxOp{},
-						DbOps:        []*pbdeos.DBOp{{ActionIndex: 1}},
-						RamOps:       []*pbdeos.RAMOp{{ActionIndex: 2}},
-						TableOps:     []*pbdeos.TableOp{{ActionIndex: 3}},
-						CreationTree: []*pbdeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
+						DtrxOps:      []*pbeos.DTrxOp{},
+						DbOps:        []*pbeos.DBOp{{ActionIndex: 1}},
+						RamOps:       []*pbeos.RAMOp{{ActionIndex: 2}},
+						TableOps:     []*pbeos.TableOp{{ActionIndex: 3}},
+						CreationTree: []*pbeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
 					},
 					Irreversible: false,
 					Written:      true,
 				},
 			},
 			inCanonicalChain: func(blockID string) bool { return true },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "11",
-				Transaction: &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				Transaction: &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "11",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
 					Elapsed:      20,
-					DtrxOps:      []*pbdeos.DTrxOp{},
-					DbOps:        []*pbdeos.DBOp{{ActionIndex: 1}},
-					RamOps:       []*pbdeos.RAMOp{{ActionIndex: 2}},
-					TableOps:     []*pbdeos.TableOp{{ActionIndex: 3}},
-					CreationTree: []*pbdeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
+					DtrxOps:      []*pbeos.DTrxOp{},
+					DbOps:        []*pbeos.DBOp{{ActionIndex: 1}},
+					RamOps:       []*pbeos.RAMOp{{ActionIndex: 2}},
+					TableOps:     []*pbeos.TableOp{{ActionIndex: 3}},
+					CreationTree: []*pbeos.CreationFlatNode{{CreatorActionIndex: 0, ExecutionActionIndex: 0}},
 				},
 				// FIXME: how was this one different from the one in the above `ExecutionTrace`?
-				//RamOps:               []*pbdeos.RAMOp{{Operation: pbdeos.RAMOp_OPERATION_CREATE_TABLE}, {ActionIndex: 2}},
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				//RamOps:               []*pbeos.RAMOp{{Operation: pbeos.RAMOp_OPERATION_CREATE_TABLE}, {ActionIndex: 2}},
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "11",
 					BlockId:             "1a",
 				},
 				ExecutionIrreversible: false,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -486,25 +486,25 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				{
 					Key: Keys.Transaction("11", "1a"),
-					BlockHeader: &pbdeos.BlockHeader{
+					BlockHeader: &pbeos.BlockHeader{
 						Producer: "eoscanadadad",
 					},
-					Transaction: &pbdeos.SignedTransaction{},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					Transaction: &pbeos.SignedTransaction{},
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "11",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 						},
 						Elapsed: 10,
-						DtrxOps: []*pbdeos.DTrxOp{
+						DtrxOps: []*pbeos.DTrxOp{
 							{
-								Operation:     pbdeos.DTrxOp_OPERATION_PUSH_CREATE,
+								Operation:     pbeos.DTrxOp_OPERATION_PUSH_CREATE,
 								TransactionId: "11",
 							},
 						},
-						RamOps: []*pbdeos.RAMOp{{ActionIndex: 1}},
+						RamOps: []*pbeos.RAMOp{{ActionIndex: 1}},
 					},
-					CreatedBy: &pbdeos.ExtDTrxOp{
+					CreatedBy: &pbeos.ExtDTrxOp{
 						SourceTransactionId: "11",
 						BlockId:             "1a",
 					},
@@ -513,33 +513,33 @@ func TestTransactionStitch(t *testing.T) {
 				},
 			},
 			inCanonicalChain: func(blockID string) bool { return true },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "11",
-				Transaction: &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				Transaction: &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "11",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
 					Elapsed: 10,
-					DtrxOps: []*pbdeos.DTrxOp{
+					DtrxOps: []*pbeos.DTrxOp{
 						{
-							Operation:     pbdeos.DTrxOp_OPERATION_PUSH_CREATE,
+							Operation:     pbeos.DTrxOp_OPERATION_PUSH_CREATE,
 							TransactionId: "11",
 						},
 					},
-					RamOps: []*pbdeos.RAMOp{{ActionIndex: 1}},
+					RamOps: []*pbeos.RAMOp{{ActionIndex: 1}},
 				},
-				ExecutionBlockHeader: &pbdeos.BlockHeader{
+				ExecutionBlockHeader: &pbeos.BlockHeader{
 					Producer: "eoscanadadad",
 				},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "11",
 					BlockId:             "1a",
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -549,17 +549,17 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				{
 					Key: Keys.Transaction("11", "1a"),
-					BlockHeader: &pbdeos.BlockHeader{
+					BlockHeader: &pbeos.BlockHeader{
 						Producer: "eoscanadadad",
 					},
-					Transaction: &pbdeos.SignedTransaction{
-						Transaction: &pbdeos.Transaction{
-							Header: &pbdeos.TransactionHeader{
+					Transaction: &pbeos.SignedTransaction{
+						Transaction: &pbeos.Transaction{
+							Header: &pbeos.TransactionHeader{
 								RefBlockNum: 1234,
 							},
 						},
 					},
-					CreatedBy: &pbdeos.ExtDTrxOp{
+					CreatedBy: &pbeos.ExtDTrxOp{
 						SourceTransactionId: "11",
 						BlockId:             "1a",
 					},
@@ -569,53 +569,53 @@ func TestTransactionStitch(t *testing.T) {
 				{
 					Key:         Keys.Transaction("11", "2a"),
 					Transaction: nil,
-					BlockHeader: &pbdeos.BlockHeader{
+					BlockHeader: &pbeos.BlockHeader{
 						Producer: "eoscanadacom",
 					},
-					TransactionTrace: &pbdeos.TransactionTrace{
+					TransactionTrace: &pbeos.TransactionTrace{
 						Id: "11",
-						Receipt: &pbdeos.TransactionReceiptHeader{
-							Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+						Receipt: &pbeos.TransactionReceiptHeader{
+							Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 						},
 						Elapsed: 20,
-						DtrxOps: []*pbdeos.DTrxOp{},
-						DbOps:   []*pbdeos.DBOp{},
-						RamOps:  []*pbdeos.RAMOp{},
+						DtrxOps: []*pbeos.DTrxOp{},
+						DbOps:   []*pbeos.DBOp{},
+						RamOps:  []*pbeos.RAMOp{},
 					},
 					Irreversible: true,
 					Written:      true,
 				},
 			},
 			inCanonicalChain: func(blockID string) bool { return true },
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id: "11",
-				Transaction: &pbdeos.SignedTransaction{
-					Transaction: &pbdeos.Transaction{
-						Header: &pbdeos.TransactionHeader{
+				Transaction: &pbeos.SignedTransaction{
+					Transaction: &pbeos.Transaction{
+						Header: &pbeos.TransactionHeader{
 							RefBlockNum: 1234,
 						},
 					},
 				},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id: "11",
-					Receipt: &pbdeos.TransactionReceiptHeader{
-						Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					Receipt: &pbeos.TransactionReceiptHeader{
+						Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
 					Elapsed: 20,
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
-				ExecutionBlockHeader: &pbdeos.BlockHeader{
+				ExecutionBlockHeader: &pbeos.BlockHeader{
 					Producer: "eoscanadacom",
 				},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "11",
 					BlockId:             "1a",
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 				PublicKeys:            []string{},
 			},
 		},
@@ -632,15 +632,15 @@ func TestTransactionStitch(t *testing.T) {
 				createdByTransactionRow(tbl, "trx_1", "1a", "trx_2", true),
 				executedTransactionRow(tbl, "trx_2", "2a", true, writtenOption(false)),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:          "trx_2",
-				Transaction: &pbdeos.SignedTransaction{},
-				CreatedBy: &pbdeos.ExtDTrxOp{
+				Transaction: &pbeos.SignedTransaction{},
+				CreatedBy: &pbeos.ExtDTrxOp{
 					SourceTransactionId: "trx_1",
 					BlockId:             "1a",
 				},
 				CreationIrreversible: true,
-				TransactionStatus:    pbdeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+				TransactionStatus:    pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED,
 				PublicKeys:           []string{},
 			},
 		},
@@ -649,20 +649,20 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				executedTransactionRow(tbl, "trx_1", "1", false, removeTraceReceipt(true)),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id:      "trx_1",
 					Receipt: nil,
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: false,
 				CreationIrreversible:  false,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL,
 				PublicKeys:            []string{},
 			},
 		},
@@ -671,20 +671,20 @@ func TestTransactionStitch(t *testing.T) {
 			rows: []*TransactionRow{
 				executedTransactionRow(tbl, "trx_1", "1", true, removeTraceReceipt(true)),
 			},
-			expected: &pbdeos.TransactionLifecycle{
+			expected: &pbeos.TransactionLifecycle{
 				Id:                   "trx_1",
-				ExecutionBlockHeader: &pbdeos.BlockHeader{},
-				Transaction:          &pbdeos.SignedTransaction{},
-				ExecutionTrace: &pbdeos.TransactionTrace{
+				ExecutionBlockHeader: &pbeos.BlockHeader{},
+				Transaction:          &pbeos.SignedTransaction{},
+				ExecutionTrace: &pbeos.TransactionTrace{
 					Id:      "trx_1",
 					Receipt: nil,
-					DtrxOps: []*pbdeos.DTrxOp{},
-					DbOps:   []*pbdeos.DBOp{},
-					RamOps:  []*pbdeos.RAMOp{},
+					DtrxOps: []*pbeos.DTrxOp{},
+					DbOps:   []*pbeos.DBOp{},
+					RamOps:  []*pbeos.RAMOp{},
 				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
-				TransactionStatus:     pbdeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL,
+				TransactionStatus:     pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL,
 				PublicKeys:            []string{},
 			},
 		},
@@ -711,17 +711,17 @@ func executedTransactionRow(
 ) *TransactionRow {
 	return configureTransactionRow(&TransactionRow{
 		Key:         Keys.Transaction(trxID, blockID),
-		Transaction: &pbdeos.SignedTransaction{},
-		TransactionTrace: &pbdeos.TransactionTrace{
+		Transaction: &pbeos.SignedTransaction{},
+		TransactionTrace: &pbeos.TransactionTrace{
 			Id: trxID,
-			Receipt: &pbdeos.TransactionReceiptHeader{
-				Status: pbdeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+			Receipt: &pbeos.TransactionReceiptHeader{
+				Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 			},
-			DtrxOps: []*pbdeos.DTrxOp{},
-			DbOps:   []*pbdeos.DBOp{},
-			RamOps:  []*pbdeos.RAMOp{},
+			DtrxOps: []*pbeos.DTrxOp{},
+			DbOps:   []*pbeos.DBOp{},
+			RamOps:  []*pbeos.RAMOp{},
 		},
-		BlockHeader:  &pbdeos.BlockHeader{},
+		BlockHeader:  &pbeos.BlockHeader{},
 		Irreversible: irreversible,
 		Written:      true,
 	}, options)
@@ -737,9 +737,9 @@ func createdByTransactionRow(
 ) *TransactionRow {
 	return configureTransactionRow(&TransactionRow{
 		Key:          Keys.Transaction(trxID, creatorBlockID),
-		Transaction:  &pbdeos.SignedTransaction{},
+		Transaction:  &pbeos.SignedTransaction{},
 		Irreversible: irreversible,
-		CreatedBy: &pbdeos.ExtDTrxOp{
+		CreatedBy: &pbeos.ExtDTrxOp{
 			SourceTransactionId: creatorID,
 			BlockId:             creatorBlockID,
 		},
@@ -758,7 +758,7 @@ func canceledByTransactionRow(
 	return configureTransactionRow(&TransactionRow{
 		Key:          Keys.Transaction(trxID, cancelerBlockID),
 		Irreversible: irreversible,
-		CanceledBy: &pbdeos.ExtDTrxOp{
+		CanceledBy: &pbeos.ExtDTrxOp{
 			SourceTransactionId: cancelerID,
 			BlockId:             cancelerBlockID,
 		},
