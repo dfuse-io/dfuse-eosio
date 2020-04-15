@@ -421,13 +421,14 @@ func init() {
 			return nil
 		},
 		InitFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) error {
-			return makeDirs([]string{filepath.Join(config.DataDir, "fluxdb")})
+			fluxDBWorkingDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+			return makeDirs([]string{fluxDBWorkingDir})
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:   viper.GetBool("luxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), filepath.Join(config.DataDir, "fluxdb")),
+				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), filepath.Join(viper.GetString("global-data-dir"), "fluxdb")),
 				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
 				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
@@ -859,13 +860,13 @@ func init() {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), filepath.Join(config.DataDir, "fluxdb")),
+				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), filepath.Join(viper.GetString("global-data-dir"), "fluxdb")),
 				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
 				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
-				SourceStoreURL:              buildStoreURL(config.DataDir, viper.GetString("eosws-merged-block-files-path")),
+				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-merged-block-files-path")),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
 				UseOpencensusStackdriver:    false,
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
@@ -939,8 +940,8 @@ func init() {
 		InitFunc:    nil,
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
-				DashboardHTTPListenAddr: config.DashboardHTTPListenAddr,
-				HttpListenAddr:          config.EosqHTTPServingAddr,
+				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
+				HttpListenAddr:          EosqHTTPServingAddr,
 			}), nil
 		},
 	})
@@ -956,12 +957,12 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
 				DmeshClient:              modules.SearchDmeshClient,
-				ManagerCommandURL:        config.EosManagerHTTPAddr,
-				GRPCListenAddr:           config.DashboardGrpcServingAddr,
-				HTTPListenAddr:           config.DashboardHTTPListenAddr,
-				EoswsHTTPServingAddr:     config.EoswsHTTPServingAddr,
-				DgraphqlHTTPServingAddr:  config.DgraphqlHTTPServingAddr,
-				NodeosAPIHTTPServingAddr: config.MindreaderNodeosAPIAddr,
+				ManagerCommandURL:        EosManagerHTTPAddr,
+				GRPCListenAddr:           DashboardGrpcServingAddr,
+				HTTPListenAddr:           DashboardHTTPListenAddr,
+				EoswsHTTPServingAddr:     EoswsHTTPServingAddr,
+				DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
+				NodeosAPIHTTPServingAddr: MindreaderNodeosAPIAddr,
 				Launcher:                 modules.Launcher,
 				MetricManager:            modules.MetricManager,
 			}), nil
