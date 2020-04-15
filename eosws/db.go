@@ -25,14 +25,14 @@ import (
 	"strconv"
 	"strings"
 
-	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/kvdb"
-	"github.com/dfuse-io/kvdb/eosdb"
 	"github.com/dfuse-io/logging"
+	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -44,8 +44,8 @@ type DB interface {
 	//GetBlocksByNum(ctx context.Context, num uint32) ([]*mdl.BlockRow, error)
 	//ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*mdl.BlockRow, error)
 	//ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*mdl.BlockRow, error)
-	GetTransaction(ctx context.Context, id string) (*pbdeos.TransactionLifecycle, error)
-	GetTransactions(ctx context.Context, ids []string) ([]*pbdeos.TransactionLifecycle, error)
+	GetTransaction(ctx context.Context, id string) (*pbeos.TransactionLifecycle, error)
+	GetTransactions(ctx context.Context, ids []string) ([]*pbeos.TransactionLifecycle, error)
 	ListTransactionsForBlockID(ctx context.Context, blockId string, startKey string, limit int) (*mdl.TransactionList, error)
 	ListMostRecentTransactions(ctx context.Context, startKey string, limit int) (*mdl.TransactionList, error)
 	// GetIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (blockID string, err error)
@@ -72,7 +72,7 @@ func NewEOSDB(dbReader eosdb.DBReader) *EOSDB {
 	}
 }
 
-func (db *EOSDB) GetTransaction(ctx context.Context, id string) (out *pbdeos.TransactionLifecycle, err error) {
+func (db *EOSDB) GetTransaction(ctx context.Context, id string) (out *pbeos.TransactionLifecycle, err error) {
 	evs, err := db.GetTransactionEvents(ctx, id)
 	if err == kvdb.ErrNotFound {
 		return nil, DBTrxNotFoundError(ctx, id)
@@ -81,12 +81,12 @@ func (db *EOSDB) GetTransaction(ctx context.Context, id string) (out *pbdeos.Tra
 		return nil, err
 	}
 
-	out = pbdeos.MergeTransactionEvents(evs, db.chainDiscriminator)
+	out = pbeos.MergeTransactionEvents(evs, db.chainDiscriminator)
 
 	return
 }
 
-func (db *EOSDB) GetTransactions(ctx context.Context, ids []string) (out []*pbdeos.TransactionLifecycle, err error) {
+func (db *EOSDB) GetTransactions(ctx context.Context, ids []string) (out []*pbeos.TransactionLifecycle, err error) {
 	evs, err := db.GetTransactionEventsBatch(ctx, ids)
 	if err != nil {
 		return nil, err
@@ -98,7 +98,7 @@ func (db *EOSDB) GetTransactions(ctx context.Context, ids []string) (out []*pbde
 			return nil, DBTrxNotFoundError(ctx, trxID)
 		}
 
-		out = append(out, pbdeos.MergeTransactionEvents(ev, db.chainDiscriminator))
+		out = append(out, pbeos.MergeTransactionEvents(ev, db.chainDiscriminator))
 	}
 
 	return
@@ -154,7 +154,7 @@ func (db *EOSDB) ListTransactionsForBlockID(ctx context.Context, blockID string,
 
 	var lifecycles []*v1.TransactionLifecycle
 	for _, evs := range trxList {
-		lc, err := mdl.ToV1TransactionLifecycle(pbdeos.MergeTransactionEvents(evs, db.chainDiscriminator))
+		lc, err := mdl.ToV1TransactionLifecycle(pbeos.MergeTransactionEvents(evs, db.chainDiscriminator))
 		if err != nil {
 			return nil, fmt.Errorf("transactions list for block ID: %w", err)
 		}
@@ -219,7 +219,7 @@ func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string
 	// On fetch seulement la colonne `trxs:executed-ids`
 	// De ceux-là, on prends les `limit` premiers, et on forge le `NextCursor` à partir soit du prochain index, ou du prochain
 
-	var list [][]*pbdeos.TransactionEvent
+	var list [][]*pbeos.TransactionEvent
 	type seenData struct {
 		transactionIndex uint16
 		blockID          string
@@ -319,7 +319,7 @@ func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string
 		out.Cursor = seenData.blockID + ":" + kvdb.HexUint16(seenData.transactionIndex)
 	}
 
-	var keep [][]*pbdeos.TransactionEvent
+	var keep [][]*pbeos.TransactionEvent
 	if len(list) < limit {
 		keep = list
 	} else {
@@ -327,7 +327,7 @@ func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string
 	}
 
 	for _, events := range keep {
-		lc, err := mdl.ToV1TransactionLifecycle(pbdeos.MergeTransactionEvents(events, db.chainDiscriminator))
+		lc, err := mdl.ToV1TransactionLifecycle(pbeos.MergeTransactionEvents(events, db.chainDiscriminator))
 		if err != nil {
 			return nil, fmt.Errorf("most recent transactions: %w", err)
 		}
@@ -337,7 +337,7 @@ func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string
 	return out, nil
 }
 
-func (db *EOSDB) GetBlock(ctx context.Context, id string) (out *pbdeos.BlockWithRefs, err error) {
+func (db *EOSDB) GetBlock(ctx context.Context, id string) (out *pbeos.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlock(ctx, id)
 	if err == eos.ErrNotFound {
 		return nil, DBBlockNotFoundError(ctx, id)
@@ -346,7 +346,7 @@ func (db *EOSDB) GetBlock(ctx context.Context, id string) (out *pbdeos.BlockWith
 	return
 }
 
-func (db *EOSDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *EOSDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbeos.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlockByNum(ctx, num)
 	if err == kvdb.ErrNotFound {
 		return nil, DBBlockNotFoundError(ctx, string(num))
@@ -358,7 +358,7 @@ func (db *EOSDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbdeos.B
 	return
 }
 
-func (db *EOSDB) GetAccount(ctx context.Context, name string) (account *pbdeos.AccountCreationRef, err error) {
+func (db *EOSDB) GetAccount(ctx context.Context, name string) (account *pbeos.AccountCreationRef, err error) {
 	account, err = db.DBReader.GetAccount(ctx, name)
 	if err == kvdb.ErrNotFound {
 		return nil, DBAccountNotFoundError(ctx, name)
@@ -394,16 +394,16 @@ func (db *MockDB) GetLastWrittenBlockID(ctx context.Context) (string, error) {
 	return "0123456700000000000000000000000000000000000000000000000000000000", nil
 }
 
-func (db *MockDB) GetTransaction(ctx context.Context, id string) (out *pbdeos.TransactionLifecycle, err error) {
+func (db *MockDB) GetTransaction(ctx context.Context, id string) (out *pbeos.TransactionLifecycle, err error) {
 	filename := filepath.Join(db.path, "transactions", fmt.Sprintf("%s.json", id))
 	err = readFromFile(filename, out)
 	return
 }
 
-func (db *MockDB) GetTransactions(ctx context.Context, ids []string) (out []*pbdeos.TransactionLifecycle, err error) {
+func (db *MockDB) GetTransactions(ctx context.Context, ids []string) (out []*pbeos.TransactionLifecycle, err error) {
 	for _, id := range ids {
 		filename := filepath.Join(db.path, "transactions", fmt.Sprintf("%s.json", id))
-		var el *pbdeos.TransactionLifecycle
+		var el *pbeos.TransactionLifecycle
 		err = readFromFile(filename, el)
 		out = append(out, el)
 	}
@@ -417,22 +417,22 @@ func (db *MockDB) ListTransactionsForBlockID(ctx context.Context, blockId string
 	panic("Implement me!")
 }
 
-func (db *MockDB) GetBlock(ctx context.Context, id string) (out *pbdeos.BlockWithRefs, err error) {
+func (db *MockDB) GetBlock(ctx context.Context, id string) (out *pbeos.BlockWithRefs, err error) {
 	filename := filepath.Join(db.path, "blocks", fmt.Sprintf("%s.json", id))
 	err = readFromFile(filename, out)
 	return
 }
 
-func (db *MockDB) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*pbdeos.BlockWithRefs, error) {
+func (db *MockDB) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*pbeos.BlockWithRefs, error) {
 	panic("implement me")
 }
 
-func (db *MockDB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbdeos.BlockWithRefs, error) {
+func (db *MockDB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbeos.BlockWithRefs, error) {
 	panic("implement me")
 }
 
-func (db *MockDB) GetAccount(ctx context.Context, name string) (out *pbdeos.AccountCreationRef, err error) {
-	return &pbdeos.AccountCreationRef{
+func (db *MockDB) GetAccount(ctx context.Context, name string) (out *pbeos.AccountCreationRef, err error) {
+	return &pbeos.AccountCreationRef{
 		Account: "eoscanadacom",
 		Creator: "bozo",
 	}, nil
@@ -442,7 +442,7 @@ func (db *MockDB) ListAccountNames(ctx context.Context, concurrentReadCount uint
 	return []string{"eoscanadacom"}, nil
 }
 
-func (db *MockDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbdeos.BlockWithRefs, err error) {
+func (db *MockDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbeos.BlockWithRefs, err error) {
 	filename := filepath.Join(db.path, "blocks", fmt.Sprintf("%s.json", fmt.Sprintf("%d", num)))
 	err = readFromFile(filename, out)
 	return

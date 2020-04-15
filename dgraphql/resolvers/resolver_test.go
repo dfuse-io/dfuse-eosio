@@ -17,36 +17,60 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/golang/protobuf/ptypes"
+
+	"go.uber.org/zap"
+
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dtracing"
-	"github.com/dfuse-io/kvdb/eosdb"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	if os.Getenv("TEST_LOG") != "" {
+		zlog = logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel))
+		logging.Set(zlog)
+	}
+}
+
 func newSearchMatchArchive(trxID string) *pbsearch.SearchMatch {
+	cs, err := ptypes.MarshalAny(&pbsearcheos.Match{})
+	if err != nil {
+		panic(err)
+	}
 	return &pbsearch.SearchMatch{
-		TrxIdPrefix: trxID,
-		Specific: &pbsearch.SearchMatch_Eos{
-			Eos: &pbsearch.EOSMatch{},
-		},
+		TrxIdPrefix:   trxID,
+		BlockNum:      0,
+		Index:         0,
+		Cursor:        "",
+		ChainSpecific: cs,
+		Undo:          false,
+		IrrBlockNum:   0,
 	}
 }
 
 func newSearchMatchLive(trxID string, idx int) *pbsearch.SearchMatch {
-	return &pbsearch.SearchMatch{
-		TrxIdPrefix: trxID,
-		Specific: &pbsearch.SearchMatch_Eos{
-			Eos: &pbsearch.EOSMatch{
-				Block: &pbsearch.EOSBlockTrxPayload{
-					Trace: &pbdeos.TransactionTrace{Index: uint64(idx)},
-				},
-			},
+	cs, err := ptypes.MarshalAny(&pbsearcheos.Match{
+		Block: &pbsearcheos.BlockTrxPayload{
+			Trace: &pbeos.TransactionTrace{Index: uint64(idx)},
 		},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return &pbsearch.SearchMatch{
+		TrxIdPrefix:   trxID,
+		ChainSpecific: cs,
 	}
 }
 
@@ -54,7 +78,7 @@ func newDgraphqlResponse(trxID string, idx int) *SearchTransactionForwardRespons
 	return &SearchTransactionForwardResponse{
 		SearchTransactionBackwardResponse: SearchTransactionBackwardResponse{
 			trxIDPrefix: trxID,
-			trxTrace: &pbdeos.TransactionTrace{
+			trxTrace: &pbeos.TransactionTrace{
 				Index: uint64(idx),
 			},
 		},
@@ -66,7 +90,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 	tests := []struct {
 		name        string
 		fromRouter  []interface{}
-		fromDB      map[string][]*pbdeos.TransactionEvent
+		fromDB      map[string][]*pbeos.TransactionEvent
 		expect      []*SearchTransactionForwardResponse
 		expectError error
 	}{
@@ -76,15 +100,15 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchArchive("trx123"),
 				fmt.Errorf("failed"),
 			},
-			fromDB: map[string][]*pbdeos.TransactionEvent{
-				"trx123": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx12399999999999999999", Event: pbdeos.NewTestExecEvent(5)},
+			fromDB: map[string][]*pbeos.TransactionEvent{
+				"trx123": {
+					{Id: "trx12399999999999999999", Event: pbeos.NewTestExecEvent(5)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{
 				newDgraphqlResponse("trx123", 5),
-				&SearchTransactionForwardResponse{
-					err: dgraphql.Errorf(ctx, "failed"),
+				{
+					err: dgraphql.Errorf(ctx, "hammer search result: failed"),
 				},
 			},
 
@@ -101,18 +125,18 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchLive("trx004", 9),
 				newSearchMatchLive("trx005", 10),
 			},
-			fromDB: map[string][]*pbdeos.TransactionEvent{
-				"trx000": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx000boo", Event: pbdeos.NewTestExecEvent(5)},
+			fromDB: map[string][]*pbeos.TransactionEvent{
+				"trx000": {
+					{Id: "trx000boo", Event: pbeos.NewTestExecEvent(5)},
 				},
-				"trx001": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx001boo", Event: pbdeos.NewTestExecEvent(6)},
+				"trx001": {
+					{Id: "trx001boo", Event: pbeos.NewTestExecEvent(6)},
 				},
-				"trx002": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx002boo", Event: pbdeos.NewTestExecEvent(7)},
+				"trx002": {
+					{Id: "trx002boo", Event: pbeos.NewTestExecEvent(7)},
 				},
-				"trx022": []*pbdeos.TransactionEvent{
-					&pbdeos.TransactionEvent{Id: "trx022boo", Event: pbdeos.NewTestExecEvent(11)},
+				"trx022": {
+					{Id: "trx022boo", Event: pbeos.NewTestExecEvent(11)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{
@@ -144,9 +168,6 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				require.NoError(t, err)
 				var expect []*SearchTransactionForwardResponse
 				for el := range res {
-					if el.err != nil {
-
-					}
 					expect = append(expect, el)
 				}
 

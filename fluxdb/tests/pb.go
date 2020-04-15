@@ -22,11 +22,11 @@ import (
 	"testing"
 	"time"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/codecs/deos"
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/jsonpb"
+	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
@@ -34,16 +34,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs ...string) *pbdeos.Block {
-	trxTraces := make([]*pbdeos.TransactionTrace, len(trxTraceJSONs))
+func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs ...string) *pbeos.Block {
+	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbdeos.TransactionTrace)
+		trxTrace := new(pbeos.TransactionTrace)
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace), "actual string:\n"+trxTraceJSON)
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbdeos.Block{
+	pbblock := &pbeos.Block{
 		Id:                blkID,
 		Number:            eos.BlockNum(blkID),
 		TransactionTraces: trxTraces,
@@ -56,7 +56,7 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 	require.NoError(t, err)
 
 	pbblock.DposIrreversibleBlocknum = pbblock.Number - 1
-	pbblock.Header = &pbdeos.BlockHeader{
+	pbblock.Header = &pbeos.BlockHeader{
 		Previous:  previousBlkID,
 		Producer:  "tester",
 		Timestamp: blockTimestamp,
@@ -77,7 +77,7 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 	return pbblock
 }
 
-func bstreamBlocks(t *testing.T, pbBlocks ...*pbdeos.Block) []*bstream.Block {
+func bstreamBlocks(t *testing.T, pbBlocks ...*pbeos.Block) []*bstream.Block {
 	blocks := make([]*bstream.Block, len(pbBlocks))
 	for i, pbBlock := range pbBlocks {
 		block, err := deos.BlockFromProto(pbBlock)
@@ -97,15 +97,15 @@ func toTimestamp(t time.Time) *tspb.Timestamp {
 	return el
 }
 
-func dbOp(t *testing.T, abi *eos.ABI, op string, path string, payer string, data string) *pbdeos.DBOp {
+func dbOp(t *testing.T, abi *eos.ABI, op string, path string, payer string, data string) *pbeos.DBOp {
 	paths := strings.Split(path, "/")
 
 	// Split those with → instead, will probably improve readability
 	payers := strings.Split(payer, "/")
 	datas := strings.Split(data, "/")
 
-	dbOp := &pbdeos.DBOp{
-		Operation:  pbdeos.DBOp_Operation(pbdeos.DBOp_Operation_value["OPERATION_"+strings.ToUpper(op)]),
+	dbOp := &pbeos.DBOp{
+		Operation:  pbeos.DBOp_Operation(pbeos.DBOp_Operation_value["OPERATION_"+strings.ToUpper(op)]),
 		Code:       paths[0],
 		TableName:  paths[1],
 		Scope:      paths[2],
@@ -138,11 +138,11 @@ func dbOp(t *testing.T, abi *eos.ABI, op string, path string, payer string, data
 	return dbOp
 }
 
-func tableOp(t *testing.T, op string, path string, payer string) *pbdeos.TableOp {
+func tableOp(t *testing.T, op string, path string, payer string) *pbeos.TableOp {
 	paths := strings.Split(path, "/")
 
-	return &pbdeos.TableOp{
-		Operation: pbdeos.TableOp_Operation(pbdeos.TableOp_Operation_value["OPERATION_"+strings.ToUpper(op)]),
+	return &pbeos.TableOp{
+		Operation: pbeos.TableOp_Operation(pbeos.TableOp_Operation_value["OPERATION_"+strings.ToUpper(op)]),
 		Code:      paths[0],
 		TableName: paths[1],
 		Scope:     paths[2],
@@ -151,14 +151,14 @@ func tableOp(t *testing.T, op string, path string, payer string) *pbdeos.TableOp
 }
 
 func trxTrace(t *testing.T, elements ...proto.Message) string {
-	trace := &pbdeos.TransactionTrace{}
+	trace := &pbeos.TransactionTrace{}
 	for _, element := range elements {
 		switch v := element.(type) {
-		case *pbdeos.ActionTrace:
+		case *pbeos.ActionTrace:
 			trace.ActionTraces = append(trace.ActionTraces, v)
-		case *pbdeos.DBOp:
+		case *pbeos.DBOp:
 			trace.DbOps = append(trace.DbOps, v)
-		case *pbdeos.TableOp:
+		case *pbeos.TableOp:
 			trace.TableOps = append(trace.TableOps, v)
 		}
 	}
@@ -169,16 +169,16 @@ func trxTrace(t *testing.T, elements ...proto.Message) string {
 	return out
 }
 
-func actionSetABI(t *testing.T, account string, abi *eos.ABI) *pbdeos.ActionTrace {
+func actionSetABI(t *testing.T, account string, abi *eos.ABI) *pbeos.ActionTrace {
 	packedABI, err := eos.MarshalBinary(abi)
 	require.NoError(t, err)
 
-	return &pbdeos.ActionTrace{
+	return &pbeos.ActionTrace{
 		Receiver: "eosio",
-		Receipt: &pbdeos.ActionReceipt{
+		Receipt: &pbeos.ActionReceipt{
 			Receiver: "eosio",
 		},
-		Action: &pbdeos.Action{
+		Action: &pbeos.Action{
 			Account:  "eosio",
 			Name:     "setabi",
 			JsonData: str(`{"account":"%s","abi":"%s"}`, account, hex.EncodeToString(packedABI)),

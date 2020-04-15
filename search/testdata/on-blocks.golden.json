@@ -1,0 +1,38 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "eosio",
+      "action": "transfer",
+      "auth": null,
+      "block_num": 1,
+      "data": null,
+      "db": {
+        "key": [
+          "global/eosio/global",
+          "global2/eosio/global2",
+          "global3/eosio/global3",
+          "namebids/eosio/j",
+          "producers/eosio/eoshuobipool"
+        ],
+        "table": [
+          "global",
+          "global/eosio",
+          "global2",
+          "global2/eosio",
+          "global3",
+          "global3/eosio",
+          "namebids",
+          "namebids/eosio",
+          "producers",
+          "producers/eosio"
+        ]
+      },
+      "input": true,
+      "notif": false,
+      "receiver": "eosio",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  }
+]

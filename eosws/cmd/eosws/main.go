@@ -25,9 +25,9 @@ import (
 
 	"github.com/abourget/viperbind"
 	"github.com/dfuse-io/derr"
+	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
 	eoswsapp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
-	_ "github.com/dfuse-io/kvdb/eosdb/bigt"
 	_ "github.com/eoscanada/eos-go/system"
 	_ "github.com/eoscanada/eos-go/token"
 	"github.com/spf13/cobra"

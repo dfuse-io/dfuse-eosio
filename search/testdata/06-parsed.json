@@ -1,0 +1,67 @@
+[
+  {
+    "trx_id": "transaction-with-dfuseiohooks-at-top-level-ignored",
+    "data": {
+      "account": "ffgamebacara",
+      "action": "event",
+      "auth": [
+        "dfuseiohooks",
+        "dfuseiohooks@active"
+      ],
+      "block_num": 46413416,
+      "input": true,
+      "notif": true,
+      "data": {},
+      "receiver": "dfuseiohooks",
+      "scheduled": true,
+      "trx_idx": 0
+    }
+  },
+  {
+    "trx_id": "transaction-with-some-hooks-below",
+    "data": {
+      "account": "yourz",
+      "action": "petactionz",
+      "auth": [
+        "yourz",
+        "yourz@active"
+      ],
+      "block_num": 46413416,
+      "data": {
+        "from": "pet1",
+        "to": "pet2"
+      },
+      "event": {
+        "key1": [
+          "value"
+        ],
+        "key2": [
+          "value2"
+        ]
+      },
+      "input": true,
+      "notif": false,
+      "receiver": "yourz",
+      "scheduled": true,
+      "trx_idx": 1
+    }
+  },
+  {
+    "trx_id": "transaction-with-some-hooks-below",
+    "data": {
+      "account": "dfuseiohooks",
+      "action": "event",
+      "auth": [
+        "ffgamebacara",
+        "ffgamebacara@active"
+      ],
+      "block_num": 46413416,
+      "data": {},
+      "input": false,
+      "notif": false,
+      "receiver": "dfuseiohooks",
+      "scheduled": true,
+      "trx_idx": 1
+    }
+  }
+]

@@ -24,22 +24,24 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/dfuse-io/bstream/codecs/deos"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
 	"github.com/dfuse-io/dgraphql/metrics"
 	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/dmetering"
-	"github.com/dfuse-io/kvdb/eosdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/opaque"
 	pbabicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/graph-gophers/graphql-go"
 	"go.uber.org/zap"
 )
@@ -227,7 +229,11 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 			return nil, dgraphql.UnwrapError(ctx, err)
 		}
 
-		eosMatch := match.GetEos()
+		eosMatch, err := searchSpecificMatchToEOSMatch(match)
+		if err != nil {
+			return nil, err
+		}
+
 		out := &SearchTransactionForwardResponse{
 			SearchTransactionBackwardResponse: SearchTransactionBackwardResponse{
 				abiCodecClient:        r.abiCodecClient,
@@ -258,7 +264,7 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 			// This ensures that we have Irreversible Traces events, even if `kvdb` didn't load
 			// it fast enough.  If we can't validate it with the `inCanonicalChain` call,
 			// then we hard-fail.
-			lifecycle := pbdeos.MergeTransactionEvents(events, func(id string) bool {
+			lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool {
 				// Query blockmetaClient.Ge
 				resp, err := r.blockmetaClient.ChainDiscriminatorClient().InLongestChain(ctx, &pbblockmeta.InLongestChainRequest{
 					BlockID: id,
@@ -323,7 +329,7 @@ type matchOrError struct {
 	err   error
 }
 
-func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbdeos.TransactionEvent, rowMap map[string]int, abiCodecClient pbabicodec.DecoderClient) (*SearchTransactionForwardResponse, error) {
+func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int, abiCodecClient pbabicodec.DecoderClient) (*SearchTransactionForwardResponse, error) {
 	if m.err != nil {
 		return &SearchTransactionForwardResponse{
 			err: dgraphql.UnwrapError(ctx, m.err),
@@ -331,7 +337,11 @@ func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbdeos.
 	}
 
 	match := m.match
-	eosMatch := match.GetEos()
+	eosMatch, err := searchSpecificMatchToEOSMatch(match)
+	if err != nil {
+		return nil, err
+	}
+
 	out := &SearchTransactionForwardResponse{
 		SearchTransactionBackwardResponse: SearchTransactionBackwardResponse{
 			abiCodecClient:        abiCodecClient,
@@ -390,7 +400,7 @@ func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbdeos.
 	// choice, return that Only ONE thing guarantees it: it's that
 	// Trace corresponds to a block in the canonical chain.  Query a
 	// block meta, to know if the block_id is in canonical chain.
-	lifecycle := pbdeos.MergeTransactionEvents(events, func(id string) bool { return true })
+	lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool { return true })
 
 	out.blockHeader = lifecycle.ExecutionBlockHeader
 	out.blockID = lifecycle.ExecutionTrace.ProducerBlockId
@@ -465,7 +475,19 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 				zl.Info("error receiving message from search stream client", zap.Error(m.err))
 				continue
 			}
-			eosMatch := m.match.GetEos()
+
+			// This sucks really hard. This was before a simple check if a variable was nil, now, it requires
+			// a full decoding of the any message to the correct type. This is probably a performance hit here
+			// to do that.
+			//
+			// Instead, the standard search engine should let us know if this match comes from a reversible or
+			// an irreversible segment. That would make sense and would remove the need to perform some extra
+			// decoding just to check if the block payload is present.
+			eosMatch, err := searchSpecificMatchToEOSMatch(m.match)
+			if err != nil {
+				return nil, fmt.Errorf("hammer func: %w", err)
+			}
+
 			if eosMatch.Block == nil {
 				prefixesToLookupInKvdb = append(prefixesToLookupInKvdb, m.match.TrxIdPrefix)
 				rowToIndex[m.match.TrxIdPrefix] = len(prefixesToLookupInKvdb) - 1
@@ -477,7 +499,7 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 		// use it if its irreversible, or if its the only one we have, otherwise, you better
 		// have a chain discriminator nearby to know if its in the longest chain.
 
-		var rows [][]*pbdeos.TransactionEvent
+		var rows [][]*pbeos.TransactionEvent
 		if len(prefixesToLookupInKvdb) != 0 {
 			rows, err = r.trxsReader.GetTransactionTracesBatch(ctx, prefixesToLookupInKvdb)
 			if err != nil {
@@ -505,9 +527,13 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 		defer hammer.Close()
 		for {
 			match, err := streamCli.Recv()
-			if err == io.EOF {
-				return
+			if err != nil {
+				if err == io.EOF {
+					return
+				}
+				err = fmt.Errorf("hammer search result: %w", err)
 			}
+
 			out := &matchOrError{
 				match: match,
 				err:   err, // we send non-EOF errors back to the client
@@ -624,8 +650,8 @@ type SearchTransactionBackwardResponse struct {
 	abiCodecClient pbabicodec.DecoderClient
 	cursor         string
 	trxIDPrefix    string
-	blockHeader    *pbdeos.BlockHeader
-	trxTrace       *pbdeos.TransactionTrace
+	blockHeader    *pbeos.BlockHeader
+	trxTrace       *pbeos.TransactionTrace
 
 	irreversibleBlockNum  uint32
 	matchingActionIndexes []uint32
@@ -678,8 +704,8 @@ func (t *SearchTransactionBackwardResponse) Trace() *TransactionTrace {
 }
 
 type TransactionTrace struct {
-	t                     *pbdeos.TransactionTrace
-	blockHeader           *pbdeos.BlockHeader
+	t                     *pbeos.TransactionTrace
+	blockHeader           *pbeos.BlockHeader
 	matchingActionIndexes []uint32
 
 	abiCodecClient pbabicodec.DecoderClient
@@ -687,7 +713,7 @@ type TransactionTrace struct {
 	memoizedFlattenActionTraces *[]*ActionTrace
 }
 
-func newTransactionTrace(trace *pbdeos.TransactionTrace, blockHeader *pbdeos.BlockHeader, matchingActionIndexes []uint32, abiCodecClient pbabicodec.DecoderClient) *TransactionTrace {
+func newTransactionTrace(trace *pbeos.TransactionTrace, blockHeader *pbeos.BlockHeader, matchingActionIndexes []uint32, abiCodecClient pbabicodec.DecoderClient) *TransactionTrace {
 	tr := &TransactionTrace{
 		abiCodecClient:        abiCodecClient,
 		t:                     trace,
@@ -774,10 +800,10 @@ func (t *TransactionTrace) ExceptJSON() (*commonTypes.JSON, error) {
 type BlockHeader struct {
 	blockID  string
 	blockNum commonTypes.Uint32
-	h        *pbdeos.BlockHeader
+	h        *pbeos.BlockHeader
 }
 
-func newBlockHeader(blockID string, blockNum commonTypes.Uint32, blockHeader *pbdeos.BlockHeader) *BlockHeader {
+func newBlockHeader(blockID string, blockNum commonTypes.Uint32, blockHeader *pbeos.BlockHeader) *BlockHeader {
 	return &BlockHeader{
 		blockID:  blockID,
 		blockNum: blockNum,
@@ -815,16 +841,16 @@ func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 	return &ProducerSchedule{s: upgradeToProducerAuthoritySchedule(t.h.NewProducersV1)}, nil
 }
 
-func upgradeToProducerAuthoritySchedule(old *pbdeos.ProducerSchedule) *pbdeos.ProducerAuthoritySchedule {
-	producers := make([]*pbdeos.ProducerAuthority, len(old.Producers))
+func upgradeToProducerAuthoritySchedule(old *pbeos.ProducerSchedule) *pbeos.ProducerAuthoritySchedule {
+	producers := make([]*pbeos.ProducerAuthority, len(old.Producers))
 	for i, oldProducer := range old.Producers {
-		producers[i] = &pbdeos.ProducerAuthority{
+		producers[i] = &pbeos.ProducerAuthority{
 			AccountName: oldProducer.AccountName,
-			BlockSigningAuthority: &pbdeos.BlockSigningAuthority{
-				Variant: &pbdeos.BlockSigningAuthority_V0{
-					V0: &pbdeos.BlockSigningAuthorityV0{
+			BlockSigningAuthority: &pbeos.BlockSigningAuthority{
+				Variant: &pbeos.BlockSigningAuthority_V0{
+					V0: &pbeos.BlockSigningAuthorityV0{
 						Threshold: 1,
-						Keys: []*pbdeos.KeyWeight{
+						Keys: []*pbeos.KeyWeight{
 							{Weight: 1, PublicKey: oldProducer.BlockSigningKey},
 						},
 					},
@@ -833,7 +859,7 @@ func upgradeToProducerAuthoritySchedule(old *pbdeos.ProducerSchedule) *pbdeos.Pr
 		}
 	}
 
-	return &pbdeos.ProducerAuthoritySchedule{
+	return &pbeos.ProducerAuthoritySchedule{
 		Version:   old.Version,
 		Producers: producers,
 	}
@@ -856,7 +882,7 @@ func (t BlockHeader) findProducerScheduleChangeExtension() (*eos.ProducerSchedul
 }
 
 type ProducerSchedule struct {
-	s *pbdeos.ProducerAuthoritySchedule
+	s *pbeos.ProducerAuthoritySchedule
 }
 
 func (s *ProducerSchedule) Version() commonTypes.Uint32 { return commonTypes.Uint32(s.s.Version) }
@@ -868,7 +894,7 @@ func (s *ProducerSchedule) Producers() (out []*ProducerKey) {
 }
 
 type ProducerKey struct {
-	k *pbdeos.ProducerAuthority
+	k *pbeos.ProducerAuthority
 }
 
 func (k *ProducerKey) ProducerName() string { return k.k.AccountName }
@@ -876,7 +902,7 @@ func (k *ProducerKey) BlockSigningKey() string {
 	return extractFirstPublicKeyFromAuthority(k.k.BlockSigningAuthority)
 }
 
-func extractFirstPublicKeyFromAuthority(in *pbdeos.BlockSigningAuthority) string {
+func extractFirstPublicKeyFromAuthority(in *pbeos.BlockSigningAuthority) string {
 	if in.GetV0() == nil {
 		panic(fmt.Errorf("only knowns how to deal with BlockSigningAuthority_V0 type, got %t", in.Variant))
 	}
@@ -890,7 +916,7 @@ func extractFirstPublicKeyFromAuthority(in *pbdeos.BlockSigningAuthority) string
 }
 
 type TransactionReceiptHeader struct {
-	h *pbdeos.TransactionReceiptHeader
+	h *pbeos.TransactionReceiptHeader
 }
 
 func (h *TransactionReceiptHeader) Status() string {
@@ -905,14 +931,14 @@ func (h *TransactionReceiptHeader) NetUsageWords() commonTypes.Uint32 {
 
 type ActionTrace struct {
 	blockNum    uint64
-	actionTrace *pbdeos.ActionTrace
+	actionTrace *pbeos.ActionTrace
 	trxTrace    *TransactionTrace
 	matched     bool
 
 	abiCodecClient pbabicodec.DecoderClient
 }
 
-func newActionTrace(blockNum uint64, actionTrace *pbdeos.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
+func newActionTrace(blockNum uint64, actionTrace *pbeos.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
 	return &ActionTrace{
 		abiCodecClient: abiCodecClient,
 		blockNum:       blockNum,
@@ -1070,7 +1096,7 @@ func (t *ActionTrace) TableOps() (out []*TableOp) {
 }
 
 type ActionReceipt struct {
-	r *pbdeos.ActionReceipt
+	r *pbeos.ActionReceipt
 }
 
 func (r *ActionReceipt) Receiver() string             { return r.r.Receiver }
@@ -1085,7 +1111,7 @@ func (r *ActionReceipt) ABISequence() types.Uint64    { return types.Uint64(r.r.
 func (r *ActionReceipt) authSequence() commonTypes.JSON { return nil }
 
 type Transaction struct {
-	t *pbdeos.SignedTransaction
+	t *pbeos.SignedTransaction
 }
 
 func (t *Transaction) Expiration() graphql.Time { return toTime(t.t.Transaction.Header.Expiration) }
@@ -1118,7 +1144,7 @@ func (t *Transaction) Actions() (out []*Action) {
 }
 
 type Action struct {
-	a *pbdeos.Action
+	a *pbeos.Action
 }
 
 func (a *Action) Account() string { return a.a.Account }
@@ -1153,8 +1179,18 @@ func (a *Action) JSON() *commonTypes.JSON {
 func (a *Action) HexData() string { return hex.EncodeToString(a.a.RawData) }
 
 type PermissionLevel struct {
-	pl *pbdeos.PermissionLevel
+	pl *pbeos.PermissionLevel
 }
 
 func (t *PermissionLevel) Actor() string      { return t.pl.Actor }
 func (t *PermissionLevel) Permission() string { return t.pl.Permission }
+
+func searchSpecificMatchToEOSMatch(match *pbsearch.SearchMatch) (*pbsearcheos.Match, error) {
+	var eosMatchAny ptypes.DynamicAny
+	err := ptypes.UnmarshalAny(match.GetChainSpecific(), &eosMatchAny)
+	if err != nil {
+		return nil, err
+	}
+
+	return eosMatchAny.Message.(*pbsearcheos.Match), nil
+}

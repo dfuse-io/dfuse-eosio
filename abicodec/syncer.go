@@ -23,15 +23,15 @@ import (
 	"math"
 	"time"
 
-	pbdeos "github.com/dfuse-io/pbgo/dfuse/codecs/deos"
+	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dgrpc"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dgrpc"
 	"github.com/eoscanada/eos-go"
-	"github.com/dfuse-io/kvdb/eosdb"
-	"github.com/dfuse-io/search-client"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +41,7 @@ type ABISyncer struct {
 	*shutter.Shutter
 
 	cache        Cache
-	client       *search.EOSClient
+	client       *searchclient.EOSClient
 	isLive       bool
 	onLive       func()
 	syncCtx      context.Context
@@ -59,7 +59,7 @@ func NewSyncer(cache Cache, dbReader eosdb.DBReader, searchAddr string, onLive f
 	syncer := &ABISyncer{
 		Shutter:      shutter.New(),
 		cache:        cache,
-		client:       search.NewEOSClient(searchConn, dbReader),
+		client:       searchclient.NewEOSClient(searchConn, dbReader),
 		onLive:       onLive,
 		syncCtx:      syncCtx,
 		cancelSyncer: cancelSyncer,
@@ -137,7 +137,7 @@ func (s *ABISyncer) streamABIChanges() error {
 	}
 }
 
-func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, actionTrace *pbdeos.ActionTrace, undo bool) error {
+func (s *ABISyncer) handleABIAction(blockRef bstream.BlockRef, trxID string, actionTrace *pbeos.ActionTrace, undo bool) error {
 	account := actionTrace.GetData("account").String()
 	hexABI := actionTrace.GetData("abi")
 
