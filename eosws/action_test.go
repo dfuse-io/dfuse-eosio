@@ -37,7 +37,6 @@ import (
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	"github.com/dfuse-io/dstore"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/websocket"
@@ -360,7 +359,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 	t.Helper()
 
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return bstream.NewFileSource(pbbstream.Protocol_EOS, archiveStore, 1, 1, nil, h)
+		return bstream.NewFileSource(archiveStore, 1, 1, nil, h)
 	})
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {

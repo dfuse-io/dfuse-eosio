@@ -595,7 +595,6 @@ func init() {
 		},
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return indexerApp.New(&indexerApp.Config{
-				Protocol:                            Protocol,
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
 				BlockstreamAddr:                     viper.GetString("search-indexer-block-stream-addr"),
@@ -638,7 +637,6 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
-				Protocol:             Protocol,
 				BlockmetaAddr:        viper.GetString("search-router-blockmeta-addr"),
 				GRPCListenAddr:       viper.GetString("search-router-listen-addr"),
 				HeadDelayTolerance:   viper.GetUint64("search-router-head-delay-tolerance"),
@@ -693,7 +691,6 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return archiveApp.New(&archiveApp.Config{
 				Dmesh:                   modules.SearchDmeshClient,
-				Protocol:                Protocol,
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
 				ServiceVersion:          viper.GetString("search-mesh-service-version"),
@@ -755,7 +752,6 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
-				Protocol:                 Protocol,
 				ServiceVersion:           viper.GetString("search-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
@@ -772,6 +768,8 @@ func init() {
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 				IndexingRestrictionsJSON: viper.GetString("search-live-indexing-restrictions-json"),
 				DfuseHooksActionName:     viper.GetString("search-live-dfuse-hooks-action-name"),
+			}, &liveApp.Modules{
+				BlockMapper: nil, //todo: blockmappper?
 			}), nil
 		},
 	})
@@ -808,7 +806,6 @@ func init() {
 		FactoryFunc: func(config *launcher.RuntimeConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return forkresolverApp.New(&forkresolverApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
-				Protocol:                 Protocol,
 				ServiceVersion:           viper.GetString("search-mesh-service-version"),
 				GRPCListenAddr:           viper.GetString("search-forkresolver-grpc-listen-addr"),
 				HttpListenAddr:           viper.GetString("search-forkresolver-http-listen-addr"),
@@ -818,6 +815,8 @@ func init() {
 				DfuseHooksActionName:     viper.GetString("search-forkresolver-dfuse-hooks-action-name"),
 				IndexingRestrictionsJSON: viper.GetString("search-forkresolver-indexing-restrictions-json"),
 				EnableReadinessProbe:     viper.GetBool("search-forkresolver-enable-readiness-probe"),
+			}, &forkresolverApp.Modules{
+				BlockMapper: nil, //todo block mapper
 			}), nil
 		},
 	})

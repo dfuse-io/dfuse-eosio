@@ -31,9 +31,10 @@ import (
 func newSearchMatchArchive(trxID string) *pbsearch.SearchMatch {
 	return &pbsearch.SearchMatch{
 		TrxIdPrefix: trxID,
-		Specific: &pbsearch.SearchMatch_Eos{
-			Eos: &pbsearch.EOSMatch{},
-		},
+		//Specific: &pbsearch.SearchMatch_Eos{
+		//	Eos: &pbsearch.EOSMatch{},
+		//},
+
 	}
 }
 
