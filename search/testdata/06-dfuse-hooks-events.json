@@ -1,0 +1,175 @@
+{
+  "block": {
+    "id": "02c436687eee91ffc9029c541519bcbef50e79103ab6c09204a2d53e2c002d8d",
+    "block_num": 46413416,
+    "header": {
+      "timestamp": "2019-03-07T20:09:23.000",
+      "producer": "eoshenzhenio",
+      "confirmed": 0,
+      "previous": "02c4366725b2e2e9b4ff5eadfcc849d9991deeab1d2b2d1204c41864a3f12adf",
+      "transaction_mroot": "6507e56039e36f0df6e9e513876e8d6d3def5954257f963fd134beebf818bc49",
+      "action_mroot": "42f35b28b89d3486ec376bfbb56e2cff392f24634acdf664f26d0f6aa2e2ab35",
+      "schedule_version": 731,
+      "header_extensions": [],
+      "producer_signature": "SIG_K1_Kj6ecCD42BqGuXccCUjPg57Yc1JbPe659QBc2UiCbdutBHuEwf5RH2ig9jUMWV4fBHtYVU1SpwCT5K3U3WkPfpDM1AQvch"
+    },
+    "dpos_proposed_irreversible_blocknum": 46413249,
+    "dpos_irreversible_blocknum": 46413081,
+    "block": {
+      "timestamp": "2019-03-07T20:09:23.000",
+      "producer": "eoshenzhenio",
+      "previous": "02c4366725b2e2e9b4ff5eadfcc849d9991deeab1d2b2d1204c41864a3f12adf"
+    }
+  },
+  "transaction_traces": [
+    {
+      "id": "transaction-with-dfuseiohooks-at-top-level-ignored",
+      "block_num": 46413416,
+      "block_time": "2019-03-07T20:09:23.000",
+      "producer_block_id": "02c436687eee91ffc9029c541519bcbef50e79103ab6c09204a2d53e2c002d8d",
+      "receipt": {
+        "status": "executed",
+        "cpu_usage_us": 181,
+        "net_usage_words": 6
+      },
+      "elapsed": 672,
+      "net_usage": 48,
+      "scheduled": true,
+      "action_traces": [
+        {
+          "receipt": {
+            "receiver": "dfuseiohooks",
+            "act_digest": "c5213be6c13b5e6103a5d777621225b464b40e93404ebf86022911770907363b",
+            "global_sequence": "5452539886",
+            "recv_sequence": 1403770,
+            "auth_sequence": [
+              [
+                "dfuseiohooks",
+                968043
+              ]
+            ],
+            "code_sequence": 17,
+            "abi_sequence": 4
+          },
+          "act": {
+            "account": "ffgamebacara",
+            "name": "event",
+            "authorization": [
+              {
+                "actor": "dfuseiohooks",
+                "permission": "active"
+              }
+            ],
+            "data": {
+              "key": "",
+              "data": "key1=value&key2=value2"
+            }
+          },
+          "context_free": false,
+          "elapsed": 586,
+          "trx_id": "7d0a1874a7b7c0c3c327969be2d92d7e5a6a3ed064459526b8f54db7cedab63d",
+          "block_num": 46413416,
+          "block_time": "2019-03-07T20:09:23.000"
+        }
+      ],
+      "except": null
+    },
+    {
+      "id": "transaction-with-some-hooks-below",
+      "block_num": 46413416,
+      "block_time": "2019-03-07T20:09:23.000",
+      "producer_block_id": "02c436687eee91ffc9029c541519bcbef50e79103ab6c09204a2d53e2c002d8d",
+      "receipt": {
+        "status": "executed",
+        "cpu_usage_us": 181,
+        "net_usage_words": 6
+      },
+      "elapsed": 672,
+      "net_usage": 48,
+      "scheduled": true,
+      "action_traces": [
+        {
+          "receipt": {
+            "receiver": "yourz",
+            "act_digest": "c5213be6c13b5e6103a5d777621225b464b40e93404ebf86022911770907363b",
+            "global_sequence": "5452539886",
+            "recv_sequence": 1403770,
+            "auth_sequence": [
+              [
+                "dfuseiohooks",
+                968043
+              ]
+            ],
+            "code_sequence": 17,
+            "abi_sequence": 4
+          },
+          "act": {
+            "account": "yourz",
+            "name": "petactionz",
+            "authorization": [
+              {
+                "actor": "yourz",
+                "permission": "active"
+              }
+            ],
+            "data": {
+              "from": "pet1",
+              "to": "pet2",
+              "memo": "go go"
+            }
+          },
+          "context_free": false,
+          "elapsed": 586,
+          "console": "",
+          "trx_id": "7d0a1874a7b7c0c3c327969be2d92d7e5a6a3ed064459526b8f54db7cedab63d",
+          "block_num": 46413416,
+          "block_time": "2019-03-07T20:09:23.000",
+          "producer_block_id": "02c436687eee91ffc9029c541519bcbef50e79103ab6c09204a2d53e2c002d8d",
+          "except": null,
+          "inline_traces": [
+            {
+              "act": {
+                "account": "dfuseiohooks",
+                "authorization": [
+                  {
+                    "actor": "ffgamebacara",
+                    "permission": "active"
+                  }
+                ],
+                "data": {
+                  "data": "key1=value&key2=value2",
+                  "key": ""
+                },
+                "name": "event"
+              },
+              "block_num": 46413416,
+              "block_time": "2019-03-07T20:09:23.000",
+              "console": "",
+              "context_free": false,
+              "elapsed": 586,
+              "except": null,
+              "inline_traces": [],
+              "producer_block_id": "02c436687eee91ffc9029c541519bcbef50e79103ab6c09204a2d53e2c002d8d",
+              "receipt": {
+                "abi_sequence": 4,
+                "act_digest": "c5213be6c13b5e6103a5d777621225b464b40e93404ebf86022911770907363b",
+                "auth_sequence": [
+                  [
+                    "dfuseiohooks",
+                    968043
+                  ]
+                ],
+                "code_sequence": 17,
+                "global_sequence": "5452539886",
+                "receiver": "dfuseiohooks",
+                "recv_sequence": 1403770
+              },
+              "trx_id": "7d0a1874a7b7c0c3c327969be2d92d7e5a6a3ed064459526b8f54db7cedab63d"
+            }
+          ]
+        }
+      ],
+      "except": null
+    }
+  ]
+}

@@ -14,14 +14,11 @@ require (
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blevesearch/bleve v0.8.0
-	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/coreos/bbolt v1.3.2
-	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
-	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200414153557-67ae4e94d6bd
-	github.com/dfuse-io/bstream v0.0.0-20200414181649-ccb26f680c4a
+	github.com/dfuse-io/bstream v0.0.0-20200414225043-302ba2b0a512
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
@@ -43,14 +40,13 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6
 	github.com/dfuse-io/relayer v0.0.0-20200408161021-6c7af0ee655f
-	github.com/dfuse-io/search v0.0.0-20200409173607-5e4cd768c281
+	github.com/dfuse-io/search v0.0.0-20200415023909-82f272cb4343
 	github.com/dfuse-io/search-client v0.0.0-20200414173833-158fa435efed
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200401171810-21f9a1430901
 	github.com/eoscanada/jsonpb v0.0.0-20191003191457-98439e8ce04b
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
-	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
@@ -64,7 +60,6 @@ require (
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
 	github.com/hidal-go/hidalgo v0.0.0-20190814174001-42e03f3b5eaa
 	github.com/improbable-eng/grpc-web v0.12.0
-	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/manifoldco/promptui v0.7.0
@@ -104,5 +99,3 @@ replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/dfuse-io/search => /Users/julien/codebase/dfuse/search
