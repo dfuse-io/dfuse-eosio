@@ -17,6 +17,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/golang/protobuf/ptypes"
@@ -35,10 +36,10 @@ import (
 )
 
 func init() {
-	//if os.Getenv("TEST_LOG") != "" {
-	zlog = logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel))
-	logging.Set(zlog)
-	//}
+	if os.Getenv("TEST_LOG") != "" {
+		zlog = logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel))
+		logging.Set(zlog)
+	}
 }
 
 func newSearchMatchArchive(trxID string) *pbsearch.SearchMatch {
