@@ -1,6 +1,11 @@
 # dfuse for EOSIO
 
-All [dfuse](https://dfuse.io) services for EOSIO, running from your laptop, as a single binary.
+All [dfuse.io](https://dfuse.io) services for EOSIO, running from your
+laptop or from a container, released as a single statically linked
+binary.
+
+See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
+for other blockchain protocols implementations.
 
 
 ## Getting started
@@ -74,18 +79,12 @@ The built javascript folder is committed with the code for convenience.
 See [eosq README](eosq/README.md) for build instructions
 
 
-## Built with
-
-- Go
-- Protobuf data models & gRPC services
-- All those dfuse pieces being open-sourced
-
 ## Overview
 
 Here's a quick map of this repository:
 
 * [abicodec](./abicodec): ABI encoding and decoding service
-* [fluxdb](./fluxdb): the dfuse State database for EOSIO, with all tables at any block height
+* [fluxdb](./fluxdb): the **dfuse State** database for EOSIO, with all tables at any block height
 * [kvdb-loader](./kvdb-loader): service that loads data into the `kvdb` storage
 * [dashboard](./dashboard): server and UI for the **dfuse for EOSIO** dashboard.
 * [eosq](./eosq): the famous https://eosq.app block explorer
