@@ -62,7 +62,7 @@ func setMaxOpenFilesLimit() error {
 
 	// For now, we use OS X maximal value because changing the maximal value on OS X
 	// is rather hard (see https://superuser.com/a/514049/459230). As such, we will try
-	// to ensure that `dfusebox` can work under such maximal values of open files.
+	// to ensure that `dfuse for EOSIO` can work under such maximal values of open files.
 	err = syscall.Setrlimit(syscall.RLIMIT_NOFILE, &syscall.Rlimit{
 		Cur: osxDefaultMaximalOpenFilesLimit,
 		Max: osxDefaultMaximalOpenFilesLimit,

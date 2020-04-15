@@ -198,7 +198,7 @@ func setupExecution(t *testing.T, testCase string, configFile string) (dataDir s
 	content, err := ioutil.ReadFile(configFile)
 	require.NoError(t, err)
 
-	err = ioutil.WriteFile(filepath.Join(dataDir, "dfusebox.yaml"), content, os.ModePerm)
+	err = ioutil.WriteFile(filepath.Join(dataDir, "dfuse.yaml"), content, os.ModePerm)
 	require.NoError(t, err)
 
 	return dataDir, func() {

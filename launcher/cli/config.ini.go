@@ -59,7 +59,7 @@ signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5
 var mindreaderLocalConfigIni = `# General settings
 access-control-allow-origin = *
 http-server-address = 127.0.0.1:9888
-agent-name = dfusebox
+agent-name = dfuse for EOSIO
 p2p-server-address = 127.0.0.1:9877
 p2p-listen-endpoint  = 127.0.0.1:9877
 p2p-max-nodes-per-host = 2
