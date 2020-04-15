@@ -7,15 +7,8 @@ import (
 	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/dfuse-io/search"
 	"github.com/golang/protobuf/ptypes"
 )
-
-func init() {
-	search.GetSearchMatchFactory = func() search.SearchMatch {
-		return &EOSSearchMatch{}
-	}
-}
 
 type EOSSearchMatch struct {
 	TrxIDPrefix   string   `json:"prefix"` // ID prefix

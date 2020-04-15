@@ -15,10 +15,6 @@ import (
 	"go.uber.org/zap"
 )
 
-func init() {
-	search.GetMatchCollector = Collect
-}
-
 type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
 type EOSBlockMapper struct {

@@ -25,36 +25,37 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-
-	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
-	"github.com/dfuse-io/manageos/mindreader"
-
-	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
-
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
+	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
+	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
+	"github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	eosCodec "github.com/dfuse-io/dfuse-eosio/codecs/deos"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
+	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
+	"github.com/dfuse-io/manageos/mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
+	"github.com/dfuse-io/search"
 	archiveApp "github.com/dfuse-io/search/app/archive"
 	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
+	searchArchive "github.com/dfuse-io/search/archive"
+	"github.com/dfuse-io/search/querylang"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -62,6 +63,27 @@ import (
 )
 
 func init() {
+	// Hooking up EOS specific configurations
+	search.GetMatchCollector = eosSearch.Collect
+	search.GetSearchMatchFactory = func() search.SearchMatch {
+		return &eosSearch.EOSSearchMatch{}
+	}
+	search.GetBleveQueryFactory = func(rawQuery string) *search.BleveQuery {
+		return &search.BleveQuery{
+			Raw:              rawQuery,
+			FieldTransformer: querylang.NoOpFieldTransformer,
+			Validator:        &eosSearch.EOSBleveQueryValidator{},
+		}
+	}
+	eosSearch.InitEOSIndexedFields()
+	search.GetIndexedFieldsMap = eosSearch.GetEOSIndexedFieldsMap
+	livenessQuery, _ := search.NewParsedQuery("receiver:999")
+	searchArchive.LivenessQuery = livenessQuery
+
+	bstream.GetBlockReaderFactory = bstream.BlockReaderFactoryFunc(eosCodec.BlockReaderFactory)
+	bstream.GetBlockDecoder = bstream.BlockDecoderFunc(eosCodec.BlockDecoder)
+	bstream.GetProtocolFirstBlock = 2
+
 	// Manager
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "manager",

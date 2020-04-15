@@ -24,11 +24,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func init() {
-	bstream.GetBlockReaderFactory = bstream.BlockReaderFactoryFunc(blockReaderFactory)
-}
-
-func blockReaderFactory(reader io.Reader) (bstream.BlockReader, error) {
+func BlockReaderFactory(reader io.Reader) (bstream.BlockReader, error) {
 	return NewBlockReader(reader)
 }
 

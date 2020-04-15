@@ -8,10 +8,6 @@ import (
 	search "github.com/dfuse-io/search"
 )
 
-func init() {
-	search.GetMatchCollector = Collect
-}
-
 type trxResult struct {
 	id       string
 	blockNum uint64

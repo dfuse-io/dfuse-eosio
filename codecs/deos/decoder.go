@@ -23,10 +23,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func init() {
-	bstream.GetBlockDecoder = bstream.BlockDecoderFunc(BlockDecoder)
-}
-
 // BlockDecoder transforms a `bstream.Block` payload into a proper `deth.Block` value
 func BlockDecoder(blk *bstream.Block) (interface{}, error) {
 	if blk.Kind() != pbbstream.Protocol_EOS {

@@ -8,22 +8,11 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/search"
-	"github.com/dfuse-io/search/querylang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"
 	"google.golang.org/grpc/codes"
 )
-
-func init() {
-	search.GetBleveQueryFactory = func(rawQuery string) *search.BleveQuery {
-		return &search.BleveQuery{
-			Raw:              rawQuery,
-			FieldTransformer: querylang.NoOpFieldTransformer,
-			Validator:        &EOSBleveQueryValidator{},
-		}
-	}
-}
 
 func Test_validateQueryFields(t *testing.T) {
 	tests := []struct {

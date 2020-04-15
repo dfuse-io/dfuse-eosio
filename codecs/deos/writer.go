@@ -24,10 +24,6 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func init() {
-	bstream.AddBlockWriterFactory(pbbstream.Protocol_EOS, bstream.BlockWriterFactoryFunc(blockWriterFactory))
-}
-
 func blockWriterFactory(writer io.Writer) (bstream.BlockWriter, error) {
 	return NewBlockWriter(writer)
 }
