@@ -98,3 +98,4 @@ replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+replace github.com/dfuse-io/dgraphql => /Users/cbillett/devel/dfuse/go/dgraphql

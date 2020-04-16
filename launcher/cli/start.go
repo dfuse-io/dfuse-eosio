@@ -55,7 +55,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	if config.Version != "v1" {
-		userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", config.Version))
+		userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", configFile, config.Version))
 		return nil
 	}
 
