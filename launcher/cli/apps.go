@@ -504,6 +504,9 @@ func init() {
 			}
 
 			eosDBClient, err := eosdb.New(fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
+			if err != nil {
+				return nil, err
+			}
 			db := &dblockmeta.EOSBlockmetaDB{
 				Driver: eosDBClient,
 			}

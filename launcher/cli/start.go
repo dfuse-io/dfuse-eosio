@@ -88,8 +88,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	apps := parseAppsFromArgs(args, config.RunProducer)
 
 	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
-	err = launcher.Launch(apps)
-	if err != nil {
+	if err = launcher.Launch(apps); err != nil {
 		userLog.Error("unable to launch", zap.Error(err))
 		os.Exit(1)
 	}
