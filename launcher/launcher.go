@@ -53,6 +53,9 @@ func NewLauncher(config *BoxConfig, modules *RuntimeModules) *Launcher {
 }
 
 func (l *Launcher) Launch(appNames []string) error {
+	if len(appNames) == 0 {
+		return fmt.Errorf("no apps specified")
+	}
 	// This is done first as a sanity check so we don't launch anything if something is misconfigured
 	for _, appID := range appNames {
 		appDef, found := AppRegistry[appID]
