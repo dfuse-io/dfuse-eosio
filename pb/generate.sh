@@ -15,12 +15,28 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
-current_dir="`pwd`"
-trap "cd \"$current_dir\"" EXIT
-pushd "$ROOT/pb" &> /dev/null
+# Protobuf definitions
+PROTO=${1:-"$ROOT/../service-definitions"}
+PROTO_EOSIO=${2:-"$ROOT/../proto-eosio"}
 
-protoc -I$ROOT/pb dfuse/eosio/abicodec/v1/abicodec.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/eosio/codec/v1/codec.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/eosio/eosdb/v1/eosdb.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/eosio/funnel/v1/funnel.proto --go_out=plugins=grpc,paths=source_relative:.
-protoc -I$ROOT/pb dfuse/eosio/search/v1/search.proto --go_out=plugins=grpc,paths=source_relative:.
+function main() {
+  current_dir="`pwd`"
+  trap "cd \"$current_dir\"" EXIT
+  pushd "$ROOT/pb" &> /dev/null
+
+  generate "dfuse/eosio/abicodec/v1/abicodec.proto"
+  generate "dfuse/eosio/codec/v1/codec.proto"
+  generate "dfuse/eosio/eosdb/v1/eosdb.proto"
+  generate "dfuse/eosio/funnel/v1/funnel.proto"
+  generate "dfuse/eosio/search/v1/search.proto"
+
+  echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
+  echo "dfuse-io/proto revision: `GIT_DIR=$PROTO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+  echo "dfuse-io/proto-eosio revision: `GIT_DIR=$PROTO_EOSIO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+}
+
+function generate() {
+    protoc -I$PROTO -I$PROTO_EOSIO $1 --go_out=plugins=grpc,paths=source_relative:.
+}
+
+main "$@"
