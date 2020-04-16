@@ -957,10 +957,10 @@
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-10.1.0.tgz#f0950bba18819512d42f7197e56c518aa491cf18"
   integrity sha512-ij4wRiunFfaJxjB0BdrYHIH8FxBJpOwNPhhAcunlmPdXudL1WQV1qoP9un6JsEBAgQH+7UXyyjh0g7jTxXK6tg==
 
-"@dfuse/client@^0.3.8":
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/@dfuse/client/-/client-0.3.8.tgz#eb164c4a952302207b091a7f1cd74bbc54456212"
-  integrity sha512-yky4dLFnsJ0NrOXOQ5yvtJ9PBppHdDkfBagrTTesZIGlVFPHUVobyqXRY9+x6WJ1152ONYRh7AQf9fDZf4Jtqg==
+"@dfuse/client@^0.3.9":
+  version "0.3.9"
+  resolved "https://registry.yarnpkg.com/@dfuse/client/-/client-0.3.9.tgz#ff8eef03bcbb6b099cc1a12cee98f4f5d7d223a9"
+  integrity sha512-3CnCTRc66/SawgQ3wFDfGQrnnSAMLb7F0LfdCTC1ATfh6qVXDLSnyttKcKLqgoMPzy6OviEfXQjVosOOwprMJw==
   dependencies:
     "@types/debug" "^0.0.31"
     debug "^4.1.0"

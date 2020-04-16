@@ -942,6 +942,8 @@ func init() {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
 				HttpListenAddr:          EosqHTTPServingAddr,
+				AuthEndpointURL:         JWTIssuerURL,
+				ApiKey:                  EosqApiKey,
 			}), nil
 		},
 	})

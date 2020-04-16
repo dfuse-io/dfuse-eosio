@@ -42,6 +42,8 @@ const (
 	FluxDBServingAddr           string             = ":13029"
 	DashboardHTTPListenAddr     string             = ":8080"
 	EosqHTTPServingAddr         string             = ":8081"
+	JWTIssuerURL                string             = "null://dfuse"
+	EosqApiKey                  string             = "web_0123456789abcdef"
 	MindreaderNodeosAPIAddr     string             = ":9888"
 	NodeosAPIAddr               string             = ":8888"
 )
