@@ -45,16 +45,11 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	return dgraphqlApp.New(&dgraphqlApp.Config{
-		HTTPListenAddr:  config.HTTPListenAddr,
-		GRPCListenAddr:  config.GRPCListenAddr,
-		NetworkID:       config.NetworkID,
-		AuthPlugin:      config.AuthPlugin,
-		MeteringPlugin:  config.MeteringPlugin,
-		OverrideTraceID: config.OverrideTraceID,
-		Protocol:        config.Protocol,
-		Schemas:         schemas,
-	}), nil
+
+	dgraphqlBaseConfig := config.Config
+	dgraphqlBaseConfig.Schemas = schemas
+
+	return dgraphqlApp.New(&dgraphqlBaseConfig), nil
 }
 
 var RootResolverFactory = eosResolver.NewRoot

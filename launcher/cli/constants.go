@@ -35,6 +35,7 @@ const (
 	IndexerHTTPServingAddr      string             = ":13022"
 	DgraphqlHTTPServingAddr     string             = ":13023"
 	DgraphqlGrpcServingAddr     string             = ":13024"
+	DgraphqlAPIKey              string             = "web_0123456789abcdef"
 	DashboardGrpcServingAddr    string             = ":13725"
 	EoswsHTTPServingAddr        string             = ":13026"
 	ForkresolverServingAddr     string             = ":13027"
@@ -43,7 +44,7 @@ const (
 	DashboardHTTPListenAddr     string             = ":8080"
 	EosqHTTPServingAddr         string             = ":8081"
 	JWTIssuerURL                string             = "null://dfuse"
-	EosqApiKey                  string             = "web_0123456789abcdef"
+	EosqAPIKey                  string             = "web_0123456789abcdef"
 	MindreaderNodeosAPIAddr     string             = ":9888"
 	NodeosAPIAddr               string             = ":8888"
 )

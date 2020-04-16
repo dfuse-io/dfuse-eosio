@@ -901,6 +901,8 @@ func init() {
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
+			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
+			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			return nil
 		},
 		InitFunc: nil,
@@ -920,11 +922,13 @@ func init() {
 					// need to be passed this way because promoted fields
 					HTTPListenAddr:  viper.GetString("dgraphql-http-addr"),
 					GRPCListenAddr:  viper.GetString("dgraphql-grpc-addr"),
-					NetworkID:       viper.GetString("dgraphql-network-id"),
 					AuthPlugin:      viper.GetString("dgraphql-auth-plugin"),
 					MeteringPlugin:  viper.GetString("dgraphql-metering-plugin"),
+					NetworkID:       viper.GetString("dgraphql-network-id"),
 					OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
 					Protocol:        viper.GetString("dgraphql-protocol"),
+					JwtIssuerURL:    viper.GetString("dgraphql-auth-url"),
+					ApiKey:          viper.GetString("dgraphql-api-key"),
 				},
 			})
 		},
@@ -938,12 +942,18 @@ func init() {
 		MetricsID:   "eosq",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
+			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
+			return nil
+		},
+
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
 				HttpListenAddr:          EosqHTTPServingAddr,
-				AuthEndpointURL:         JWTIssuerURL,
-				ApiKey:                  EosqApiKey,
+				AuthEndpointURL:         viper.GetString("eosq-auth-url"),
+				ApiKey:                  viper.GetString("eosq-api-key"),
 			}), nil
 		},
 	})
