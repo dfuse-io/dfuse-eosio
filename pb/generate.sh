@@ -16,7 +16,7 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 # Protobuf definitions
-PROTO=${1:-"$ROOT/../service-definitions"}
+PROTO=${1:-"$ROOT/../proto"}
 PROTO_EOSIO=${2:-"$ROOT/../proto-eosio"}
 
 function main() {
