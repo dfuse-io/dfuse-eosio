@@ -22,6 +22,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/dfuse-io/shutter"
@@ -60,10 +61,12 @@ func (s *Server) Launch() error {
 
 func authIssueHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	expiresAtInSeconds := time.Now().Unix() + (180 * 24 * 60 * 60)
 	authResponse := map[string]interface{}{
 		"token":      "a.b.c",
-		"expires_at": 9999999999,
+		"expires_at": expiresAtInSeconds,
 	}
+
 	zlog.Debug("serving dummy JWT", zap.Any("jwt", authResponse))
 	enc := json.NewEncoder(w)
 
