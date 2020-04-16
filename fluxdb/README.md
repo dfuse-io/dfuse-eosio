@@ -43,7 +43,3 @@ See the `/v0/state` endpoints under https://docs.dfuse.io/reference/eosio/rest/
 See the dfuse-wide
 [contribution guide](https://github.com/dfuse-io/dfuse#contributing)
 if you wish to contribute to this code base.
-
-## License
-
-[Apache 2.0](LICENSE)
