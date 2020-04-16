@@ -128,13 +128,12 @@ func printWelcomeMessage() {
 	message := strings.TrimLeft(`
 Your instance should be ready in a few seconds, here some relevant links:
 
-		Dashboard: http://localhost%s
-		GraphiQL: http://localhost%s/graphiql
-		Eosq: http://localhost%s
+  Dashboard: http://localhost%s
+  GraphiQL: http://localhost%s/graphiql
+  Eosq: http://localhost%s
 `, "\n")
 
-	userLog.Printf(message, DashboardHTTPListenAddr, DgraphqlHTTPServingAddr, EosqHTTPServingAddr)
-
+	userLog.Printf(message, DashboardHTTPListenAddr, DashboardHTTPListenAddr, EosqHTTPServingAddr)
 }
 
 func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
