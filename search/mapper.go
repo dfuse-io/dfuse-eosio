@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -12,6 +13,9 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/search"
+	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/checker/decls"
+	"github.com/google/cel-go/common/types"
 	"go.uber.org/zap"
 )
 
@@ -20,20 +24,66 @@ type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interfa
 type EOSBlockMapper struct {
 	hooksActionName string
 	restrictions    []*restriction
+	celProgram      cel.Program
 }
 
 func NewEOSBlockMapper(hooksActionName string, res string) (*EOSBlockMapper, error) {
-	restrictions, err := parseRestrictionsJSON(res)
+	prog, err := buildCELProgram(res)
 	if err != nil {
-		return nil, fmt.Errorf("failed parsing restrictions JSON")
+		return nil, err
 	}
-	if len(restrictions) > 0 {
-		zlog.Info("applying restrictions on indexing", zap.Reflect("restrictions", restrictions))
-	}
+
+	fmt.Println("MAMA, CEL program built", prog)
+
+	// restrictions, err := parseRestrictionsJSON(res)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed parsing restrictions JSON")
+	// }
+	// if len(restrictions) > 0 {
+	// 	zlog.Info("applying restrictions on indexing", zap.Reflect("restrictions", restrictions))
+	// }
 	return &EOSBlockMapper{
 		hooksActionName: hooksActionName,
-		restrictions:    restrictions,
+		// restrictions:    restrictions,
+		celProgram: prog,
 	}, nil
+}
+
+func buildCELProgram(programString string) (cel.Program, error) {
+	env, err := cel.NewEnv(
+		cel.Declarations(
+			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
+			decls.NewIdent("data", decls.NewMapType(decls.String, decls.String), nil),
+			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
+			decls.NewIdent("receiver", decls.String, nil),
+			decls.NewIdent("account", decls.String, nil),
+			decls.NewIdent("action", decls.String, nil),
+			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
+			decls.NewIdent("input", decls.Bool, nil),
+			decls.NewIdent("notif", decls.Bool, nil),
+			decls.NewIdent("scheduled", decls.Bool, nil),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, issues := env.Parse(programString)
+	if issues != nil && issues.Err() != nil {
+		return nil, fmt.Errorf("parse error: %w", issues.Err())
+	}
+
+	checked, issues := env.Check(parsed)
+	if issues != nil && issues.Err() != nil {
+		return nil, fmt.Errorf("type-check error: %w", issues.Err())
+	}
+
+	prg, err := env.Program(checked)
+	if err != nil {
+		return nil, fmt.Errorf("cel program construction error: %w", err)
+	}
+
+	return prg, nil
 }
 
 func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
@@ -88,17 +138,21 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	actionsCount := 0
 	var docsList []*document.Document
 	batchActionUpdater := func(trxID string, idx int, data map[string]interface{}) error {
-		if m.shouldIndexAction(data) {
-			doc := document.NewDocument(EOSDocumentID(blk.Num(), trxID, idx))
-			err := mapper.MapDocument(doc, data)
-			if err != nil {
-				return err
-			}
-
-			actionsCount++
-			docsList = append(docsList, doc)
+		if !m.shouldIndexAction(data) {
+			return nil
 		}
 
+		t0 := time.Now()
+		doc := document.NewDocument(EOSDocumentID(blk.Num(), trxID, idx))
+		err := mapper.MapDocument(doc, data)
+		if err != nil {
+			return err
+		}
+
+		actionsCount++
+		docsList = append(docsList, doc)
+
+		fmt.Println("MAP", time.Since(t0))
 		return nil
 	}
 
@@ -153,13 +207,20 @@ func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
 }
 
 func (m *EOSBlockMapper) shouldIndexAction(actionWrapper map[string]interface{}) bool {
-	for _, r := range m.restrictions {
-		if !r.Pass(actionWrapper) {
-			return false
-		}
+	fmt.Println("TESTING ACTION", actionWrapper)
+	t0 := time.Now()
+	res, details, err := m.celProgram.Eval(actionWrapper)
+	fmt.Println("CEL running:", res, details, err, time.Since(t0))
+	if err != nil {
+		return false
 	}
-	return true
-
+	return res.Equal(types.True) == types.True
+	// for _, r := range m.restrictions {
+	// 	if !r.Pass(actionWrapper) {
+	// 		return false
+	// 	}
+	// }
+	// return true
 }
 
 func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater eosBatchActionUpdater) error {
