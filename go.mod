@@ -22,7 +22,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
-	github.com/dfuse-io/dgraphql v0.0.0-20200413182955-46b5777006c2
+	github.com/dfuse-io/dgraphql v0.0.0-20200416122022-45ce31ac8803
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -98,4 +98,3 @@ replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-replace github.com/dfuse-io/dgraphql => /Users/cbillett/devel/dfuse/go/dgraphql
