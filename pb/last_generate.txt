@@ -1,2 +1,3 @@
-generate.sh - Wed Apr 15 02:04:33 EDT 2020 - maoueh
-service-definitions revision: 8f41131a312f813188ae56210fd987797b9bde9f
+generate.sh - Thu Apr 16 09:25:35 EDT 2020 - maoueh
+dfuse-io/proto revision: 77bf70666c4334a37e5977ac7bba988b934d58dd
+dfuse-io/proto-eosio revision: 16f9a0a23f39460af342e13f90d3190e1096581f
