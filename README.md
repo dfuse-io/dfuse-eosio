@@ -32,7 +32,7 @@ See [INSTALL.md](INSTALL.md) to install the dependencies (like an instrumented `
 #### Build from source
 
 ```
-git clone git@github.com:dfuse-io/dfuse-eosio
+git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 go install -v ./cmd/dfuseeos
 ```
