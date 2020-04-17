@@ -13,7 +13,7 @@
 # limitations under the License.
 
 keys:
-  ephemeral: 5JbVep8Gf5idYKTi3CiyKyoN15a4YBL9tQZj5qfBVVjV5MXvpv9   #  EOS6jBVvGM3LLGDsbprLS3xGr2R7rMUgkiVVVUJTfBibMCeQkhj35
+  ephemeral: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3   # EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
 contents:
   - name: eosio.bios.abi
@@ -157,4 +157,3 @@ boot_sequence:
     - eosio.saving
     - eosio.bpay
     - eosio.vpay
-
