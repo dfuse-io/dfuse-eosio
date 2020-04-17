@@ -106,7 +106,7 @@ dfuse Products's EOSIO-specific hooks and plugins:
 
 ## Contributing
 
-Please read [CONTRIBUTING.md] for details on our Code of Conduct, [CONVENTIONS.md] for coding conventions, and processes for submitting pull requests.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our Code of Conduct, [CONVENTIONS.md](CONVENTIONS.md) for coding conventions, and processes for submitting pull requests.
 
 ## License
 
