@@ -220,14 +220,14 @@ func init() {
 			if viper.GetBool("mindreader-start-failure-handler") {
 				startUpFunc = func() {
 					userLog.Error(`*********************************************************************************
-									* Mindreader failed to start nodeos process
-									* To see nodeos logs...
-									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
-									*********************************************************************************
+* Mindreader failed to start nodeos process
+* To see nodeos logs...
+* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
+*********************************************************************************
 
-									Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
-									at https://github.com/dfuse-io/dfuse-eosio#dfuse-Instrumented-EOSIO-Prebuilt-Binaries
-									to find how to install it.`)
+Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
+at https://github.com/dfuse-io/dfuse-eosio/blob/develop/INSTALL.md
+to find how to install it.`)
 					os.Exit(1)
 				}
 
