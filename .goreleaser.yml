@@ -1,8 +1,8 @@
-project_name: dfusebox
+project_name: dfuse-eosio
 release:
   github:
-    owner: eoscanada
-    name: dfuse
+    owner: dfuse-io
+    name: dfuse-eosio
   name_template: '{{.Tag}}'
 before:
   hooks:
@@ -12,7 +12,7 @@ before:
 builds:
 - env:
   - CGO_ENABLED=0
-  main: ./cmd/dfusebox
+  main: ./cmd/dfuseeos
   ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
   binary: dfusebox
   goos:
@@ -29,9 +29,11 @@ archives:
     386: i386
     amd64: x86_64
   files:
-  - LICENSE*
-  - README*
-  - CHANGELOG*
+  - LICENSE
+  - README.md
+  - CHANGELOG.md
+  - CONTRIBUTING.md
+  - INSTALL.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -56,9 +58,3 @@ signs:
     artifacts: checksum
 env_files:
   github_token: ~/.config/goreleaser/github_token
-# brew:
-#   github:
-#     owner: dfuse-io
-#     name: homebrew-tap
-#   homepage: "https://eosc.app/"
-#   description: "Cross-platform EOS command-line swiss-army-knife"
