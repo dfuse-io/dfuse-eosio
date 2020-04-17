@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -22,68 +21,28 @@ import (
 type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
 type EOSBlockMapper struct {
-	hooksActionName string
-	restrictions    []*restriction
-	celProgram      cel.Program
+	hooksActionName  string
+	restrictions     []*restriction
+	filterOnProgram  cel.Program
+	filterOutProgram cel.Program
 }
 
-func NewEOSBlockMapper(hooksActionName string, res string) (*EOSBlockMapper, error) {
-	prog, err := buildCELProgram(res)
+func NewEOSBlockMapper(hooksActionName string, filterOn, filterOut string) (*EOSBlockMapper, error) {
+	fonProgram, err := buildCELProgram("true", filterOn)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("MAMA, CEL program built", prog)
+	foutProgram, err := buildCELProgram("false", filterOut)
+	if err != nil {
+		return nil, err
+	}
 
-	// restrictions, err := parseRestrictionsJSON(res)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed parsing restrictions JSON")
-	// }
-	// if len(restrictions) > 0 {
-	// 	zlog.Info("applying restrictions on indexing", zap.Reflect("restrictions", restrictions))
-	// }
 	return &EOSBlockMapper{
-		hooksActionName: hooksActionName,
-		// restrictions:    restrictions,
-		celProgram: prog,
+		hooksActionName:  hooksActionName,
+		filterOnProgram:  fonProgram,
+		filterOutProgram: foutProgram,
 	}, nil
-}
-
-func buildCELProgram(programString string) (cel.Program, error) {
-	env, err := cel.NewEnv(
-		cel.Declarations(
-			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
-			decls.NewIdent("data", decls.NewMapType(decls.String, decls.String), nil),
-			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
-			decls.NewIdent("receiver", decls.String, nil),
-			decls.NewIdent("account", decls.String, nil),
-			decls.NewIdent("action", decls.String, nil),
-			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
-			decls.NewIdent("input", decls.Bool, nil),
-			decls.NewIdent("notif", decls.Bool, nil),
-			decls.NewIdent("scheduled", decls.Bool, nil),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	parsed, issues := env.Parse(programString)
-	if issues != nil && issues.Err() != nil {
-		return nil, fmt.Errorf("parse error: %w", issues.Err())
-	}
-
-	checked, issues := env.Check(parsed)
-	if issues != nil && issues.Err() != nil {
-		return nil, fmt.Errorf("type-check error: %w", issues.Err())
-	}
-
-	prg, err := env.Program(checked)
-	if err != nil {
-		return nil, fmt.Errorf("cel program construction error: %w", err)
-	}
-
-	return prg, nil
 }
 
 func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
@@ -142,7 +101,6 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 			return nil
 		}
 
-		t0 := time.Now()
 		doc := document.NewDocument(EOSDocumentID(blk.Num(), trxID, idx))
 		err := mapper.MapDocument(doc, data)
 		if err != nil {
@@ -152,7 +110,6 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 		actionsCount++
 		docsList = append(docsList, doc)
 
-		fmt.Println("MAP", time.Since(t0))
 		return nil
 	}
 
@@ -206,21 +163,70 @@ func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
 	return false
 }
 
-func (m *EOSBlockMapper) shouldIndexAction(actionWrapper map[string]interface{}) bool {
-	fmt.Println("TESTING ACTION", actionWrapper)
-	t0 := time.Now()
-	res, details, err := m.celProgram.Eval(actionWrapper)
-	fmt.Println("CEL running:", res, details, err, time.Since(t0))
+func buildCELProgram(noopProgram string, programString string) (cel.Program, error) {
+	stripped := strings.TrimSpace(programString)
+	if stripped == "" || stripped == noopProgram {
+		return nil, nil
+	}
+
+	env, err := cel.NewEnv(
+		cel.Declarations(
+			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil), // "table", "key" => string
+			decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
+			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
+			decls.NewIdent("receiver", decls.String, nil),
+			decls.NewIdent("account", decls.String, nil),
+			decls.NewIdent("action", decls.String, nil),
+			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
+			decls.NewIdent("input", decls.Bool, nil),
+			decls.NewIdent("notif", decls.Bool, nil),
+			decls.NewIdent("scheduled", decls.Bool, nil),
+		),
+	)
 	if err != nil {
+		return nil, err
+	}
+
+	exprAst, issues := env.Compile(programString)
+	if issues != nil && issues.Err() != nil {
+		return nil, fmt.Errorf("filter expression parse/check error: %w", issues.Err())
+	}
+
+	if exprAst.ResultType() != decls.Bool {
+		return nil, fmt.Errorf("filter expression should return a boolean, returned %s", exprAst.ResultType())
+	}
+
+	prg, err := env.Program(exprAst)
+	if err != nil {
+		return nil, fmt.Errorf("cel program construction error: %w", err)
+	}
+
+	return prg, nil
+}
+
+func (m *EOSBlockMapper) shouldIndexAction(doc map[string]interface{}) bool {
+	filterOnResult := m.filterMatches(m.filterOnProgram, true, doc)
+	filterOutResult := m.filterMatches(m.filterOutProgram, false, doc)
+	return filterOnResult && !filterOutResult
+}
+
+func (m *EOSBlockMapper) filterMatches(program cel.Program, defaultVal bool, doc map[string]interface{}) bool {
+	if program == nil {
+		return defaultVal
+	}
+
+	res, _, err := program.Eval(doc)
+	if err != nil {
+		//fmt.Printf("filter program: %s\n", err.Error())
 		return false
 	}
-	return res.Equal(types.True) == types.True
-	// for _, r := range m.restrictions {
-	// 	if !r.Pass(actionWrapper) {
-	// 		return false
-	// 	}
-	// }
-	// return true
+	retval, valid := res.(types.Bool)
+	if !valid {
+		// TODO: use logger, we've checked the return value should be a Bool previously, so
+		// it's even safe to panic here
+		panic("return value of our cel program isn't of type bool")
+	}
+	return bool(retval)
 }
 
 func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater eosBatchActionUpdater) error {

@@ -120,7 +120,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "")
+			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "", "")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -245,19 +245,34 @@ func TestParseRestrictionsJSON(t *testing.T) {
 	assert.Len(t, rests, 4)
 }
 
-func TestRestrictions(t *testing.T) {
+func TestFilterOut(t *testing.T) {
 	tests := []struct {
 		name         string
-		restriction  *restriction
+		filterOn     string
+		filterOut    string
 		message      map[string]interface{}
 		expectedPass bool
 	}{
 		{
-			"let pass eosio transfer",
-			&restriction{
-				"account":   "eosio.token",
-				"data.from": "badguy",
+			"filter nothing",
+			"",
+			"",
+			map[string]interface{}{"account": "whatever"},
+			true,
+		},
+		{
+			"filter nothing, with default programs",
+			"true",
+			"false",
+			map[string]interface{}{
+				"account": "whatever",
 			},
+			true,
+		},
+		{
+			"blacklist things FROM badguy",
+			`true`,
+			`account == "eosio.token" && data.from == "badguy"`,
 			map[string]interface{}{
 				"account": "eosio.token",
 				"data": map[string]interface{}{
@@ -268,11 +283,22 @@ func TestRestrictions(t *testing.T) {
 			true,
 		},
 		{
-			"prevent eosio transfer to eidosonecoin",
-			&restriction{
+			"blacklist things TO badguy",
+			`true`,
+			"account == 'eosio.token' && data.to == 'badguy'",
+			map[string]interface{}{
 				"account": "eosio.token",
-				"data.to": "eidosonecoin",
+				"data": map[string]interface{}{
+					"from": "goodguy",
+					"to":   "badguy",
+				},
 			},
+			false,
+		},
+		{
+			"blacklist transfers to eidosonecoin",
+			"",
+			`account == 'eosio.token' && data.to == 'eidosonecoin'`,
 			map[string]interface{}{
 				"account": "eosio.token",
 				"data": map[string]interface{}{
@@ -283,24 +309,83 @@ func TestRestrictions(t *testing.T) {
 			false,
 		},
 		{
-			"block receiver",
-			&restriction{
-				"receiver": "badguy",
+			"non-matching identifier in filter-out program doesn't blacklist",
+			"",
+			`account == 'eosio.token' && data.from == 'broken'`,
+			map[string]interface{}{
+				"account": "eosio.token",
+				"action":  "issue",
+				"data": map[string]interface{}{
+					"to": "winner",
+				},
 			},
+			true,
+		},
+		{
+			"non-matching identifier in filter-on program still matches",
+			`account == 'eosio.token' && data.bob == 'broken'`,
+			``,
+			map[string]interface{}{
+				"account": "eosio.token",
+				"action":  "issue",
+				"data": map[string]interface{}{
+					"to": "winner",
+				},
+			},
+			false,
+		},
+		{
+			"both whitelist and blacklist fail",
+			`data.bob == 'broken'`,
+			`data.rita == 'rebroken'`,
+			map[string]interface{}{
+				"data": map[string]interface{}{
+					"denise": "winner",
+				},
+			},
+			false,
+		},
+		{
+			"whitelisted but blacklist cleans out",
+			`data.bob == '1'`,
+			`data.rita == '2'`,
+			map[string]interface{}{
+				"data": map[string]interface{}{
+					"bob":  "1",
+					"rita": "2",
+				},
+			},
+			false,
+		},
+		{
+			"whitelisted but blacklist broken so doesn't clean out",
+			`data.bob == '1'`,
+			`data.broken == 'really'`,
+			map[string]interface{}{
+				"data": map[string]interface{}{
+					"bob": "1",
+				},
+			},
+			true,
+		},
+
+		{
+			"block receiver",
+			"",
+			`receiver == "badguy"`,
 			map[string]interface{}{
 				"receiver": "badguy",
 			},
 			false,
 		},
 		{
-			"pass with data restriction on no data",
-			&restriction{
-				"account":   "badacct",
-				"data.from": "badguy",
-			},
+			"prevent a failure on evaluation, so matches because blacklist fails",
+			"",
+			`account == "badacct" && has(data.from) && data.from != "badguy"`,
 			map[string]interface{}{
 				"account":  "badacct",
 				"receiver": "badrecv",
+				"data": map[string]interface{}{},
 			},
 			true,
 		},
@@ -308,8 +393,18 @@ func TestRestrictions(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expectedPass, test.restriction.Pass(test.message))
+			mapper, err := NewEOSBlockMapper("", test.filterOn, test.filterOut)
+			assert.NoError(t, err)
+
+			assert.Equal(t, test.expectedPass, mapper.shouldIndexAction(test.message))
 		})
 	}
+}
 
+func TestCompileCELPrograms(t *testing.T) {
+	_, err := NewEOSBlockMapper("", "bro = '", "")
+	require.Error(t, err)
+
+	_, err = NewEOSBlockMapper("", "", "ken")
+	require.Error(t, err)
 }
