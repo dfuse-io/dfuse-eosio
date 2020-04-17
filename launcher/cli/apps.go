@@ -101,53 +101,54 @@ func init() {
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if config.RunProducer {
-				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-				if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
-					return err
-				}
-				if config.ProducerConfigIni == "" {
-					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
-				}
+			if err := CheckNodeosInstallation(viper.GetString("manager-nodeos-path")); err != nil {
+				return err
+			}
 
-				if err := writeGenesisAndConfig(config.ProducerConfigIni, config.GenesisJSON, managerConfigDir, "producer"); err != nil {
-					return err
-				}
+			managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+			if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
+				return err
+			}
+			if config.ProducerConfigIni == "" {
+				return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
+			}
+
+			if err := writeGenesisAndConfig(config.ProducerConfigIni, config.GenesisJSON, managerConfigDir, "producer"); err != nil {
+				return err
 			}
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			if config.RunProducer {
-				return nodeosManagerApp.New(&nodeosManagerApp.Config{
-					ManagerAPIAddress:       viper.GetString("manager-api-addr"),
-					NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
-					ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
-					NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
-					NodeosBinPath:           viper.GetString("manager-nodeos-path"),
-					NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
-					ProducerHostname:        viper.GetString("manager-producer-hostname"),
-					TrustedProducer:         viper.GetString("manager-trusted-producer"),
-					ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
-					ForceProduction:         viper.GetBool("manager-force-production"),
-					NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
-					BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
-					BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
-					DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
-					LogToZap:                viper.GetBool("manager-log-to-zap"),
-					AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
-					RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
-					RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
-					SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
-					ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
-					BackupTag:               viper.GetString("manager-backup-tag"),
-					AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
-					AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
-					AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
-					AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
-					DisableProfiler:         viper.GetBool("manager-disable-profiler"),
-					StartFailureHandlerFunc: nil,
-				}), nil
-			}
+			return nodeosManagerApp.New(&nodeosManagerApp.Config{
+				ManagerAPIAddress:       viper.GetString("manager-api-addr"),
+				NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
+				ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
+				NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
+				NodeosBinPath:           viper.GetString("manager-nodeos-path"),
+				NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
+				ProducerHostname:        viper.GetString("manager-producer-hostname"),
+				TrustedProducer:         viper.GetString("manager-trusted-producer"),
+				ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
+				ForceProduction:         viper.GetBool("manager-force-production"),
+				NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
+				BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
+				BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
+				DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
+				LogToZap:                viper.GetBool("manager-log-to-zap"),
+				AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
+				RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
+				RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
+				SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
+				ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
+				BackupTag:               viper.GetString("manager-backup-tag"),
+				AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
+				AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
+				AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
+				AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
+				DisableProfiler:         viper.GetBool("manager-disable-profiler"),
+				StartFailureHandlerFunc: nil,
+			}), nil
+
 			// Can we detect a nil interface
 			return nil, nil
 		},
@@ -194,6 +195,10 @@ func init() {
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
+			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
+				return err
+			}
+
 			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
 			if err := mkdirStorePathIfLocal(nodeosConfigDir); err != nil {
 				return err
