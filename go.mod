@@ -21,7 +21,7 @@ require (
 	github.com/dfuse-io/bstream v0.0.0-20200416141423-3cf4bc051382
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
-	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
+	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200416174509-8a1810f128b0
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
