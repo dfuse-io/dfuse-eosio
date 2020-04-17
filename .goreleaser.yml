@@ -14,7 +14,7 @@ builds:
   - CGO_ENABLED=0
   main: ./cmd/dfuseeos
   ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
-  binary: dfusebox
+  binary: dfuseeos
   goos:
     - linux
     - darwin
