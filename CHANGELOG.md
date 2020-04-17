@@ -5,12 +5,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-* renamed `dfusebox` to `dfuse for EOSIO`
-  * `dfusebox.yaml` to `dfuse.yaml`
-  * `dfusebox-data` to `dfuse-data`
 
-## [v0.2.0] 2020-04-03
+
+## [v0.1.0-beta1] 2020-04-17
 
 ### Added
 * Added `--nodeos-path` to control which `nodeos` executable is used.
@@ -20,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `init --reset` option, `dfusebox purge` does it all now.
 
 ### Changed
+* Renamed `dfusebox` to `dfuse for EOSIO`
+  * `dfusebox.yaml` to `dfuse.yaml`
+  * `dfusebox-data` to `dfuse-data`
 * `--data-dir` now defaults to `./dfusebox-data`, and is separate from a chain name or the config file location.
 * `dfusebox init` now only generates a `dfusebox.yaml` config file, which can be booted with `dfusebox start`.
 * `dfusebox init` now only has the interactive method. We can later add more programmatic method to boot chains.  With a `dfusebox.yaml` config now, however, we can reuse initializations multiple times.
