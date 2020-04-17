@@ -1,6 +1,8 @@
 # dfuse for EOSIO
+[![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All [dfuse.io](https://dfuse.io) services for EOSIO, running from your
+All **[dfuse.io](https://dfuse.io)** services for EOSIO, running from your
 laptop or from a container, released as a single statically linked
 binary.
 
