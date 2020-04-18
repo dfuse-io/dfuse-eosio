@@ -18,10 +18,10 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
-func (db *EOSDatabase) storeTransactions(blk *pbeos.Block) (map[string]bool, error) {
+func (db *EOSDatabase) storeTransactions(blk *pbcodec.Block) (map[string]bool, error) {
 	blockID := blk.Id
 	transactionKeys := map[string]bool{}
 

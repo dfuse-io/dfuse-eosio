@@ -19,7 +19,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
 	commonTypes "github.com/dfuse-io/dgraphql/types"
@@ -65,7 +65,7 @@ func (r *Root) QueryBlock(ctx context.Context, req QueryBlockRequest) (*Block, e
 		return nil, dgraphql.Errorf(ctx, "Invalid request, can only specify block num or ID")
 	}
 
-	var block *pbeos.BlockWithRefs
+	var block *pbcodec.BlockWithRefs
 	var err error
 	if req.Id != nil {
 		blockID := strings.TrimPrefix(*req.Id, "0x")
@@ -125,10 +125,10 @@ func (r *Root) QueryBlock(ctx context.Context, req QueryBlockRequest) (*Block, e
 //----------------------------
 type Block struct {
 	root        *Root
-	blkWithRefs *pbeos.BlockWithRefs
+	blkWithRefs *pbcodec.BlockWithRefs
 }
 
-func newBlock(blkWithRefs *pbeos.BlockWithRefs, root *Root) *Block {
+func newBlock(blkWithRefs *pbcodec.BlockWithRefs, root *Root) *Block {
 	return &Block{
 		root:        root,
 		blkWithRefs: blkWithRefs,
@@ -193,9 +193,9 @@ func (b *Block) TransactionTraces(ctx context.Context, req *TransactionTracesReq
 		return nil, dgraphql.Errorf(ctx, "unable to retrieve transaction traces")
 	}
 
-	var trxLifecycles []*pbeos.TransactionLifecycle
+	var trxLifecycles []*pbcodec.TransactionLifecycle
 	for _, events := range trxEvents {
-		lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool {
+		lifecycle := pbcodec.MergeTransactionEvents(events, func(id string) bool {
 			return id == b.blkWithRefs.Id
 		})
 		trxLifecycles = append(trxLifecycles, lifecycle)

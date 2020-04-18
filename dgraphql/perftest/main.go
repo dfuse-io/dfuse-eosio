@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dhammer"
 )
 
@@ -73,7 +73,7 @@ func main() {
 					close(doneReading)
 					return
 				}
-				evs := v.([]*pbeos.TransactionEvent)
+				evs := v.([]*pbcodec.TransactionEvent)
 				fmt.Println("got row: ", evs[0].Id, "events:", len(evs))
 			}
 		}

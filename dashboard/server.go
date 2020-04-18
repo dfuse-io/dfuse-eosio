@@ -25,6 +25,7 @@ import (
 	"time"
 
 	rice "github.com/GeertJohan/go.rice"
+	dashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
 	pbdashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
 	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dgrpc"
@@ -252,27 +253,29 @@ func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.D
 		stream.Send(resp)
 	}
 
+	sub := s.config.Launcher.SubscribeAppStatus()
+	defer s.config.Launcher.UnsubscribeAppStatus(sub)
+
 	for {
 		select {
-		case newAppStatus := <-l.AppStatusStream:
-			resp := &pbdashboard.AppsInfoResponse{}
-			if req.FilterAppId != "" {
-				if req.FilterAppId == newAppStatus.GetId() {
-					resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
-						Id:     newAppStatus.GetId(),
-						Status: l.GetAppStatus(newAppStatus.GetId()),
-					})
-				}
-			} else {
-				resp.Apps = append(resp.Apps, &pbdashboard.AppInfo{
-					Id:     newAppStatus.GetId(),
-					Status: l.GetAppStatus(newAppStatus.GetId()),
-				})
+		case <-stream.Context().Done():
+			return nil
+		case info, opened := <-sub.IncomingAppInfo:
+			if !opened {
+				// we've been shutdown somehow, simply close the current connection.
+				// we'll have logged at the source
+				return nil
 			}
 
-			if len(resp.Apps) > 0 {
-				zlog.Debug("sending new AppStatus")
-				err := stream.Send(resp)
+			if req.FilterAppId == "" || req.FilterAppId == info.Id {
+				zlog.Debug("sending stream info",
+					zap.String("app_id", info.Id),
+					zap.Int32("app_status", int32(info.Status)),
+				)
+
+				err := stream.Send(&dashboard.AppsInfoResponse{
+					Apps: []*dashboard.AppInfo{info},
+				})
 				if err != nil {
 					zlog.Info("failed writing to socket, shutting down subscription", zap.Error(err))
 					return err
@@ -280,6 +283,7 @@ func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.D
 			}
 		}
 	}
+
 }
 
 var successfulStartAppResponse = &pbdashboard.StartAppResponse{}

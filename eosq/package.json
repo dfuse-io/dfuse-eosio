@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@dfuse/client": "^0.3.8",
+    "@dfuse/client": "^0.3.9",
     "@emotion/core": "^10.0.5",
     "@emotion/styled": "^10.0.5",
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",

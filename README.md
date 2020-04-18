@@ -1,6 +1,8 @@
 # dfuse for EOSIO
+[![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All [dfuse.io](https://dfuse.io) services for EOSIO, running from your
+All **[dfuse.io](https://dfuse.io)** services for EOSIO, running from your
 laptop or from a container, released as a single statically linked
 binary.
 
@@ -30,7 +32,7 @@ See [INSTALL.md](INSTALL.md) to install the dependencies (like an instrumented `
 #### Build from source
 
 ```
-git clone git@github.com:dfuse-io/dfuse-eosio
+git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 go install -v ./cmd/dfuseeos
 ```
@@ -104,7 +106,7 @@ dfuse Products's EOSIO-specific hooks and plugins:
 
 ## Contributing
 
-Please read [CONTRIBUTING.md] for details on our Code of Conduct, [CONVENTIONS.md] for coding conventions, and processes for submitting pull requests.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our Code of Conduct, [CONVENTIONS.md](CONVENTIONS.md) for coding conventions, and processes for submitting pull requests.
 
 ## License
 

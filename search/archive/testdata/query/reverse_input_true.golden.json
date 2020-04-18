@@ -4,7 +4,7 @@
     "blockNum": 4,
     "cursor": "1:4::trx1",
     "chainSpecific": {
-      "type_url": "type.googleapis.com/dfuse.search.eos.v1.Match",
+      "type_url": "type.googleapis.com/dfuse.eosio.search.v1.Match",
       "value": "CgEA"
     },
     "irrBlockNum": 4

@@ -27,7 +27,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosdb/mdl"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -38,7 +38,7 @@ import (
 var latestCellOnly = bigtable.LatestNFilter(1)
 var latestCellFilter = bigtable.RowFilter(latestCellOnly)
 
-func (b *EOSDatabase) GetBlock(ctx context.Context, blockID string) (*pbeos.BlockWithRefs, error) {
+func (b *EOSDatabase) GetBlock(ctx context.Context, blockID string) (*pbcodec.BlockWithRefs, error) {
 	ctx, span := b.StartSpan(ctx, "get block", trace.StringAttribute("block_id", blockID))
 	defer span.End()
 
@@ -74,7 +74,7 @@ func (b *EOSDatabase) GetLastWrittenBlockID(ctx context.Context) (out string, er
 	return blocks[0].Id, nil
 }
 
-func (b *EOSDatabase) GetBlockByNum(ctx context.Context, blockNum uint32) ([]*pbeos.BlockWithRefs, error) {
+func (b *EOSDatabase) GetBlockByNum(ctx context.Context, blockNum uint32) ([]*pbcodec.BlockWithRefs, error) {
 	ctx, span := b.StartSpan(ctx, "get block by num", trace.Int64Attribute("block_num", int64(blockNum)))
 	defer span.End()
 
@@ -259,7 +259,7 @@ func (b *EOSDatabase) ListTransactionsForBlockID(
 	}, nil
 }
 
-func (b *EOSDatabase) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*pbeos.BlockWithRefs, error) {
+func (b *EOSDatabase) ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*pbcodec.BlockWithRefs, error) {
 	ctx, span := b.StartSpan(ctx, "list blocks",
 		trace.Int64Attribute("start_block_num", int64(startBlockNum)),
 		trace.Int64Attribute("limit", int64(limit)),
@@ -281,7 +281,7 @@ func (b *EOSDatabase) ListBlocks(ctx context.Context, startBlockNum uint32, limi
 	return responses, nil
 }
 
-func (b *EOSDatabase) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbeos.BlockWithRefs, error) {
+func (b *EOSDatabase) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbcodec.BlockWithRefs, error) {
 	ctx, span := b.StartSpan(ctx, "list siblings blocks",
 		trace.Int64Attribute("block_num", int64(blockNum)),
 		trace.Int64Attribute("spread", int64(spread)),
@@ -306,7 +306,7 @@ func (b *EOSDatabase) ListSiblingBlocks(ctx context.Context, blockNum uint32, sp
 	return responses, nil
 }
 
-func (b *EOSDatabase) ListBlocksRange(ctx context.Context, blockNumStart uint32, blockNumEnd uint32) ([]*pbeos.BlockWithRefs, error) {
+func (b *EOSDatabase) ListBlocksRange(ctx context.Context, blockNumStart uint32, blockNumEnd uint32) ([]*pbcodec.BlockWithRefs, error) {
 	ctx, span := b.StartSpan(ctx, "list blocks range",
 		trace.Int64Attribute("block_num_start", int64(blockNumStart)),
 		trace.Int64Attribute("block_num_end", int64(blockNumEnd)),
@@ -374,7 +374,7 @@ func createAccountRowSets(concurrentReadCount uint32) []bigtable.RowSet {
 	return rowRanges
 }
 
-func (b *EOSDatabase) GetAccount(ctx context.Context, accountName string) (*pbeos.AccountCreationRef, error) {
+func (b *EOSDatabase) GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error) {
 	ctx, span := b.StartSpan(ctx, "get account", trace.StringAttribute("account_name", accountName))
 	defer span.End()
 
@@ -398,7 +398,7 @@ func (b *EOSDatabase) GetAccount(ctx context.Context, accountName string) (*pbeo
 		return nil, err
 	}
 
-	out := &pbeos.AccountCreationRef{
+	out := &pbcodec.AccountCreationRef{
 		Account: string(parsed.Name),
 		Creator: string(parsed.CreatorName),
 	}
@@ -424,14 +424,14 @@ func (b *EOSDatabase) GetAccount(ctx context.Context, accountName string) (*pbeo
 // 	// MOVED TO `eosws`
 // }
 
-func (b *EOSDatabase) GetTransactionTraces(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (b *EOSDatabase) GetTransactionTraces(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	events, err := b.GetTransactionEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, ev := range events {
-		if _, ok := ev.Event.(*pbeos.TransactionEvent_Execution); ok {
+		if _, ok := ev.Event.(*pbcodec.TransactionEvent_Execution); ok {
 			out = append(out, ev)
 		}
 	}
@@ -445,7 +445,7 @@ func (b *EOSDatabase) GetTransactionTraces(ctx context.Context, idPrefix string)
 	return out, nil
 }
 
-func (b *EOSDatabase) GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbeos.TransactionEvent, error) {
+func (b *EOSDatabase) GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error) {
 	ctx, span := b.StartSpan(ctx, "get transaction", trace.StringAttribute("id_prefix", idPrefix))
 	defer span.End()
 
@@ -462,16 +462,16 @@ func (b *EOSDatabase) GetTransactionEvents(ctx context.Context, idPrefix string)
 	return events, nil
 }
 
-func (b *EOSDatabase) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbeos.TransactionEvent, err error) {
+func (b *EOSDatabase) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
 	allEvents, err := b.GetTransactionEventsBatch(ctx, idPrefixes)
 	if err != nil {
 		return nil, err
 	}
 
-	out = make([][]*pbeos.TransactionEvent, len(allEvents))
+	out = make([][]*pbcodec.TransactionEvent, len(allEvents))
 	for idx, events := range allEvents {
 		for _, ev := range events {
-			if _, ok := ev.Event.(*pbeos.TransactionEvent_Execution); ok {
+			if _, ok := ev.Event.(*pbcodec.TransactionEvent_Execution); ok {
 				out[idx] = append(out[idx], ev)
 			}
 		}
@@ -483,8 +483,8 @@ func (b *EOSDatabase) GetTransactionTracesBatch(ctx context.Context, idPrefixes 
 // GetTransactionEventsBatch retrieves all events for each transaction
 // listed in `idPrefixes`.  It is the caller's responsibility to
 // decide whether it wants Irreversible only, by using
-// `pbeos.MergeTransactionEvents()` for example.
-func (b *EOSDatabase) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbeos.TransactionEvent, error) {
+// `pbcodec.MergeTransactionEvents()` for example.
+func (b *EOSDatabase) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error) {
 	ctx, span := b.StartSpan(ctx, "get transaction row batch trace", trace.Int64Attribute("len_id_prefixes", int64(len(idPrefixes))))
 	defer span.End()
 
@@ -501,7 +501,7 @@ func (b *EOSDatabase) GetTransactionEventsBatch(ctx context.Context, idPrefixes 
 	}
 
 	m := idToPrefix{}
-	out := make([][]*pbeos.TransactionEvent, len(idPrefixes))
+	out := make([][]*pbcodec.TransactionEvent, len(idPrefixes))
 	for _, ev := range events {
 		prefix, err := m.prefix(idPrefixes, ev.Id)
 		if err != nil {
@@ -560,7 +560,7 @@ func (b *EOSDatabase) GetTransactionRow(ctx context.Context, idPrefix string) (*
 // FIXME: delete this, it's used by `eosws`, but see how it can NOT use it anymore.
 // This should be replaced by `GetTransactionEventsBatch` and Merged like the other ones.
 // Hopefully there's no difference (check in `eosws`).
-func (b *EOSDatabase) GetTransactions(ctx context.Context, ids []string, chainDiscriminator eosdb.ChainDiscriminator) (out []*pbeos.TransactionLifecycle, err error) {
+func (b *EOSDatabase) GetTransactions(ctx context.Context, ids []string, chainDiscriminator eosdb.ChainDiscriminator) (out []*pbcodec.TransactionLifecycle, err error) {
 	ctx, span := b.StartSpan(ctx, "get transactions", trace.Int64Attribute("transaction_count", int64(len(ids))))
 	defer span.End()
 

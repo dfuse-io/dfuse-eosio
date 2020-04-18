@@ -18,7 +18,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
@@ -51,7 +51,7 @@ func (p *Pipeline) Launch() {
 			return nil
 		}
 
-		//blk := block.ToNative().(*pbeos.Block)
+		//blk := block.ToNative().(*pbcodec.Block)
 		//zlog.Info("Implemented me for god sake!", zap.Any("block", blk))
 
 		// p.processExecutedTransactions(blk.AllExecutedTransactionTraces())
@@ -72,7 +72,7 @@ func (p *Pipeline) Launch() {
 	})
 }
 
-func (p *Pipeline) processExecutedTransactions(transactions []*pbeos.TransactionTrace) {
+func (p *Pipeline) processExecutedTransactions(transactions []*pbcodec.TransactionTrace) {
 	for _, transaction := range transactions {
 		for _, action := range transaction.ActionTraces {
 			p.processExecutedAction(action)
@@ -80,13 +80,13 @@ func (p *Pipeline) processExecutedTransactions(transactions []*pbeos.Transaction
 	}
 }
 
-func (p *Pipeline) processExecutedAction(action *pbeos.ActionTrace) {
+func (p *Pipeline) processExecutedAction(action *pbcodec.ActionTrace) {
 	if action.Action.Name == "newaccount" && action.FullName() == "eosio:eosio:newaccount" {
 		p.updateCompletion(action)
 	}
 }
 
-func (p *Pipeline) updateCompletion(actionTrace *pbeos.ActionTrace) {
+func (p *Pipeline) updateCompletion(actionTrace *pbcodec.ActionTrace) {
 	action := actionTrace.Action
 	var newAccount *system.NewAccount
 	if err := action.UnmarshalData(&newAccount); err != nil {

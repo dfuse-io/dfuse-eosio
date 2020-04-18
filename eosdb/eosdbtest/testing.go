@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -42,16 +42,16 @@ func TestAll(t *testing.T, driverName string, driverFactory DriverFactory) {
 	TestAllTransactionsReader(t, driverName, driverFactory)
 }
 
-func TestBlock(t *testing.T, blkId string, previousBlkId string, trxTraceJSONs ...string) *pbeos.Block {
-	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
+func TestBlock(t *testing.T, blkId string, previousBlkId string, trxTraceJSONs ...string) *pbcodec.Block {
+	trxTraces := make([]*pbcodec.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbeos.TransactionTrace)
+		trxTrace := new(pbcodec.TransactionTrace)
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbeos.Block{
+	pbblock := &pbcodec.Block{
 		Id:                blkId,
 		Number:            eos.BlockNum(blkId),
 		TransactionTraces: trxTraces,
@@ -64,7 +64,7 @@ func TestBlock(t *testing.T, blkId string, previousBlkId string, trxTraceJSONs .
 	require.NoError(t, err)
 
 	pbblock.DposIrreversibleBlocknum = pbblock.Number - 1
-	pbblock.Header = &pbeos.BlockHeader{
+	pbblock.Header = &pbcodec.BlockHeader{
 		Previous:  fmt.Sprintf("%08d%s", pbblock.Number-1, blkId[8:]),
 		Producer:  "tester",
 		Timestamp: blockTimestamp,

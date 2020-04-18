@@ -33,7 +33,6 @@ func setup() {
 	setupLogger()
 	setupTracing()
 
-	userLog.Printf("Confidential property of dfuse")
 	go dmetrics.Serve(":9102")
 
 	err := setMaxOpenFilesLimit()

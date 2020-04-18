@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
 type ChainDiscriminator func(blockID string) bool
@@ -43,7 +43,7 @@ type BlocksTransactionsReader interface {
 }
 
 type AccountsReader interface {
-	GetAccount(ctx context.Context, accountName string) (*pbeos.AccountCreationRef, error)
+	GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error)
 	//TODO: concurrentReadCount is that a property only for Bigtable? should it be configured when creating the driver
 	ListAccountNames(ctx context.Context, concurrentReadCount uint32) ([]string, error)
 }
@@ -53,16 +53,16 @@ type TransactionsReader interface {
 	// and the caller will discriminate the right block IDs from the wrong.
 
 	// GetTransactionTraces retrieves only the execution traces event, ignoring deferred lifecycle events.
-	GetTransactionTraces(ctx context.Context, idPrefix string) ([]*pbeos.TransactionEvent, error)
+	GetTransactionTraces(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error)
 	// GetTransactionTracesBatch returns only the execution traces (ignoring deferred licycle events), for each id prefix specified.
-	GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) ([][]*pbeos.TransactionEvent, error)
+	GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error)
 
 	// GetTransactionEvents retrieves all the events related to the lifecycle of a transaction, including transaction introduction, deferred creations, cancellations, and traces of execution.
 	// This function returns `kvdb.ErrNotFound` is the transaction was not found
-	GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbeos.TransactionEvent, error)
+	GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error)
 	// GetTransactionEventsBatch returns a list of all events for each transaction id prefix.
 	// If some ids are not found, the corresponding index will have a nil list of TransactionEvent.
-	GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbeos.TransactionEvent, error)
+	GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error)
 }
 
 type TimelineExplorer interface {
@@ -73,8 +73,8 @@ type TimelineExplorer interface {
 
 type BlocksReader interface {
 	GetLastWrittenBlockID(ctx context.Context) (blockID string, err error)
-	GetBlock(ctx context.Context, id string) (*pbeos.BlockWithRefs, error)
-	GetBlockByNum(ctx context.Context, num uint32) ([]*pbeos.BlockWithRefs, error)
+	GetBlock(ctx context.Context, id string) (*pbcodec.BlockWithRefs, error)
+	GetBlockByNum(ctx context.Context, num uint32) ([]*pbcodec.BlockWithRefs, error)
 	GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (ref bstream.BlockRef, err error)
 	GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bstream.BlockRef, err error)
 	// ListBlocks retrieves blocks where `highBlockNum` is the highest
@@ -85,16 +85,16 @@ type BlocksReader interface {
 	// FIXME: this one should be `lowBlockNum` and `highBlockNum`, the
 	// thing is you might not have the expected block range if there
 	// are forked blocks provided.
-	ListBlocks(ctx context.Context, highBlockNum uint32, limit int) ([]*pbeos.BlockWithRefs, error)
-	ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbeos.BlockWithRefs, error)
+	ListBlocks(ctx context.Context, highBlockNum uint32, limit int) ([]*pbcodec.BlockWithRefs, error)
+	ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*pbcodec.BlockWithRefs, error)
 }
 
 type DBWriter interface {
 	SetWriterChainID(chainID []byte)
 	// Where did I leave off last time I wrote?
 	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
-	PutBlock(ctx context.Context, blk *pbeos.Block) error
-	UpdateNowIrreversibleBlock(ctx context.Context, blk *pbeos.Block) error
+	PutBlock(ctx context.Context, blk *pbcodec.Block) error
+	UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error
 	// Flush MUST be called or you WILL lose data
 	Flush(context.Context) error
 }

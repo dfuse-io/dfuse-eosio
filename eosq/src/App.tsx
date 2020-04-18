@@ -20,6 +20,6 @@ const App = (props: any) => (
   <AppErrorBoundary>
     <Container />
   </AppErrorBoundary>
-)
+);
 
 export default App

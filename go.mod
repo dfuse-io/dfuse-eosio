@@ -17,12 +17,12 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200415105003-0b2b107fb2ca
-	github.com/dfuse-io/bstream v0.0.0-20200415154805-fc5f1d364031
+	github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8
+	github.com/dfuse-io/bstream v0.0.0-20200416141423-3cf4bc051382
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
-	github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1
-	github.com/dfuse-io/dgraphql v0.0.0-20200413182955-46b5777006c2
+	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
+	github.com/dfuse-io/dgraphql v0.0.0-20200416174509-8a1810f128b0
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -30,17 +30,17 @@ require (
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
 	github.com/dfuse-io/dmetrics v0.0.0-20200406214800-499fc7b320ab
 	github.com/dfuse-io/dstore v0.0.0-20200407173215-10b5ced43022
-	github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125
+	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200414142539-055d6b6fb265
+	github.com/dfuse-io/kvdb v0.0.0-20200415145138-10866173305f
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
-	github.com/dfuse-io/manageos v0.0.0-20200415155056-cf12d1f589be
+	github.com/dfuse-io/manageos v0.0.0-20200415205129-a682936ecac8
 	github.com/dfuse-io/merger v0.0.0-20200415155431-c9eb96bab37a
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200415053022-5b009da68d9c
-	github.com/dfuse-io/relayer v0.0.0-20200415111224-818cc0ff8f14
-	github.com/dfuse-io/search v0.0.0-20200415165454-ed7333c50750
+	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
+	github.com/dfuse-io/relayer v0.0.0-20200415185455-d2258925e560
+	github.com/dfuse-io/search v0.0.0-20200416191519-bae68194ce26
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -51,6 +51,7 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.4
+	github.com/google/cel-go v0.4.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
@@ -65,6 +66,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
+	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00 // indirect
+	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521 // indirect
+	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.2

@@ -45,7 +45,6 @@ func newServer(config *Config) *Server {
 
 func (s *Server) Launch() error {
 	router := mux.NewRouter()
-	router.Path("/v1/auth/issue").Methods("POST").HandlerFunc(authIssueHandler)
 	router.PathPrefix("/").HandlerFunc(s.staticAssetsHandler)
 
 	zlog.Debug("eosq static listener http server launching", zap.String("addr", s.config.HttpListenAddr))
@@ -56,21 +55,6 @@ func (s *Server) Launch() error {
 	}
 
 	return nil
-}
-
-func authIssueHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	authResponse := map[string]interface{}{
-		"token":      "a.b.c",
-		"expires_at": 9999999999,
-	}
-	zlog.Debug("serving dummy JWT", zap.Any("jwt", authResponse))
-	enc := json.NewEncoder(w)
-
-	if err := enc.Encode(authResponse); err != nil {
-		zlog.Error("serving dummy JWT", zap.Error(err))
-	}
-	return
 }
 
 func (s *Server) staticAssetsHandler(w http.ResponseWriter, r *http.Request) {
@@ -128,8 +112,8 @@ func (s *Server) templatedIndex() (*bytes.Reader, error) {
 		"current_network":     "local",
 		"on_demand":           false,
 		"dfuse_io_endpoint":   "localhost" + s.config.DashboardHTTPListenAddr,
-		"dfuse_io_api_key":    "web_0123456789abcdef",
-		"dfuse_auth_endpoint": "http://localhost" + s.config.HttpListenAddr,
+		"dfuse_io_api_key":    s.config.ApiKey,
+		"dfuse_auth_endpoint": s.config.AuthEndpointURL,
 		"display_price":       false,
 		"price_ticker_name":   "EOS",
 		"available_networks":  []interface{}{},

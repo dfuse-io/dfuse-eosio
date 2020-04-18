@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/ecc"
@@ -60,7 +60,7 @@ func newWriter(t *testing.T) (*DB, func()) {
 	return db, cleanup
 }
 
-func testBlock1() *pbeos.Block {
+func testBlock1() *pbcodec.Block {
 	blockTime, _ := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")
 	blockTimestamp, _ := ptypes.TimestampProto(blockTime)
 
@@ -97,51 +97,51 @@ func testBlock1() *pbeos.Block {
 		},
 	}
 
-	pbblock := &pbeos.Block{
+	pbblock := &pbcodec.Block{
 		Id:                       "00000002a",
 		Number:                   2,
 		DposIrreversibleBlocknum: 1,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Previous:  "00000001a",
 			Producer:  "tester",
 			Timestamp: blockTimestamp,
 		},
-		Transactions: []*pbeos.TransactionReceipt{
+		Transactions: []*pbcodec.TransactionReceipt{
 			codec.TransactionReceiptToDEOS(receipt),
 		},
-		ImplicitTransactionOps: []*pbeos.TrxOp{
+		ImplicitTransactionOps: []*pbcodec.TrxOp{
 			{
-				Operation:     pbeos.TrxOp_OPERATION_CREATE,
+				Operation:     pbcodec.TrxOp_OPERATION_CREATE,
 				Name:          "onblock",
 				TransactionId: "abc999",
-				Transaction: &pbeos.SignedTransaction{
-					Transaction: &pbeos.Transaction{},
+				Transaction: &pbcodec.SignedTransaction{
+					Transaction: &pbcodec.Transaction{},
 				},
 			},
 		},
-		TransactionTraces: []*pbeos.TransactionTrace{
+		TransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "00112233",
-				DtrxOps: []*pbeos.DTrxOp{
+				DtrxOps: []*pbcodec.DTrxOp{
 					{
-						Operation:     pbeos.DTrxOp_OPERATION_CREATE,
+						Operation:     pbcodec.DTrxOp_OPERATION_CREATE,
 						TransactionId: "trx777",
-						Transaction: &pbeos.SignedTransaction{
-							Transaction: &pbeos.Transaction{},
+						Transaction: &pbcodec.SignedTransaction{
+							Transaction: &pbcodec.Transaction{},
 						},
 					},
 					{
-						Operation:     pbeos.DTrxOp_OPERATION_CANCEL,
+						Operation:     pbcodec.DTrxOp_OPERATION_CANCEL,
 						TransactionId: "trx888",
-						Transaction: &pbeos.SignedTransaction{
-							Transaction: &pbeos.Transaction{},
+						Transaction: &pbcodec.SignedTransaction{
+							Transaction: &pbcodec.Transaction{},
 						},
 					},
 				},
-				ActionTraces: []*pbeos.ActionTrace{
+				ActionTraces: []*pbcodec.ActionTrace{
 					{
 						Receiver: "eosio",
-						Action: &pbeos.Action{
+						Action: &pbcodec.Action{
 							Account:  "eosio",
 							Name:     "newaccount",
 							JsonData: `{"creator": "frankenstein", "name": "createdacct"}`,
@@ -242,7 +242,7 @@ func TestReadTransactions(t *testing.T) {
 	assert.Equal(t, "00112233", ev1.Id)
 	assert.Equal(t, "00000002a", ev1.BlockId)
 	assert.True(t, ev1.Irreversible)
-	add, found := ev1.Event.(*pbeos.TransactionEvent_Addition)
+	add, found := ev1.Event.(*pbcodec.TransactionEvent_Addition)
 	assert.True(t, found)
 	assert.Equal(t, 32, int(add.Addition.Receipt.NetUsageWords))
 	assert.Equal(t, 32, int(add.Addition.Receipt.CpuUsageMicroSeconds))
@@ -256,7 +256,7 @@ func TestReadTransactions(t *testing.T) {
 	assert.Equal(t, "00000002a", ev2.BlockId)
 	assert.True(t, ev2.Irreversible)
 
-	exec, found := ev2.Event.(*pbeos.TransactionEvent_Execution)
+	exec, found := ev2.Event.(*pbcodec.TransactionEvent_Execution)
 	assert.True(t, found)
 	assert.Equal(t, "00000001a", exec.Execution.BlockHeader.Previous)
 	assert.Equal(t, "tester", exec.Execution.BlockHeader.Producer)
@@ -271,10 +271,10 @@ func TestReadTimelineEqual(t *testing.T) {
 
 	noon := time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
 
-	blkA := &pbeos.Block{
+	blkA := &pbcodec.Block{
 		Id:     "00000008a",
 		Number: 8,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: toTimestamp(noon),
 		},
 	}
@@ -284,10 +284,10 @@ func TestReadTimelineEqual(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "00000008a", res)
 
-	blkB := &pbeos.Block{
+	blkB := &pbcodec.Block{
 		Id:     "00000008b",
 		Number: 8,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: toTimestamp(noon),
 		},
 	}
@@ -307,28 +307,28 @@ func TestReadTimelineAfter(t *testing.T) {
 	noon := time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
 	afterNoon := time.Date(2020, time.February, 02, 13, 0, 0, 0, time.UTC)
 
-	blkBeforeNoon := &pbeos.Block{
+	blkBeforeNoon := &pbcodec.Block{
 		Id:     "00000007a",
 		Number: 7,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: toTimestamp(beforeNoon),
 		},
 	}
 	require.NoError(t, db.PutBlock(ctx, blkBeforeNoon))
 
-	blkNoon := &pbeos.Block{
+	blkNoon := &pbcodec.Block{
 		Id:     "00000008a",
 		Number: 8,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: toTimestamp(noon),
 		},
 	}
 	require.NoError(t, db.PutBlock(ctx, blkNoon))
 
-	blkAfterNoon := &pbeos.Block{
+	blkAfterNoon := &pbcodec.Block{
 		Id:     "00000009a",
 		Number: 9,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: toTimestamp(afterNoon),
 		},
 	}

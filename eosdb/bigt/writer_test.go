@@ -29,7 +29,7 @@ import (
 	"github.com/andreyvit/diff"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/jsonpb"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"
@@ -115,7 +115,7 @@ func TestStoreBlock(t *testing.T) {
 
 	blockWithZlibCompressedTrx := testBlock(t, "00000002a")
 	blockWithZlibCompressedTrx.Transactions = append(blockWithZlibCompressedTrx.Transactions,
-		&pbeos.TransactionReceipt{PackedTransaction: &pbeos.PackedTransaction{
+		&pbcodec.TransactionReceipt{PackedTransaction: &pbcodec.PackedTransaction{
 			Compression:       1,
 			PackedTransaction: zlibCompressedPackedTrx,
 		}},
@@ -123,17 +123,17 @@ func TestStoreBlock(t *testing.T) {
 
 	tests := []struct {
 		name                        string
-		blocks                      []*pbeos.Block
+		blocks                      []*pbcodec.Block
 		expectedMutationsGoldenFile string
 	}{
 		{
 			name:                        "empty block",
-			blocks:                      []*pbeos.Block{testBlock(t, "00000002a")},
+			blocks:                      []*pbcodec.Block{testBlock(t, "00000002a")},
 			expectedMutationsGoldenFile: "empty-block.golden.json",
 		},
 		{
 			name: "deferred trx failed",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				testBlock(t, "00000002a",
 					`{"id":"a1","ram_ops":[{"namespace":"NAMESPACE_DEFERRED_TRX","action":"ACTION_REMOVE"}]}`,
 					`{"id":"a2","ram_ops":[{"action_index":2}],"failed_dtrx_trace":{"id":"a1","ram_ops":[{"namespace":"NAMESPACE_DEFERRED_TRX","action":"ACTION_REMOVE"}]}}`,
@@ -144,7 +144,7 @@ func TestStoreBlock(t *testing.T) {
 		},
 		{
 			name: "deferred trx creation (pushed by user)",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				testBlock(t, "00000002a",
 					`{"id":"a1","dtrx_ops":[{"transaction_id":"a2","operation":"OPERATION_PUSH_CREATE","transaction":{}}]}`,
 				),
@@ -153,7 +153,7 @@ func TestStoreBlock(t *testing.T) {
 		},
 		{
 			name: "zlib compressed packed transaction",
-			blocks: []*pbeos.Block{
+			blocks: []*pbcodec.Block{
 				blockWithZlibCompressedTrx,
 			},
 			expectedMutationsGoldenFile: "zlib_compressed_packed_transaction.golden.json",
@@ -270,17 +270,17 @@ func maybeProtoBytesToMutationValue(familyColumn string, bytes []byte) interface
 func familyColumnToProtoMessage(familyColumn string) proto.Message {
 	switch familyColumn {
 	case "block:proto":
-		return &pbeos.Block{}
+		return &pbcodec.Block{}
 	case "trace:proto":
-		return &pbeos.TransactionTrace{}
+		return &pbcodec.TransactionTrace{}
 	case "trx:proto":
-		return &pbeos.SignedTransaction{}
+		return &pbcodec.SignedTransaction{}
 	case "meta:blockheader":
-		return &pbeos.BlockHeader{}
+		return &pbcodec.BlockHeader{}
 	case "trxs:trxRefsProto", "trxs:traceRefsProto":
-		return &pbeos.TransactionRefs{}
+		return &pbcodec.TransactionRefs{}
 	case "dtrx:created-by", "dtrx:canceled-by":
-		return &pbeos.ExtDTrxOp{}
+		return &pbcodec.ExtDTrxOp{}
 	}
 
 	return nil
@@ -302,16 +302,16 @@ func (a goldenTestSetEntries) Less(i, j int) bool {
 	return (left.Key + left.FamilyColumn) < (right.Key + right.FamilyColumn)
 }
 
-func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbeos.Block {
-	trxTraces := make([]*pbeos.TransactionTrace, len(trxTraceJSONs))
+func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbcodec.Block {
+	trxTraces := make([]*pbcodec.TransactionTrace, len(trxTraceJSONs))
 	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbeos.TransactionTrace)
+		trxTrace := new(pbcodec.TransactionTrace)
 		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace))
 
 		trxTraces[i] = trxTrace
 	}
 
-	pbblock := &pbeos.Block{
+	pbblock := &pbcodec.Block{
 		Id:                id,
 		Number:            eos.BlockNum(id),
 		TransactionTraces: trxTraces,
@@ -324,7 +324,7 @@ func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbeos.Block {
 	require.NoError(t, err)
 
 	pbblock.DposIrreversibleBlocknum = pbblock.Number - 1
-	pbblock.Header = &pbeos.BlockHeader{
+	pbblock.Header = &pbcodec.BlockHeader{
 		Previous:  fmt.Sprintf("%08d%s", pbblock.Number-1, id[8:]),
 		Producer:  "tester",
 		Timestamp: blockTimestamp,

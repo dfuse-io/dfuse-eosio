@@ -21,6 +21,8 @@ import (
 type Config struct {
 	DashboardHTTPListenAddr string
 	HttpListenAddr          string
+	AuthEndpointURL         string
+	ApiKey                  string
 }
 
 type App struct {

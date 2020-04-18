@@ -27,7 +27,7 @@ import (
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
-	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"

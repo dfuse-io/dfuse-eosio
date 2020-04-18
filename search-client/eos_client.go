@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
@@ -31,9 +31,9 @@ type EOSSearchMatch struct {
 	*pbsearch.SearchMatch
 
 	BlockID          string
-	BlockHeader      *pbeos.BlockHeader
-	TransactionTrace *pbeos.TransactionTrace
-	MatchingActions  []*pbeos.ActionTrace
+	BlockHeader      *pbcodec.BlockHeader
+	TransactionTrace *pbcodec.TransactionTrace
+	MatchingActions  []*pbcodec.ActionTrace
 }
 
 func NewEOSClient(cc *grpc.ClientConn, dbReader eosdb.DBReader) *EOSClient {
@@ -63,7 +63,7 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 
 	prefixes, prefixToIndex := searchclient.GatherTransactionPrefixesToFetch(items, isIrreversibleEOSMatch)
 
-	var rows [][]*pbeos.TransactionEvent
+	var rows [][]*pbcodec.TransactionEvent
 	if len(prefixes) > 0 {
 		zlogger.Debug("performing retrieval of transaction traces", zap.Int("prefix_count", len(prefixes)))
 		rows, err = e.dbReader.GetTransactionTracesBatch(ctx, prefixes)
@@ -85,7 +85,7 @@ func (e *EOSClient) hammerBatchProcessor(ctx context.Context, items []interface{
 	return out, nil
 }
 
-func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, rows [][]*pbeos.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
+func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, rows [][]*pbcodec.TransactionEvent, rowMap map[string]int) (*EOSSearchMatch, error) {
 	if m.Err != nil {
 		return nil, m.Err
 	}
@@ -101,8 +101,8 @@ func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, row
 	eosMatch := eosMatchAny.Message.(*pbsearcheos.Match)
 
 	var blockID string
-	var blockHeader *pbeos.BlockHeader
-	var trace *pbeos.TransactionTrace
+	var blockHeader *pbcodec.BlockHeader
+	var trace *pbcodec.TransactionTrace
 
 	if eosMatch.Block != nil {
 		blockID = eosMatch.Block.BlockID
@@ -122,7 +122,7 @@ func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, row
 		// If we are here, it must be because the result was irreversible (otherwise,
 		// the `eosMatch.Block != nil` would have been `true`). Hence, it's ok to not have
 		// a chain discriminator here.
-		lifecycle := pbeos.MergeTransactionEvents(events, func(id string) bool { return true })
+		lifecycle := pbcodec.MergeTransactionEvents(events, func(id string) bool { return true })
 		if lifecycle.ExecutionTrace == nil {
 			return nil, fmt.Errorf("unable to merge transaction events correctly")
 		}
@@ -132,9 +132,9 @@ func processEOSHammerItem(ctx context.Context, m *searchclient.MatchOrError, row
 		trace = lifecycle.ExecutionTrace
 	}
 
-	var matchingActions []*pbeos.ActionTrace
+	var matchingActions []*pbcodec.ActionTrace
 	if trace != nil {
-		matchingActions = make([]*pbeos.ActionTrace, len(eosMatch.ActionIndexes))
+		matchingActions = make([]*pbcodec.ActionTrace, len(eosMatch.ActionIndexes))
 		for i, callIndex := range eosMatch.ActionIndexes {
 			matchingActions[i] = trace.ActionTraces[callIndex]
 		}

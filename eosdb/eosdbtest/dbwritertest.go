@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +42,7 @@ func TestAllDbWriter(t *testing.T, driverName string, driverFactory DriverFactor
 func TestPutBlock(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		block         *pbeos.Block
+		block         *pbcodec.Block
 		expectErr     bool
 		expectBlockId string
 	}{
@@ -71,7 +71,7 @@ func TestPutBlock(t *testing.T, driverFactory DriverFactory) {
 func TestUpdateNowIrreversibleBlock(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
-		block         *pbeos.Block
+		block         *pbcodec.Block
 		expectErr     bool
 		expectBlockId string
 	}{

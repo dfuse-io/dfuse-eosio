@@ -15,10 +15,10 @@
 package mdl
 
 import (
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
 type TransactionList struct {
 	NextCursor   string
-	Transactions [][]*pbeos.TransactionEvent
+	Transactions [][]*pbcodec.TransactionEvent
 }

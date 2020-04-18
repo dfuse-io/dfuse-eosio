@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/assert"
@@ -30,14 +30,14 @@ import (
 
 func TestPreprocessBlock_TableOps(t *testing.T) {
 	blk := newBlock("0000003a", []string{"1", "2"})
-	blk.TransactionTraces[0].TableOps = []*pbeos.TableOp{
-		{Operation: pbeos.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
-		{Operation: pbeos.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "john", Code: "john", Scope: "scope2", TableName: "table3"},
-		{Operation: pbeos.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
+	blk.TransactionTraces[0].TableOps = []*pbcodec.TableOp{
+		{Operation: pbcodec.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
+		{Operation: pbcodec.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "john", Code: "john", Scope: "scope2", TableName: "table3"},
+		{Operation: pbcodec.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
 	}
 
-	blk.TransactionTraces[1].TableOps = []*pbeos.TableOp{
-		{Operation: pbeos.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "another", Code: "another", Scope: "scope1", TableName: "table1"},
+	blk.TransactionTraces[1].TableOps = []*pbcodec.TableOp{
+		{Operation: pbcodec.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "another", Code: "another", Scope: "scope1", TableName: "table1"},
 	}
 
 	bstreamBlock, err := codec.BlockFromProto(blk)
@@ -69,19 +69,19 @@ func TestPreprocessBlock_TableOps(t *testing.T) {
 func TestPreprocessBlock_DbOps(t *testing.T) {
 	tests := []struct {
 		name   string
-		input  []*pbeos.DBOp
+		input  []*pbcodec.DBOp
 		expect []*TableDataRow
 	}{
 		{
 			name: "nothing if update doesn't change",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer/payer", "data/data"),
 			},
 			expect: nil,
 		},
 		{
 			name: "two different keys, two different writes",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
 				testDBOp("INS", "eosio/scope/table1/key2", "/payer2", "/d2"),
 			},
@@ -92,7 +92,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "two updt, one sticks",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
 			},
@@ -102,7 +102,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "remove, take it out",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d0/"),
 			},
 			expect: []*TableDataRow{
@@ -111,7 +111,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "UPD+UPD+REM, keep the rem",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d2/"),
@@ -122,7 +122,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "UPD+REM+INS+REM, still keep the rem",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d2"),
@@ -134,7 +134,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "gobble up INS+DEL",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
 			},
@@ -142,7 +142,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "gobble up multiple INS+DEL",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
@@ -152,7 +152,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		},
 		{
 			name: "gobble up INS+UPD+UPD+DEL",
-			input: []*pbeos.DBOp{
+			input: []*pbcodec.DBOp{
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d2/d3"),
@@ -182,12 +182,12 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 
 }
 
-func testDBOp(op string, path, payers, datas string) *pbeos.DBOp {
+func testDBOp(op string, path, payers, datas string) *pbcodec.DBOp {
 	chunks := strings.SplitN(path, "/", 4)
 	payerChunks := strings.SplitN(payers, "/", 2)
 	dataChunks := strings.SplitN(datas, "/", 2)
 
-	out := &pbeos.DBOp{
+	out := &pbcodec.DBOp{
 		Code:       chunks[0],
 		Scope:      chunks[1],
 		TableName:  chunks[2],
@@ -199,11 +199,11 @@ func testDBOp(op string, path, payers, datas string) *pbeos.DBOp {
 	}
 	switch op {
 	case "INS":
-		out.Operation = pbeos.DBOp_OPERATION_INSERT
+		out.Operation = pbcodec.DBOp_OPERATION_INSERT
 	case "REM":
-		out.Operation = pbeos.DBOp_OPERATION_REMOVE
+		out.Operation = pbcodec.DBOp_OPERATION_REMOVE
 	case "UPD":
-		out.Operation = pbeos.DBOp_OPERATION_UPDATE
+		out.Operation = pbcodec.DBOp_OPERATION_UPDATE
 	default:
 		panic("wtf-happy? I know not that thing")
 	}
@@ -212,13 +212,13 @@ func testDBOp(op string, path, payers, datas string) *pbeos.DBOp {
 
 func TestPreprocessBlock_PermOps(t *testing.T) {
 	blk := newBlock("0000003a", []string{"1", "2"})
-	blk.TransactionTraces[0].PermOps = []*pbeos.PermOp{
+	blk.TransactionTraces[0].PermOps = []*pbcodec.PermOp{
 		newPermOp("INS", 0, nil, newPermOpData("eosio", "owner", []string{"k1", "k2"})),
 		newPermOp("INS", 1, nil, newPermOpData("eosio", "active", []string{"k2"})),
 		newPermOp("REM", 0, newPermOpData("eosio", "owner", []string{"k2"}), nil),
 	}
 
-	blk.TransactionTraces[1].PermOps = []*pbeos.PermOp{
+	blk.TransactionTraces[1].PermOps = []*pbcodec.PermOp{
 		newPermOp("INS", 0, nil, newPermOpData("eosio", "owner", []string{"k3"})),
 	}
 
@@ -244,53 +244,53 @@ func TestPreprocessBlock_PermOps(t *testing.T) {
 	}, keyAccountRows)
 }
 
-func newBlock(blockID string, trxIDs []string) *pbeos.Block {
-	traces := make([]*pbeos.TransactionTrace, len(trxIDs))
+func newBlock(blockID string, trxIDs []string) *pbcodec.Block {
+	traces := make([]*pbcodec.TransactionTrace, len(trxIDs))
 	for i, trxID := range trxIDs {
-		traces[i] = &pbeos.TransactionTrace{
+		traces[i] = &pbcodec.TransactionTrace{
 			Id: trxID,
 		}
 	}
 
-	blk := &pbeos.Block{
+	blk := &pbcodec.Block{
 		Id:                blockID,
 		TransactionTraces: traces,
-		Header: &pbeos.BlockHeader{
+		Header: &pbcodec.BlockHeader{
 			Timestamp: &timestamp.Timestamp{Seconds: 1569604302},
 		},
 	}
 	return blk
 }
 
-func newPermOp(operation string, actionIndex int, oldPerm, newPerm *pbeos.PermissionObject) *pbeos.PermOp {
-	pbeosOperation := pbeos.PermOp_OPERATION_UNKNOWN
+func newPermOp(operation string, actionIndex int, oldPerm, newPerm *pbcodec.PermissionObject) *pbcodec.PermOp {
+	pbcodecOperation := pbcodec.PermOp_OPERATION_UNKNOWN
 	switch operation {
 	case "INS":
-		pbeosOperation = pbeos.PermOp_OPERATION_INSERT
+		pbcodecOperation = pbcodec.PermOp_OPERATION_INSERT
 	case "UPD":
-		pbeosOperation = pbeos.PermOp_OPERATION_UPDATE
+		pbcodecOperation = pbcodec.PermOp_OPERATION_UPDATE
 	case "REM":
-		pbeosOperation = pbeos.PermOp_OPERATION_REMOVE
+		pbcodecOperation = pbcodec.PermOp_OPERATION_REMOVE
 	}
 
-	return &pbeos.PermOp{
-		Operation:   pbeosOperation,
+	return &pbcodec.PermOp{
+		Operation:   pbcodecOperation,
 		ActionIndex: uint32(actionIndex),
 		OldPerm:     oldPerm,
 		NewPerm:     newPerm,
 	}
 }
 
-func newPermOpData(account string, permission string, publicKeys []string) *pbeos.PermissionObject {
-	authKeys := make([]*pbeos.KeyWeight, len(publicKeys))
+func newPermOpData(account string, permission string, publicKeys []string) *pbcodec.PermissionObject {
+	authKeys := make([]*pbcodec.KeyWeight, len(publicKeys))
 	for i, publicKey := range publicKeys {
-		authKeys[i] = &pbeos.KeyWeight{PublicKey: publicKey, Weight: 1}
+		authKeys[i] = &pbcodec.KeyWeight{PublicKey: publicKey, Weight: 1}
 	}
 
-	return &pbeos.PermissionObject{
+	return &pbcodec.PermissionObject{
 		Owner: account,
 		Name:  permission,
-		Authority: &pbeos.Authority{
+		Authority: &pbcodec.Authority{
 			Keys: authKeys,
 		},
 	}

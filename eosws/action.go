@@ -24,7 +24,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	_ "github.com/eoscanada/eos-go/forum"
 	"github.com/golang/protobuf/ptypes"
 )
@@ -55,10 +55,10 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	targetActions := mapString(msg.Data.ActionNames)
 
 	handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
-		blk := block.ToNative().(*pbeos.Block)
+		blk := block.ToNative().(*pbcodec.Block)
 
 		for _, trx := range blk.TransactionTraces {
-			if trx.Receipt == nil || trx.Receipt.Status != pbeos.TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+			if trx.Receipt == nil || trx.Receipt.Status != pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
 				// We do **not** stream transaction for that are not properly executed
 				continue
 			}

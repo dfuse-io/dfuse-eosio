@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/bigtable"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"
 	"github.com/golang/protobuf/proto"
@@ -46,7 +46,7 @@ func NewBlocksTable(name string, client *bigtable.Client) *BlocksTable {
 	}
 }
 
-func (tbl *BlocksTable) ReadRows(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbeos.BlockWithRefs, err error) {
+func (tbl *BlocksTable) ReadRows(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbcodec.BlockWithRefs, err error) {
 	var innerErr error
 	err = tbl.BaseTable.ReadRows(ctx, rowRange, func(row bigtable.Row) bool {
 		response, err := tbl.ParseRowAs(row)
@@ -70,9 +70,9 @@ func (tbl *BlocksTable) ReadRows(ctx context.Context, rowRange bigtable.RowSet, 
 	return
 }
 
-func (tbl *BlocksTable) ReadIrrCell(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbeos.BlockWithRefs, err error) {
+func (tbl *BlocksTable) ReadIrrCell(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbcodec.BlockWithRefs, err error) {
 	err = tbl.BaseTable.ReadRows(ctx, rowRange, func(row bigtable.Row) bool {
-		out = append(out, &pbeos.BlockWithRefs{
+		out = append(out, &pbcodec.BlockWithRefs{
 			Id: kvdb.ReversedBlockID(row.Key()),
 		})
 		return true
@@ -84,15 +84,15 @@ func (tbl *BlocksTable) ReadIrrCell(ctx context.Context, rowRange bigtable.RowSe
 	return
 }
 
-func (tbl *BlocksTable) ParseRowAs(row bigtable.Row) (*pbeos.BlockWithRefs, error) {
+func (tbl *BlocksTable) ParseRowAs(row bigtable.Row) (*pbcodec.BlockWithRefs, error) {
 	fullyWritten, _ := basebigt.BoolColumnItem(row, tbl.ColMetaWritten)
 	if !fullyWritten {
 		return nil, nil
 	}
 
-	blk := &pbeos.BlockWithRefs{
+	blk := &pbcodec.BlockWithRefs{
 		Id:    kvdb.ReversedBlockID(row.Key()),
-		Block: &pbeos.Block{},
+		Block: &pbcodec.Block{},
 	}
 
 	err := basebigt.ProtoColumnItem(row, tbl.ColBlock, func() proto.Message { return blk.Block })
@@ -104,7 +104,7 @@ func (tbl *BlocksTable) ParseRowAs(row bigtable.Row) (*pbeos.BlockWithRefs, erro
 	blk.Irreversible, _ = basebigt.BoolColumnItem(row, tbl.ColMetaIrreversible)
 
 	protoResolver := func() proto.Message {
-		blk.TransactionRefs = &pbeos.TransactionRefs{}
+		blk.TransactionRefs = &pbcodec.TransactionRefs{}
 		return blk.TransactionRefs
 	}
 	err = basebigt.ProtoColumnItem(row, tbl.ColTransactionRefs, protoResolver)
@@ -113,7 +113,7 @@ func (tbl *BlocksTable) ParseRowAs(row bigtable.Row) (*pbeos.BlockWithRefs, erro
 	}
 
 	protoResolver = func() proto.Message {
-		blk.TransactionTraceRefs = &pbeos.TransactionRefs{}
+		blk.TransactionTraceRefs = &pbcodec.TransactionRefs{}
 		return blk.TransactionTraceRefs
 	}
 	err = basebigt.ProtoColumnItem(row, tbl.ColTransactionTraceRefs, protoResolver)
@@ -130,7 +130,7 @@ func (tbl *BlocksTable) ParseRowAs(row bigtable.Row) (*pbeos.BlockWithRefs, erro
 // **Warning** This method is not concurrent safe! While in the method, we assume full
 //             control of the passed `block` instance. You are responsible for ensuring
 //             this preconditions holds.
-func (tbl *BlocksTable) PutBlock(key string, block *pbeos.Block) {
+func (tbl *BlocksTable) PutBlock(key string, block *pbcodec.Block) {
 	// Keep a reference, so we can re-put the block correctly
 	holdTransactions := block.Transactions
 	holdTransactionTraces := block.TransactionTraces
@@ -145,11 +145,11 @@ func (tbl *BlocksTable) PutBlock(key string, block *pbeos.Block) {
 	block.TransactionTraces = holdTransactionTraces
 }
 
-func (tbl *BlocksTable) PutTransactionRefs(key string, refs *pbeos.TransactionRefs) {
+func (tbl *BlocksTable) PutTransactionRefs(key string, refs *pbcodec.TransactionRefs) {
 	tbl.SetKey(key, tbl.ColTransactionRefs, kvdb.MustProtoMarshal(refs))
 }
 
-func (tbl *BlocksTable) PutTransactionTraceRefs(key string, refs *pbeos.TransactionRefs) {
+func (tbl *BlocksTable) PutTransactionTraceRefs(key string, refs *pbcodec.TransactionRefs) {
 	tbl.SetKey(key, tbl.ColTransactionTraceRefs, kvdb.MustProtoMarshal(refs))
 }
 

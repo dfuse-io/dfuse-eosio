@@ -16,6 +16,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,29 +37,25 @@ import (
 	"go.uber.org/zap"
 )
 
-var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE}
-
-func init() {
-	startCmd.Flags().Bool("send-to-bigquery", false, "Send data to big query")
-}
+var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE, Args: cobra.ArbitraryArgs}
 
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	cmd.SilenceUsage = true
 
 	configFile := viper.GetString("global-config-file")
-	userLog.Printf("Starting dfuse for EOSIO '%s'", configFile)
+	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
 	dataDir := viper.GetString("global-data-dir")
-	userLog.Debug("dfuse single binary started", zap.String("data_dir", dataDir))
+	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 
-	boxConfig, err := launcher.ReadConfig(configFile)
+	config, err := launcher.ReadConfig(configFile)
 	if err != nil {
-		userLog.Error("dfuse for EOSIO not initialized. Please run 'dfuseeos init'")
+		userLog.Error(fmt.Sprintf("Error reading config file. Did you 'dfuseeos init' ?  Error: %s", err))
 		return nil
 	}
 
-	if boxConfig.Version != "v1" {
-		userLog.Error("dfuse for EOSIO not initialized with this version. Please run 'dfuseeos init'")
+	if config.Version != "v1" {
+		userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", configFile, config.Version))
 		return nil
 	}
 
@@ -85,21 +82,13 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		os.Exit(1)
 	}
 
-	launcher := launcher.NewLauncher(boxConfig, modules)
+	launcher := launcher.NewLauncher(config, modules)
 	userLog.Debug("launcher created")
 
-	apps := []string{}
+	apps := parseAppsFromArgs(args, config.RunProducer)
 
-	// Producer node
-	if boxConfig.RunProducer {
-		apps = append(apps, "manager")
-	}
-	//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "abicodec", "eosws")
-	apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
-
-	userLog.Printf("Launching all applications...")
-	err = launcher.Launch(apps)
-	if err != nil {
+	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
+	if err = launcher.Launch(apps); err != nil {
 		userLog.Error("unable to launch", zap.Error(err))
 		os.Exit(1)
 	}
@@ -139,11 +128,30 @@ func printWelcomeMessage() {
 	message := strings.TrimLeft(`
 Your instance should be ready in a few seconds, here some relevant links:
 
-		Dashboard: http://localhost%s
-		GraphiQL: http://localhost%s/graphiql
-		Eosq: http://localhost%s
+  Dashboard: http://localhost%s
+  GraphiQL: http://localhost%s/graphiql
+  Eosq: http://localhost%s
 `, "\n")
 
-	userLog.Printf(message, DashboardHTTPListenAddr, DgraphqlHTTPServingAddr, EosqHTTPServingAddr)
+	userLog.Printf(message, DashboardHTTPListenAddr, DashboardHTTPListenAddr, EosqHTTPServingAddr)
+}
 
+func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
+	if len(args) == 0 || args[0] == "all" {
+		// Producer node
+		if runProducer {
+			apps = append(apps, "manager")
+		}
+		//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "abicodec", "eosws")
+		apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
+	} else {
+		for _, arg := range args {
+			chunks := strings.Split(arg, ",")
+			for _, chunk := range chunks {
+				apps = append(apps, strings.TrimSpace(chunk))
+			}
+		}
+	}
+
+	return
 }

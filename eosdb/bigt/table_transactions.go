@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/bigtable"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"
 	"github.com/golang/protobuf/proto"
@@ -78,7 +78,7 @@ func (tbl *TransactionsTable) ReadRows(ctx context.Context, rowRange bigtable.Ro
 	return out, nil
 }
 
-func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbeos.TransactionEvent, err error) {
+func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.RowSet, opts ...bigtable.ReadOption) (out []*pbcodec.TransactionEvent, err error) {
 	rows, err := tbl.ReadRows(ctx, rowRange, opts...)
 	if err != nil {
 		return nil, err
@@ -95,8 +95,8 @@ func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.
 			return nil, err
 		}
 
-		newEv := func() *pbeos.TransactionEvent {
-			ev := &pbeos.TransactionEvent{
+		newEv := func() *pbcodec.TransactionEvent {
+			ev := &pbcodec.TransactionEvent{
 				Id:           trxID,
 				BlockId:      blockID,
 				Irreversible: row.Irreversible,
@@ -108,8 +108,8 @@ func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.
 		// Conditions for each Event types
 		if row.TransactionTrace != nil {
 			ev := newEv()
-			ev.Event = &pbeos.TransactionEvent_Execution{
-				Execution: &pbeos.TransactionEvent_Executed{
+			ev.Event = &pbcodec.TransactionEvent_Execution{
+				Execution: &pbcodec.TransactionEvent_Executed{
 					Trace:       row.TransactionTrace,
 					BlockHeader: row.BlockHeader,
 				},
@@ -117,20 +117,20 @@ func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.
 		}
 		if row.CreatedBy != nil {
 			ev := newEv()
-			ev.Event = &pbeos.TransactionEvent_DtrxScheduling{
-				DtrxScheduling: &pbeos.TransactionEvent_DtrxScheduled{
+			ev.Event = &pbcodec.TransactionEvent_DtrxScheduling{
+				DtrxScheduling: &pbcodec.TransactionEvent_DtrxScheduled{
 					CreatedBy:   row.CreatedBy,
 					Transaction: row.Transaction,
 				},
 			}
 		} else if row.Transaction != nil {
-			var pubKeys *pbeos.PublicKeys
+			var pubKeys *pbcodec.PublicKeys
 			if row.PublicKeys != nil {
-				pubKeys = &pbeos.PublicKeys{PublicKeys: row.PublicKeys}
+				pubKeys = &pbcodec.PublicKeys{PublicKeys: row.PublicKeys}
 			}
 			ev := newEv()
-			ev.Event = &pbeos.TransactionEvent_Addition{
-				Addition: &pbeos.TransactionEvent_Added{
+			ev.Event = &pbcodec.TransactionEvent_Addition{
+				Addition: &pbcodec.TransactionEvent_Added{
 					// Receipt:     receipt, // FIXME: We currently don't have the receipt in the Bigtable implementation.. and this prevents us from reconstructing the blocks as they were originally (the receipt exists in the blocks logs).  It was later added to the SQL layer..  We could add it to bigtable, but we'd want to measure what's the increase in storage, and perhaps add it when we also implement compression at the bigtable-layer.
 					Transaction: row.Transaction,
 					PublicKeys:  pubKeys,
@@ -141,16 +141,16 @@ func (tbl *TransactionsTable) ReadEvents(ctx context.Context, rowRange bigtable.
 			// receipt.. so we'd distinguish them here. OR we instrument the node better and
 			// retrieve the receipt for even those internal transactions, in which case we don't
 			// need to have Internal vs Addition..
-			// ev.Event = &pbeos.TransactionEvent_InternalAddition{
-			// 	InternalAddition: &pbeos.TransactionEvent_AddedInternally{
+			// ev.Event = &pbcodec.TransactionEvent_InternalAddition{
+			// 	InternalAddition: &pbcodec.TransactionEvent_AddedInternally{
 			// 		Transaction: row.Transaction,
 			// 	},
 			// }
 		}
 		if row.CanceledBy != nil {
 			ev := newEv()
-			ev.Event = &pbeos.TransactionEvent_DtrxCancellation{
-				DtrxCancellation: &pbeos.TransactionEvent_DtrxCanceled{
+			ev.Event = &pbcodec.TransactionEvent_DtrxCancellation{
+				DtrxCancellation: &pbcodec.TransactionEvent_DtrxCanceled{
 					CanceledBy: row.CanceledBy,
 				},
 			}
@@ -165,14 +165,14 @@ func (tbl *TransactionsTable) ParseRowAs(row bigtable.Row) (*TransactionRow, err
 	response := &TransactionRow{}
 	response.Key = row.Key()
 
-	protoResolver := func() proto.Message { response.Transaction = &pbeos.SignedTransaction{}; return response.Transaction }
+	protoResolver := func() proto.Message { response.Transaction = &pbcodec.SignedTransaction{}; return response.Transaction }
 	err := basebigt.ProtoColumnItem(row, tbl.ColTrx, protoResolver)
 	if err != nil && !basebigt.IsErrColumnNotPresent(err) {
 		return nil, fmt.Errorf("transaction trx:proto: %s", err)
 	}
 
 	protoResolver = func() proto.Message {
-		response.TransactionTrace = &pbeos.TransactionTrace{}
+		response.TransactionTrace = &pbcodec.TransactionTrace{}
 		return response.TransactionTrace
 	}
 	err = basebigt.ProtoColumnItem(row, tbl.ColTrace, protoResolver)
@@ -180,19 +180,19 @@ func (tbl *TransactionsTable) ParseRowAs(row bigtable.Row) (*TransactionRow, err
 		return nil, fmt.Errorf("transaction trace:proto: %s", err)
 	}
 
-	protoResolver = func() proto.Message { response.CreatedBy = &pbeos.ExtDTrxOp{}; return response.CreatedBy }
+	protoResolver = func() proto.Message { response.CreatedBy = &pbcodec.ExtDTrxOp{}; return response.CreatedBy }
 	err = basebigt.ProtoColumnItem(row, tbl.ColDTrxCreatedBy, protoResolver)
 	if err != nil && !basebigt.IsErrColumnNotPresent(err) {
 		return nil, fmt.Errorf("transaction dtrx:created-by: %s", err)
 	}
 
-	protoResolver = func() proto.Message { response.CanceledBy = &pbeos.ExtDTrxOp{}; return response.CanceledBy }
+	protoResolver = func() proto.Message { response.CanceledBy = &pbcodec.ExtDTrxOp{}; return response.CanceledBy }
 	err = basebigt.ProtoColumnItem(row, tbl.ColDTrxCanceledBy, protoResolver)
 	if err != nil && !basebigt.IsErrColumnNotPresent(err) {
 		return nil, fmt.Errorf("transaction dtrx:canceled-by: %s", err)
 	}
 
-	protoResolver = func() proto.Message { response.BlockHeader = &pbeos.BlockHeader{}; return response.BlockHeader }
+	protoResolver = func() proto.Message { response.BlockHeader = &pbcodec.BlockHeader{}; return response.BlockHeader }
 	err = basebigt.ProtoColumnItem(row, tbl.ColMetaBlockHeader, protoResolver)
 	if err != nil && !basebigt.IsErrColumnNotPresent(err) {
 		return nil, fmt.Errorf("transaction meta:blockheader: %s", err)
@@ -216,15 +216,15 @@ func (tbl *TransactionsTable) ParseRowAs(row bigtable.Row) (*TransactionRow, err
 	return response, nil
 }
 
-func (tbl *TransactionsTable) PutTrx(key string, trx *pbeos.SignedTransaction) {
+func (tbl *TransactionsTable) PutTrx(key string, trx *pbcodec.SignedTransaction) {
 	tbl.SetKey(key, tbl.ColTrx, kvdb.MustProtoMarshal(trx))
 }
 
-func (tbl *TransactionsTable) PutTrace(key string, trace *pbeos.TransactionTrace) {
+func (tbl *TransactionsTable) PutTrace(key string, trace *pbcodec.TransactionTrace) {
 	tbl.SetKey(key, tbl.ColTrace, kvdb.MustProtoMarshal(trace))
 }
 
-func (tbl *TransactionsTable) PutBlockHeader(key string, header *pbeos.BlockHeader) {
+func (tbl *TransactionsTable) PutBlockHeader(key string, header *pbcodec.BlockHeader) {
 	tbl.SetKey(key, tbl.ColMetaBlockHeader, kvdb.MustProtoMarshal(header))
 }
 
@@ -232,11 +232,11 @@ func (tbl *TransactionsTable) PutPublicKeys(key string, publicKeys []string) {
 	tbl.SetKey(key, tbl.ColMetaPubkeys, kvdb.StringListToBytes(publicKeys, ":"))
 }
 
-func (tbl *TransactionsTable) PutDTrxCreatedBy(key string, extDTrxOp *pbeos.ExtDTrxOp) {
+func (tbl *TransactionsTable) PutDTrxCreatedBy(key string, extDTrxOp *pbcodec.ExtDTrxOp) {
 	tbl.SetKey(key, tbl.ColDTrxCreatedBy, kvdb.MustProtoMarshal(extDTrxOp))
 }
 
-func (tbl *TransactionsTable) PutDTrxCanceledBy(key string, extDTrxOp *pbeos.ExtDTrxOp) {
+func (tbl *TransactionsTable) PutDTrxCanceledBy(key string, extDTrxOp *pbcodec.ExtDTrxOp) {
 	tbl.SetKey(key, tbl.ColDTrxCanceledBy, kvdb.MustProtoMarshal(extDTrxOp))
 }
 
@@ -252,8 +252,8 @@ func (tbl *TransactionsTable) PutMetaIrreversible(key string, irreversible bool)
 // blockID ascending, and assumes DEDUPLICATED rows.  In the cases of
 // two rows in the same block, the rows list should be ordered as read
 // by gjson or whatever.
-// REMOVE ME, this is replaced by a pbeos.MergeLifecycleEvents
-func (tbl *TransactionsTable) stitchTransaction(rows []*TransactionRow, inCanonicalChain func(blockID string) bool) (*pbeos.TransactionLifecycle, error) {
+// REMOVE ME, this is replaced by a pbcodec.MergeLifecycleEvents
+func (tbl *TransactionsTable) stitchTransaction(rows []*TransactionRow, inCanonicalChain func(blockID string) bool) (*pbcodec.TransactionLifecycle, error) {
 	inChain := func(isStepIrreversible, rowIrreversible bool, blockID string) bool {
 		if rowIrreversible {
 			return true
@@ -267,7 +267,7 @@ func (tbl *TransactionsTable) stitchTransaction(rows []*TransactionRow, inCanoni
 	}
 
 	responseKey := ""
-	response := &pbeos.TransactionLifecycle{
+	response := &pbcodec.TransactionLifecycle{
 		PublicKeys: []string{},
 	}
 
@@ -353,25 +353,25 @@ func (tbl *TransactionsTable) stitchTransaction(rows []*TransactionRow, inCanoni
 	return response, nil
 }
 
-func getTransactionLifeCycleStatus(lifeCycle *pbeos.TransactionLifecycle) pbeos.TransactionStatus {
-	// FIXME: this function belongs to the sample place as the stitcher, probably in `pbeos`
+func getTransactionLifeCycleStatus(lifeCycle *pbcodec.TransactionLifecycle) pbcodec.TransactionStatus {
+	// FIXME: this function belongs to the sample place as the stitcher, probably in `pbcodec`
 	// alongside the rest.
 	if lifeCycle.CanceledBy != nil {
-		return pbeos.TransactionStatus_TRANSACTIONSTATUS_CANCELED
+		return pbcodec.TransactionStatus_TRANSACTIONSTATUS_CANCELED
 	}
 
 	if lifeCycle.ExecutionTrace == nil {
 		if lifeCycle.CreatedBy != nil {
-			return pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED
+			return pbcodec.TransactionStatus_TRANSACTIONSTATUS_DELAYED
 		}
 
 		// FIXME: It was `pending` before but not present anymore, what should we do?
-		return pbeos.TransactionStatus_TRANSACTIONSTATUS_NONE
+		return pbcodec.TransactionStatus_TRANSACTIONSTATUS_NONE
 	}
 
 	if lifeCycle.ExecutionTrace.Receipt == nil {
 		// That happen strangely on EOS Kylin where `eosio:onblock` started to fail and exhibit no Receipt
-		return pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
+		return pbcodec.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
 	}
 
 	// Expired Failed Executed
@@ -386,7 +386,7 @@ func computeStepsIrreversibility(rows []*TransactionRow) (executionIrr bool, cre
 		}
 
 		if row.TransactionTrace != nil && row.Irreversible {
-			if row.TransactionTrace.Receipt != nil && row.TransactionTrace.Receipt.Status == pbeos.TransactionStatus_TRANSACTIONSTATUS_DELAYED {
+			if row.TransactionTrace.Receipt != nil && row.TransactionTrace.Receipt.Status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_DELAYED {
 				creationIrr = true
 			} else {
 				executionIrr = true

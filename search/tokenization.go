@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/url"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/search"
 	"go.uber.org/zap"
 )
@@ -96,7 +96,7 @@ var hashedEOSDataIndexedFields = []search.IndexedField{
 	{"code", search.HexType}, // only for action = setcode
 }
 
-func tokenizeEOSExecutedAction(actTrace *pbeos.ActionTrace) (out map[string]interface{}) {
+func tokenizeEOSExecutedAction(actTrace *pbcodec.ActionTrace) (out map[string]interface{}) {
 	out = make(map[string]interface{})
 	out["receiver"] = actTrace.Receipt.Receiver
 	out["account"] = actTrace.Account()
@@ -107,7 +107,7 @@ func tokenizeEOSExecutedAction(actTrace *pbeos.ActionTrace) (out map[string]inte
 	return out
 }
 
-func tokenizeEOSAuthority(authorizations []*pbeos.PermissionLevel) (out []string) {
+func tokenizeEOSAuthority(authorizations []*pbcodec.PermissionLevel) (out []string) {
 	for _, auth := range authorizations {
 		actor := auth.Actor
 		perm := auth.Permission

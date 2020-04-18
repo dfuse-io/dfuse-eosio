@@ -24,7 +24,7 @@ import (
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/shutter"
@@ -32,7 +32,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Job = func(blockNum uint64, blk *pbeos.Block, fObj *forkable.ForkableObject) (err error)
+type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error)
 
 type BigtableLoader struct {
 	*shutter.Shutter
@@ -231,7 +231,7 @@ func (l *BigtableLoader) Healthy() bool {
 
 // fullJob does all the database insertions needed to load the blockchain
 // into our database.
-func (l *BigtableLoader) FullJob(blockNum uint64, block *pbeos.Block, fObj *forkable.ForkableObject) (err error) {
+func (l *BigtableLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
 	blkTime := block.MustTime()
 
 	switch fObj.Step {
@@ -284,7 +284,7 @@ func (l *BigtableLoader) ProcessBlock(blk *bstream.Block, obj interface{}) (err 
 		return nil
 	}
 
-	return l.processingJob(blk.Num(), blk.ToNative().(*pbeos.Block), obj.(*forkable.ForkableObject))
+	return l.processingJob(blk.Num(), blk.ToNative().(*pbcodec.Block), obj.(*forkable.ForkableObject))
 }
 
 func (l *BigtableLoader) DoFlush(blockNum uint64) error {
@@ -333,7 +333,7 @@ func (l *BigtableLoader) ShouldPushLIBUpdates(dposLIBNum uint64) bool {
 
 func (l *BigtableLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream.PreprocessedBlock) error {
 	for _, blkObj := range nowIrreversibleBlocks {
-		blk := blkObj.Block.ToNative().(*pbeos.Block)
+		blk := blkObj.Block.ToNative().(*pbcodec.Block)
 
 		if blk.Num() == 1 {
 			// Empty block 0, so we don't care
@@ -357,7 +357,7 @@ func (l *BigtableLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream
 // `patch-<tag>-<date>` where the tag is giving an overview of the patch and the date
 // is the effective date (`<year>-<month>-<day>`): `patch-add-trx-meta-written-2019-06-30`.
 // The branch is then deleted and the tag is pushed to the remote repository.
-func (l *BigtableLoader) PatchJob(blockNum uint64, blk *pbeos.Block, fObj *forkable.ForkableObject) (err error) {
+func (l *BigtableLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
 	switch fObj.Step {
 	case forkable.StepNew:
 		l.ShowProgress(blockNum)

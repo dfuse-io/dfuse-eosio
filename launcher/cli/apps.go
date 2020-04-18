@@ -38,7 +38,7 @@ import (
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
@@ -101,53 +101,54 @@ func init() {
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if config.RunProducer {
-				managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
-				if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
-					return err
-				}
-				if config.ProducerConfigIni == "" {
-					return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
-				}
+			if err := CheckNodeosInstallation(viper.GetString("manager-nodeos-path")); err != nil {
+				return err
+			}
 
-				if err := writeGenesisAndConfig(config.ProducerConfigIni, config.GenesisJSON, managerConfigDir, "producer"); err != nil {
-					return err
-				}
+			managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+			if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
+				return err
+			}
+			if config.ProducerConfigIni == "" {
+				return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
+			}
+
+			if err := writeGenesisAndConfig(config.ProducerConfigIni, config.GenesisJSON, managerConfigDir, "producer"); err != nil {
+				return err
 			}
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			if config.RunProducer {
-				return nodeosManagerApp.New(&nodeosManagerApp.Config{
-					ManagerAPIAddress:       viper.GetString("manager-api-addr"),
-					NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
-					ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
-					NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
-					NodeosBinPath:           viper.GetString("manager-nodeos-path"),
-					NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
-					ProducerHostname:        viper.GetString("manager-producer-hostname"),
-					TrustedProducer:         viper.GetString("manager-trusted-producer"),
-					ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
-					ForceProduction:         viper.GetBool("manager-force-production"),
-					NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
-					BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
-					BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
-					DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
-					LogToZap:                viper.GetBool("manager-log-to-zap"),
-					AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
-					RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
-					RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
-					SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
-					ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
-					BackupTag:               viper.GetString("manager-backup-tag"),
-					AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
-					AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
-					AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
-					AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
-					DisableProfiler:         viper.GetBool("manager-disable-profiler"),
-					StartFailureHandlerFunc: nil,
-				}), nil
-			}
+			return nodeosManagerApp.New(&nodeosManagerApp.Config{
+				ManagerAPIAddress:       viper.GetString("manager-api-addr"),
+				NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
+				ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
+				NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
+				NodeosBinPath:           viper.GetString("manager-nodeos-path"),
+				NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
+				ProducerHostname:        viper.GetString("manager-producer-hostname"),
+				TrustedProducer:         viper.GetString("manager-trusted-producer"),
+				ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
+				ForceProduction:         viper.GetBool("manager-force-production"),
+				NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
+				BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
+				BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
+				DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
+				LogToZap:                viper.GetBool("manager-log-to-zap"),
+				AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
+				RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
+				RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
+				SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
+				ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
+				BackupTag:               viper.GetString("manager-backup-tag"),
+				AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
+				AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
+				AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
+				AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
+				DisableProfiler:         viper.GetBool("manager-disable-profiler"),
+				StartFailureHandlerFunc: nil,
+			}), nil
+
 			// Can we detect a nil interface
 			return nil, nil
 		},
@@ -194,6 +195,10 @@ func init() {
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
+			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
+				return err
+			}
+
 			nodeosConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir"))
 			if err := mkdirStorePathIfLocal(nodeosConfigDir); err != nil {
 				return err
@@ -220,14 +225,14 @@ func init() {
 			if viper.GetBool("mindreader-start-failure-handler") {
 				startUpFunc = func() {
 					userLog.Error(`*********************************************************************************
-									* Mindreader failed to start nodeos process
-									* To see nodeos logs...
-									* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
-									*********************************************************************************
+* Mindreader failed to start nodeos process
+* To see nodeos logs...
+* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
+*********************************************************************************
 
-									Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
-									at https://github.com/dfuse-io/dfuse-eosio#dfuse-Instrumented-EOSIO-Prebuilt-Binaries
-									to find how to install it.`)
+Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
+at https://github.com/dfuse-io/dfuse-eosio/blob/develop/INSTALL.md
+to find how to install it.`)
 					os.Exit(1)
 				}
 
@@ -237,9 +242,9 @@ func init() {
 			}
 			//
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
-				blk, ok := obj.(*pbeos.Block)
+				blk, ok := obj.(*pbcodec.Block)
 				if !ok {
-					return nil, fmt.Errorf("expected *pbeos.Block, got %T", obj)
+					return nil, fmt.Errorf("expected *pbcodec.Block, got %T", obj)
 				}
 
 				return codec.BlockFromProto(blk)
@@ -504,6 +509,9 @@ func init() {
 			}
 
 			eosDBClient, err := eosdb.New(fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
+			if err != nil {
+				return nil, err
+			}
 			db := &dblockmeta.EOSBlockmetaDB{
 				Driver: eosDBClient,
 			}
@@ -578,18 +586,21 @@ func init() {
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Bool("search-indexer-enable-readiness-probe", true, "Enable search indexer's app readiness probe")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
-			cmd.Flags().String("search-indexer-indexing-restrictions-json", "", "json-formatted array of items to skip from indexing")
-			cmd.Flags().String("search-indexer-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			cmd.Flags().String("search-indexer-writable-path", "search/indexer", "Writable base path for storing index files")
 			cmd.Flags().String("search-indexer-indices-store", IndicesFilePath, "Indices path to read or write index shards")
 			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-indexer-dfuse-hooks-action-name"), viper.GetString("search-indexer-indexing-restrictions-json"))
+			mapper, err := eosSearch.NewEOSBlockMapper(
+				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-action-filter-on-expr"),
+				viper.GetString("search-common-action-filter-out-expr"),
+			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
 			}
+
 			return indexerApp.New(&indexerApp.Config{
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
@@ -622,6 +633,17 @@ func init() {
 		MetricsID:   "router",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
+
+			// Register common search flags once for all the services
+			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
+			cmd.Flags().String("search-common-mesh-namespace", DmeshNamespace, "[COMMON] Dmesh namespace where services reside (eos-mainnet)")
+			cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
+			cmd.Flags().Duration("search-common-mesh-publish-polling-duration", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
+			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
+			cmd.Flags().String("search-common-action-filter-out-expr", "", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
+			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
+
+			// Router-specific flags
 			cmd.Flags().String("search-router-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-router-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to validate cursors that are passed LIB and forked out")
 			cmd.Flags().Bool("search-router-enable-retry", false, "Enables the router's attempt to retry a backend search if there is an error. This could have adverse consequences when search through the live")
@@ -652,22 +674,12 @@ func init() {
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
-			if cmd.Flag("search-mesh-store-addr") == nil {
-				cmd.Flags().String("search-mesh-store-addr", "", "address of the backing etcd cluster for mesh service discovery")
-			}
-			if cmd.Flag("search-mesh-namespace") == nil {
-				cmd.Flags().String("search-mesh-namespace", DmeshNamespace, "dmesh namespace where services reside (eos-mainnet)")
-			}
-			if cmd.Flag("search-mesh-service-version") == nil {
-				cmd.PersistentFlags().String("search-mesh-service-version", DmeshServiceVersion, "dmesh service version (v1)")
-			}
 			p := "search-archive-"
 			cmd.Flags().String(p+"grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String(p+"http-listen-addr", ArchiveHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String(p+"memcache-addr", "", "Empty results cache's memcache server address")
 			cmd.Flags().Bool(p+"enable-empty-results-cache", false, "Enable roaring-bitmap-based empty results caching")
 			cmd.Flags().Uint32(p+"tier-level", 50, "Level of the search tier")
-			cmd.Flags().Duration(p+"mesh-publish-polling-duration", 0*time.Second, "How often does search archive poll dmesh")
 			cmd.Flags().Bool(p+"enable-moving-tail", false, "Enable moving tail, requires a relative --start-block (negative number)")
 			cmd.Flags().Uint64(p+"shard-size", 200, "Number of blocks to store in a given Bleve index")
 			cmd.Flags().Int(p+"start-block", 0, "Start at given block num, the initial sync and polling")
@@ -689,11 +701,11 @@ func init() {
 				Dmesh:                   modules.SearchDmeshClient,
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
-				ServiceVersion:          viper.GetString("search-mesh-service-version"),
+				ServiceVersion:          viper.GetString("search-common-mesh-service-version"),
 				TierLevel:               viper.GetUint32("search-archive-tier-level"),
 				GRPCListenAddr:          viper.GetString("search-archive-grpc-listen-addr"),
 				HTTPListenAddr:          viper.GetString("search-archive-http-listen-addr"),
-				PublishDuration:         viper.GetDuration("search-archive-mesh-publish-polling-duration"),
+				PublishDuration:         viper.GetDuration("search-common-mesh-publish-polling-duration"),
 				EnableMovingTail:        viper.GetBool("search-archive-enable-moving-tail"),
 				ShardSize:               viper.GetUint64("search-archive-shard-size"),
 				StartBlock:              viper.GetInt64("search-archive-start-block"),
@@ -719,15 +731,6 @@ func init() {
 		MetricsID:   "live",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			if cmd.Flag("search-mesh-store-addr") == nil {
-				cmd.Flags().String("search-mesh-store-addr", "", "address of the backing etcd cluster for mesh service discovery")
-			}
-			if cmd.Flag("search-mesh-namespace") == nil {
-				cmd.Flags().String("search-mesh-namespace", DmeshNamespace, "dmesh namespace where services reside (eos-mainnet)")
-			}
-			if cmd.Flag("search-mesh-service-version") == nil {
-				cmd.PersistentFlags().String("search-mesh-service-version", DmeshServiceVersion, "dmesh service version (v1)")
-			}
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-live-block-stream-addr", RelayerServingAddr, "gRPC Address to reach a stream of blocks")
@@ -739,20 +742,21 @@ func init() {
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
 			cmd.Flags().Bool("search-live-enable-readiness-probe", true, "Enable search live's app readiness probe")
 			cmd.Flags().String("search-live-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().Duration("search-live-mesh-publish-polling-duration", 0*time.Second, "How often does search live poll dmesh")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
-			cmd.Flags().String("search-live-indexing-restrictions-json", "", "json-formatted array of items to skip from indexing")
-			cmd.Flags().String("search-live-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-live-dfuse-hooks-action-name"), viper.GetString("search-live-indexing-restrictions-json"))
+			mapper, err := eosSearch.NewEOSBlockMapper(
+				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-action-filter-on-expr"),
+				viper.GetString("search-common-action-filter-out-expr"),
+			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
 			}
 			return liveApp.New(&liveApp.Config{
 				Dmesh:                    modules.SearchDmeshClient,
-				ServiceVersion:           viper.GetString("search-mesh-service-version"),
+				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
 				BlockmetaAddr:            viper.GetString("search-live-blockmeta-addr"),
@@ -764,7 +768,7 @@ func init() {
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
 				EnableReadinessProbe:     viper.GetBool("search-live-enable-readiness-probe"),
-				PublishDuration:          viper.GetDuration("search-live-mesh-publish-polling-duration"),
+				PublishDuration:          viper.GetDuration("search-common-mesh-publish-polling-duration"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
 				BlockMapper: mapper,
@@ -780,39 +784,30 @@ func init() {
 		MetricsID:   "forkresolver",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			if cmd.Flag("search-mesh-store-addr") == nil {
-				cmd.Flags().String("search-mesh-store-addr", "", "address of the backing etcd cluster for mesh service discovery")
-			}
-			if cmd.Flag("search-mesh-namespace") == nil {
-				cmd.Flags().String("search-mesh-namespace", DmeshNamespace, "dmesh namespace where services reside (eos-mainnet)")
-			}
-			if cmd.Flag("search-mesh-service-version") == nil {
-				cmd.PersistentFlags().String("search-mesh-service-version", DmeshServiceVersion, "dmesh service version (v1)")
-			}
-
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("search-forkresolver-indices-path", "search/forkresolver", "Location for inflight indices")
-			cmd.Flags().Duration("search-forkresolver-mesh-publish-polling-duration", 0*time.Second, "How often does search forkresolver poll dmesh")
 			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().String("search-forkresolver-indexing-restrictions-json", "", "json-formatted array of items to skip from indexing")
-			cmd.Flags().String("search-forkresolver-dfuse-hooks-action-name", "", "The dfuse Hooks event action name to intercept")
 			cmd.Flags().Bool("search-forkresolver-enable-readiness-probe", true, "Enable search forlresolver's app readiness probe")
 
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			mapper, err := eosSearch.NewEOSBlockMapper(viper.GetString("search-forkresolver-dfuse-hooks-action-name"), viper.GetString("search-forkresolver-indexing-restrictions-json"))
+			mapper, err := eosSearch.NewEOSBlockMapper(
+				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-action-filter-on-expr"),
+				viper.GetString("search-common-action-filter-out-expr"),
+			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
 			}
 
 			return forkresolverApp.New(&forkresolverApp.Config{
 				Dmesh:                modules.SearchDmeshClient,
-				ServiceVersion:       viper.GetString("search-mesh-service-version"),
+				ServiceVersion:       viper.GetString("search-common-mesh-service-version"),
 				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
 				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
-				PublishDuration:      viper.GetDuration("search-forkresolver-mesh-publish-polling-duration"),
+				PublishDuration:      viper.GetDuration("search-common-mesh-publish-polling-duration"),
 				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
 				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
@@ -898,6 +893,8 @@ func init() {
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
+			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
+			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			return nil
 		},
 		InitFunc: nil,
@@ -917,11 +914,13 @@ func init() {
 					// need to be passed this way because promoted fields
 					HTTPListenAddr:  viper.GetString("dgraphql-http-addr"),
 					GRPCListenAddr:  viper.GetString("dgraphql-grpc-addr"),
-					NetworkID:       viper.GetString("dgraphql-network-id"),
 					AuthPlugin:      viper.GetString("dgraphql-auth-plugin"),
 					MeteringPlugin:  viper.GetString("dgraphql-metering-plugin"),
+					NetworkID:       viper.GetString("dgraphql-network-id"),
 					OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
 					Protocol:        viper.GetString("dgraphql-protocol"),
+					JwtIssuerURL:    viper.GetString("dgraphql-auth-url"),
+					ApiKey:          viper.GetString("dgraphql-api-key"),
 				},
 			})
 		},
@@ -935,10 +934,18 @@ func init() {
 		MetricsID:   "eosq",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
+			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
+			return nil
+		},
+
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
 				HttpListenAddr:          EosqHTTPServingAddr,
+				AuthEndpointURL:         viper.GetString("eosq-auth-url"),
+				ApiKey:                  viper.GetString("eosq-api-key"),
 			}), nil
 		},
 	})

@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
 )
@@ -65,17 +65,17 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
-	block          *pbeos.Block
+	block          *pbcodec.Block
 	activeBlockNum int64
 
-	trx         *pbeos.TransactionTrace
+	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
 }
 
 func newParseCtx() *parseCtx {
 	return &parseCtx{
-		block: &pbeos.Block{},
-		trx:   &pbeos.TransactionTrace{},
+		block: &pbcodec.Block{},
+		trx:   &pbcodec.TransactionTrace{},
 	}
 }
 
@@ -183,11 +183,11 @@ func (ctx *parseCtx) resetBlock() {
 		ctx.resetTrx()
 	}
 
-	ctx.block = &pbeos.Block{}
+	ctx.block = &pbcodec.Block{}
 }
 
 func (ctx *parseCtx) resetTrx() {
-	ctx.trx = &pbeos.TransactionTrace{}
+	ctx.trx = &pbcodec.TransactionTrace{}
 	ctx.creationOps = nil
 }
 
@@ -195,35 +195,35 @@ func (ctx *parseCtx) recordCreationOp(operation *creationOp) {
 	ctx.creationOps = append(ctx.creationOps, operation)
 }
 
-func (ctx *parseCtx) recordDBOp(operation *pbeos.DBOp) {
+func (ctx *parseCtx) recordDBOp(operation *pbcodec.DBOp) {
 	ctx.trx.DbOps = append(ctx.trx.DbOps, operation)
 }
 
-func (ctx *parseCtx) recordDTrxOp(transaction *pbeos.DTrxOp) {
+func (ctx *parseCtx) recordDTrxOp(transaction *pbcodec.DTrxOp) {
 	ctx.trx.DtrxOps = append(ctx.trx.DtrxOps, transaction)
 
-	if transaction.Operation == pbeos.DTrxOp_OPERATION_FAILED {
+	if transaction.Operation == pbcodec.DTrxOp_OPERATION_FAILED {
 		ctx.revertOpsDueToFailedTransaction()
 	}
 }
 
-func (ctx *parseCtx) recordFeatureOp(operation *pbeos.FeatureOp) {
+func (ctx *parseCtx) recordFeatureOp(operation *pbcodec.FeatureOp) {
 	ctx.trx.FeatureOps = append(ctx.trx.FeatureOps, operation)
 }
 
-func (ctx *parseCtx) recordPermOp(operation *pbeos.PermOp) {
+func (ctx *parseCtx) recordPermOp(operation *pbcodec.PermOp) {
 	ctx.trx.PermOps = append(ctx.trx.PermOps, operation)
 }
 
-func (ctx *parseCtx) recordRAMOp(operation *pbeos.RAMOp) {
+func (ctx *parseCtx) recordRAMOp(operation *pbcodec.RAMOp) {
 	ctx.trx.RamOps = append(ctx.trx.RamOps, operation)
 }
 
-func (ctx *parseCtx) recordRAMCorrectionOp(operation *pbeos.RAMCorrectionOp) {
+func (ctx *parseCtx) recordRAMCorrectionOp(operation *pbcodec.RAMCorrectionOp) {
 	ctx.trx.RamCorrectionOps = append(ctx.trx.RamCorrectionOps, operation)
 }
 
-func (ctx *parseCtx) recordRlimitOp(operation *pbeos.RlimitOp) {
+func (ctx *parseCtx) recordRlimitOp(operation *pbcodec.RlimitOp) {
 	if operation.IsGlobalKind() {
 		ctx.block.RlimitOps = append(ctx.block.RlimitOps, operation)
 	} else if operation.IsLocalKind() {
@@ -231,15 +231,15 @@ func (ctx *parseCtx) recordRlimitOp(operation *pbeos.RlimitOp) {
 	}
 }
 
-func (ctx *parseCtx) recordTableOp(operation *pbeos.TableOp) {
+func (ctx *parseCtx) recordTableOp(operation *pbcodec.TableOp) {
 	ctx.trx.TableOps = append(ctx.trx.TableOps, operation)
 }
 
-func (ctx *parseCtx) recordTrxOp(operation *pbeos.TrxOp) {
+func (ctx *parseCtx) recordTrxOp(operation *pbcodec.TrxOp) {
 	ctx.block.ImplicitTransactionOps = append(ctx.block.ImplicitTransactionOps, operation)
 }
 
-func (ctx *parseCtx) recordTransaction(trace *pbeos.TransactionTrace) error {
+func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	failedTrace := trace.FailedDtrxTrace
 	if failedTrace != nil {
 		// Having a `FailedDtrxTrace` means the `trace` we got is an `onerror` handler.
@@ -253,8 +253,8 @@ func (ctx *parseCtx) recordTransaction(trace *pbeos.TransactionTrace) error {
 		// resulted in a subjetive failure, which is really a soft fail. So, when the receipt is
 		// not set, let's re-create it here with soft fail status only.
 		if failedTrace.Receipt == nil {
-			failedTrace.Receipt = &pbeos.TransactionReceiptHeader{
-				Status: pbeos.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL,
+			failedTrace.Receipt = &pbcodec.TransactionReceiptHeader{
+				Status: pbcodec.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL,
 			}
 		}
 
@@ -268,7 +268,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbeos.TransactionTrace) error {
 		// defined failed to execute properly. So in the `hard_fail` case, let's reset all ops.
 		// However, we do keep `RLimitOps` as they seems to be billed regardeless of transaction
 		// execution status
-		if trace.Receipt == nil || trace.Receipt.Status == pbeos.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL {
+		if trace.Receipt == nil || trace.Receipt.Status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL {
 			ctx.revertOpsDueToFailedTransaction()
 		}
 	}
@@ -300,9 +300,9 @@ func (ctx *parseCtx) revertOpsDueToFailedTransaction() {
 	// as well as the RLimitOps, which happens at a location that does not revert.
 	toRestoreRlimitOps := ctx.trx.RlimitOps
 
-	var deferredRemovalRAMOp *pbeos.RAMOp
+	var deferredRemovalRAMOp *pbcodec.RAMOp
 	for _, op := range ctx.trx.RamOps {
-		if op.Namespace == pbeos.RAMOp_NAMESPACE_DEFERRED_TRX && op.Action == pbeos.RAMOp_ACTION_REMOVE {
+		if op.Namespace == pbcodec.RAMOp_NAMESPACE_DEFERRED_TRX && op.Action == pbcodec.RAMOp_ACTION_REMOVE {
 			deferredRemovalRAMOp = op
 			break
 		}
@@ -311,13 +311,13 @@ func (ctx *parseCtx) revertOpsDueToFailedTransaction() {
 	ctx.resetTrx()
 	ctx.trx.RlimitOps = toRestoreRlimitOps
 	if deferredRemovalRAMOp != nil {
-		ctx.trx.RamOps = []*pbeos.RAMOp{deferredRemovalRAMOp}
+		ctx.trx.RamOps = []*pbcodec.RAMOp{deferredRemovalRAMOp}
 	}
 }
 
-func (ctx *parseCtx) transferDeferredRemovedRAMOp(initialRAMOps []*pbeos.RAMOp, target *pbeos.TransactionTrace) (filteredRAMOps []*pbeos.RAMOp) {
+func (ctx *parseCtx) transferDeferredRemovedRAMOp(initialRAMOps []*pbcodec.RAMOp, target *pbcodec.TransactionTrace) (filteredRAMOps []*pbcodec.RAMOp) {
 	for _, ramOp := range initialRAMOps {
-		if ramOp.Namespace == pbeos.RAMOp_NAMESPACE_DEFERRED_TRX && ramOp.Action == pbeos.RAMOp_ACTION_REMOVE {
+		if ramOp.Namespace == pbcodec.RAMOp_NAMESPACE_DEFERRED_TRX && ramOp.Action == pbcodec.RAMOp_ACTION_REMOVE {
 			target.RamOps = append(target.RamOps, ramOp)
 		} else {
 			filteredRAMOps = append(filteredRAMOps, ramOp)
@@ -348,7 +348,7 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 
 // Line format:
 //   ACCEPTED_BLOCK ${block_num} ${block_json}
-func (ctx *parseCtx) readAcceptedBlock(line string) (*pbeos.Block, error) {
+func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
 		return nil, fmt.Errorf("expected 3 fields, got %d", len(chunks))
@@ -528,16 +528,16 @@ func (ctx *parseCtx) readDBOp(line string) error {
 
 	opString := chunks[1]
 
-	op := pbeos.DBOp_OPERATION_UNKNOWN
+	op := pbcodec.DBOp_OPERATION_UNKNOWN
 	var oldData, newData string
 	var oldPayer, newPayer string
 	switch opString {
 	case "INS":
-		op = pbeos.DBOp_OPERATION_INSERT
+		op = pbcodec.DBOp_OPERATION_INSERT
 		newData = chunks[8]
 		newPayer = chunks[3]
 	case "UPD":
-		op = pbeos.DBOp_OPERATION_UPDATE
+		op = pbcodec.DBOp_OPERATION_UPDATE
 
 		dataChunks := strings.SplitN(chunks[8], ":", 2)
 		if len(dataChunks) != 2 {
@@ -555,7 +555,7 @@ func (ctx *parseCtx) readDBOp(line string) error {
 		oldPayer = payerChunks[0]
 		newPayer = payerChunks[1]
 	case "REM":
-		op = pbeos.DBOp_OPERATION_REMOVE
+		op = pbcodec.DBOp_OPERATION_REMOVE
 		oldData = chunks[8]
 		oldPayer = chunks[3]
 	default:
@@ -577,7 +577,7 @@ func (ctx *parseCtx) readDBOp(line string) error {
 		}
 	}
 
-	ctx.recordDBOp(&pbeos.DBOp{
+	ctx.recordDBOp(&pbcodec.DBOp{
 		Operation:   op,
 		ActionIndex: uint32(actionIndex),
 		OldPayer:    oldPayer,
@@ -606,7 +606,7 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 	}
 
 	opString := chunks[1]
-	op, ok := pbeos.DTrxOp_Operation_value["OPERATION_"+opString]
+	op, ok := pbcodec.DTrxOp_Operation_value["OPERATION_"+opString]
 	if !ok {
 		return fmt.Errorf("operation %q unknown", opString)
 	}
@@ -622,8 +622,8 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
 	}
 
-	ctx.recordDTrxOp(&pbeos.DTrxOp{
-		Operation:     pbeos.DTrxOp_Operation(op),
+	ctx.recordDTrxOp(&pbcodec.DTrxOp{
+		Operation:     pbcodec.DTrxOp_Operation(op),
 		ActionIndex:   uint32(actionIndex),
 		Sender:        chunks[3],
 		SenderId:      chunks[4],
@@ -651,8 +651,8 @@ func (ctx *parseCtx) readFailedDTrxOp(line string) error {
 		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
 	}
 
-	ctx.recordDTrxOp(&pbeos.DTrxOp{
-		Operation:   pbeos.DTrxOp_OPERATION_FAILED,
+	ctx.recordDTrxOp(&pbcodec.DTrxOp{
+		Operation:   pbcodec.DTrxOp_OPERATION_FAILED,
 		ActionIndex: uint32(actionIndex),
 	})
 
@@ -667,13 +667,13 @@ func (ctx *parseCtx) readFeatureOpActivate(line string) error {
 		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
 	}
 
-	feature := &pbeos.Feature{}
+	feature := &pbcodec.Feature{}
 	err := json.Unmarshal(json.RawMessage(chunks[3]), &feature)
 	if err != nil {
 		return fmt.Errorf("unmashall new feature data: %s", err)
 	}
 
-	ctx.recordFeatureOp(&pbeos.FeatureOp{
+	ctx.recordFeatureOp(&pbcodec.FeatureOp{
 		Kind:          chunks[1],
 		FeatureDigest: chunks[2],
 		Feature:       feature,
@@ -695,13 +695,13 @@ func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
 	}
 
-	feature := &pbeos.Feature{}
+	feature := &pbcodec.Feature{}
 	err = json.Unmarshal(json.RawMessage(chunks[4]), &feature)
 	if err != nil {
 		return fmt.Errorf("unmashall new feature data: %s", err)
 	}
 
-	ctx.recordFeatureOp(&pbeos.FeatureOp{
+	ctx.recordFeatureOp(&pbcodec.FeatureOp{
 		Kind:          chunks[1],
 		ActionIndex:   uint32(actionIndex),
 		FeatureDigest: chunks[3],
@@ -727,16 +727,16 @@ func (ctx *parseCtx) readPermOp(line string) error {
 
 	opString := chunks[1]
 
-	op := pbeos.PermOp_OPERATION_UNKNOWN
+	op := pbcodec.PermOp_OPERATION_UNKNOWN
 	var oldData, newData []byte
 
 	switch opString {
 	case "INS":
-		op = pbeos.PermOp_OPERATION_INSERT
+		op = pbcodec.PermOp_OPERATION_INSERT
 		newData = []byte(chunks[3])
 
 	case "UPD":
-		op = pbeos.PermOp_OPERATION_UPDATE
+		op = pbcodec.PermOp_OPERATION_UPDATE
 
 		oldJSONResult := gjson.Get(chunks[3], "old")
 		if !oldJSONResult.Exists() {
@@ -752,7 +752,7 @@ func (ctx *parseCtx) readPermOp(line string) error {
 		newData = []byte(newJSONResult.Raw)
 
 	case "REM":
-		op = pbeos.PermOp_OPERATION_REMOVE
+		op = pbcodec.PermOp_OPERATION_REMOVE
 
 		oldData = []byte(chunks[3])
 
@@ -760,7 +760,7 @@ func (ctx *parseCtx) readPermOp(line string) error {
 		return fmt.Errorf("unknown PERM_OP op: %q", opString)
 	}
 
-	permOp := &pbeos.PermOp{
+	permOp := &pbcodec.PermOp{
 		Operation:   op,
 		ActionIndex: uint32(actionIndex),
 	}
@@ -803,19 +803,19 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 	}
 
 	namespaceString := chunks[3]
-	namespace, ok := pbeos.RAMOp_Namespace_value["NAMESPACE_"+strings.ToUpper(namespaceString)]
+	namespace, ok := pbcodec.RAMOp_Namespace_value["NAMESPACE_"+strings.ToUpper(namespaceString)]
 	if !ok {
 		return fmt.Errorf("namespace %q unknown", namespaceString)
 	}
 
 	actionString := chunks[4]
-	action, ok := pbeos.RAMOp_Action_value["ACTION_"+strings.ToUpper(actionString)]
+	action, ok := pbcodec.RAMOp_Action_value["ACTION_"+strings.ToUpper(actionString)]
 	if !ok {
 		return fmt.Errorf("action %q unknown", actionString)
 	}
 
 	operationString := chunks[5]
-	operation, ok := pbeos.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
+	operation, ok := pbcodec.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
 	if !ok {
 		return fmt.Errorf("operation %q unknown", operationString)
 	}
@@ -830,12 +830,12 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		return fmt.Errorf("delta is not a valid number, got: %q", chunks[5])
 	}
 
-	ctx.recordRAMOp(&pbeos.RAMOp{
+	ctx.recordRAMOp(&pbcodec.RAMOp{
 		ActionIndex: uint32(actionIndex),
 		UniqueKey:   chunks[2],
-		Namespace:   pbeos.RAMOp_Namespace(namespace),
-		Action:      pbeos.RAMOp_Action(action),
-		Operation:   pbeos.RAMOp_Operation(operation),
+		Namespace:   pbcodec.RAMOp_Namespace(namespace),
+		Action:      pbcodec.RAMOp_Action(action),
+		Operation:   pbcodec.RAMOp_Operation(operation),
 		Payer:       chunks[6],
 		Usage:       uint64(usage),
 		Delta:       int64(delta),
@@ -858,7 +858,7 @@ func (ctx *parseCtx) readRAMCorrectionOp(line string) error {
 		return fmt.Errorf("delta not a valid number, got: %q", chunks[5])
 	}
 
-	ctx.recordRAMCorrectionOp(&pbeos.RAMCorrectionOp{
+	ctx.recordRAMCorrectionOp(&pbcodec.RAMCorrectionOp{
 		CorrectionId: chunks[2],
 		UniqueKey:    chunks[3],
 		Payer:        chunks[4],
@@ -885,17 +885,17 @@ func (ctx *parseCtx) readRlimitOp(line string) error {
 	kindString := chunks[1]
 	operationString := chunks[2]
 
-	operation := pbeos.RlimitOp_OPERATION_UNKNOWN
+	operation := pbcodec.RlimitOp_OPERATION_UNKNOWN
 	switch operationString {
 	case "INS":
-		operation = pbeos.RlimitOp_OPERATION_INSERT
+		operation = pbcodec.RlimitOp_OPERATION_INSERT
 	case "UPD":
-		operation = pbeos.RlimitOp_OPERATION_UPDATE
+		operation = pbcodec.RlimitOp_OPERATION_UPDATE
 	default:
 		return fmt.Errorf("operation %q is unknown", operationString)
 	}
 
-	op := &pbeos.RlimitOp{Operation: operation}
+	op := &pbcodec.RlimitOp{Operation: operation}
 	data := json.RawMessage(chunks[3])
 
 	switch kindString {
@@ -959,17 +959,17 @@ func (ctx *parseCtx) readTableOp(line string) error {
 	}
 
 	opString := chunks[1]
-	op := pbeos.TableOp_OPERATION_UNKNOWN
+	op := pbcodec.TableOp_OPERATION_UNKNOWN
 	switch opString {
 	case "INS":
-		op = pbeos.TableOp_OPERATION_INSERT
+		op = pbcodec.TableOp_OPERATION_INSERT
 	case "REM":
-		op = pbeos.TableOp_OPERATION_REMOVE
+		op = pbcodec.TableOp_OPERATION_REMOVE
 	default:
 		return fmt.Errorf("unknown kind: %q", opString)
 	}
 
-	ctx.recordTableOp(&pbeos.TableOp{
+	ctx.recordTableOp(&pbcodec.TableOp{
 		Operation:   op,
 		ActionIndex: uint32(actionIndex),
 		Payer:       chunks[6],
@@ -990,10 +990,10 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 	}
 
 	opString := chunks[1]
-	op := pbeos.TrxOp_OPERATION_UNKNOWN
+	op := pbcodec.TrxOp_OPERATION_UNKNOWN
 	switch opString {
 	case "CREATE":
-		op = pbeos.TrxOp_OPERATION_CREATE
+		op = pbcodec.TrxOp_OPERATION_CREATE
 	default:
 		return fmt.Errorf("unknown kind: %q", opString)
 	}
@@ -1004,7 +1004,7 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
 	}
 
-	ctx.recordTrxOp(&pbeos.TrxOp{
+	ctx.recordTrxOp(&pbcodec.TrxOp{
 		Operation:     op,
 		Name:          chunks[2], // "onblock" or "onerror"
 		TransactionId: chunks[3], // the hash of the transaction

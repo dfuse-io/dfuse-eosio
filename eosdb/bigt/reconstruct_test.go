@@ -53,7 +53,7 @@ func TrashTestReconstructBlock(t *testing.T) {
 		require.NoError(t, err)
 
 		_ = packed
-		// packed, err = pbeosPackedTransactionToDEOS(packed)
+		// packed, err = pbcodecPackedTransactionToDEOS(packed)
 		// require.NoError(t, err)
 
 		// block.Block.Transactions = append(block.Block.Transactions, packed)

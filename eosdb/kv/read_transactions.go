@@ -3,19 +3,19 @@ package kv
 import (
 	"context"
 
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	pbkv "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosdb/kv/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
 )
 
-func (db *DB) GetTransactionTraces(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) GetTransactionTraces(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	out, err = db.getTransactionExecutionEvents(ctx, idPrefix)
 	return
 }
 
-func (db *DB) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) (out [][]*pbeos.TransactionEvent, err error) {
+func (db *DB) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
 	// OPTIMIZE: Parallelize access, or do requests to get things in parallel
 	for _, idPrefix := range idPrefixes {
 		trxResult, err := db.GetTransactionEvents(ctx, idPrefix)
@@ -27,7 +27,7 @@ func (db *DB) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string
 	return
 }
 
-func (db *DB) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbeos.TransactionEvent, err error) {
+func (db *DB) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
 	// OPTIMIZE: Parallelize access, or do requests to get things in parallel
 	for _, idPrefix := range idPrefixes {
 		trxResult, err := db.GetTransactionTraces(ctx, idPrefix)
@@ -39,7 +39,7 @@ func (db *DB) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string
 	return
 }
 
-func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	evs, err := db.getTransactionAdditionEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
@@ -67,15 +67,15 @@ func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []
 	return
 }
 
-func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackTrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbkv.TrxRow{}
+		row := &pbeosdb.TrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackTrxsKey(it.Item().Key)
 
-		ev := &pbeos.TransactionEvent{
+		ev := &pbcodec.TransactionEvent{
 			Id:       trxID,
 			BlockId:  blockID,
 			BlockNum: eos.BlockNum(blockID),
@@ -84,16 +84,16 @@ func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string)
 		ev.Irreversible = err != store.ErrNotFound
 
 		if row.Receipt != nil {
-			ev.Event = &pbeos.TransactionEvent_Addition{
-				Addition: &pbeos.TransactionEvent_Added{
+			ev.Event = &pbcodec.TransactionEvent_Addition{
+				Addition: &pbcodec.TransactionEvent_Added{
 					Receipt:     row.Receipt,
 					Transaction: row.SignedTrx,
 					PublicKeys:  row.PublicKeys,
 				},
 			}
 		} else {
-			ev.Event = &pbeos.TransactionEvent_InternalAddition{
-				InternalAddition: &pbeos.TransactionEvent_AddedInternally{
+			ev.Event = &pbcodec.TransactionEvent_InternalAddition{
+				InternalAddition: &pbcodec.TransactionEvent_AddedInternally{
 					Transaction: row.SignedTrx,
 				},
 			}
@@ -110,15 +110,15 @@ func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string)
 	return
 }
 
-func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackImplicitTrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbkv.ImplicitTrxRow{}
+		row := &pbeosdb.ImplicitTrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackImplicitTrxsKey(it.Item().Key)
 
-		ev := &pbeos.TransactionEvent{
+		ev := &pbcodec.TransactionEvent{
 			Id:       trxID,
 			BlockId:  blockID,
 			BlockNum: eos.BlockNum(blockID),
@@ -126,8 +126,8 @@ func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string)
 		_, err := db.store.Get(ctx, Keys.PackIrrBlocksKey(blockID))
 		ev.Irreversible = err != store.ErrNotFound
 
-		ev.Event = &pbeos.TransactionEvent_InternalAddition{
-			InternalAddition: &pbeos.TransactionEvent_AddedInternally{
+		ev.Event = &pbcodec.TransactionEvent_InternalAddition{
+			InternalAddition: &pbcodec.TransactionEvent_AddedInternally{
 				Transaction: row.SignedTrx,
 			},
 		}
@@ -143,15 +143,15 @@ func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string)
 	return
 }
 
-func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackTrxTracesPrefix(idPrefix))
 	for it.Next() {
-		row := &pbkv.TrxTraceRow{}
+		row := &pbeosdb.TrxTraceRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackTrxTracesKey(it.Item().Key)
 
-		ev := &pbeos.TransactionEvent{
+		ev := &pbcodec.TransactionEvent{
 			Id:       trxID,
 			BlockId:  blockID,
 			BlockNum: eos.BlockNum(blockID),
@@ -159,8 +159,8 @@ func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string
 		_, err := db.store.Get(ctx, Keys.PackIrrBlocksKey(blockID))
 		ev.Irreversible = err != store.ErrNotFound
 
-		ev.Event = &pbeos.TransactionEvent_Execution{
-			Execution: &pbeos.TransactionEvent_Executed{
+		ev.Event = &pbcodec.TransactionEvent_Execution{
+			Execution: &pbcodec.TransactionEvent_Executed{
 				Trace:       row.TrxTrace,
 				BlockHeader: row.BlockHeader,
 			},
@@ -179,15 +179,15 @@ func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string
 	return
 }
 
-func (db *DB) getTransactionDtrxEvents(ctx context.Context, idPrefix string) (out []*pbeos.TransactionEvent, err error) {
+func (db *DB) getTransactionDtrxEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackDtrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbkv.DtrxRow{}
+		row := &pbeosdb.DtrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackDtrxsKey(it.Item().Key)
 
-		ev := &pbeos.TransactionEvent{
+		ev := &pbcodec.TransactionEvent{
 			Id:       trxID,
 			BlockId:  blockID,
 			BlockNum: eos.BlockNum(blockID),
@@ -196,15 +196,15 @@ func (db *DB) getTransactionDtrxEvents(ctx context.Context, idPrefix string) (ou
 		ev.Irreversible = err != store.ErrNotFound
 
 		if row.CreatedBy != nil {
-			ev.Event = &pbeos.TransactionEvent_DtrxScheduling{
-				DtrxScheduling: &pbeos.TransactionEvent_DtrxScheduled{
+			ev.Event = &pbcodec.TransactionEvent_DtrxScheduling{
+				DtrxScheduling: &pbcodec.TransactionEvent_DtrxScheduled{
 					CreatedBy:   row.CreatedBy,
 					Transaction: row.SignedTrx,
 				},
 			}
 		} else {
-			ev.Event = &pbeos.TransactionEvent_DtrxCancellation{
-				DtrxCancellation: &pbeos.TransactionEvent_DtrxCanceled{
+			ev.Event = &pbcodec.TransactionEvent_DtrxCancellation{
+				DtrxCancellation: &pbcodec.TransactionEvent_DtrxCanceled{
 					CanceledBy: row.CanceledBy,
 				},
 			}

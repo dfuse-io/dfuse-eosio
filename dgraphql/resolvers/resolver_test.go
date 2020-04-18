@@ -20,19 +20,17 @@ import (
 	"os"
 	"testing"
 
-	"github.com/golang/protobuf/ptypes"
-
-	"go.uber.org/zap"
-
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
-	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/search/eos/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -61,7 +59,7 @@ func newSearchMatchArchive(trxID string) *pbsearch.SearchMatch {
 func newSearchMatchLive(trxID string, idx int) *pbsearch.SearchMatch {
 	cs, err := ptypes.MarshalAny(&pbsearcheos.Match{
 		Block: &pbsearcheos.BlockTrxPayload{
-			Trace: &pbeos.TransactionTrace{Index: uint64(idx)},
+			Trace: &pbcodec.TransactionTrace{Index: uint64(idx)},
 		},
 	})
 	if err != nil {
@@ -78,7 +76,7 @@ func newDgraphqlResponse(trxID string, idx int) *SearchTransactionForwardRespons
 	return &SearchTransactionForwardResponse{
 		SearchTransactionBackwardResponse: SearchTransactionBackwardResponse{
 			trxIDPrefix: trxID,
-			trxTrace: &pbeos.TransactionTrace{
+			trxTrace: &pbcodec.TransactionTrace{
 				Index: uint64(idx),
 			},
 		},
@@ -90,7 +88,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 	tests := []struct {
 		name        string
 		fromRouter  []interface{}
-		fromDB      map[string][]*pbeos.TransactionEvent
+		fromDB      map[string][]*pbcodec.TransactionEvent
 		expect      []*SearchTransactionForwardResponse
 		expectError error
 	}{
@@ -100,9 +98,9 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchArchive("trx123"),
 				fmt.Errorf("failed"),
 			},
-			fromDB: map[string][]*pbeos.TransactionEvent{
+			fromDB: map[string][]*pbcodec.TransactionEvent{
 				"trx123": {
-					{Id: "trx12399999999999999999", Event: pbeos.NewTestExecEvent(5)},
+					{Id: "trx12399999999999999999", Event: pbcodec.NewTestExecEvent(5)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{
@@ -125,18 +123,18 @@ func TestSubscriptionSearchForward(t *testing.T) {
 				newSearchMatchLive("trx004", 9),
 				newSearchMatchLive("trx005", 10),
 			},
-			fromDB: map[string][]*pbeos.TransactionEvent{
+			fromDB: map[string][]*pbcodec.TransactionEvent{
 				"trx000": {
-					{Id: "trx000boo", Event: pbeos.NewTestExecEvent(5)},
+					{Id: "trx000boo", Event: pbcodec.NewTestExecEvent(5)},
 				},
 				"trx001": {
-					{Id: "trx001boo", Event: pbeos.NewTestExecEvent(6)},
+					{Id: "trx001boo", Event: pbcodec.NewTestExecEvent(6)},
 				},
 				"trx002": {
-					{Id: "trx002boo", Event: pbeos.NewTestExecEvent(7)},
+					{Id: "trx002boo", Event: pbcodec.NewTestExecEvent(7)},
 				},
 				"trx022": {
-					{Id: "trx022boo", Event: pbeos.NewTestExecEvent(11)},
+					{Id: "trx022boo", Event: pbcodec.NewTestExecEvent(11)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{

@@ -22,7 +22,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"go.uber.org/zap"
 )
 
@@ -44,7 +44,7 @@ func (db *DB) Close() error {
 	return nil
 }
 
-func (db *DB) PutBlock(ctx context.Context, blk *pbeos.Block) error {
+func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 	defer db.db.ExecContext(ctx, "SET autocommit=1")
 
 	_, err := db.db.ExecContext(ctx, "SET autocommit=0")
@@ -104,7 +104,7 @@ func (db *DB) Flush(ctx context.Context) error {
 	return nil
 }
 
-func (db *DB) putTransactions(ctx context.Context, blk *pbeos.Block) error {
+func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 	for _, trxReceipt := range blk.Transactions {
 		if trxReceipt.PackedTransaction == nil {
 			// This means we deal with a deferred transaction receipt, and that it has been handled through DtrxOps already
@@ -117,7 +117,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbeos.Block) error {
 		}
 
 		signedTrx := codec.SignedTransactionToDEOS(signedTransaction)
-		pubKeyProto := &pbeos.PublicKeys{
+		pubKeyProto := &pbcodec.PublicKeys{
 			PublicKeys: codec.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
 		}
 
@@ -134,7 +134,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbeos.Block) error {
 	return nil
 }
 
-func (db *DB) putTransactionTraces(ctx context.Context, blk *pbeos.Block) error {
+func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) error {
 	//marshaledHeader := db.enc.MustProto(blk.Header)
 
 	for _, trxTrace := range blk.TransactionTraces {
@@ -181,7 +181,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbeos.Block) error 
 	return nil
 }
 
-func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbeos.Block) error {
+func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
 	// name is "onblock" or "onerror"
 	for _, trxOp := range blk.ImplicitTransactionOps {
 		_, err := db.db.ExecContext(ctx, INSERT_IGNORE+"INTO implicittrxs (id, blockId, name, signedTrx) VALUES (?, ?, ?, ?)", trxOp.TransactionId, blk.ID(), trxOp.Name, db.enc.MustProto(trxOp.Transaction))
@@ -193,18 +193,18 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbeos.Block) err
 	return nil
 }
 
-func (db *DB) getRefs(blk *pbeos.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbeos.TransactionRefs) {
-	implicitTrxRefs = &pbeos.TransactionRefs{}
+func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbcodec.TransactionRefs) {
+	implicitTrxRefs = &pbcodec.TransactionRefs{}
 	for _, trxOp := range blk.ImplicitTransactionOps {
 		implicitTrxRefs.Hashes = append(implicitTrxRefs.Hashes, eosdb.MustHexDecode(trxOp.TransactionId))
 	}
 
-	trxRefs = &pbeos.TransactionRefs{}
+	trxRefs = &pbcodec.TransactionRefs{}
 	for _, trx := range blk.Transactions {
 		trxRefs.Hashes = append(trxRefs.Hashes, eosdb.MustHexDecode(trx.Id))
 	}
 
-	tracesRefs = &pbeos.TransactionRefs{}
+	tracesRefs = &pbcodec.TransactionRefs{}
 	for _, trx := range blk.TransactionTraces {
 		tracesRefs.Hashes = append(tracesRefs.Hashes, eosdb.MustHexDecode(trx.Id))
 	}
@@ -212,7 +212,7 @@ func (db *DB) getRefs(blk *pbeos.Block) (implicitTrxRefs, trxRefs, tracesRefs *p
 	return
 }
 
-func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbeos.Block) error {
+func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
 	_, err := db.db.ExecContext(ctx, INSERT_IGNORE+"INTO irrblks (id, irreversible) VALUES (?, ?)", blk.ID(), true)
 	if err != nil {
 		return err

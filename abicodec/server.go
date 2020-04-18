@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"net"
 
-	pbabicodec "github.com/dfuse-io/pbgo/dfuse/abicodec/eosio/v1"
+	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	"github.com/dfuse-io/dgrpc"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
-	"github.com/dfuse-io/dgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

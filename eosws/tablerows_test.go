@@ -25,7 +25,7 @@ import (
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
-	pbeos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/codecs/eos"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
@@ -52,7 +52,7 @@ func Test_onGetTableRows(t *testing.T) {
 		{
 			name: "sunny path",
 			lib:  1,
-			archiveFiles: []archiveFiles{{name: "0000000000", content: pbeosBlockToFile(t, pbeosBlockFromString(t, `{
+			archiveFiles: []archiveFiles{{name: "0000000000", content: pbcodecBlockToFile(t, pbcodecBlockFromString(t, `{
     "header": {
         "previous": "00000001a",
         "timestamp": "2019-09-09T00:00:00Z"
@@ -383,8 +383,8 @@ func protoJSONUnmarshal(t *testing.T, data []byte, into proto.Message) {
 	require.NoError(t, jsonpb.UnmarshalString(string(data), into))
 }
 
-func pbeosBlockFromString(t *testing.T, in string) (out *pbeos.Block) {
-	out = &pbeos.Block{}
+func pbcodecBlockFromString(t *testing.T, in string) (out *pbcodec.Block) {
+	out = &pbcodec.Block{}
 	require.NoError(t, jsonpb.UnmarshalString(in, out))
 	return
 }
