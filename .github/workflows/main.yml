@@ -44,7 +44,6 @@ jobs:
       
       - name: Build dfuseeos
         run: |
-          go get -v 
           go build -o dfuseeos ./cmd/dfuseeos
   
 # jobs:
