@@ -8,14 +8,31 @@ on:
   pull_request:
   
 jobs:
-  lint:
+  # test:
+  #   name: Test
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-16.04]
+  #   steps:
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+
+  #     - name: Check out code
+  #       uses: actions/checkout@v1
+
+  #     - name: Run Unit tests.
+  #       run: go test ./...
+
+  build:
     name: Build
-    env:
-      GOPRIVATE: github.com/dfuse-io/*
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-16.04]
+    # needs: [test]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
@@ -25,32 +42,13 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
       
-      - name: Granting private modules access
-        run: |
-          git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}:x-oauth-basic@github.com/dfuse-io".insteadOf "https://github.com/dfuse-io" 
-
       - name: Build dfuseeos
         run: |
-          #go get -x
           go build -o dfuseeos ./cmd/dfuseeos
   
 # jobs:
 
-#   test:
-#     name: Test
-#     runs-on: ${{ matrix.os }}
-#     strategy:
-#       matrix:
-#         os: [ubuntu-16.04]
-#     steps:
-#       - name: Set up Go
-#         uses: actions/setup-go@v1
-#         with:
-#           go-version: 1.13
-#       - name: Check out code
-#         uses: actions/checkout@v1
-#       - name: Run Unit tests.
-#         run: go test ./...
+
 
   # build:
   #   name: Build
