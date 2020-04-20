@@ -8,31 +8,12 @@ on:
   pull_request:
   
 jobs:
-  # test:
-  #   name: Test
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-16.04]
-  #   steps:
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v1
-  #       with:
-  #         go-version: 1.13
-
-  #     - name: Check out code
-  #       uses: actions/checkout@v1
-
-  #     - name: Run Unit tests.
-  #       run: go test ./...
-
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-16.04]
-    # needs: [test]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
@@ -41,10 +22,29 @@ jobs:
 
       - name: Check out code
         uses: actions/checkout@v1
+
+      - name: Run Unit tests.
+        run: go test ./...
+
+  # build:
+  #   name: Build
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [ubuntu-16.04]
+  #   # needs: [test]
+  #   steps:
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+
+  #     - name: Check out code
+  #       uses: actions/checkout@v1
       
-      - name: Build dfuseeos
-        run: |
-          go build -o dfuseeos ./cmd/dfuseeos
+  #     - name: Build dfuseeos
+  #       run: |
+  #         go build -o dfuseeos ./cmd/dfuseeos
   
 # jobs:
 
