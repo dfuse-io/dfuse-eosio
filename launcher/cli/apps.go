@@ -47,7 +47,6 @@ import (
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	archiveApp "github.com/dfuse-io/search/app/archive"
-	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
@@ -566,10 +565,10 @@ to find how to install it.`)
 
 	// Search Indexer
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "indexer",
+		ID:          "search-indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
-		MetricsID:   "indexer",
+		MetricsID:   "search-indexer",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
@@ -627,10 +626,10 @@ to find how to install it.`)
 
 	// Search Router
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "router",
+		ID:          "search-router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
-		MetricsID:   "router",
+		MetricsID:   "search-router",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 
@@ -667,10 +666,10 @@ to find how to install it.`)
 
 	// Search Archive
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "archive",
+		ID:          "search-archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
-		MetricsID:   "archive",
+		MetricsID:   "search-archive",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
@@ -725,10 +724,10 @@ to find how to install it.`)
 	})
 	// Search Live
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "live",
+		ID:          "search-live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
-		MetricsID:   "live",
+		MetricsID:   "search-live",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
@@ -776,46 +775,46 @@ to find how to install it.`)
 		},
 	})
 
-	// Search Fork Resolver
-	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "forkresolver",
-		Title:       "Search fork resolver",
-		Description: "Search forks",
-		MetricsID:   "forkresolver",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
-		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
-			cmd.Flags().String("search-forkresolver-indices-path", "search/forkresolver", "Location for inflight indices")
-			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().Bool("search-forkresolver-enable-readiness-probe", true, "Enable search forlresolver's app readiness probe")
-
-			return nil
-		},
-		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-			mapper, err := eosSearch.NewEOSBlockMapper(
-				viper.GetString("search-common-dfuse-hooks-action-name"),
-				viper.GetString("search-common-action-filter-on-expr"),
-				viper.GetString("search-common-action-filter-out-expr"),
-			)
-			if err != nil {
-				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
-			}
-
-			return forkresolverApp.New(&forkresolverApp.Config{
-				Dmesh:                modules.SearchDmeshClient,
-				ServiceVersion:       viper.GetString("search-common-mesh-service-version"),
-				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
-				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
-				PublishDuration:      viper.GetDuration("search-common-mesh-publish-polling-duration"),
-				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
-				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
-				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
-			}, &forkresolverApp.Modules{
-				BlockMapper: mapper,
-			}), nil
-		},
-	})
+	//	// Search Fork Resolver
+	//	launcher.RegisterApp(&launcher.AppDef{
+	//		ID:          "search-forkresolver",
+	//		Title:       "Search fork resolver",
+	//		Description: "Search forks",
+	//		MetricsID:   "search-forkresolver",
+	//		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+	//		RegisterFlags: func(cmd *cobra.Command) error {
+	//			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
+	//			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
+	//			cmd.Flags().String("search-forkresolver-indices-path", "search/forkresolver", "Location for inflight indices")
+	//			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
+	//			cmd.Flags().Bool("search-forkresolver-enable-readiness-probe", true, "Enable search forlresolver's app readiness probe")
+	//
+	//			return nil
+	//		},
+	//		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+	//			mapper, err := eosSearch.NewEOSBlockMapper(
+	//				viper.GetString("search-common-dfuse-hooks-action-name"),
+	//				viper.GetString("search-common-action-filter-on-expr"),
+	//				viper.GetString("search-common-action-filter-out-expr"),
+	//			)
+	//			if err != nil {
+	//				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+	//			}
+	//
+	//			return forkresolverApp.New(&forkresolverApp.Config{
+	//				Dmesh:                modules.SearchDmeshClient,
+	//				ServiceVersion:       viper.GetString("search-common-mesh-service-version"),
+	//				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
+	//				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
+	//				PublishDuration:      viper.GetDuration("search-common-mesh-publish-polling-duration"),
+	//				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
+	//				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
+	//				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
+	//			}, &forkresolverApp.Modules{
+	//				BlockMapper: mapper,
+	//			}), nil
+	//		},
+	//	})
 
 	// eosWS (deprecated app, scheduled to be dismantled and features migrated to dgraphql)
 	launcher.RegisterApp(&launcher.AppDef{

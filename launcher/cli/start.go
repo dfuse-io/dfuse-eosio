@@ -27,6 +27,7 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -138,12 +139,13 @@ Your instance should be ready in a few seconds, here some relevant links:
 
 func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
 	if len(args) == 0 || args[0] == "all" {
-		// Producer node
-		if runProducer {
-			apps = append(apps, "manager")
+		for app := range core.AppRegistry {
+			if app == "manager" && !runProducer {
+				continue
+			}
+			apps = append(apps, app)
 		}
-		//apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "abicodec", "eosws")
-		apps = append(apps, "mindreader", "relayer", "merger", "kvdb-loader", "fluxdb", "indexer", "blockmeta", "abicodec", "router", "archive", "live", "dgraphql", "eosws", "dashboard", "eosq")
+
 	} else {
 		for _, arg := range args {
 			chunks := strings.Split(arg, ",")

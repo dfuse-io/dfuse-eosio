@@ -15,6 +15,9 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/dfuse-io/derr"
 	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/spf13/cobra"
@@ -42,6 +45,13 @@ func Main() {
 
 	derr.Check("registering application flags", core.RegisterFlags(startCmd))
 
+	var availableCmds []string
+	for app := range core.AppRegistry {
+		availableCmds = append(availableCmds, app)
+	}
+	startCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
+	startCmd.Example = startCmdExample
+
 	RootCmd.AddCommand(startCmd, purgeCmd, initCmd)
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -50,3 +60,28 @@ func Main() {
 
 	derr.Check("dfuse", RootCmd.Execute())
 }
+
+var startCmdExample = `dfuseeos start relayer merger --merger-grpc-serving-addr=localhost:12345 --relayer-merger-addr=localhost:12345`
+var startCmdHelpTemplate = `Usage:{{if .Runnable}}
+  {{.UseLine}}{{end}} [all|command1 [command2...]]{{if gt (len .Aliases) 0}}
+
+Aliases:
+  {{.NameAndAliases}}{{end}}{{if .HasExample}}
+
+Examples:
+  {{.Example}}{{end}}
+
+Available Commands:
+  %s{{if .HasAvailableLocalFlags}}
+
+Flags:
+{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
+
+Global Flags:
+{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasHelpSubCommands}}
+
+Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
+  {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
+
+Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+`
