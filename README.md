@@ -38,9 +38,8 @@ and make sure you get a grasp of what this blockchain node is capable.
 
 #### From source
 
-* Grab [Go 1.14](https://golang.org/dl/)
-
 ```
+# The minimum required Go version is 1.13
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 go install -v ./cmd/dfuseeos
