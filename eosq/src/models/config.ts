@@ -42,6 +42,7 @@ interface EosqConfig {
   secure: boolean
   disable_segments: boolean
   disable_sentry: boolean
+  disable_token_meta: boolean
 }
 
 export const Config = windowTS.TopLevelConfig as EosqConfig

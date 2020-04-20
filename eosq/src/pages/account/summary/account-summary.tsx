@@ -13,6 +13,7 @@ import { AccountTokens } from "./account-tokens"
 import { UiHrDense } from "../../../atoms/ui-hr/ui-hr"
 import { useAccountBalances } from "../../../hooks/use-account-balances"
 import { LCE } from "../../../components/lce/lce"
+import { Config } from "../../../models/config"
 
 interface Props {
   account: Account
@@ -68,7 +69,7 @@ export class AccountSummary extends ContentLoaderComponent<Props, any> {
             <Widget account={account} />
           </Cell>
         </Grid>
-        <Tokens accountName={account.account_name} />
+        {Config.disable_token_meta ? null : <Tokens accountName={account.account_name} />}
         <AccountPermissions account={account} />
       </Cell>
     )

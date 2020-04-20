@@ -120,6 +120,7 @@ func (s *Server) templatedIndex() (*bytes.Reader, error) {
 		"secure":              false,
 		"disable_segments":    true,
 		"disable_sentry":      true,
+		"disable_token_meta":  true,
 	}
 
 	tpl, err := template.New("index.html").Funcs(template.FuncMap{
