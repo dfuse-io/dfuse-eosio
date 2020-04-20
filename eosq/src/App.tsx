@@ -7,7 +7,8 @@ import withTheme from "./hocs/with-theme"
 import { Config } from "./models/config"
 
 // Let's initialize Sentry error handling, if not disabled
-if (!Config.disable_sentry) {
+if (!Config.disable_sentry && !Config.isLocalhost) {
+  console.log("Initializing Sentry!")
   Sentry.init({
     dsn: "https://e268f409256b4df6b11d2fa584e734af@sentry.io/1339887"
   })
@@ -20,6 +21,6 @@ const App = (props: any) => (
   <AppErrorBoundary>
     <Container />
   </AppErrorBoundary>
-);
+)
 
 export default App
