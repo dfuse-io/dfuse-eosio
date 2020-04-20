@@ -37,6 +37,8 @@ cd dfuse-eosio
 go install -v ./cmd/dfuseeos
 ```
 
+This will install the binary in your `$GOPATH/bin` folder (normally
+`$HOME/go/bin`). Make sure this folder is in your `PATH` env variable.
 
 ### Usage
 
