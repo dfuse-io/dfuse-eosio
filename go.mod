@@ -13,6 +13,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
+	github.com/blendle/zapdriver v1.3.1
 	github.com/blevesearch/bleve v0.8.0
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
