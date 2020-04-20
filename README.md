@@ -12,24 +12,33 @@ for other blockchain protocols implementations.
 
 ## Getting started
 
-### Prerequisites
-
 If it's the first time you boot a `nodeos` node, please review
 https://developers.eos.io/welcome/latest/tutorials/bios-boot-sequence
 and make sure you get a grasp of what this blockchain node is capable.
 
-You might want to have the [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
-installed, as well as `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
-[eosc](https://github.com/eoscanada/eosc/releases).
+### Requirements
 
-### Install
+#### Operating System
+* This software runs on Linux or Mac OS X
 
-Get a release from the _Releases_ tab in GitHub. Install the binary in your `PATH`.
+#### dfuse Instrumented nodeos (deep-mind)
+* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented nodeos binary (_nodeos-dm_)
 
-See [INSTALL.md](INSTALL.md) to install the dependencies (like an instrumented `nodeos`).
+#### Recommended tools
+* [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
+* `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
+* [eosc](https://github.com/eoscanada/eosc/releases).
 
+### Installing
 
-#### Build from source
+#### From a pre-built release
+
+* Download a tarball from the [GitHub Releases Tab](https://github.com/dfuse-io/dfuse-eosio/releases).
+* Put the binary `dfuseeos` in your `PATH`.
+
+#### From source
+
+* Grab [Go 1.14](https://golang.org/dl/)
 
 ```
 git clone https://github.com/dfuse-io/dfuse-eosio
@@ -84,7 +93,6 @@ See [eosq README](eosq/README.md) for build instructions
 
 
 ## Overview
-
 
 Here's a quick map of this repository:
 
