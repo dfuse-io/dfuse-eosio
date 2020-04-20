@@ -10,7 +10,7 @@ dashboard/client/.npmrc
 /tools/output.log
 /dfuse.yaml
 /dfuse-data
-rice-box.go
+#rice-box.go temporarily disable this, ideally we would not commit the rice-box... but until we have a better solution
 /dist
 *SOURCE_ME.sh*
 dfuseeos
