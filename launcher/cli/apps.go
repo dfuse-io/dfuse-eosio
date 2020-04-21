@@ -841,6 +841,8 @@ to find how to install it.`)
 			cmd.Flags().Duration("eosws-filesource-ratelimit", 2*time.Millisecond, "time to sleep between blocks coming from filesource to control replay speed")
 			cmd.Flags().String("eosws-auth-plugin", "null://", "authenticator plugin URI configuration")
 			cmd.Flags().String("eosws-metering-plugin", "null://", "metering plugin URI configuration")
+			cmd.Flags().String("eosws-healthz-secret", "", "Secret to access healthz")
+			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
 			return nil
 		},
@@ -851,22 +853,24 @@ to find how to install it.`)
 			}
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
-				SearchAddr:                  viper.GetString("eosws-search-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
-				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
-				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
+				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
 				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-merged-block-files-path")),
+				SearchAddr:                  viper.GetString("eosws-search-addr"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
+				AuthenticateNodeosAPI:       false,
+				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
+				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
 				UseOpencensusStackdriver:    false,
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
 				FetchVoteTally:              viper.GetBool("eosws-fetch-vote-tally"),
 				FilesourceRateLimitPerBlock: viper.GetDuration("eosws-filesource-ratelimit"),
 				BlocksBufferSize:            viper.GetInt("eosws-blocks-buffer-size"),
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
-				DataIntegrityProofSecret:    "boo",
+				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
+				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
 			}), nil
 		},
 	})
