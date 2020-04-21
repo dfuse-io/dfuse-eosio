@@ -2,9 +2,9 @@
 [![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All **[dfuse.io](https://dfuse.io)** services for EOSIO, running from your
-laptop or from a container, released as a single statically linked
-binary.
+All **[dfuse.io services](https://www.dfuse.io/technology)** for EOSIO,
+running from your laptop or from a container, released as a single
+statically linked binary: `dfuseeos`.
 
 See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
 for other blockchain protocols implementations.
@@ -15,6 +15,9 @@ for other blockchain protocols implementations.
 If it's the first time you boot a `nodeos` node, please review
 https://developers.eos.io/welcome/latest/tutorials/bios-boot-sequence
 and make sure you get a grasp of what this blockchain node is capable.
+
+The default settings of `dfuseeos` allow you to quickly bootstrap a working
+development chain by also managing the block producing node for you.
 
 ### Requirements
 
