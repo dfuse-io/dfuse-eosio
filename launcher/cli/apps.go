@@ -307,15 +307,15 @@ to find how to install it.`)
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return relayerApp.New(&relayerApp.Config{
-				SourcesAddr:          viper.GetStringSlice("relayer-source"),
-				GRPCListenAddr:       viper.GetString("relayer-grpc-listen-addr"),
-				MergerAddr:           viper.GetString("relayer-merger-addr"),
-				BufferSize:           viper.GetInt("relayer-buffer-size"),
-				MaxDrift:             viper.GetDuration("relayer-max-drift"),
-				MaxSourceLatency:     viper.GetDuration("relayer-max-source-latency"),
-				InitTime:             viper.GetDuration("relayer-init-time"),
-				MinStartOffset:       viper.GetUint64("relayer-min-start-offset"),
-				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
+				SourcesAddr:      viper.GetStringSlice("relayer-source"),
+				GRPCListenAddr:   viper.GetString("relayer-grpc-listen-addr"),
+				MergerAddr:       viper.GetString("relayer-merger-addr"),
+				BufferSize:       viper.GetInt("relayer-buffer-size"),
+				MaxDrift:         viper.GetDuration("relayer-max-drift"),
+				MaxSourceLatency: viper.GetDuration("relayer-max-source-latency"),
+				InitTime:         viper.GetDuration("relayer-init-time"),
+				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
+				SourceStoreURL:   buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
 			}), nil
 		},
 	})
@@ -384,7 +384,6 @@ to find how to install it.`)
 				SeenBlocksFile:               buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")),
 				MaxFixableFork:               viper.GetUint64("merger-max-fixable-fork"),
 				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
-				EnableReadinessProbe:         true,
 			}), nil
 		},
 	})

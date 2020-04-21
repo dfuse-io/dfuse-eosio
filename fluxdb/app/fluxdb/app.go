@@ -24,7 +24,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
 	"github.com/dfuse-io/dstore"
-	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
@@ -43,8 +42,7 @@ type Config struct {
 
 type App struct {
 	*shutter.Shutter
-	config         *Config
-	readinessProbe pbhealth.HealthClient
+	config *Config
 }
 
 func New(config *Config) *App {
