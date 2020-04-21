@@ -22,15 +22,18 @@ import (
 )
 
 type Config struct {
-	ManagerCommandURL        string
+	EosNodeManagerAPIAddr    string
 	GRPCListenAddr           string
 	HTTPListenAddr           string
 	DgraphqlHTTPServingAddr  string
 	EoswsHTTPServingAddr     string
 	NodeosAPIHTTPServingAddr string
-	Launcher                 *launcher.Launcher
-	MetricManager            *metrics.Manager
-	DmeshClient              dmeshCli.SearchClient
+}
+
+type Modules struct {
+	Launcher      *launcher.Launcher
+	MetricManager *metrics.Manager
+	DmeshClient   dmeshCli.SearchClient
 }
 
 type App struct {
@@ -39,18 +42,20 @@ type App struct {
 	launcher *launcher.Launcher
 	Ready    chan interface{}
 	ready    bool
+	modules  Modules
 }
 
-func New(config *Config) *App {
+func New(config *Config, modules Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		config:  config,
 		Ready:   make(chan interface{}),
+		modules: modules,
 	}
 }
 
 func (a *App) Run() error {
-	s := newServer(a.config)
+	s := newServer(a.config, a.modules)
 
 	a.OnTerminating(s.Shutdown)
 

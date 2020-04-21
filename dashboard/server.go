@@ -42,6 +42,7 @@ import (
 type server struct {
 	*shutter.Shutter
 	config            *Config
+	modules           Modules
 	httpServer        *http.Server
 	grpcServer        *grpc.Server
 	grpcToHTTPServer  *grpcweb.WrappedGrpcServer
@@ -52,7 +53,7 @@ type server struct {
 	nodeosAPIProxy    *httputil.ReverseProxy
 }
 
-func newServer(config *Config) *server {
+func newServer(config *Config, modules Modules) *server {
 	createProxy := func(servingAddr string) *httputil.ReverseProxy {
 		return httputil.NewSingleHostReverseProxy(&url.URL{Host: "localhost" + servingAddr, Scheme: "http"})
 	}
@@ -60,7 +61,8 @@ func newServer(config *Config) *server {
 	return &server{
 		Shutter:           shutter.New(),
 		config:            config,
-		managerController: core.NewController(config.ManagerCommandURL),
+		modules:           modules,
+		managerController: core.NewController(config.EosNodeManagerAPIAddr),
 		box:               rice.MustFindBox("client/build").HTTPBox(),
 		dgraphqlProxy:     createProxy(config.DgraphqlHTTPServingAddr),
 		eoswsProxy:        createProxy(config.EoswsHTTPServingAddr),
@@ -151,7 +153,7 @@ func (s *server) Dmesh(ctx context.Context, req *pbdashboard.DmeshRequest) (*pbd
 	out := &pbdashboard.DmeshResponse{
 		Clients: []*pbdashboard.DmeshClient{},
 	}
-	searchPeers := s.config.DmeshClient.Peers()
+	searchPeers := s.modules.DmeshClient.Peers()
 	sort.Slice(searchPeers, func(i, j int) bool {
 		return searchPeers[i].TierLevel < searchPeers[j].TierLevel
 	})
@@ -180,7 +182,7 @@ func (s *server) Dmesh(ctx context.Context, req *pbdashboard.DmeshRequest) (*pbd
 }
 
 func (s *server) AppsList(ctx context.Context, req *pbdashboard.AppsListRequest) (*pbdashboard.AppsListResponse, error) {
-	appIDs := s.config.Launcher.GetAppIDs()
+	appIDs := s.modules.Launcher.GetAppIDs()
 	resp := &pbdashboard.AppsListResponse{}
 	for _, appID := range appIDs {
 		if appDef, found := core.AppRegistry[appID]; found {
@@ -196,8 +198,8 @@ func (s *server) AppsList(ctx context.Context, req *pbdashboard.AppsListRequest)
 }
 
 func (s *server) AppsMetrics(req *pbdashboard.AppsMetricsRequest, stream pbdashboard.Dashboard_AppsMetricsServer) error {
-	sub := s.config.MetricManager.Subscribe(req.FilterAppId)
-	defer s.config.MetricManager.Unsubscribe(req.FilterAppId, sub)
+	sub := s.modules.MetricManager.Subscribe(req.FilterAppId)
+	defer s.modules.MetricManager.Unsubscribe(req.FilterAppId, sub)
 
 	for {
 		select {
@@ -225,7 +227,7 @@ func (s *server) AppsMetrics(req *pbdashboard.AppsMetricsRequest, stream pbdashb
 
 func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.Dashboard_AppsInfoServer) error {
 	zlog.Info("app info by name", zap.String("app_id", req.FilterAppId))
-	l := s.config.Launcher
+	l := s.modules.Launcher
 
 	// when first called, stream latest status of one or all apps depending on FilterAppId
 	if req.FilterAppId == "" {
@@ -253,8 +255,8 @@ func (s *server) AppsInfo(req *pbdashboard.AppsInfoRequest, stream pbdashboard.D
 		stream.Send(resp)
 	}
 
-	sub := s.config.Launcher.SubscribeAppStatus()
-	defer s.config.Launcher.UnsubscribeAppStatus(sub)
+	sub := s.modules.Launcher.SubscribeAppStatus()
+	defer s.modules.Launcher.UnsubscribeAppStatus(sub)
 
 	for {
 		select {

@@ -18,7 +18,7 @@ const (
 	DmeshNamespace              string             = "local"
 	NetworkID                   string             = "eos-local"
 	NodeosBinPath               string             = "nodeos"
-	EosManagerHTTPAddr          string             = ":13008"
+	EosManagerAPIAddr           string             = ":13008"
 	EosMindreaderHTTPAddr       string             = ":13009"
 	MindreaderGRPCAddr          string             = ":13010"
 	RelayerServingAddr          string             = ":13011"
