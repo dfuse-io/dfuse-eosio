@@ -20,18 +20,17 @@ import (
 	"net/http"
 	"time"
 
-	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
+	"github.com/dfuse-io/dstore"
+	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
+	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
 
 type Config struct {
 	StoreDSN           string // Storage connection string
-	NetworkID          string // network name used to differentiate between traces (mainnet, kylin, jungle)
 	EnableLivePipeline bool   // connecs to a live source, can be turn off when doing re-processing
 	BlockStreamAddr    string // gRPC endpoint to get real-time blocks
 	ThreadsNum         int    // Number of threads of parallel processing
