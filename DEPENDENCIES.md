@@ -17,7 +17,7 @@ under [github.com/dfuse-io/eos](https://github.com/dfuse-io/eos) fork of EOSIO s
   special instrumentations are gated around a config option (i.e. `deep-mind = true`) that is off by
   default.
 
-* this instrumentation has been merged in the upstream develop branch,
+* This instrumentation has been merged in the upstream develop branch,
   but is not yet in a release: https://github.com/EOSIO/eos/pull/8788
 
 

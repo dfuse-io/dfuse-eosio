@@ -22,7 +22,7 @@ and make sure you get a grasp of what this blockchain node is capable.
 * This software runs on Linux or Mac OS X
 
 #### dfuse Instrumented nodeos (deep-mind)
-* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented nodeos binary (_nodeos-dm_)
+* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
 
 #### Recommended tools
 * [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
