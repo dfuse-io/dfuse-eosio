@@ -36,18 +36,15 @@ type zl = zapcore.Level
 
 // Core & Libraries
 var commongLoggingDef = &launcher.LoggingDef{
-	Title:  "common",
 	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 }
 
 var dfuseLoggingDef = &launcher.LoggingDef{
-	Title:  "dfuse",
 	Levels: []zl{zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/dfuse-eosio(/metrics|/cmd/dfuseeos)?$",
 }
 
 var bstreamLoggingDef = &launcher.LoggingDef{
-	Title:  "bstream",
 	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/bstream.*",
 }

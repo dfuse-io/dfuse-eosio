@@ -18,9 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dfuse-io/shutter"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
 

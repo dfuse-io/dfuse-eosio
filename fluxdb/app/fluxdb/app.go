@@ -125,7 +125,7 @@ func (a *App) IsReady() bool {
 func startHealthCheckServer(fdb *fluxdb.FluxDB, httpListenAddr string) {
 	http.DefaultServeMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if !derr.IsShuttingDown() && fdb.IsReady() {
-			w.Write([]byte("r1`eady\n"))
+			w.Write([]byte("ready\n"))
 		} else {
 			http.Error(w, "not ready\n", http.StatusServiceUnavailable)
 		}

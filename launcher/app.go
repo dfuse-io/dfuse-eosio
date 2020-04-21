@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -17,9 +18,19 @@ type AppDef struct {
 }
 
 type LoggingDef struct {
-	Title  string
 	Levels []zapcore.Level
 	Regex  string
+}
+
+func NewLoggingDef(regex string, levels []zapcore.Level) *LoggingDef {
+	if len(levels) == 0 {
+		levels = []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}
+	}
+
+	return &LoggingDef{
+		Levels: levels,
+		Regex:  regex,
+	}
 }
 
 type App interface {
