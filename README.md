@@ -2,9 +2,9 @@
 [![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All **[dfuse.io](https://dfuse.io)** services for EOSIO, running from your
-laptop or from a container, released as a single statically linked
-binary.
+All **[dfuse.io services](https://www.dfuse.io/technology)** for EOSIO,
+running from your laptop or from a container, released as a single
+statically linked binary: `dfuseeos`.
 
 See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
 for other blockchain protocols implementations.
@@ -12,26 +12,37 @@ for other blockchain protocols implementations.
 
 ## Getting started
 
-### Prerequisites
-
 If it's the first time you boot a `nodeos` node, please review
 https://developers.eos.io/welcome/latest/tutorials/bios-boot-sequence
 and make sure you get a grasp of what this blockchain node is capable.
 
-You might want to have the [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
-installed, as well as `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
-[eosc](https://github.com/eoscanada/eosc/releases).
+The default settings of `dfuseeos` allow you to quickly bootstrap a working
+development chain by also managing the block producing node for you.
 
-### Install
+### Requirements
 
-Get a release from the _Releases_ tab in GitHub. Install the binary in your `PATH`.
+#### Operating System
+* This software runs on Linux or Mac OS X
 
-See [INSTALL.md](INSTALL.md) to install the dependencies (like an instrumented `nodeos`).
+#### dfuse Instrumented nodeos (deep-mind)
+* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
 
+#### Recommended tools
+* [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
+* `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
+* [eosc](https://github.com/eoscanada/eosc/releases).
 
-#### Build from source
+### Installing
+
+#### From a pre-built release
+
+* Download a tarball from the [GitHub Releases Tab](https://github.com/dfuse-io/dfuse-eosio/releases).
+* Put the binary `dfuseeos` in your `PATH`.
+
+#### From source
 
 ```
+# The minimum required Go version is 1.13
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 go install -v ./cmd/dfuseeos
@@ -84,7 +95,6 @@ See [eosq README](eosq/README.md) for build instructions
 
 
 ## Overview
-
 
 Here's a quick map of this repository:
 
