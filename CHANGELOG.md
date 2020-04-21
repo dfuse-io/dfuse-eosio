@@ -5,7 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+* `dashboard` doesn't act as a reverse proxy anymore (`apiproxy` does).
+* `dashboard`'s default port is now `:8081`
+* `eosq`'s port is now proxied through `:8080`, so use that.
+
 ### Added
+* Added `apiproxy` application, with its flags
 * Filtering (whitelist and blacklist) of what is indexed in Search, based on Google's Common Expression Language.  See [details here](./search/README.md). Added `--search-common-action-filter-on-expr` and `--search-common-action-filter-out-expr`.
     * NOTE: This doesn't affect what is extracted from the chain, allowing you to re-index selectively without a chain replay.
 

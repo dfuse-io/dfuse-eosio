@@ -56,6 +56,7 @@ func (s *Server) Check(ctx context.Context, in *pbhealth.HealthCheckRequest) (*p
 	if s.ready {
 		status = pbhealth.HealthCheckResponse_SERVING
 	}
+
 	return &pbhealth.HealthCheckResponse{
 		Status: status,
 	}, nil

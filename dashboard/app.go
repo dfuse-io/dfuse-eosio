@@ -25,9 +25,6 @@ type Config struct {
 	EosNodeManagerAPIAddr    string
 	GRPCListenAddr           string
 	HTTPListenAddr           string
-	DgraphqlHTTPServingAddr  string
-	EoswsHTTPServingAddr     string
-	NodeosAPIHTTPServingAddr string
 }
 
 type Modules struct {

@@ -69,7 +69,7 @@ export function useStreamStatus(params: { appId?: string }): AppInfo.AsObject[] 
     // block until AppsList grpc endpoint is live
     await retryFunc(tryGetAppsList);
     client = grpc.client(Dashboard.AppsInfo, {
-      host: process.env.REACT_APP_DASHBOARD_GRPC_WEB_URL || "http://localhost:8080/api",
+      host: process.env.REACT_APP_DASHBOARD_GRPC_WEB_URL || "http://localhost:8081/api",
     });
 
     if (!client) console.log("error creating AppsInfo streaming client");

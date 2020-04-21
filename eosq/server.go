@@ -47,8 +47,8 @@ func (s *Server) Launch() error {
 	router := mux.NewRouter()
 	router.PathPrefix("/").HandlerFunc(s.staticAssetsHandler)
 
-	zlog.Debug("eosq static listener http server launching", zap.String("addr", s.config.HttpListenAddr))
-	err := http.ListenAndServe(s.config.HttpListenAddr, router)
+	zlog.Debug("eosq static listener http server launching", zap.String("addr", s.config.HTTPListenAddr))
+	err := http.ListenAndServe(s.config.HTTPListenAddr, router)
 	if err != nil {
 		zlog.Debug("eosq static http server failed", zap.Error(err))
 		return err
