@@ -398,19 +398,15 @@ to find how to install it.`)
 		MetricsID:   "fluxdb",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enable dev mode")
-			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enable dev mode")
+			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
+			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into KVDB")
 			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Storage connection string")
-			cmd.Flags().String("fluxdb-kvdb-grpc-serving-addr", FluxDBServingAddr, "Storage connection string")
-			cmd.Flags().Duration("fluxdb-db-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
-			cmd.Flags().String("fluxdb-db-blocks-store", "gs://example/blocks", "dbin blocks store")
-			cmd.Flags().String("fluxdb-db-block-stream-addr", "localhost:9001", "gRPC endpoint to get real-time blocks")
-			cmd.Flags().Int("fluxdb-db-threads", 2, "Number of threads of parallel processing")
-			cmd.Flags().Bool("fluxdb-db-live", true, "Also connect to a live source, can be turn off when doing re-processing")
-			cmd.Flags().String("fluxdb-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
-			cmd.Flags().String("fluxdb-merger-blocks-files-path", MergedBlocksFilesPath, "Store path url to read batch files from")
-			cmd.Flags().Bool("fluxdb-enable-dev-mode", false, "Enable dev mode")
-
+			cmd.Flags().Bool("fluxdb-live", true, "Connect to a live source, can be turn off when doing re-processing")
+			cmd.Flags().String("fluxdb-block-stream-addr", RelayerServingAddr, "gRPC endpoint to get real-time blocks")
+			cmd.Flags().String("fluxdb-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
+			cmd.Flags().Bool("fluxdb-enable-dev-mode", false, "Enable dev mode, enables fluxdb without a live pipeline (**do not** use this in prod)")
+			cmd.Flags().Int("fluxdb-max-threads", 2, "Number of threads of parallel processing")
+			cmd.Flags().String("fluxdb-http-listen-addr", FluxDBServingAddr, "Address to listen for incoming http requests")
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
@@ -425,13 +421,12 @@ to find how to install it.`)
 				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
 				StoreDSN:           fmt.Sprintf(viper.GetString("fluxdb-kvdb-store-dsn"), absDataDir),
-				EnableLivePipeline: viper.GetBool("fluxdb-db-live"),
+				EnableLivePipeline: viper.GetBool("fluxdb-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
-				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-merger-blocks-files-path")),
-				HTTPListenAddr:     viper.GetString("fluxdb-kvdb-grpc-serving-addr"),
+				BlockStoreURL:      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("fluxdb-blocks-store")),
 				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
-				ThreadsNum:         2,
-				NetworkID:          NetworkID,
+				ThreadsNum:         viper.GetInt("fluxdb-max-threads"),
+				HTTPListenAddr:     viper.GetString("fluxdb-http-listen-addr"),
 			}), nil
 		},
 	})
