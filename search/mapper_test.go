@@ -298,7 +298,7 @@ func TestFilterOut(t *testing.T) {
 		{
 			"blacklist transfers to eidosonecoin",
 			"",
-			`account == 'eosio.token' && data.to == 'eidosonecoin'`,
+			`account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))`,
 			map[string]interface{}{
 				"account": "eosio.token",
 				"data": map[string]interface{}{

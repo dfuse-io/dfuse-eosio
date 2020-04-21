@@ -630,7 +630,7 @@ to find how to install it.`)
 			cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
 			cmd.Flags().Duration("search-common-mesh-publish-polling-duration", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
 			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
-			cmd.Flags().String("search-common-action-filter-out-expr", "", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
+			cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
 			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
 			// Router-specific flags
 			cmd.Flags().String("search-router-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
