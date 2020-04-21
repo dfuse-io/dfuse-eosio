@@ -21,6 +21,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/blendle/zapdriver"
 	_ "github.com/dfuse-io/dfuse-eosio/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
@@ -56,20 +57,25 @@ func init() {
 func setupLogger() {
 	dataDir := viper.GetString("global-data-dir")
 	verbosity := viper.GetInt("global-verbose")
+	logformat := viper.GetString("global-log-format")
+	logToFile := viper.GetBool("global-log-to-file")
 
 	// TODO: The logger expect that the dataDir already exists...
-	// The second argument is a `closer` method, it should be linked to exit of application, for now, we don't care, OS will cleanup
-	logFileWriter := createLogFileWriter(dataDir)
+
+	var logFileWriter zapcore.WriteSyncer
+	if logToFile {
+		logFileWriter = createLogFileWriter(dataDir)
+	}
 	logStdoutWriter := zapcore.Lock(os.Stdout)
 
-	commonLogger := createLogger("common", commongLoggingDef, verbosity, logFileWriter, logStdoutWriter)
+	commonLogger := createLogger("common", commongLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat)
 	logging.Set(commonLogger)
 
 	for _, appDef := range launcher.AppRegistry {
-		logging.Set(createLogger(appDef.ID, appDef.Logger, verbosity, logFileWriter, logStdoutWriter), appDef.Logger.Regex)
+		logging.Set(createLogger(appDef.ID, appDef.Logger, verbosity, logFileWriter, logStdoutWriter, logformat), appDef.Logger.Regex)
 	}
-	logging.Set(createLogger("dfuse", dfuseLoggingDef, verbosity, logFileWriter, logStdoutWriter), dfuseLoggingDef.Regex)
-	logging.Set(createLogger("bstream", bstreamLoggingDef, verbosity, logFileWriter, logStdoutWriter), bstreamLoggingDef.Regex)
+	logging.Set(createLogger("dfuse", dfuseLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat), dfuseLoggingDef.Regex)
+	logging.Set(createLogger("bstream", bstreamLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat), bstreamLoggingDef.Regex)
 
 	// Fine-grain customization
 	//
@@ -99,19 +105,30 @@ func setupLogger() {
 var appToAtomicLevel = map[string]zap.AtomicLevel{}
 var appToAtomicLevelLock sync.Mutex
 
-func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, fileSyncer zapcore.WriteSyncer, consoleSyncer zapcore.WriteSyncer) *zap.Logger {
-	fileCore := zapcore.NewNopCore()
-	if fileSyncer != nil {
-		encoderConfig := zap.NewProductionEncoderConfig()
-		fileCore = zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), fileSyncer, zap.InfoLevel)
-	}
+func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, fileSyncer zapcore.WriteSyncer, consoleSyncer zapcore.WriteSyncer, format string) *zap.Logger {
 
 	// It's ok for concurrent use here, we assume all logger are created in a single goroutine
 	appToAtomicLevel[appID] = zap.NewAtomicLevelAt(appLoggerLevel(loggingDef.Levels, verbosity))
-	consoleCore := zapcore.NewCore(zapbox.NewEncoder(verbosity), consoleSyncer, appToAtomicLevel[appID])
+
+	var consoleCore zapcore.Core
+	switch format {
+	case "json":
+		encoderConfig := zapdriver.NewProductionEncoderConfig()
+		consoleCore = zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), consoleSyncer, appToAtomicLevel[appID])
+	default:
+		consoleCore = zapcore.NewCore(zapbox.NewEncoder(verbosity), consoleSyncer, appToAtomicLevel[appID])
+	}
+
+	if fileSyncer == nil {
+		return zap.New(consoleCore, zap.AddCaller()).Named(appID)
+	}
+
+	encoderConfig := zap.NewProductionEncoderConfig()
+	fileCore := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), fileSyncer, zap.InfoLevel)
 	teeCore := zapcore.NewTee(consoleCore, fileCore)
 
 	return zap.New(teeCore, zap.AddCaller()).Named(appID)
+
 }
 
 func changeLoggersLevel(inputs string, level zapcore.Level) {

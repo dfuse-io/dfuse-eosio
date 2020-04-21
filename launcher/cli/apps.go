@@ -821,6 +821,7 @@ to find how to install it.`)
 			cmd.Flags().String("eosws-healthz-secret", "", "Secret to access healthz")
 			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
+			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -836,11 +837,12 @@ to find how to install it.`)
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
 				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-merged-block-files-path")),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
+				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
-				AuthenticateNodeosAPI:       false,
+				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
 				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
 				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
-				UseOpencensusStackdriver:    false,
+				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
 				FetchVoteTally:              viper.GetBool("eosws-fetch-vote-tally"),
 				FilesourceRateLimitPerBlock: viper.GetDuration("eosws-filesource-ratelimit"),
