@@ -633,7 +633,7 @@ to find how to install it.`)
 			cmd.Flags().String("search-common-action-filter-out-expr", "", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
 			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
 			// Router-specific flags
-			cmd.Flags().String("search-router-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("search-router-grpc-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-router-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to validate cursors that are passed LIB and forked out")
 			cmd.Flags().Bool("search-router-enable-retry", false, "Enables the router's attempt to retry a backend search if there is an error. This could have adverse consequences when search through the live")
 			cmd.Flags().Uint64("search-router-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
@@ -643,7 +643,7 @@ to find how to install it.`)
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				BlockmetaAddr:      viper.GetString("search-router-blockmeta-addr"),
-				GRPCListenAddr:     viper.GetString("search-router-listen-addr"),
+				GRPCListenAddr:     viper.GetString("search-router-grpc-listen-addr"),
 				HeadDelayTolerance: viper.GetUint64("search-router-head-delay-tolerance"),
 				LibDelayTolerance:  viper.GetUint64("search-router-lib-delay-tolerance"),
 				EnableRetry:        viper.GetBool("search-router-enable-retry"),
@@ -709,6 +709,7 @@ to find how to install it.`)
 			}), nil
 		},
 	})
+
 	// Search Live
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-live",
