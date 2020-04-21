@@ -141,6 +141,9 @@ Your instance should be ready in a few seconds, here some relevant links:
 func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
 	if len(args) == 0 || args[0] == "all" {
 		for app := range core.AppRegistry {
+			if app == "search-forkresolver" {
+				continue // keep this until we fix search-forkresolver here
+			}
 			if app == "manager" && !runProducer {
 				continue
 			}

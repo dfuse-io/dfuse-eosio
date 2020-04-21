@@ -109,10 +109,12 @@ func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, 
 
 	// It's ok for concurrent use here, we assume all logger are created in a single goroutine
 	appToAtomicLevel[appID] = zap.NewAtomicLevelAt(appLoggerLevel(loggingDef.Levels, verbosity))
+	opts := []zap.Option{zap.AddCaller()}
 
 	var consoleCore zapcore.Core
 	switch format {
-	case "json":
+	case "stackdriver":
+		opts = append(opts, zapdriver.WrapCore(zapdriver.ReportAllErrors(true), zapdriver.ServiceName(appID)))
 		encoderConfig := zapdriver.NewProductionEncoderConfig()
 		consoleCore = zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), consoleSyncer, appToAtomicLevel[appID])
 	default:
@@ -120,14 +122,14 @@ func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, 
 	}
 
 	if fileSyncer == nil {
-		return zap.New(consoleCore, zap.AddCaller()).Named(appID)
+		return zap.New(consoleCore, opts...).Named(appID)
 	}
 
 	encoderConfig := zap.NewProductionEncoderConfig()
 	fileCore := zapcore.NewCore(zapcore.NewJSONEncoder(encoderConfig), fileSyncer, zap.InfoLevel)
 	teeCore := zapcore.NewTee(consoleCore, fileCore)
 
-	return zap.New(teeCore, zap.AddCaller()).Named(appID)
+	return zap.New(teeCore, opts...).Named(appID)
 
 }
 

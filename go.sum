@@ -269,6 +269,7 @@ github.com/fproulx-eoscanada/bleve v0.0.0-20190823192325-db63d5f16d8b h1:xRTPjNc
 github.com/fproulx-eoscanada/bleve v0.0.0-20190823192325-db63d5f16d8b/go.mod h1:3F+4zR0Ju26krAOah1vJEHmS9Ts+7wpXA3zz74G/OgU=
 github.com/francoispqt/gojay v1.2.13 h1:d2m3sFjloqoIUQU3TsHBgj6qg/BVGlTBeHDUmyJnXKk=
 github.com/francoispqt/gojay v1.2.13/go.mod h1:ehT5mTG4ua4581f1++1WLG0vPdaA9HaiDsoyrBGkyDY=
+github.com/frostschutz/go-fibmap v0.0.0-20160825162329-b32c231bfe6a h1:uW54f9RL/0sd6JKvYXp18CbwGWgrn7eknZRm08VEdPQ=
 github.com/frostschutz/go-fibmap v0.0.0-20160825162329-b32c231bfe6a/go.mod h1:lRHaZbkaPTYkvVMU3Wm4lF/4113iwNclbfv/gZsHG+I=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
