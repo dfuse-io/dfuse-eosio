@@ -802,13 +802,12 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
-			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
 			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
-			cmd.Flags().String("eosws-merged-block-files-path", MergedBlocksFilesPath, "path to merged blocks files")
+			cmd.Flags().String("eosws-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			cmd.Flags().String("eosws-block-stream-addr", RelayerServingAddr, "gRPC endpoint to get streams of blocks (relayer)")
 			cmd.Flags().String("eosws-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
@@ -835,7 +834,7 @@ to find how to install it.`)
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
 				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
-				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-merged-block-files-path")),
+				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-blocks-store")),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
