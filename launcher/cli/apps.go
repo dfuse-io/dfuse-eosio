@@ -824,7 +824,7 @@ to find how to install it.`)
 		MetricsID:   "eosws",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("eosws-http-serving-addreosws", EoswsHTTPServingAddr, "Interface to listen on, with main application")
+			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Interface to listen on, with main application")
 			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
@@ -852,7 +852,7 @@ to find how to install it.`)
 				return nil, err
 			}
 			return eoswsApp.New(&eoswsApp.Config{
-				HTTPListenAddr:              viper.GetString("eosws-http-serving-addreosws"),
+				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
 				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
