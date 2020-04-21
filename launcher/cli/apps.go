@@ -302,8 +302,7 @@ to find how to install it.`)
 			cmd.Flags().Uint64("relayer-min-start-offset", 120, "number of blocks before HEAD where we want to start for faster buffer filling (missing blocks come from files/merger)")
 			cmd.Flags().Duration("relayer-max-source-latency", 1*time.Minute, "max latency tolerated to connect to a source")
 			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
-			cmd.Flags().String("relayer-source-store", MergedBlocksFilesPath, "Store path url to read batch files from")
-			cmd.Flags().Bool("relayer-enable-readiness-probe", true, "Enable relayer's app readiness probe")
+			cmd.Flags().String("relayer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -316,8 +315,6 @@ to find how to install it.`)
 				MaxSourceLatency:     viper.GetDuration("relayer-max-source-latency"),
 				InitTime:             viper.GetDuration("relayer-init-time"),
 				MinStartOffset:       viper.GetUint64("relayer-min-start-offset"),
-				Protocol:             Protocol,
-				EnableReadinessProbe: viper.GetBool("relayer-enable-readiness-probe"),
 				SourceStoreURL:       buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
 			}), nil
 		},
@@ -345,6 +342,8 @@ to find how to install it.`)
 			cmd.Flags().String("merger-seen-blocks-file", "merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
 			cmd.Flags().Uint64("merger-max-fixable-fork", 10000, "after that number of blocks, a block belonging to another fork will be discarded (DELETED depending on flagDeleteBlocksBefore) instead of being inserted in last bundle")
 			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of one-block files when prior to the currently processed bundle (to avoid long file listings)")
+
+			cmd.Flags().Bool("merger-enable-readiness-probe", true, "Enables an internal readiness probe that can be access via the App Pattern")
 
 			return nil
 		},
@@ -488,7 +487,7 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
-			cmd.Flags().String("blockmeta-blocks-store", MergedBlocksFilesPath, "URL to source store")
+			cmd.Flags().String("blockmeta-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not, defaults to true")
 			cmd.Flags().Bool("blockmeta-enable-readiness-probe", true, "Enable blockmeta's app readiness probe")
 			cmd.Flags().StringSlice("blockmeta-eos-api-upstream-addr", []string{NodeosAPIAddr}, "EOS API address to fetch info from running chain, must be in-sync")

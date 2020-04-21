@@ -7,7 +7,6 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.6
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/abourget/llerrgroup v0.2.0
-	github.com/abourget/viperbind v0.1.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
@@ -39,7 +38,7 @@ require (
 	github.com/dfuse-io/merger v0.0.0-20200415155431-c9eb96bab37a
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
-	github.com/dfuse-io/relayer v0.0.0-20200415185455-d2258925e560
+	github.com/dfuse-io/relayer v0.0.0-20200421150534-d4d76ebf6978
 	github.com/dfuse-io/search v0.0.0-20200416191519-bae68194ce26
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
@@ -80,7 +79,6 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
-	go.uber.org/automaxprocs v1.3.0
 	go.uber.org/zap v1.14.0
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
