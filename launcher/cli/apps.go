@@ -877,7 +877,6 @@ to find how to install it.`)
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			return nil
 		},
-		InitFunc: nil,
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
 			if err != nil {
