@@ -964,7 +964,7 @@ to find how to install it.`)
 		Title:       "API Proxy",
 		Description: "Reverse proxies all API services under one port",
 		MetricsID:   "apiproxy",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "TCP Listener addr for gRPC")
 			cmd.Flags().String("apiproxy-eosws-http-addr", EoswsHTTPServingAddr, "Target address of the eosws API endpoint")
