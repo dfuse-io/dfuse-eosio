@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"sort"
 	"time"
 
@@ -32,7 +30,6 @@ import (
 	"github.com/dfuse-io/shutter"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"go.uber.org/zap"
@@ -48,25 +45,15 @@ type server struct {
 	grpcToHTTPServer  *grpcweb.WrappedGrpcServer
 	managerController *core.Controller
 	box               *rice.HTTPBox
-	dgraphqlProxy     *httputil.ReverseProxy
-	eoswsProxy        *httputil.ReverseProxy
-	nodeosAPIProxy    *httputil.ReverseProxy
 }
 
 func newServer(config *Config, modules *Modules) *server {
-	createProxy := func(servingAddr string) *httputil.ReverseProxy {
-		return httputil.NewSingleHostReverseProxy(&url.URL{Host: "localhost" + servingAddr, Scheme: "http"})
-	}
-
 	return &server{
 		Shutter:           shutter.New(),
 		config:            config,
 		modules:           modules,
 		managerController: core.NewController(config.EosNodeManagerAPIAddr),
 		box:               rice.MustFindBox("client/build").HTTPBox(),
-		dgraphqlProxy:     createProxy(config.DgraphqlHTTPServingAddr),
-		eoswsProxy:        createProxy(config.EoswsHTTPServingAddr),
-		nodeosAPIProxy:    createProxy(config.NodeosAPIHTTPServingAddr),
 	}
 }
 
@@ -105,23 +92,6 @@ func (s *server) Launch() error {
 	)
 
 	router := mux.NewRouter()
-
-	originsOptions := handlers.AllowedOrigins([]string{"*"})
-	headersOptions := handlers.AllowedHeaders([]string{"authorization"})
-
-	router.Methods("OPTIONS").PathPrefix("/").Handler(handlers.CORS(originsOptions, headersOptions)(router))
-
-	// FIXME: This is most probably a TCP proxy to GRPC server, how to handle that?
-	// "/dfuse.eosio.v1.GraphQL" dgraphqlProxy
-	// "/grpc.reflection.v1alpha.ServerReflection" dgraphqlProxy
-	router.PathPrefix("/graphql").Handler(s.dgraphqlProxy)
-	router.PathPrefix("/graphiql").Handler(s.dgraphqlProxy)
-	router.PathPrefix("/v1/chain/push_transaction").Handler(s.eoswsProxy)
-	router.PathPrefix("/v1/chain").Handler(s.nodeosAPIProxy)
-	router.PathPrefix("/v1/stream").Handler(s.eoswsProxy)
-	router.PathPrefix("/v1").Handler(s.eoswsProxy)
-	router.PathPrefix("/v0").Handler(s.eoswsProxy)
-
 	router.PathPrefix("/api").HandlerFunc(s.grcpToHTTPApiHandler)
 	router.PathPrefix("/").HandlerFunc(s.dashboardStaticHandler)
 	s.httpServer = &http.Server{

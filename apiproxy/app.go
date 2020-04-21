@@ -12,65 +12,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dashboard
+package apiproxy
 
 import (
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	"github.com/dfuse-io/dfuse-eosio/metrics"
-	dmeshCli "github.com/dfuse-io/dmesh/client"
 	"github.com/dfuse-io/shutter"
 )
 
-type Config struct {
-	EosNodeManagerAPIAddr    string
-	GRPCListenAddr           string
-	HTTPListenAddr           string
-}
+// dfuseeos start apiproxy,eosws,eosq
+// --apiproxy-http-listen-addr :8080
+// --apiproxy-dgraphql-http-addr
+// --apiproxy-eosws-http-addr
+// --apiproxy-nodeos-http-addr
+// --apiproxy-root-http-addr  [defaults to: eosq? dashboard?]
 
-type Modules struct {
-	Launcher      *launcher.Launcher
-	MetricManager *metrics.Manager
-	DmeshClient   dmeshCli.SearchClient
+// Welcome:
+//
+//    dashboard:           http://localhost:8081
+//
+//    Explorer and APIs:   http://localhost:8080
+//    GraphiQL:            http://localhost:8080/graphiql/
+//
+
+type Config struct {
+	HTTPListenAddr   string
+	DgraphqlHTTPAddr string
+	EoswsHTTPAddr    string
+	NodeosHTTPAddr   string
+	RootHTTPAddr     string
 }
 
 type App struct {
 	*shutter.Shutter
 	config   *Config
 	launcher *launcher.Launcher
-	Ready    chan interface{}
-	ready    bool
-	modules  *Modules
 }
 
-func New(config *Config, modules *Modules) *App {
+func New(config *Config) *App {
 	return &App{
 		Shutter: shutter.New(),
 		config:  config,
-		Ready:   make(chan interface{}),
-		modules: modules,
 	}
 }
 
 func (a *App) Run() error {
-	s := newServer(a.config, a.modules)
+	p := newProxy(a.config)
 
-	a.OnTerminating(s.Shutdown)
+	a.OnTerminating(p.Shutdown)
 
 	go func() {
-		a.Shutdown(s.Launch())
+		a.Shutdown(p.Launch())
 	}()
 
-	close(a.Ready)
-	a.ready = true
-
 	return nil
-}
-
-func (a *App) OnReady(f func()) {
-	<-a.Ready
-	f()
-}
-
-func (a *App) IsReady() bool {
-	return a.ready
 }

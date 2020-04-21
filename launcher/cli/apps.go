@@ -28,6 +28,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dauth/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
+	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
@@ -58,7 +59,6 @@ import (
 )
 
 func init() {
-	// Manager
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "manager",
 		Title:       "Producer node",
@@ -154,7 +154,6 @@ func init() {
 		},
 	})
 
-	// Mindreader
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
 		Title:       "Reader node",
@@ -321,7 +320,6 @@ to find how to install it.`)
 		},
 	})
 
-	// Merger
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "merger",
 		Title:       "Merger",
@@ -389,7 +387,6 @@ to find how to install it.`)
 		},
 	})
 
-	// fluxdb
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "fluxdb",
 		Title:       "FluxDB",
@@ -430,7 +427,6 @@ to find how to install it.`)
 		},
 	})
 
-	// KVDB Loader
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "kvdb-loader",
 		Title:       "DB loader",
@@ -709,7 +705,7 @@ to find how to install it.`)
 			}), nil
 		},
 	})
-	// Search Live
+
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-live",
 		Title:       "Search live",
@@ -798,7 +794,6 @@ to find how to install it.`)
 		},
 	})
 
-	// eosWS (deprecated app, scheduled to be dismantled and features migrated to dgraphql)
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosws",
 		Title:       "EOSWS",
@@ -857,7 +852,6 @@ to find how to install it.`)
 		},
 	})
 
-	// dGraphql
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dgraphql",
 		Title:       "GraphQL",
@@ -912,7 +906,6 @@ to find how to install it.`)
 		},
 	})
 
-	// eosq
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosq",
 		Title:       "Eosq",
@@ -922,7 +915,7 @@ to find how to install it.`)
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
-			cmd.Flags().String("eosq-api-endpoint-url", DashboardHTTPListenAddr, "API key used in eosq")
+			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "API key used in eosq")
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			return nil
@@ -930,7 +923,7 @@ to find how to install it.`)
 
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
-				HttpListenAddr:  viper.GetString("eosq-http-listen-addr"),
+				HTTPListenAddr:  viper.GetString("eosq-http-listen-addr"),
 				APIEndpointURL:  viper.GetString("eosq-api-endpoint-url"),
 				AuthEndpointURL: viper.GetString("eosq-auth-url"),
 				ApiKey:          viper.GetString("eosq-api-key"),
@@ -938,7 +931,6 @@ to find how to install it.`)
 		},
 	})
 
-	// dashboard
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
@@ -948,24 +940,46 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
-			cmd.Flags().String("dashboard-eosws-api-addr", EoswsHTTPServingAddr, "Address of eosws api")
-			cmd.Flags().String("dashboard-dgraphql-api-addr", DgraphqlHTTPServingAddr, "Address of dgraphql api")
 			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the nodeos manager api")
-			cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader nodeos manager api")
+			// FIXME: we can re-add when the app actually makes use of it.
+			//cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader nodeos manager api")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
-				GRPCListenAddr:           viper.GetString("dashboard-grpc-listen-addr"),
-				HTTPListenAddr:           viper.GetString("dashboard-http-listen-addr"),
-				EoswsHTTPServingAddr:     viper.GetString("dashboard-eosws-api-addr"),
-				DgraphqlHTTPServingAddr:  viper.GetString("dashboard-dgraphql-api-addr"),
-				EosNodeManagerAPIAddr:    viper.GetString("dashboard-eos-node-manager-api-addr"),
-				NodeosAPIHTTPServingAddr: viper.GetString("dashboard-mindreader-manager-api-addr"),
+				GRPCListenAddr:        viper.GetString("dashboard-grpc-listen-addr"),
+				HTTPListenAddr:        viper.GetString("dashboard-http-listen-addr"),
+				EosNodeManagerAPIAddr: viper.GetString("dashboard-eos-node-manager-api-addr"),
+				//NodeosAPIHTTPServingAddr: viper.GetString("dashboard-mindreader-manager-api-addr"),
 			}, &dashboard.Modules{
 				Launcher:      modules.Launcher,
 				MetricManager: modules.MetricManager,
 				DmeshClient:   modules.SearchDmeshClient,
+			}), nil
+		},
+	})
+
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "apiproxy",
+		Title:       "API Proxy",
+		Description: "Reverse proxies all API services under one port",
+		MetricsID:   "apiproxy",
+		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("apiproxy-eosws-http-addr", EoswsHTTPServingAddr, "Target address of the eosws API endpoint")
+			cmd.Flags().String("apiproxy-dgraphql-http-addr", DgraphqlHTTPServingAddr, "Target address of the dgraphql API endpoint")
+			cmd.Flags().String("apiproxy-nodeos-http-addr", NodeosAPIAddr, "Address of a queriable nodeos instance")
+			cmd.Flags().String("apiproxy-root-http-addr", EosqHTTPServingAddr, "What to serve at the root of the proxy (defaults to eosq)")
+			return nil
+		},
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			return apiproxy.New(&apiproxy.Config{
+				HTTPListenAddr:   viper.GetString("apiproxy-http-listen-addr"),
+				EoswsHTTPAddr:    viper.GetString("apiproxy-eosws-http-addr"),
+				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
+				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
+				RootHTTPAddr:     viper.GetString("apiproxy-root-http-addr"),
 			}), nil
 		},
 	})

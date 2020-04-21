@@ -20,7 +20,7 @@ import (
 
 type Config struct {
 	APIEndpointURL  string
-	HttpListenAddr  string
+	HTTPListenAddr  string
 	AuthEndpointURL string
 	ApiKey          string
 }
