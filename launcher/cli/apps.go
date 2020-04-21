@@ -163,7 +163,7 @@ func init() {
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
-			cmd.Flags().String("mindreader-api-addr", NodeosAPIAddr, "Target API address")
+			cmd.Flags().String("mindreader-nodeos-api-addr", NodeosAPIAddr, "Target API address")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("mindreader-config-dir", "mindreadernode/config", "Directory for config files. ")
 			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
@@ -252,7 +252,7 @@ to find how to install it.`)
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
 				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:           viper.GetString("mindreader-api-addr"),
+				NodeosAPIAddress:           viper.GetString("mindreader-nodeos-api-addr"),
 				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
 				NodeosConfigDir:            buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("mindreader-config-dir")),
 				NodeosBinPath:              viper.GetString("mindreader-nodeos-path"),
