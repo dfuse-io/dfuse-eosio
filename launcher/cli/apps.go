@@ -64,7 +64,7 @@ func init() {
 		Title:       "Producer node",
 		Description: "Block producing node",
 		MetricsID:   "manager",
-		Logger:      newLoggerDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("manager-api-addr", EosManagerAPIAddr, "eos-manager API address")
 			cmd.Flags().String("manager-nodeos-api-addr", NodeosAPIAddr, "Target API address")
@@ -160,7 +160,7 @@ func init() {
 		Title:       "Reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "manager",
-		Logger:      newLoggerDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-api-addr", NodeosAPIAddr, "Target API address")
@@ -293,7 +293,7 @@ to find how to install it.`)
 		Title:       "Relayer",
 		Description: "Serves blocks as a stream, with a buffer",
 		MetricsID:   "relayer",
-		Logger:      newLoggerDef("github.com/dfuse-io/relayer.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of blockstream sources to connect to for live block feeds (repeat flag as needed)")
@@ -327,7 +327,7 @@ to find how to install it.`)
 		Title:       "Merger",
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
-		Logger:      newLoggerDef("github.com/dfuse-io/merger.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("merger-merged-block-path", MergedBlocksFilesPath, "URL of storage to write merged-block-files to")
 			cmd.Flags().String("merger-one-block-path", OneBlockFilesPath, "URL of storage to read one-block-files from")
@@ -395,7 +395,7 @@ to find how to install it.`)
 		Title:       "FluxDB",
 		Description: "Temporal chain state store",
 		MetricsID:   "fluxdb",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into KVDB")
@@ -436,7 +436,7 @@ to find how to install it.`)
 		Title:       "DB loader",
 		Description: "Main blocks and transactions database",
 		MetricsID:   "kvdb-loader",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/kvdb-loader.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/kvdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
 			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
@@ -483,7 +483,7 @@ to find how to install it.`)
 		Title:       "Blockmeta",
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
-		Logger:      newLoggerDef("github.com/dfuse-io/blockmeta.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
@@ -528,7 +528,7 @@ to find how to install it.`)
 		Title:       "ABI codec",
 		Description: "Decodes binary data against ABIs for different contracts",
 		MetricsID:   "abicodec",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
@@ -563,7 +563,7 @@ to find how to install it.`)
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
 		MetricsID:   "search-indexer",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-indexer-http-listen-addr", IndexerHTTPServingAddr, "Address to listen for incoming http requests")
@@ -622,7 +622,7 @@ to find how to install it.`)
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "search-router",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Register common search flags once for all the services
 			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
@@ -659,7 +659,7 @@ to find how to install it.`)
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
 		MetricsID:   "search-archive",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
 			cmd.Flags().String("search-archive-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -715,7 +715,7 @@ to find how to install it.`)
 		Title:       "Search live",
 		Description: "Serves live search queries",
 		MetricsID:   "search-live",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(live|app/live).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -766,7 +766,7 @@ to find how to install it.`)
 		Title:       "Search fork resolver",
 		Description: "Search forks",
 		MetricsID:   "search-forkresolver",
-		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
@@ -804,7 +804,7 @@ to find how to install it.`)
 		Title:       "EOSWS",
 		Description: "Serves websocket and http queries to clients",
 		MetricsID:   "eosws",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
@@ -863,7 +863,7 @@ to find how to install it.`)
 		Title:       "GraphQL",
 		Description: "Serves GraphQL queries to clients",
 		MetricsID:   "dgraphql",
-		Logger:      newLoggerDef("github.com/dfuse-io/dgraphql.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
@@ -888,6 +888,7 @@ to find how to install it.`)
 			if err != nil {
 				return nil, err
 			}
+
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
@@ -917,7 +918,7 @@ to find how to install it.`)
 		Title:       "Eosq",
 		Description: "EOSIO Block Explorer",
 		MetricsID:   "eosq",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
@@ -943,7 +944,7 @@ to find how to install it.`)
 		Title:       "Dashboard",
 		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
-		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
@@ -995,15 +996,4 @@ func makeDirs(directories []string) error {
 	}
 
 	return nil
-}
-
-func newLoggerDef(regex string, levels []zapcore.Level) *launcher.LoggingDef {
-	if len(levels) == 0 {
-		levels = []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}
-	}
-
-	return &launcher.LoggingDef{
-		Levels: levels,
-		Regex:  regex,
-	}
 }
