@@ -3,6 +3,8 @@
 /eosq
 /config.json
 
+/rice-box.go
+
 # dependencies
 /node_modules
 
