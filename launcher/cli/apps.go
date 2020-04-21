@@ -65,7 +65,7 @@ func init() {
 		MetricsID:   "manager",
 		Logger:      newLoggerDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("manager-api-addr", EosManagerHTTPAddr, "eos-manager API address")
+			cmd.Flags().String("manager-api-addr", EosManagerAPIAddr, "eos-manager API address")
 			cmd.Flags().String("manager-nodeos-api-addr", NodeosAPIAddr, "Target API address")
 			cmd.Flags().Bool("manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("manager-config-dir", "manager/config", "Directory for config files")
@@ -932,6 +932,8 @@ to find how to install it.`)
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
+			cmd.Flags().String("eosq-api-endpoint-url", DashboardHTTPListenAddr, "API key used in eosq")
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			return nil
@@ -939,10 +941,10 @@ to find how to install it.`)
 
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
-				DashboardHTTPListenAddr: DashboardHTTPListenAddr,
-				HttpListenAddr:          EosqHTTPServingAddr,
-				AuthEndpointURL:         viper.GetString("eosq-auth-url"),
-				ApiKey:                  viper.GetString("eosq-api-key"),
+				HttpListenAddr:  viper.GetString("eosq-http-listen-addr"),
+				APIEndpointURL:  viper.GetString("eosq-api-endpoint-url"),
+				AuthEndpointURL: viper.GetString("eosq-auth-url"),
+				ApiKey:          viper.GetString("eosq-api-key"),
 			}), nil
 		},
 	})
@@ -954,18 +956,27 @@ to find how to install it.`)
 		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
-		InitFunc:    nil,
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
+			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("dashboard-eosws-api-addr", EoswsHTTPServingAddr, "Address of eosws api")
+			cmd.Flags().String("dashboard-dgraphql-api-addr", DgraphqlHTTPServingAddr, "Address of dgraphql api")
+			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the nodeos manager api")
+			cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader nodeos manager api")
+			return nil
+		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
-				DmeshClient:              modules.SearchDmeshClient,
-				ManagerCommandURL:        EosManagerHTTPAddr,
-				GRPCListenAddr:           DashboardGrpcServingAddr,
-				HTTPListenAddr:           DashboardHTTPListenAddr,
-				EoswsHTTPServingAddr:     EoswsHTTPServingAddr,
-				DgraphqlHTTPServingAddr:  DgraphqlHTTPServingAddr,
-				NodeosAPIHTTPServingAddr: MindreaderNodeosAPIAddr,
-				Launcher:                 modules.Launcher,
-				MetricManager:            modules.MetricManager,
+				GRPCListenAddr:           viper.GetString("dashboard-grpc-listen-addr"),
+				HTTPListenAddr:           viper.GetString("dashboard-http-listen-addr"),
+				EoswsHTTPServingAddr:     viper.GetString("dashboard-eosws-api-addr"),
+				DgraphqlHTTPServingAddr:  viper.GetString("dashboard-dgraphql-api-addr"),
+				EosNodeManagerAPIAddr:    viper.GetString("dashboard-eos-node-manager-api-addr"),
+				NodeosAPIHTTPServingAddr: viper.GetString("dashboard-mindreader-manager-api-addr"),
+			}, dashboard.Modules{
+				Launcher:      modules.Launcher,
+				MetricManager: modules.MetricManager,
+				DmeshClient:   modules.SearchDmeshClient,
 			}), nil
 		},
 	})

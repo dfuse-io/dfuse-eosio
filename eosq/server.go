@@ -111,7 +111,7 @@ func (s *Server) templatedIndex() (*bytes.Reader, error) {
 		"version":             1,
 		"current_network":     "local",
 		"on_demand":           false,
-		"dfuse_io_endpoint":   "localhost" + s.config.DashboardHTTPListenAddr,
+		"dfuse_io_endpoint":   "localhost" + s.config.APIEndpointURL,
 		"dfuse_io_api_key":    s.config.ApiKey,
 		"dfuse_auth_endpoint": s.config.AuthEndpointURL,
 		"display_price":       false,
