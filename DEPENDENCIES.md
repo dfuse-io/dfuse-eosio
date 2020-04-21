@@ -3,6 +3,26 @@
 dfuse for EOSIO requires our instrumented `nodeos` binary, a fork
 of the standard `EOSIO` software.
 
+You will also want to build both the `dashboard` and the `eosq` apps
+
+## Building web apps
+
+Building `eosq`:
+
+```
+cd eosq
+yarn install
+yarn build
+```
+
+and building the `dashboard`:
+
+```
+cd dashboard/client
+yarn install
+yarn build
+```
+
 ## dfuse Instrumented EOSIO Prebuilt Binaries
 
 dfuse uses a specialized EOSIO binary that contains instrumentation required

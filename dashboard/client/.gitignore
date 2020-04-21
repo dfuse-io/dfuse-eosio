@@ -9,7 +9,7 @@
 /coverage
 
 # in our case we are now commiting for ease of development
-# /build
+/build
 
 # misc
 .DS_Store
