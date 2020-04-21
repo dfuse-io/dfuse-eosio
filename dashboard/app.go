@@ -42,10 +42,10 @@ type App struct {
 	launcher *launcher.Launcher
 	Ready    chan interface{}
 	ready    bool
-	modules  Modules
+	modules  *Modules
 }
 
-func New(config *Config, modules Modules) *App {
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		config:  config,

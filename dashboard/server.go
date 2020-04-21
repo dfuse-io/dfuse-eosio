@@ -42,7 +42,7 @@ import (
 type server struct {
 	*shutter.Shutter
 	config            *Config
-	modules           Modules
+	modules           *Modules
 	httpServer        *http.Server
 	grpcServer        *grpc.Server
 	grpcToHTTPServer  *grpcweb.WrappedGrpcServer
@@ -53,7 +53,7 @@ type server struct {
 	nodeosAPIProxy    *httputil.ReverseProxy
 }
 
-func newServer(config *Config, modules Modules) *server {
+func newServer(config *Config, modules *Modules) *server {
 	createProxy := func(servingAddr string) *httputil.ReverseProxy {
 		return httputil.NewSingleHostReverseProxy(&url.URL{Host: "localhost" + servingAddr, Scheme: "http"})
 	}

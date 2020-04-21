@@ -47,6 +47,7 @@ import (
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	archiveApp "github.com/dfuse-io/search/app/archive"
+	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
@@ -576,7 +577,6 @@ to find how to install it.`)
 			cmd.Flags().Uint("search-indexer-num-blocks-before-start", 0, "Number of blocks to fetch before start block")
 			cmd.Flags().Bool("search-indexer-verbose", false, "Verbose logging")
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
-			cmd.Flags().Bool("search-indexer-enable-readiness-probe", true, "Enable search indexer's app readiness probe")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
 			cmd.Flags().String("search-indexer-writable-path", "search/indexer", "Writable base path for storing index files")
 			cmd.Flags().String("search-indexer-indices-store", IndicesFilePath, "Indices path to read or write index shards")
@@ -607,7 +607,6 @@ to find how to install it.`)
 				EnableUpload:                        viper.GetBool("search-indexer-enable-upload"),
 				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
-				EnableReadinessProbe:                viper.GetBool("search-indexer-enable-readiness-probe"),
 				WritablePath:                        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-writable-path")),
 				IndicesStoreURL:                     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
 				BlocksStoreURL:                      buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
@@ -625,7 +624,6 @@ to find how to install it.`)
 		MetricsID:   "search-router",
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-
 			// Register common search flags once for all the services
 			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
 			cmd.Flags().String("search-common-mesh-namespace", DmeshNamespace, "[COMMON] Dmesh namespace where services reside (eos-mainnet)")
@@ -634,25 +632,23 @@ to find how to install it.`)
 			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
 			cmd.Flags().String("search-common-action-filter-out-expr", "", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
 			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
-
 			// Router-specific flags
 			cmd.Flags().String("search-router-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-router-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to validate cursors that are passed LIB and forked out")
 			cmd.Flags().Bool("search-router-enable-retry", false, "Enables the router's attempt to retry a backend search if there is an error. This could have adverse consequences when search through the live")
 			cmd.Flags().Uint64("search-router-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			cmd.Flags().Uint64("search-router-lib-delay-tolerance", 0, "Number of blocks above a backend's lib we allow a request query to be served (Live & Router)")
-			cmd.Flags().Bool("search-router-enable-readiness-probe", true, "Enable search router's app readiness probe")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
-				Dmesh:                modules.SearchDmeshClient,
-				BlockmetaAddr:        viper.GetString("search-router-blockmeta-addr"),
-				GRPCListenAddr:       viper.GetString("search-router-listen-addr"),
-				HeadDelayTolerance:   viper.GetUint64("search-router-head-delay-tolerance"),
-				LibDelayTolerance:    viper.GetUint64("search-router-lib-delay-tolerance"),
-				EnableReadinessProbe: viper.GetBool("search-router-enable-readiness-probe"),
-				EnableRetry:          viper.GetBool("search-router-enable-retry"),
+				BlockmetaAddr:      viper.GetString("search-router-blockmeta-addr"),
+				GRPCListenAddr:     viper.GetString("search-router-listen-addr"),
+				HeadDelayTolerance: viper.GetUint64("search-router-head-delay-tolerance"),
+				LibDelayTolerance:  viper.GetUint64("search-router-lib-delay-tolerance"),
+				EnableRetry:        viper.GetBool("search-router-enable-retry"),
+			}, &routerApp.Modules{
+				Dmesh: modules.SearchDmeshClient,
 			}), nil
 		},
 	})
@@ -666,31 +662,28 @@ to find how to install it.`)
 		Logger:      newLoggerDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
-			p := "search-archive-"
-			cmd.Flags().String(p+"grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String(p+"http-listen-addr", ArchiveHTTPServingAddr, "Address to listen for incoming http requests")
-			cmd.Flags().String(p+"memcache-addr", "", "Empty results cache's memcache server address")
-			cmd.Flags().Bool(p+"enable-empty-results-cache", false, "Enable roaring-bitmap-based empty results caching")
-			cmd.Flags().Uint32(p+"tier-level", 50, "Level of the search tier")
-			cmd.Flags().Bool(p+"enable-moving-tail", false, "Enable moving tail, requires a relative --start-block (negative number)")
-			cmd.Flags().Uint64(p+"shard-size", 200, "Number of blocks to store in a given Bleve index")
-			cmd.Flags().Int(p+"start-block", 0, "Start at given block num, the initial sync and polling")
-			cmd.Flags().Uint(p+"stop-block", 0, "Stop before given block num, the initial sync and polling")
-			cmd.Flags().Bool(p+"index-polling", true, "Populate local indexes using indexes store polling.")
-			cmd.Flags().Bool(p+"sync-from-storage", false, "Download missing indexes from --indexes-store before starting")
-			cmd.Flags().Int(p+"sync-max-indexes", 100000, "Maximum number of indexes to sync. On production, use a very large number.")
-			cmd.Flags().Int(p+"indices-dl-threads", 1, "Number of indices files to download from the GS input store and decompress in parallel. In prod, use large value like 20.")
-			cmd.Flags().Int(p+"max-query-threads", 10, "Number of end-user query parallel threads to query 5K-blocks indexes")
-			cmd.Flags().Duration(p+"shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
-			cmd.Flags().String(p+"warmup-filepath", "", "Optional filename containing queries to warm-up the search")
-			cmd.Flags().Bool(p+"enable-readiness-probe", true, "Enable search archive's app readiness probe")
-			cmd.Flags().String(p+"indices-store", IndicesFilePath, "GS path to read or write index shards")
-			cmd.Flags().String(p+"writable-path", "search/archiver", "Writable base path for storing index files")
+			cmd.Flags().String("search-archive-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("search-archive-http-listen-addr", ArchiveHTTPServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().String("search-archive-memcache-addr", "", "Empty results cache's memcache server address")
+			cmd.Flags().Bool("search-archive-enable-empty-results-cache", false, "Enable roaring-bitmap-based empty results caching")
+			cmd.Flags().Uint32("search-archive-tier-level", 50, "Level of the search tier")
+			cmd.Flags().Bool("search-archive-enable-moving-tail", false, "Enable moving tail, requires a relative --start-block (negative number)")
+			cmd.Flags().Uint64("search-archive-shard-size", 200, "Number of blocks to store in a given Bleve index")
+			cmd.Flags().Int("search-archive-start-block", 0, "Start at given block num, the initial sync and polling")
+			cmd.Flags().Uint("search-archive-stop-block", 0, "Stop before given block num, the initial sync and polling")
+			cmd.Flags().Bool("search-archive-index-polling", true, "Populate local indexes using indexes store polling.")
+			cmd.Flags().Bool("search-archive-sync-from-storage", false, "Download missing indexes from --indexes-store before starting")
+			cmd.Flags().Int("search-archive-sync-max-indexes", 100000, "Maximum number of indexes to sync. On production, use a very large number.")
+			cmd.Flags().Int("search-archive-indices-dl-threads", 1, "Number of indices files to download from the GS input store and decompress in parallel. In prod, use large value like 20.")
+			cmd.Flags().Int("search-archive-max-query-threads", 10, "Number of end-user query parallel threads to query 5K-blocks indexes")
+			cmd.Flags().Duration("search-archive-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
+			cmd.Flags().String("search-archive-warmup-filepath", "", "Optional filename containing queries to warm-up the search")
+			cmd.Flags().String("search-archive-indices-store", IndicesFilePath, "GS path to read or write index shards")
+			cmd.Flags().String("search-archive-writable-path", "search/archiver", "Writable base path for storing index files")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return archiveApp.New(&archiveApp.Config{
-				Dmesh:                   modules.SearchDmeshClient,
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
 				ServiceVersion:          viper.GetString("search-common-mesh-service-version"),
@@ -709,9 +702,10 @@ to find how to install it.`)
 				NumQueryThreads:         viper.GetInt("search-archive-max-query-threads"),
 				ShutdownDelay:           viper.GetDuration("search-archive-shutdown-delay"),
 				WarmupFilepath:          viper.GetString("search-archive-warmup-filepath"),
-				EnableReadinessProbe:    viper.GetBool("search-archive-enable-readiness-probe"),
 				IndexesStoreURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-indices-store")),
 				IndexesPath:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("search-archive-writable-path")),
+			}, &archiveApp.Modules{
+				Dmesh: modules.SearchDmeshClient,
 			}), nil
 		},
 	})
@@ -732,7 +726,6 @@ to find how to install it.`)
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().String("search-live-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried for its headinfo service")
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
-			cmd.Flags().Bool("search-live-enable-readiness-probe", true, "Enable search live's app readiness probe")
 			cmd.Flags().String("search-live-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			return nil
@@ -747,7 +740,6 @@ to find how to install it.`)
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
 			}
 			return liveApp.New(&liveApp.Config{
-				Dmesh:                    modules.SearchDmeshClient,
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
@@ -759,55 +751,52 @@ to find how to install it.`)
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
-				EnableReadinessProbe:     viper.GetBool("search-live-enable-readiness-probe"),
 				PublishDuration:          viper.GetDuration("search-common-mesh-publish-polling-duration"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
 				BlockMapper: mapper,
+				Dmesh:       modules.SearchDmeshClient,
 			}), nil
 		},
 	})
 
-	//	// Search Fork Resolver
-	//	launcher.RegisterApp(&launcher.AppDef{
-	//		ID:          "search-forkresolver",
-	//		Title:       "Search fork resolver",
-	//		Description: "Search forks",
-	//		MetricsID:   "search-forkresolver",
-	//		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
-	//		RegisterFlags: func(cmd *cobra.Command) error {
-	//			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
-	//			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
-	//			cmd.Flags().String("search-forkresolver-indices-path", "search/forkresolver", "Location for inflight indices")
-	//			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-	//			cmd.Flags().Bool("search-forkresolver-enable-readiness-probe", true, "Enable search forlresolver's app readiness probe")
-	//
-	//			return nil
-	//		},
-	//		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
-	//			mapper, err := eosSearch.NewEOSBlockMapper(
-	//				viper.GetString("search-common-dfuse-hooks-action-name"),
-	//				viper.GetString("search-common-action-filter-on-expr"),
-	//				viper.GetString("search-common-action-filter-out-expr"),
-	//			)
-	//			if err != nil {
-	//				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
-	//			}
-	//
-	//			return forkresolverApp.New(&forkresolverApp.Config{
-	//				Dmesh:                modules.SearchDmeshClient,
-	//				ServiceVersion:       viper.GetString("search-common-mesh-service-version"),
-	//				GRPCListenAddr:       viper.GetString("search-forkresolver-grpc-listen-addr"),
-	//				HttpListenAddr:       viper.GetString("search-forkresolver-http-listen-addr"),
-	//				PublishDuration:      viper.GetDuration("search-common-mesh-publish-polling-duration"),
-	//				IndicesPath:          viper.GetString("search-forkresolver-indices-path"),
-	//				BlocksStoreURL:       viper.GetString("search-forkresolver-blocks-store"),
-	//				EnableReadinessProbe: viper.GetBool("search-forkresolver-enable-readiness-probe"),
-	//			}, &forkresolverApp.Modules{
-	//				BlockMapper: mapper,
-	//			}), nil
-	//		},
-	//	})
+	// Search Fork Resolver
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "search-forkresolver",
+		Title:       "Search fork resolver",
+		Description: "Search forks",
+		MetricsID:   "search-forkresolver",
+		Logger:      newLoggerDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
+			cmd.Flags().String("search-forkresolver-indices-path", "search/forkresolver", "Location for inflight indices")
+			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
+			return nil
+		},
+		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
+			mapper, err := eosSearch.NewEOSBlockMapper(
+				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-action-filter-on-expr"),
+				viper.GetString("search-common-action-filter-out-expr"),
+			)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
+
+			return forkresolverApp.New(&forkresolverApp.Config{
+				ServiceVersion:  viper.GetString("search-common-mesh-service-version"),
+				GRPCListenAddr:  viper.GetString("search-forkresolver-grpc-listen-addr"),
+				HttpListenAddr:  viper.GetString("search-forkresolver-http-listen-addr"),
+				PublishDuration: viper.GetDuration("search-common-mesh-publish-polling-duration"),
+				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
+				BlocksStoreURL:  viper.GetString("search-forkresolver-blocks-store"),
+			}, &forkresolverApp.Modules{
+				Dmesh:       modules.SearchDmeshClient,
+				BlockMapper: mapper,
+			}), nil
+		},
+	})
 
 	// eosWS (deprecated app, scheduled to be dismantled and features migrated to dgraphql)
 	launcher.RegisterApp(&launcher.AppDef{
@@ -972,7 +961,7 @@ to find how to install it.`)
 				DgraphqlHTTPServingAddr:  viper.GetString("dashboard-dgraphql-api-addr"),
 				EosNodeManagerAPIAddr:    viper.GetString("dashboard-eos-node-manager-api-addr"),
 				NodeosAPIHTTPServingAddr: viper.GetString("dashboard-mindreader-manager-api-addr"),
-			}, dashboard.Modules{
+			}, &dashboard.Modules{
 				Launcher:      modules.Launcher,
 				MetricManager: modules.MetricManager,
 				DmeshClient:   modules.SearchDmeshClient,
