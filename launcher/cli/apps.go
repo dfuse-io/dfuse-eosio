@@ -176,7 +176,7 @@ func init() {
 			cmd.Flags().String("mindreader-oneblock-store-url", OneBlockFilesPath, "Storage bucket with path prefix to write one-block file to")
 			cmd.Flags().String("mindreader-working-dir", "mindreader", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
-			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "gRPC listening address for stream of blocks and transactions")
+			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
 			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown nodeos/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
@@ -294,7 +294,7 @@ to find how to install it.`)
 		MetricsID:   "relayer",
 		Logger:      newLoggerDef("github.com/dfuse-io/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Listening address for gRPC service serving blocks")
+			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of blockstream sources to connect to for live block feeds (repeat flag as needed)")
 			cmd.Flags().String("relayer-merger-addr", MergerServingAddr, "Address for grpc merger service")
 			cmd.Flags().Int("relayer-buffer-size", 300, "number of blocks that will be kept and sent immediately on connection")
@@ -335,7 +335,7 @@ to find how to install it.`)
 			cmd.Flags().String("merger-one-block-path", OneBlockFilesPath, "URL of storage to read one-block-files from")
 			cmd.Flags().Duration("merger-store-timeout", 2*time.Minute, "max time to to allow for each store operation")
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
-			cmd.Flags().String("merger-grpc-serving-addr", MergerServingAddr, "gRPC listen address to serve merger endpoints")
+			cmd.Flags().String("merger-grpc-listen-addr", MergerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("merger-process-live-blocks", true, "Ignore --start-.. and --stop-.. blocks, and process only live blocks")
 			cmd.Flags().Uint64("merger-start-block-num", 0, "FOR REPROCESSING: if >= 0, Set the block number where we should start processing")
 			cmd.Flags().Uint64("merger-stop-block-num", 0, "FOR REPROCESSING: if > 0, Set the block number where we should stop processing (and stop the process)")
@@ -375,7 +375,7 @@ to find how to install it.`)
 				StorageOneBlockFilesPath:     buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")),
 				StoreOperationTimeout:        viper.GetDuration("merger-store-timeout"),
 				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
-				GRPCListenAddr:               viper.GetString("merger-grpc-serving-addr"),
+				GRPCListenAddr:               viper.GetString("merger-grpc-listen-addr"),
 				Live:                         viper.GetBool("merger-process-live-blocks"),
 				StartBlockNum:                viper.GetUint64("merger-start-block-num"),
 				StopBlockNum:                 viper.GetUint64("merger-stop-block-num"),
@@ -400,7 +400,7 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into KVDB")
-			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Storage connection string")
+			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Kvdbd database connection string")
 			cmd.Flags().Bool("fluxdb-live", true, "Connect to a live source, can be turn off when doing re-processing")
 			cmd.Flags().String("fluxdb-block-stream-addr", RelayerServingAddr, "gRPC endpoint to get real-time blocks")
 			cmd.Flags().String("fluxdb-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
@@ -441,14 +441,15 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
 			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
-			cmd.Flags().String("kvdb-loader-merged-block-path", MergedBlocksFilesPath, "URL of storage to read one-block-files from")
-			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVDBDSN, "kvdb connection string")
+			cmd.Flags().String("kvdb-loader-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
+			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVDBDSN, "Kvdbd database connection string")
 			cmd.Flags().String("kvdb-loader-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
 			cmd.Flags().Uint64("kvdb-loader-batch-size", 1, "number of blocks batched together for database write")
 			cmd.Flags().Uint64("kvdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
 			cmd.Flags().Uint64("kvdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
 			cmd.Flags().Uint64("kvdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
 			cmd.Flags().String("kvdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
+			cmd.Flags().Int("kvdb-parallel-file-download-count", 2, "Maximum number of files to download in parallel")
 			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
@@ -463,7 +464,7 @@ to find how to install it.`)
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
-				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-merged-block-path")),
+				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-blocks-store")),
 				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
@@ -472,8 +473,7 @@ to find how to install it.`)
 				NumBlocksBeforeStart:      viper.GetUint64("kvdb-loader-num-blocks-before-start"),
 				AllowLiveOnEmptyTable:     viper.GetBool("kvdb-loader-allow-live-on-empty-table"),
 				HTTPListenAddr:            viper.GetString("kvdb-loader-http-listen-addr"),
-				Protocol:                  Protocol.String(),
-				ParallelFileDownloadCount: 2,
+				ParallelFileDownloadCount: viper.GetInt("kvdb-parallel-file-download-count"),
 			}), nil
 		},
 	})
@@ -486,14 +486,14 @@ to find how to install it.`)
 		MetricsID:   "blockmeta",
 		Logger:      newLoggerDef("github.com/dfuse-io/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "GRPC listen on this port")
+			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
 			cmd.Flags().String("blockmeta-blocks-store", MergedBlocksFilesPath, "URL to source store")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not, defaults to true")
 			cmd.Flags().Bool("blockmeta-enable-readiness-probe", true, "Enable blockmeta's app readiness probe")
 			cmd.Flags().StringSlice("blockmeta-eos-api-upstream-addr", []string{NodeosAPIAddr}, "EOS API address to fetch info from running chain, must be in-sync")
 			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
-			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdb database connection information")
+			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdbd database connection string")
 			return nil
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -531,9 +531,9 @@ to find how to install it.`)
 		MetricsID:   "abicodec",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
-			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "kvdb connection string")
+			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
 			cmd.Flags().String("abicodec-cache-base-url", "storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
@@ -819,11 +819,11 @@ to find how to install it.`)
 		MetricsID:   "eosws",
 		Logger:      newLoggerDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Interface to listen on, with main application")
+			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().Duration("eosws-graceful-shutdown-delay", time.Second*1, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
-			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "kvdb connection string")
+			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().String("eosws-merged-block-files-path", MergedBlocksFilesPath, "path to merged blocks files")
@@ -883,7 +883,7 @@ to find how to install it.`)
 			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
 			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
-			cmd.Flags().String("dgraphql-kvdb-dsn", KVDBDSN, "KVDB connection information") // Used on EOSIO right now, eventually becomes the reference.
+			cmd.Flags().String("dgraphql-kvdb-dsn", KVDBDSN, "Kvdb database connection string") // Used on EOSIO right now, eventually becomes the reference.
 			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
 			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
 			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")

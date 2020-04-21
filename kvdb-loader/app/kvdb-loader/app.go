@@ -41,7 +41,6 @@ type Config struct {
 	NumBlocksBeforeStart      uint64 // [BATCH] Number of blocks to fetch before start block
 	ParallelFileDownloadCount int    // Number of threads of parallel file download
 	AllowLiveOnEmptyTable     bool   // [LIVE] force pipeline creation if live request and table is empty
-	Protocol                  string // Protocol to load, EOS or ETH
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
 }
 
@@ -73,32 +72,24 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 	var loader kvdbloader.Loader
-	switch a.Config.Protocol {
-	case "EOS":
-		chainID, err := hex.DecodeString(a.Config.ChainId)
-		if err != nil {
-			return fmt.Errorf("decoding chain_id from command line argument: %w", err)
-		}
 
-		db, err := eosdb.New(a.Config.KvdbDsn)
-		if err != nil {
-			return fmt.Errorf("unable to create eosdb: %w", err)
-		}
-		// FIXME: make sure we call CLOSE() at the end!
-		//defer db.Close()
-
-		db.SetWriterChainID(chainID)
-
-		l := kvdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
-
-		loader = l
-
-	case "ETH":
-		return fmt.Errorf("support for ETH temporarily removed")
-
-	default:
-		return fmt.Errorf("unsupported --protocol, use EOS or ETH: %q", a.Config.Protocol)
+	chainID, err := hex.DecodeString(a.Config.ChainId)
+	if err != nil {
+		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
+
+	db, err := eosdb.New(a.Config.KvdbDsn)
+	if err != nil {
+		return fmt.Errorf("unable to create eosdb: %w", err)
+	}
+	// FIXME: make sure we call CLOSE() at the end!
+	//defer db.Close()
+
+	db.SetWriterChainID(chainID)
+
+	l := kvdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
+
+	loader = l
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {
