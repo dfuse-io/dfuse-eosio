@@ -109,6 +109,10 @@ func init() {
 			if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
 				return err
 			}
+			if fileExists(path.Join(managerConfigDir, "config.ini")) {
+				return nil
+			}
+
 			if config.ProducerConfigIni == "" {
 				return fmt.Errorf("producerConfigIni empty when runProducer is enabled")
 			}
@@ -202,7 +206,9 @@ func init() {
 			if err := mkdirStorePathIfLocal(nodeosConfigDir); err != nil {
 				return err
 			}
-
+			if fileExists(path.Join(nodeosConfigDir, "config.ini")) {
+				return nil
+			}
 			if config.ReaderConfigIni == "" {
 				// TODO: considering this can eventually run the mindreader application solely, instead of returning
 				// an error we may want to assume that config.ini file would already be at that place on disk
