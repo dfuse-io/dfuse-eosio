@@ -49,7 +49,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
-	var config *core.BoxConfig
+	config := &core.BoxConfig{}
 	if configFile != "" {
 		config, err = launcher.ReadConfig(configFile)
 		if err != nil {
