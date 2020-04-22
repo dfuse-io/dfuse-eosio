@@ -109,7 +109,7 @@ func (s *ABISyncer) streamABIChanges() error {
 		Mode:               pbsearch.RouterRequest_STREAMING,
 	})
 	if err != nil {
-		return fmt.Errorf("unble to init search query for all ABIs: %w", err)
+		return fmt.Errorf("unable to init search query for all ABIs: %w", err)
 	}
 
 	for {

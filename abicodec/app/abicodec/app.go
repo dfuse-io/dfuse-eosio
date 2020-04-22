@@ -62,7 +62,7 @@ func (a *App) Run() error {
 
 	cache, err := abicodec.NewABICache(store, a.config.CacheStateName)
 	if err != nil {
-		return fmt.Errorf("unble to init ABI cache: %w", err)
+		return fmt.Errorf("unable to init ABI cache: %w", err)
 	}
 
 	backuper := abicodec.NewBackuper(cache, a.config.ExportCache, a.config.ExportCacheURL)
@@ -73,7 +73,7 @@ func (a *App) Run() error {
 
 	dbReader, err := eosdb.New(a.config.KvdbDSN)
 	if err != nil {
-		return fmt.Errorf("unble to init KVDB connection: %w", err)
+		return fmt.Errorf("unable to init KVDB connection: %w", err)
 	}
 
 	server := abicodec.NewServer(cache, a.config.GRPCListenAddr)
@@ -86,7 +86,7 @@ func (a *App) Run() error {
 	onLive := func() { server.SetReady() }
 	syncer, err := abicodec.NewSyncer(cache, dbReader, a.config.SearchAddr, onLive)
 	if err != nil {
-		return fmt.Errorf("unble to create ABI syncer: %w", err)
+		return fmt.Errorf("unable to create ABI syncer: %w", err)
 	}
 
 	syncer.OnTerminated(a.Shutdown)
