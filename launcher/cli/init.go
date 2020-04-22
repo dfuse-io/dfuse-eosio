@@ -49,7 +49,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	newConfig := &launcher.BoxConfig{RunProducer: runProducer, Version: "v1"}
-	newConfig.ReaderNodeVersion = "v2.0.3-dm"
+	newConfig.ReaderNodeVersion = "v2.0.5-dm"
 
 	if newConfig.RunProducer {
 		newConfig.ReaderConfigIni = mindreaderLocalConfigIni
@@ -58,7 +58,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		newConfig.GeneratedPrivateKey = "5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3"
 		newConfig.GeneratedPublicKey = "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV"
 		newConfig.ProducerConfigIni = managerLocalConfigIni
-		newConfig.ProducerNodeVersion = "v2.0.3-dm"
+		newConfig.ProducerNodeVersion = "v2.0.5-dm"
 		newConfig.GenesisJSON = localGenesisJSON
 	} else {
 		err := initRemoteBox(newConfig)

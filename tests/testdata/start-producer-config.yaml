@@ -37,7 +37,7 @@ producer_config_ini: |
   producer-name = eosio
   enable-stale-production = true
   signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
-producer_node_version: v2.0.3-dm
+producer_node_version: v2.0.5-dm
 reader_config_ini: |
   # General settings
   access-control-allow-origin = *
@@ -77,5 +77,5 @@ reader_config_ini: |
 
   ## Peers
   p2p-peer-address = 127.0.0.1:9876
-reader_node_version: v2.0.3-dm
+reader_node_version: v2.0.5-dm
 version: v1

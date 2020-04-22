@@ -40,13 +40,12 @@ under [github.com/dfuse-io/eos](https://github.com/dfuse-io/eos) fork of EOSIO s
 * This instrumentation has been merged in the upstream develop branch,
   but is not yet in a release: https://github.com/EOSIO/eos/pull/8788
 
-
 ### Mac OS X:
 
 #### Mac OS X Brew Install
 
 ```sh
-brew tap dfuse-io/tap/eosio
+brew install dfuse-io/tap/eosio
 ```
 
 #### Mac OS X Brew Uninstall
@@ -60,15 +59,15 @@ brew remove eosio
 #### Ubuntu 18.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.3-dm/eosio_2.0.3-dm_ubuntu-18.04_amd64.deb
-sudo apt install ./eosio_2.0.3-dm_ubuntu-18.04_amd64.deb
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio_2.0.5-1-ubuntu-18.04_amd64.deb
+sudo apt install ./eosio_2.0.5-1-ubuntu-18.04_amd64.deb
 ```
 
 #### Ubuntu 16.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.3-dm/eosio_2.0.3-dm_ubuntu-16.04_amd64.deb
-sudo apt install ./eosio_2.0.3-dm_ubuntu-16.04_amd64.deb
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio_2.0.5-1-ubuntu-16.04_amd64.deb
+sudo apt install ./eosio_2.0.5-1-ubuntu-16.04_amd64.deb
 ```
 
 #### Ubuntu Package Uninstall
@@ -82,8 +81,8 @@ sudo apt remove eosio
 #### RPM Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.3-dm/eosio_2.0.3-dm.el7.x86_64.rpm
-sudo yum install ./eosio_2.0.3-dm.el7.x86_64.rpm
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio-2.0.5-1.el7.x86_64.rpm
+sudo yum install ./eosio-2.0.5-1.el7.x86_64.rpm
 ```
 
 #### RPM Package Uninstall
