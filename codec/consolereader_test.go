@@ -37,14 +37,15 @@ func TestParseFromFile(t *testing.T) {
 		deepMindFile string
 	}{
 		{"testdata/deep-mind.dmlog"},
+		{"testdata/deep-mind-offchain-abi-decoding.dmlog"},
 		{"testdata/dtrx-hard-fail.dmlog"},
 		{"testdata/dtrx-soft-fail-onerror-not-present.dmlog"},
 		{"testdata/dtrx-soft-fail-onerror-failed.dmlog"},
 		{"testdata/dtrx-soft-fail-onerror-succeed.dmlog"},
 	}
 
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.deepMindFile, func(t *testing.T) {
 			cr := testFileConsoleReader(t, test.deepMindFile)
 			buf := &bytes.Buffer{}
 

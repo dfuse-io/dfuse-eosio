@@ -35,7 +35,8 @@ type ConsoleReader struct {
 	scanner *bufio.Scanner
 	close   func()
 
-	ctx *parseCtx
+	ctx        *parseCtx
+	abiDecoder *ABIDecoder
 }
 
 // TODO: At some point, the interface of a ConsoleReader should be re-done.
@@ -45,9 +46,10 @@ type ConsoleReader struct {
 //       the line and the console reader would simply process each line, one at a time.
 func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 	l := &ConsoleReader{
-		src:   reader,
-		close: func() {},
-		ctx:   newParseCtx(),
+		src:        reader,
+		close:      func() {},
+		ctx:        newParseCtx(),
+		abiDecoder: newABIDecoder(),
 	}
 	l.setupScanner()
 	return l, nil
@@ -138,7 +140,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFailedDTrxOp(line)
 
 		case strings.HasPrefix(line, "ACCEPTED_BLOCK"):
-			return ctx.readAcceptedBlock(line)
+			return ctx.readAcceptedBlock(line, l.abiDecoder)
 
 		case strings.HasPrefix(line, "START_BLOCK"):
 			ctx.readStartBlock(line)
@@ -348,7 +350,7 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 
 // Line format:
 //   ACCEPTED_BLOCK ${block_num} ${block_json}
-func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
+func (ctx *parseCtx) readAcceptedBlock(line string, abiDecoder *ABIDecoder) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
 		return nil, fmt.Errorf("expected 3 fields, got %d", len(chunks))
@@ -448,6 +450,11 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	block := ctx.block
 	ctx.resetBlock()
+
+	err = abiDecoder.postProcessBlock(block)
+	if err != nil {
+		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
+	}
 
 	return block, nil
 }
