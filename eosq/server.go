@@ -39,7 +39,7 @@ func newServer(config *Config) *Server {
 	return &Server{
 		Shutter: shutter.New(),
 		config:  config,
-		box:     rice.MustFindBox("build").HTTPBox(),
+		box:     rice.MustFindBox("eosq-build").HTTPBox(),
 	}
 }
 
