@@ -12,16 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Use `go generate` to pack all *.graphql files under this directory (and sub-directories) into
-// a binary format.
-//
-//go:generate go-bindata -ignore=\.go -ignore=testdata/.* -pkg=dgraphql -o=bindata.go ./...
-package dgraphql
-
-import "github.com/dfuse-io/dgraphql"
-
-func init() {
-	for _, name := range AssetNames() {
-		dgraphql.RegisterSchema("dfuse_eosio", name, (MustAsset(name)))
-	}
-}
+//go:generate go-bindata -ignore=\.go -pkg=schema -o=bindata.go ./...
+package schema

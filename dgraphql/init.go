@@ -15,15 +15,13 @@
 package dgraphql
 
 import (
-	"os"
-
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"github.com/dfuse-io/dfuse-eosio/dgraphql/schema"
+	"github.com/dfuse-io/dgraphql"
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") != "" {
-		logger, _ := zap.NewDevelopment()
-		logging.Override(logger)
+	zlog.Info("registering dfuse eosio schema files")
+	for _, name := range schema.AssetNames() {
+		dgraphql.RegisterSchema("dfuse_eosio", name, schema.MustAsset(name))
 	}
 }

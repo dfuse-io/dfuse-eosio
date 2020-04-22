@@ -55,7 +55,6 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 var RootResolverFactory = eosResolver.NewRoot
 
 func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
-
 	zlog.Info("creating db reader")
 	dbReader, err := eosdb.New(config.KVDBDSN)
 	if err != nil {

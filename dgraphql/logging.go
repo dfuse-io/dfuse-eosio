@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var zlog *zap.Logger
+var zlog *zap.Logger = zap.NewNop()
 
 func init() {
 	logging.Register("github.com/dfuse-io/dfuse-eosio/dgraphql", &zlog)
