@@ -53,7 +53,7 @@ func newServer(config *Config, modules *Modules) *server {
 		config:            config,
 		modules:           modules,
 		managerController: core.NewController(config.EosNodeManagerAPIAddr),
-		box:               rice.MustFindBox("client/build").HTTPBox(),
+		box:               rice.MustFindBox("dashboard-build").HTTPBox(),
 	}
 }
 

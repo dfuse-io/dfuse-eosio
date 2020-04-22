@@ -8,8 +8,8 @@
     "@emotion/styled": "^10.0.5",
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
     "@fortawesome/free-brands-svg-icons": "^5.1.0-11",
-    "@fortawesome/free-solid-svg-icons": "^5.1.0-11",
     "@fortawesome/free-regular-svg-icons": "^5.1.0-11",
+    "@fortawesome/free-solid-svg-icons": "^5.1.0-11",
     "@fortawesome/react-fontawesome": "^0.1.0-11",
     "@material-ui/core": "=3.8.3",
     "@sentry/browser": "^4.4.1",
@@ -55,7 +55,8 @@
   },
   "scripts": {
     "start": "EXTEND_ESLINT=true react-app-rewired start",
-    "build": "EXTEND_ESLINT=true react-scripts build",
+    "prebuild": "rimraf ./eosq-build",
+    "build": "BUILD_DIR=build-lite EXTEND_ESLINT=true react-scripts build && mv build ./eosq-build",
     "test": "EXTEND_ESLINT=true react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -110,6 +111,7 @@
     "react-hot-loader": "^4.12.12",
     "react-scripts": "^3.4.0",
     "react-test-renderer": "^16.4.1",
+    "rimraf": "^3.0.2",
     "typescript": "^3.3.1"
   },
   "browserslist": [
