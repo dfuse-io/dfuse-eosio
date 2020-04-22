@@ -43,21 +43,24 @@ var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` ser
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	cmd.SilenceUsage = true
 
-	configFile := viper.GetString("global-config-file")
-	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
-
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 
-	config, err := launcher.ReadConfig(configFile)
-	if err != nil {
-		userLog.Error(fmt.Sprintf("Error reading config file. Did you 'dfuseeos init' ?  Error: %s", err))
-		return nil
-	}
+	configFile := viper.GetString("global-config-file")
+	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
-	if config.Version != "v1" {
-		userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", configFile, config.Version))
-		return nil
+	var config *core.BoxConfig
+	if configFile != "" {
+		config, err = launcher.ReadConfig(configFile)
+		if err != nil {
+			userLog.Error(fmt.Sprintf("Error reading config file. Did you 'dfuseeos init' ?  Error: %s", err))
+			return nil
+		}
+
+		if config.Version != "v1" {
+			userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", configFile, config.Version))
+			return nil
+		}
 	}
 
 	dataDirAbs, err := filepath.Abs(dataDir)
