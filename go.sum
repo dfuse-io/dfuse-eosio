@@ -218,8 +218,12 @@ github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af h1:eh9e9gPlX+pMYc
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/manageos v0.0.0-20200415205129-a682936ecac8 h1:9GZa2p+N6YNnLpr70eQc39bns6bs+/d8vZLhBp8cS4E=
 github.com/dfuse-io/manageos v0.0.0-20200415205129-a682936ecac8/go.mod h1:6RsFntRfyNasYCFxSS8PeZbbkuu9zTwGrJSzZK8OYHE=
+github.com/dfuse-io/manageos v0.0.0-20200422203552-c10e235a3b5a h1:PYN4nRu2AgsO2rQ7zbeLelYojFmAckem03zTSgxaqj8=
+github.com/dfuse-io/manageos v0.0.0-20200422203552-c10e235a3b5a/go.mod h1:6RsFntRfyNasYCFxSS8PeZbbkuu9zTwGrJSzZK8OYHE=
 github.com/dfuse-io/merger v0.0.0-20200421151116-0e4c9002ed90 h1:z80a4iqpP76v5tf4A9AB8/bDrPBr+3qydNjcZHyernM=
 github.com/dfuse-io/merger v0.0.0-20200421151116-0e4c9002ed90/go.mod h1:h7t8ixxzxHoQjYWGjWzUk1pGCMdtn6kl7NV2/XNqjC0=
+github.com/dfuse-io/merger v0.0.0-20200422205004-c6c814e2004b h1:y9oa3BEA3fJ3oYHfxyWbI9izv0DzJqz6z21HYqofaDE=
+github.com/dfuse-io/merger v0.0.0-20200422205004-c6c814e2004b/go.mod h1:h7t8ixxzxHoQjYWGjWzUk1pGCMdtn6kl7NV2/XNqjC0=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
