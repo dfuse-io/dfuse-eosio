@@ -176,10 +176,9 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 
 			dataRows := req.(*WriteRequest).TableDatas
 
-			assert.Equal(t, test.expect, dataRows)
+			assert.ElementsMatch(t, test.expect, dataRows)
 		})
 	}
-
 }
 
 func testDBOp(op string, path, payers, datas string) *pbcodec.DBOp {
