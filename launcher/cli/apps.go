@@ -502,10 +502,12 @@ to find how to install it.`)
 				return nil, err
 			}
 
-			eosDBClient, err := eosdb.New(fmt.Sprintf(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
+			eosDBClient, err := eosdb.New(buildDSN(viper.GetString("blockmeta-kvdb-dsn"), absDataDir))
 			if err != nil {
 				return nil, err
 			}
+
+			//todo: add db to a modules struct in blockmeta
 			db := &dblockmeta.EOSBlockmetaDB{
 				Driver: eosDBClient,
 			}
