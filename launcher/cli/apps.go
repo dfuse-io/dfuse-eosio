@@ -319,7 +319,7 @@ to find how to install it.`)
 				MaxSourceLatency: viper.GetDuration("relayer-max-source-latency"),
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
-				SourceStoreURL:   buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-source-store")),
+				SourceStoreURL:   buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-blocks-store")),
 			}), nil
 		},
 	})
