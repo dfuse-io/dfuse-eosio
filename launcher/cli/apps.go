@@ -319,7 +319,7 @@ to find how to install it.`)
 				MaxSourceLatency: viper.GetDuration("relayer-max-source-latency"),
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
-				SourceStoreURL:   buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("relayer-blocks-store")),
+				SourceStoreURL:   buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("")),
 			}), nil
 		},
 	})
@@ -460,11 +460,12 @@ to find how to install it.`)
 			if err != nil {
 				return nil, err
 			}
+
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
 				BlockStoreURL:             buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-blocks-store")),
-				KvdbDsn:                   fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
+				KvdbDsn:                   buildDSN(viper.GetString("kvdb-loader-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
 				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
@@ -548,7 +549,7 @@ to find how to install it.`)
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
-				KvdbDSN:              fmt.Sprintf(viper.GetString("abicodec-kvdb-dsn"), absDataDir),
+				KvdbDSN:              buildDSN(viper.GetString("abicodec-kvdb-dsn"), absDataDir),
 				ExportCache:          viper.GetBool("abicodec-export-cache"),
 				CacheBaseURL:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
@@ -836,7 +837,7 @@ to find how to install it.`)
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
-				KVDBDSN:                     fmt.Sprintf(viper.GetString("eosws-kvdb-dsn"), absDataDir),
+				KVDBDSN:                     buildDSN(viper.GetString("eosws-kvdb-dsn"), absDataDir),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
 				SourceStoreURL:              buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("eosws-blocks-store")),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
@@ -892,7 +893,7 @@ to find how to install it.`)
 				SearchAddr:    viper.GetString("dgraphql-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				KVDBDSN:       fmt.Sprintf(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
+				KVDBDSN:       buildDSN(viper.GetString("dgraphql-kvdb-dsn"), absDataDir),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields

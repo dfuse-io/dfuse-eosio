@@ -1,11 +1,23 @@
 package cli
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/viper"
+
 	"go.uber.org/zap"
 )
+
+func buildDSN(dsn, dataDir string) string {
+
+	if strings.Contains(dsn, "%s") {
+		return fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), dataDir)
+	}
+
+	return dsn
+}
 
 func buildStoreURL(dataDir, storeURL string) string {
 	parts := strings.Split(storeURL, "://")
