@@ -6,14 +6,14 @@ import (
 
 const (
 	Protocol              pbbstream.Protocol = pbbstream.Protocol_EOS
-	BlockmetaDSN          string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by data-dir
-	KVDBDSN               string             = "badger://%s/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by `<data-dir>`
-	FluxDSN               string             = "badger://%s/fluxdb/flux.db"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
-	MergedBlocksFilesPath string             = "storage/merged-blocks"
-	IndicesFilePath       string             = "storage/indexes"
-	OneBlockFilesPath     string             = "storage/one-blocks"
-	PitreosPath           string             = "storage/pitreos"
-	SnapshotsPath         string             = "storage/snapshots"
+	BlockmetaDSN          string             = "badger://{datadir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by data-dir
+	KVDBDSN               string             = "badger://{datadir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by `<data-dir>`
+	FluxDSN               string             = "badger://{datadir}/fluxdb/flux.db"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
+	MergedBlocksFilesPath string             = "{datadir}/storage/merged-blocks"
+	IndicesFilePath       string             = "{datadir}/storage/indexes"
+	OneBlockFilesPath     string             = "{datadir}/storage/one-blocks"
+	PitreosPath           string             = "{datadir}/storage/pitreos"
+	SnapshotsPath         string             = "{datadir}/storage/snapshots"
 	DmeshServiceVersion   string             = "v1"
 	DmeshNamespace        string             = "local"
 	NetworkID             string             = "eos-local"

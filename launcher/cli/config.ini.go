@@ -21,7 +21,7 @@ var localGenesisJSON = `{
 }
 `
 
-var managerLocalConfigIni = `# Plugins
+var producerLocalConfigIni = `# Plugins
 plugin = eosio::producer_plugin
 plugin = eosio::producer_api_plugin
 plugin = eosio::chain_plugin
