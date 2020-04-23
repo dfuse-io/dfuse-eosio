@@ -1,7 +1,6 @@
 export default {
   footer: {
     telegram: "Telegram 社区&团队支持群",
-    subTitle: "need to translate",
     aboutDfuse: "dfuse 是一个开源区块链数据平台",
     copyright: "© 2018-{{year}} dfuse Platform Inc. 版权所有",
     privacyPolicy: "隐私政策",
@@ -10,7 +9,3 @@ export default {
     termsOfServicesLink: "https://dfuse.io/en/terms"
   }
 }
-
-/**
- * subTitle is not used at the moment
- * */
