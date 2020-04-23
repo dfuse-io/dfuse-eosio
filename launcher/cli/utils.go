@@ -1,37 +1,18 @@
 package cli
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
-
-	"github.com/spf13/viper"
 
 	"go.uber.org/zap"
 )
 
-func buildDSN(dsn, dataDir string) string {
-
-	if strings.Contains(dsn, "%s") {
-		return fmt.Sprintf(viper.GetString("kvdb-loader-kvdb-dsn"), dataDir)
-	}
-
-	return dsn
-}
-
-func buildStoreURL(dataDir, storeURL string) string {
-	parts := strings.Split(storeURL, "://")
-
-	if len(parts) > 1 {
-		return storeURL
-	}
-
-	if strings.HasPrefix(parts[0], "/") {
-		// absolute path
-		return storeURL
-	}
-
-	return filepath.Join(dataDir, storeURL)
+func replaceDataDir(dataDir, in string) string {
+	//fmt.Println("REPLACE", dataDir, in)
+	in = strings.Replace(in, "{datadir}", dataDir, -1)
+	in = strings.Replace(in, "{dataDir}", dataDir, -1)
+	in = strings.Replace(in, "{data-dir}", dataDir, -1)
+	return in
 }
 
 func mkdirStorePathIfLocal(storeURL string) (err error) {

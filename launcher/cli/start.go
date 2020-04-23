@@ -27,7 +27,6 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	core "github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -40,6 +39,10 @@ import (
 
 var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE, Args: cobra.ArbitraryArgs}
 
+func init() {
+	RootCmd.AddCommand(startCmd)
+}
+
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	cmd.SilenceUsage = true
 
@@ -49,16 +52,11 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
-	config := &core.BoxConfig{}
+	config := &launcher.DfuseConfig{}
 	if configFile != "" {
 		config, err = launcher.ReadConfig(configFile)
 		if err != nil {
 			userLog.Error(fmt.Sprintf("Error reading config file. Did you 'dfuseeos init' ?  Error: %s", err))
-			return nil
-		}
-
-		if config.Version != "v1" {
-			userLog.Error(fmt.Sprintf("Config file %q isn't for a supported version. Expected 'v1', found '%s'", configFile, config.Version))
 			return nil
 		}
 	}
@@ -86,13 +84,21 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		os.Exit(1)
 	}
 
-	launcher := launcher.NewLauncher(config, modules)
+	launch := launcher.NewLauncher(config, modules)
 	userLog.Debug("launcher created")
 
-	apps := parseAppsFromArgs(args, config.RunProducer)
+	apps := launcher.ParseAppsFromArgs(args)
+	if len(args) == 0 {
+		apps = launcher.ParseAppsFromArgs(config.Start.Args)
+	}
+
+	// Set default values for flags in `start`
+	for k, v := range config.Start.Flags {
+		viper.SetDefault(k, v)
+	}
 
 	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
-	if err = launcher.Launch(apps); err != nil {
+	if err = launch.Launch(apps); err != nil {
 		userLog.Error("unable to launch", zap.Error(err))
 		os.Exit(1)
 	}
@@ -105,16 +111,16 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	select {
 	case <-signalHandler:
 		userLog.Printf("Received termination signal, quitting")
-	case <-launcher.Terminating():
+	case <-launch.Terminating():
 		userLog.Printf("One of the applications shutdown unexpectedly, quitting")
 		err = errors.New("unexpected termination")
 	}
 
 	// all sub apps will be shut down by launcher when dfuse shut down
-	go launcher.Shutdown(nil)
+	go launch.Shutdown(nil)
 
 	// wait for all sub apps to terminate
-	launcher.WaitForTermination()
+	launch.WaitForTermination()
 
 	userLog.Printf("Goodbye")
 
@@ -139,28 +145,4 @@ Your instance should be ready in a few seconds, here some relevant links:
 `, "\n")
 
 	userLog.Printf(message, DashboardHTTPListenAddr, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
-}
-
-func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
-	if len(args) == 0 || args[0] == "all" {
-		for app := range core.AppRegistry {
-			if app == "search-forkresolver" {
-				continue // keep this until we fix search-forkresolver here
-			}
-			if app == "node-manager" && !runProducer {
-				continue
-			}
-			apps = append(apps, app)
-		}
-
-	} else {
-		for _, arg := range args {
-			chunks := strings.Split(arg, ",")
-			for _, chunk := range chunks {
-				apps = append(apps, strings.TrimSpace(chunk))
-			}
-		}
-	}
-
-	return
 }

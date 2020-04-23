@@ -27,7 +27,7 @@ import (
 type Launcher struct {
 	*shutter.Shutter
 
-	config  *BoxConfig
+	config  *DfuseConfig
 	modules *RuntimeModules
 	apps    map[string]App
 
@@ -38,7 +38,7 @@ type Launcher struct {
 	shutdownFatalLogOnce sync.Once
 }
 
-func NewLauncher(config *BoxConfig, modules *RuntimeModules) *Launcher {
+func NewLauncher(config *DfuseConfig, modules *RuntimeModules) *Launcher {
 	l := &Launcher{
 		Shutter:   shutter.New(),
 		apps:      make(map[string]App),
@@ -65,7 +65,7 @@ func (l *Launcher) Launch(appNames []string) error {
 
 		if appDef.InitFunc != nil {
 			userLog.Debug("initialize application", zap.String("app", appID))
-			err := appDef.InitFunc(l.config, l.modules)
+			err := appDef.InitFunc(l.modules)
 			if err != nil {
 				return fmt.Errorf("unable to initialize app %q: %w", appID, err)
 			}
@@ -77,7 +77,7 @@ func (l *Launcher) Launch(appNames []string) error {
 
 		l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_CREATED)
 		userLog.Debug("creating application", zap.String("app", appID))
-		app, err := appDef.FactoryFunc(l.config, l.modules)
+		app, err := appDef.FactoryFunc(l.modules)
 		if err != nil {
 			return fmt.Errorf("unable to create app %q: %w", appID, err)
 		}

@@ -7,6 +7,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type DfuseConfig struct {
+	Start struct {
+		Args  []string          `json:"args"`
+		Flags map[string]string `json:"flags"`
+	} `json:"start"`
+}
+
 // Configuration extracted from the `dfuse.yaml` file. User-driven.
 type BoxConfig struct {
 	// Either GenesisJSON or GenesisFile
@@ -27,7 +34,7 @@ type BoxConfig struct {
 // Load reads a YAML config, and returns the raw JSON plus a
 // top-level Config object. Use the raw JSON form to provide to the
 // different plugins and apps for them to load their config.
-func ReadConfig(filename string) (conf *BoxConfig, err error) {
+func ReadConfig(filename string) (conf *DfuseConfig, err error) {
 	yamlBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -36,15 +43,6 @@ func ReadConfig(filename string) (conf *BoxConfig, err error) {
 	err = yaml.Unmarshal(yamlBytes, &conf)
 	if err != nil {
 		return nil, fmt.Errorf("reading json: %s", err)
-	}
-
-	if conf.GenesisFile != "" {
-		genesis, err := ioutil.ReadFile(conf.GenesisFile)
-		if err != nil {
-			return nil, fmt.Errorf("reading genesis file: %s", err)
-		}
-
-		conf.GenesisJSON = string(genesis)
 	}
 
 	return conf, nil
