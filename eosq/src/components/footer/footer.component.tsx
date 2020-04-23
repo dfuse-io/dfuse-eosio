@@ -38,11 +38,6 @@ const LogoSecond: React.ComponentType<any> = styled.div`
   position: relative;
 `
 
-/* const StyledLogoImg: React.ComponentType<any> = styled.img`
-  max-height: 50px;
-  margin-bottom: 6px;
-` */
-
 const StyledText: React.ComponentType<any> = styled(Text)`
   &:hover {
     color: ${theme.colors.primary};
@@ -77,12 +72,6 @@ const BaseFooter = () => (
               q
             </LogoSecond>
           </LogoLink>
-          {/* <Cell pt={[3]}>
-          <Text color={theme.colors.primary}>{t("footer.subTitle")}</Text>
-        </Cell>
-        <ExternalTextLink to="https://dfuse.io/">
-          <StyledLogoImg src="/images/dfuse-logo-white-01.svg" />
-        </ExternalTextLink> */}
         </Cell>
         <Cell justifySelf="right" textAlign="right" alignSelf="right" pt={[4]}>
           <ExternalTextLink to="https://t.me/dfuseAPI">
