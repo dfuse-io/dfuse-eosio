@@ -147,7 +147,7 @@ func parseAppsFromArgs(args []string, runProducer bool) (apps []string) {
 			if app == "search-forkresolver" {
 				continue // keep this until we fix search-forkresolver here
 			}
-			if app == "manager" && !runProducer {
+			if app == "node-manager" && !runProducer {
 				continue
 			}
 			apps = append(apps, app)

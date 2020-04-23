@@ -60,52 +60,52 @@ import (
 
 func init() {
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "manager",
-		Title:       "Producer node",
+		ID:          "node-manager",
+		Title:       "Node manager",
 		Description: "Block producing node",
 		MetricsID:   "manager",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("manager-api-addr", EosManagerAPIAddr, "eos-manager API address")
-			cmd.Flags().String("manager-nodeos-api-addr", NodeosAPIAddr, "Target API address")
-			cmd.Flags().Bool("manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
-			cmd.Flags().String("manager-config-dir", "manager/config", "Directory for config files")
-			cmd.Flags().String("manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("manager-data-dir", "managernode/data", "Directory for data (blocks)")
-			cmd.Flags().String("manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
-			cmd.Flags().String("manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
-			cmd.Flags().Duration("manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
-			cmd.Flags().String("manager-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
-			cmd.Flags().String("manager-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
-			cmd.Flags().String("manager-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
-			cmd.Flags().Bool("manager-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
-			cmd.Flags().Bool("manager-auto-restore", false, "Enables restore from the latest backup on boot if there is no block logs or if nodeos cannot start at all. Do not use on a single BP node")
-			cmd.Flags().String("manager-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
-			cmd.Flags().String("manager-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
-			cmd.Flags().Duration("manager-shutdown-delay", 0*time.Second, "Delay before shutting manager when sigterm received")
-			cmd.Flags().String("manager-backup-tag", "default", "tag to identify the backup")
-			cmd.Flags().Bool("manager-disable-profiler", true, "Disables the manageos profiler")
-			cmd.Flags().StringSlice("manager-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
-			cmd.Flags().Bool("manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
-			cmd.Flags().Int("manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
-			cmd.Flags().Duration("manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
-			cmd.Flags().Int("manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
-			cmd.Flags().Duration("manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
-			cmd.Flags().String("manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
-			cmd.Flags().Duration("manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
-			cmd.Flags().Int("manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
-			cmd.Flags().String("manager-target-volume-snapshot-specific", "", "Comma-separated list of block numbers where volume snapshots will be done automatically")
-			cmd.Flags().Bool("manager-force-production", true, "Forces the production of blocks")
+			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
+			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address of managed nodeos")
+			cmd.Flags().Bool("node-manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
+			cmd.Flags().String("node-manager-config-dir", "node-manager/config", "Directory for config files")
+			cmd.Flags().String("node-manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
+			cmd.Flags().String("node-manager-data-dir", "node-manager/data", "Directory for data (nodeos blocks and state)")
+			cmd.Flags().String("node-manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
+			cmd.Flags().String("node-manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
+			cmd.Flags().Duration("node-manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
+			cmd.Flags().String("node-manager-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
+			cmd.Flags().String("node-manager-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
+			cmd.Flags().String("node-manager-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
+			cmd.Flags().Bool("node-manager-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
+			cmd.Flags().Bool("node-manager-auto-restore", false, "Enables restore from the latest backup on boot if there is no block logs or if nodeos cannot start at all. Do not use on a single BP node")
+			cmd.Flags().String("node-manager-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
+			cmd.Flags().String("node-manager-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
+			cmd.Flags().Duration("node-manager-shutdown-delay", 0*time.Second, "Delay before shutting manager when sigterm received")
+			cmd.Flags().String("node-manager-backup-tag", "default", "tag to identify the backup")
+			cmd.Flags().Bool("node-manager-disable-profiler", true, "Disables the manageos profiler")
+			cmd.Flags().StringSlice("node-manager-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
+			cmd.Flags().Bool("node-manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
+			cmd.Flags().Int("node-manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
+			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
+			cmd.Flags().Int("node-manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
+			cmd.Flags().Duration("node-manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
+			cmd.Flags().String("node-manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
+			cmd.Flags().Duration("node-manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
+			cmd.Flags().Int("node-manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
+			cmd.Flags().String("node-manager-target-volume-snapshot-specific", "", "Comma-separated list of block numbers where volume snapshots will be done automatically")
+			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
 		InitFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if err := CheckNodeosInstallation(viper.GetString("manager-nodeos-path")); err != nil {
+			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
 				return err
 			}
 
-			managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir"))
+			managerConfigDir := buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("node-manager-config-dir"))
 			if err := mkdirStorePathIfLocal(managerConfigDir); err != nil {
 				return err
 			}
@@ -124,32 +124,32 @@ func init() {
 		},
 		FactoryFunc: func(config *launcher.BoxConfig, modules *launcher.RuntimeModules) (launcher.App, error) {
 			return nodeosManagerApp.New(&nodeosManagerApp.Config{
-				ManagerAPIAddress:       viper.GetString("manager-api-addr"),
-				NodeosAPIAddress:        viper.GetString("manager-nodeos-api-addr"),
-				ConnectionWatchdog:      viper.GetBool("manager-connection-watchdog"),
-				NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-config-dir")),
-				NodeosBinPath:           viper.GetString("manager-nodeos-path"),
-				NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-data-dir")),
-				ProducerHostname:        viper.GetString("manager-producer-hostname"),
-				TrustedProducer:         viper.GetString("manager-trusted-producer"),
-				ReadinessMaxLatency:     viper.GetDuration("manager-readiness-max-latency"),
-				ForceProduction:         viper.GetBool("manager-force-production"),
-				NodeosExtraArgs:         viper.GetStringSlice("manager-nodeos-args"),
-				BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-backup-store-url")),
-				BootstrapDataURL:        viper.GetString("manager-bootstrap-data-url"),
-				DebugDeepMind:           viper.GetBool("manager-debug-deep-mind"),
-				LogToZap:                viper.GetBool("manager-log-to-zap"),
-				AutoRestoreLatest:       viper.GetBool("manager-auto-restore"),
-				RestoreBackupName:       viper.GetString("manager-restore-backup-name"),
-				RestoreSnapshotName:     viper.GetString("manager-restore-snapshot-name"),
-				SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("manager-snapshot-store-url")),
-				ShutdownDelay:           viper.GetDuration("manager-shutdown-delay"),
-				BackupTag:               viper.GetString("manager-backup-tag"),
-				AutoBackupModulo:        viper.GetInt("manager-auto-backup-modulo"),
-				AutoBackupPeriod:        viper.GetDuration("manager-auto-backup-period"),
-				AutoSnapshotModulo:      viper.GetInt("manager-auto-snapshot-modulo"),
-				AutoSnapshotPeriod:      viper.GetDuration("manager-auto-snapshot-period"),
-				DisableProfiler:         viper.GetBool("manager-disable-profiler"),
+				ManagerAPIAddress:       viper.GetString("node-manager-api-addr"),
+				NodeosAPIAddress:        viper.GetString("node-manager-nodeos-api-addr"),
+				ConnectionWatchdog:      viper.GetBool("node-manager-connection-watchdog"),
+				NodeosConfigDir:         buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("node-manager-config-dir")),
+				NodeosBinPath:           viper.GetString("node-manager-nodeos-path"),
+				NodeosDataDir:           buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("node-manager-data-dir")),
+				ProducerHostname:        viper.GetString("node-manager-producer-hostname"),
+				TrustedProducer:         viper.GetString("node-manager-trusted-producer"),
+				ReadinessMaxLatency:     viper.GetDuration("node-manager-readiness-max-latency"),
+				ForceProduction:         viper.GetBool("node-manager-force-production"),
+				NodeosExtraArgs:         viper.GetStringSlice("node-manager-nodeos-args"),
+				BackupStoreURL:          buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("node-manager-backup-store-url")),
+				BootstrapDataURL:        viper.GetString("node-manager-bootstrap-data-url"),
+				DebugDeepMind:           viper.GetBool("node-manager-debug-deep-mind"),
+				LogToZap:                viper.GetBool("node-manager-log-to-zap"),
+				AutoRestoreLatest:       viper.GetBool("node-manager-auto-restore"),
+				RestoreBackupName:       viper.GetString("node-manager-restore-backup-name"),
+				RestoreSnapshotName:     viper.GetString("node-manager-restore-snapshot-name"),
+				SnapshotStoreURL:        buildStoreURL(viper.GetString("global-data-dir"), viper.GetString("node-manager-snapshot-store-url")),
+				ShutdownDelay:           viper.GetDuration("node-manager-shutdown-delay"),
+				BackupTag:               viper.GetString("node-manager-backup-tag"),
+				AutoBackupModulo:        viper.GetInt("node-manager-auto-backup-modulo"),
+				AutoBackupPeriod:        viper.GetDuration("node-manager-auto-backup-period"),
+				AutoSnapshotModulo:      viper.GetInt("node-manager-auto-snapshot-modulo"),
+				AutoSnapshotPeriod:      viper.GetDuration("node-manager-auto-snapshot-period"),
+				DisableProfiler:         viper.GetBool("node-manager-disable-profiler"),
 				StartFailureHandlerFunc: nil,
 			}), nil
 
@@ -160,7 +160,7 @@ func init() {
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
-		Title:       "Reader node",
+		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "manager",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
@@ -168,9 +168,9 @@ func init() {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", NodeosAPIAddr, "Target API address")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
-			cmd.Flags().String("mindreader-config-dir", "mindreadernode/config", "Directory for config files. ")
+			cmd.Flags().String("mindreader-config-dir", "mindreader/config", "Directory for config files. ")
 			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("mindreader-data-dir", "mindreadernode/data", "Directory for data (blocks)")
+			cmd.Flags().String("mindreader-data-dir", "mindreader/data", "Directory for data (blocks)")
 			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")

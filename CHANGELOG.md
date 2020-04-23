@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `dashboard` doesn't act as a reverse proxy anymore (`apiproxy` does).
 * `dashboard`'s default port is now `:8081`
 * `eosq`'s port is now proxied through `:8080`, so use that.
+* App `manager` renamed to `node-manager`. All of its flags were changed from `--manager-...` to `--node-manager-...`
+* Default value for `--node-manager-config-dir` now `node-manager/config` (was `manager/config`)
+* Default value for `--node-manager-data-dir` now `node-manager/data` (was `managernode/data`)
+* Default value for `--mindreader-config-dir` now `mindreader/config` (was `mindreadernode/config`)
+* Default value for `--mindreader-data-dir` now `mindreader/data` (was `mindreadernode/data`)
+
 
 ### Added
 * Added `apiproxy` application, with its flags
