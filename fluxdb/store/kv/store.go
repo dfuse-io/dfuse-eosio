@@ -22,8 +22,8 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/dtracing"
 	kv "github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
 )
@@ -302,7 +302,7 @@ func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd st
 	}
 
 	// TODO: we need to fix this limit
-	itr := s.db.Scan(ctx, startKey, endKey, -1)
+	itr := s.db.Scan(ctx, startKey, endKey, 0)
 
 	for itr.Next() {
 		item := itr.Item()
