@@ -9,9 +9,7 @@ import (
 
 func replaceDataDir(dataDir, in string) string {
 	//fmt.Println("REPLACE", dataDir, in)
-	in = strings.Replace(in, "{datadir}", dataDir, -1)
-	in = strings.Replace(in, "{dataDir}", dataDir, -1)
-	in = strings.Replace(in, "{data-dir}", dataDir, -1)
+	in = strings.Replace(in, "{dfuse-data-dir}", dataDir, -1)
 	return in
 }
 
