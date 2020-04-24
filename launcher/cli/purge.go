@@ -27,6 +27,7 @@ import (
 var purgeCmd = &cobra.Command{Use: "purge", Short: "Purges dfuse's local data", RunE: dfusePurgeE}
 
 func init() {
+	RootCmd.AddCommand(purgeCmd)
 	purgeCmd.Flags().BoolP("force", "f", false, "Force purging of data without user intervention")
 }
 

@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/derr"
-	core "github.com/dfuse-io/dfuse-eosio/launcher"
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/spf13/cobra"
 )
 
@@ -45,16 +45,14 @@ func Main() {
 	RootCmd.PersistentFlags().Bool("log-to-file", true, "Also write logs to {data-dir}/dfuse.log.json ")
 	RootCmd.PersistentFlags().CountP("verbose", "v", "Enables verbose output (-vvvv for max verbosity)")
 
-	derr.Check("registering application flags", core.RegisterFlags(startCmd))
+	derr.Check("registering application flags", launcher.RegisterFlags(startCmd))
 
 	var availableCmds []string
-	for app := range core.AppRegistry {
+	for app := range launcher.AppRegistry {
 		availableCmds = append(availableCmds, app)
 	}
 	startCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
 	startCmd.Example = startCmdExample
-
-	RootCmd.AddCommand(startCmd, purgeCmd, initCmd)
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setup()

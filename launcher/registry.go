@@ -1,6 +1,9 @@
 package launcher
 
 import (
+	"sort"
+	"strings"
+
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -35,4 +38,47 @@ func RegisterFlags(cmd *cobra.Command) error {
 		}
 	}
 	return nil
+}
+
+func ParseAppsFromArgs(args []string) (apps []string) {
+	if len(args) == 0 {
+		return ParseAppsFromArgs([]string{"all"})
+	}
+
+	for _, arg := range args {
+		chunks := strings.Split(arg, ",")
+		for _, app := range chunks {
+			app = strings.TrimSpace(app)
+
+			if app == "all" {
+				for app := range AppRegistry {
+					if app == "search-forkresolver" {
+						continue // keep this until we fix search-forkresolver here
+					}
+					apps = append(apps, app)
+				}
+			} else {
+				if strings.HasPrefix(app, "-") {
+					removeApp := app[1:]
+					apps = removeElement(apps, removeApp)
+				} else {
+					apps = append(apps, app)
+				}
+			}
+
+		}
+	}
+
+	sort.Strings(apps)
+
+	return
+}
+
+func removeElement(lst []string, el string) (out []string) {
+	for _, l := range lst {
+		if l != el {
+			out = append(out, l)
+		}
+	}
+	return
 }

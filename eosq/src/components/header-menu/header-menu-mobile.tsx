@@ -233,12 +233,16 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
             pt={[4]}
             style={{ position: "absolute", bottom: "20px", textAlign: "center", width: "100%" }}
           >
-            <a href={`https://www.dfuse.io/${getCurrentLanguageValue()}`} title="dfuse API for EOS">
+            <a
+              href={`https://dfuse.io/${getCurrentLanguageValue()}`}
+              title="The dfuse Blockchain Data Platform"
+              target="_blank"
+            >
               <img
-                src={`https://www.dfuse.io/hubfs/built-with-dfuse${
-                  getCurrentLanguageValue() === "zh" ? "-CN" : ""
+                src={`/images/built-with-dfuse${
+                    getCurrentLanguageValue() === "zh" ? "-CN" : ""
                 }-01.png`}
-                title="dfuse API for EOS"
+                title="The dfuse Blockchain Data Platform"
                 width="210"
                 height="auto"
               />

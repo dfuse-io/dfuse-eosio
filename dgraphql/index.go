@@ -83,7 +83,11 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create root resolver: %w", err)
+	}
+
 	schemas, err := dgraphql.NewSchemas(resolver)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse schema: %w", err)

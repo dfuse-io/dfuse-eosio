@@ -57,7 +57,7 @@ type Root struct {
 	abiCodecClient           pbabicodec.DecoderClient
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient) *Root {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient) (interface{}, error) {
 	return &Root{
 		searchClient:    searchClient,
 		trxsReader:      dbReader,
@@ -65,7 +65,7 @@ func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockM
 		accountsReader:  dbReader,
 		blockmetaClient: blockMetaClient,
 		abiCodecClient:  abiCodecClient,
-	}
+	}, nil
 }
 
 // CAREFUL - this mirrored in the BigQuery schema - if you change this, make sure to be backwards compatible
