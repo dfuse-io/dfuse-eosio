@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" {
+	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") == "true" {
 		logger, _ := zap.NewDevelopment()
 		logging.Override(logger)
 	}

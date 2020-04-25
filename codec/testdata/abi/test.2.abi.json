@@ -6,18 +6,15 @@
       "base": "",
       "fields": [
         {
-          "name": "from",
-          "type": "name"
+          "name": "to",
+          "type": "uint64"
         }
       ]
     }
   ],
-  "tables": [
-    {
-      "name": "rows",
-      "type": "value"
-    }
+  "actions": [
+    { "name": "act2", "type": "value" }
   ],
-  "ricardian_clauses": [],
+  "ricardian_clauses": [{"id":"name", "body":"test.2.abi.json"}],
   "abi_extensions": []
 }

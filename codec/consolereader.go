@@ -35,8 +35,7 @@ type ConsoleReader struct {
 	scanner *bufio.Scanner
 	close   func()
 
-	ctx        *parseCtx
-	abiDecoder *ABIDecoder
+	ctx *parseCtx
 }
 
 // TODO: At some point, the interface of a ConsoleReader should be re-done.
@@ -46,10 +45,9 @@ type ConsoleReader struct {
 //       the line and the console reader would simply process each line, one at a time.
 func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 	l := &ConsoleReader{
-		src:        reader,
-		close:      func() {},
-		ctx:        newParseCtx(),
-		abiDecoder: newABIDecoder(),
+		src:   reader,
+		close: func() {},
+		ctx:   newParseCtx(),
 	}
 	l.setupScanner()
 	return l, nil
@@ -67,6 +65,7 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
+	abiDecoder     *ABIDecoder
 	block          *pbcodec.Block
 	activeBlockNum int64
 
@@ -76,8 +75,9 @@ type parseCtx struct {
 
 func newParseCtx() *parseCtx {
 	return &parseCtx{
-		block: &pbcodec.Block{},
-		trx:   &pbcodec.TransactionTrace{},
+		abiDecoder: newABIDecoder(),
+		block:      &pbcodec.Block{},
+		trx:        &pbcodec.TransactionTrace{},
 	}
 }
 
@@ -140,7 +140,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFailedDTrxOp(line)
 
 		case strings.HasPrefix(line, "ACCEPTED_BLOCK"):
-			return ctx.readAcceptedBlock(line, l.abiDecoder)
+			return ctx.readAcceptedBlock(line)
 
 		case strings.HasPrefix(line, "START_BLOCK"):
 			ctx.readStartBlock(line)
@@ -292,8 +292,12 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.TableOps = ctx.trx.TableOps
 
 	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
-	ctx.resetTrx()
 
+	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
+		return fmt.Errorf("abi decoder: %w", err)
+	}
+
+	ctx.resetTrx()
 	return nil
 }
 
@@ -344,13 +348,14 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 
 	ctx.resetBlock()
 	ctx.activeBlockNum = blockNum
+	ctx.abiDecoder.startBlock(uint64(blockNum))
 
 	return nil
 }
 
 // Line format:
 //   ACCEPTED_BLOCK ${block_num} ${block_json}
-func (ctx *parseCtx) readAcceptedBlock(line string, abiDecoder *ABIDecoder) (*pbcodec.Block, error) {
+func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
 		return nil, fmt.Errorf("expected 3 fields, got %d", len(chunks))
@@ -451,7 +456,8 @@ func (ctx *parseCtx) readAcceptedBlock(line string, abiDecoder *ABIDecoder) (*pb
 	block := ctx.block
 	ctx.resetBlock()
 
-	err = abiDecoder.postProcessBlock(block)
+	// This calls block until all transaction has been decoded inside the block
+	err = ctx.abiDecoder.endBlock(ctx.block.AsRef())
 	if err != nil {
 		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
 	}

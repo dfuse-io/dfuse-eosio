@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/tidwall/gjson"
 )
@@ -61,9 +62,9 @@ func (b *Block) LIBNum() uint64 {
 	return uint64(b.DposIrreversibleBlocknum)
 }
 
-// func (b *Block) AsRef() bstream.BlockRef {
-// 	return bstream.BlockRefFromID(b.Id)
-// }
+func (b *Block) AsRef() bstream.BlockRef {
+	return bstream.BlockRefFromID(b.Id)
+}
 
 func (b *Block) CanceledDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
@@ -123,6 +124,30 @@ func (b *Block) PopulateActionAndTransactionCount() {
 			}
 		}
 	}
+}
+
+func (t *TransactionTrace) HasBeenReverted() bool {
+	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
+	if t.Receipt == nil {
+		return true
+	}
+
+	status := t.Receipt.Status
+
+	// Any executed transaction is definitely NOT reverted
+	if status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+		return false
+	}
+
+	// The `eosio::onerror` transaction when in `soft_fail` status means it was actually correctly executed, so it's NOT reverted
+	if status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL && len(t.ActionTraces) >= 1 && t.ActionTraces[0].FullName() == "eosio:eosio:onerror" {
+		return false
+	}
+
+	// Even if there is other transaction status, a transaction trace, the object
+	// we are in, can only be executed, expired, soft_fail or hard_fail. So at this
+	// point, it must have been reverted
+	return true
 }
 
 func (t *TransactionTrace) DBOpsForAction(idx uint32) (ops []*DBOp) {
