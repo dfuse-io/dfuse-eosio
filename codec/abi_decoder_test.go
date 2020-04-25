@@ -1,6 +1,7 @@
 package codec
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -403,6 +404,12 @@ func TestABIDecoder(t *testing.T) {
 				{"block 3/trace 1/action 0", `{"to":"transfer3"}`},
 			},
 		},
+
+		// TODO: Add those tests
+		//        - ensures "hard-coded" system methods like `setabi`, `setcode` always work?
+		//        - transaction soft_fail, set abi works inside transaction, but not outside
+		//        - transaction soft_fail follow by success onerror correctly records ABI for next
+		//        - transaction soft_fail follow by failed onerror works inside transaction, but not outside
 	}
 
 	toString := func(in proto.Message) string {
@@ -425,13 +432,16 @@ func TestABIDecoder(t *testing.T) {
 			decoder := newABIDecoder()
 
 			for _, block := range test.blocks {
-				decoder.startBlock(block.Num())
+				err := decoder.startBlock(context.Background(), block.Num())
+				require.NoError(t, err)
+
 				for _, trxTrace := range block.TransactionTraces {
 					err := decoder.processTransaction(trxTrace)
 					require.NoError(t, err)
 				}
 
-				err := decoder.endBlock(block.AsRef())
+				// This should wait for all decoding in the block to terminate
+				err = decoder.endBlock(block.AsRef())
 				require.NoError(t, err)
 			}
 
@@ -504,7 +514,12 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 }
 
 func trxTrace(t *testing.T, elements ...proto.Message) string {
-	trace := &pbcodec.TransactionTrace{}
+	trace := &pbcodec.TransactionTrace{
+		Receipt: &pbcodec.TransactionReceiptHeader{
+			Status: pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+		},
+	}
+
 	for _, element := range elements {
 		switch v := element.(type) {
 		case *pbcodec.ActionTrace:

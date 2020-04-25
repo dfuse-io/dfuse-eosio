@@ -16,6 +16,7 @@ package codec
 
 import (
 	"bufio"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -348,7 +349,11 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 
 	ctx.resetBlock()
 	ctx.activeBlockNum = blockNum
-	ctx.abiDecoder.startBlock(uint64(blockNum))
+
+	// FIXME: Connect to caller somehow, probably the one doing the `Read` call on the top-level reader
+	if err := ctx.abiDecoder.startBlock(context.Background(), uint64(blockNum)); err != nil {
+		return fmt.Errorf("abi decoder: %w", err)
+	}
 
 	return nil
 }
