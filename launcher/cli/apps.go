@@ -63,7 +63,7 @@ func init() {
 		ID:          "node-manager",
 		Title:       "Node manager",
 		Description: "Block producing node",
-		MetricsID:   "manager",
+		MetricsID:   "producer",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
@@ -112,6 +112,7 @@ func init() {
 				return nil, err
 			}
 			return nodeosManagerApp.New(&nodeosManagerApp.Config{
+				MetricID:                "producer",
 				ManagerAPIAddress:       viper.GetString("node-manager-http-listen-addr"),
 				NodeosAPIAddress:        viper.GetString("node-manager-nodeos-api-addr"),
 				ConnectionWatchdog:      viper.GetBool("node-manager-connection-watchdog"),
@@ -150,7 +151,7 @@ func init() {
 		ID:          "mindreader",
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
-		MetricsID:   "manager",
+		MetricsID:   "mindreader",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
@@ -231,6 +232,7 @@ to find how to install it.`)
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
+				MetricID:                   "mindreader",
 				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
 				NodeosAPIAddress:           viper.GetString("mindreader-nodeos-api-addr"),
 				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
