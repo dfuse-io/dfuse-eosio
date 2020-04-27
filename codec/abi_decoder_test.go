@@ -39,12 +39,12 @@ func TestABIDecoder(t *testing.T) {
 		return blocks
 	}
 
-	eosioTokenABI1 := readABI(t, "token.1.abi.json")
-	eosioTokenABI2 := readABI(t, "token.2.abi.json")
-	eosioTestABI1 := readABI(t, "test.1.abi.json")
-	eosioTestABI2 := readABI(t, "test.2.abi.json")
-	eosioTestABI3 := readABI(t, "test.3.abi.json")
-	// eosioNekotABI1 := readABI(t, "nekot.1.abi.json")
+	tokenABI1 := readABI(t, "token.1.abi.json")
+	tokenABI2 := readABI(t, "token.2.abi.json")
+	testABI1 := readABI(t, "test.1.abi.json")
+	testABI2 := readABI(t, "test.2.abi.json")
+	testABI3 := readABI(t, "test.3.abi.json")
+	systemABI := readABI(t, "system.abi.json")
 
 	softFailStatus := pbcodec.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL
 	hardFailStatus := pbcodec.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
@@ -54,8 +54,8 @@ func TestABIDecoder(t *testing.T) {
 			name: "setabi and usage, same trace",
 			blocks: in(testBlock(t, "00000002aa", "00000001aa",
 				trxTrace(t,
-					actionTraceSetABI(t, "test", 0, 1, eosioTestABI1),
-					actionTrace(t, "test:test:act1", 1, 2, eosioTestABI1, `{"from":"test1"}`),
+					actionTraceSetABI(t, "test", 0, 1, testABI1),
+					actionTrace(t, "test:test:act1", 1, 2, testABI1, `{"from":"test1"}`),
 				),
 			)),
 			expectations: []expectation{
@@ -65,8 +65,8 @@ func TestABIDecoder(t *testing.T) {
 		{
 			name: "setabi and usage, same block, two traces",
 			blocks: in(testBlock(t, "00000002aa", "00000001aa",
-				trxTrace(t, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
-				trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test1"}`)),
+				trxTrace(t, actionTraceSetABI(t, "test", 0, 1, testABI1)),
+				trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test1"}`)),
 			)),
 			expectations: []expectation{
 				{"block 0/trace 1/action 0", `{"from":"test1"}`},
@@ -76,10 +76,10 @@ func TestABIDecoder(t *testing.T) {
 			name: "setabi and usage, two different blocks",
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, testABI1)),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test1"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test1"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -91,15 +91,15 @@ func TestABIDecoder(t *testing.T) {
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
 					trxTrace(t,
-						actionTraceSetABI(t, "test", 0, 1, eosioTestABI1),
-						actionTrace(t, "test:test:act1", 1, 2, eosioTestABI1, `{"from":"test1"}`),
-						actionTraceSetABI(t, "test", 2, 3, eosioTestABI2),
-						actionTrace(t, "test:test:act2", 2, 4, eosioTestABI2, `{"to":20}`),
-						actionTraceSetABI(t, "test", 4, 5, eosioTestABI3),
+						actionTraceSetABI(t, "test", 0, 1, testABI1),
+						actionTrace(t, "test:test:act1", 1, 2, testABI1, `{"from":"test1"}`),
+						actionTraceSetABI(t, "test", 2, 3, testABI2),
+						actionTrace(t, "test:test:act2", 2, 4, testABI2, `{"to":20}`),
+						actionTraceSetABI(t, "test", 4, 5, testABI3),
 					),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act3", 0, 6, eosioTestABI3, `{"quantity":"1.0 EOS"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act3", 0, 6, testABI3, `{"quantity":"1.0 EOS"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -112,14 +112,14 @@ func TestABIDecoder(t *testing.T) {
 			name: "set multiple times, across transactions, two different blocks",
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
-					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test1"}`)),
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 3, eosioTestABI2)),
-					trxTrace(t, actionTrace(t, "test:test:act2", 0, 4, eosioTestABI2, `{"to":20}`)),
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 5, eosioTestABI3)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, testABI1)),
+					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test1"}`)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 3, testABI2)),
+					trxTrace(t, actionTrace(t, "test:test:act2", 0, 4, testABI2, `{"to":20}`)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 5, testABI3)),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act3", 0, 6, eosioTestABI3, `{"quantity":"1.0 EOS"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act3", 0, 6, testABI3, `{"quantity":"1.0 EOS"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -132,21 +132,21 @@ func TestABIDecoder(t *testing.T) {
 			name: "fork multiple block",
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
-					trxTrace(t, actionTraceSetABI(t, "token", 0, 2, eosioTokenABI1)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, testABI1)),
+					trxTrace(t, actionTraceSetABI(t, "token", 0, 2, tokenABI1)),
 				),
 				testBlock(t, "00000002bb", "00000001aa",
-					trxTrace(t, actionTrace(t, "test:test:act1", 0, 3, eosioTestABI1, `{"from":"test1"}`)),
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 4, eosioTestABI2)),
-					trxTrace(t, actionTrace(t, "test:test:act2", 0, 5, eosioTestABI2, `{"to":20}`)),
+					trxTrace(t, actionTrace(t, "test:test:act1", 0, 3, testABI1, `{"from":"test1"}`)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 4, testABI2)),
+					trxTrace(t, actionTrace(t, "test:test:act2", 0, 5, testABI2, `{"to":20}`)),
 				),
 				testBlock(t, "00000003bb", "00000002bb",
-					trxTrace(t, actionTrace(t, "test:test:act2", 0, 6, eosioTestABI2, `{"to":20}`)),
-					trxTrace(t, actionTraceSetABI(t, "token", 0, 7, eosioTokenABI2)),
+					trxTrace(t, actionTrace(t, "test:test:act2", 0, 6, testABI2, `{"to":20}`)),
+					trxTrace(t, actionTraceSetABI(t, "token", 0, 7, tokenABI2)),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act1", 0, 3, eosioTestABI1, `{"from":"test1"}`)),
-					trxTrace(t, actionTrace(t, "token:token:transfer", 0, 4, eosioTokenABI1, `{"to":"transfer3"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act1", 0, 3, testABI1, `{"from":"test1"}`)),
+					trxTrace(t, actionTrace(t, "token:token:transfer", 0, 4, tokenABI1, `{"to":"transfer3"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -161,10 +161,10 @@ func TestABIDecoder(t *testing.T) {
 			name: "fail transaction, does not save ABI",
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
-					trxTrace(t, hardFailStatus, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
+					trxTrace(t, hardFailStatus, actionTraceSetABI(t, "test", 0, 1, testABI1)),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test1"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test1"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -175,23 +175,23 @@ func TestABIDecoder(t *testing.T) {
 			name: "fail transaction, still works from failed transaction but does not record ABI",
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
-					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, eosioTestABI1)),
+					trxTrace(t, actionTraceSetABI(t, "test", 0, 1, testABI1)),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
 					trxTrace(t, hardFailStatus,
-						actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test1"}`),
-						actionTraceSetABI(t, "test", 1, 3, eosioTestABI2),
-						actionTrace(t, "test:test:act2", 2, 4, eosioTestABI2, `{"to":1}`),
-						actionTrace(t, "test:test:act2", 3, 5, eosioTestABI2, `{"to":2}`),
-						actionTraceSetABI(t, "test", 4, 6, eosioTestABI3),
-						actionTraceFail(t, "test:test:act3", 5, eosioTestABI3, `{"quantity":"1.0000 EOS"}`),
+						actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test1"}`),
+						actionTraceSetABI(t, "test", 1, 3, testABI2),
+						actionTrace(t, "test:test:act2", 2, 4, testABI2, `{"to":1}`),
+						actionTrace(t, "test:test:act2", 3, 5, testABI2, `{"to":2}`),
+						actionTraceSetABI(t, "test", 4, 6, testABI3),
+						actionTraceFail(t, "test:test:act3", 5, testABI3, `{"quantity":"1.0000 EOS"}`),
 					),
 				),
 				testBlock(t, "00000004aa", "00000003aa",
 					trxTrace(t,
-						actionTrace(t, "test:test:act1", 0, 2, eosioTestABI1, `{"from":"test3"}`),
+						actionTrace(t, "test:test:act1", 0, 2, testABI1, `{"from":"test3"}`),
 						// Let's assume there is a bunch of transaction in-between, so we test that no recording actually occurred!
-						actionTrace(t, "test:test:act1", 1, 7, eosioTestABI1, `{"from":"test4"}`),
+						actionTrace(t, "test:test:act1", 1, 7, testABI1, `{"from":"test4"}`),
 					),
 				),
 			),
@@ -211,13 +211,13 @@ func TestABIDecoder(t *testing.T) {
 				testBlock(t, "00000002aa", "00000001aa",
 					trxTrace(t, softFailStatus,
 						actionTrace(t, "eosio:eosio:onerror", 0, 1, nil, ""),
-						actionTraceSetABI(t, "test", 1, 2, eosioTestABI2),
-						actionTrace(t, "test:test:act2", 2, 3, eosioTestABI2, `{"to":1}`),
-						actionTraceSetABI(t, "test", 3, 4, eosioTestABI3),
+						actionTraceSetABI(t, "test", 1, 2, testABI2),
+						actionTrace(t, "test:test:act2", 2, 3, testABI2, `{"to":1}`),
+						actionTraceSetABI(t, "test", 3, 4, testABI3),
 					),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act3", 0, 5, eosioTestABI3, `{"quantity":"1.0000 EOS"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act3", 0, 5, testABI3, `{"quantity":"1.0000 EOS"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -231,16 +231,16 @@ func TestABIDecoder(t *testing.T) {
 				testBlock(t, "00000002aa", "00000001aa",
 					trxTrace(t, hardFailStatus,
 						actionTrace(t, "eosio:eosio:onerror", 0, 1, nil, ""),
-						actionTraceSetABI(t, "test", 1, 2, eosioTestABI2),
-						actionTrace(t, "test:test:act2", 2, 3, eosioTestABI2, `{"to":1}`),
-						actionTraceSetABI(t, "test", 3, 4, eosioTestABI3),
+						actionTraceSetABI(t, "test", 1, 2, testABI2),
+						actionTrace(t, "test:test:act2", 2, 3, testABI2, `{"to":1}`),
+						actionTraceSetABI(t, "test", 3, 4, testABI3),
 						actionTraceFail(t, "any:any:any", 4, nil, ""),
 					),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
-					trxTrace(t, actionTrace(t, "test:test:act3", 0, 1, eosioTestABI3, `{"quantity":"1.0000 EOS"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act3", 0, 1, testABI3, `{"quantity":"1.0000 EOS"}`)),
 					// Let's assume there is a bunch of transaction in-between, so we test that no recording actually occurred!
-					trxTrace(t, actionTrace(t, "test:test:act3", 0, 8, eosioTestABI3, `{"quantity":"2.0000 EOS"}`)),
+					trxTrace(t, actionTrace(t, "test:test:act3", 0, 8, testABI3, `{"quantity":"2.0000 EOS"}`)),
 				),
 			),
 			expectations: []expectation{
@@ -255,27 +255,30 @@ func TestABIDecoder(t *testing.T) {
 			blocks: in(
 				testBlock(t, "00000002aa", "00000001aa",
 					trxTrace(t,
-						actionTraceSetABI(t, "test", 0, 1, eosioTestABI1),
-						actionTraceSetABI(t, "token", 1, 2, eosioTokenABI1),
-						actionTrace(t, "test:test:act1", 2, 3, eosioTestABI1, `{"from":"block1"}`),
+						actionTraceSetABI(t, "test", 0, 1, testABI1),
+						actionTraceSetABI(t, "token", 1, 2, tokenABI1),
+						actionTrace(t, "test:test:act1", 2, 3, testABI1, `{"from":"block1"}`),
 
 						// A dtrx op created by action index 2
-						dtrxOp(t, 2, signedTrx(t,
-							cfaAction(t, "token:transfer", eosioTokenABI1, `{"to":"someone"}`),
-							action(t, "test:act1", eosioTestABI1, `{"from":"inner1"}`),
+						dtrxOp(t, 2, "create", signedTrx(t,
+							cfaAction(t, "token:transfer", tokenABI1, `{"to":"someone"}`),
+							action(t, "test:act1", testABI1, `{"from":"inner1"}`),
 						)),
 					),
 				),
 				testBlock(t, "00000003aa", "00000002aa",
 					trxTrace(t,
-						actionTrace(t, "test:test:act1", 0, 4, eosioTestABI1, `{"from":"block2"}`),
+						actionTrace(t, "test:test:act1", 0, 4, testABI1, `{"from":"block2"}`),
 
 						// A dtrx op created by action index 0
-						dtrxOp(t, 0, signedTrx(t,
-							cfaAction(t, "token:transfer", eosioTokenABI1, `{"to":"somelse"}`),
-							action(t, "test:act1", eosioTestABI1, `{"from":"inner2"}`),
+						dtrxOp(t, 0, "create", signedTrx(t,
+							cfaAction(t, "token:transfer", tokenABI1, `{"to":"somelse"}`),
+							action(t, "test:act1", testABI1, `{"from":"inner2"}`),
 						)),
 					),
+				),
+				testBlock(t, "00000004aa", "00000003aa",
+					trxTrace(t, dtrxOp(t, 0, "push_create", signedTrx(t, action(t, "test:act1", testABI1, `{"from":"push1"}`)))),
 				),
 			),
 			expectations: []expectation{
@@ -285,6 +288,47 @@ func TestABIDecoder(t *testing.T) {
 
 				{"block 1/trace 0/dtrxOp 0/action 0", `{"from":"inner2"}`},
 				{"block 1/trace 0/dtrxOp 0/cfaAction 0", `{"to":"somelse"}`},
+
+				{"block 2/trace 0/dtrxOp 0/action 0", `{"from":"push1"}`},
+			},
+		},
+
+		{
+			name: "trx ops are correctly decoded",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t,
+						actionTraceSetABI(t, "test", 0, 1, testABI1),
+						actionTraceSetABI(t, "token", 1, 2, tokenABI1),
+						actionTraceSetABI(t, "eosio", 2, 3, systemABI),
+					),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, softFailStatus,
+						actionTrace(t, "test:test:act1", 0, 4, testABI1, `{"from":"block2"}`),
+					),
+					trxTrace(t, hardFailStatus,
+						actionTrace(t, "eosio:eosio:onerror", 0, 5, systemABI, `{"trx_id":"abc"}`),
+					),
+
+					trxOp(t, signedTrx(t,
+						action(t, "eosio:onblock", systemABI, `{"id":"00000003aa"}`),
+						cfaAction(t, "test:act1", testABI1, `{"from":"block3"}`),
+					)),
+					trxOp(t, signedTrx(t,
+						action(t, "eosio:onerror", systemABI, `{"trx_id":"abc"}`),
+						cfaAction(t, "token:transfer", tokenABI1, `{"to":"someone"}`),
+					)),
+				),
+			),
+			expectations: []expectation{
+				{"block 1/trace 0/action 0", `{"from":"block2"}`},
+				{"block 1/trace 1/action 0", `{"trx_id":"abc"}`},
+
+				{"block 1/trxOp 0/action 0", `{"id":"00000003aa"}`},
+				{"block 1/trxOp 0/cfaAction 0", `{"from":"block3"}`},
+				{"block 1/trxOp 1/action 0", `{"trx_id":"abc"}`},
+				{"block 1/trxOp 1/cfaAction 0", `{"to":"someone"}`},
 			},
 		},
 
@@ -302,6 +346,7 @@ func TestABIDecoder(t *testing.T) {
 	hexRegex := regexp.MustCompile("^[0-9a-fA-F]+$")
 	actionTraceRegex := regexp.MustCompile("^block (\\d+)/trace (\\d+)/action (\\d+)$")
 	dtrxOpRegex := regexp.MustCompile("^block (\\d+)/trace (\\d+)/dtrxOp (\\d+)/(action|cfaAction) (\\d+)$")
+	trxOpRegex := regexp.MustCompile("^block (\\d+)/trxOp (\\d+)/(action|cfaAction) (\\d+)$")
 
 	toInt := func(in string) int {
 		out, err := strconv.ParseInt(in, 10, 32)
@@ -319,9 +364,10 @@ func TestABIDecoder(t *testing.T) {
 	assertMatchAction := func(expected string, action *pbcodec.Action) {
 		if hexRegex.MatchString(expected) {
 			require.Equal(t, expected, hex.EncodeToString(action.RawData), toString(action))
-			require.Empty(t, action.JsonData, toString(action))
+			require.Empty(t, action.JsonData, "JsonData should be empty\n%s", toString(action))
 		} else {
-			require.NotEmpty(t, action.JsonData, toString(action))
+			require.NotEmpty(t, action.RawData, "RawData should still be populated\n%s", toString(action))
+			require.NotEmpty(t, action.JsonData, "JsonData should not be empty\n%s", toString(action))
 			assert.JSONEq(t, expected, action.JsonData)
 		}
 	}
@@ -367,6 +413,18 @@ func TestABIDecoder(t *testing.T) {
 					continue
 				}
 
+				if match = fullMatchRegex(trxOpRegex, expect.path); match != nil {
+					block := test.blocks[toInt(match[1])]
+					trxOp := block.ImplicitTransactionOps[toInt(match[2])]
+
+					if match[3] == "cfaAction" {
+						assertMatchAction(expect.value, trxOp.Transaction.Transaction.ContextFreeActions[toInt(match[4])])
+					} else if match[3] == "action" {
+						assertMatchAction(expect.value, trxOp.Transaction.Transaction.Actions[toInt(match[4])])
+					}
+					continue
+				}
+
 				assert.Fail(t, "Unable to assert unknown expectation", "Expecation path %q not matching any assertion regex", expect.path)
 			}
 		})
@@ -382,19 +440,10 @@ func fullMatchRegex(regex *regexp.Regexp, content string) []string {
 	return match[0]
 }
 
-func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs ...string) *pbcodec.Block {
-	trxTraces := make([]*pbcodec.TransactionTrace, len(trxTraceJSONs))
-	for i, trxTraceJSON := range trxTraceJSONs {
-		trxTrace := new(pbcodec.TransactionTrace)
-		require.NoError(t, jsonpb.UnmarshalString(trxTraceJSON, trxTrace), "actual string:\n"+trxTraceJSON)
-
-		trxTraces[i] = trxTrace
-	}
-
+func testBlock(t *testing.T, blkID string, previousBlkID string, elements ...interface{}) *pbcodec.Block {
 	pbblock := &pbcodec.Block{
-		Id:                blkID,
-		Number:            eos.BlockNum(blkID),
-		TransactionTraces: trxTraces,
+		Id:     blkID,
+		Number: eos.BlockNum(blkID),
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")
@@ -410,10 +459,20 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 		Timestamp: blockTimestamp,
 	}
 
+	for _, element := range elements {
+		switch v := element.(type) {
+		case *pbcodec.TransactionTrace:
+			pbblock.TransactionTraceCount++
+			pbblock.TransactionTraces = append(pbblock.TransactionTraces, v)
+		case *pbcodec.TrxOp:
+			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
+		}
+	}
+
 	return pbblock
 }
 
-func trxTrace(t *testing.T, elements ...interface{}) string {
+func trxTrace(t *testing.T, elements ...interface{}) *pbcodec.TransactionTrace {
 	trace := &pbcodec.TransactionTrace{
 		Receipt: &pbcodec.TransactionReceiptHeader{
 			Status: pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
@@ -435,10 +494,7 @@ func trxTrace(t *testing.T, elements ...interface{}) string {
 		}
 	}
 
-	out, err := jsonpb.MarshalIndentToString(trace, "")
-	require.NoError(t, err)
-
-	return out
+	return trace
 }
 
 func signedTrx(t *testing.T, elements ...interface{}) *pbcodec.SignedTransaction {
@@ -535,8 +591,19 @@ func action(t *testing.T, pairName string, abi *eos.ABI, data string) *pbcodec.A
 	}
 }
 
-func dtrxOp(t *testing.T, actionIndex uint32, signedTrx *pbcodec.SignedTransaction) *pbcodec.DTrxOp {
+func trxOp(t *testing.T, signedTrx *pbcodec.SignedTransaction) *pbcodec.TrxOp {
+	op := &pbcodec.TrxOp{
+		Transaction: signedTrx,
+	}
+
+	return op
+}
+
+func dtrxOp(t *testing.T, actionIndex uint32, operation string, signedTrx *pbcodec.SignedTransaction) *pbcodec.DTrxOp {
+	opName := pbcodec.DTrxOp_Operation_value["OPERATION_"+strings.ToUpper(operation)]
+
 	op := &pbcodec.DTrxOp{
+		Operation:   pbcodec.DTrxOp_Operation(opName),
 		ActionIndex: actionIndex,
 		Transaction: signedTrx,
 	}

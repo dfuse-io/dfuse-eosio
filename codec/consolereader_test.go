@@ -76,16 +76,6 @@ func TestParseFromFile(t *testing.T) {
 			cnt, err := ioutil.ReadFile(goldenFile)
 			require.NoError(t, err)
 
-			//f, err := os.Create("/tmp/cnt")
-			//require.NoError(t, err)
-			//_, err = f.WriteString(string(cnt))
-			//require.NoError(t, err)
-			//
-			//f2, err := os.Create("/tmp/buf")
-			//require.NoError(t, err)
-			//_, err = f2.WriteString(buf.String())
-			//require.NoError(t, err)
-
 			if !assert.Equal(t, string(cnt), buf.String()) {
 				t.Error("previous diff:\n" + unifiedDiff(t, cnt, buf.Bytes()))
 			}

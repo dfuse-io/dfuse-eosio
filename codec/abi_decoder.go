@@ -27,6 +27,7 @@ import (
 	"go.uber.org/zap"
 )
 
+var mostRecentActiveABI uint64 = math.MaxUint64
 var noActiveBlockNum uint64 = math.MaxUint64
 
 // ABIDecoder holds the ABI cache, controls it and process transaction
@@ -97,10 +98,14 @@ func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
 }
 
 func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
-	zlog.Debug("ending active block", zap.Stringer("block", block))
+	blockRef := block.AsRef()
+	zlog.Debug("post-processing block", zap.Stringer("block", blockRef))
 	if c.activeBlockNum == noActiveBlockNum {
 		return fmt.Errorf("end block for block %s received while no active block present", block)
 	}
+
+	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.ImplicitTransactionOps)))
+	c.processImplicitTransactions(block.ImplicitTransactionOps)
 
 	zlog.Debug("waiting for decoding queue to drain completely")
 	err := c.queue.drain()
@@ -108,14 +113,17 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 		return fmt.Errorf("unable to correctly drain decoding queue: %w", err)
 	}
 
+	zlog.Debug("ending block processing", zap.String("block", block.Id))
 	c.activeBlockNum = noActiveBlockNum
-	c.lastSeenBlockRef = block.AsRef()
+	c.lastSeenBlockRef = blockRef
 	c.queue = nil
 
 	return nil
 }
 
 func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) error {
+	zlog.Debug("processing transaction for decoding", zap.String("trx_id", trxTrace.Id))
+
 	// Optimization: The truncation and ABI addition just below could share the same
 	//               write lock. In the current code form, the lock is acquired/released
 	//               twice. We could make them together but it adds a fair amount of logic
@@ -172,7 +180,12 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 	}
 
 	for _, dtrxOp := range trxTrace.DtrxOps {
-		globalSequence := actionTraceGlobalSequence(trxTrace.ActionTraces[dtrxOp.ActionIndex])
+		// A deferred transaction push in the blockchain (using CLI and `--delay-sec`) does not any action trace,
+		// let's use the most recent active ABI global sequence in those cases.
+		globalSequence := mostRecentActiveABI
+		if dtrxOp.Operation != pbcodec.DTrxOp_OPERATION_PUSH_CREATE {
+			globalSequence = actionTraceGlobalSequence(trxTrace.ActionTraces[dtrxOp.ActionIndex])
+		}
 
 		for _, action := range dtrxOp.Transaction.Transaction.ContextFreeActions {
 			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, globalSequence, localCache}})
@@ -183,15 +196,29 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 		}
 	}
 
-	c.queue.addJobs(trxTrace.Id, decodingJobs)
+	zlog.Debug("queuing transaction trace decoding jobs", zap.Uint64("block_num", c.activeBlockNum), zap.String("id", trxTrace.Id), zap.Int("job_count", len(decodingJobs)))
+	return c.queue.addJobs(decodingJobs)
+}
 
-	// FIXME: Performed also for `trxOps`
+func (c *ABIDecoder) processImplicitTransactions(trxOps []*pbcodec.TrxOp) error {
+	var decodingJobs []decodingJob
 
-	return nil
+	for _, trxOp := range trxOps {
+		for _, action := range trxOp.Transaction.Transaction.ContextFreeActions {
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, math.MaxUint64, emptyCache}})
+		}
+
+		for _, action := range trxOp.Transaction.Transaction.Actions {
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, math.MaxUint64, emptyCache}})
+		}
+	}
+
+	zlog.Debug("queuing implicit transactions decoding jobs", zap.Uint64("block_num", c.activeBlockNum), zap.Int("job_count", len(decodingJobs)))
+	return c.queue.addJobs(decodingJobs)
 }
 
 func actionTraceGlobalSequence(actionTrace *pbcodec.ActionTrace) uint64 {
-	globalSequence := uint64(math.MaxUint64)
+	globalSequence := mostRecentActiveABI
 	if actionTrace.Receipt != nil && actionTrace.Receipt.GlobalSequence != 0 {
 		globalSequence = actionTrace.Receipt.GlobalSequence
 	}
@@ -243,7 +270,8 @@ func (c *ABIDecoder) createLocalABICache(trxID string, operations []abiOperation
 
 func (c *ABIDecoder) extractABIOperations(trxTrace *pbcodec.TransactionTrace) (out []abiOperation, err error) {
 	for i, actionTrace := range trxTrace.ActionTraces {
-		if actionTrace.FullName() == "eosio:eosio:setabi" {
+		// If the action trace receipt is `nil`, it means the action failed, in which case, we don't care about those `setabi`
+		if actionTrace.FullName() == "eosio:eosio:setabi" && actionTrace.Receipt != nil {
 			setABI := &system.SetABI{}
 			err := eos.UnmarshalBinary(actionTrace.Action.RawData, setABI)
 			if err != nil {
@@ -258,7 +286,6 @@ func (c *ABIDecoder) extractABIOperations(trxTrace *pbcodec.TransactionTrace) (o
 				continue
 			}
 
-			fmt.Printf("actiontrace not nil %t, receipt %t\n", actionTrace != nil, actionTrace.Receipt != nil)
 			out = append(out, abiOperation{string(setABI.Account), i, actionTrace.Receipt.GlobalSequence, abi})
 		}
 	}
@@ -314,21 +341,20 @@ func newDecodingQueue(ctx context.Context, blockNum uint64, globalCache *ABICach
 
 	// This is going to drain continuously hammer so new jobs can execute
 	queue.drainerWg.Add(1)
-	go queue.consumeCompletedDecodingJob(blockNum)
+	go queue.drainQueueFully(blockNum)
 
 	return queue
 }
 
-func (q *decodingQueue) addJobs(trxID string, jobs []decodingJob) error {
+func (q *decodingQueue) addJobs(jobs []decodingJob) error {
 	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
 	q.queuerWg.Add(1)
 	go func() {
-		zlog.Debug("abi decoding of transaction", zap.Uint64("block_num", q.blockNum), zap.String("id", trxID))
 		defer q.queuerWg.Done()
 
 		for _, job := range jobs {
 			if traceEnabled {
-				zlog.Debug("adding decoding job", zap.String("kind", job.kind()))
+				zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
 			}
 
 			q.hammer.In <- job
@@ -372,10 +398,10 @@ func (c *decodingQueue) executeDecodingJob(ctx context.Context, batch []interfac
 	}
 }
 
-func (q *decodingQueue) consumeCompletedDecodingJob(blockNum uint64) {
-	zlog.Debug("consume completed decoding job starting", zap.Uint64("block_num", blockNum))
+func (q *decodingQueue) drainQueueFully(blockNum uint64) {
+	zlog.Debug("queue drainer routine started", zap.Uint64("block_num", blockNum))
 	defer func() {
-		zlog.Debug("consuming completed decoding job terminated", zap.Uint64("block_num", blockNum))
+		zlog.Debug("queue drainer routine terminated", zap.Uint64("block_num", blockNum))
 		q.drainerWg.Done()
 	}()
 
@@ -383,12 +409,12 @@ func (q *decodingQueue) consumeCompletedDecodingJob(blockNum uint64) {
 		select {
 		case jobKind, ok := <-q.hammer.Out:
 			if !ok {
-				zlog.Debug("hammer closed for block", zap.Uint64("block_num", blockNum))
+				zlog.Debug("queue is now closed", zap.Uint64("block_num", blockNum))
 				return
 			}
 
 			if traceEnabled {
-				zlog.Debug("hammer job completed", zap.String("kind", jobKind.(string)))
+				zlog.Debug("queue job completed", zap.String("kind", jobKind.(string)))
 			}
 		}
 	}
@@ -396,7 +422,7 @@ func (q *decodingQueue) consumeCompletedDecodingJob(blockNum uint64) {
 
 func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint64, localCache *ABICache) error {
 	if traceEnabled {
-		zlog.Debug("abi decoding action", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
+		zlog.Debug("decoding action", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 	}
 
 	if len(action.RawData) <= 0 {
@@ -433,9 +459,6 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 	}
 
 	action.JsonData = string(jsonData)
-
-	// FIXME: Do we need to keep both here? I'm not sure, reading `eos_to_proto` did not give me the final answer (it coded that late!)
-	action.RawData = nil
 
 	return nil
 }
