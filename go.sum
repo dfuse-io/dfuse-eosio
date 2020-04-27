@@ -193,6 +193,8 @@ github.com/dennwc/base v1.0.0 h1:xlBzvBNRvkQ1LFI/jom7rr0vZsvYDKtvMM6lIpjFb3M=
 github.com/dennwc/base v1.0.0/go.mod h1:zaTDIiAcg2oKW9XhjIaRc1kJVteCFXSSW6jwmCedUaI=
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f h1:U5y3Y5UE0w7amNe7Z5G/twsBW0KEalRQXZzf8ufSh9I=
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFMt8koVQZ6WFms69WAsDWr2XsYL3Hkl7jkoLE=
+github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8 h1:Kt/6nnDoG2VpD6WexOp9JwtQ3Z5s1pWX+tOak24/ZQw=
+github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8/go.mod h1:zDObxOau2AHis3ozUKuWthQN0llJrnwPFZxa+WWJFlQ=
 github.com/dfuse-io/blockmeta v0.0.0-20200427163644-fb8601b89faf h1:8h8dDbXyI1TUUbTftSIKCJwTrOIu0TP1CMY8U3lU2Q8=
 github.com/dfuse-io/blockmeta v0.0.0-20200427163644-fb8601b89faf/go.mod h1:+dlVlGzRRQN2K+11Y/K3kozbbWppsSDP5wxu5uT1zSk=
 github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3jWU18nI6wq0hCl0uatjUtrN652zRnJD6dMGGc=
@@ -211,6 +213,7 @@ github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0 h1:saup3uh3r5kk12Kbr
 github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
 github.com/dfuse-io/dgraphql v0.0.0-20200422185551-c1f84b42ce8d h1:3Gwmk3BrX64tMCOvFnCrKJFFJowV6p1Fyp9yq3HUG5Q=
 github.com/dfuse-io/dgraphql v0.0.0-20200422185551-c1f84b42ce8d/go.mod h1:8kIlkUa/SMhAZ2g1gt4yAYUEuFdnf3ac7RiitJqUzYQ=
+github.com/dfuse-io/dgraphql v0.0.0-20200424190011-2585985eab85 h1:GXjdqecNr/GbXMF7BM0YatYgsOWABcTiRB1ge9BwUUI=
 github.com/dfuse-io/dgraphql v0.0.0-20200424190011-2585985eab85/go.mod h1:8kIlkUa/SMhAZ2g1gt4yAYUEuFdnf3ac7RiitJqUzYQ=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c h1:ebrUj1rR2g1ErpCMjQUmTON3T3MNi22wf/vYJ/zSkXI=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
