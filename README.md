@@ -82,7 +82,7 @@ Explorer & APIs:  http://localhost:8080
 GraphiQL:         http://localhost:8080/graphiql
 ```
 
-  * If dfuse is starting a new chain, two nodeos instances should now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
+  * If dfuse is starting a new chain, two nodeos instances will now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
   * If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
 
 4. If you chose to have dfuse create a new chain for you, see [bootstrapping](./bootstrapping) for info on creating the initial accounts and interacting with the chain
