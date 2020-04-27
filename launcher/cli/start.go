@@ -73,8 +73,13 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
+	meshClient, err := dmeshClient.New(viper.GetString("search-common-mesh-dsn"))
+	if err != nil {
+		return fmt.Errorf("unable to create dmesh client: %w", err)
+	}
+
 	modules := &launcher.RuntimeModules{
-		SearchDmeshClient: dmeshClient.NewLocalClient(),
+		SearchDmeshClient: meshClient,
 		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta()),
 	}
 

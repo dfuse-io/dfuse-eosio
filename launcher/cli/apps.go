@@ -643,8 +643,9 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Register common search flags once for all the services
+
 			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
-			cmd.Flags().String("search-common-mesh-namespace", DmeshNamespace, "[COMMON] Dmesh namespace where services reside (eos-mainnet)")
+			cmd.Flags().String("search-common-mesh-dsn", DmeshDSN, "[COMMON] Dmesh DSN, supports local & etcd")
 			cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
 			cmd.Flags().Duration("search-common-mesh-publish-polling-duration", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
 			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
@@ -660,6 +661,7 @@ to find how to install it.`)
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
+				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
 				BlockmetaAddr:      viper.GetString("search-router-blockmeta-addr"),
 				GRPCListenAddr:     viper.GetString("search-router-grpc-listen-addr"),
 				HeadDelayTolerance: viper.GetUint64("search-router-head-delay-tolerance"),

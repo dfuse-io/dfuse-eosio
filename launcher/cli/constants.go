@@ -14,11 +14,10 @@ const (
 	OneBlockFilesPath     string             = "{dfuse-data-dir}/storage/one-blocks"
 	PitreosPath           string             = "{dfuse-data-dir}/storage/pitreos"
 	SnapshotsPath         string             = "{dfuse-data-dir}/storage/snapshots"
+	DmeshDSN              string             = "local://"
 	DmeshServiceVersion   string             = "v1"
-	DmeshNamespace        string             = "local"
 	NetworkID             string             = "eos-local"
 	NodeosBinPath         string             = "nodeos"
-
 	// Ports
 	EosManagerAPIAddr           string = ":13008"
 	EosMindreaderHTTPAddr       string = ":13009"

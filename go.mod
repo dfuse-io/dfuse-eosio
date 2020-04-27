@@ -26,7 +26,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dmesh v0.0.0-20200407045015-ea4e41ecdb6c
+	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
 	github.com/dfuse-io/dmetrics v0.0.0-20200406214800-499fc7b320ab
 	github.com/dfuse-io/dstore v0.0.0-20200407173215-10b5ced43022
@@ -40,7 +40,7 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
 	github.com/dfuse-io/relayer v0.0.0-20200421150534-d4d76ebf6978
-	github.com/dfuse-io/search v0.0.0-20200427120934-350365113fae
+	github.com/dfuse-io/search v0.0.0-20200427144014-26fc4793078f
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
