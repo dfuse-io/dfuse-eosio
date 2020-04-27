@@ -643,11 +643,10 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Register common search flags once for all the services
-
 			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
 			cmd.Flags().String("search-common-mesh-dsn", DmeshDSN, "[COMMON] Dmesh DSN, supports local & etcd")
 			cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
-			cmd.Flags().Duration("search-common-mesh-publish-polling-duration", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
+			cmd.Flags().Duration("search-common-mesh-publish-interval", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
 			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
 			cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
 			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
@@ -714,7 +713,7 @@ to find how to install it.`)
 				TierLevel:               viper.GetUint32("search-archive-tier-level"),
 				GRPCListenAddr:          viper.GetString("search-archive-grpc-listen-addr"),
 				HTTPListenAddr:          viper.GetString("search-archive-http-listen-addr"),
-				PublishDuration:         viper.GetDuration("search-common-mesh-publish-polling-duration"),
+				PublishInterval:         viper.GetDuration("search-common-mesh-publish-interval"),
 				EnableMovingTail:        viper.GetBool("search-archive-enable-moving-tail"),
 				ShardSize:               viper.GetUint64("search-archive-shard-size"),
 				StartBlock:              viper.GetInt64("search-archive-start-block"),
@@ -779,7 +778,7 @@ to find how to install it.`)
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
-				PublishDuration:          viper.GetDuration("search-common-mesh-publish-polling-duration"),
+				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
 				BlockMapper: mapper,
@@ -816,7 +815,7 @@ to find how to install it.`)
 				ServiceVersion:  viper.GetString("search-common-mesh-service-version"),
 				GRPCListenAddr:  viper.GetString("search-forkresolver-grpc-listen-addr"),
 				HttpListenAddr:  viper.GetString("search-forkresolver-http-listen-addr"),
-				PublishDuration: viper.GetDuration("search-common-mesh-publish-polling-duration"),
+				PublishInterval: viper.GetDuration("search-common-mesh-publish-interval"),
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:  viper.GetString("search-forkresolver-blocks-store"),
 			}, &forkresolverApp.Modules{
