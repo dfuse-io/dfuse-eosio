@@ -462,7 +462,7 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	ctx.resetBlock()
 
 	// This calls block until all transaction has been decoded inside the block
-	err = ctx.abiDecoder.endBlock(ctx.block.AsRef())
+	err = ctx.abiDecoder.endBlock(ctx.block)
 	if err != nil {
 		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
 	}

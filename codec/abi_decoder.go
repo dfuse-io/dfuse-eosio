@@ -39,11 +39,8 @@ var noActiveBlockNum uint64 = math.MaxUint64
 // multiple ABIs inside a single locking session, than resume with the read.
 // That is to improve lock-contention.
 type ABIDecoder struct {
-	cache  *ABICache
-	hammer *dhammer.Hammer
-
-	hammerFeederWg   sync.WaitGroup
-	hammerConsumerWg sync.WaitGroup
+	cache *ABICache
+	queue *decodingQueue
 
 	// The logic of truncation is the following. We assume we will always receives
 	// blocks in sequential order, expect when there is a fork, we could go back
@@ -72,22 +69,12 @@ type ABIDecoder struct {
 	truncateOnNextGlobalSequence bool
 }
 
-type actionDecodingJob struct {
-	actionTrace *pbcodec.ActionTrace
-	actionIndex int
-	localCache  *ABICache
-}
-
 func newABIDecoder() *ABIDecoder {
-	decoder := &ABIDecoder{
+	return &ABIDecoder{
 		cache:            newABICache(),
 		activeBlockNum:   noActiveBlockNum,
 		lastSeenBlockRef: bstream.BlockRefEmpty,
 	}
-
-	decoder.hammer = dhammer.NewHammer(1, 8, decoder.executeDecodingJob)
-
-	return decoder
 }
 
 func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
@@ -104,37 +91,26 @@ func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
 		c.truncateOnNextGlobalSequence = true
 	}
 
-	// FIXME: Replace 8 with as many CPUs available minus one (or two) we have. Will need some profiling to see the best value for EOS Mainnet
-	c.hammer = dhammer.NewHammer(1, 8, c.executeDecodingJob)
-	c.hammer.Start(ctx)
-
-	// This is going to drain continuously hammer so new jobs can execute
-	c.hammerConsumerWg.Add(1)
-	go c.consumeCompletedDecodingJob(blockNum)
+	c.queue = newDecodingQueue(ctx, blockNum, c.cache)
 
 	return nil
 }
 
-func (c *ABIDecoder) endBlock(blockRef bstream.BlockRef) error {
-	zlog.Debug("ending active block", zap.Stringer("block", blockRef))
+func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
+	zlog.Debug("ending active block", zap.Stringer("block", block))
 	if c.activeBlockNum == noActiveBlockNum {
-		return fmt.Errorf("end block for block %s received while no active block present", blockRef)
+		return fmt.Errorf("end block for block %s received while no active block present", block)
 	}
 
-	zlog.Debug("waiting for all transaction processing call that feeds hammer to complete")
-	c.hammerFeederWg.Wait()
-
-	zlog.Debug("waiting for hammer to complete all inflight requests")
-	c.hammer.Close()
-	c.hammerConsumerWg.Wait()
-
-	if c.hammer.Err() != nil {
-		return c.hammer.Err()
+	zlog.Debug("waiting for decoding queue to drain completely")
+	err := c.queue.drain()
+	if err != nil {
+		return fmt.Errorf("unable to correctly drain decoding queue: %w", err)
 	}
 
 	c.activeBlockNum = noActiveBlockNum
-	c.lastSeenBlockRef = blockRef
-	c.hammer = nil
+	c.lastSeenBlockRef = block.AsRef()
+	c.queue = nil
 
 	return nil
 }
@@ -178,34 +154,49 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 		}
 	}
 
-	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
-	c.hammerFeederWg.Add(1)
-	go func() {
-		zlog.Debug("abi decoding of transaction", zap.Uint64("block_num", c.activeBlockNum), zap.String("id", trxTrace.Id))
-		defer c.hammerFeederWg.Done()
+	var decodingJobs []decodingJob
 
-		// FIXME: Optimization: We could optimize notification inside a transaction. We could have a two-pass algorithm.
-		//                      In the first pass we loop on all `non-notification` action, decoding them against the ABI.
-		//                      In the second pass, we loop on all `notification` action this time and now instead of
-		//                      decoding them, we find the action that created the notification and use it's already decoded
-		//                      action. This would save us 2 decoding for each `eosio.token` for example.
-		//
-		//                      Now that we run that in parallel, two-pass it a little bit harder. Implementation wise, I
-		//                      suggest we perform a final serialize phase in the `endBlock` method, after having done all
-		//                      decoding jobs. This way, we are sure that all parent action are properly decoded.
-		for i, actionTrace := range trxTrace.ActionTraces {
-			if traceEnabled {
-				zlog.Debug("adding action decoding job", zap.Int("action_index", i))
-			}
+	// FIXME: Optimization: We could optimize notification inside a transaction. We could have a two-pass algorithm.
+	//                      In the first pass we loop on all `non-notification` action, decoding them against the ABI.
+	//                      In the second pass, we loop on all `notification` action this time and now instead of
+	//                      decoding them, we find the action that created the notification and use it's already decoded
+	//                      action. This would save us 2 decoding for each `eosio.token` for example.
+	//
+	//                      Now that we run that in parallel, two-pass it a little bit harder. Implementation wise, I
+	//                      suggest we perform a final serialize phase in the `endBlock` method, after having done all
+	//                      decoding jobs. This way, we are sure that all parent action are properly decoded.
+	for _, actionTrace := range trxTrace.ActionTraces {
+		globalSequence := actionTraceGlobalSequence(actionTrace)
 
-			c.hammer.In <- actionDecodingJob{actionTrace, i, localCache}
+		decodingJobs = append(decodingJobs, actionDecodingJob{actionTrace.Action, globalSequence, localCache})
+	}
+
+	for _, dtrxOp := range trxTrace.DtrxOps {
+		globalSequence := actionTraceGlobalSequence(trxTrace.ActionTraces[dtrxOp.ActionIndex])
+
+		for _, action := range dtrxOp.Transaction.Transaction.ContextFreeActions {
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, globalSequence, localCache}})
 		}
-	}()
 
-	// FIXME: Performed also for `dtrxOps` and `trxOps`
-	// FIXME: How about `dbOps`, do we check them right now?
+		for _, action := range dtrxOp.Transaction.Transaction.Actions {
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, globalSequence, localCache}})
+		}
+	}
+
+	c.queue.addJobs(trxTrace.Id, decodingJobs)
+
+	// FIXME: Performed also for `trxOps`
 
 	return nil
+}
+
+func actionTraceGlobalSequence(actionTrace *pbcodec.ActionTrace) uint64 {
+	globalSequence := uint64(math.MaxUint64)
+	if actionTrace.Receipt != nil && actionTrace.Receipt.GlobalSequence != 0 {
+		globalSequence = actionTrace.Receipt.GlobalSequence
+	}
+
+	return globalSequence
 }
 
 func (c *ABIDecoder) findFirstGlobalSequence(trxTrace *pbcodec.TransactionTrace) (uint64, bool) {
@@ -285,71 +276,140 @@ func (c *ABIDecoder) truncateCache(truncateAt uint64) {
 	c.truncateOnNextGlobalSequence = false
 }
 
-var actionJobTypeResult = []interface{}{"action"}
+type decodingQueue struct {
+	blockNum    uint64
+	globalCache *ABICache
+	hammer      *dhammer.Hammer
 
-func (c *ABIDecoder) executeDecodingJob(ctx context.Context, batch []interface{}) ([]interface{}, error) {
+	queuerWg  sync.WaitGroup
+	drainerWg sync.WaitGroup
+}
+
+type decodingJob interface {
+	kind() string
+}
+
+func (j actionDecodingJob) kind() string { return "action" }
+func (j dtrxDecodingJob) kind() string   { return "dtrx" }
+
+type actionDecodingJob struct {
+	action         *pbcodec.Action
+	globalSequence uint64
+	localCache     *ABICache
+}
+
+type dtrxDecodingJob struct {
+	actionDecodingJob
+}
+
+func newDecodingQueue(ctx context.Context, blockNum uint64, globalCache *ABICache) *decodingQueue {
+	queue := &decodingQueue{
+		blockNum:    blockNum,
+		globalCache: globalCache,
+	}
+
+	// FIXME: Replace 8 with as many CPUs available minus one (or two) we have. Will need some profiling to see the best value for EOS Mainnet
+	queue.hammer = dhammer.NewHammer(1, 8, queue.executeDecodingJob)
+	queue.hammer.Start(ctx)
+
+	// This is going to drain continuously hammer so new jobs can execute
+	queue.drainerWg.Add(1)
+	go queue.consumeCompletedDecodingJob(blockNum)
+
+	return queue
+}
+
+func (q *decodingQueue) addJobs(trxID string, jobs []decodingJob) error {
+	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
+	q.queuerWg.Add(1)
+	go func() {
+		zlog.Debug("abi decoding of transaction", zap.Uint64("block_num", q.blockNum), zap.String("id", trxID))
+		defer q.queuerWg.Done()
+
+		for _, job := range jobs {
+			if traceEnabled {
+				zlog.Debug("adding decoding job", zap.String("kind", job.kind()))
+			}
+
+			q.hammer.In <- job
+		}
+	}()
+	return nil
+}
+
+func (q *decodingQueue) drain() error {
+	zlog.Debug("waiting for all transaction processing call that feeds hammer to complete")
+	q.queuerWg.Wait()
+
+	zlog.Debug("waiting for hammer to complete all inflight requests")
+	q.hammer.Close()
+	q.drainerWg.Wait()
+
+	if q.hammer.Err() != nil {
+		return q.hammer.Err()
+	}
+
+	return nil
+}
+
+func (c *decodingQueue) executeDecodingJob(ctx context.Context, batch []interface{}) ([]interface{}, error) {
 	if len(batch) != 1 {
 		return nil, fmt.Errorf("expecting batch to have a single element, got %d", len(batch))
 	}
 
+	job := batch[0].(decodingJob)
 	if traceEnabled {
-		zlog.Debug("executing decoding job", zap.String("type", fmt.Sprintf("%T", batch[0])))
+		zlog.Debug("executing decoding job", zap.String("kind", job.kind()))
 	}
 
 	switch v := batch[0].(type) {
 	case actionDecodingJob:
-		return actionJobTypeResult, c.decodeActionTrace(&v)
+		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, v.localCache)
+	case dtrxDecodingJob:
+		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, v.localCache)
+	default:
+		return nil, fmt.Errorf("unknown decoding job kind %s", job.kind())
 	}
-
-	return nil, fmt.Errorf("unknown decoding job type %T", batch[0])
 }
 
-func (c *ABIDecoder) consumeCompletedDecodingJob(blockNum uint64) {
+func (q *decodingQueue) consumeCompletedDecodingJob(blockNum uint64) {
 	zlog.Debug("consume completed decoding job starting", zap.Uint64("block_num", blockNum))
 	defer func() {
 		zlog.Debug("consuming completed decoding job terminated", zap.Uint64("block_num", blockNum))
-		c.hammerConsumerWg.Done()
+		q.drainerWg.Done()
 	}()
 
 	for {
 		select {
-		case jobType, ok := <-c.hammer.Out:
+		case jobKind, ok := <-q.hammer.Out:
 			if !ok {
 				zlog.Debug("hammer closed for block", zap.Uint64("block_num", blockNum))
 				return
 			}
 
 			if traceEnabled {
-				zlog.Debug("hammer job completed", zap.String("job_type", jobType.(string)))
+				zlog.Debug("hammer job completed", zap.String("kind", jobKind.(string)))
 			}
 		}
 	}
 }
 
-func (c *ABIDecoder) decodeActionTrace(job *actionDecodingJob) error {
-	actionTrace := job.actionTrace
-
-	globalSequence := uint64(math.MaxUint64)
-	if actionTrace.Receipt != nil && actionTrace.Receipt.GlobalSequence != 0 {
-		globalSequence = actionTrace.Receipt.GlobalSequence
-	}
-
+func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint64, localCache *ABICache) error {
 	if traceEnabled {
-		zlog.Debug("abi decoding action trace", zap.Int("action_index", job.actionIndex), zap.Uint64("global_sequence", globalSequence))
+		zlog.Debug("abi decoding action", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 	}
 
-	action := actionTrace.Action
 	if len(action.RawData) <= 0 {
 		if traceEnabled {
-			zlog.Debug("skipping action since no hex data found", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
+			zlog.Debug("skipping action since no hex data found", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 		}
 		return nil
 	}
 
-	abi := c.findABI(action.Account, globalSequence, job.localCache)
+	abi := q.findABI(action.Account, globalSequence, localCache)
 	if abi == nil {
 		if traceEnabled {
-			zlog.Debug("skipping action since no ABI found for it", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
+			zlog.Debug("skipping action since no ABI found for it", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 		}
 		return nil
 	}
@@ -357,13 +417,13 @@ func (c *ABIDecoder) decodeActionTrace(job *actionDecodingJob) error {
 	actionDef := abi.ActionForName(eos.ActionName(action.Name))
 	if actionDef == nil {
 		if traceEnabled {
-			zlog.Debug("skipping action since action was not in ABI", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
+			zlog.Debug("skipping action since action was not in ABI", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 		}
 		return nil
 	}
 
 	if traceEnabled {
-		zlog.Debug("found ABI and action definition, performing decoding", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
+		zlog.Debug("found ABI and action definition, performing decoding", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 	}
 
 	decoder := eos.NewDecoder(action.RawData)
@@ -380,7 +440,7 @@ func (c *ABIDecoder) decodeActionTrace(job *actionDecodingJob) error {
 	return nil
 }
 
-func (c *ABIDecoder) findABI(contract string, globalSequence uint64, localCache *ABICache) *eos.ABI {
+func (q *decodingQueue) findABI(contract string, globalSequence uint64, localCache *ABICache) *eos.ABI {
 	if localCache != emptyCache {
 		localCache.RLock()
 		defer localCache.RUnlock()
@@ -391,8 +451,8 @@ func (c *ABIDecoder) findABI(contract string, globalSequence uint64, localCache 
 		}
 	}
 
-	c.cache.RLock()
-	defer c.cache.RUnlock()
+	q.globalCache.RLock()
+	defer q.globalCache.RUnlock()
 
-	return c.cache.findABI(contract, globalSequence)
+	return q.globalCache.findABI(contract, globalSequence)
 }

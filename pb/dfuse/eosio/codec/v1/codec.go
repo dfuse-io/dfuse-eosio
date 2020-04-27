@@ -232,11 +232,11 @@ func (a *ActionTrace) Account() string {
 }
 
 func (a *ActionTrace) SimpleName() string {
-	return a.Action.Account + ":" + a.Action.Name
+	return a.Action.SimpleName()
 }
 
 func (a *ActionTrace) FullName() string {
-	return a.Receiver + ":" + a.Action.Account + ":" + a.Action.Name
+	return a.Receiver + ":" + a.Action.SimpleName()
 }
 
 func (a *ActionTrace) GetData(gjsonPath string) gjson.Result {
@@ -251,6 +251,10 @@ func (a *ActionTrace) IsInput() bool {
 //
 /// Action
 //
+
+func (a *Action) SimpleName() string {
+	return a.Account + ":" + a.Name
+}
 
 func (a *Action) UnmarshalData(into interface{}) error {
 	return json.Unmarshal([]byte(a.JsonData), into)
