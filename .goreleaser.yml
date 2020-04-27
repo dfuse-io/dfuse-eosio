@@ -33,7 +33,7 @@ archives:
   - README.md
   - CHANGELOG.md
   - CONTRIBUTING.md
-  - INSTALL.md
+  - DEPENDENCIES.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
