@@ -22,6 +22,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var emptyCache *ABICache = nil
+
 type ABICache struct {
 	sync.RWMutex
 
@@ -69,8 +71,11 @@ func newABICache() *ABICache {
 //
 // If the invariant is not respected, an error is returned.
 func (c *ABICache) addABI(contract string, globalSequence uint64, abi *eos.ABI) error {
-	zlog.Debug("adding new abi", zap.String("account", contract), zap.Uint64("global_sequence", globalSequence))
+	if c == nil {
+		return nil
+	}
 
+	zlog.Debug("adding new abi", zap.String("account", contract), zap.Uint64("global_sequence", globalSequence))
 	contractOrdering, found := c.abisOrdering[contract]
 	if found && len(contractOrdering) > 0 && contractOrdering[len(contractOrdering)-1] > globalSequence {
 		return fmt.Errorf("abi is not sequential against latest ABI's global sequence, latest is %d and trying to add %d which is in the past", contractOrdering[len(contractOrdering)-1], globalSequence)
@@ -91,6 +96,10 @@ func (c *ABICache) addABI(contract string, globalSequence uint64, abi *eos.ABI) 
 // findABI for the given `contract` at which `globalSequence` was the most
 // recent active ABI.
 func (c *ABICache) findABI(contract string, globalSequence uint64) *eos.ABI {
+	if c == nil {
+		return nil
+	}
+
 	contractOrdering := c.abisOrdering[contract]
 	if len(contractOrdering) <= 0 {
 		return nil
@@ -109,6 +118,10 @@ func (c *ABICache) findABI(contract string, globalSequence uint64) *eos.ABI {
 }
 
 func (c *ABICache) truncateAfterOrEqualTo(globalSequence uint64) {
+	if c == nil {
+		return
+	}
+
 	startTime := time.Now()
 	removedCount := 0
 

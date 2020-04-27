@@ -2,6 +2,7 @@ package codec
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"regexp"
@@ -23,8 +24,9 @@ import (
 
 func TestABIDecoder(t *testing.T) {
 	type expectedTrace struct {
-		path      string
-		jsonValue string
+		path string
+		// If value is a hex string, it expects `rawData` to match it, otherwise, it expects `jsonData` to match it
+		value string
 	}
 
 	in := func(blocks ...*pbcodec.Block) []*pbcodec.Block {
@@ -37,6 +39,9 @@ func TestABIDecoder(t *testing.T) {
 	eosioTestABI2 := readABI(t, "test.2.abi.json")
 	eosioTestABI3 := readABI(t, "test.3.abi.json")
 	// eosioNekotABI1 := readABI(t, "nekot.1.abi.json")
+
+	softFailStatus := pbcodec.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL
+	hardFailStatus := pbcodec.TransactionStatus_TRANSACTIONSTATUS_HARDFAIL
 
 	tests := []struct {
 		name           string
@@ -76,7 +81,6 @@ func TestABIDecoder(t *testing.T) {
 				{"block 1/trace 0/action 0", `{"from":"test1"}`},
 			},
 		},
-
 		{
 			name: "set multiple times, within same transaction, two different blocks",
 			blocks: in(
@@ -99,7 +103,6 @@ func TestABIDecoder(t *testing.T) {
 				{"block 1/trace 0/action 0", `{"quantity":"1.0 EOS"}`},
 			},
 		},
-
 		{
 			name: "set multiple times, across transactions, two different blocks",
 			blocks: in(
@@ -120,7 +123,6 @@ func TestABIDecoder(t *testing.T) {
 				{"block 1/trace 0/action 0", `{"quantity":"1.0 EOS"}`},
 			},
 		},
-
 		{
 			name: "fork multiple block",
 			blocks: in(
@@ -150,12 +152,101 @@ func TestABIDecoder(t *testing.T) {
 				{"block 3/trace 1/action 0", `{"to":"transfer3"}`},
 			},
 		},
+		{
+			name: "fail transaction, does not save ABI",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, hardFailStatus, actionSetABI(t, "test", 1, eosioTestABI1)),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, action(t, "test:test:act1", 2, eosioTestABI1, `{"from":"test1"}`)),
+				),
+			),
+			expectedTraces: []expectedTrace{
+				{"block 1/trace 0/action 0", `000000008090b1ca`},
+			},
+		},
+		{
+			name: "fail transaction, still works from failed transaction but does not record ABI",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, actionSetABI(t, "test", 1, eosioTestABI1)),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, hardFailStatus,
+						action(t, "test:test:act1", 2, eosioTestABI1, `{"from":"test1"}`),
+						actionSetABI(t, "test", 3, eosioTestABI2),
+						action(t, "test:test:act2", 4, eosioTestABI2, `{"to":1}`),
+						action(t, "test:test:act2", 5, eosioTestABI2, `{"to":2}`),
+						actionSetABI(t, "test", 6, eosioTestABI3),
+						actionFail(t, "test:test:act3", eosioTestABI3, `{"quantity":"1.0000 EOS"}`),
+					),
+				),
+				testBlock(t, "00000004aa", "00000003aa",
+					trxTrace(t,
+						action(t, "test:test:act1", 2, eosioTestABI1, `{"from":"test3"}`),
+						// Let's assume there is a bunch of transaction in-between, so we test that no recording actually occurred!
+						action(t, "test:test:act1", 7, eosioTestABI1, `{"from":"test4"}`),
+					),
+				),
+			),
+			expectedTraces: []expectedTrace{
+				{"block 1/trace 0/action 0", `{"from":"test1"}`},
+				{"block 1/trace 0/action 2", `{"to":1}`},
+				{"block 1/trace 0/action 3", `{"to":2}`},
+				{"block 1/trace 0/action 5", `{"quantity":"1.0000 EOS"}`},
+				{"block 2/trace 0/action 0", `{"from":"test3"}`},
+				{"block 2/trace 0/action 1", `{"from":"test4"}`},
+			},
+		},
+
+		{
+			name: "soft_fail onerror, still records ABI",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, softFailStatus,
+						action(t, "eosio:eosio:onerror", 1, nil, ""),
+						actionSetABI(t, "test", 2, eosioTestABI2),
+						action(t, "test:test:act2", 3, eosioTestABI2, `{"to":1}`),
+						actionSetABI(t, "test", 4, eosioTestABI3),
+					),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, action(t, "test:test:act3", 5, eosioTestABI3, `{"quantity":"1.0000 EOS"}`)),
+				),
+			),
+			expectedTraces: []expectedTrace{
+				{"block 0/trace 0/action 2", `{"to":1}`},
+				{"block 1/trace 0/action 0", `{"quantity":"1.0000 EOS"}`},
+			},
+		},
+		{
+			name: "hard_fail onerror, still works from failed transaction but does not record ABI",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, hardFailStatus,
+						action(t, "eosio:eosio:onerror", 1, nil, ""),
+						actionSetABI(t, "test", 2, eosioTestABI2),
+						action(t, "test:test:act2", 3, eosioTestABI2, `{"to":1}`),
+						actionSetABI(t, "test", 4, eosioTestABI3),
+						actionFail(t, "any:any:any", nil, ""),
+					),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, action(t, "test:test:act3", 1, eosioTestABI3, `{"quantity":"1.0000 EOS"}`)),
+					// Let's assume there is a bunch of transaction in-between, so we test that no recording actually occurred!
+					trxTrace(t, action(t, "test:test:act3", 8, eosioTestABI3, `{"quantity":"2.0000 EOS"}`)),
+				),
+			),
+			expectedTraces: []expectedTrace{
+				{"block 0/trace 0/action 2", `{"to":1}`},
+				{"block 1/trace 0/action 0", `102700000000000004454f5300000000`},
+				{"block 1/trace 1/action 0", `204e00000000000004454f5300000000`},
+			},
+		},
 
 		// TODO: Add those tests
 		//        - ensures "hard-coded" system methods like `setabi`, `setcode` always work?
-		//        - transaction soft_fail, set abi works inside transaction, but not outside
-		//        - transaction soft_fail follow by success onerror correctly records ABI for next
-		//        - transaction soft_fail follow by failed onerror works inside transaction, but not outside
 	}
 
 	toString := func(in proto.Message) string {
@@ -165,7 +256,9 @@ func TestABIDecoder(t *testing.T) {
 		return out
 	}
 
+	hexRegex := regexp.MustCompile("^[0-9a-fA-F]+$")
 	pathRegex := regexp.MustCompile("block ([0-9]+)/trace ([0-9]+)/action ([0-9]+)")
+
 	toInt := func(in string) int {
 		out, err := strconv.ParseInt(in, 10, 32)
 		require.NoError(t, err)
@@ -178,6 +271,8 @@ func TestABIDecoder(t *testing.T) {
 			decoder := newABIDecoder()
 
 			for _, block := range test.blocks {
+				maybePrintBlock(t, block)
+
 				err := decoder.startBlock(context.Background(), block.Num())
 				require.NoError(t, err)
 
@@ -197,8 +292,13 @@ func TestABIDecoder(t *testing.T) {
 				trace := block.TransactionTraces[toInt(match[2])]
 				actionTrace := trace.ActionTraces[toInt(match[3])]
 
-				require.NotEmpty(t, actionTrace.Action.JsonData, toString(actionTrace))
-				assert.JSONEq(t, expect.jsonValue, actionTrace.Action.JsonData)
+				if hexRegex.MatchString(expect.value) {
+					require.Equal(t, expect.value, hex.EncodeToString(actionTrace.Action.RawData), toString(actionTrace))
+					require.Empty(t, actionTrace.Action.JsonData, toString(actionTrace))
+				} else {
+					require.NotEmpty(t, actionTrace.Action.JsonData, toString(actionTrace))
+					assert.JSONEq(t, expect.value, actionTrace.Action.JsonData)
+				}
 			}
 		})
 	}
@@ -232,22 +332,10 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, trxTraceJSONs .
 		Timestamp: blockTimestamp,
 	}
 
-	if os.Getenv("DEBUG") != "" {
-		marshaler := &jsonpb.Marshaler{}
-		out, err := marshaler.MarshalToString(pbblock)
-		require.NoError(t, err)
-
-		// We re-normalize to a plain map[string]interface{} so it's printed as JSON and not a proto default String implementation
-		normalizedOut := map[string]interface{}{}
-		require.NoError(t, json.Unmarshal([]byte(out), &normalizedOut))
-
-		zlog.Debug("created test block", zap.Any("block", normalizedOut))
-	}
-
 	return pbblock
 }
 
-func trxTrace(t *testing.T, elements ...proto.Message) string {
+func trxTrace(t *testing.T, elements ...interface{}) string {
 	trace := &pbcodec.TransactionTrace{
 		Receipt: &pbcodec.TransactionReceiptHeader{
 			Status: pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
@@ -262,6 +350,8 @@ func trxTrace(t *testing.T, elements ...proto.Message) string {
 			trace.DbOps = append(trace.DbOps, v)
 		case *pbcodec.TableOp:
 			trace.TableOps = append(trace.TableOps, v)
+		case pbcodec.TransactionStatus:
+			trace.Receipt.Status = v
 		}
 	}
 
@@ -277,8 +367,12 @@ func action(t *testing.T, tripletName string, globalSequence uint64, abi *eos.AB
 	account := parts[1]
 	actionName := parts[2]
 
-	rawData, err := abi.EncodeAction(eos.ActionName(actionName), []byte(data))
-	require.NoError(t, err)
+	var rawData []byte
+	if abi != nil && data != "" {
+		var err error
+		rawData, err = abi.EncodeAction(eos.ActionName(actionName), []byte(data))
+		require.NoError(t, err)
+	}
 
 	return &pbcodec.ActionTrace{
 		Receiver: receiver,
@@ -292,6 +386,13 @@ func action(t *testing.T, tripletName string, globalSequence uint64, abi *eos.AB
 			RawData: rawData,
 		},
 	}
+}
+
+func actionFail(t *testing.T, tripletName string, abi *eos.ABI, data string) *pbcodec.ActionTrace {
+	actionTrace := action(t, tripletName, 0, abi, data)
+	actionTrace.Receipt = nil
+
+	return actionTrace
 }
 
 func actionSetABI(t *testing.T, account string, globalSequence uint64, abi *eos.ABI) *pbcodec.ActionTrace {
@@ -314,4 +415,20 @@ func actionSetABI(t *testing.T, account string, globalSequence uint64, abi *eos.
 			RawData: rawData,
 		},
 	}
+}
+
+func maybePrintBlock(t *testing.T, block *pbcodec.Block) {
+	if os.Getenv("DEBUG") == "" && os.Getenv("TRACE") != "true" {
+		return
+	}
+
+	marshaler := &jsonpb.Marshaler{}
+	out, err := marshaler.MarshalToString(block)
+	require.NoError(t, err)
+
+	// We re-normalize to a plain map[string]interface{} so it's printed as JSON and not a proto default String implementation
+	normalizedOut := map[string]interface{}{}
+	require.NoError(t, json.Unmarshal([]byte(out), &normalizedOut))
+
+	zlog.Debug("processing test block", zap.Any("block", normalizedOut))
 }

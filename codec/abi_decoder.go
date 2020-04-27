@@ -73,8 +73,9 @@ type ABIDecoder struct {
 }
 
 type actionDecodingJob struct {
-	action *pbcodec.ActionTrace
-	index  int
+	actionTrace *pbcodec.ActionTrace
+	actionIndex int
+	localCache  *ABICache
 }
 
 func newABIDecoder() *ABIDecoder {
@@ -153,14 +154,34 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 		}
 	}
 
-	if err := c.addABIsFromTransaction(trxTrace); err != nil {
-		return fmt.Errorf("unable to update abis from transaction: %w", err)
+	abiOperations, err := c.extractABIOperations(trxTrace)
+	if err != nil {
+		return fmt.Errorf("unable to extract abis: %w", err)
+	}
+
+	// We only commit ABIs if the transaction was recored in the blockchain, failure is handled locally
+	if len(abiOperations) > 0 && !trxTrace.HasBeenReverted() {
+		if err := c.commitABIs(trxTrace.Id, abiOperations); err != nil {
+			return fmt.Errorf("unable to commit abis: %w", err)
+		}
+	}
+
+	// When a transaction fails, the ABIs cannot be committed since they were not recorded in the
+	// blockchain. Instead, we build a local cache that will be passed to each decoding job.
+	// The decoder will then lookup the local cache prior the global one to search for the correct
+	// ABI.
+	localCache := emptyCache
+	if len(abiOperations) > 0 && trxTrace.HasBeenReverted() {
+		localCache, err = c.createLocalABICache(trxTrace.Id, abiOperations)
+		if err != nil {
+			return fmt.Errorf("unable to create local abi cache: %w", err)
+		}
 	}
 
 	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
 	c.hammerFeederWg.Add(1)
 	go func() {
-		zlog.Debug("abi decoding transaction traces", zap.Uint64("block_num", c.activeBlockNum), zap.String("id", trxTrace.Id))
+		zlog.Debug("abi decoding of transaction", zap.Uint64("block_num", c.activeBlockNum), zap.String("id", trxTrace.Id))
 		defer c.hammerFeederWg.Done()
 
 		// FIXME: Optimization: We could optimize notification inside a transaction. We could have a two-pass algorithm.
@@ -177,7 +198,7 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 				zlog.Debug("adding action decoding job", zap.Int("action_index", i))
 			}
 
-			c.hammer.In <- actionDecodingJob{actionTrace, i}
+			c.hammer.In <- actionDecodingJob{actionTrace, i, localCache}
 		}
 	}()
 
@@ -202,33 +223,40 @@ type abiOperation struct {
 	abi            *eos.ABI
 }
 
-func (c *ABIDecoder) addABIsFromTransaction(trxTrace *pbcodec.TransactionTrace) error {
-	zlog.Debug("adding abis from transaction", zap.String("id", trxTrace.Id), zap.Uint64("block_num", c.activeBlockNum))
+func (c *ABIDecoder) commitABIs(trxID string, operations []abiOperation) error {
+	zlog.Debug("updating cache with abis from transaction", zap.String("id", trxID), zap.Uint64("block_num", c.activeBlockNum), zap.Int("abi_count", len(operations)))
+	c.cache.Lock()
+	defer c.cache.Unlock()
 
-	if trxTrace.HasBeenReverted() {
-		zlog.Debug("skipping transaction since it was reverted")
-		return nil
+	for _, operation := range operations {
+		if err := c.cache.addABI(operation.account, operation.globalSequence, operation.abi); err != nil {
+			return fmt.Errorf("failed to add ABI in action trace at index %d in transaction %s: %w", operation.actionIndex, trxID, err)
+		}
 	}
 
-	// FIXME: Add support for failed_dtrx_trace, think about the correct meaning. Answers the
-	//        following questions/use cases:
-	//        - Assumes dtrx that fails with 3 actions in it. Action@450 (setabi) Action@451 (data with new ABI) Action@0 (fails)
-	//          We are currently building the full cache for the block, does it mean we cannot do it? Maybe we should only accumulated
-	//          committed block state and for failure causes, we resolve in the transaction trace it self?.
-	//        - Think and test weird case that a `eosio:setabi` is called in a successufl `onerror` handler.
-	//
-	//        One important thing to note, the failed deferred transaction will always be followed by
-	//        an `onerror` handler. Both could be in failure state. In the original failure, no abi should be
-	//        comitted and we need to deal with the setabi only within the transaction. While in the onerror,
-	//        it could have committed some `setabi`.
+	return nil
+}
 
-	var abiOperations []abiOperation
+func (c *ABIDecoder) createLocalABICache(trxID string, operations []abiOperation) (*ABICache, error) {
+	zlog.Debug("creating local abi cache from transaction", zap.String("id", trxID), zap.Uint64("block_num", c.activeBlockNum))
+
+	abiCache := newABICache()
+	for _, operation := range operations {
+		if err := abiCache.addABI(operation.account, operation.globalSequence, operation.abi); err != nil {
+			return nil, fmt.Errorf("failed to add local ABI in action trace at index %d in transaction %s: %w", operation.actionIndex, trxID, err)
+		}
+	}
+
+	return abiCache, nil
+}
+
+func (c *ABIDecoder) extractABIOperations(trxTrace *pbcodec.TransactionTrace) (out []abiOperation, err error) {
 	for i, actionTrace := range trxTrace.ActionTraces {
 		if actionTrace.FullName() == "eosio:eosio:setabi" {
 			setABI := &system.SetABI{}
 			err := eos.UnmarshalBinary(actionTrace.Action.RawData, setABI)
 			if err != nil {
-				return fmt.Errorf("unable to read action trace 'setabi' at index %d in transaction %s: %w", i, trxTrace.Id, err)
+				return nil, fmt.Errorf("unable to read action trace 'setabi' at index %d in transaction %s: %w", i, trxTrace.Id, err)
 			}
 
 			// All sort of garbage can be in this field, skip if we cannot properly decode to an eos.ABI object
@@ -240,25 +268,11 @@ func (c *ABIDecoder) addABIsFromTransaction(trxTrace *pbcodec.TransactionTrace) 
 			}
 
 			fmt.Printf("actiontrace not nil %t, receipt %t\n", actionTrace != nil, actionTrace.Receipt != nil)
-			abiOperations = append(abiOperations, abiOperation{string(setABI.Account), i, actionTrace.Receipt.GlobalSequence, abi})
+			out = append(out, abiOperation{string(setABI.Account), i, actionTrace.Receipt.GlobalSequence, abi})
 		}
 	}
 
-	if len(abiOperations) <= 0 {
-		return nil
-	}
-
-	zlog.Debug("updating cache with abis from transaction", zap.String("id", trxTrace.Id), zap.Uint64("block_num", c.activeBlockNum))
-	c.cache.Lock()
-	defer c.cache.Unlock()
-
-	for _, operation := range abiOperations {
-		if err := c.cache.addABI(operation.account, operation.globalSequence, operation.abi); err != nil {
-			return fmt.Errorf("failed to add ABI in action trace at index %d in transaction %s: %w", operation.actionIndex, trxTrace.Id, err)
-		}
-	}
-
-	return nil
+	return out, nil
 }
 
 func (c *ABIDecoder) truncateCache(truncateAt uint64) {
@@ -284,7 +298,7 @@ func (c *ABIDecoder) executeDecodingJob(ctx context.Context, batch []interface{}
 
 	switch v := batch[0].(type) {
 	case actionDecodingJob:
-		return actionJobTypeResult, c.decodeActionTrace(v.action, v.index)
+		return actionJobTypeResult, c.decodeActionTrace(&v)
 	}
 
 	return nil, fmt.Errorf("unknown decoding job type %T", batch[0])
@@ -312,14 +326,16 @@ func (c *ABIDecoder) consumeCompletedDecodingJob(blockNum uint64) {
 	}
 }
 
-func (c *ABIDecoder) decodeActionTrace(actionTrace *pbcodec.ActionTrace, actionIndex int) error {
+func (c *ABIDecoder) decodeActionTrace(job *actionDecodingJob) error {
+	actionTrace := job.actionTrace
+
 	globalSequence := uint64(math.MaxUint64)
 	if actionTrace.Receipt != nil && actionTrace.Receipt.GlobalSequence != 0 {
 		globalSequence = actionTrace.Receipt.GlobalSequence
 	}
 
 	if traceEnabled {
-		zlog.Debug("abi decoding action trace", zap.Int("action_index", actionIndex), zap.Uint64("global_sequence", globalSequence))
+		zlog.Debug("abi decoding action trace", zap.Int("action_index", job.actionIndex), zap.Uint64("global_sequence", globalSequence))
 	}
 
 	action := actionTrace.Action
@@ -330,10 +346,7 @@ func (c *ABIDecoder) decodeActionTrace(actionTrace *pbcodec.ActionTrace, actionI
 		return nil
 	}
 
-	c.cache.RLock()
-	defer c.cache.RUnlock()
-
-	abi := c.cache.findABI(action.Account, globalSequence)
+	abi := c.findABI(action.Account, globalSequence, job.localCache)
 	if abi == nil {
 		if traceEnabled {
 			zlog.Debug("skipping action since no ABI found for it", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
@@ -349,6 +362,10 @@ func (c *ABIDecoder) decodeActionTrace(actionTrace *pbcodec.ActionTrace, actionI
 		return nil
 	}
 
+	if traceEnabled {
+		zlog.Debug("found ABI and action definition, performing decoding", zap.String("action", action.Account+":"+action.Name), zap.Uint64("global_sequence", globalSequence))
+	}
+
 	decoder := eos.NewDecoder(action.RawData)
 	jsonData, err := abi.Decode(decoder, actionDef.Type)
 	if err != nil {
@@ -361,4 +378,21 @@ func (c *ABIDecoder) decodeActionTrace(actionTrace *pbcodec.ActionTrace, actionI
 	action.RawData = nil
 
 	return nil
+}
+
+func (c *ABIDecoder) findABI(contract string, globalSequence uint64, localCache *ABICache) *eos.ABI {
+	if localCache != emptyCache {
+		localCache.RLock()
+		defer localCache.RUnlock()
+
+		abi := localCache.findABI(contract, globalSequence)
+		if abi != nil {
+			return abi
+		}
+	}
+
+	c.cache.RLock()
+	defer c.cache.RUnlock()
+
+	return c.cache.findABI(contract, globalSequence)
 }
