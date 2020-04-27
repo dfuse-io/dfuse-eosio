@@ -62,27 +62,30 @@ This will install the binary in your `$GOPATH/bin` folder (normally
 
 ### Usage
 
-Initialize a new `dfuse.yaml` config file (answer 'y' for a quick start) with:
+1. Initialize a few configuration files in your working directory (`dfuse.yaml`, `mindreader/config.ini`, ...)
 
-    dfuseeos init
+```
+dfuseeos init
+```
 
-The created file will contain the private and public keys generated
-for the booted chain.
+2. Boot your instance with:
 
-Boot your instance with:
+```
+dfuseeos start
+```
 
-    dfuseeos start
+3. A terminal prompt will list the graphical interfaces with their relevant links:
 
-If you answered 'y', this will boot a producer node, a reader node,
-both communicating together, boot all dfuse services and expose a
-dashboard and all the APIs.
+```
+Dashboard: http://localhost:8081
+Explorer & APIs:  http://localhost:8080
+GraphiQL:         http://localhost:8080/graphiql
+```
 
-A terminal prompt will list the graphical interfaces with their relevant links:
+  * If dfuse is starting a new chain, two nodeos instances should now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
+  * If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
 
-    Dashboard: http://localhost:8081
-    Explorer & APIs:  http://localhost:8080
-    GraphiQL:         http://localhost:8080/graphiql
-
+4. If you chose to have dfuse create a new chain for you, see [bootstrapping](./bootstrapping) for info on creating the initial accounts and interacting with the chain
 
 ## Overview
 
