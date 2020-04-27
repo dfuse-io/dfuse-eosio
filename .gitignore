@@ -7,7 +7,7 @@
 /dfuse
 dashboard/client/.npmrc
 .DS_Store
-/tools/output.log
+/bootstrapping/output.log
 /dfuse.yaml
 /dfuse-data
 #rice-box.go temporarily disable this, ideally we would not commit the rice-box... but until we have a better solution
