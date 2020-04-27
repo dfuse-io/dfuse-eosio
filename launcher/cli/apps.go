@@ -328,9 +328,6 @@ to find how to install it.`)
 			cmd.Flags().String("merger-seen-blocks-file", "{dfuse-data-dir}/merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
 			cmd.Flags().Uint64("merger-max-fixable-fork", 10000, "after that number of blocks, a block belonging to another fork will be discarded (DELETED depending on flagDeleteBlocksBefore) instead of being inserted in last bundle")
 			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of one-block files when prior to the currently processed bundle (to avoid long file listings)")
-
-			cmd.Flags().Bool("merger-enable-readiness-probe", true, "Enables an internal readiness probe that can be access via the App Pattern")
-
 			return nil
 		},
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
