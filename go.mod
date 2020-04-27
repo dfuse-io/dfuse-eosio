@@ -33,7 +33,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200415145138-10866173305f
+	github.com/dfuse-io/kvdb v0.0.0-20200424185846-7c443ace0291
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
 	github.com/dfuse-io/manageos v0.0.0-20200426195254-45c23fd7e97f
 	github.com/dfuse-io/merger v0.0.0-20200422205004-c6c814e2004b
