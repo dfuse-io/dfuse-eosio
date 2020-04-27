@@ -103,7 +103,7 @@ export const SideMenu: React.FC = () => {
         </Menu.Item>
         <Menu.Item key="eosqElese">
           {/* TODO: Must come from some config provided by the server */}
-          <a href="http://localhost:8081" target="_blank" rel="noopener noreferrer">
+          <a href="http://localhost:8080" target="_blank" rel="noopener noreferrer">
             <IconWrapper>
               <FontAwesomeIcon icon={faSearch} />
             </IconWrapper>
