@@ -85,6 +85,10 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		if err = ioutil.WriteFile("./producer/genesis.json", []byte(localGenesisJSON), 0644); err != nil {
 			return fmt.Errorf("writing ./producer/genesis.json file: %s", err)
 		}
+		userLog.Printf("Writing './mindreader/genesis.json'...")
+		if err = ioutil.WriteFile("./mindreader/genesis.json", []byte(localGenesisJSON), 0644); err != nil {
+			return fmt.Errorf("writing ./mindreader/genesis.json file: %s", err)
+		}
 	} else {
 		peers, err := askPeers()
 		if err != nil {

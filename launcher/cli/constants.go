@@ -6,14 +6,14 @@ import (
 
 const (
 	Protocol              pbbstream.Protocol = pbbstream.Protocol_EOS
-	BlockmetaDSN          string             = "badger://{datadir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by data-dir
-	KVDBDSN               string             = "badger://{datadir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by `<data-dir>`
-	FluxDSN               string             = "badger://{datadir}/fluxdb/flux.db"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
-	MergedBlocksFilesPath string             = "{datadir}/storage/merged-blocks"
-	IndicesFilePath       string             = "{datadir}/storage/indexes"
-	OneBlockFilesPath     string             = "{datadir}/storage/one-blocks"
-	PitreosPath           string             = "{datadir}/storage/pitreos"
-	SnapshotsPath         string             = "{datadir}/storage/snapshots"
+	BlockmetaDSN          string             = "badger://{dfuse-data-dir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by data-dir
+	KVDBDSN               string             = "badger://{dfuse-data-dir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by `<data-dir>`
+	FluxDSN               string             = "badger://{dfuse-data-dir}/fluxdb/flux.db"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
+	MergedBlocksFilesPath string             = "{dfuse-data-dir}/storage/merged-blocks"
+	IndicesFilePath       string             = "{dfuse-data-dir}/storage/indexes"
+	OneBlockFilesPath     string             = "{dfuse-data-dir}/storage/one-blocks"
+	PitreosPath           string             = "{dfuse-data-dir}/storage/pitreos"
+	SnapshotsPath         string             = "{dfuse-data-dir}/storage/snapshots"
 	DmeshServiceVersion   string             = "v1"
 	DmeshNamespace        string             = "local"
 	NetworkID             string             = "eos-local"

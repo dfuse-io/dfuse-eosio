@@ -41,10 +41,19 @@ development chain by also managing the block producing node for you.
 
 #### From source
 
+Build requirements:
+* `Go` 1.13 or higher
+* `Node.js` 12 or higher, `yarn`
+
 ```
-# The minimum required Go version is 1.13
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
+pushd dashboard/client
+  yarn install && yarn build
+popd
+pushd eosq
+  yarn install && yarn build
+popd
 go install -v ./cmd/dfuseeos
 ```
 
@@ -70,28 +79,9 @@ dashboard and all the APIs.
 
 A terminal prompt will list the graphical interfaces with their relevant links:
 
-    Dashboard: http://localhost:8080
-    GraphiQL: http://localhost:13019
-    Eosq: http://localhost:8081
-
-The **Dashboard** is a diagnostic tool to monitor the status of each
-component of dfuse for EOSIO. It also provides a graph to visualize how far
-their head block has drifted from the current block.
-
-To run the dashboard in dev mode:
-
-    cd dashboard/client
-    yarn install
-    yarn start
-
-Head to the **GraphiQL** interface, and do a streaming search of
-what's happening on chain! All dfuse GraphQL queries are available here.
-
-**Eosq**, our high precision block explorer is also integrated in box.
-Use it to test out search queries and view organized information
-such as accounts, transaction data, and inline actions.
-The built javascript folder is committed with the code for convenience.
-See [eosq README](eosq/README.md) for build instructions
+    Dashboard: http://localhost:8081
+    Explorer & APIs:  http://localhost:8080
+    GraphiQL:         http://localhost:8080/graphiql
 
 
 ## Overview

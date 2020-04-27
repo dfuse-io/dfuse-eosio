@@ -63,15 +63,15 @@ func init() {
 		ID:          "node-manager",
 		Title:       "Node manager",
 		Description: "Block producing node",
-		MetricsID:   "manager",
+		MetricsID:   "producer",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
 			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address of managed nodeos")
 			cmd.Flags().Bool("node-manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
-			cmd.Flags().String("node-manager-config-dir", "./producer/config", "Directory for config files")
+			cmd.Flags().String("node-manager-config-dir", "./producer", "Directory for config files")
 			cmd.Flags().String("node-manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("node-manager-data-dir", "{datadir}/node-manager/data", "Directory for data (nodeos blocks and state)")
+			cmd.Flags().String("node-manager-data-dir", "{dfuse-data-dir}/node-manager/data", "Directory for data (nodeos blocks and state)")
 			cmd.Flags().String("node-manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("node-manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("node-manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
@@ -107,26 +107,31 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			return nodeosManagerApp.New(&nodeosManagerApp.Config{
-				ManagerAPIAddress:       viper.GetString("node-manager-api-addr"),
+				MetricID:                "producer",
+				ManagerAPIAddress:       viper.GetString("node-manager-http-listen-addr"),
 				NodeosAPIAddress:        viper.GetString("node-manager-nodeos-api-addr"),
 				ConnectionWatchdog:      viper.GetBool("node-manager-connection-watchdog"),
 				NodeosConfigDir:         viper.GetString("node-manager-config-dir"),
 				NodeosBinPath:           viper.GetString("node-manager-nodeos-path"),
-				NodeosDataDir:           replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("node-manager-data-dir")),
+				NodeosDataDir:           replaceDataDir(dfuseDataDir, viper.GetString("node-manager-data-dir")),
 				ProducerHostname:        viper.GetString("node-manager-producer-hostname"),
 				TrustedProducer:         viper.GetString("node-manager-trusted-producer"),
 				ReadinessMaxLatency:     viper.GetDuration("node-manager-readiness-max-latency"),
 				ForceProduction:         viper.GetBool("node-manager-force-production"),
 				NodeosExtraArgs:         viper.GetStringSlice("node-manager-nodeos-args"),
-				BackupStoreURL:          replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("node-manager-backup-store-url")),
+				BackupStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("node-manager-backup-store-url")),
 				BootstrapDataURL:        viper.GetString("node-manager-bootstrap-data-url"),
 				DebugDeepMind:           viper.GetBool("node-manager-debug-deep-mind"),
 				LogToZap:                viper.GetBool("node-manager-log-to-zap"),
 				AutoRestoreLatest:       viper.GetBool("node-manager-auto-restore"),
 				RestoreBackupName:       viper.GetString("node-manager-restore-backup-name"),
 				RestoreSnapshotName:     viper.GetString("node-manager-restore-snapshot-name"),
-				SnapshotStoreURL:        replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("node-manager-snapshot-store-url")),
+				SnapshotStoreURL:        replaceDataDir(dfuseDataDir, viper.GetString("node-manager-snapshot-store-url")),
 				ShutdownDelay:           viper.GetDuration("node-manager-shutdown-delay"),
 				BackupTag:               viper.GetString("node-manager-backup-tag"),
 				AutoBackupModulo:        viper.GetInt("node-manager-auto-backup-modulo"),
@@ -146,15 +151,15 @@ func init() {
 		ID:          "mindreader",
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
-		MetricsID:   "manager",
+		MetricsID:   "mindreader",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", NodeosAPIAddr, "Target API address")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
-			cmd.Flags().String("mindreader-config-dir", "./mindreader/config", "Directory for config files. ")
+			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
 			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("mindreader-data-dir", "{datadir}/mindreader/data", "Directory for data (nodeos blocks and state)")
+			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (nodeos blocks and state)")
 			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
@@ -162,7 +167,7 @@ func init() {
 			cmd.Flags().String("mindreader-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-oneblock-store-url", OneBlockFilesPath, "Storage bucket with path prefix to write one-block file to")
-			cmd.Flags().String("mindreader-working-dir", "{datadir}/mindreader", "Path where mindreader will stores its files")
+			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
@@ -188,9 +193,13 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			archiveStoreURL := replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-oneblock-store-url"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			archiveStoreURL := replaceDataDir(dfuseDataDir, viper.GetString("mindreader-oneblock-store-url"))
 			if viper.GetBool("mindreader-merge-and-upload-directly") {
-				archiveStoreURL = replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-merged-blocks-store-url"))
+				archiveStoreURL = replaceDataDir(dfuseDataDir, viper.GetString("mindreader-merged-blocks-store-url"))
 			}
 
 			var startUpFunc func()
@@ -223,17 +232,18 @@ to find how to install it.`)
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
+				MetricID:                   "mindreader",
 				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
 				NodeosAPIAddress:           viper.GetString("mindreader-nodeos-api-addr"),
 				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
 				NodeosConfigDir:            viper.GetString("mindreader-config-dir"),
 				NodeosBinPath:              viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:              replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-data-dir")),
+				NodeosDataDir:              replaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
 				ProducerHostname:           viper.GetString("mindreader-producer-hostname"),
 				TrustedProducer:            viper.GetString("mindreader-trusted-producer"),
 				ReadinessMaxLatency:        viper.GetDuration("mindreader-readiness-max-latency"),
 				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:             replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-backup-store-url")),
+				BackupStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("mindreader-backup-store-url")),
 				BackupTag:                  viper.GetString("mindreader-backup-tag"),
 				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
@@ -241,7 +251,7 @@ to find how to install it.`)
 				AutoRestoreLatest:          viper.GetBool("mindreader-auto-restore"),
 				RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
 				RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
-				SnapshotStoreURL:           replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-snapshot-store-url")),
+				SnapshotStoreURL:           replaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
 				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
 				ArchiveStoreURL:            archiveStoreURL,
 				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-upload-directly"),
@@ -249,7 +259,7 @@ to find how to install it.`)
 				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
 				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
 				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
-				WorkingDir:                 replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("mindreader-working-dir")),
+				WorkingDir:                 replaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
 				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
 				StartFailureHandlerFunc:    startUpFunc,
 			}, &nodeosMindreaderApp.Modules{
@@ -279,6 +289,10 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:      viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:   viper.GetString("relayer-grpc-listen-addr"),
@@ -288,7 +302,7 @@ to find how to install it.`)
 				MaxSourceLatency: viper.GetDuration("relayer-max-source-latency"),
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
-				SourceStoreURL:   replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("relayer-blocks-store")),
+				SourceStoreURL:   replaceDataDir(dfuseDataDir, viper.GetString("relayer-blocks-store")),
 			}), nil
 		},
 	})
@@ -311,7 +325,7 @@ to find how to install it.`)
 			cmd.Flags().String("merger-progress-filename", "", "FOR REPROCESSING: If non-empty, will update progress in this file and start right there on restart")
 			cmd.Flags().Uint64("merger-minimal-block-num", 0, "FOR LIVE: Set the minimal block number where we should start looking at the destination storage to figure out where to start")
 			cmd.Flags().Duration("merger-writers-leeway", 10*time.Second, "how long we wait after seeing the upper boundary, to ensure that we get as many blocks as possible in a bundle")
-			cmd.Flags().String("merger-seen-blocks-file", "{datadir}/merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
+			cmd.Flags().String("merger-seen-blocks-file", "{dfuse-data-dir}/merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
 			cmd.Flags().Uint64("merger-max-fixable-fork", 10000, "after that number of blocks, a block belonging to another fork will be discarded (DELETED depending on flagDeleteBlocksBefore) instead of being inserted in last bundle")
 			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of one-block files when prior to the currently processed bundle (to avoid long file listings)")
 
@@ -323,17 +337,21 @@ to find how to install it.`)
 		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
 		//        init flow and call init after the factory and giving it the instantiated app...
 		InitFunc: func(modules *launcher.RuntimeModules) error {
-			err := mkdirStorePathIfLocal(replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return err
+			}
+			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("merger-merged-block-path")))
 			if err != nil {
 				return err
 			}
 
-			err = mkdirStorePathIfLocal(replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")))
+			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("merger-one-block-path")))
 			if err != nil {
 				return err
 			}
 
-			err = mkdirStorePathIfLocal(replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")))
+			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("merger-seen-blocks-file")))
 			if err != nil {
 				return err
 			}
@@ -341,9 +359,13 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			return mergerApp.New(&mergerApp.Config{
-				StorageMergedBlocksFilesPath: replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-merged-block-path")),
-				StorageOneBlockFilesPath:     replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-one-block-path")),
+				StorageMergedBlocksFilesPath: replaceDataDir(dfuseDataDir, viper.GetString("merger-merged-block-path")),
+				StorageOneBlockFilesPath:     replaceDataDir(dfuseDataDir, viper.GetString("merger-one-block-path")),
 				StoreOperationTimeout:        viper.GetDuration("merger-store-timeout"),
 				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
 				GRPCListenAddr:               viper.GetString("merger-grpc-listen-addr"),
@@ -353,7 +375,7 @@ to find how to install it.`)
 				ProgressFilename:             viper.GetString("merger-progress-filename"),
 				MinimalBlockNum:              viper.GetUint64("merger-minimal-block-num"),
 				WritersLeewayDuration:        viper.GetDuration("merger-writers-leeway"),
-				SeenBlocksFile:               replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("merger-seen-blocks-file")),
+				SeenBlocksFile:               replaceDataDir(dfuseDataDir, viper.GetString("merger-seen-blocks-file")),
 				MaxFixableFork:               viper.GetUint64("merger-max-fixable-fork"),
 				DeleteBlocksBefore:           viper.GetBool("merger-delete-blocks-before"),
 			}), nil
@@ -379,10 +401,18 @@ to find how to install it.`)
 			return nil
 		},
 		InitFunc: func(modules *launcher.RuntimeModules) error {
-			return mkdirStorePathIfLocal(replaceDataDir(viper.GetString("global-data-dir"), "fluxdb"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return err
+			}
+			return mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, "fluxdb"))
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			absDataDir, err := filepath.Abs(dfuseDataDir)
 			if err != nil {
 				return nil, err
 			}
@@ -392,7 +422,7 @@ to find how to install it.`)
 				StoreDSN:           replaceDataDir(absDataDir, viper.GetString("fluxdb-kvdb-store-dsn")),
 				EnableLivePipeline: viper.GetBool("fluxdb-live"),
 				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
-				BlockStoreURL:      replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("fluxdb-blocks-store")),
+				BlockStoreURL:      replaceDataDir(dfuseDataDir, viper.GetString("fluxdb-blocks-store")),
 				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
 				ThreadsNum:         viper.GetInt("fluxdb-max-threads"),
 				HTTPListenAddr:     viper.GetString("fluxdb-http-listen-addr"),
@@ -422,10 +452,18 @@ to find how to install it.`)
 			return nil
 		},
 		InitFunc: func(modules *launcher.RuntimeModules) error {
-			return mkdirStorePathIfLocal(replaceDataDir(viper.GetString("global-data-dir"), "kvdb"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return err
+			}
+			return mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, "kvdb"))
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			absDataDir, err := filepath.Abs(dfuseDataDir)
 			if err != nil {
 				return nil, err
 			}
@@ -433,7 +471,7 @@ to find how to install it.`)
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
 				ChainId:                   viper.GetString("chain-id"),
 				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
-				BlockStoreURL:             replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("kvdb-loader-blocks-store")),
+				BlockStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("kvdb-loader-blocks-store")),
 				KvdbDsn:                   replaceDataDir(absDataDir, viper.GetString("kvdb-loader-kvdb-dsn")),
 				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
 				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
@@ -466,12 +504,12 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
 			}
 
-			eosDBClient, err := eosdb.New(replaceDataDir(absDataDir, viper.GetString("blockmeta-kvdb-dsn")))
+			eosDBClient, err := eosdb.New(replaceDataDir(dfuseDataDir, viper.GetString("blockmeta-kvdb-dsn")))
 			if err != nil {
 				return nil, err
 			}
@@ -485,7 +523,7 @@ to find how to install it.`)
 				Protocol:                Protocol,
 				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
 				GRPCListenAddr:          viper.GetString("blockmeta-grpc-listen-addr"),
-				BlocksStoreURL:          replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("blockmeta-blocks-store")),
+				BlocksStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("blockmeta-blocks-store")),
 				LiveSource:              viper.GetBool("blockmeta-live-source"),
 				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
@@ -505,14 +543,18 @@ to find how to install it.`)
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
-			cmd.Flags().String("abicodec-cache-base-url", "{datadir}/storage/abicahe", "path where the cache store is state")
+			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
 
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			absDataDir, err := filepath.Abs(dfuseDataDir)
 			if err != nil {
 				return nil, err
 			}
@@ -522,7 +564,7 @@ to find how to install it.`)
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
 				KvdbDSN:              replaceDataDir(absDataDir, viper.GetString("abicodec-kvdb-dsn")),
 				ExportCache:          viper.GetBool("abicodec-export-cache"),
-				CacheBaseURL:         replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("abicodec-cache-base-url")),
+				CacheBaseURL:         replaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
 				EnableReadinessProbe: true,
 			}), nil
@@ -550,12 +592,16 @@ to find how to install it.`)
 			cmd.Flags().Bool("search-indexer-verbose", false, "Verbose logging")
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
-			cmd.Flags().String("search-indexer-writable-path", "{datadir}/search/indexer", "Writable base path for storing index files")
+			cmd.Flags().String("search-indexer-writable-path", "{dfuse-data-dir}/search/indexer", "Writable base path for storing index files")
 			cmd.Flags().String("search-indexer-indices-store", IndicesFilePath, "Indices path to read or write index shards")
 			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-hooks-action-name"),
 				viper.GetString("search-common-action-filter-on-expr"),
@@ -579,9 +625,9 @@ to find how to install it.`)
 				EnableUpload:                        viper.GetBool("search-indexer-enable-upload"),
 				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
-				WritablePath:                        replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-indexer-writable-path")),
-				IndicesStoreURL:                     replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-indexer-indices-store")),
-				BlocksStoreURL:                      replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-indexer-blocks-store")),
+				WritablePath:                        replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-writable-path")),
+				IndicesStoreURL:                     replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-indices-store")),
+				BlocksStoreURL:                      replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-blocks-store")),
 			}, &indexerApp.Modules{
 				BlockMapper: mapper,
 			}), nil
@@ -651,10 +697,14 @@ to find how to install it.`)
 			cmd.Flags().Duration("search-archive-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().String("search-archive-warmup-filepath", "", "Optional filename containing queries to warm-up the search")
 			cmd.Flags().String("search-archive-indices-store", IndicesFilePath, "GS path to read or write index shards")
-			cmd.Flags().String("search-archive-writable-path", "{datadir}/search/archiver", "Writable base path for storing index files")
+			cmd.Flags().String("search-archive-writable-path", "{dfuse-data-dir}/search/archiver", "Writable base path for storing index files")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			return archiveApp.New(&archiveApp.Config{
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
@@ -674,8 +724,8 @@ to find how to install it.`)
 				NumQueryThreads:         viper.GetInt("search-archive-max-query-threads"),
 				ShutdownDelay:           viper.GetDuration("search-archive-shutdown-delay"),
 				WarmupFilepath:          viper.GetString("search-archive-warmup-filepath"),
-				IndexesStoreURL:         replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-archive-indices-store")),
-				IndexesPath:             replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-archive-writable-path")),
+				IndexesStoreURL:         replaceDataDir(dfuseDataDir, viper.GetString("search-archive-indices-store")),
+				IndexesPath:             replaceDataDir(dfuseDataDir, viper.GetString("search-archive-writable-path")),
 			}, &archiveApp.Modules{
 				Dmesh: modules.SearchDmeshClient,
 			}), nil
@@ -692,7 +742,7 @@ to find how to install it.`)
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-live-block-stream-addr", RelayerServingAddr, "gRPC Address to reach a stream of blocks")
-			cmd.Flags().String("search-live-live-indices-path", "{datadir}/search/live", "Location for live indexes (ideally a ramdisk)")
+			cmd.Flags().String("search-live-live-indices-path", "{dfuse-data-dir}/search/live", "Location for live indexes (ideally a ramdisk)")
 			cmd.Flags().Int("search-live-truncation-threshold", 1, "number of available dmesh peers that should serve irreversible blocks before we truncate them from this backend's memory")
 			cmd.Flags().Duration("search-live-realtime-tolerance", 1*time.Minute, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
@@ -703,6 +753,10 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-hooks-action-name"),
 				viper.GetString("search-common-action-filter-on-expr"),
@@ -716,8 +770,8 @@ to find how to install it.`)
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
 				BlockmetaAddr:            viper.GetString("search-live-blockmeta-addr"),
-				LiveIndexesPath:          replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-live-live-indices-path")),
-				BlocksStoreURL:           replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("search-live-blocks-store")),
+				LiveIndexesPath:          replaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
+				BlocksStoreURL:           replaceDataDir(dfuseDataDir, viper.GetString("search-live-blocks-store")),
 				BlockstreamAddr:          viper.GetString("search-live-block-stream-addr"),
 				StartBlockDriftTolerance: viper.GetUint64("search-live-start-block-drift-tolerance"),
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
@@ -742,7 +796,7 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
-			cmd.Flags().String("search-forkresolver-indices-path", "{datadir}/search/forkresolver", "Location for inflight indices")
+			cmd.Flags().String("search-forkresolver-indices-path", "{dfuse-data-dir}/search/forkresolver", "Location for inflight indices")
 			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
@@ -800,7 +854,7 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
 			}
@@ -808,9 +862,9 @@ to find how to install it.`)
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
-				KVDBDSN:                     replaceDataDir(absDataDir, viper.GetString("eosws-kvdb-dsn")),
+				KVDBDSN:                     replaceDataDir(dfuseDataDir, viper.GetString("eosws-kvdb-dsn")),
 				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
-				SourceStoreURL:              replaceDataDir(viper.GetString("global-data-dir"), viper.GetString("eosws-blocks-store")),
+				SourceStoreURL:              replaceDataDir(dfuseDataDir, viper.GetString("eosws-blocks-store")),
 				SearchAddr:                  viper.GetString("eosws-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
@@ -854,7 +908,11 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			absDataDir, err := filepath.Abs(viper.GetString("global-data-dir"))
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			absDataDir, err := filepath.Abs(dfuseDataDir)
 			if err != nil {
 				return nil, err
 			}
@@ -986,4 +1044,8 @@ func makeDirs(directories []string) error {
 	}
 
 	return nil
+}
+
+func dfuseAbsoluteDataDir() (string, error) {
+	return filepath.Abs(viper.GetString("global-data-dir"))
 }
