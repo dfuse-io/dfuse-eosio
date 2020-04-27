@@ -6,6 +6,10 @@ release:
   name_template: '{{.Tag}}'
 before:
   hooks:
+    - yarn install --cwd eosq
+    - yarn build --cwd eosq
+    - yarn install --cwd dashboard/client
+    - yarn build --cwd dashboard/client
     # Requires `rice` to be installed: go get github.com/GeertJohan/go.rice/rice
     - go generate ./dashboard
     - go generate ./eosq
