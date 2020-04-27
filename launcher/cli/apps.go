@@ -543,7 +543,7 @@ to find how to install it.`)
 			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
-
+			cmd.Flags().String("abicodec-export-cache-url", "{dfuse-data-dir}/storage/abicahe", "path where the exported cache will reside")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -560,9 +560,10 @@ to find how to install it.`)
 				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:           viper.GetString("abicodec-search-addr"),
 				KvdbDSN:              replaceDataDir(absDataDir, viper.GetString("abicodec-kvdb-dsn")),
-				ExportCache:          viper.GetBool("abicodec-export-cache"),
 				CacheBaseURL:         replaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
+				ExportCache:          viper.GetBool("abicodec-export-cache"),
+				ExportCacheURL:       viper.GetString("abicodec-export-cache-url"),
 				EnableReadinessProbe: true,
 			}), nil
 		},
