@@ -15,6 +15,7 @@
 package abicodec
 
 import (
+	"context"
 	"encoding/hex"
 	"os"
 	"testing"
@@ -307,14 +308,15 @@ func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 
 func TestDefaultCache_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
+	ctx := context.Background()
 
 	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
-	exist, err := store.FileExists(cacheName)
+	exist, err := store.FileExists(ctx, cacheName)
 	require.NoError(t, err)
 	if exist {
-		err := store.DeleteObject(cacheName)
+		err := store.DeleteObject(ctx, cacheName)
 		require.NoError(t, err)
 	}
 
@@ -355,14 +357,15 @@ func TestDefaultCache_Save_Load(t *testing.T) {
 
 func TestDefaultCache_Large_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
+	ctx := context.Background()
 
 	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
-	exist, err := store.FileExists(cacheName)
+	exist, err := store.FileExists(ctx, cacheName)
 	require.NoError(t, err)
 	if exist {
-		err := store.DeleteObject(cacheName)
+		err := store.DeleteObject(ctx, cacheName)
 		require.NoError(t, err)
 	}
 

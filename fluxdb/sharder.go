@@ -16,8 +16,10 @@ package fluxdb
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"fmt"
+	"time"
 
 	"github.com/abourget/llerrgroup"
 	"github.com/dfuse-io/bstream"
@@ -136,7 +138,10 @@ func (s *Sharder) writeShards() error {
 
 			zlog.Info("encoding shard", zap.Int("shard_index", shardIndex), zap.Uint32("start", s.startBlock), zap.Uint32("stop", s.stopBlock))
 
-			err := s.shardsStore.WriteObject(baseName, bytes.NewReader(buffer.Bytes()))
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			defer cancel()
+
+			err := s.shardsStore.WriteObject(ctx, baseName, bytes.NewReader(buffer.Bytes()))
 			if err != nil {
 				return fmt.Errorf("unable to correctly write shard %d: %s", shardIndex, err)
 			}

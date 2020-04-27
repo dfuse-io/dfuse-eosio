@@ -16,6 +16,7 @@ package abicodec
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
@@ -52,7 +53,10 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	zlog.Info("loading cache", zap.String("cache_name", cacheName))
 	start := time.Now()
 
-	exist, err := store.FileExists(cacheName)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	exist, err := store.FileExists(ctx, cacheName)
 	if err != nil {
 		return nil, fmt.Errorf("validating existance of cache file %s: %s", cacheName, err)
 	}
@@ -67,7 +71,7 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 
 	}
 
-	r, err := store.OpenObject(cacheName)
+	r, err := store.OpenObject(ctx, cacheName)
 	defer r.Close()
 
 	if err != nil {
@@ -171,7 +175,10 @@ func (c *DefaultCache) SaveState() error {
 		return err
 	}
 
-	err = c.store.WriteObject(c.cacheName, bytes.NewReader(b.Bytes()))
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	err = c.store.WriteObject(ctx, c.cacheName, bytes.NewReader(b.Bytes()))
 	if err != nil {
 		return fmt.Errorf("saving cache: %s", err)
 	}
@@ -230,8 +237,11 @@ func (c *DefaultCache) Upload(storeUrl string) error {
 		return fmt.Errorf("error marshalling default cache: %w", err)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
 	fname := fmt.Sprintf("%s.zst", filename)
-	err = store.WriteObject(fname, bytes.NewReader(data))
+	err = store.WriteObject(ctx, fname, bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("exporting cache: %w", err)
 	}

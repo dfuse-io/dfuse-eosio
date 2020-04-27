@@ -19,6 +19,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/dfuse-io/dstore"
 	"go.uber.org/zap"
@@ -37,10 +38,13 @@ func NewShardInjector(shardsStore dstore.Store, db *FluxDB) *ShardInjector {
 }
 
 func (s *ShardInjector) Run() (err error) {
-	err = s.shardsStore.Walk("", "", func(filename string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	err = s.shardsStore.Walk(ctx, "", "", func(filename string) error {
 		zlog.Info("processing shard file", zap.String("filename", filename))
 
-		reader, err := s.shardsStore.OpenObject(filename)
+		reader, err := s.shardsStore.OpenObject(ctx, filename)
 		if err != nil {
 			return fmt.Errorf("opening object from shards store %q: %s", filename, err)
 		}

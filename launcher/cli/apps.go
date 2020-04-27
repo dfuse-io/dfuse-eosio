@@ -316,7 +316,6 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("merger-merged-block-path", MergedBlocksFilesPath, "URL of storage to write merged-block-files to")
 			cmd.Flags().String("merger-one-block-path", OneBlockFilesPath, "URL of storage to read one-block-files from")
-			cmd.Flags().Duration("merger-store-timeout", 2*time.Minute, "max time to to allow for each store operation")
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
 			cmd.Flags().String("merger-grpc-listen-addr", MergerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("merger-process-live-blocks", true, "Ignore --start-.. and --stop-.. blocks, and process only live blocks")
@@ -363,7 +362,6 @@ to find how to install it.`)
 			return mergerApp.New(&mergerApp.Config{
 				StorageMergedBlocksFilesPath: replaceDataDir(dfuseDataDir, viper.GetString("merger-merged-block-path")),
 				StorageOneBlockFilesPath:     replaceDataDir(dfuseDataDir, viper.GetString("merger-one-block-path")),
-				StoreOperationTimeout:        viper.GetDuration("merger-store-timeout"),
 				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
 				GRPCListenAddr:               viper.GetString("merger-grpc-listen-addr"),
 				Live:                         viper.GetBool("merger-process-live-blocks"),

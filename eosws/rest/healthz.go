@@ -24,15 +24,15 @@ import (
 	"sync"
 	"time"
 
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dstore"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
+	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -304,8 +304,12 @@ func healthCheckMerger(h *Healthz, wg *sync.WaitGroup, headBlockNum uint32, bloc
 		var exists bool
 		var err error
 		for !exists && err == nil {
+
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
 			zlogger.Debug("searching for", zap.String("base_filename", baseFilename))
-			exists, err = blockStore.FileExists(baseFilename)
+			exists, err = blockStore.FileExists(ctx, baseFilename)
 			baseBlockNum -= 100
 			baseFilename = fmt.Sprintf("%010d", baseBlockNum)
 		}

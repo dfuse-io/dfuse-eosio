@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+* Removed the `--merger-store-timeout` flag.  Not needed anymore, as some sensible timeouts have been put here and there, using the latest `dstore@v0.1.0` that is context-aware.
+
 ## [v0.1.0-beta2] 2020-04-27
 
 ### Added
