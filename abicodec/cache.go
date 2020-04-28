@@ -237,8 +237,7 @@ func (c *DefaultCache) Upload(storeUrl string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	fname := fmt.Sprintf("%s.zst", filename)
-	err = store.WriteObject(ctx, fname, bytes.NewReader(data))
+	err = store.WriteObject(ctx, filename, bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("exporting cache: %w", err)
 	}

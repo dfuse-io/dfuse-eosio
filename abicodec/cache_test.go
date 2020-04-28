@@ -416,6 +416,13 @@ func Test_Upload(t *testing.T) {
 	}{
 		{
 			name:           "golden path",
+			url:            "gs://dfuseio-global-abicache-us/eos-dev1-v3.json.zst",
+			expectBaseURL:  "gs://dfuseio-global-abicache-us",
+			expectFileName: "eos-dev1-v3.json.zst",
+			expectError:    false,
+		},
+		{
+			name:           "does not add a compression extension, it expect it to already be configured",
 			url:            "gs://dfuseio-global-abicache-us/eos-dev1-v3.json",
 			expectBaseURL:  "gs://dfuseio-global-abicache-us",
 			expectFileName: "eos-dev1-v3.json",
