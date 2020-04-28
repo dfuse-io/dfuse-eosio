@@ -83,7 +83,10 @@ func (a *App) Run() error {
 
 	go server.Serve()
 
-	onLive := func() { server.SetReady() }
+	onLive := func() {
+		backuper.IsLive = true
+		server.SetReady()
+	}
 	syncer, err := abicodec.NewSyncer(cache, dbReader, a.config.SearchAddr, onLive)
 	if err != nil {
 		return fmt.Errorf("unable to create ABI syncer: %w", err)

@@ -15,8 +15,9 @@
 package abicodec
 
 import (
-	"go.uber.org/zap"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/dfuse-io/shutter"
 )
@@ -25,7 +26,7 @@ type Backuper struct {
 	*shutter.Shutter
 
 	cache       Cache
-	isLive      bool
+	IsLive      bool
 	exportURL   string
 	exportCache bool
 }
@@ -56,7 +57,7 @@ func (b *Backuper) BackupPeriodically(every time.Duration) {
 				zlog.Error("unable to backup abicodec", zap.Error(err))
 			}
 
-			if b.exportCache && b.isLive {
+			if b.exportCache && b.IsLive {
 				err := b.cache.Upload(b.exportURL)
 				if err != nil {
 					zlog.Error("unable to backup abicodec", zap.Error(err))
