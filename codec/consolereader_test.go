@@ -32,6 +32,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestConsoleReaderPerformances(t *testing.T) {
+	fl, err := os.Open("/home/abourget/dfuse/dfuse-eosio/mainnet/a-bunch-of-blocks.deepmind.log")
+	require.NoError(t, err)
+	r, err := NewConsoleReader(fl)
+	require.NoError(t, err)
+	defer r.Close()
+
+	count := 1000
+
+	t0 := time.Now()
+	for i := 0; i < count; i++ {
+		blki, err := r.Read()
+		require.NoError(t, err)
+
+		blk := blki.(*pbcodec.Block)
+		fmt.Println("Processing block", blk.Num())
+	}
+
+	d1 := time.Since(t0)
+	perSec := float64(count) / (float64(d1) / float64(time.Second))
+	fmt.Printf("%d blocks in %s (%f blocks/sec)", count, d1, perSec)
+}
+
 func TestParseFromFile(t *testing.T) {
 	tests := []struct {
 		deepMindFile string

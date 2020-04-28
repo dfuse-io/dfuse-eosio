@@ -95,9 +95,6 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 		// Order of conditions is based (approximately) on those that will appear more often
 		switch {
-		case strings.HasPrefix(line, "ABIDUMP"):
-			err = ctx.readABIDump(line)
-
 		case strings.HasPrefix(line, "RAM_OP"):
 			err = ctx.readRAMOp(line)
 
@@ -147,7 +144,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			return ctx.readAcceptedBlock(line)
 
 		case strings.HasPrefix(line, "START_BLOCK"):
-			ctx.readStartBlock(line)
+			err = ctx.readStartBlock(line)
 
 		case strings.HasPrefix(line, "FEATURE_OP ACTIVATE"):
 			err = ctx.readFeatureOpActivate(line)
@@ -158,6 +155,12 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 		case strings.HasPrefix(line, "SWITCH_FORK"):
 			zlog.Info("Fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
+
+		case strings.HasPrefix(line, "ABIDUMP"):
+			err = ctx.readABIDump(line)
+
+		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
+			err = ctx.readDeepmindVersion(line)
 
 		default:
 			return nil, fmt.Errorf("unsupported log line: %q", line)
@@ -861,6 +864,26 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		Usage:       uint64(usage),
 		Delta:       int64(delta),
 	})
+	return nil
+}
+
+// Line format:
+//   DEEP_MIND_VERSION ${version}
+func (ctx *parseCtx) readDeepmindVersion(line string) error {
+	chunks := strings.SplitN(line, " ", 2)
+	if len(chunks) != 2 {
+		return fmt.Errorf("expected 2 fields, got %d", len(chunks))
+	}
+
+	version, err := strconv.Atoi(chunks[1])
+	if err != nil {
+		return fmt.Errorf("version is not a valid number, got: %q", chunks[1])
+	}
+
+	if version != 1 {
+		return fmt.Errorf("deep-mind reports version %d, but this reader supports only version %d", version, 1)
+	}
+
 	return nil
 }
 
