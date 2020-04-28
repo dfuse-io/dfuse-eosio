@@ -18,25 +18,20 @@ import (
 	"github.com/dfuse-io/dmetrics"
 )
 
-var metricset = dmetrics.NewSet()
+var Metricset = dmetrics.NewSet()
 
-var CurrentConnections = metricset.NewGauge("eosws_current_connections", "Number of connections open on web socket")
-var ConnectionsCounter = metricset.NewCounter("ws_connections_counter", "Counter of connections on web socket")
-var DocumentResponseCounter = metricset.NewCounter("document_response_counter", "Number of documents sent as response in websocket")
-var CurrentListeners = metricset.NewGaugeVec("current_listeners", []string{"req_type"}, "Number of WS streams active (listening)")
-var ListenersCount = metricset.NewGaugeVec("listeners_count", []string{"req_type"}, "Counter of WS streams requests")
-var PushTrxCount = metricset.NewCounterVec("push_transaction_count", []string{"guarantee"}, "Number of request for push_transaction")
-var TimedOutPushTrxCount = metricset.NewCounterVec("timed_out_pushing_transaction_count", []string{"guarantee"}, "Number of requests for push_transaction timed out waiting for inclusion in block")
-var TimedOutPushingTrxCount = metricset.NewCounterVec("timed_out_push_transaction_count", []string{"guarantee"}, "Number of requests for push_transaction timed out while submitting")
-var FailedPushTrxCount = metricset.NewCounterVec("failed_push_transaction_count", []string{"guarantee"}, "Number of failed requests for push_transaction before being submitted")
-var SucceededPushTrxCount = metricset.NewCounterVec("succeeded_push_transaction_count", []string{"guarantee"}, "Number of succeeded requests for push_transaction")
-var HeadBlockNum = metricset.NewHeadBlockNumber("eosws")
-var HeadTimeDrift = metricset.NewHeadTimeDrift("eosws")
-
-func ServeMetrics() {
-	metricset.Register()
-	dmetrics.Serve(":9102")
-}
+var CurrentConnections = Metricset.NewGauge("eosws_current_connections", "Number of connections open on web socket")
+var ConnectionsCounter = Metricset.NewCounter("ws_connections_counter", "Counter of connections on web socket")
+var DocumentResponseCounter = Metricset.NewCounter("document_response_counter", "Number of documents sent as response in websocket")
+var CurrentListeners = Metricset.NewGaugeVec("current_listeners", []string{"req_type"}, "Number of WS streams active (listening)")
+var ListenersCount = Metricset.NewGaugeVec("listeners_count", []string{"req_type"}, "Counter of WS streams requests")
+var PushTrxCount = Metricset.NewCounterVec("push_transaction_count", []string{"guarantee"}, "Number of request for push_transaction")
+var TimedOutPushTrxCount = Metricset.NewCounterVec("timed_out_pushing_transaction_count", []string{"guarantee"}, "Number of requests for push_transaction timed out waiting for inclusion in block")
+var TimedOutPushingTrxCount = Metricset.NewCounterVec("timed_out_push_transaction_count", []string{"guarantee"}, "Number of requests for push_transaction timed out while submitting")
+var FailedPushTrxCount = Metricset.NewCounterVec("failed_push_transaction_count", []string{"guarantee"}, "Number of failed requests for push_transaction before being submitted")
+var SucceededPushTrxCount = Metricset.NewCounterVec("succeeded_push_transaction_count", []string{"guarantee"}, "Number of succeeded requests for push_transaction")
+var HeadBlockNum = Metricset.NewHeadBlockNumber("eosws")
+var HeadTimeDrift = Metricset.NewHeadTimeDrift("eosws")
 
 func IncCurrentConnections() {
 	CurrentConnections.Inc()

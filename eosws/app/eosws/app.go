@@ -36,11 +36,13 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
+	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
 	"github.com/dfuse-io/dmetering"
+	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
@@ -101,6 +103,7 @@ func New(config *Config) *App {
 func (a *App) Run() error {
 	zlog.Info("running eosws app", zap.Reflect("config", a.Config))
 
+	dmetrics.Register(metrics.Metricset)
 	meter, err := dmetering.New(a.Config.MeteringPlugin)
 	if err != nil {
 		return fmt.Errorf("metering setup: %w", err)

@@ -22,15 +22,7 @@ import (
 
 var headBlockTime time.Time
 
-var metricset = dmetrics.NewSet()
+var Metricset = dmetrics.NewSet()
 
-var HeadBlockTimeDrift = metricset.NewHeadTimeDrift("kvdb-loader")
-var HeadBlockNumber = metricset.NewHeadBlockNumber("kvdb-loader")
-
-func ServeMetrics() {
-	dmetrics.Serve(":9102")
-}
-
-func init() {
-	metricset.Register()
-}
+var HeadBlockTimeDrift = Metricset.NewHeadTimeDrift("kvdb-loader")
+var HeadBlockNumber = Metricset.NewHeadBlockNumber("kvdb-loader")

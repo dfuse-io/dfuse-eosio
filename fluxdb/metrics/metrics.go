@@ -18,15 +18,7 @@ import (
 	"github.com/dfuse-io/dmetrics"
 )
 
-var metricSet = dmetrics.NewSet()
+var MetricSet = dmetrics.NewSet()
 
-var HeadBlockNumber = metricSet.NewHeadBlockNumber("fluxdb")
-var HeadTimeDrift = metricSet.NewHeadTimeDrift("fluxdb")
-
-func init() {
-	dmetrics.Register(metricSet)
-}
-
-func ServeMetrics() {
-	dmetrics.Serve(":9102")
-}
+var HeadBlockNumber = MetricSet.NewHeadBlockNumber("fluxdb")
+var HeadTimeDrift = MetricSet.NewHeadTimeDrift("fluxdb")

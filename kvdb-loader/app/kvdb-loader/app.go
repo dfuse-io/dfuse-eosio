@@ -24,6 +24,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	kvdbloader "github.com/dfuse-io/dfuse-eosio/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
+	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
@@ -59,13 +60,13 @@ func New(config *Config) *App {
 func (a *App) Run() error {
 	zlog.Info("launching kvdb loader", zap.Reflect("config", a.Config))
 
+	dmetrics.Register(metrics.Metricset)
+
 	switch a.Config.ProcessingType {
 	case "live", "batch", "patch":
 	default:
 		return fmt.Errorf("unknown processing-type value %q", a.Config.ProcessingType)
 	}
-
-	go metrics.ServeMetrics()
 
 	blocksStore, err := dstore.NewDBinStore(a.Config.BlockStoreURL)
 	if err != nil {

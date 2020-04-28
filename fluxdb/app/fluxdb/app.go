@@ -22,7 +22,9 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
+	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
@@ -54,6 +56,8 @@ func New(config *Config) *App {
 
 func (a *App) Run() error {
 	zlog.Info("running fluxdb", zap.Reflect("config", a.config))
+
+	dmetrics.Register(metrics.MetricSet)
 
 	kvStore, err := fluxdb.NewKVStore(a.config.StoreDSN)
 	if err != nil {
