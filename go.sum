@@ -197,6 +197,8 @@ github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8 h1:Kt/6nnDoG2Vp
 github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8/go.mod h1:zDObxOau2AHis3ozUKuWthQN0llJrnwPFZxa+WWJFlQ=
 github.com/dfuse-io/blockmeta v0.0.0-20200427163644-fb8601b89faf h1:8h8dDbXyI1TUUbTftSIKCJwTrOIu0TP1CMY8U3lU2Q8=
 github.com/dfuse-io/blockmeta v0.0.0-20200427163644-fb8601b89faf/go.mod h1:+dlVlGzRRQN2K+11Y/K3kozbbWppsSDP5wxu5uT1zSk=
+github.com/dfuse-io/blockmeta v0.0.0-20200428160315-bfdbab6691f4 h1:ek2bh4TuwUm4+2ehy5uNa/JhTd8O0ZwHKS3tFvMi3hw=
+github.com/dfuse-io/blockmeta v0.0.0-20200428160315-bfdbab6691f4/go.mod h1:+dlVlGzRRQN2K+11Y/K3kozbbWppsSDP5wxu5uT1zSk=
 github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3jWU18nI6wq0hCl0uatjUtrN652zRnJD6dMGGc=
 github.com/dfuse-io/bstream v0.0.0-20200415154805-fc5f1d364031/go.mod h1:tCeWgLk5bsjFO/pj8c6b0iX2rJAEt1Z86twwg7CHlHQ=
 github.com/dfuse-io/bstream v0.0.0-20200415195700-4274669bdcb6/go.mod h1:tCeWgLk5bsjFO/pj8c6b0iX2rJAEt1Z86twwg7CHlHQ=

@@ -18,15 +18,7 @@ import (
 	"github.com/dfuse-io/dmetrics"
 )
 
-var metricset = dmetrics.NewSet()
+var Metricset = dmetrics.NewSet()
 
-var HeadBlockTimeDrift = metricset.NewHeadTimeDrift("abicodec")
-var HeadBlockNumer = metricset.NewHeadBlockNumber("abicodec")
-
-func init() {
-	dmetrics.Register(metricset)
-}
-
-func ServeMetrics() {
-	dmetrics.Serve(":9102")
-}
+var HeadBlockTimeDrift = Metricset.NewHeadTimeDrift("abicodec")
+var HeadBlockNumer = Metricset.NewHeadBlockNumber("abicodec")
