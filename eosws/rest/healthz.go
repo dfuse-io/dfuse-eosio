@@ -79,6 +79,27 @@ type Healthz struct {
 	} `json:"healthy"`
 }
 
+func SearchNotStuckHandler(searchEngine *eosws.SearchEngine) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		searchRequest := &pbsearch.RouterRequest{
+			Query:               "action:onblock",
+			Limit:               1,
+			WithReversible:      true,
+			Descending:          true,
+			UseLegacyBoundaries: true,
+			BlockCount:          1,
+		}
+		_, _, err := searchEngine.DoRequest(r.Context(), searchRequest)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("search error: %s", err.Error())))
+			return
+		}
+		w.Write([]byte("ok"))
+		return
+	})
+}
+
 func HealthzHandler(hub *hub.SubscriptionHub, api *eos.API, blocksStore dstore.Store, db eosws.DB, fluxClient fluxdb.Client, searchEngine *eosws.SearchEngine, expectedSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		zlogger := logging.Logger(r.Context(), zlog)
