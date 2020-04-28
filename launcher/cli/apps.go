@@ -555,14 +555,13 @@ to find how to install it.`)
 			}
 
 			return abicodecApp.New(&abicodecApp.Config{
-				GRPCListenAddr:       viper.GetString("abicodec-grpc-listen-addr"),
-				SearchAddr:           viper.GetString("abicodec-search-addr"),
-				KvdbDSN:              replaceDataDir(absDataDir, viper.GetString("abicodec-kvdb-dsn")),
-				CacheBaseURL:         replaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
-				CacheStateName:       viper.GetString("abicodec-cache-file-name"),
-				ExportCache:          viper.GetBool("abicodec-export-cache"),
-				ExportCacheURL:       viper.GetString("abicodec-export-cache-url"),
-				EnableReadinessProbe: true,
+				GRPCListenAddr: viper.GetString("abicodec-grpc-listen-addr"),
+				SearchAddr:     viper.GetString("abicodec-search-addr"),
+				KvdbDSN:        replaceDataDir(absDataDir, viper.GetString("abicodec-kvdb-dsn")),
+				CacheBaseURL:   replaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
+				CacheStateName: viper.GetString("abicodec-cache-file-name"),
+				ExportCache:    viper.GetBool("abicodec-export-cache"),
+				ExportCacheURL: viper.GetString("abicodec-export-cache-url"),
 			}), nil
 		},
 	})

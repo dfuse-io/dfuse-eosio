@@ -30,14 +30,13 @@ import (
 )
 
 type Config struct {
-	GRPCListenAddr       string
-	SearchAddr           string
-	KvdbDSN              string
-	CacheBaseURL         string
-	CacheStateName       string
-	ExportCache          bool
-	ExportCacheURL       string
-	EnableReadinessProbe bool
+	GRPCListenAddr string
+	SearchAddr     string
+	KvdbDSN        string
+	CacheBaseURL   string
+	CacheStateName string
+	ExportCache    bool
+	ExportCacheURL string
 }
 
 type App struct {
@@ -97,13 +96,11 @@ func (a *App) Run() error {
 
 	go syncer.Sync()
 
-	if a.config.EnableReadinessProbe {
-		gs, err := dgrpc.NewInternalClient(a.config.GRPCListenAddr)
-		if err != nil {
-			return fmt.Errorf("cannot create readiness probe")
-		}
-		a.readinessProbe = pbhealth.NewHealthClient(gs)
+	gs, err := dgrpc.NewInternalClient(a.config.GRPCListenAddr)
+	if err != nil {
+		return fmt.Errorf("cannot create readiness probe")
 	}
+	a.readinessProbe = pbhealth.NewHealthClient(gs)
 
 	return nil
 }
