@@ -95,6 +95,9 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 		// Order of conditions is based (approximately) on those that will appear more often
 		switch {
+		case strings.HasPrefix(line, "ABIDUMP"):
+			err = ctx.readABIDump(line)
+
 		case strings.HasPrefix(line, "RAM_OP"):
 			err = ctx.readRAMOp(line)
 
@@ -859,6 +862,25 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		Delta:       int64(delta),
 	})
 	return nil
+}
+
+// Line format:
+//   ABIDUMP ${block_num} ${contract} ${base64_abi}
+func (ctx *parseCtx) readABIDump(line string) error {
+	chunks := strings.SplitN(line, " ", 4)
+	if len(chunks) != 4 {
+		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
+	}
+
+	blockNum, err := strconv.Atoi(chunks[1])
+	if err != nil {
+		return fmt.Errorf("block_num is not a valid number, got: %q", chunks[1])
+	}
+	_ = blockNum
+	contract := chunks[2]
+	rawABI := chunks[3]
+
+	return ctx.abiDecoder.importInitialABIDump(contract, rawABI)
 }
 
 // Line format:

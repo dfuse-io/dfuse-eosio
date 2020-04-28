@@ -15,6 +15,7 @@ package codec
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"math"
 	"sync"
@@ -105,6 +106,7 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 	}
 
 	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.ImplicitTransactionOps)))
+	// FIXME: manage `error`
 	c.processImplicitTransactions(block.ImplicitTransactionOps)
 
 	zlog.Debug("waiting for decoding queue to drain completely")
@@ -198,6 +200,25 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 
 	zlog.Debug("queuing transaction trace decoding jobs", zap.Uint64("block_num", c.activeBlockNum), zap.String("id", trxTrace.Id), zap.Int("job_count", len(decodingJobs)))
 	return c.queue.addJobs(decodingJobs)
+}
+
+func (c *ABIDecoder) importInitialABIDump(contract string, b64ABI string) error {
+	rawABI, err := base64.StdEncoding.DecodeString(b64ABI)
+	if err != nil {
+		return fmt.Errorf("decoding hex abi: %w", err)
+	}
+
+	abi := &eos.ABI{}
+	err = eos.UnmarshalBinary(rawABI, abi)
+	if err != nil {
+		zlog.Debug("invalid abi for contract", zap.String("contract", contract), zap.Error(err))
+		return nil
+	}
+
+	c.cache.Lock()
+	defer c.cache.Unlock()
+
+	return c.cache.addABI(contract, 0, abi)
 }
 
 func (c *ABIDecoder) processImplicitTransactions(trxOps []*pbcodec.TrxOp) error {

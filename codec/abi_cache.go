@@ -71,10 +71,6 @@ func newABICache() *ABICache {
 //
 // If the invariant is not respected, an error is returned.
 func (c *ABICache) addABI(contract string, globalSequence uint64, abi *eos.ABI) error {
-	if c == nil {
-		return nil
-	}
-
 	zlog.Debug("adding new abi", zap.String("account", contract), zap.Uint64("global_sequence", globalSequence))
 	contractOrdering, found := c.abisOrdering[contract]
 	if found && len(contractOrdering) > 0 && contractOrdering[len(contractOrdering)-1] > globalSequence {
