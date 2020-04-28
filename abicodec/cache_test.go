@@ -229,6 +229,7 @@ func TestDefaultCache_ABIAtBlockNum(t *testing.T) {
 	}
 
 }
+
 func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 	testCases := []struct {
 		name            string
@@ -402,5 +403,37 @@ func TestDefaultCache_Large_Save_Load(t *testing.T) {
 	//a := accountABIS[0]
 	//require.Equal(t, uint32(2), a.BlockNum)
 	//require.Equal(t, "eosio::abi/1.0", a.ABI.Version)
+
+}
+
+func Test_Upload(t *testing.T) {
+	tests := []struct {
+		name           string
+		url            string
+		expectBaseURL  string
+		expectFileName string
+		expectError    bool
+	}{
+		{
+			name:           "golden path",
+			url:            "gs://dfuseio-global-abicache-us/eos-dev1-v3.json",
+			expectBaseURL:  "gs://dfuseio-global-abicache-us",
+			expectFileName: "eos-dev1-v3.json",
+			expectError:    false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			baseURL, filename, err := getStoreInfo(test.url)
+			if test.expectError {
+				require.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectBaseURL, baseURL)
+				assert.Equal(t, test.expectFileName, filename)
+			}
+		})
+	}
 
 }

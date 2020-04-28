@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/url"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -218,16 +219,12 @@ func (c *DefaultCache) Upload(storeUrl string) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	u, err := url.Parse(storeUrl)
+	baseURL, filename, err := getStoreInfo(storeUrl)
 	if err != nil {
 		return fmt.Errorf("cannot pause upload url: %s", storeUrl)
 	}
-	filename := path.Base(u.Path)
 
-	u.Path = path.Dir(u.Path)
-	baseUrl := u.String()
-
-	store, err := dstore.NewStore(baseUrl, "", "zstd", true)
+	store, err := dstore.NewStore(baseURL, "", "zstd", true)
 	if err != nil {
 		return fmt.Errorf("error creating export store: %w", err)
 	}
@@ -247,6 +244,17 @@ func (c *DefaultCache) Upload(storeUrl string) error {
 	}
 
 	return nil
+}
+
+func getStoreInfo(storeUrl string) (baseURL, filename string, err error) {
+	u, err := url.Parse(storeUrl)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot pause upload url: %s", storeUrl)
+	}
+	filename = path.Base(u.Path)
+	u.Path = path.Dir(u.Path)
+	baseURL = strings.TrimRight(u.String(), "/")
+	return
 }
 
 func (c *DefaultCache) Save(cursor string, workerID string) error {
