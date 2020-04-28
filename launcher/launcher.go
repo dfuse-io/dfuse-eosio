@@ -158,8 +158,7 @@ func (l *Launcher) shutdownIfRecoveringFromPanic(appID string, recovered interfa
 
 	err := fmt.Errorf("app %q panicked", appID)
 	if recoveredErr, ok := recovered.(error); ok {
-		err = fmt.Errorf("%s: %w", err.Error(), recoveredErr)
-		userLog.Error("stacktrace from panic: \n" + string(debug.Stack()))
+		err = fmt.Errorf("%s: %w\n", err.Error(), recoveredErr, string(debug.Stack()))
 	}
 
 	l.Shutdown(err)
