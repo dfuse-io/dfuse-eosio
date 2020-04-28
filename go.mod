@@ -39,7 +39,7 @@ require (
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
-	github.com/dfuse-io/relayer v0.0.0-20200421150534-d4d76ebf6978
+	github.com/dfuse-io/relayer v0.0.0-20200428165403-4830385b8321
 	github.com/dfuse-io/search v0.0.0-20200427201429-4408f3a54ca3
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
