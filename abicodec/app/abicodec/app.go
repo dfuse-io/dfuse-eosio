@@ -19,10 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-
-	"github.com/dfuse-io/dmetrics"
-
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
@@ -57,8 +53,6 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
-	dmetrics.Register(metrics.Metricset)
-
 	zlog.Info("initiating cache", zap.String("cache_state_path", a.config.CacheBaseURL), zap.String("cache_state_name", a.config.CacheStateName))
 	store, err := dstore.NewSimpleStore(a.config.CacheBaseURL)
 	if err != nil {
