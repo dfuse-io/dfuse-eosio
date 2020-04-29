@@ -167,6 +167,7 @@ func init() {
 			cmd.Flags().String("mindreader-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-oneblock-store-url", OneBlockFilesPath, "Storage bucket with path prefix to write one-block file to")
+			cmd.Flags().Bool("mindreader-no-blocks-log", false, "always DELETE blocks.log before running (run without any archive)")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
@@ -245,6 +246,7 @@ to find how to install it.`)
 				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
 				BackupStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("mindreader-backup-store-url")),
 				BackupTag:                  viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:                viper.GetBool("mindreader-no-blocks-log"),
 				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
 				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
