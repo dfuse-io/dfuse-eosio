@@ -73,6 +73,7 @@ func Test_FetchABI(t *testing.T) {
 	require.NoError(t, err)
 
 	abi := &eos.ABI{}
+	abi.SetFitNodeos(true)
 	err = eos.UnmarshalBinary(packedABI, abi)
 	require.NoError(t, err)
 

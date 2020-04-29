@@ -214,7 +214,7 @@ func (c *ABIDecoder) importInitialABIDump(contract string, b64ABI string) error 
 		zlog.Debug("invalid abi for contract", zap.String("contract", contract), zap.Error(err))
 		return nil
 	}
-
+	abi.SetFitNodeos(true)
 	c.cache.Lock()
 	defer c.cache.Unlock()
 
@@ -306,7 +306,7 @@ func (c *ABIDecoder) extractABIOperations(trxTrace *pbcodec.TransactionTrace) (o
 				zlog.Info("skipping action trace 'setabi' since abi content cannot be unmarshalled correctly", zap.Int("action_index", i), zap.String("trx_id", trxTrace.Id))
 				continue
 			}
-
+			abi.SetFitNodeos(true)
 			out = append(out, abiOperation{string(setABI.Account), i, actionTrace.Receipt.GlobalSequence, abi})
 		}
 	}
