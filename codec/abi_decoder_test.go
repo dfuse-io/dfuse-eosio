@@ -332,6 +332,20 @@ func TestABIDecoder(t *testing.T) {
 			},
 		},
 
+		{
+			name: "native eosio:transfer correctly decoded",
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, actionTraceSetABI(t, "eosio.token", 0, 1, tokenABI2)),
+					trxTrace(t, actionTrace(t, "eosio.token:eosio.token:transfer", 0, 2, tokenABI2, `{"from":"eosio","to":"token","quantity":"1.0000 EOS","memo":""}`)),
+					trxTrace(t, actionTrace(t, "eosio.token:eosio.token:transfer", 0, 3, tokenABI2, `{"from":"eosio","to":"token","quantity":"1.0000 EOS","memo":"With memo"}`)),
+				),
+			),
+			expectations: []expectation{
+				{"block 0/trace 1/action 0", `{"from":"eosio","to":"token","quantity":"1.0000 EOS","memo":""}`},
+				{"block 0/trace 2/action 0", `{"from":"eosio","to":"token","quantity":"1.0000 EOS","memo":"With memo"}`},
+			},
+		},
 		// TODO: Add those tests
 		//        - ensures "hard-coded" system methods like `setabi`, `setcode` always work?
 	}

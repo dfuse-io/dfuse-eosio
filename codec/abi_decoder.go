@@ -453,6 +453,21 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 		return nil
 	}
 
+	// Transfer raw data min length is 8 bytes for `from`, 8 bytes for `to`, 16 bytes for `quantity` and `1 byte` for memo length
+	if action.Account == "eosio.token" && action.Name == "transfer" && len(action.RawData) >= 33 {
+		if traceEnabled {
+			zlog.Debug("decoding action using pre-built eosio.token:transfer decoder", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
+		}
+
+		var err error
+		action.JsonData, err = decodeTransfer(action.RawData)
+		if err != nil {
+			return fmt.Errorf("unable to decode transfer action: %w", err)
+		}
+
+		return nil
+	}
+
 	abi := q.findABI(action.Account, globalSequence, localCache)
 	if abi == nil {
 		if traceEnabled {
@@ -499,4 +514,29 @@ func (q *decodingQueue) findABI(contract string, globalSequence uint64, localCac
 	defer q.globalCache.RUnlock()
 
 	return q.globalCache.findABI(contract, globalSequence)
+}
+
+func decodeTransfer(data []byte) (string, error) {
+	decoder := eos.NewDecoder(data)
+	from, err := decoder.ReadName()
+	if err != nil {
+		return "", fmt.Errorf(`unable to read transfer field "from": %w`, err)
+	}
+
+	to, err := decoder.ReadName()
+	if err != nil {
+		return "", fmt.Errorf(`unable to read transfer field "to": %w`, err)
+	}
+
+	quantity, err := decoder.ReadAsset()
+	if err != nil {
+		return "", fmt.Errorf(`unable to read transfer field "quantity": %w`, err)
+	}
+
+	memo, err := decoder.ReadString()
+	if err != nil {
+		return "", fmt.Errorf(`unable to read transfer field "memo": %w`, err)
+	}
+
+	return fmt.Sprintf(`{"from":"%s","to":"%s","quantity":"%s","memo":"%s"}`, from, to, quantity, memo), nil
 }
