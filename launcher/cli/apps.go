@@ -522,7 +522,6 @@ to find how to install it.`)
 				GRPCListenAddr:          viper.GetString("blockmeta-grpc-listen-addr"),
 				BlocksStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("blockmeta-blocks-store")),
 				LiveSource:              viper.GetBool("blockmeta-live-source"),
-				EnableReadinessProbe:    viper.GetBool("blockmeta-enable-readiness-probe"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
 			}, db), nil

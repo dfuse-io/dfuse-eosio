@@ -355,6 +355,10 @@ func (a *App) Run() error {
 	healthzRouter := router.PathPrefix("/").Subrouter()
 	healthzRouter.Path("/healthz").Handler(healthzHandler)
 
+	// Setup simple check to determine if search is stuck, workaround for elusive bug
+	searchNotStuckHandler := rest.SearchNotStuckHandler(searchQueryHandler)
+	healthzRouter.Path("/search_not_stuck").Handler(searchNotStuckHandler)
+
 	// Core endpoints
 	coreRouter := router.PathPrefix("/").Subrouter()
 	coreRouter.Use(eosws.OpenCensusMiddleware)

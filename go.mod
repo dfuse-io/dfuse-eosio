@@ -17,18 +17,18 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200415145600-fef33cb242b8
+	github.com/dfuse-io/blockmeta v0.0.0-20200428160315-bfdbab6691f4
 	github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200424190011-2585985eab85
+	github.com/dfuse-io/dgraphql v0.0.0-20200428160855-57e0abb636c6
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
 	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
-	github.com/dfuse-io/dmetrics v0.0.0-20200406214800-499fc7b320ab
+	github.com/dfuse-io/dmetrics v0.0.0-20200429132936-f8ed5f60a17a
 	github.com/dfuse-io/dstore v0.1.0
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
@@ -36,11 +36,11 @@ require (
 	github.com/dfuse-io/kvdb v0.0.0-20200424185846-7c443ace0291
 	github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af
 	github.com/dfuse-io/manageos v0.0.0-20200429175401-7f6cf2d6c5f7
-	github.com/dfuse-io/merger v0.0.0-20200427193941-a962577f3aa5
+	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
-	github.com/dfuse-io/relayer v0.0.0-20200421150534-d4d76ebf6978
-	github.com/dfuse-io/search v0.0.0-20200427201429-4408f3a54ca3
+	github.com/dfuse-io/relayer v0.0.0-20200428165403-4830385b8321
+	github.com/dfuse-io/search v0.0.0-20200429135518-f723040ac0c4
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
