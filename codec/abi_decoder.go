@@ -18,7 +18,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math"
-	"sync"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -328,9 +327,6 @@ type decodingQueue struct {
 	blockNum    uint64
 	globalCache *ABICache
 	hammer      *dhammer.Hammer
-
-	queuerWg  sync.WaitGroup
-	drainerWg sync.WaitGroup
 }
 
 type decodingJob interface {
@@ -357,11 +353,9 @@ func newDecodingQueue(ctx context.Context, blockNum uint64, globalCache *ABICach
 	}
 
 	// FIXME: Replace 8 with as many CPUs available minus one (or two) we have. Will need some profiling to see the best value for EOS Mainnet
-	queue.hammer = dhammer.NewHammer(1, 8, queue.executeDecodingJob)
+	queue.hammer = dhammer.NewHammer(1, 8, queue.executeDecodingJob, dhammer.SetInChanSize(10000))
 	queue.hammer.Start(ctx)
 
-	// This is going to drain continuously hammer so new jobs can execute
-	queue.drainerWg.Add(1)
 	go queue.drainQueueFully(blockNum)
 
 	return queue
@@ -369,37 +363,33 @@ func newDecodingQueue(ctx context.Context, blockNum uint64, globalCache *ABICach
 
 func (q *decodingQueue) addJobs(jobs []decodingJob) error {
 	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
-	q.queuerWg.Add(1)
-	go func() {
-		defer q.queuerWg.Done()
-
-		for _, job := range jobs {
-			if traceEnabled {
-				zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
-			}
-
-			select {
-			case <-q.hammer.Terminating():
-				zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
-				return
-			case q.hammer.In <- job:
-			}
+	for _, job := range jobs {
+		if traceEnabled {
+			zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
 		}
-	}()
+
+		select {
+		case <-q.hammer.Terminating():
+			zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
+			return q.hammer.Err()
+		case q.hammer.In <- job:
+		}
+	}
 	return nil
 }
 
 func (q *decodingQueue) drain() error {
-	zlog.Debug("waiting for all transaction processing call that feeds hammer to complete")
-	q.queuerWg.Wait()
 
-	zlog.Debug("waiting for hammer to complete all inflight requests")
+	zlog.Debug("closing dhammer")
 	q.hammer.Close()
-	q.drainerWg.Wait()
 
+	zlog.Debug("waiting for dhammer terminated")
+	<-q.hammer.Terminated()
 	if q.hammer.Err() != nil {
+		zlog.Warn("dhammer terminated with error", zap.Error(q.hammer.Err()))
 		return q.hammer.Err()
 	}
+	zlog.Debug("dhammer terminated")
 
 	return nil
 }
@@ -428,7 +418,6 @@ func (q *decodingQueue) drainQueueFully(blockNum uint64) {
 	zlog.Debug("queue drainer routine started", zap.Uint64("block_num", blockNum))
 	defer func() {
 		zlog.Debug("queue drainer routine terminated", zap.Uint64("block_num", blockNum))
-		q.drainerWg.Done()
 	}()
 
 	for {
