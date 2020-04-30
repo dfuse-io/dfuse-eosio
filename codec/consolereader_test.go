@@ -19,10 +19,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	_ "net/http/pprof"
 
 	"github.com/andreyvit/diff"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -30,24 +33,40 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func TestConsoleReaderPerformances(t *testing.T) {
-	fl, err := os.Open("/home/abourget/dfuse/dfuse-eosio/mainnet/a-bunch-of-blocks.deepmind.log")
+	dmlogBenchmarkFile := os.Getenv("PERF_DMLOG_BENCHMARK_FILE")
+	if dmlogBenchmarkFile == "" || !fileExists(dmlogBenchmarkFile) {
+		t.Skipf("Environment variable 'PERF_DMLOG_BENCHMARK_FILE' not set or value %q is not an existing file", dmlogBenchmarkFile)
+		return
+	}
+
+	go func() {
+		fmt.Println("starting profiler")
+		if err := http.ListenAndServe("localhost:6060", nil); err != nil {
+			zlog.Info("listening localhost:6060", zap.Error(err))
+		}
+	}()
+
+	fl, err := os.Open(dmlogBenchmarkFile)
 	require.NoError(t, err)
+
 	r, err := NewConsoleReader(fl)
 	require.NoError(t, err)
 	defer r.Close()
 
-	count := 1000
+	count := 1999
 
 	t0 := time.Now()
+
 	for i := 0; i < count; i++ {
 		blki, err := r.Read()
 		require.NoError(t, err)
 
 		blk := blki.(*pbcodec.Block)
-		fmt.Println("Processing block", blk.Num())
+		fmt.Fprintln(os.Stderr, "Processing block", blk.Num())
 	}
 
 	d1 := time.Since(t0)
@@ -429,4 +448,17 @@ func protoJSONMarshalIndent(t *testing.T, message proto.Message) string {
 	require.NoError(t, err)
 
 	return value
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
 }

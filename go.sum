@@ -213,6 +213,8 @@ github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1 h1:HPRgnmMbQw3P6H
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200429195738-1f9a4e210b5c h1:0Cvsd14v8J1NWepk47CZvLy01QwG6Mcq84k4TWFJjAo=
 github.com/dfuse-io/dhammer v0.0.0-20200429195738-1f9a4e210b5c/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
+github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063 h1:kQgi/lEAFCOC2eu3Xm+nVUQaNQbqPnDBoEmGQUHxXAo=
+github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSutKgJwa328F/bJ23rpWC8clt5LhCiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95 h1:D4k9BRsWzf8hXkICPZh0uhslU1f/nHc4vSfp80GA6jE=
@@ -294,6 +296,8 @@ github.com/eoscanada/eos-go v0.8.10-0.20190329223853-84b552870f2a/go.mod h1:RKrm
 github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200429175201-ba2ce9b98346 h1:9bJZ1aXNU+hShhiinKFSid1y8K4z391ZsJfYvGere/o=
 github.com/eoscanada/eos-go v0.9.1-0.20200429175201-ba2ce9b98346/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e h1:l7BsNCZEaYspc19veSlhgKIdW8yz1SeKOQECE1gWLYU=
+github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2 h1:qXzIzDwZsixtJfR6jHRFShEhOKrjYANdjHaPMb1uGCo=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2/go.mod h1:6A7XkYpqkq0DjHzakhUybMXmZeY+9E6Z1SBAWytyO0A=
 github.com/etcd-io/bbolt v1.3.1-etcd.8 h1:pjlDzUF2rdYqUOcjXlZreLijevTZT7bv3zP0TqJTQ74=

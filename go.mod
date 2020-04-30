@@ -24,7 +24,7 @@ require (
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200428160855-57e0abb636c6
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
-	github.com/dfuse-io/dhammer v0.0.0-20200429195738-1f9a4e210b5c
+	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
@@ -44,7 +44,7 @@ require (
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200429175201-ba2ce9b98346
+	github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/go-sql-driver/mysql v1.5.0
