@@ -37,10 +37,10 @@ import (
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
-	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
@@ -59,6 +59,43 @@ import (
 )
 
 func init() {
+
+	launcher.RegisterCommonFlags = func(cmd *cobra.Command) error {
+		// Common stores configuration flags
+		cmd.Flags().String("common-backup-store-url", PitreosURL, "[COMMON] Store URL (with prefix) where to read or write backups.")
+		cmd.Flags().String("common-blocks-store-url", MergedBlocksStoreURL, "[COMMON] Store URL (with prefix) where to read/write. Used by: relayer, fluxdb, trxdb-loader, blockmeta, search-indexer, search-live, search-forkresolver, eosws")
+		cmd.Flags().String("common-oneblock-store-url", OneBlockStoreURL, "[COMMON] Store URL (with prefix) to read/write one-block files. Used by: mindreader, merger")
+		cmd.Flags().String("common-blockstream-addr", RelayerServingAddr, "gRPC endpoint to get real-time blocks. Used by: fluxdb, trxdb-loader, blockmeta, search-indexer, search-live, eosws (relayer uses its own --relayer-blockstream-addr)")
+
+		// Network config
+		cmd.Flags().String("common-network-id", NetworkID, "Short network identifier, for billing purposes (usually maps namespaces on deployments). Used by: dgraphql")
+		cmd.Flags().String("common-chain-id", "", "Chain ID in hex. Used by: trxdb-loader (to reverse the signatures and extract public keys)") // TODO: eventually, pluck that from somewhere instead of asking for it here (!). You risk noticing its missing very late, and it'll require reprocessing if you want the pubkeys.
+
+		// Authentication and metering plugins
+		cmd.Flags().String("common-auth-plugin", "null://", "Auth plugin URI, see dfuse-io/dauth repository")
+		cmd.Flags().String("common-metering-plugin", "null://", "Metering plugin URI, see dfuse-io/dmetering repository")
+
+		// Database connection strings
+		cmd.Flags().String("common-trxdb-dsn", TrxdbDSN, "kvdb connection string to trxdb database. Used by: trxdb-loader, abicodec, eosws, dgraphql")
+
+		// Service addresses
+		cmd.Flags().String("common-search-addr", RouterServingAddr, "gRPC endpoint to reach the Search Router. Used by: abicodec, eosws, dgraphql")
+		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
+
+		// Search flags
+		// Register common search flags once for all the services
+		cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
+		cmd.Flags().String("search-common-mesh-dsn", DmeshDSN, "[COMMON] Dmesh DSN, supports local & etcd")
+		cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
+		cmd.Flags().Duration("search-common-mesh-publish-interval", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
+		cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
+		cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
+		cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
+		cmd.Flags().String("search-common-indices-store-url", IndicesStoreURL, "[COMMON] Indices path to read or write index shards Used by: search-indexer, search-archiver.")
+
+		return nil
+	}
+
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "node-manager",
 		Title:       "Node manager",
@@ -75,9 +112,8 @@ func init() {
 			cmd.Flags().String("node-manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("node-manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("node-manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
-			cmd.Flags().String("node-manager-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
 			cmd.Flags().String("node-manager-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
-			cmd.Flags().String("node-manager-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
+			cmd.Flags().String("node-manager-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().Bool("node-manager-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().Bool("node-manager-auto-restore", false, "Enables restore from the latest backup on boot if there is no block logs or if nodeos cannot start at all. Do not use on a single BP node")
 			cmd.Flags().String("node-manager-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
@@ -124,7 +160,7 @@ func init() {
 				ReadinessMaxLatency:     viper.GetDuration("node-manager-readiness-max-latency"),
 				ForceProduction:         viper.GetBool("node-manager-force-production"),
 				NodeosExtraArgs:         viper.GetStringSlice("node-manager-nodeos-args"),
-				BackupStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("node-manager-backup-store-url")),
+				BackupStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
 				BootstrapDataURL:        viper.GetString("node-manager-bootstrap-data-url"),
 				DebugDeepMind:           viper.GetBool("node-manager-debug-deep-mind"),
 				LogToZap:                viper.GetBool("node-manager-log-to-zap"),
@@ -164,9 +200,7 @@ func init() {
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
 			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the manageos profiler")
-			cmd.Flags().String("mindreader-backup-store-url", PitreosPath, "Storage bucket with path prefix where backups should be done")
-			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsPath, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
-			cmd.Flags().String("mindreader-oneblock-store-url", OneBlockFilesPath, "Storage bucket with path prefix to write one-block file to")
+			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
@@ -181,8 +215,7 @@ func init() {
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0*time.Second, "Delay before shutting manager when sigterm received")
-			cmd.Flags().String("mindreader-merged-blocks-store-url", MergedBlocksFilesPath, "USE FOR REPROCESSING ONLY. Storage bucket with path prefix to write merged blocks logs to (in conjunction with --merge-and-upload-directly)")
-			cmd.Flags().Bool("mindreader-merge-and-upload-directly", false, "USE FOR REPROCESSING ONLY. When enabled, do not write one-block files, sidestep the merger and write the merged 100-blocks logs directly to --merged-blocks-store-url")
+			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			return nil
 		},
@@ -197,9 +230,9 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			archiveStoreURL := replaceDataDir(dfuseDataDir, viper.GetString("mindreader-oneblock-store-url"))
-			if viper.GetBool("mindreader-merge-and-upload-directly") {
-				archiveStoreURL = replaceDataDir(dfuseDataDir, viper.GetString("mindreader-merged-blocks-store-url"))
+			archiveStoreURL := replaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))
+			if viper.GetBool("mindreader-merge-and-store-directly") {
+				archiveStoreURL = replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
 			}
 
 			var startUpFunc func()
@@ -243,7 +276,7 @@ to find how to install it.`)
 				TrustedProducer:            viper.GetString("mindreader-trusted-producer"),
 				ReadinessMaxLatency:        viper.GetDuration("mindreader-readiness-max-latency"),
 				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("mindreader-backup-store-url")),
+				BackupStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
 				BackupTag:                  viper.GetString("mindreader-backup-tag"),
 				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
@@ -278,14 +311,13 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of blockstream sources to connect to for live block feeds (repeat flag as needed)")
+			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of Blockstream sources (mindreaders) to connect to for live block feeds (repeat flag as needed)")
 			cmd.Flags().String("relayer-merger-addr", MergerServingAddr, "Address for grpc merger service")
 			cmd.Flags().Int("relayer-buffer-size", 300, "number of blocks that will be kept and sent immediately on connection")
 			cmd.Flags().Duration("relayer-max-drift", 300*time.Second, "max delay between live blocks before we die in hope of a better world")
 			cmd.Flags().Uint64("relayer-min-start-offset", 120, "number of blocks before HEAD where we want to start for faster buffer filling (missing blocks come from files/merger)")
 			cmd.Flags().Duration("relayer-max-source-latency", 1*time.Minute, "max latency tolerated to connect to a source")
 			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
-			cmd.Flags().String("relayer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -302,7 +334,7 @@ to find how to install it.`)
 				MaxSourceLatency: viper.GetDuration("relayer-max-source-latency"),
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
-				SourceStoreURL:   replaceDataDir(dfuseDataDir, viper.GetString("relayer-blocks-store")),
+				SourceStoreURL:   replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}), nil
 		},
 	})
@@ -314,8 +346,6 @@ to find how to install it.`)
 		MetricsID:   "merger",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("merger-merged-block-path", MergedBlocksFilesPath, "URL of storage to write merged-block-files to")
-			cmd.Flags().String("merger-one-block-path", OneBlockFilesPath, "URL of storage to read one-block-files from")
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
 			cmd.Flags().String("merger-grpc-listen-addr", MergerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("merger-process-live-blocks", true, "Ignore --start-.. and --stop-.. blocks, and process only live blocks")
@@ -326,7 +356,7 @@ to find how to install it.`)
 			cmd.Flags().Duration("merger-writers-leeway", 10*time.Second, "how long we wait after seeing the upper boundary, to ensure that we get as many blocks as possible in a bundle")
 			cmd.Flags().String("merger-seen-blocks-file", "{dfuse-data-dir}/merger/merger.seen.gob", "file to save to / load from the map of 'seen blocks'")
 			cmd.Flags().Uint64("merger-max-fixable-fork", 10000, "after that number of blocks, a block belonging to another fork will be discarded (DELETED depending on flagDeleteBlocksBefore) instead of being inserted in last bundle")
-			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of one-block files when prior to the currently processed bundle (to avoid long file listings)")
+			cmd.Flags().Bool("merger-delete-blocks-before", true, "Enable deletion of oneblock files when prior to the currently processed bundle (to avoid long file listings)")
 			return nil
 		},
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
@@ -337,12 +367,12 @@ to find how to install it.`)
 			if err != nil {
 				return err
 			}
-			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("merger-merged-block-path")))
+			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")))
 			if err != nil {
 				return err
 			}
 
-			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("merger-one-block-path")))
+			err = mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url")))
 			if err != nil {
 				return err
 			}
@@ -360,8 +390,8 @@ to find how to install it.`)
 				return nil, err
 			}
 			return mergerApp.New(&mergerApp.Config{
-				StorageMergedBlocksFilesPath: replaceDataDir(dfuseDataDir, viper.GetString("merger-merged-block-path")),
-				StorageOneBlockFilesPath:     replaceDataDir(dfuseDataDir, viper.GetString("merger-one-block-path")),
+				StorageMergedBlocksFilesPath: replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				StorageOneBlockFilesPath:     replaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url")),
 				TimeBetweenStoreLookups:      viper.GetDuration("merger-time-between-store-lookups"),
 				GRPCListenAddr:               viper.GetString("merger-grpc-listen-addr"),
 				Live:                         viper.GetBool("merger-process-live-blocks"),
@@ -385,22 +415,13 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
-			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into KVDB")
-			cmd.Flags().String("fluxdb-kvdb-store-dsn", FluxDSN, "Kvdbd database connection string")
+			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into its database")
+			cmd.Flags().String("fluxdb-statedb-dsn", FluxDSN, "kvdb connection string to State database")
 			cmd.Flags().Bool("fluxdb-live", true, "Connect to a live source, can be turn off when doing re-processing")
-			cmd.Flags().String("fluxdb-block-stream-addr", RelayerServingAddr, "gRPC endpoint to get real-time blocks")
-			cmd.Flags().String("fluxdb-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			cmd.Flags().Bool("fluxdb-enable-dev-mode", false, "Enable dev mode, enables fluxdb without a live pipeline (**do not** use this in prod)")
 			cmd.Flags().Int("fluxdb-max-threads", 2, "Number of threads of parallel processing")
 			cmd.Flags().String("fluxdb-http-listen-addr", FluxDBServingAddr, "Address to listen for incoming http requests")
 			return nil
-		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return err
-			}
-			return mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, "fluxdb"))
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
@@ -414,10 +435,10 @@ to find how to install it.`)
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           replaceDataDir(absDataDir, viper.GetString("fluxdb-kvdb-store-dsn")),
+				StoreDSN:           replaceDataDir(absDataDir, viper.GetString("fluxdb-statedb-dsn")),
 				EnableLivePipeline: viper.GetBool("fluxdb-live"),
-				BlockStreamAddr:    viper.GetString("fluxdb-block-stream-addr"),
-				BlockStoreURL:      replaceDataDir(dfuseDataDir, viper.GetString("fluxdb-blocks-store")),
+				BlockStreamAddr:    viper.GetString("common-blockstream-addr"),
+				BlockStoreURL:      replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
 				ThreadsNum:         viper.GetInt("fluxdb-max-threads"),
 				HTTPListenAddr:     viper.GetString("fluxdb-http-listen-addr"),
@@ -426,32 +447,21 @@ to find how to install it.`)
 	})
 
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "kvdb-loader",
+		ID:          "trxdb-loader",
 		Title:       "DB loader",
 		Description: "Main blocks and transactions database",
-		MetricsID:   "kvdb-loader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/kvdb-loader.*", nil),
+		MetricsID:   "trxdb-loader",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("kvdb-loader-chain-id", "", "Chain ID")
-			cmd.Flags().String("kvdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
-			cmd.Flags().String("kvdb-loader-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().String("kvdb-loader-kvdb-dsn", KVDBDSN, "Kvdbd database connection string")
-			cmd.Flags().String("kvdb-loader-block-stream-addr", RelayerServingAddr, "grpc address of a block stream, usually the relayer grpc address")
-			cmd.Flags().Uint64("kvdb-loader-batch-size", 1, "number of blocks batched together for database write")
-			cmd.Flags().Uint64("kvdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
-			cmd.Flags().Uint64("kvdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
-			cmd.Flags().Uint64("kvdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
-			cmd.Flags().String("kvdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
-			cmd.Flags().Int("kvdb-parallel-file-download-count", 2, "Maximum number of files to download in parallel")
-			cmd.Flags().Bool("kvdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
+			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
+			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "number of blocks batched together for database write")
+			cmd.Flags().Uint64("trxdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
+			cmd.Flags().Uint64("trxdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
+			cmd.Flags().Uint64("trxdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
+			cmd.Flags().String("trxdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
+			cmd.Flags().Int("trxdb-loader-parallel-file-download-count", 2, "Maximum number of files to download in parallel")
+			cmd.Flags().Bool("trxdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
-		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return err
-			}
-			return mkdirStorePathIfLocal(replaceDataDir(dfuseDataDir, "kvdb"))
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
@@ -464,18 +474,18 @@ to find how to install it.`)
 			}
 
 			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
-				ChainId:                   viper.GetString("chain-id"),
-				ProcessingType:            viper.GetString("kvdb-loader-processing-type"),
-				BlockStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("kvdb-loader-blocks-store")),
-				KvdbDsn:                   replaceDataDir(absDataDir, viper.GetString("kvdb-loader-kvdb-dsn")),
-				BlockStreamAddr:           viper.GetString("kvdb-loader-block-stream-addr"),
-				BatchSize:                 viper.GetUint64("kvdb-loader-batch-size"),
-				StartBlockNum:             viper.GetUint64("kvdb-loader-start-block-num"),
-				StopBlockNum:              viper.GetUint64("kvdb-loader-stop-block-num"),
-				NumBlocksBeforeStart:      viper.GetUint64("kvdb-loader-num-blocks-before-start"),
-				AllowLiveOnEmptyTable:     viper.GetBool("kvdb-loader-allow-live-on-empty-table"),
-				HTTPListenAddr:            viper.GetString("kvdb-loader-http-listen-addr"),
-				ParallelFileDownloadCount: viper.GetInt("kvdb-parallel-file-download-count"),
+				ChainId:                   viper.GetString("common-chain-id"),
+				ProcessingType:            viper.GetString("trxdb-loader-processing-type"),
+				BlockStoreURL:             replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				KvdbDsn:                   replaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				BlockStreamAddr:           viper.GetString("common-blockstream-addr"),
+				BatchSize:                 viper.GetUint64("trxdb-loader-batch-size"),
+				StartBlockNum:             viper.GetUint64("trxdb-loader-start-block-num"),
+				StopBlockNum:              viper.GetUint64("trxdb-loader-stop-block-num"),
+				NumBlocksBeforeStart:      viper.GetUint64("trxdb-loader-num-blocks-before-start"),
+				AllowLiveOnEmptyTable:     viper.GetBool("trxdb-loader-allow-live-on-empty-table"),
+				HTTPListenAddr:            viper.GetString("trxdb-loader-http-listen-addr"),
+				ParallelFileDownloadCount: viper.GetInt("trxdb-loader-parallel-file-download-count"),
 			}), nil
 		},
 	})
@@ -489,13 +499,10 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("blockmeta-block-stream-addr", RelayerServingAddr, "Websocket endpoint to get a real-time blocks feed")
-			cmd.Flags().String("blockmeta-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not, defaults to true")
+			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not.")
 			cmd.Flags().Bool("blockmeta-enable-readiness-probe", true, "Enable blockmeta's app readiness probe")
 			cmd.Flags().StringSlice("blockmeta-eos-api-upstream-addr", []string{NodeosAPIAddr}, "EOS API address to fetch info from running chain, must be in-sync")
 			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
-			cmd.Flags().String("blockmeta-kvdb-dsn", BlockmetaDSN, "Kvdbd database connection string")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -504,7 +511,7 @@ to find how to install it.`)
 				return nil, err
 			}
 
-			eosDBClient, err := eosdb.New(replaceDataDir(dfuseDataDir, viper.GetString("blockmeta-kvdb-dsn")))
+			eosDBClient, err := eosdb.New(replaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")))
 			if err != nil {
 				return nil, err
 			}
@@ -516,9 +523,9 @@ to find how to install it.`)
 
 			return blockmetaApp.New(&blockmetaApp.Config{
 				Protocol:                Protocol,
-				BlockStreamAddr:         viper.GetString("blockmeta-block-stream-addr"),
+				BlockStreamAddr:         viper.GetString("common-blockstream-addr"),
 				GRPCListenAddr:          viper.GetString("blockmeta-grpc-listen-addr"),
-				BlocksStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("blockmeta-blocks-store")),
+				BlocksStoreURL:          replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				LiveSource:              viper.GetBool("blockmeta-live-source"),
 				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
 				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
@@ -535,8 +542,6 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("abicodec-search-addr", RouterServingAddr, "Base URL for search service")
-			cmd.Flags().String("abicodec-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
 			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicahe", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
@@ -555,8 +560,8 @@ to find how to install it.`)
 
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr: viper.GetString("abicodec-grpc-listen-addr"),
-				SearchAddr:     viper.GetString("abicodec-search-addr"),
-				KvdbDSN:        replaceDataDir(absDataDir, viper.GetString("abicodec-kvdb-dsn")),
+				SearchAddr:     viper.GetString("common-search-addr"),
+				KvdbDSN:        replaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
 				CacheBaseURL:   replaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
 				CacheStateName: viper.GetString("abicodec-cache-file-name"),
 				ExportCache:    viper.GetBool("abicodec-export-cache"),
@@ -577,8 +582,6 @@ to find how to install it.`)
 			cmd.Flags().String("search-indexer-http-listen-addr", IndexerHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().Bool("search-indexer-enable-upload", true, "Upload merged indexes to the --indexes-store")
 			cmd.Flags().Bool("search-indexer-delete-after-upload", true, "Delete local indexes after uploading them")
-			cmd.Flags().String("search-indexer-block-stream-addr", RelayerServingAddr, "gRPC URL to reach a stream of blocks")
-			cmd.Flags().String("search-indexer-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to find the last irreversible block on the network being indexed")
 			cmd.Flags().Int("search-indexer-start-block", 0, "Start indexing from block num")
 			cmd.Flags().Uint("search-indexer-stop-block", 0, "Stop indexing at block num")
 			cmd.Flags().Bool("search-indexer-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stoip block")
@@ -587,8 +590,6 @@ to find how to install it.`)
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
 			cmd.Flags().String("search-indexer-writable-path", "{dfuse-data-dir}/search/indexer", "Writable base path for storing index files")
-			cmd.Flags().String("search-indexer-indices-store", IndicesFilePath, "Indices path to read or write index shards")
-			cmd.Flags().String("search-indexer-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -608,20 +609,20 @@ to find how to install it.`)
 			return indexerApp.New(&indexerApp.Config{
 				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
-				BlockstreamAddr:                     viper.GetString("search-indexer-block-stream-addr"),
+				BlockstreamAddr:                     viper.GetString("common-blockstream-addr"),
 				ShardSize:                           viper.GetUint64("search-indexer-shard-size"),
 				StartBlock:                          int64(viper.GetInt("search-indexer-start-block")),
 				StopBlock:                           viper.GetUint64("search-indexer-stop-block"),
 				IsVerbose:                           viper.GetBool("search-indexer-verbose"),
 				EnableBatchMode:                     viper.GetBool("search-indexer-enable-batch-mode"),
-				BlockmetaAddr:                       viper.GetString("search-indexer-blockmeta-addr"),
+				BlockmetaAddr:                       viper.GetString("common-blockmeta-addr"),
 				NumberOfBlocksToFetchBeforeStarting: viper.GetUint64("search-indexer-num-blocks-before-start"),
 				EnableUpload:                        viper.GetBool("search-indexer-enable-upload"),
 				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
 				WritablePath:                        replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-writable-path")),
-				IndicesStoreURL:                     replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-indices-store")),
-				BlocksStoreURL:                      replaceDataDir(dfuseDataDir, viper.GetString("search-indexer-blocks-store")),
+				IndicesStoreURL:                     replaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
+				BlocksStoreURL:                      replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &indexerApp.Modules{
 				BlockMapper: mapper,
 			}), nil
@@ -636,17 +637,8 @@ to find how to install it.`)
 		MetricsID:   "search-router",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			// Register common search flags once for all the services
-			cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
-			cmd.Flags().String("search-common-mesh-dsn", DmeshDSN, "[COMMON] Dmesh DSN, supports local & etcd")
-			cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
-			cmd.Flags().Duration("search-common-mesh-publish-interval", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
-			cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
-			cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
-			cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
 			// Router-specific flags
 			cmd.Flags().String("search-router-grpc-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("search-router-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried to validate cursors that are passed LIB and forked out")
 			cmd.Flags().Bool("search-router-enable-retry", false, "Enables the router's attempt to retry a backend search if there is an error. This could have adverse consequences when search through the live")
 			cmd.Flags().Uint64("search-router-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			cmd.Flags().Uint64("search-router-lib-delay-tolerance", 0, "Number of blocks above a backend's lib we allow a request query to be served (Live & Router)")
@@ -655,7 +647,7 @@ to find how to install it.`)
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
-				BlockmetaAddr:      viper.GetString("search-router-blockmeta-addr"),
+				BlockmetaAddr:      viper.GetString("common-blockmeta-addr"),
 				GRPCListenAddr:     viper.GetString("search-router-grpc-listen-addr"),
 				HeadDelayTolerance: viper.GetUint64("search-router-head-delay-tolerance"),
 				LibDelayTolerance:  viper.GetUint64("search-router-lib-delay-tolerance"),
@@ -691,7 +683,6 @@ to find how to install it.`)
 			cmd.Flags().Int("search-archive-max-query-threads", 10, "Number of end-user query parallel threads to query 5K-blocks indexes")
 			cmd.Flags().Duration("search-archive-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().String("search-archive-warmup-filepath", "", "Optional filename containing queries to warm-up the search")
-			cmd.Flags().String("search-archive-indices-store", IndicesFilePath, "GS path to read or write index shards")
 			cmd.Flags().String("search-archive-writable-path", "{dfuse-data-dir}/search/archiver", "Writable base path for storing index files")
 			return nil
 		},
@@ -719,7 +710,7 @@ to find how to install it.`)
 				NumQueryThreads:         viper.GetInt("search-archive-max-query-threads"),
 				ShutdownDelay:           viper.GetDuration("search-archive-shutdown-delay"),
 				WarmupFilepath:          viper.GetString("search-archive-warmup-filepath"),
-				IndexesStoreURL:         replaceDataDir(dfuseDataDir, viper.GetString("search-archive-indices-store")),
+				IndexesStoreURL:         replaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				IndexesPath:             replaceDataDir(dfuseDataDir, viper.GetString("search-archive-writable-path")),
 			}, &archiveApp.Modules{
 				Dmesh: modules.SearchDmeshClient,
@@ -736,14 +727,11 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("search-live-block-stream-addr", RelayerServingAddr, "gRPC Address to reach a stream of blocks")
 			cmd.Flags().String("search-live-live-indices-path", "{dfuse-data-dir}/search/live", "Location for live indexes (ideally a ramdisk)")
 			cmd.Flags().Int("search-live-truncation-threshold", 1, "number of available dmesh peers that should serve irreversible blocks before we truncate them from this backend's memory")
 			cmd.Flags().Duration("search-live-realtime-tolerance", 1*time.Minute, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
-			cmd.Flags().String("search-live-blockmeta-addr", BlockmetaServingAddr, "Blockmeta endpoint is queried for its headinfo service")
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
-			cmd.Flags().String("search-live-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			return nil
 		},
@@ -764,10 +752,10 @@ to find how to install it.`)
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
-				BlockmetaAddr:            viper.GetString("search-live-blockmeta-addr"),
+				BlockmetaAddr:            viper.GetString("common-blockmeta-addr"),
 				LiveIndexesPath:          replaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
-				BlocksStoreURL:           replaceDataDir(dfuseDataDir, viper.GetString("search-live-blocks-store")),
-				BlockstreamAddr:          viper.GetString("search-live-block-stream-addr"),
+				BlocksStoreURL:           replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				BlockstreamAddr:          viper.GetString("common-blockstream-addr"),
 				StartBlockDriftTolerance: viper.GetUint64("search-live-start-block-drift-tolerance"),
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
@@ -792,7 +780,6 @@ to find how to install it.`)
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("search-forkresolver-indices-path", "{dfuse-data-dir}/search/forkresolver", "Location for inflight indices")
-			cmd.Flags().String("search-forkresolver-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -811,7 +798,7 @@ to find how to install it.`)
 				HttpListenAddr:  viper.GetString("search-forkresolver-http-listen-addr"),
 				PublishInterval: viper.GetDuration("search-common-mesh-publish-interval"),
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
-				BlocksStoreURL:  viper.GetString("search-forkresolver-blocks-store"),
+				BlocksStoreURL:  viper.GetString("common-blocks-store-url"),
 			}, &forkresolverApp.Modules{
 				Dmesh:       modules.SearchDmeshClient,
 				BlockMapper: mapper,
@@ -827,21 +814,14 @@ to find how to install it.`)
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
-			cmd.Flags().String("eosws-block-meta-addr", BlockmetaServingAddr, "Address of the Blockmeta service")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
-			cmd.Flags().String("eosws-kvdb-dsn", KVDBDSN, "Kvdb database connection string")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
-			cmd.Flags().String("eosws-blocks-store", MergedBlocksFilesPath, "Path to read blocks files")
-			cmd.Flags().String("eosws-block-stream-addr", RelayerServingAddr, "gRPC endpoint to get streams of blocks (relayer)")
 			cmd.Flags().String("eosws-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
 			cmd.Flags().Bool("eosws-fetch-vote-tally", false, "Enable regularly fetching vote tally")
-			cmd.Flags().String("eosws-search-addr", RouterServingAddr, "search grpc endpoin")
-			cmd.Flags().String("eosws-search-addr-secondary", "", "search grpc endpoin")
+			cmd.Flags().String("eosws-search-addr-secondary", "", "secondary search grpc endpoint")
 			cmd.Flags().Duration("eosws-filesource-ratelimit", 2*time.Millisecond, "time to sleep between blocks coming from filesource to control replay speed")
-			cmd.Flags().String("eosws-auth-plugin", "null://", "authenticator plugin URI configuration")
-			cmd.Flags().String("eosws-metering-plugin", "null://", "metering plugin URI configuration")
 			cmd.Flags().String("eosws-healthz-secret", "", "Secret to access healthz")
 			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
@@ -856,16 +836,16 @@ to find how to install it.`)
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
-				BlockmetaAddr:               viper.GetString("eosws-block-meta-addr"),
-				KVDBDSN:                     replaceDataDir(dfuseDataDir, viper.GetString("eosws-kvdb-dsn")),
-				BlockStreamAddr:             viper.GetString("eosws-block-stream-addr"),
-				SourceStoreURL:              replaceDataDir(dfuseDataDir, viper.GetString("eosws-blocks-store")),
-				SearchAddr:                  viper.GetString("eosws-search-addr"),
+				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
+				KVDBDSN:                     replaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
+				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
+				SourceStoreURL:              replaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
 				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
-				MeteringPlugin:              viper.GetString("eosws-metering-plugin"),
-				AuthPlugin:                  viper.GetString("eosws-auth-plugin"),
+				MeteringPlugin:              viper.GetString("common-metering-plugin"),
+				AuthPlugin:                  viper.GetString("common-auth-plugin"),
 				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
 				FetchVoteTally:              viper.GetBool("eosws-fetch-vote-tally"),
@@ -887,13 +867,7 @@ to find how to install it.`)
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
-			cmd.Flags().String("dgraphql-search-addr", RouterServingAddr, "Base URL for search service")
 			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
-			cmd.Flags().String("dgraphql-block-meta-addr", BlockmetaServingAddr, "Base URL for blockmeta service")
-			cmd.Flags().String("dgraphql-kvdb-dsn", KVDBDSN, "Kvdb database connection string") // Used on EOSIO right now, eventually becomes the reference.
-			cmd.Flags().String("dgraphql-auth-plugin", "null://", "Auth plugin, ese dauth repository")
-			cmd.Flags().String("dgraphql-metering-plugin", "null://", "Metering plugin, see dmetering repository")
-			cmd.Flags().String("dgraphql-network-id", NetworkID, "Network ID, for billing (usually maps namespaces on deployments)")
 			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
@@ -914,18 +888,18 @@ to find how to install it.`)
 
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
-				SearchAddr:    viper.GetString("dgraphql-search-addr"),
+				SearchAddr:    viper.GetString("common-search-addr"),
 				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
-				BlockMetaAddr: viper.GetString("dgraphql-blockmeta-addr"),
-				KVDBDSN:       replaceDataDir(absDataDir, viper.GetString("dgraphql-kvdb-dsn")),
+				BlockMetaAddr: viper.GetString("common-blockmeta-addr"),
+				KVDBDSN:       replaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields
 					HTTPListenAddr:  viper.GetString("dgraphql-http-addr"),
 					GRPCListenAddr:  viper.GetString("dgraphql-grpc-addr"),
-					AuthPlugin:      viper.GetString("dgraphql-auth-plugin"),
-					MeteringPlugin:  viper.GetString("dgraphql-metering-plugin"),
-					NetworkID:       viper.GetString("dgraphql-network-id"),
+					AuthPlugin:      viper.GetString("common-auth-plugin"),
+					MeteringPlugin:  viper.GetString("common-metering-plugin"),
+					NetworkID:       viper.GetString("common-network-id"),
 					OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
 					Protocol:        viper.GetString("dgraphql-protocol"),
 					JwtIssuerURL:    viper.GetString("dgraphql-auth-url"),

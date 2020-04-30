@@ -12,4 +12,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- BREAKING CHANGE: rename `app/kvbd-loader` to `app/kvdb-loader`
+- BREAKING CHANGE: rename `app/kvdb-loader` to `app/trxdb-loader`

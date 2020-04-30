@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvdb_loader
+package trxdb_loader
 
 import (
 	"context"
@@ -22,8 +22,8 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	kvdbloader "github.com/dfuse-io/dfuse-eosio/kvdb-loader"
-	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
+	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
+	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
@@ -72,7 +72,7 @@ func (a *App) Run() error {
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
-	var loader kvdbloader.Loader
+	var loader trxdbloader.Loader
 
 	chainID, err := hex.DecodeString(a.Config.ChainId)
 	if err != nil {
@@ -88,7 +88,7 @@ func (a *App) Run() error {
 
 	db.SetWriterChainID(chainID)
 
-	l := kvdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
+	l := trxdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
 
 	loader = l
 

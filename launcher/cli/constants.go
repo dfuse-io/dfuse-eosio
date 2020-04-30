@@ -5,19 +5,18 @@ import (
 )
 
 const (
-	Protocol              pbbstream.Protocol = pbbstream.Protocol_EOS
-	BlockmetaDSN          string             = "badger://{dfuse-data-dir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by data-dir
-	KVDBDSN               string             = "badger://{dfuse-data-dir}/kvdb/kvdb_badger.db?compression=zstd" //%s will be replaced by `<data-dir>`
-	FluxDSN               string             = "badger://{dfuse-data-dir}/fluxdb/flux.db"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
-	MergedBlocksFilesPath string             = "{dfuse-data-dir}/storage/merged-blocks"
-	IndicesFilePath       string             = "{dfuse-data-dir}/storage/indexes"
-	OneBlockFilesPath     string             = "{dfuse-data-dir}/storage/one-blocks"
-	PitreosPath           string             = "{dfuse-data-dir}/storage/pitreos"
-	SnapshotsPath         string             = "{dfuse-data-dir}/storage/snapshots"
-	DmeshDSN              string             = "local://"
-	DmeshServiceVersion   string             = "v1"
-	NetworkID             string             = "eos-local"
-	NodeosBinPath         string             = "nodeos"
+	Protocol             pbbstream.Protocol = pbbstream.Protocol_EOS
+	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb" //%s will be replaced by `<data-dir>`
+	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
+	MergedBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/merged-blocks"
+	IndicesStoreURL      string             = "file://{dfuse-data-dir}/storage/indexes"
+	OneBlockStoreURL     string             = "file://{dfuse-data-dir}/storage/one-blocks"
+	PitreosURL           string             = "file://{dfuse-data-dir}/storage/pitreos"
+	SnapshotsURL         string             = "file://{dfuse-data-dir}/storage/snapshots"
+	DmeshDSN             string             = "local://"
+	DmeshServiceVersion  string             = "v1"
+	NetworkID            string             = "eos-local"
+	NodeosBinPath        string             = "nodeos"
 	// Ports
 	EosManagerAPIAddr           string = ":13008"
 	EosMindreaderHTTPAddr       string = ":13009"

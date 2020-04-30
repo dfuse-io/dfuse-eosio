@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvdb_loader
+package trxdb_loader
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	"github.com/dfuse-io/dfuse-eosio/kvdb-loader/metrics"
+	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
@@ -120,7 +120,7 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 				300,
 				subHandler,
 			)
-			src.SetName("kvdb-loader")
+			src.SetName("trxdb-loader")
 			return src
 		})
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
@@ -139,16 +139,16 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			handler,
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(2),
-			bstream.JoiningSourceName("kvdb-loader"),
+			bstream.JoiningSourceName("trxdb-loader"),
 		)
-		js.SetName("kvdb_loader")
+		js.SetName("trxdb-loader")
 		return js
 	})
 
 	forkableHandler := forkable.New(l,
 		forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible),
 		forkable.EnsureAllBlocksTriggerLongestChain(),
-		forkable.WithName("kvdb-loader"),
+		forkable.WithName("trxdb-loader"),
 	)
 
 	es := bstream.NewEternalSource(sf, forkableHandler)

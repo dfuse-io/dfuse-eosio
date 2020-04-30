@@ -12,21 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvdb_loader
+package trxdb_loader
 
-type Loader interface {
-	StopBeforeBlock(uint64)
+import (
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
+)
 
-	BuildPipelineLive(bool) error
-	BuildPipelineBatch(startBlock uint64, beforeStart uint64)
-	BuildPipelinePatch(startBlock uint64, beforeStart uint64)
+var zlog *zap.Logger
 
-	Launch()
-	Healthy() bool
-
-	// Shutter related
-	Shutdown(err error)
-	OnTerminated(f func(error))
-	Terminated() <-chan struct{}
-	Err() error
+func init() {
+	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb-loader", &zlog)
 }

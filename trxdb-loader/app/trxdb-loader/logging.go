@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvdb_loader
+package trxdb_loader
 
 import (
 	"github.com/dfuse-io/logging"
@@ -22,5 +22,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/kvdb-loader/app/kvdb-loader", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader", &zlog)
 }

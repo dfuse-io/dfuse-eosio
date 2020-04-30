@@ -22,7 +22,7 @@ import (
 	"sync"
 
 	"github.com/blendle/zapdriver"
-	_ "github.com/dfuse-io/dfuse-eosio/kvdb-loader"
+	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
 	"github.com/dfuse-io/logging"

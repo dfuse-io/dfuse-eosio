@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Removed the `--merger-store-timeout` flag.  Not needed anymore, as some sensible timeouts have been put here and there, using the latest `dstore@v0.1.0` that is context-aware.
 
+### Changed
+
+* The `kvdb-loader` application was renamed `trxdb-loader`. In general what was (confusingly) named `kvdb` is now `trxdb`, so that `kvdb` can now take on its full meaning of a lean key-value storage abstraction (which is also used by FluxDB).
+   * All `--kvdb-loader` flags have been renamed to `--trxdb-loader`.
+   * Metrics ID for `kvdb-loader` has been changed to `trxdb-loader` (check your dashboards)
+* The `--mindreader-merge-and-upload-directly` was renamed to `--mindreader-merge-and-store-directly`.
+* `--common-blocks-store-url` now replaces all of these flags:
+    * `--mindreader-merged-blocks-store-url`, `--relayer-blocks-store`, `--fluxdb-blocks-store`, `--kvdb-loader-blocks-store`, `--blockmeta-blocks-store`, `--search-indexer-blocks-store`, `--search-live-blocks-store`, `--search-forkresolver-blocks-store`, `--eosws-blocks-store`
+* `--common-oneblock-store-url` now replaces these flags:
+    *  `--mindreader-oneblock-store-url`, `--merger-one-block-path`
+* `--common-backup-store-url` now replaces these flags:
+    * `--node-manager-backup-store-url`, `--mindreader-backup-store-url`
+* `--search-common-indices-store-url` now replaces these flags:
+    * `--search-indexer-indices-store`, `--search-archive-indices-store`
+* `--common-blockstream-addr` now replaces these flags:
+    * `--fluxdb-block-stream-addr`, `--kvdb-loader-block-stream-addr`, `--blockmeta-block-stream-addr`, `--search-indexer-block-stream-addr`, `--search-live-block-stream-addr`, `--eosws-block-stream-addr`
+* `--common-blockmeta-addr` now replaces these flags:
+    * `--search-indexer-blockmeta-addr`, `--search-router-blockmeta-addr`, `--search-live-blockmeta-addr`, `--eosws-block-meta-addr`, `--dgraphql-block-meta-addr`
+* `--common-network-id` now replaces this flag: `--dgraphql-network-id`
+* `--common-auth-plugin` now replaces these flags:
+    * `--dgraphql-auth-plugin`, `--eosws-auth-plugin`
+* `--fluxdb-statedb-dsn` replaces `--fluxdb-kvdb-store-dsn` (to avoid confusion between what's actually stored in `kvdb` and how FluxDB is using it (as a simple kv store).
+* `--trxdb-loader-parallel-file-download-count` replaces `--kvdb-parallel-file-download-count`
+* `--common-trxdb-dsn` replaces these flags:
+    * `--blockmeta-kvdb-dsn`, `--abicodec-kvdb-dsn`, `--eosws-kvdb-dsn`, `--dgraphql-kvdb-dsn`, `--kvdb-loader-kvdb-dsn`
+
+* Changed default value for storage URL for `fluxdb` and `kvbd` (now named `trxdb`)
+
+### Fixed
+
+* `--kvdb-loader-chain-id` not being taken into account. This affected the decoding of public keys during the `kvdb` loading process.
+
+
 ## [v0.1.0-beta2] 2020-04-27
 
 ### Added
