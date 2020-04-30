@@ -892,6 +892,7 @@ func (ctx *parseCtx) readDeepmindVersion(line string) error {
 
 func (ctx *parseCtx) readABIStart() error {
 	ctx.abiDecoder.resetCache()
+	return nil
 }
 
 // Line format:
