@@ -79,6 +79,10 @@ func newABIDecoder() *ABIDecoder {
 	}
 }
 
+func (c *ABIDecoder) resetCache() {
+	c.cache = newABICache()
+}
+
 func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
 	zlog.Debug("starting a new block", zap.Uint64("block_num", blockNum), zap.Stringer("previous_block", c.lastSeenBlockRef))
 	if c.activeBlockNum != noActiveBlockNum {

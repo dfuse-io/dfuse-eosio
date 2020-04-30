@@ -156,9 +156,12 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			zlog.Info("Fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
 
-		case strings.HasPrefix(line, "ABIDUMP"):
+		case strings.HasPrefix(line, "ABIDUMP START"):
+			err = ctx.readABIStart()
+		case strings.HasPrefix(line, "ABIDUMP DUMP"):
 			err = ctx.readABIDump(line)
-
+		case strings.HasPrefix(line, "ABIDUMP END"):
+			//noop
 		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
 			err = ctx.readDeepmindVersion(line)
 
@@ -885,6 +888,10 @@ func (ctx *parseCtx) readDeepmindVersion(line string) error {
 	}
 
 	return nil
+}
+
+func (ctx *parseCtx) readABIStart() error {
+	ctx.abiDecoder.resetCache()
 }
 
 // Line format:
