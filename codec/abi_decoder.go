@@ -378,7 +378,12 @@ func (q *decodingQueue) addJobs(jobs []decodingJob) error {
 				zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
 			}
 
-			q.hammer.In <- job
+			select {
+			case <-q.hammer.Terminating():
+				zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
+				return
+			case q.hammer.In <- job:
+			}
 		}
 	}()
 	return nil
@@ -491,7 +496,7 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 	decoder := eos.NewDecoder(action.RawData)
 	jsonData, err := abi.Decode(decoder, actionDef.Type)
 	if err != nil {
-		return err
+		return fmt.Errorf("decoding action %s: %w", action.SimpleName(), err)
 	}
 
 	action.JsonData = string(jsonData)
