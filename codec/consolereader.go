@@ -183,6 +183,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readABIDump(line)
 		case strings.HasPrefix(line, "ABIDUMP END"):
 			//noop
+
 		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
 			err = ctx.readDeepmindVersion(line)
 
@@ -940,7 +941,7 @@ func (ctx *parseCtx) readABIDump(line string) error {
 	contract := chunks[3]
 	rawABI := chunks[4]
 
-	return ctx.abiDecoder.importInitialABIDump(contract, rawABI)
+	return ctx.abiDecoder.addInitialABI(contract, rawABI)
 }
 
 // Line format:

@@ -44,7 +44,7 @@ require (
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e
+	github.com/eoscanada/eos-go v0.9.1-0.20200501204100-0f5cba49a91f
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/go-sql-driver/mysql v1.5.0

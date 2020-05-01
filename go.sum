@@ -300,6 +300,8 @@ github.com/eoscanada/eos-go v0.9.1-0.20200429175201-ba2ce9b98346 h1:9bJZ1aXNU+hS
 github.com/eoscanada/eos-go v0.9.1-0.20200429175201-ba2ce9b98346/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e h1:l7BsNCZEaYspc19veSlhgKIdW8yz1SeKOQECE1gWLYU=
 github.com/eoscanada/eos-go v0.9.1-0.20200429235339-c0dd9797527e/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200501204100-0f5cba49a91f h1:6vp+QhIDfh+9RcLhFGbzak5sITh/E9oMO1oStGOdq0g=
+github.com/eoscanada/eos-go v0.9.1-0.20200501204100-0f5cba49a91f/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2 h1:qXzIzDwZsixtJfR6jHRFShEhOKrjYANdjHaPMb1uGCo=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2/go.mod h1:6A7XkYpqkq0DjHzakhUybMXmZeY+9E6Z1SBAWytyO0A=
 github.com/etcd-io/bbolt v1.3.1-etcd.8 h1:pjlDzUF2rdYqUOcjXlZreLijevTZT7bv3zP0TqJTQ74=

@@ -82,6 +82,27 @@ func (c *ABIDecoder) resetCache() {
 	c.cache = newABICache()
 }
 
+func (c *ABIDecoder) addInitialABI(contract string, b64ABI string) error {
+	rawABI, err := base64.StdEncoding.DecodeString(b64ABI)
+	if err != nil {
+		return fmt.Errorf("unable to decode ABI hex data: %w", err)
+	}
+
+	abi := &eos.ABI{}
+	abi.SetFitNodeos(true)
+
+	err = eos.UnmarshalBinary(rawABI, abi)
+	if err != nil {
+		zlog.Info("skipping initial ABI since content cannot be unmarshalled correctly", zap.String("contract", contract))
+		return nil
+	}
+
+	c.cache.Lock()
+	defer c.cache.Unlock()
+
+	return c.cache.addABI(contract, 0, abi)
+}
+
 func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
 	zlog.Debug("starting a new block", zap.Uint64("block_num", blockNum), zap.Stringer("previous_block", c.lastSeenBlockRef))
 	if c.activeBlockNum != noActiveBlockNum {
@@ -183,7 +204,7 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 	for _, actionTrace := range trxTrace.ActionTraces {
 		globalSequence := actionTraceGlobalSequence(actionTrace)
 
-		decodingJobs = append(decodingJobs, actionDecodingJob{actionTrace.Action, globalSequence, localCache})
+		decodingJobs = append(decodingJobs, actionDecodingJob{actionTrace.Action, c.activeBlockNum, globalSequence, localCache})
 	}
 
 	for _, dtrxOp := range trxTrace.DtrxOps {
@@ -195,11 +216,11 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 		}
 
 		for _, action := range dtrxOp.Transaction.Transaction.ContextFreeActions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, globalSequence, localCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, globalSequence, localCache}})
 		}
 
 		for _, action := range dtrxOp.Transaction.Transaction.Actions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, globalSequence, localCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, globalSequence, localCache}})
 		}
 	}
 
@@ -207,36 +228,16 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 	return c.queue.addJobs(decodingJobs)
 }
 
-func (c *ABIDecoder) importInitialABIDump(contract string, b64ABI string) error {
-	rawABI, err := base64.StdEncoding.DecodeString(b64ABI)
-	if err != nil {
-		return fmt.Errorf("decoding hex abi: %w", err)
-	}
-
-	abi := &eos.ABI{}
-	err = eos.UnmarshalBinary(rawABI, abi)
-	if err != nil {
-		zlog.Debug("invalid abi for contract", zap.String("contract", contract), zap.Error(err))
-		return nil
-	}
-	abi.SetFitNodeos(true)
-
-	c.cache.Lock()
-	defer c.cache.Unlock()
-
-	return c.cache.addABI(contract, 0, abi)
-}
-
 func (c *ABIDecoder) processImplicitTransactions(trxOps []*pbcodec.TrxOp) error {
 	var decodingJobs []decodingJob
 
 	for _, trxOp := range trxOps {
 		for _, action := range trxOp.Transaction.Transaction.ContextFreeActions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, math.MaxUint64, emptyCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, mostRecentActiveABI, emptyCache}})
 		}
 
 		for _, action := range trxOp.Transaction.Transaction.Actions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, math.MaxUint64, emptyCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, mostRecentActiveABI, emptyCache}})
 		}
 	}
 
@@ -337,14 +338,19 @@ type decodingQueue struct {
 }
 
 type decodingJob interface {
+	blockNum() uint64
 	kind() string
 }
+
+func (j actionDecodingJob) blockNum() uint64 { return j.actualblockNum }
+func (j dtrxDecodingJob) blockNum() uint64   { return j.actionDecodingJob.actualblockNum }
 
 func (j actionDecodingJob) kind() string { return "action" }
 func (j dtrxDecodingJob) kind() string   { return "dtrx" }
 
 type actionDecodingJob struct {
 	action         *pbcodec.Action
+	actualblockNum uint64
 	globalSequence uint64
 	localCache     *ABICache
 }
@@ -369,7 +375,6 @@ func newDecodingQueue(ctx context.Context, blockNum uint64, globalCache *ABICach
 }
 
 func (q *decodingQueue) addJobs(jobs []decodingJob) error {
-	// The wait group `Add` **must** be done before launching the go routine, otherwise, race conditions can happen
 	for _, job := range jobs {
 		if traceEnabled {
 			zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
@@ -378,26 +383,29 @@ func (q *decodingQueue) addJobs(jobs []decodingJob) error {
 		select {
 		case <-q.hammer.Terminating():
 			zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
-			return q.hammer.Err()
+			return fmt.Errorf("unable to add job, hammer is terminating: %w", q.hammer.Err())
 		case q.hammer.In <- job:
 		}
 	}
+
 	return nil
 }
 
 func (q *decodingQueue) drain() error {
-
 	zlog.Debug("closing dhammer")
 	q.hammer.Close()
 
-	zlog.Debug("waiting for dhammer terminated")
+	zlog.Debug("waiting for dhammer termination")
 	<-q.hammer.Terminated()
 	if q.hammer.Err() != nil {
-		zlog.Warn("dhammer terminated with error", zap.Error(q.hammer.Err()))
-		return q.hammer.Err()
+		return fmt.Errorf("dhammer unexpected termination: %w", q.hammer.Err())
 	}
-	zlog.Debug("dhammer terminated")
 
+	if len(q.hammer.In) != 0 || len(q.hammer.Out) != 0 {
+		return fmt.Errorf("dhammer terminated without being fully drained, still %d elements in In and %d elements in Out", len(q.hammer.In), len(q.hammer.Out))
+	}
+
+	zlog.Debug("dhammer terminated")
 	return nil
 }
 
@@ -409,6 +417,10 @@ func (c *decodingQueue) executeDecodingJob(ctx context.Context, batch []interfac
 	job := batch[0].(decodingJob)
 	if traceEnabled {
 		zlog.Debug("executing decoding job", zap.String("kind", job.kind()))
+	}
+
+	if job.blockNum() != c.blockNum {
+		return nil, fmt.Errorf("trying to decode a job for block num %d while decoding queue block num is %d", job.blockNum(), c.blockNum)
 	}
 
 	switch v := batch[0].(type) {
@@ -492,7 +504,15 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 	decoder := eos.NewDecoder(action.RawData)
 	jsonData, err := abi.Decode(decoder, actionDef.Type)
 	if err != nil {
-		return fmt.Errorf("decoding action %s: %w", action.SimpleName(), err)
+		// Sadly, anything can make up the hex data of an action, so it could be pure garbage that does not fit against
+		// the ABI. Even more, the ABI iteself while valid in structure could be wrong, image a struct field type that point to
+		// an alias that itself is not defined in the ABI. This would prevent decoding. We simply cannot error out here, it must
+		// be logged and we must track the difference somehow.
+		//
+		// FIXME: Probably that logging an error is too much, it's being done like this for now while we
+		//        tweak. Will probably move to INFO (depending on occurrences) or DEBUG.
+		zlog.Error("skipping action since we were not able to decode it against ABI", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence), zap.Error(err))
+		return nil
 	}
 
 	action.JsonData = string(jsonData)
