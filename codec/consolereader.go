@@ -32,9 +32,11 @@ import (
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
 type ConsoleReader struct {
-	src     io.Reader
-	scanner *bufio.Scanner
-	close   func()
+	src        io.Reader
+	scanner    *bufio.Scanner
+	close      func()
+	readBuffer chan string
+	done       chan interface{}
 
 	ctx *parseCtx
 }
@@ -49,6 +51,7 @@ func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 		src:   reader,
 		close: func() {},
 		ctx:   newParseCtx(),
+		done:  make(chan interface{}),
 	}
 	l.setupScanner()
 	return l, nil
@@ -59,6 +62,24 @@ func (l *ConsoleReader) setupScanner() {
 	scanner := bufio.NewScanner(l.src)
 	scanner.Buffer(buf, 50*1024*1024)
 	l.scanner = scanner
+	l.readBuffer = make(chan string, 10)
+
+	go func() {
+		for l.scanner.Scan() {
+			line := l.scanner.Text()
+			if !strings.HasPrefix(line, "DMLOG ") {
+				continue
+			}
+			l.readBuffer <- line
+		}
+		close(l.readBuffer)
+		close(l.done)
+	}()
+
+}
+
+func (l *ConsoleReader) Done() <-chan interface{} {
+	return l.done
 }
 
 func (l *ConsoleReader) Close() {
@@ -85,12 +106,7 @@ func newParseCtx() *parseCtx {
 func (l *ConsoleReader) Read() (out interface{}, err error) {
 	ctx := l.ctx
 
-	for l.scanner.Scan() {
-		line := l.scanner.Text()
-		if !strings.HasPrefix(line, "DMLOG ") {
-			continue
-		}
-
+	for line := range l.readBuffer {
 		line = line[6:]
 
 		// Order of conditions is based (approximately) on those that will appear more often
