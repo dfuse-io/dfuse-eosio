@@ -141,7 +141,12 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFailedDTrxOp(line)
 
 		case strings.HasPrefix(line, "ACCEPTED_BLOCK"):
-			return ctx.readAcceptedBlock(line)
+			block, err := ctx.readAcceptedBlock(line)
+			if err != nil {
+				return nil, l.formatError(line, err)
+			}
+
+			return block, nil
 
 		case strings.HasPrefix(line, "START_BLOCK"):
 			err = ctx.readStartBlock(line)
@@ -158,7 +163,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 		case strings.HasPrefix(line, "ABIDUMP START"):
 			err = ctx.readABIStart()
-		case strings.HasPrefix(line, "ABIDUMP DUMP"):
+		case strings.HasPrefix(line, "ABIDUMP ABI"):
 			err = ctx.readABIDump(line)
 		case strings.HasPrefix(line, "ABIDUMP END"):
 			//noop
@@ -170,8 +175,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 		}
 
 		if err != nil {
-			chunks := strings.SplitN(line, " ", 2)
-			return nil, fmt.Errorf("%s: %s (line %q)", chunks[0], err, line)
+			return nil, l.formatError(line, err)
 		}
 	}
 
@@ -180,6 +184,11 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 	}
 
 	return nil, l.scanner.Err()
+}
+
+func (l *ConsoleReader) formatError(line string, err error) error {
+	chunks := strings.SplitN(line, " ", 2)
+	return fmt.Errorf("%s: %s (line %q)", chunks[0], err, line)
 }
 
 type creationOp struct {
@@ -896,20 +905,20 @@ func (ctx *parseCtx) readABIStart() error {
 }
 
 // Line format:
-//   ABIDUMP ${block_num} ${contract} ${base64_abi}
+//   ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
 func (ctx *parseCtx) readABIDump(line string) error {
-	chunks := strings.SplitN(line, " ", 4)
-	if len(chunks) != 4 {
-		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
+	chunks := strings.SplitN(line, " ", 5)
+	if len(chunks) != 5 {
+		return fmt.Errorf("expected 5 fields, got %d", len(chunks))
 	}
 
-	blockNum, err := strconv.Atoi(chunks[1])
+	_, err := strconv.Atoi(chunks[2])
 	if err != nil {
-		return fmt.Errorf("block_num is not a valid number, got: %q", chunks[1])
+		return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
 	}
-	_ = blockNum
-	contract := chunks[2]
-	rawABI := chunks[3]
+
+	contract := chunks[3]
+	rawABI := chunks[4]
 
 	return ctx.abiDecoder.importInitialABIDump(contract, rawABI)
 }

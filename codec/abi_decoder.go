@@ -109,11 +109,13 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 	}
 
 	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.ImplicitTransactionOps)))
-	// FIXME: manage `error`
-	c.processImplicitTransactions(block.ImplicitTransactionOps)
+	err := c.processImplicitTransactions(block.ImplicitTransactionOps)
+	if err != nil {
+		return fmt.Errorf("unable to process implicit transactions: %w", err)
+	}
 
 	zlog.Debug("waiting for decoding queue to drain completely")
-	err := c.queue.drain()
+	err = c.queue.drain()
 	if err != nil {
 		return fmt.Errorf("unable to correctly drain decoding queue: %w", err)
 	}
