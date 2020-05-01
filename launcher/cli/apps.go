@@ -104,7 +104,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
-			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address of managed nodeos")
+			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
 			cmd.Flags().Bool("node-manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("node-manager-config-dir", "./producer", "Directory for config files")
 			cmd.Flags().String("node-manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
@@ -191,7 +191,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
-			cmd.Flags().String("mindreader-nodeos-api-addr", NodeosAPIAddr, "Target API address")
+			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
 			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
