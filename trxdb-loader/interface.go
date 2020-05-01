@@ -12,17 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metrics
+package trxdb_loader
 
-import (
-	"time"
+type Loader interface {
+	StopBeforeBlock(uint64)
 
-	"github.com/dfuse-io/dmetrics"
-)
+	BuildPipelineLive(bool) error
+	BuildPipelineBatch(startBlock uint64, beforeStart uint64)
+	BuildPipelinePatch(startBlock uint64, beforeStart uint64)
 
-var headBlockTime time.Time
+	Launch()
+	Healthy() bool
 
-var Metricset = dmetrics.NewSet()
-
-var HeadBlockTimeDrift = Metricset.NewHeadTimeDrift("kvdb-loader")
-var HeadBlockNumber = Metricset.NewHeadBlockNumber("kvdb-loader")
+	// Shutter related
+	Shutdown(err error)
+	OnTerminated(f func(error))
+	Terminated() <-chan struct{}
+	Err() error
+}

@@ -26,6 +26,8 @@ func GetMetricAppMeta() map[string]*metrics.AppMeta {
 	return mapping
 }
 
+var RegisterCommonFlags func(cmd *cobra.Command) error
+
 func RegisterFlags(cmd *cobra.Command) error {
 	for _, appDef := range AppRegistry {
 		userLog.Debug("trying to register flags", zap.String("app_id", appDef.ID))
@@ -37,6 +39,12 @@ func RegisterFlags(cmd *cobra.Command) error {
 			}
 		}
 	}
+	if RegisterCommonFlags != nil {
+		if err := RegisterCommonFlags(cmd); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

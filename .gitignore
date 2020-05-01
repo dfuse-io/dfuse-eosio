@@ -16,3 +16,5 @@ dashboard/client/.npmrc
 dfuseeos
 /producer
 /mindreader
+*dbin*
+/proj*

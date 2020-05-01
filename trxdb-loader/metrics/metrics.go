@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kvdb_loader
+package metrics
 
 import (
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"time"
+
+	"github.com/dfuse-io/dmetrics"
 )
 
-var zlog *zap.Logger
+var headBlockTime time.Time
 
-func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/kvdb-loader", &zlog)
-}
+var Metricset = dmetrics.NewSet()
+
+var HeadBlockTimeDrift = Metricset.NewHeadTimeDrift("trxdb-loader")
+var HeadBlockNumber = Metricset.NewHeadBlockNumber("trxdb-loader")
