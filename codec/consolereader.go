@@ -398,7 +398,7 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 }
 
 // Line format:
-//   ACCEPTED_BLOCK ${block_num} ${block_json}
+//   ACCEPTED_BLOCK ${block_num} ${block_state_hex}
 func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -414,21 +414,18 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		return nil, fmt.Errorf("block_num %d doesn't match the active block num (%d)", blockNum, ctx.activeBlockNum)
 	}
 
+	blockStateHex, err := hex.DecodeString(chunks[2])
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode block %d state hex: %w", blockNum, err)
+	}
+
 	blockState := &eos.BlockState{}
-	err = json.Unmarshal([]byte(chunks[2]), &blockState)
+	err = unmarshalBinary(blockStateHex, blockState)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshalling blockState: %s", err)
+		return nil, fmt.Errorf("unmarshalling binary block state: %w", err)
 	}
 
-	signedBlock := &eos.SignedBlock{}
-	err = json.Unmarshal(
-		json.RawMessage(gjson.Get(chunks[2], "block").Raw),
-		&signedBlock,
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling signed block: %s", err)
-	}
+	signedBlock := blockState.SignedBlock
 
 	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
@@ -514,7 +511,7 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 }
 
 // Line format:
-//   APPLIED_TRANSACTION ${block_num} ${traces_json}
+//   APPLIED_TRANSACTION ${block_num} ${trace_hex}
 func (ctx *parseCtx) readAppliedTransaction(line string) error {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -530,13 +527,18 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("saw transactions from block %d while active block is %d", blockNum, ctx.activeBlockNum)
 	}
 
-	transactionTrace := &eos.TransactionTrace{}
-	err = json.Unmarshal(json.RawMessage(chunks[2]), &transactionTrace)
+	trxTraceHex, err := hex.DecodeString(chunks[2])
 	if err != nil {
-		return fmt.Errorf("unmarshal transaction trace: %s", err)
+		return fmt.Errorf("unable to decode transaction trace hex at block num %d: %w", blockNum, err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(transactionTrace))
+	trxTrace := &eos.TransactionTrace{}
+	err = unmarshalBinary(trxTraceHex, trxTrace)
+	if err != nil {
+		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
+	}
+
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace))
 }
 
 // Line formats:
@@ -667,24 +669,44 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 	}
 
 	opString := chunks[1]
-	op, ok := pbcodec.DTrxOp_Operation_value["OPERATION_"+opString]
+	rawOp, ok := pbcodec.DTrxOp_Operation_value["OPERATION_"+opString]
 	if !ok {
 		return fmt.Errorf("operation %q unknown", opString)
 	}
+
+	op := pbcodec.DTrxOp_Operation(rawOp)
 
 	actionIndex, err := strconv.Atoi(chunks[2])
 	if err != nil {
 		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
 	}
 
-	trx := &eos.SignedTransaction{}
-	err = json.Unmarshal([]byte(chunks[10]), trx)
+	trxHex, err := hex.DecodeString(chunks[10])
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
+		return fmt.Errorf("unable to decode signed transaction hex: %w", err)
+	}
+
+	var signedTrx *eos.SignedTransaction
+	if op == pbcodec.DTrxOp_OPERATION_PUSH_CREATE {
+		signedTrx = new(eos.SignedTransaction)
+		err = unmarshalBinary(trxHex, signedTrx)
+		if err != nil {
+			return fmt.Errorf("unmarshal binary signed transaction: %w", err)
+		}
+	} else {
+		trx := &eos.Transaction{}
+		err = unmarshalBinary(trxHex, trx)
+		if err != nil {
+			return fmt.Errorf("unmarshal binary transaction: %w", err)
+		}
+
+		signedTrx = &eos.SignedTransaction{
+			Transaction: trx,
+		}
 	}
 
 	ctx.recordDTrxOp(&pbcodec.DTrxOp{
-		Operation:     pbcodec.DTrxOp_Operation(op),
+		Operation:     op,
 		ActionIndex:   uint32(actionIndex),
 		Sender:        chunks[3],
 		SenderId:      chunks[4],
@@ -693,7 +715,7 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 		DelayUntil:    chunks[7],
 		ExpirationAt:  chunks[8],
 		TransactionId: chunks[9],
-		Transaction:   SignedTransactionToDEOS(trx),
+		Transaction:   SignedTransactionToDEOS(signedTrx),
 	})
 
 	return nil
@@ -1103,18 +1125,34 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 		return fmt.Errorf("unknown kind: %q", opString)
 	}
 
-	trx := &eos.SignedTransaction{}
-	err := json.Unmarshal([]byte(chunks[4]), trx)
+	name := chunks[2]
+	trxID := chunks[3]
+
+	trxHex, err := hex.DecodeString(chunks[4])
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
+		return fmt.Errorf("unable to decode signed transaction %s hex: %w", trxID, err)
+	}
+
+	trx := &eos.SignedTransaction{}
+	err = unmarshalBinary(trxHex, trx)
+	if err != nil {
+		return fmt.Errorf("unmarshal binary signed transaction %s: %w", trxID, err)
 	}
 
 	ctx.recordTrxOp(&pbcodec.TrxOp{
 		Operation:     op,
-		Name:          chunks[2], // "onblock" or "onerror"
-		TransactionId: chunks[3], // the hash of the transaction
+		Name:          name,  // "onblock" or "onerror"
+		TransactionId: trxID, // the hash of the transaction
 		Transaction:   SignedTransactionToDEOS(trx),
 	})
 
 	return nil
+}
+
+func unmarshalBinary(data []byte, v interface{}) error {
+	decoder := eos.NewDecoder(data)
+	decoder.DecodeActions(false)
+	decoder.DecodeP2PMessage(false)
+
+	return decoder.Decode(v)
 }

@@ -307,10 +307,6 @@ github.com/eoscanada/eos-go v0.9.1-0.20200505155649-bcdc4bb0fea2 h1:vwQf2jz+Abyv
 github.com/eoscanada/eos-go v0.9.1-0.20200505155649-bcdc4bb0fea2/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200505161502-39ef3b2d881e h1:hfC1/GcRq5ASYniMgB4vTzgnYmFLpQYxdJ7ClHj9rCI=
 github.com/eoscanada/eos-go v0.9.1-0.20200505161502-39ef3b2d881e/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20200505163554-d07c6e066ba8 h1:vtZJ7h9RqXmVoGu6eyOOwnEN4ArLOADbAQbIYB8oa+c=
-github.com/eoscanada/eos-go v0.9.1-0.20200505163554-d07c6e066ba8/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20200505165842-f6651dd66d62 h1:8G3iJtxwI9oAHlRdJ9Jn9dbXgemvqzEL/ICl22n2o1M=
-github.com/eoscanada/eos-go v0.9.1-0.20200505165842-f6651dd66d62/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae h1:ERE+1jP7ArYHPaCscct/pnURl+lbyA5h4954i6BE4Mo=
 github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200506024405-e9ea3e48a72b h1:HSUYOc15q1kb5uLhDhfgMSRhsxHkETRbfK6LYrDJcX4=
