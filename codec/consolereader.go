@@ -284,6 +284,10 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		// transferred RAM op, so it's all good to attach it directly.
 		ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, failedTrace)
 
+		if err := ctx.abiDecoder.processTransaction(failedTrace); err != nil {
+			return fmt.Errorf("abi decoding failed trace: %w", err)
+		}
+
 		// When the `onerror` `trace` receipt is `soft_fail`, it means the `onerror` handler
 		// succeed. But when it's `hard_fail` it means either no handler was defined, or the one
 		// defined failed to execute properly. So in the `hard_fail` case, let's reset all ops.
@@ -313,7 +317,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
 
 	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
-		return fmt.Errorf("abi decoder: %w", err)
+		return fmt.Errorf("abi decoding trace: %w", err)
 	}
 
 	ctx.resetTrx()

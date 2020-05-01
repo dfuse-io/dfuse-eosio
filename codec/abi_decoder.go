@@ -220,6 +220,7 @@ func (c *ABIDecoder) importInitialABIDump(contract string, b64ABI string) error 
 		return nil
 	}
 	abi.SetFitNodeos(true)
+
 	c.cache.Lock()
 	defer c.cache.Unlock()
 
