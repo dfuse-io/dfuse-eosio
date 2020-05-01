@@ -289,7 +289,7 @@ to find how to install it.`)
 				SnapshotStoreURL:           replaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
 				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
 				ArchiveStoreURL:            archiveStoreURL,
-				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-upload-directly"),
+				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
 				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
 				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
 				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
