@@ -1,15 +1,20 @@
 package cli
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
 	"go.uber.org/zap"
 )
 
-func replaceDataDir(dataDir, in string) string {
-	//fmt.Println("REPLACE", dataDir, in)
-	in = strings.Replace(in, "{dfuse-data-dir}", dataDir, -1)
+func mustReplaceDataDir(dataDir, in string) string {
+	d, err := filepath.Abs(dataDir)
+	if err != nil {
+		panic(fmt.Errorf("file path abs: %w", err))
+	}
+
+	in = strings.Replace(in, "{dfuse-data-dir}", d, -1)
 	return in
 }
 
