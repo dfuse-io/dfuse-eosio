@@ -261,6 +261,8 @@ github.com/dfuse-io/manageos v0.0.0-20200427194536-7390db3958c6 h1:5+hpGCnx2FnzI
 github.com/dfuse-io/manageos v0.0.0-20200427194536-7390db3958c6/go.mod h1:EjCqmIkI9BseVbTIfn1IqX+cfYX9jJARtvTDScOMPjc=
 github.com/dfuse-io/manageos v0.0.0-20200428164919-62086bd03ef3 h1:PSAcGZacsEUvPs1V5nrUA6pTF6KqUZU1ive1xi4+pRA=
 github.com/dfuse-io/manageos v0.0.0-20200428164919-62086bd03ef3/go.mod h1:EjCqmIkI9BseVbTIfn1IqX+cfYX9jJARtvTDScOMPjc=
+github.com/dfuse-io/manageos v0.0.0-20200501154145-7152b316b38f h1:aISxXQ2amRd8nHlAKkwFD6pFJqeIMKWl/nqqRVaQ1Zc=
+github.com/dfuse-io/manageos v0.0.0-20200501154145-7152b316b38f/go.mod h1:EjCqmIkI9BseVbTIfn1IqX+cfYX9jJARtvTDScOMPjc=
 github.com/dfuse-io/merger v0.0.0-20200422205004-c6c814e2004b h1:y9oa3BEA3fJ3oYHfxyWbI9izv0DzJqz6z21HYqofaDE=
 github.com/dfuse-io/merger v0.0.0-20200422205004-c6c814e2004b/go.mod h1:h7t8ixxzxHoQjYWGjWzUk1pGCMdtn6kl7NV2/XNqjC0=
 github.com/dfuse-io/merger v0.0.0-20200427193941-a962577f3aa5 h1:MfWDqSgazcCjaRbV5b5GquA5/yQW+ObZ7/5QjeiM+Mg=
