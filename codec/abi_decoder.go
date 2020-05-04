@@ -85,7 +85,7 @@ func (c *ABIDecoder) resetCache() {
 func (c *ABIDecoder) addInitialABI(contract string, b64ABI string) error {
 	rawABI, err := base64.StdEncoding.DecodeString(b64ABI)
 	if err != nil {
-		return fmt.Errorf("unable to decode ABI hex data: %w", err)
+		return fmt.Errorf("unable to decode ABI hex data for contract %s: %w", contract, err)
 	}
 
 	abi := &eos.ABI{}
@@ -204,7 +204,7 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 	for _, actionTrace := range trxTrace.ActionTraces {
 		globalSequence := actionTraceGlobalSequence(actionTrace)
 
-		decodingJobs = append(decodingJobs, actionDecodingJob{actionTrace.Action, c.activeBlockNum, globalSequence, localCache})
+		decodingJobs = append(decodingJobs, actionDecodingJob{actionTrace.Action, c.activeBlockNum, trxTrace.Id, globalSequence, localCache})
 	}
 
 	for _, dtrxOp := range trxTrace.DtrxOps {
@@ -216,11 +216,11 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 		}
 
 		for _, action := range dtrxOp.Transaction.Transaction.ContextFreeActions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, globalSequence, localCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, trxTrace.Id, globalSequence, localCache}})
 		}
 
 		for _, action := range dtrxOp.Transaction.Transaction.Actions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, globalSequence, localCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, trxTrace.Id, globalSequence, localCache}})
 		}
 	}
 
@@ -233,11 +233,11 @@ func (c *ABIDecoder) processImplicitTransactions(trxOps []*pbcodec.TrxOp) error 
 
 	for _, trxOp := range trxOps {
 		for _, action := range trxOp.Transaction.Transaction.ContextFreeActions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, mostRecentActiveABI, emptyCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, trxOp.TransactionId, mostRecentActiveABI, emptyCache}})
 		}
 
 		for _, action := range trxOp.Transaction.Transaction.Actions {
-			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, mostRecentActiveABI, emptyCache}})
+			decodingJobs = append(decodingJobs, dtrxDecodingJob{actionDecodingJob{action, c.activeBlockNum, trxOp.TransactionId, mostRecentActiveABI, emptyCache}})
 		}
 	}
 
@@ -340,10 +340,14 @@ type decodingQueue struct {
 type decodingJob interface {
 	blockNum() uint64
 	kind() string
+	trxID() string
 }
 
 func (j actionDecodingJob) blockNum() uint64 { return j.actualblockNum }
 func (j dtrxDecodingJob) blockNum() uint64   { return j.actionDecodingJob.actualblockNum }
+
+func (j actionDecodingJob) trxID() string { return j.actualTrxID }
+func (j dtrxDecodingJob) trxID() string   { return j.actionDecodingJob.actualTrxID }
 
 func (j actionDecodingJob) kind() string { return "action" }
 func (j dtrxDecodingJob) kind() string   { return "dtrx" }
@@ -351,6 +355,7 @@ func (j dtrxDecodingJob) kind() string   { return "dtrx" }
 type actionDecodingJob struct {
 	action         *pbcodec.Action
 	actualblockNum uint64
+	actualTrxID    string
 	globalSequence uint64
 	localCache     *ABICache
 }
@@ -425,9 +430,9 @@ func (c *decodingQueue) executeDecodingJob(ctx context.Context, batch []interfac
 
 	switch v := batch[0].(type) {
 	case actionDecodingJob:
-		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, v.localCache)
+		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, job.trxID(), job.blockNum(), v.localCache)
 	case dtrxDecodingJob:
-		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, v.localCache)
+		return []interface{}{job.kind()}, c.decodeAction(v.action, v.globalSequence, job.trxID(), job.blockNum(), v.localCache)
 	default:
 		return nil, fmt.Errorf("unknown decoding job kind %s", job.kind())
 	}
@@ -454,7 +459,7 @@ func (q *decodingQueue) drainQueueFully(blockNum uint64) {
 	}
 }
 
-func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint64, localCache *ABICache) error {
+func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint64, trxID string, blockNum uint64, localCache *ABICache) error {
 	if traceEnabled {
 		zlog.Debug("decoding action", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 	}
@@ -475,7 +480,7 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 		var err error
 		action.JsonData, err = decodeTransfer(action.RawData)
 		if err != nil {
-			return fmt.Errorf("unable to decode transfer action: %w", err)
+			return fmt.Errorf("unable to decode transfer action with globalsequence %d in trx %s: %w", globalSequence, trxID, err)
 		}
 
 		return nil
