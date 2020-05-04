@@ -16,6 +16,7 @@ package codec
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math"
 
@@ -555,6 +556,13 @@ func (q *decodingQueue) findABI(contract string, globalSequence uint64, localCac
 	return q.globalCache.findABI(contract, globalSequence)
 }
 
+type eosioTokenTransfer struct {
+	From     eos.Name  `json:"from"`
+	To       eos.Name  `json:"to"`
+	Quantity eos.Asset `json:"quantity"`
+	Memo     string    `json:"memo"`
+}
+
 func decodeTransfer(data []byte) (string, error) {
 	decoder := eos.NewDecoder(data)
 	from, err := decoder.ReadName()
@@ -577,5 +585,15 @@ func decodeTransfer(data []byte) (string, error) {
 		return "", fmt.Errorf(`unable to read transfer field "memo": %w`, err)
 	}
 
-	return fmt.Sprintf(`{"from":"%s","to":"%s","quantity":"%s","memo":"%s"}`, from, to, quantity, memo), nil
+	serialized, err := json.Marshal(&eosioTokenTransfer{
+		From:     from,
+		To:       to,
+		Quantity: quantity,
+		Memo:     memo,
+	})
+	if err != nil {
+		return "", fmt.Errorf(`unable to Marshal transfer to JSON: %w`, err)
+	}
+
+	return string(serialized), nil
 }
