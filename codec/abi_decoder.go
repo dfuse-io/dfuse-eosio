@@ -480,7 +480,8 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 		var err error
 		action.JsonData, err = decodeTransfer(action.RawData)
 		if err != nil {
-			return fmt.Errorf("unable to decode transfer action with globalsequence %d in trx %s: %w", globalSequence, trxID, err)
+			zlog.Error("skipping transfer action since it failed. This is probably a softFail", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence), zap.String("trx_id", trxID), zap.Error(err))
+			return nil
 		}
 
 		return nil
