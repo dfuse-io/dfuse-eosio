@@ -270,6 +270,20 @@ type abiOperation struct {
 	abi            *eos.ABI
 }
 
+func cloneABI(src *eos.ABI) *eos.ABI {
+	return &eos.ABI{
+		Version:          src.Version,
+		Types:            src.Types,
+		Structs:          src.Structs,
+		Actions:          src.Actions,
+		Tables:           src.Tables,
+		RicardianClauses: src.RicardianClauses,
+		ErrorMessages:    src.ErrorMessages,
+		Extensions:       src.Extensions,
+		Variants:         src.Variants,
+	}
+}
+
 func (c *ABIDecoder) commitABIs(trxID string, operations []abiOperation) error {
 	zlog.Debug("updating cache with abis from transaction", zap.String("id", trxID), zap.Uint64("block_num", c.activeBlockNum), zap.Int("abi_count", len(operations)))
 	c.cache.Lock()
@@ -500,6 +514,9 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 			zlog.Debug("skipping action since no ABI found for it", zap.String("action", action.SimpleName()), zap.Uint64("global_sequence", globalSequence))
 		}
 		return nil
+	}
+	if action.Account == "eosio" && action.Name == "onerror" {
+		abi = cloneABI(abi) // this will have FitNodeos set to false...
 	}
 
 	actionDef := abi.ActionForName(eos.ActionName(action.Name))
