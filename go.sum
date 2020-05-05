@@ -244,6 +244,10 @@ github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39 h1:vQL3ZKf3mUWvp4
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/manageos v0.0.0-20200505143338-2fb2b2501199 h1:hM43e6BcUPo8RfCUdI7GydG+CFGB16ptlZ3ynft42qE=
 github.com/dfuse-io/manageos v0.0.0-20200505143338-2fb2b2501199/go.mod h1:2IER+zoYxW6TqD3lnsDinJlipow6JbzDMK6NxCawmo8=
+github.com/dfuse-io/manageos v0.0.0-20200505172737-41113713f86a h1:M/mjZwpoXQUOodYZBvnkp6q8SmLRPX61lJFa2/JTxlE=
+github.com/dfuse-io/manageos v0.0.0-20200505172737-41113713f86a/go.mod h1:AgvQiBN6wFa9oX8wOboFsE9D34almQgHO/Tf2fZ8gpA=
+github.com/dfuse-io/manageos v0.0.0-20200505184340-9e51bf26c46c h1:eOsqwU8Ew4/8kv5gcF97h8lIK7TSWDV9yFwdgytwKmc=
+github.com/dfuse-io/manageos v0.0.0-20200505184340-9e51bf26c46c/go.mod h1:2j07QgpLjNi2tsGK5VOW2TNAqd8Z5sdCHMgGFG736FA=
 github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7 h1:jB/hkwZQ9m7wu8puUoIYBAHdHnk0cSoeww4MgU1H9HY=
 github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7/go.mod h1:nCt/Y9Iot+/Xjv5Eu2QaSyJ+bRzYwy8iVmQJnVSsdG0=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
@@ -307,6 +311,8 @@ github.com/eoscanada/eos-go v0.9.1-0.20200505163554-d07c6e066ba8 h1:vtZJ7h9RqXmV
 github.com/eoscanada/eos-go v0.9.1-0.20200505163554-d07c6e066ba8/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200505165842-f6651dd66d62 h1:8G3iJtxwI9oAHlRdJ9Jn9dbXgemvqzEL/ICl22n2o1M=
 github.com/eoscanada/eos-go v0.9.1-0.20200505165842-f6651dd66d62/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae h1:ERE+1jP7ArYHPaCscct/pnURl+lbyA5h4954i6BE4Mo=
+github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2 h1:qXzIzDwZsixtJfR6jHRFShEhOKrjYANdjHaPMb1uGCo=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2/go.mod h1:6A7XkYpqkq0DjHzakhUybMXmZeY+9E6Z1SBAWytyO0A=
 github.com/etcd-io/bbolt v1.3.1-etcd.8 h1:pjlDzUF2rdYqUOcjXlZreLijevTZT7bv3zP0TqJTQ74=
