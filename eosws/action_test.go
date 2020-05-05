@@ -71,8 +71,6 @@ func TestOnGetActionsTraces(t *testing.T) {
 		out, _ = sjson.SetRaw(out, "data.trace.producer_block_id", `""`)
 		out, _ = sjson.SetRaw(out, "data.trace.trx_id", `""`)
 		out, _ = sjson.SetRaw(out, "data.trace.elapsed", `0`)
-		out, _ = sjson.SetRaw(out, "data.trace.except", `null`)
-		out, _ = sjson.SetRaw(out, "data.trace.error_code", `null`)
 		out, _ = sjson.SetRaw(out, "data.trace.block_time", `"1970-01-01T00:00:00"`)
 		return out
 	}

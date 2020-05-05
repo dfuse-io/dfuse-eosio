@@ -2,6 +2,7 @@ package codec
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"os"
@@ -31,6 +32,7 @@ func TestABIDecoder(t *testing.T) {
 
 	type testData struct {
 		name         string
+		abiDumps     map[string]*eos.ABI
 		blocks       []*pbcodec.Block
 		expectations []expectation
 	}
@@ -225,6 +227,27 @@ func TestABIDecoder(t *testing.T) {
 				{"block 1/trace 0/action 0", `{"quantity":"1.0000 EOS"}`},
 			},
 		},
+
+		{
+			name: "soft_fail, with abi dumps, single action global sequence 0, still records ABI",
+			abiDumps: map[string]*eos.ABI{
+				"eosio.token": tokenABI2,
+			},
+			blocks: in(
+				testBlock(t, "00000002aa", "00000001aa",
+					trxTrace(t, actionTraceSetABI(t, "eosio.token", 0, 1, tokenABI2)),
+				),
+				testBlock(t, "00000003aa", "00000002aa",
+					trxTrace(t, softFailStatus,
+						actionTraceFail(t, "eosio.token:eosio.token:transfer", 0, tokenABI2, `{"from":"bitfinexcw11","memo":"Simple test","quantity":"1.0000 EOS","to":"bitfinexcw12"}`),
+					),
+				),
+			),
+			expectations: []expectation{
+				{"block 1/trace 0/action 0", `{"from":"bitfinexcw11","memo":"Simple test","quantity":"1.0000 EOS","to":"bitfinexcw12"}`},
+			},
+		},
+
 		{
 			name: "hard_fail onerror, still works from failed transaction but does not record ABI",
 			blocks: in(
@@ -389,6 +412,13 @@ func TestABIDecoder(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			decoder := newABIDecoder()
+
+			for contract, abi := range test.abiDumps {
+				abiBinary, err := eos.MarshalBinary(abi)
+				require.NoError(t, err)
+
+				decoder.addInitialABI(contract, base64.RawStdEncoding.EncodeToString(abiBinary))
+			}
 
 			for _, block := range test.blocks {
 				maybePrintBlock(t, block)

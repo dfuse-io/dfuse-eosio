@@ -45,15 +45,6 @@ func TestToV1ActionTraceEmptyNoPanic(t *testing.T) {
 	ToV1ActionTrace(&pbcodec.ActionTrace{}) // should not panic
 }
 
-// func TestConvertEOSToDEOS(t *testing.T) {
-// 	transactionTrace := &eos.TransactionTrace{}
-// 	unmarshalFromFixture(filepath.Join("testdata", "02-action-wraps-v2.json"), transactionTrace)
-
-// 	pbTrace := deos.TransactionTraceToDEOS(transactionTrace)
-// 	out := protoJSONMarshalIndent(t, pbTrace)
-// 	ioutil.WriteFile("/tmp/throughpb02.json", []byte(out), 0644)
-// }
-
 func TestToTransactionV1Lifecycle(t *testing.T) {
 	tests := []struct {
 		fixture string

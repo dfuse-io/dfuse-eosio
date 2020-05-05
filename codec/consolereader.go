@@ -60,7 +60,7 @@ func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 func (l *ConsoleReader) setupScanner() {
 	buf := make([]byte, 50*1024*1024)
 	scanner := bufio.NewScanner(l.src)
-	scanner.Buffer(buf, 50*1024*1024)
+	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
 	l.readBuffer = make(chan string, 10)
 
@@ -430,7 +430,7 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		return nil, fmt.Errorf("unmarshalling signed block: %s", err)
 	}
 
-	ctx.block.Id = blockState.BlockID
+	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)

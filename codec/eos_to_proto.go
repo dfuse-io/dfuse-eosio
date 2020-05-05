@@ -30,9 +30,9 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-func ActivatedProtocolFeaturesToDEOS(in map[string][]eos.HexBytes) *pbcodec.ActivatedProtocolFeatures {
+func ActivatedProtocolFeaturesToDEOS(in *eos.ProtocolFeatureActivationSet) *pbcodec.ActivatedProtocolFeatures {
 	out := &pbcodec.ActivatedProtocolFeatures{}
-	out.ProtocolFeatures = hexBytesToBytesSlices(in["protocol_features"])
+	out.ProtocolFeatures = checksumsToBytesSlices(in.ProtocolFeatures)
 	return out
 }
 
@@ -59,23 +59,23 @@ func PendingScheduleToDEOS(in *eos.PendingSchedule) *pbcodec.PendingProducerSche
 	return out
 }
 
-func ProducerToLastProducedToDEOS(in [][2]eos.EOSNameOrUint32) []*pbcodec.ProducerToLastProduced {
+func ProducerToLastProducedToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastProduced {
 	out := []*pbcodec.ProducerToLastProduced{}
 	for _, elem := range in {
 		out = append(out, &pbcodec.ProducerToLastProduced{
-			Name:                 elem[0].(string),
-			LastBlockNumProduced: uint32(elem[1].(float64)),
+			Name:                 string(elem.AccountName),
+			LastBlockNumProduced: uint32(elem.BlockNum),
 		})
 	}
 	return out
 }
 
-func ProducerToLastImpliedIrbToDEOS(in [][2]eos.EOSNameOrUint32) []*pbcodec.ProducerToLastImpliedIRB {
+func ProducerToLastImpliedIrbToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastImpliedIRB {
 	out := []*pbcodec.ProducerToLastImpliedIRB{}
 	for _, elem := range in {
 		out = append(out, &pbcodec.ProducerToLastImpliedIRB{
-			Name:                 elem[0].(string),
-			LastBlockNumProduced: uint32(elem[1].(float64)),
+			Name:                 string(elem.AccountName),
+			LastBlockNumProduced: uint32(elem.BlockNum),
 		})
 	}
 	return out
@@ -83,9 +83,17 @@ func ProducerToLastImpliedIrbToDEOS(in [][2]eos.EOSNameOrUint32) []*pbcodec.Prod
 
 func BlockrootMerkleToDEOS(merkle *eos.MerkleRoot) *pbcodec.BlockRootMerkle {
 	return &pbcodec.BlockRootMerkle{
-		NodeCount:   merkle.NodeCount,
-		ActiveNodes: mustHexStringArrayToBytesArray(merkle.ActiveNodes),
+		NodeCount:   uint32(merkle.NodeCount),
+		ActiveNodes: checksumsToBytesSlices(merkle.ActiveNodes),
 	}
+}
+
+func checksumsToBytesSlices(in []eos.Checksum256) [][]byte {
+	out := [][]byte{}
+	for _, s := range in {
+		out = append(out, []byte(s))
+	}
+	return out
 }
 
 func hexBytesToBytesSlices(in []eos.HexBytes) [][]byte {
@@ -104,7 +112,7 @@ func bytesSlicesToHexBytes(in [][]byte) []eos.HexBytes {
 	return out
 }
 
-func mustHexStringArrayToBytesArray(in []string) [][]byte {
+func mustHexStringArrayToBytesSlices(in []string) [][]byte {
 	out := [][]byte{}
 	for _, s := range in {
 		b, err := hex.DecodeString(s)
@@ -652,12 +660,12 @@ func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.Actio
 		BlockTime:            mustProtoTimestamp(in.BlockTime.Time),
 		AccountRamDeltas:     AccountRAMDeltasToDEOS(in.AccountRAMDeltas),
 		Exception:            ExceptionToDEOS(in.Except),
-		ActionOrdinal:        in.ActionOrdinal,
-		CreatorActionOrdinal: in.CreatorActionOrdinal,
+		ActionOrdinal:        uint32(in.ActionOrdinal),
+		CreatorActionOrdinal: uint32(in.CreatorActionOrdinal),
 		ExecutionIndex:       execIndex,
 		ErrorCode:            ErrorCodeToDEOS(in.ErrorCode),
 	}
-	out.ClosestUnnotifiedAncestorActionOrdinal = in.ClosestUnnotifiedAncestorActionOrdinal // freaking long line, stay away from me
+	out.ClosestUnnotifiedAncestorActionOrdinal = uint32(in.ClosestUnnotifiedAncestorActionOrdinal) // freaking long line, stay away from me
 
 	if in.Receipt != nil {
 		var deosAuthSequence []*pbcodec.AuthSequence
@@ -666,7 +674,7 @@ func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.Actio
 		}
 		out.Receipt = &pbcodec.ActionReceipt{
 			Receiver:       string(in.Receipt.Receiver),
-			Digest:         in.Receipt.ActionDigest,
+			Digest:         in.Receipt.ActionDigest.String(),
 			GlobalSequence: uint64(in.Receipt.GlobalSequence),
 			AuthSequence:   deosAuthSequence,
 			RecvSequence:   uint64(in.Receipt.ReceiveSequence),
@@ -705,23 +713,23 @@ func ActionTraceToEOS(in *pbcodec.ActionTrace) (out eos.ActionTrace) {
 		BlockTime:            TimestampToBlockTimestamp(in.BlockTime),
 		AccountRAMDeltas:     AccountRAMDeltasToEOS(in.AccountRamDeltas),
 		Except:               ExceptionToEOS(in.Exception),
-		ActionOrdinal:        uint32(in.ActionOrdinal),
-		CreatorActionOrdinal: uint32(in.CreatorActionOrdinal),
+		ActionOrdinal:        eos.Varuint32(in.ActionOrdinal),
+		CreatorActionOrdinal: eos.Varuint32(in.CreatorActionOrdinal),
 		ErrorCode:            ErrorCodeToEOS(in.ErrorCode),
 	}
-	out.ClosestUnnotifiedAncestorActionOrdinal = uint32(in.ClosestUnnotifiedAncestorActionOrdinal) // freaking long line, stay away from me
+	out.ClosestUnnotifiedAncestorActionOrdinal = eos.Varuint32(in.ClosestUnnotifiedAncestorActionOrdinal) // freaking long line, stay away from me
 
 	if in.Receipt != nil {
 		receipt := in.Receipt
 
 		out.Receipt = &eos.ActionTraceReceipt{
 			Receiver:        eos.AccountName(receipt.Receiver),
-			ActionDigest:    receipt.Digest,
+			ActionDigest:    ChecksumToEOS(receipt.Digest),
 			GlobalSequence:  eos.Uint64(receipt.GlobalSequence),
 			AuthSequence:    AuthSequenceListToEOS(receipt.AuthSequence),
 			ReceiveSequence: eos.Uint64(receipt.RecvSequence),
-			CodeSequence:    eos.Uint64(receipt.CodeSequence),
-			ABISequence:     eos.Uint64(receipt.AbiSequence),
+			CodeSequence:    eos.Varuint32(receipt.CodeSequence),
+			ABISequence:     eos.Varuint32(receipt.AbiSequence),
 		}
 	}
 
@@ -861,7 +869,7 @@ func ExceptionToEOS(in *pbcodec.Exception) *eos.Except {
 		return nil
 	}
 	out := &eos.Except{
-		Code:    int(in.Code),
+		Code:    eos.Int64(in.Code),
 		Name:    in.Name,
 		Message: in.Message,
 	}
@@ -889,7 +897,7 @@ func ExceptionToEOS(in *pbcodec.Exception) *eos.Except {
 func LogContextToDEOS(in eos.ExceptLogContext) *pbcodec.Exception_LogContext {
 
 	out := &pbcodec.Exception_LogContext{
-		Level:      in.Level,
+		Level:      in.Level.String(),
 		File:       in.File,
 		Line:       int32(in.Line),
 		Method:     in.Method,
@@ -908,10 +916,13 @@ func LogContextToEOS(in *pbcodec.Exception_LogContext) *eos.ExceptLogContext {
 		return nil
 	}
 
+	var exceptLevel eos.ExceptLogLevel
+	exceptLevel.FromString(in.Level)
+
 	return &eos.ExceptLogContext{
-		Level:      in.Level,
+		Level:      exceptLevel,
 		File:       in.File,
-		Line:       int(in.Line),
+		Line:       uint64(in.Line),
 		Method:     in.Method,
 		Hostname:   in.Hostname,
 		ThreadName: in.ThreadName,
