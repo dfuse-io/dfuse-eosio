@@ -242,10 +242,6 @@ github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af h1:eh9e9gPlX+pMYc
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39 h1:vQL3ZKf3mUWvp4hdqCKYJ3J80lshaS/DYE2pB24hWOQ=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
-github.com/dfuse-io/manageos v0.0.0-20200505184340-9e51bf26c46c h1:eOsqwU8Ew4/8kv5gcF97h8lIK7TSWDV9yFwdgytwKmc=
-github.com/dfuse-io/manageos v0.0.0-20200505184340-9e51bf26c46c/go.mod h1:2j07QgpLjNi2tsGK5VOW2TNAqd8Z5sdCHMgGFG736FA=
-github.com/dfuse-io/manageos v0.0.0-20200506160132-08fdac2ed9e2 h1:1u2oSsHujSC4WqdrMUAu4RQdxxC5Gdo/Uf93Xd6l630=
-github.com/dfuse-io/manageos v0.0.0-20200506160132-08fdac2ed9e2/go.mod h1:okcJtaebmwEgwLyRLRXfHWEs8UPdD5mW37ZRuuflS4M=
 github.com/dfuse-io/manageos v0.0.0-20200506180559-2410ab3075d8 h1:Auh3zfedLxEYcLheszv04pRbZJVRC4pvU7evo3D4RM8=
 github.com/dfuse-io/manageos v0.0.0-20200506180559-2410ab3075d8/go.mod h1:okcJtaebmwEgwLyRLRXfHWEs8UPdD5mW37ZRuuflS4M=
 github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7 h1:jB/hkwZQ9m7wu8puUoIYBAHdHnk0cSoeww4MgU1H9HY=
@@ -296,12 +292,10 @@ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7
 github.com/eoscanada/eos-go v0.8.5/go.mod h1:RKrm2XzZEZWxSMTRqH5QOyJ1fb/qKEjs2ix1aQl0sk4=
 github.com/eoscanada/eos-go v0.8.10-0.20190329223853-84b552870f2a/go.mod h1:RKrm2XzZEZWxSMTRqH5QOyJ1fb/qKEjs2ix1aQl0sk4=
 github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae h1:ERE+1jP7ArYHPaCscct/pnURl+lbyA5h4954i6BE4Mo=
-github.com/eoscanada/eos-go v0.9.1-0.20200505184254-edcf1812b1ae/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20200506155140-4a5658d5f4ef h1:/nij6zQikOE12o243twhGGqkEkVDaWcUF2N+elCSUj4=
-github.com/eoscanada/eos-go v0.9.1-0.20200506155140-4a5658d5f4ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef h1:dgDINeBMr/GQUqQqz1st2RHRivszsh2v2tahwX2ZqMU=
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200506181410-e68eec7a6f2d h1:STaCO9Vp5JuFX0dXoxFA7SQMQXoTS77c7LvSQmcspfc=
+github.com/eoscanada/eos-go v0.9.1-0.20200506181410-e68eec7a6f2d/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2 h1:qXzIzDwZsixtJfR6jHRFShEhOKrjYANdjHaPMb1uGCo=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2/go.mod h1:6A7XkYpqkq0DjHzakhUybMXmZeY+9E6Z1SBAWytyO0A=
 github.com/etcd-io/bbolt v1.3.1-etcd.8 h1:pjlDzUF2rdYqUOcjXlZreLijevTZT7bv3zP0TqJTQ74=

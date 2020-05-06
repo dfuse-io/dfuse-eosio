@@ -705,7 +705,7 @@ func ActionTraceToEOS(in *pbcodec.ActionTrace) (out eos.ActionTrace) {
 		Receiver:             eos.AccountName(in.Receiver),
 		Action:               ActionToEOS(in.Action),
 		Elapsed:              eos.Int64(in.Elapsed),
-		Console:              eos.ConsoleLog(in.Console),
+		Console:              eos.SafeString(in.Console),
 		TransactionID:        ChecksumToEOS(in.TransactionId),
 		ContextFree:          in.ContextFree,
 		ProducerBlockID:      ChecksumToEOS(in.ProducerBlockId),
