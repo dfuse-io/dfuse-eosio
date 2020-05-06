@@ -60,23 +60,31 @@ func PendingScheduleToDEOS(in *eos.PendingSchedule) *pbcodec.PendingProducerSche
 }
 
 func ProducerToLastProducedToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastProduced {
-	out := []*pbcodec.ProducerToLastProduced{}
-	for _, elem := range in {
-		out = append(out, &pbcodec.ProducerToLastProduced{
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([]*pbcodec.ProducerToLastProduced, len(in))
+	for i, elem := range in {
+		out[i] = &pbcodec.ProducerToLastProduced{
 			Name:                 string(elem.AccountName),
 			LastBlockNumProduced: uint32(elem.BlockNum),
-		})
+		}
 	}
 	return out
 }
 
 func ProducerToLastImpliedIrbToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastImpliedIRB {
-	out := []*pbcodec.ProducerToLastImpliedIRB{}
-	for _, elem := range in {
-		out = append(out, &pbcodec.ProducerToLastImpliedIRB{
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([]*pbcodec.ProducerToLastImpliedIRB, len(in))
+	for i, elem := range in {
+		out[i] = &pbcodec.ProducerToLastImpliedIRB{
 			Name:                 string(elem.AccountName),
 			LastBlockNumProduced: uint32(elem.BlockNum),
-		})
+		}
 	}
 	return out
 }
@@ -89,37 +97,53 @@ func BlockrootMerkleToDEOS(merkle *eos.MerkleRoot) *pbcodec.BlockRootMerkle {
 }
 
 func checksumsToBytesSlices(in []eos.Checksum256) [][]byte {
-	out := [][]byte{}
-	for _, s := range in {
-		out = append(out, []byte(s))
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([][]byte, len(in))
+	for i, s := range in {
+		out[i] = []byte(s)
 	}
 	return out
 }
 
 func hexBytesToBytesSlices(in []eos.HexBytes) [][]byte {
-	out := [][]byte{}
-	for _, s := range in {
-		out = append(out, []byte(s))
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([][]byte, len(in))
+	for i, s := range in {
+		out[i] = []byte(s)
 	}
 	return out
 }
 
 func bytesSlicesToHexBytes(in [][]byte) []eos.HexBytes {
-	out := []eos.HexBytes{}
-	for _, s := range in {
-		out = append(out, []byte(s))
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([]eos.HexBytes, len(in))
+	for i, s := range in {
+		out[i] = []byte(s)
 	}
 	return out
 }
 
 func mustHexStringArrayToBytesSlices(in []string) [][]byte {
-	out := [][]byte{}
-	for _, s := range in {
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([][]byte, len(in))
+	for i, s := range in {
 		b, err := hex.DecodeString(s)
 		if err != nil {
 			panic("invalid hex string")
 		}
-		out = append(out, b)
+		out[i] = b
 	}
 	return out
 }
@@ -232,74 +256,110 @@ func ProducerAuthorityScheduleToEOS(in *pbcodec.ProducerAuthoritySchedule) *eos.
 }
 
 func ProducerKeysToDEOS(in []eos.ProducerKey) (out []*pbcodec.ProducerKey) {
-	for _, key := range in {
-		out = append(out, &pbcodec.ProducerKey{
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.ProducerKey, len(in))
+	for i, key := range in {
+		out[i] = &pbcodec.ProducerKey{
 			AccountName:     string(key.AccountName),
 			BlockSigningKey: key.BlockSigningKey.String(),
-		})
+		}
 	}
 	return
 }
 
 func ProducerKeysToEOS(in []*pbcodec.ProducerKey) (out []eos.ProducerKey) {
-	for _, producer := range in {
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]eos.ProducerKey, len(in))
+	for i, producer := range in {
+		// panic on error instead?
 		key, _ := ecc.NewPublicKey(producer.BlockSigningKey)
-		// panic?
-		eosProducer := eos.ProducerKey{
+
+		out[i] = eos.ProducerKey{
 			AccountName:     eos.AccountName(producer.AccountName),
 			BlockSigningKey: key,
 		}
-		out = append(out, eosProducer)
 	}
 	return
 }
 
 func PublicKeysToEOS(in []string) (out []*ecc.PublicKey) {
-	for _, inkey := range in {
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]*ecc.PublicKey, len(in))
+	for i, inkey := range in {
+		// panic on error instead?
 		key, _ := ecc.NewPublicKey(inkey)
-		out = append(out, &key)
+
+		out[i] = &key
 	}
 	return
 }
 
 func ExtensionsToDEOS(in []*eos.Extension) (out []*pbcodec.Extension) {
-	for _, extension := range in {
-		out = append(out, &pbcodec.Extension{
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.Extension, len(in))
+	for i, extension := range in {
+		out[i] = &pbcodec.Extension{
 			Type: uint32(extension.Type),
 			Data: extension.Data,
-		})
+		}
 	}
 
 	return
 }
 
 func ExtensionsToEOS(in []*pbcodec.Extension) (out []*eos.Extension) {
-	for _, extension := range in {
-		out = append(out, &eos.Extension{
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]*eos.Extension, len(in))
+	for i, extension := range in {
+		out[i] = &eos.Extension{
 			Type: uint16(extension.Type),
 			Data: extension.Data,
-		})
+		}
 	}
 	return
 }
 
 func ProducerAuthoritiesToDEOS(producerAuthorities []*eos.ProducerAuthority) (out []*pbcodec.ProducerAuthority) {
-	for _, authority := range producerAuthorities {
-		deosProducer := pbcodec.ProducerAuthority{
+	if len(producerAuthorities) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.ProducerAuthority, len(producerAuthorities))
+	for i, authority := range producerAuthorities {
+		out[i] = &pbcodec.ProducerAuthority{
 			AccountName:           string(authority.AccountName),
 			BlockSigningAuthority: BlockSigningAuthorityToDEOS(authority.BlockSigningAuthority),
 		}
-		out = append(out, &deosProducer)
 	}
 	return
 }
 
 func ProducerAuthoritiesToEOS(producerAuthorities []*pbcodec.ProducerAuthority) (out []*eos.ProducerAuthority) {
-	for _, authority := range producerAuthorities {
-		out = append(out, &eos.ProducerAuthority{
+	if len(producerAuthorities) <= 0 {
+		return nil
+	}
+
+	out = make([]*eos.ProducerAuthority, len(producerAuthorities))
+	for i, authority := range producerAuthorities {
+		out[i] = &eos.ProducerAuthority{
 			AccountName:           eos.AccountName(authority.AccountName),
 			BlockSigningAuthority: BlockSigningAuthorityToEOS(authority.BlockSigningAuthority),
-		})
+		}
 	}
 	return
 }
@@ -341,20 +401,30 @@ func TransactionReceiptHeaderToEOS(in *pbcodec.TransactionReceiptHeader) *eos.Tr
 }
 
 func SignaturesToDEOS(in []ecc.Signature) (out []string) {
-	for _, signature := range in {
-		out = append(out, signature.String())
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out = make([]string, len(in))
+	for i, signature := range in {
+		out[i] = signature.String()
 	}
 	return
 }
 
 func SignaturesToEOS(in []string) []ecc.Signature {
-	out := []ecc.Signature{}
-	for _, signature := range in {
+	if len(in) <= 0 {
+		return nil
+	}
+
+	out := make([]ecc.Signature, len(in))
+	for i, signature := range in {
 		sig, err := ecc.NewSignature(signature)
 		if err != nil {
 			panic(fmt.Sprintf("failed to read signature %q: %s", signature, err))
 		}
-		out = append(out, sig)
+
+		out[i] = sig
 	}
 	return out
 }
@@ -420,28 +490,38 @@ func PermissionToDEOS(perm *eos.Permission) *pbcodec.Permission {
 func AuthoritiesToDEOS(authority *eos.Authority) *pbcodec.Authority {
 	return &pbcodec.Authority{
 		Threshold: authority.Threshold,
-		Keys:      KeyWeightToDEOS(authority.Keys),
+		Keys:      KeyWeightsToDEOS(authority.Keys),
 		Accounts:  PermissionLevelWeightsToDEOS(authority.Accounts),
 		Waits:     WaitWeightsToDEOS(authority.Waits),
 	}
 }
 
 func WaitWeightsToDEOS(waits []eos.WaitWeight) (out []*pbcodec.WaitWeight) {
-	for _, o := range waits {
-		out = append(out, &pbcodec.WaitWeight{
+	if len(waits) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.WaitWeight, len(waits))
+	for i, o := range waits {
+		out[i] = &pbcodec.WaitWeight{
 			WaitSec: o.WaitSec,
 			Weight:  uint32(o.Weight),
-		})
+		}
 	}
 	return
 }
 
 func PermissionLevelWeightsToDEOS(weights []eos.PermissionLevelWeight) (out []*pbcodec.PermissionLevelWeight) {
-	for _, o := range weights {
-		out = append(out, &pbcodec.PermissionLevelWeight{
+	if len(weights) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.PermissionLevelWeight, len(weights))
+	for i, o := range weights {
+		out[i] = &pbcodec.PermissionLevelWeight{
 			Permission: PermissionLevelToDEOS(o.Permission),
 			Weight:     uint32(o.Weight),
-		})
+		}
 	}
 	return
 }
@@ -451,11 +531,12 @@ func PermissionLevelWeightsToEOS(weights []*pbcodec.PermissionLevelWeight) (out 
 		return []eos.PermissionLevelWeight{}
 	}
 
-	for _, o := range weights {
-		out = append(out, eos.PermissionLevelWeight{
+	out = make([]eos.PermissionLevelWeight, len(weights))
+	for i, o := range weights {
+		out[i] = eos.PermissionLevelWeight{
 			Permission: PermissionLevelToEOS(o.Permission),
 			Weight:     uint16(o.Weight),
-		})
+		}
 	}
 	return
 }
@@ -474,35 +555,51 @@ func PermissionLevelToEOS(perm *pbcodec.PermissionLevel) eos.PermissionLevel {
 	}
 }
 
-func KeyWeightToDEOS(keys []eos.KeyWeight) (out []*pbcodec.KeyWeight) {
-	for _, o := range keys {
-		out = append(out, &pbcodec.KeyWeight{
+func KeyWeightsToDEOS(keys []eos.KeyWeight) (out []*pbcodec.KeyWeight) {
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = &pbcodec.KeyWeight{
 			PublicKey: o.PublicKey.String(),
 			Weight:    uint32(o.Weight),
-		})
+		}
 	}
 	return
 }
 
 func KeyWeightsPToDEOS(keys []*eos.KeyWeight) (out []*pbcodec.KeyWeight) {
-	for _, o := range keys {
-		out = append(out, &pbcodec.KeyWeight{
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = &pbcodec.KeyWeight{
 			PublicKey: o.PublicKey.String(),
 			Weight:    uint32(o.Weight),
-		})
+		}
 	}
 	return
 }
 
 func TransactionToDEOS(trx *eos.Transaction) *pbcodec.Transaction {
-
 	var contextFreeActions []*pbcodec.Action
-	for _, act := range trx.ContextFreeActions {
-		contextFreeActions = append(contextFreeActions, ActionToDEOS(act))
+	if len(trx.ContextFreeActions) > 0 {
+		contextFreeActions = make([]*pbcodec.Action, len(trx.ContextFreeActions))
+		for i, act := range trx.ContextFreeActions {
+			contextFreeActions[i] = ActionToDEOS(act)
+		}
 	}
+
 	var actions []*pbcodec.Action
-	for _, act := range trx.Actions {
-		actions = append(actions, ActionToDEOS(act))
+	if len(trx.Actions) > 0 {
+		actions = make([]*pbcodec.Action, len(trx.Actions))
+		for i, act := range trx.Actions {
+			actions[i] = ActionToDEOS(act)
+		}
 	}
 
 	return &pbcodec.Transaction{
@@ -515,13 +612,19 @@ func TransactionToDEOS(trx *eos.Transaction) *pbcodec.Transaction {
 
 func TransactionToEOS(trx *pbcodec.Transaction) *eos.Transaction {
 	var contextFreeActions []*eos.Action
-	for _, act := range trx.ContextFreeActions {
-		contextFreeActions = append(contextFreeActions, ActionToEOS(act))
+	if len(trx.ContextFreeActions) > 0 {
+		contextFreeActions = make([]*eos.Action, len(trx.ContextFreeActions))
+		for i, act := range trx.ContextFreeActions {
+			contextFreeActions[i] = ActionToEOS(act)
+		}
 	}
 
 	var actions []*eos.Action
-	for _, act := range trx.Actions {
-		actions = append(actions, ActionToEOS(act))
+	if len(trx.Actions) > 0 {
+		actions = make([]*eos.Action, len(trx.Actions))
+		for i, act := range trx.Actions {
+			actions[i] = ActionToEOS(act)
+		}
 	}
 
 	return &eos.Transaction{
@@ -575,17 +678,25 @@ func SignedTransactionToEOS(trx *pbcodec.SignedTransaction) *eos.SignedTransacti
 }
 
 func CreationTreeToDEOS(tree CreationFlatTree) []*pbcodec.CreationFlatNode {
-	var out []*pbcodec.CreationFlatNode
-	for _, node := range tree {
-		out = append(out, &pbcodec.CreationFlatNode{
+	if len(tree) <= 0 {
+		return nil
+	}
+
+	out := make([]*pbcodec.CreationFlatNode, len(tree))
+	for i, node := range tree {
+		out[i] = &pbcodec.CreationFlatNode{
 			CreatorActionIndex:   int32(node[1]),
 			ExecutionActionIndex: uint32(node[2]),
-		})
+		}
 	}
 	return out
 }
 
 func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTrace) {
+	if len(actionTraces) <= 0 {
+		return nil
+	}
+
 	sort.Slice(actionTraces, func(i, j int) bool {
 		leftSeq := uint64(math.MaxUint64)
 		rightSeq := uint64(math.MaxUint64)
@@ -604,19 +715,25 @@ func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTr
 		return leftSeq < rightSeq
 	})
 
+	out = make([]*pbcodec.ActionTrace, len(actionTraces))
 	for idx, actionTrace := range actionTraces {
-		out = append(out, ActionTraceToDEOS(actionTrace, uint32(idx)))
+		out[idx] = ActionTraceToDEOS(actionTrace, uint32(idx))
 	}
 
 	return
 }
 
 func ActionTracesToEOS(actionTraces []*pbcodec.ActionTrace) (out []eos.ActionTrace) {
-	sort.Slice(actionTraces, func(i, j int) bool { return actionTraces[i].ActionOrdinal < actionTraces[j].ActionOrdinal })
-
-	for _, actionTrace := range actionTraces {
-		out = append(out, ActionTraceToEOS(actionTrace))
+	if len(actionTraces) <= 0 {
+		return nil
 	}
+
+	out = make([]eos.ActionTrace, len(actionTraces))
+	for i, actionTrace := range actionTraces {
+		out[i] = ActionTraceToEOS(actionTrace)
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i].ActionOrdinal < out[j].ActionOrdinal })
 
 	return
 }
@@ -633,8 +750,9 @@ func AuthSequenceListToEOS(in []*pbcodec.AuthSequence) (out []eos.TransactionTra
 		return []eos.TransactionTraceAuthSequence{}
 	}
 
-	for _, seq := range in {
-		out = append(out, AuthSequenceToEOS(seq))
+	out = make([]eos.TransactionTraceAuthSequence, len(in))
+	for i, seq := range in {
+		out[i] = AuthSequenceToEOS(seq)
 	}
 
 	return
@@ -668,10 +786,16 @@ func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.Actio
 	out.ClosestUnnotifiedAncestorActionOrdinal = uint32(in.ClosestUnnotifiedAncestorActionOrdinal) // freaking long line, stay away from me
 
 	if in.Receipt != nil {
+		authSequences := in.Receipt.AuthSequence
+
 		var deosAuthSequence []*pbcodec.AuthSequence
-		for _, seq := range in.Receipt.AuthSequence {
-			deosAuthSequence = append(deosAuthSequence, AuthSequenceToDEOS(seq))
+		if len(authSequences) > 0 {
+			deosAuthSequence = make([]*pbcodec.AuthSequence, len(authSequences))
+			for i, seq := range authSequences {
+				deosAuthSequence[i] = AuthSequenceToDEOS(seq)
+			}
 		}
+
 		out.Receipt = &pbcodec.ActionReceipt{
 			Receiver:       string(in.Receipt.Receiver),
 			Digest:         in.Receipt.ActionDigest.String(),
@@ -692,6 +816,7 @@ func ErrorCodeToDEOS(in *eos.Uint64) uint64 {
 	}
 	return 0
 }
+
 func ErrorCodeToEOS(in uint64) *eos.Uint64 {
 	if in != 0 {
 		val := eos.Uint64(in)
@@ -741,6 +866,7 @@ func ChecksumToEOS(in string) eos.Checksum256 {
 	if err != nil {
 		panic(fmt.Sprintf("failed decoding checksum %q: %s", in, err))
 	}
+
 	return eos.Checksum256(out)
 }
 
@@ -779,14 +905,12 @@ func ActionToEOS(action *pbcodec.Action) (out *eos.Action) {
 	d := eos.ActionData{}
 	d.SetToServer(false) // rather, what we expect FROM `nodeos` servers
 
+	d.HexData = eos.HexBytes(action.RawData)
 	if len(action.JsonData) != 0 {
 		err := json.Unmarshal([]byte(action.JsonData), &d.Data)
 		if err != nil {
 			panic(fmt.Sprintf("unmarshaling action json data %q: %s", action.JsonData, err))
 		}
-		d.HexData = eos.HexBytes(action.RawData)
-	} else {
-		d.HexData = eos.HexBytes(action.RawData)
 	}
 
 	out = &eos.Action{
@@ -800,8 +924,13 @@ func ActionToEOS(action *pbcodec.Action) (out *eos.Action) {
 }
 
 func AuthorizationToDEOS(authorization []eos.PermissionLevel) (out []*pbcodec.PermissionLevel) {
-	for _, permission := range authorization {
-		out = append(out, PermissionLevelToDEOS(permission))
+	if len(authorization) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.PermissionLevel, len(authorization))
+	for i, permission := range authorization {
+		out[i] = PermissionLevelToDEOS(permission)
 	}
 	return
 }
@@ -811,18 +940,24 @@ func AuthorizationToEOS(authorization []*pbcodec.PermissionLevel) (out []eos.Per
 		return []eos.PermissionLevel{}
 	}
 
-	for _, permission := range authorization {
-		out = append(out, PermissionLevelToEOS(permission))
+	out = make([]eos.PermissionLevel, len(authorization))
+	for i, permission := range authorization {
+		out[i] = PermissionLevelToEOS(permission)
 	}
 	return
 }
 
 func AccountRAMDeltasToDEOS(deltas []*eos.AccountRAMDelta) (out []*pbcodec.AccountRAMDelta) {
-	for _, delta := range deltas {
-		out = append(out, &pbcodec.AccountRAMDelta{
+	if len(deltas) <= 0 {
+		return nil
+	}
+
+	out = make([]*pbcodec.AccountRAMDelta, len(deltas))
+	for i, delta := range deltas {
+		out[i] = &pbcodec.AccountRAMDelta{
 			Account: string(delta.Account),
 			Delta:   int64(delta.Delta),
-		})
+		}
 	}
 	return
 }
@@ -832,11 +967,12 @@ func AccountRAMDeltasToEOS(deltas []*pbcodec.AccountRAMDelta) (out []*eos.Accoun
 		return []*eos.AccountRAMDelta{}
 	}
 
-	for _, delta := range deltas {
-		out = append(out, &eos.AccountRAMDelta{
+	out = make([]*eos.AccountRAMDelta, len(deltas))
+	for i, delta := range deltas {
+		out[i] = &eos.AccountRAMDelta{
 			Account: eos.AccountName(delta.Account),
 			Delta:   eos.Int64(delta.Delta),
-		})
+		}
 	}
 	return
 }
@@ -851,14 +987,15 @@ func ExceptionToDEOS(in *eos.Except) *pbcodec.Exception {
 		Message: in.Message,
 	}
 
-	for _, el := range in.Stack {
-		msg := &pbcodec.Exception_LogMessage{
-			Context: LogContextToDEOS(el.Context),
-			Format:  el.Format,
-			Data:    el.Data,
+	if len(in.Stack) > 0 {
+		out.Stack = make([]*pbcodec.Exception_LogMessage, len(in.Stack))
+		for i, el := range in.Stack {
+			out.Stack[i] = &pbcodec.Exception_LogMessage{
+				Context: LogContextToDEOS(el.Context),
+				Format:  el.Format,
+				Data:    el.Data,
+			}
 		}
-
-		out.Stack = append(out.Stack, msg)
 	}
 
 	return out
@@ -874,28 +1011,30 @@ func ExceptionToEOS(in *pbcodec.Exception) *eos.Except {
 		Message: in.Message,
 	}
 
-	for _, el := range in.Stack {
-		msg := &eos.ExceptLogMessage{
-			Format: el.Format,
-		}
+	if len(in.Stack) > 0 {
+		out.Stack = make([]*eos.ExceptLogMessage, len(in.Stack))
+		for i, el := range in.Stack {
+			msg := &eos.ExceptLogMessage{
+				Format: el.Format,
+			}
 
-		ctx := LogContextToEOS(el.Context)
-		if ctx != nil {
-			msg.Context = *ctx
-		}
+			ctx := LogContextToEOS(el.Context)
+			if ctx != nil {
+				msg.Context = *ctx
+			}
 
-		if len(el.Data) > 0 {
-			msg.Data = json.RawMessage(el.Data)
-		}
+			if len(el.Data) > 0 {
+				msg.Data = json.RawMessage(el.Data)
+			}
 
-		out.Stack = append(out.Stack, msg)
+			out.Stack[i] = msg
+		}
 	}
 
 	return out
 }
 
 func LogContextToDEOS(in eos.ExceptLogContext) *pbcodec.Exception_LogContext {
-
 	out := &pbcodec.Exception_LogContext{
 		Level:      in.Level.String(),
 		File:       in.File,
@@ -933,17 +1072,11 @@ func LogContextToEOS(in *pbcodec.Exception_LogContext) *eos.ExceptLogContext {
 
 func TimestampToJSONTime(in *timestamp.Timestamp) eos.JSONTime {
 	out, _ := ptypes.Timestamp(in)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("invalid timestamp JSONTime conversion %v: %s", in, err))
-	// }
 	return eos.JSONTime{Time: out}
 }
 
 func TimestampToBlockTimestamp(in *timestamp.Timestamp) eos.BlockTimestamp {
 	out, _ := ptypes.Timestamp(in)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("invalid timestamp BlockTimestamp conversion %v: %s", in, err))
-	// }
 	return eos.BlockTimestamp{Time: out}
 }
 
@@ -1034,7 +1167,6 @@ func GetPublicKeysFromSignedTransaction(chainID eos.Checksum256, signedTransacti
 	eccPublicKeys, err := signedTransaction.SignedByKeys(chainID)
 	if err != nil {
 		// We discard any errors and simply return an empty array
-		//zlog.Warn("unable to extract public keys from transaction: %s", zap.Error(err))
 		return nil
 	}
 
