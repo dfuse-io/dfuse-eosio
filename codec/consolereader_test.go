@@ -44,7 +44,6 @@ func TestConsoleReaderPerformances(t *testing.T) {
 	}
 
 	go func() {
-		fmt.Println("starting profiler")
 		if err := http.ListenAndServe("localhost:6060", nil); err != nil {
 			zlog.Info("listening localhost:6060", zap.Error(err))
 		}

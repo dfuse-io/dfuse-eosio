@@ -434,7 +434,6 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	ctx.block.Number = blockState.BlockNum
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
-	ctx.block.ConfirmCount = blockState.ConfirmCount
 	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
 	ctx.block.DposProposedIrreversibleBlocknum = blockState.DPoSProposedIrreversibleBlockNum
 	ctx.block.Validated = blockState.Validated
@@ -443,6 +442,11 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	ctx.block.ProducerToLastImpliedIrb = ProducerToLastImpliedIrbToDEOS(blockState.ProducerToLastImpliedIRB)
 	ctx.block.ActivatedProtocolFeatures = ActivatedProtocolFeaturesToDEOS(blockState.ActivatedProtocolFeatures)
 	ctx.block.ProducerSignature = signedBlock.ProducerSignature.String()
+
+	ctx.block.ConfirmCount = make([]uint32, len(blockState.ConfirmCount))
+	for i, count := range blockState.ConfirmCount {
+		ctx.block.ConfirmCount[i] = uint32(count)
+	}
 
 	if blockState.PendingSchedule != nil {
 		ctx.block.PendingSchedule = PendingScheduleToDEOS(blockState.PendingSchedule)
