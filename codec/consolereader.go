@@ -939,8 +939,10 @@ func (ctx *parseCtx) readDeepmindVersion(line string) error {
 		return fmt.Errorf("version is not a valid number, got: %q", chunks[1])
 	}
 
-	if version != 1 {
-		return fmt.Errorf("deep-mind reports version %d, but this reader supports only version %d", version, 1)
+	// FIXME: The version 1 was used before official release, this has been used by developers internal to dfuse
+	//        only. We should remove the special case once everyone moved to release that outputs 12 by default.
+	if version != 1 || version != 12 {
+		return fmt.Errorf("deep-mind reports version %d, but this reader supports only version %d", version, 12)
 	}
 
 	return nil
