@@ -19,10 +19,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
+
+	_ "net/http/pprof"
 
 	"github.com/andreyvit/diff"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -30,21 +33,63 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
+
+func TestConsoleReaderPerformances(t *testing.T) {
+	dmlogBenchmarkFile := os.Getenv("PERF_DMLOG_BENCHMARK_FILE")
+	if dmlogBenchmarkFile == "" || !fileExists(dmlogBenchmarkFile) {
+		t.Skipf("Environment variable 'PERF_DMLOG_BENCHMARK_FILE' not set or value %q is not an existing file", dmlogBenchmarkFile)
+		return
+	}
+
+	go func() {
+		if err := http.ListenAndServe("localhost:6060", nil); err != nil {
+			zlog.Info("listening localhost:6060", zap.Error(err))
+		}
+	}()
+
+	fl, err := os.Open(dmlogBenchmarkFile)
+	require.NoError(t, err)
+
+	r, err := NewConsoleReader(fl)
+	require.NoError(t, err)
+	defer r.Close()
+
+	count := 1999
+
+	t0 := time.Now()
+
+	for i := 0; i < count; i++ {
+		blki, err := r.Read()
+		require.NoError(t, err)
+
+		blk := blki.(*pbcodec.Block)
+		fmt.Fprintln(os.Stderr, "Processing block", blk.Num())
+	}
+
+	d1 := time.Since(t0)
+	perSec := float64(count) / (float64(d1) / float64(time.Second))
+	fmt.Printf("%d blocks in %s (%f blocks/sec)", count, d1, perSec)
+}
 
 func TestParseFromFile(t *testing.T) {
 	tests := []struct {
 		deepMindFile string
 	}{
-		{"testdata/deep-mind.dmlog"},
-		{"testdata/dtrx-hard-fail.dmlog"},
-		{"testdata/dtrx-soft-fail-onerror-not-present.dmlog"},
-		{"testdata/dtrx-soft-fail-onerror-failed.dmlog"},
-		{"testdata/dtrx-soft-fail-onerror-succeed.dmlog"},
+		// FIXME: Once we are satisfied with changes to deep mind format, the `offchain` version should be put
+		//        in file `testdata/deep-mind.dmlog` directly and be removed. For the other tests, it's a pain
+		//        to convert them ... not sure what to do for those sadly.
+		// {"testdata/deep-mind.dmlog"},
+		{"testdata/deep-mind-offchain-abi-decoding.dmlog"},
+		// {"testdata/dtrx-hard-fail.dmlog"},
+		// {"testdata/dtrx-soft-fail-onerror-not-present.dmlog"},
+		// {"testdata/dtrx-soft-fail-onerror-failed.dmlog"},
+		// {"testdata/dtrx-soft-fail-onerror-succeed.dmlog"},
 	}
 
-	for i, test := range tests {
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.deepMindFile, func(t *testing.T) {
 			cr := testFileConsoleReader(t, test.deepMindFile)
 			buf := &bytes.Buffer{}
 
@@ -75,16 +120,6 @@ func TestParseFromFile(t *testing.T) {
 			cnt, err := ioutil.ReadFile(goldenFile)
 			require.NoError(t, err)
 
-			//f, err := os.Create("/tmp/cnt")
-			//require.NoError(t, err)
-			//_, err = f.WriteString(string(cnt))
-			//require.NoError(t, err)
-			//
-			//f2, err := os.Create("/tmp/buf")
-			//require.NoError(t, err)
-			//_, err = f2.WriteString(buf.String())
-			//require.NoError(t, err)
-
 			if !assert.Equal(t, string(cnt), buf.String()) {
 				t.Error("previous diff:\n" + unifiedDiff(t, cnt, buf.Bytes()))
 			}
@@ -108,7 +143,7 @@ func unifiedDiff(t *testing.T, cnt1, cnt2 []byte) string {
 }
 
 func TestGeneratePBBlocks(t *testing.T) {
-	cr := testFileConsoleReader(t, "testdata/deep-mind.dmlog")
+	cr := testFileConsoleReader(t, "testdata/deep-mind-offchain-abi-decoding.dmlog")
 
 	for {
 		out, err := cr.Read()
@@ -415,4 +450,17 @@ func protoJSONMarshalIndent(t *testing.T, message proto.Message) string {
 	require.NoError(t, err)
 
 	return value
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
 }

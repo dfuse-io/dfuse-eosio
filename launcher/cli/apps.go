@@ -203,6 +203,7 @@ func init() {
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader/work", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
+			cmd.Flags().Bool("mindreader-no-blocks-log", false, "always DELETE blocks.log before running (run without any archive)")
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
@@ -278,6 +279,7 @@ to find how to install it.`)
 				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
 				BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
 				BackupTag:                  viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:                viper.GetBool("mindreader-no-blocks-log"),
 				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
 				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
@@ -287,7 +289,7 @@ to find how to install it.`)
 				SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
 				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
 				ArchiveStoreURL:            archiveStoreURL,
-				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-upload-directly"),
+				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
 				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
 				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
 				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),

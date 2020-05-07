@@ -1,0 +1,18 @@
+
+###################################  Most common commands ... ############################################
+ * cleos get info
+ * eos-isproducing
+
+ * eos-maintenance # stop nodeos
+ * eos-resume      # start nodeos
+
+ * eos-listbackups
+ * eos-restore-from-pitreos 2019-12-05-19-52-18--default
+ * eos-backup
+
+ * eos-rewind-to-lib
+ * eos-reset-continuity-check
+
+ * eos-... (tab for completion!)
+##########################################################################################################
+

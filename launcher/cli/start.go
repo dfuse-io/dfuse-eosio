@@ -32,6 +32,7 @@ import (
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
+	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -118,7 +119,11 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		userLog.Printf("Received termination signal, quitting")
 	case <-launch.Terminating():
 		userLog.Printf("One of the applications shutdown unexpectedly, quitting")
-		err = errors.New("unexpected termination")
+		if launch.FirstAppError == nodeosMindreaderApp.ErrEndBlockReached {
+			userLog.Printf("Mindreader app reached end block, shutting down without error")
+		} else {
+			err = errors.New("unexpected termination")
+		}
 	}
 
 	// all sub apps will be shut down by launcher when dfuse shut down

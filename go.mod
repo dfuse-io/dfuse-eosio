@@ -24,7 +24,7 @@ require (
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200428160855-57e0abb636c6
 	github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c
-	github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1
+	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
@@ -35,7 +35,7 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200424185846-7c443ace0291
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
-	github.com/dfuse-io/manageos v0.0.0-20200501154145-7152b316b38f
+	github.com/dfuse-io/manageos v0.0.0-20200507150215-faefcfa5d849
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
@@ -44,7 +44,7 @@ require (
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca
+	github.com/eoscanada/eos-go v0.9.1-0.20200507122837-271bfac45a78
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/go-sql-driver/mysql v1.5.0
@@ -80,7 +80,7 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
-	go.uber.org/zap v1.14.0
+	go.uber.org/zap v1.15.0
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
 	gopkg.in/olivere/elastic.v3 v3.0.75

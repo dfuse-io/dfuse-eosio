@@ -1,0 +1,3 @@
+#!/bin/bash
+# description: Start nodeos after maintenance
+curl -sS -XPOST localhost:8080/v1/resume?sync=true

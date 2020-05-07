@@ -1,0 +1,7 @@
+#!/bin/bash
+# description: prints either 'producing' if this node has production active, or 'paused'
+if curl -sS localhost:8888/v1/producer/paused 2>&1 |grep -q ^false$; then
+	echo producing
+else
+	echo paused
+fi

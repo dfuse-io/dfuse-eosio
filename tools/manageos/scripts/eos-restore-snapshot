@@ -1,0 +1,7 @@
+#!/bin/bash
+# description: Perform a snapshot restore
+if [[ "$1" != "" ]]; then
+  curl -XPOST "localhost:8080/v1/snapshot_restore?snapshotName=$1&sync=true"
+else
+  curl -XPOST "localhost:8080/v1/snapshot_restore?sync=true"
+fi

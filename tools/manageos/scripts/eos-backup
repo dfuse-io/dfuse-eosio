@@ -1,0 +1,3 @@
+#!/bin/bash
+# description: Take a backup using pitreos
+curl -XPOST localhost:8080/v1/backup?sync=true

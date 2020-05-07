@@ -1,0 +1,38 @@
+{
+  "version": "eosio::abi/1.0",
+  "structs": [
+    {
+      "name": "onblock",
+      "base": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "onerror",
+      "base": "",
+      "fields": [
+        {
+          "name": "trx_id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "onblock",
+      "type": "onblock"
+    },
+    {
+      "name": "onerror",
+      "type": "onerror"
+    }
+  ],
+  "tables": [],
+  "ricardian_clauses": [{"id":"name", "body":"onblock.abi.json"}],
+  "abi_extensions": []
+}

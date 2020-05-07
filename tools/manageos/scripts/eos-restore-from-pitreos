@@ -1,0 +1,7 @@
+#!/bin/bash
+# description: Restore from backup (you can pass the backup name as an argument, or no argument to restore latest)
+if [[ "$1" != "" ]]; then
+  curl -XPOST "localhost:8080/v1/restore?backupName=$1&sync=true"
+else
+  curl -XPOST "localhost:8080/v1/restore?sync=true"
+fi

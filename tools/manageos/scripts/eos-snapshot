@@ -1,0 +1,3 @@
+#!/bin/bash
+# description: Perform a snapshot
+curl -sS -XPOST localhost:8080/v1/snapshot?sync=true

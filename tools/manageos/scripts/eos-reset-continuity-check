@@ -1,0 +1,3 @@
+#!/bin/bash
+# description: (for mindreader only) Remove ConcurrencyCheck files, to force it going over a hole
+curl -sS -XPOST localhost:8080/v1/reset_cc
