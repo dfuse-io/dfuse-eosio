@@ -34,7 +34,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq"
+	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
@@ -923,6 +923,7 @@ to find how to install it.`)
 			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "API key used in eosq")
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
+			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
 			return nil
 		},
 
@@ -932,6 +933,7 @@ to find how to install it.`)
 				APIEndpointURL:  viper.GetString("eosq-api-endpoint-url"),
 				AuthEndpointURL: viper.GetString("eosq-auth-url"),
 				ApiKey:          viper.GetString("eosq-api-key"),
+				Environement:    viper.GetString("eosq-environment"),
 			}), nil
 		},
 	})

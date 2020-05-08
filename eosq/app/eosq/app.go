@@ -23,6 +23,7 @@ type Config struct {
 	HTTPListenAddr  string
 	AuthEndpointURL string
 	ApiKey          string
+	Environement    string
 }
 
 type App struct {
