@@ -28,14 +28,14 @@ require (
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200407002734-b1d962316f28
-	github.com/dfuse-io/dmetrics v0.0.0-20200429132936-f8ed5f60a17a
+	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.0
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200424185846-7c443ace0291
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
-	github.com/dfuse-io/manageos v0.0.0-20200507211108-f029e987f81b
+	github.com/dfuse-io/manageos v0.0.0-20200508153848-ba88dd14750d
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
