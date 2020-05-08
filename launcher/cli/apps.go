@@ -127,6 +127,7 @@ func init() {
 			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
 			cmd.Flags().Duration("node-manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
+			cmd.Flags().Int("node-manager-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("node-manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
 			cmd.Flags().Duration("node-manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
@@ -174,6 +175,7 @@ func init() {
 				AutoBackupPeriod:        viper.GetDuration("node-manager-auto-backup-period"),
 				AutoSnapshotModulo:      viper.GetInt("node-manager-auto-snapshot-modulo"),
 				AutoSnapshotPeriod:      viper.GetDuration("node-manager-auto-snapshot-period"),
+				NumberOfSnapshotsToKeep: viper.GetInt("node-manager-number-of-snapshots-to-keep"),
 				DisableProfiler:         viper.GetBool("node-manager-disable-profiler"),
 				StartFailureHandlerFunc: nil,
 			}), nil
@@ -213,7 +215,8 @@ func init() {
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
-			cmd.Flags().Duration("mindreader-auto-snapshot-period", time.Hour, "Takes state snapshots at this interval")
+			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "Takes state snapshots at this interval")
+			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
@@ -286,6 +289,7 @@ to find how to install it.`)
 				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
+				NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
 				RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
 				RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
 				SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
