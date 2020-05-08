@@ -81,6 +81,8 @@ read-mode = read-only
 #api-accept-transactions = false
 
 # Plugins
+plugin = eosio::producer_plugin # for state snapshots
+plugin = eosio::producer_api_plugin # for state snapshots
 plugin = eosio::chain_plugin
 plugin = eosio::net_api_plugin
 plugin = eosio::chain_api_plugin
