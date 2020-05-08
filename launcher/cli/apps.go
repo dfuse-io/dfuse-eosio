@@ -17,10 +17,8 @@ package cli
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -246,12 +244,8 @@ func init() {
 					userLog.Error(`*********************************************************************************
 * Mindreader failed to start nodeos process
 * To see nodeos logs...
-* DEBUG=\"github.com/dfuse-io/manageos.*\" dfuseeos start
-*********************************************************************************
-
-Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
-at https://github.com/dfuse-io/dfuse-eosio/blob/develop/INSTALL.md
-to find how to install it.`)
+* DEBUG="mindreader" dfuseeos start
+*********************************************************************************`)
 					os.Exit(1)
 				}
 
@@ -997,21 +991,6 @@ to find how to install it.`)
 		},
 	})
 
-}
-
-func writeGenesisAndConfig(configIni string, genesisJSON string, destDir string, destNode string) error {
-	managerGenesisFile := path.Join(destDir, "genesis.json")
-	if err := ioutil.WriteFile(managerGenesisFile, []byte(genesisJSON), 0755); err != nil {
-		return fmt.Errorf("failed to create %s's genesis file %q: %w", destNode, managerGenesisFile, err)
-	}
-
-	// TODO: NOTIFY THE USER when its overwritten: COMPARE the config.ini previously there, read & compare & notify
-	managerConfigFile := path.Join(destDir, "config.ini")
-	if err := ioutil.WriteFile(managerConfigFile, []byte(configIni), 0755); err != nil {
-		return fmt.Errorf("failed to create %s's config file %q: %w", destNode, managerConfigFile, err)
-	}
-
-	return nil
 }
 
 func makeDirs(directories []string) error {
