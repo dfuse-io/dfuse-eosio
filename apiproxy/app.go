@@ -15,6 +15,8 @@
 package apiproxy
 
 import (
+	"fmt"
+
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/shutter"
 )
@@ -36,6 +38,8 @@ import (
 
 type Config struct {
 	HTTPListenAddr   string
+	HTTPSListenAddr  string
+	AutocertDomains  []string
 	DgraphqlHTTPAddr string
 	EoswsHTTPAddr    string
 	NodeosHTTPAddr   string
@@ -56,6 +60,10 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
+	if a.config.HTTPSListenAddr != "" && len(a.config.AutocertDomains) == 0 {
+		return fmt.Errorf("https listen address is set, but you did not specify autocert domains for SSL")
+	}
+
 	p := newProxy(a.config)
 
 	a.OnTerminating(p.Shutdown)
