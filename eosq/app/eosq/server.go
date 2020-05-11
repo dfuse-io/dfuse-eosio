@@ -24,6 +24,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -157,23 +158,45 @@ func (s *Server) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	w.Write(s.indexData)
 }
 
+func sanitizeAPIEndpoint(apiEndpointURL string) (host string, secure bool, err error) {
+	u, err := url.Parse(apiEndpointURL)
+	if err != nil {
+		return "", false, err
+	}
+
+	host = u.Host
+	if host == "" {
+		host = "localhost"
+	}
+	if port := u.Port(); port != "" {
+		host = fmt.Sprintf("%s:%s", host, port)
+	}
+
+	secure = strings.ToLower(u.Scheme) == "https"
+	return
+}
+
 func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 	indexContent, err := box.Bytes("index.html")
 	if err != nil {
 		panic(fmt.Errorf("failed to get index from rice box: %w", err))
 	}
 
+	host, secure, err := sanitizeAPIEndpoint(config.APIEndpointURL)
+	if err != nil {
+		panic(fmt.Errorf("failed to sanitize API endpoint: %w", err))
+	}
 	indexConfig := map[string]interface{}{
 		"version":             1,
 		"current_network":     "local",
 		"on_demand":           false,
-		"dfuse_io_endpoint":   "localhost" + config.APIEndpointURL,
+		"dfuse_io_endpoint":   host,
 		"dfuse_io_api_key":    config.ApiKey,
 		"dfuse_auth_endpoint": config.AuthEndpointURL,
 		"display_price":       false,
 		"price_ticker_name":   "EOS",
 		"available_networks":  []interface{}{},
-		"secure":              false,
+		"secure":              secure,
 		"disable_segments":    true,
 		"disable_sentry":      true,
 		"disable_token_meta":  true,
