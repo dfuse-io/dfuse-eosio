@@ -72,13 +72,14 @@ func (p *proxy) Launch() error {
 	if p.config.HTTPSListenAddr != "" {
 		zlog.Info("Starting SSL listener", zap.Any("domains", p.config.AutocertDomains))
 		m := &autocert.Manager{
-			Cache:      autocert.DirCache("secret-dir"),
+			Cache:      autocert.DirCache(p.config.AutocertCacheDir),
 			Prompt:     autocert.AcceptTOS,
 			HostPolicy: autocert.HostWhitelist(p.config.AutocertDomains...),
 		}
 		p.httpsServer = &http.Server{
 			Addr:      p.config.HTTPSListenAddr,
 			TLSConfig: m.TLSConfig(),
+			Handler:   router,
 		}
 		go func() {
 			err := p.httpsServer.ListenAndServeTLS("", "")

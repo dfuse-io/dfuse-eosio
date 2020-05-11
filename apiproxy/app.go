@@ -44,6 +44,7 @@ type Config struct {
 	EoswsHTTPAddr    string
 	NodeosHTTPAddr   string
 	RootHTTPAddr     string
+	AutocertCacheDir string
 }
 
 type App struct {
