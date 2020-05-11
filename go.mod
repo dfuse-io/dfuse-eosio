@@ -81,7 +81,7 @@ require (
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
