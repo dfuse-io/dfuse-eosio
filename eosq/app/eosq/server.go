@@ -24,7 +24,6 @@ import (
 	"html/template"
 	"io"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -158,21 +157,21 @@ func (s *Server) serveIndexHTML(w http.ResponseWriter, r *http.Request) {
 	w.Write(s.indexData)
 }
 
-func sanitizeAPIEndpoint(apiEndpointURL string) (host string, secure bool, err error) {
-	u, err := url.Parse(apiEndpointURL)
-	if err != nil {
-		return "", false, err
+func sanitizeAPIEndpoint(apiEndpointURL string) (host string, secure bool) {
+
+	secure = strings.HasPrefix(apiEndpointURL, "https")
+	noProto := strings.TrimPrefix(
+		strings.TrimPrefix(
+			apiEndpointURL,
+			"http://"),
+		"https://")
+
+	if strings.HasPrefix(noProto, ":") {
+		host = "localhost" + noProto
+	} else {
+		host = noProto
 	}
 
-	host = u.Host
-	if host == "" {
-		host = "localhost"
-	}
-	if port := u.Port(); port != "" {
-		host = fmt.Sprintf("%s:%s", host, port)
-	}
-
-	secure = strings.ToLower(u.Scheme) == "https"
 	return
 }
 
@@ -182,10 +181,7 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		panic(fmt.Errorf("failed to get index from rice box: %w", err))
 	}
 
-	host, secure, err := sanitizeAPIEndpoint(config.APIEndpointURL)
-	if err != nil {
-		panic(fmt.Errorf("failed to sanitize API endpoint: %w", err))
-	}
+	host, secure := sanitizeAPIEndpoint(config.APIEndpointURL)
 	indexConfig := map[string]interface{}{
 		"version":             1,
 		"current_network":     "local",
