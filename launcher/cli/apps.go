@@ -990,7 +990,7 @@ to find how to install it.`)
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			autocertDomains := strings.Split(viper.GetString("apiproxy-https-listen-addr"), ",")
+			autocertDomains := strings.Split(viper.GetString("apiproxy-autocert-domains"), ",")
 			return apiproxy.New(&apiproxy.Config{
 				HTTPListenAddr:   viper.GetString("apiproxy-http-listen-addr"),
 				HTTPSListenAddr:  viper.GetString("apiproxy-https-listen-addr"),
