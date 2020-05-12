@@ -6,8 +6,8 @@ import (
 
 const (
 	Protocol             pbbstream.Protocol = pbbstream.Protocol_EOS
-	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb" //%s will be replaced by `<data-dir>`
-	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
+	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb"   //%s will be replaced by `<data-dir>`
+	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb" //%s will be replaced by `<data-dir>/<flux-data-dir>
 	MergedBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/merged-blocks"
 	IndicesStoreURL      string             = "file://{dfuse-data-dir}/storage/indexes"
 	OneBlockStoreURL     string             = "file://{dfuse-data-dir}/storage/one-blocks"
@@ -42,7 +42,7 @@ const (
 	EosqHTTPServingAddr         string = ":13030"
 	DashboardGrpcServingAddr    string = ":13031"
 	DashboardHTTPListenAddr     string = ":8081"
-	APIProxyHTTPListenAddr      string = ":8080"
+	APIProxyHTTPListenAddr      string = "localhost:8080"
 	MindreaderNodeosAPIAddr     string = ":9888"
 	NodeosAPIAddr               string = ":8888"
 
