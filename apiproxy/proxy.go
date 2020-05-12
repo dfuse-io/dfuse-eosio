@@ -9,12 +9,14 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 type proxy struct {
 	*shutter.Shutter
 	config        *Config
 	httpServer    *http.Server
+	httpsServer   *http.Server
 	dgraphqlProxy *httputil.ReverseProxy
 	eoswsProxy    *httputil.ReverseProxy
 	nodeosProxy   *httputil.ReverseProxy
@@ -66,6 +68,26 @@ func (p *proxy) Launch() error {
 	}
 
 	zlog.Info("starting http server", zap.String("listen_addr", p.config.HTTPListenAddr))
+
+	if p.config.HTTPSListenAddr != "" {
+		zlog.Info("Starting SSL listener", zap.Any("domains", p.config.AutocertDomains))
+		m := &autocert.Manager{
+			Cache:      autocert.DirCache(p.config.AutocertCacheDir),
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist(p.config.AutocertDomains...),
+		}
+		p.httpsServer = &http.Server{
+			Addr:      p.config.HTTPSListenAddr,
+			TLSConfig: m.TLSConfig(),
+			Handler:   router,
+		}
+		go func() {
+			err := p.httpsServer.ListenAndServeTLS("", "")
+			if err != nil {
+				p.Shutdown(err)
+			}
+		}()
+	}
 
 	return p.httpServer.ListenAndServe()
 }

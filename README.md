@@ -48,12 +48,18 @@ Build requirements:
 ```
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
+
 pushd dashboard/client
   yarn install && yarn build
 popd
+
 pushd eosq
   yarn install && yarn build
 popd
+
+go generate ./dashboard
+go generate ./eosq/app/eosq
+
 go install -v ./cmd/dfuseeos
 ```
 

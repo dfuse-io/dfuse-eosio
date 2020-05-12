@@ -42,7 +42,7 @@ const (
 	EosqHTTPServingAddr         string = ":13030"
 	DashboardGrpcServingAddr    string = ":13031"
 	DashboardHTTPListenAddr     string = ":8081"
-	APIProxyHTTPListenAddr      string = "localhost:8080"
+	APIProxyHTTPListenAddr      string = ":8080"
 	MindreaderNodeosAPIAddr     string = ":9888"
 	NodeosAPIAddr               string = ":8888"
 
