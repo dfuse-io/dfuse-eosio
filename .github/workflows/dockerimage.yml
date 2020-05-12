@@ -1,0 +1,12 @@
+name: Docker Image CI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u USERNAME --password-stdin
+        docker build . -t docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest
+        docker push       docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest
