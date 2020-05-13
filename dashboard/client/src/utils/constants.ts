@@ -16,7 +16,7 @@ export const METRIC_CONFIG: Record<string, MetricConfig> = {
     headBlockNumber: true,
     headBlockDrift: false
   },
-  archive: {
+  'search-archive': {
     headBlockNumber: true,
     headBlockDrift: false
   },
@@ -32,7 +32,7 @@ export const METRIC_CONFIG: Record<string, MetricConfig> = {
     headBlockNumber: false,
     headBlockDrift: false
   },
-  indexer: {
+  'search-indexer': {
     headBlockNumber: true,
     headBlockDrift: true
   },
@@ -40,7 +40,7 @@ export const METRIC_CONFIG: Record<string, MetricConfig> = {
     headBlockNumber: true,
     headBlockDrift: true
   },
-  live: {
+  'search-live': {
     headBlockNumber: true,
     headBlockDrift: true
   },
@@ -56,7 +56,7 @@ export const METRIC_CONFIG: Record<string, MetricConfig> = {
     headBlockNumber: true,
     headBlockDrift: true
   },
-  router: {
+  'search-router': {
     headBlockNumber: false,
     headBlockDrift: false
   },

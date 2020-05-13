@@ -26,18 +26,18 @@ interface AppColor {
 
 const appColors: AppColor = {
   'abicodec': '#ffb230',
-  'archiver': '#ff7165',
+  'search-archiver': '#ff7165',
   'blockmeta': '#cc2644',
   'dashboard': '#600000',
   'dgraphql': '#8177e0',
-  'indexer': '#c783ec',
+  'search-indexer': '#c783ec',
   'trxdb-loader': '#219ce4',
-  'live': '#76ddf0',
+  'search-live': '#76ddf0',
   'manager': '#00c0a2',
   'merger': '#a2e349',
   'mindreader': '#01f349',
   'relayer': '#657a90',
-  'router': '#333333',
+  'search-router': '#333333',
   'default': '#000000',
 };
 

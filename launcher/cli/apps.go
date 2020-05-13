@@ -585,7 +585,7 @@ to find how to install it.`)
 		ID:          "search-indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
-		MetricsID:   "search-indexer",
+		MetricsID:   "indexer",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
@@ -644,7 +644,7 @@ to find how to install it.`)
 		ID:          "search-router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
-		MetricsID:   "search-router",
+		MetricsID:   "router",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Router-specific flags
@@ -673,7 +673,7 @@ to find how to install it.`)
 		ID:          "search-archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
-		MetricsID:   "search-archive",
+		MetricsID:   "archive",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
@@ -732,7 +732,7 @@ to find how to install it.`)
 		ID:          "search-live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
-		MetricsID:   "search-live",
+		MetricsID:   "live",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
@@ -784,7 +784,7 @@ to find how to install it.`)
 		ID:          "search-forkresolver",
 		Title:       "Search fork resolver",
 		Description: "Search forks",
-		MetricsID:   "search-forkresolver",
+		MetricsID:   "forkresolver",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
