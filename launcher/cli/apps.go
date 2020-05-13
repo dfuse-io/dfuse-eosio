@@ -215,7 +215,7 @@ func init() {
 			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
-			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
+			cmd.Flags().String("mindreader-auto-restore-source", "", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
 			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "Takes state snapshots at this interval")
 			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
@@ -271,23 +271,24 @@ to find how to install it.`)
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				MetricID:                   "mindreader",
-				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:           viper.GetString("mindreader-nodeos-api-addr"),
-				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
-				NodeosConfigDir:            viper.GetString("mindreader-config-dir"),
-				NodeosBinPath:              viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:              mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
-				ProducerHostname:           viper.GetString("mindreader-producer-hostname"),
-				TrustedProducer:            viper.GetString("mindreader-trusted-producer"),
-				ReadinessMaxLatency:        viper.GetDuration("mindreader-readiness-max-latency"),
-				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BackupTag:                  viper.GetString("mindreader-backup-tag"),
-				NoBlocksLog:                viper.GetBool("mindreader-no-blocks-log"),
-				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
-				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
-				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
+				MetricID:            "mindreader",
+				ManagerAPIAddress:   viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:    viper.GetString("mindreader-nodeos-api-addr"),
+				ConnectionWatchdog:  viper.GetBool("mindreader-connection-watchdog"),
+				NodeosConfigDir:     viper.GetString("mindreader-config-dir"),
+				NodeosBinPath:       viper.GetString("mindreader-nodeos-path"),
+				NodeosDataDir:       mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
+				ProducerHostname:    viper.GetString("mindreader-producer-hostname"),
+				TrustedProducer:     viper.GetString("mindreader-trusted-producer"),
+				ReadinessMaxLatency: viper.GetDuration("mindreader-readiness-max-latency"),
+				NodeosExtraArgs:     viper.GetStringSlice("mindreader-nodeos-args"),
+				BackupStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+				BackupTag:           viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:         viper.GetBool("mindreader-no-blocks-log"),
+				BootstrapDataURL:    viper.GetString("mindreader-bootstrap-data-url"),
+				DebugDeepMind:       viper.GetBool("mindreader-debug-deep-mind"),
+				LogToZap:            viper.GetBool("mindreader-log-to-zap"),
+
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
 				NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),

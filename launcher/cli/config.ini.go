@@ -128,8 +128,7 @@ plugin = eosio::producer_api_plugin
 
 # Enable deep mind
 deep-mind = true
-deep-mind-console = true
-#contracts-console = true
+contracts-console = true
 
 ## Peers
 %s
