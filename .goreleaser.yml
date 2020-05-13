@@ -9,8 +9,7 @@ before:
     - eosq/build.sh
     - dashboard/client/build.sh
     # Requires `rice` to be installed: go get github.com/GeertJohan/go.rice/rice
-    - go generate ./dashboard
-    - go generate ./eosq
+    - go generate ./...
 builds:
 - env:
   - CGO_ENABLED=0
