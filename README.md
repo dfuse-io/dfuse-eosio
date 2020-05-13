@@ -114,6 +114,9 @@ dfuse Products's EOSIO-specific hooks and plugins:
 * [dgraphql resolvers](./dgraphql), with all data schemas for EOSIO
 * [blockmeta plugin](./blockmeta), for EOS-specific `kvdb` bridge.
 
+## Troubleshooting
+
+See [Troubleshooting](./TROUBLESHOOTING.md) section
 
 ## Contributing
 
