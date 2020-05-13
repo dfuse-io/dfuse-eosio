@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.1.0-beta3
+## [v0.1.0-beta3] 2020-05-13
 * [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
 * Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
