@@ -41,6 +41,8 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	configFile := viper.GetString("global-config-file")
 	userLog.Debug("starting init", zap.String("config-file", configFile))
 
+	maybeCheckNodeosVersion()
+
 	runProducer, err := askProducer()
 	if err != nil {
 		return err
@@ -56,36 +58,34 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	conf.Start.Args = apps
 	conf.Start.Flags = map[string]string{}
 
-	userLog.Printf("Mkdir './mindreader/'")
-	if err := os.MkdirAll("./mindreader", 0755); err != nil {
-		return fmt.Errorf("mkdir mindreader: %s", err)
-	}
 	if runProducer {
+		userLog.Printf("")
+
 		// FIXME: would we create an `eosc-vault` ?
-
-		userLog.Printf("Writing 'mindreader/config.ini'...")
-		if err = ioutil.WriteFile("mindreader/config.ini", []byte(mindreaderLocalConfigIni), 0644); err != nil {
-			return fmt.Errorf("writing mindreader/config.ini file: %s", err)
-		}
-
-		userLog.Printf("Using private key: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3")
-		userLog.Printf("       public key: EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
-
-		userLog.Printf("Mkdir './producer/'")
 		if err := os.MkdirAll("./producer", 0755); err != nil {
 			return fmt.Errorf("mkdir producer: %s", err)
 		}
 
-		userLog.Printf("Writing './producer/config.ini'...")
+		userLog.Printf("Writing 'producer/config.ini'")
 		if err = ioutil.WriteFile("./producer/config.ini", []byte(producerLocalConfigIni), 0600); err != nil {
 			return fmt.Errorf("writing ./producer/config.ini file: %s", err)
 		}
 
-		userLog.Printf("Writing './producer/genesis.json'...")
+		userLog.Printf("Writing 'producer/genesis.json'")
 		if err = ioutil.WriteFile("./producer/genesis.json", []byte(localGenesisJSON), 0644); err != nil {
 			return fmt.Errorf("writing ./producer/genesis.json file: %s", err)
 		}
-		userLog.Printf("Writing './mindreader/genesis.json'...")
+
+		if err := os.MkdirAll("./mindreader", 0755); err != nil {
+			return fmt.Errorf("mkdir mindreader: %s", err)
+		}
+
+		userLog.Printf("Writing 'mindreader/config.ini'")
+		if err = ioutil.WriteFile("./mindreader/config.ini", []byte(mindreaderLocalConfigIni), 0644); err != nil {
+			return fmt.Errorf("writing mindreader/config.ini file: %s", err)
+		}
+
+		userLog.Printf("Writing 'mindreader/genesis.json'")
 		if err = ioutil.WriteFile("./mindreader/genesis.json", []byte(localGenesisJSON), 0644); err != nil {
 			return fmt.Errorf("writing ./mindreader/genesis.json file: %s", err)
 		}
@@ -95,13 +95,17 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 			return err
 		}
 
-		userLog.Printf("Writing './mindreader/config.ini'...")
+		userLog.Printf("")
+
+		if err := os.MkdirAll("./mindreader", 0755); err != nil {
+			return fmt.Errorf("mkdir mindreader: %s", err)
+		}
+
+		userLog.Printf("Writing 'mindreader/config.ini'")
 		mindreaderConfig := fmt.Sprintf(mindreaderRemoteConfigIniFormat, peersListConfigEntry(peers))
 		if err = ioutil.WriteFile("./mindreader/config.ini", []byte(mindreaderConfig), 0644); err != nil {
 			return fmt.Errorf("writing mindreader/config.ini file: %s", err)
 		}
-
-		userLog.Printf("NOTE: Move the remote network's 'genesis.json' file in 'mindreader/' to 'start' with default values")
 	}
 
 	configBytes, err := yaml.Marshal(conf)
@@ -109,18 +113,26 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	userLog.Printf("Writing file '%s'...\n", configFile)
+	userLog.Printf("Writing config '%s'", strings.TrimPrefix(configFile, "./"))
 	if err = ioutil.WriteFile(configFile, configBytes, 0644); err != nil {
 		return fmt.Errorf("writing config file %s: %w", configFile, err)
 	}
 
-	userLog.Printf("------------------------------")
-	userLog.Printf("Initialization complete!")
-	userLog.Printf("Run:")
+	if runProducer {
+		userLog.Printf("")
+		userLog.Printf("Here the key pair controlling 'eosio' to interact with your local chain:")
+		userLog.Printf("")
+		userLog.Printf("  Public Key:  EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
+		userLog.Printf("  Private Key: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3")
+	} else {
+		userLog.Printf("")
+		userLog.Printf("IMPORANT: Move the remote network's 'genesis.json' file in './mindreader' directory")
+	}
+
 	userLog.Printf("")
-	userLog.Printf("    dfuseeos start")
+	userLog.Printf("Initialization completed, to kickstart your environment run:")
 	userLog.Printf("")
-	userLog.Printf("to kickstart your environment.")
+	userLog.Printf("  dfuseeos start")
 
 	return nil
 }

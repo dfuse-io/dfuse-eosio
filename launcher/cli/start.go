@@ -50,6 +50,8 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 
+	maybeCheckNodeosVersion()
+
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
