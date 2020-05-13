@@ -8,7 +8,6 @@ require (
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/abourget/llerrgroup v0.2.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
-	github.com/akavel/rsrc v0.9.0 // indirect
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
@@ -35,9 +34,9 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200424185846-7c443ace0291
+	github.com/dfuse-io/kvdb v0.0.0-20200508203924-c107cb0b2fa2
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
-	github.com/dfuse-io/manageos v0.0.0-20200508183619-cff4f6083b23
+	github.com/dfuse-io/manageos v0.0.0-20200513125910-693572e329bc
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
@@ -66,7 +65,6 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/minio/highwayhash v1.0.0
-	github.com/nkovacs/streamquote v1.0.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
@@ -82,10 +80,10 @@ require (
 	github.com/tidwall/gjson v1.5.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0 // indirect
-	github.com/valyala/fasttemplate v1.1.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
 	gopkg.in/olivere/elastic.v3 v3.0.75

@@ -6,8 +6,8 @@ import (
 
 const (
 	Protocol             pbbstream.Protocol = pbbstream.Protocol_EOS
-	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb" //%s will be replaced by `<data-dir>`
-	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb"                       //%s will be replaced by `<data-dir>/<flux-data-dir>
+	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb"   //%s will be replaced by `<data-dir>`
+	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb" //%s will be replaced by `<data-dir>/<flux-data-dir>
 	MergedBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/merged-blocks"
 	IndicesStoreURL      string             = "file://{dfuse-data-dir}/storage/indexes"
 	OneBlockStoreURL     string             = "file://{dfuse-data-dir}/storage/one-blocks"

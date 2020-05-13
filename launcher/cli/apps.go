@@ -20,6 +20,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
@@ -264,23 +265,24 @@ func init() {
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				MetricID:                   "mindreader",
-				ManagerAPIAddress:          viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:           viper.GetString("mindreader-nodeos-api-addr"),
-				ConnectionWatchdog:         viper.GetBool("mindreader-connection-watchdog"),
-				NodeosConfigDir:            viper.GetString("mindreader-config-dir"),
-				NodeosBinPath:              viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:              mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
-				ProducerHostname:           viper.GetString("mindreader-producer-hostname"),
-				TrustedProducer:            viper.GetString("mindreader-trusted-producer"),
-				ReadinessMaxLatency:        viper.GetDuration("mindreader-readiness-max-latency"),
-				NodeosExtraArgs:            viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BackupTag:                  viper.GetString("mindreader-backup-tag"),
-				NoBlocksLog:                viper.GetBool("mindreader-no-blocks-log"),
-				BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
-				DebugDeepMind:              viper.GetBool("mindreader-debug-deep-mind"),
-				LogToZap:                   viper.GetBool("mindreader-log-to-zap"),
+				MetricID:            "mindreader",
+				ManagerAPIAddress:   viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:    viper.GetString("mindreader-nodeos-api-addr"),
+				ConnectionWatchdog:  viper.GetBool("mindreader-connection-watchdog"),
+				NodeosConfigDir:     viper.GetString("mindreader-config-dir"),
+				NodeosBinPath:       viper.GetString("mindreader-nodeos-path"),
+				NodeosDataDir:       mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
+				ProducerHostname:    viper.GetString("mindreader-producer-hostname"),
+				TrustedProducer:     viper.GetString("mindreader-trusted-producer"),
+				ReadinessMaxLatency: viper.GetDuration("mindreader-readiness-max-latency"),
+				NodeosExtraArgs:     viper.GetStringSlice("mindreader-nodeos-args"),
+				BackupStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+				BackupTag:           viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:         viper.GetBool("mindreader-no-blocks-log"),
+				BootstrapDataURL:    viper.GetString("mindreader-bootstrap-data-url"),
+				DebugDeepMind:       viper.GetBool("mindreader-debug-deep-mind"),
+				LogToZap:            viper.GetBool("mindreader-log-to-zap"),
+
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
 				NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
@@ -577,7 +579,7 @@ func init() {
 		ID:          "search-indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
-		MetricsID:   "search-indexer",
+		MetricsID:   "indexer",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
@@ -636,7 +638,7 @@ func init() {
 		ID:          "search-router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
-		MetricsID:   "search-router",
+		MetricsID:   "router",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Router-specific flags
@@ -665,7 +667,7 @@ func init() {
 		ID:          "search-archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
-		MetricsID:   "search-archive",
+		MetricsID:   "archive",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
@@ -724,7 +726,7 @@ func init() {
 		ID:          "search-live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
-		MetricsID:   "search-live",
+		MetricsID:   "live",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
@@ -776,7 +778,7 @@ func init() {
 		ID:          "search-forkresolver",
 		Title:       "Search fork resolver",
 		Description: "Search forks",
-		MetricsID:   "search-forkresolver",
+		MetricsID:   "forkresolver",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
@@ -973,7 +975,10 @@ func init() {
 		MetricsID:   "apiproxy",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "HTTP Listener address")
+			cmd.Flags().String("apiproxy-https-listen-addr", "", "If non-empty, will listen for HTTPS connections on this address")
+			cmd.Flags().String("apiproxy-autocert-domains", "", "If non-empty, requests certificates from Let's Encrypt for this comma-separated list of domains")
+			cmd.Flags().String("apiproxy-autocert-cache-dir", "{dfuse-data-dir}/api-proxy", "Path to directory where certificates will be saved to disk")
 			cmd.Flags().String("apiproxy-eosws-http-addr", EoswsHTTPServingAddr, "Target address of the eosws API endpoint")
 			cmd.Flags().String("apiproxy-dgraphql-http-addr", DgraphqlHTTPServingAddr, "Target address of the dgraphql API endpoint")
 			cmd.Flags().String("apiproxy-nodeos-http-addr", NodeosAPIAddr, "Address of a queriable nodeos instance")
@@ -981,8 +986,16 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			autocertDomains := strings.Split(viper.GetString("apiproxy-autocert-domains"), ",")
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
 			return apiproxy.New(&apiproxy.Config{
 				HTTPListenAddr:   viper.GetString("apiproxy-http-listen-addr"),
+				HTTPSListenAddr:  viper.GetString("apiproxy-https-listen-addr"),
+				AutocertDomains:  autocertDomains,
+				AutocertCacheDir: mustReplaceDataDir(dfuseDataDir, viper.GetString("apiproxy-autocert-cache-dir")),
 				EoswsHTTPAddr:    viper.GetString("apiproxy-eosws-http-addr"),
 				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
 				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
