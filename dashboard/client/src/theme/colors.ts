@@ -31,7 +31,7 @@ const appColors: AppColor = {
   'dashboard': '#600000',
   'dgraphql': '#8177e0',
   'indexer': '#c783ec',
-  'kvdb-loader': '#219ce4',
+  'trxdb-loader': '#219ce4',
   'live': '#76ddf0',
   'manager': '#00c0a2',
   'merger': '#a2e349',

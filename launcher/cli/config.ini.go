@@ -125,6 +125,8 @@ plugin = eosio::net_api_plugin
 plugin = eosio::chain_api_plugin
 plugin = eosio::db_size_api_plugin
 plugin = eosio::producer_api_plugin
+plugin = eosio::producer_plugin # for state snapshots
+plugin = eosio::producer_api_plugin # for state snapshots
 
 # Enable deep mind
 deep-mind = true

@@ -36,7 +36,7 @@ export const METRIC_CONFIG: Record<string, MetricConfig> = {
     headBlockNumber: true,
     headBlockDrift: true
   },
-  'kvdb-loader': {
+  'trxdb-loader': {
     headBlockNumber: true,
     headBlockDrift: true
   },
