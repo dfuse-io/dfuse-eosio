@@ -64,7 +64,7 @@ server another small Go server to run stand-alone eosq server
 
 * Material-ui
 * Emotion
-* Fortawesome PRO
+* Fortawesome
 * @dfuse/client
 * i18next
 * nvd3/d3
