@@ -18,12 +18,36 @@ type Mapping struct {
 }
 
 type Table struct {
+	name     string
 	mappings Mappings
 }
 
 type account struct {
 	tables map[eos.TableName]*Table
+	name   string
 	abi    *eos.ABI
+}
+
+func (a *account) extractTables() {
+	out := make(map[eos.TableName]*Table)
+	for _, table := range a.abi.Tables {
+		var mappings []Mapping
+		struc := a.abi.StructForName(table.Type)
+		// TODO: add support for `base` type, therefore add fields for that one too.
+		for _, field := range struc.Fields {
+			mappings = append(mappings, Mapping{
+				ChainField: field.Name,
+				DBField:    field.Name,
+				KeepJSON:   !stringInFilter(field.Type, parsableFieldTypes),
+				Type:       field.Type,
+			})
+		}
+		out[table.Name] = &Table{
+			name:     a.name + "_" + string(table.Name),
+			mappings: mappings,
+		}
+	}
+	a.tables = out
 }
 
 func init() {
@@ -46,17 +70,5 @@ func init() {
 	//			// or check the field from ABI to pick another type
 	//			r = append(r, result.Str)
 	//		}
-	//	}
-	//	SimpleAssetsMappings = map[string]Mappings{
-	//		"sassets": Mappings{
-	//			Mapping{"id", "id", "string"},
-	//			Mapping{"owner", "owner", "string"},
-	//			Mapping{"author", "author", "string"},
-	//			Mapping{"category", "category", "string"},
-	//			Mapping{"idata", "idata", "string"},
-	//			Mapping{"mdata", "mdata", "string"},
-	//			Mapping{"container", "container", "raw"},
-	//			Mapping{"containerf", "containerf", "raw"},
-	//		},
 	//	}
 }

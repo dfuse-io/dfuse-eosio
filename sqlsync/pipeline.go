@@ -2,144 +2,14 @@ package sqlsync
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
-
-var parsableFieldTypes = []string{
-	"name",
-	"string",
-	"symbol",
-	"bool",
-	"int64",
-	"uint64",
-	"int32",
-	"uint32",
-	"asset",
-}
-
-func extractTables(abi *eos.ABI) map[eos.TableName]*Table {
-	out := make(map[eos.TableName]*Table)
-	for _, table := range abi.Tables {
-
-		var mappings []Mapping
-		for i := 0; i < len(table.KeyNames); i++ {
-			mappings = append(mappings, Mapping{
-				ChainField: table.KeyNames[i],
-				DBField:    string(table.KeyNames[i]),
-				KeepJSON:   !stringInFilter(table.KeyTypes[i], parsableFieldTypes),
-				Type:       table.KeyTypes[i],
-			})
-		}
-		out[table.Name] = &Table{
-			mappings: mappings,
-		}
-	}
-	return nil
-}
-
-func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.AccountName]*account, error) {
-	out := make(map[eos.AccountName]*account)
-	abi, err := s.getABI("simpleassets", uint32(startBlock.Num()))
-	if err != nil {
-		return nil, err
-	}
-
-	out["simpleassets"] = &account{
-		abi:    abi,
-		tables: extractTables(abi),
-	}
-	return out, nil
-}
-
-var chainToSQLTypes = map[string]string{
-	"name":   "varchar(13) NOT NULL",
-	"string": "varchar(1024) NOT NULL",
-	"symbol": "varchar(8) NOT NULL",
-	"bool":   "boolean",
-	"int64":  "int NOT NULL",
-	"uint64": "int unsigned NOT NULL",
-	"int32":  "int NOT NULL", // make smaller
-	"uint32": "int unsigned NOT NULL",
-	"asset":  "varchar(64) NOT NULL",
-}
-
-func (s *SQLSync) bootstrapFromFlux(startBlock bstream.BlockRef) error {
-	// s.db.createTables
-
-	// get all tables that are in watchedAccounts
-	zlog.Info("bootstrapping SQL database", zap.Int("accounts", len(s.watchedAccounts)))
-	for acctName, acct := range s.watchedAccounts {
-
-		for tblName, tbl := range acct.tables {
-			stmt := "CREATE TABLE IF NOT EXISTS " + string(tblName) + `(
-  _scope varchar(13) NOT NULL,
-  _key varchar(13) NOT NULL,
-`
-			for _, field := range tbl.mappings {
-				stmt = stmt + " " + field.ChainField + " "
-				if field.KeepJSON {
-					stmt = stmt + "text NOT NULL,"
-				} else {
-					stmt = stmt + chainToSQLTypes[field.Type] + " NOT NULL,"
-				}
-			}
-
-			stmt += ` PRIMARY KEY (_scope, _key)
-);`
-			zlog.Info("creating table", zap.String("stmt", stmt))
-			_, err := s.db.db.ExecContext(context.Background(), stmt)
-			if err != nil {
-				return fmt.Errorf("create table %s for account %s: %w", tblName, acctName, err)
-			}
-		}
-	}
-
-	// get snapshots
-
-	//s.fluxdb.GetTable()
-	return nil
-}
-
-func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) error {
-	accs, err := s.getWatchedAccounts(startBlock)
-	if err != nil {
-		return err
-	}
-	s.watchedAccounts = accs
-
-	if bootstrapRequired {
-		if err := s.bootstrapFromFlux(startBlock); err != nil {
-			return err
-		}
-	}
-
-	if err := s.db.db.Close(); err != nil {
-		return err
-	}
-
-	time.Sleep(1 * time.Hour)
-
-	s.setupPipeline(startBlock)
-
-	zlog.Info("launching pipeline")
-	go s.source.Run()
-
-	<-s.source.Terminated()
-	if err := s.source.Err(); err != nil {
-		zlog.Error("source shutdown with error", zap.Error(err))
-		return err
-	}
-	zlog.Info("source is done")
-
-	return nil
-}
 
 func (s *SQLSync) setupPipeline(startBlock bstream.BlockRef) {
 
@@ -189,4 +59,60 @@ func (s *SQLSync) setupPipeline(startBlock bstream.BlockRef) {
 	s.OnTerminating(func(e error) {
 		s.source.Shutdown(e)
 	})
+}
+
+func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
+	// forkable setup will only yield irreversible blocks
+	blk := block.ToNative().(*pbcodec.Block)
+
+	if (blk.Number % 120) == 0 {
+		zlog.Info("process blk 1/120", zap.String("block_id", block.ID()), zap.Uint64("blocker_number", block.Number))
+	}
+
+	for _, trx := range blk.TransactionTraces {
+		zlogger := zlog.With(zap.Uint64("blk_id", block.Num()), zap.String("trx_id", trx.Id))
+
+		for _, dbop := range trx.DbOps {
+			if !shouldProcessDbop(dbop) {
+				continue
+			}
+			zlog.Debug("processing dbop", zap.String("contract", dbop.Code), zap.String("table", dbop.TableName), zap.String("scope", dbop.Scope), zap.String("primary_key", dbop.PrimaryKey))
+
+			rowData := dbop.NewData
+			if rowData == nil {
+				zlog.Info("using db row old data")
+				rowData = dbop.OldData
+			}
+			contract := eos.AccountName("whatever")
+			row, err := t.decodeDBOpToRow(rowData, eos.TableName(dbop.TableName), contract, uint32(block.Number))
+			if err != nil {
+				zlogger.Error("cannot decode table row",
+					zap.String("contract", string(contract)),
+					zap.String("table_name", dbop.TableName),
+					zap.String("transaction_id", trx.Id),
+					zap.Error(err))
+				continue
+			}
+			_ = row
+
+			switch dbop.TableName {
+			}
+		}
+	}
+	return nil
+}
+
+func shouldProcessDbop(dbop *pbcodec.DBOp) bool {
+	//	if dbop.TableName == string(...) {
+	//		return true
+	//	}
+	//	return false
+	return false
+}
+
+func shouldProcessAction(actionTrace *pbcodec.ActionTrace) bool {
+	if actionTrace.Action.Name == "close" {
+		return true
+	}
+	return false
 }

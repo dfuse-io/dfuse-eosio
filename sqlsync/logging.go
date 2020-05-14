@@ -22,5 +22,5 @@ import (
 var zlog = zap.NewNop()
 
 func init() {
-	logging.Register("github.com/dfuse-io/sqlsync", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/sqlsync", &zlog)
 }
