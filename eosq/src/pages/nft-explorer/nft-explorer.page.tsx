@@ -1,11 +1,12 @@
-import * as React from "react"
+import React, { useState, useEffect } from "react"
 import { RouteComponentProps, Link } from "react-router-dom"
 import styled from "@emotion/styled"
-import { useNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
+import { fetchNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
 
 const PageWrapper = styled.div`
   display: grid;
   grid-template-columns: 250px auto;
+  grid-template-rows: minmax(820px, auto);
 `
 
 const SideBar = styled.form`
@@ -13,6 +14,7 @@ const SideBar = styled.form`
   background-color: #c4caff;
   display: flex;
   flex-direction: column;
+  height: 100%;
   label,
   strong {
     font-size: 21px;
@@ -49,11 +51,15 @@ const Card = styled.table`
 
 interface Props extends RouteComponentProps<any> {}
 
-const FilterCheckbox: React.FC<{ name: string }> = ({ name }) => (
+const FilterCheckbox: React.FC<{
+  name: string
+  value: string
+  handleChange: ((event: React.ChangeEvent<HTMLInputElement>) => void) | undefined
+}> = ({ name, value, handleChange }) => (
   <>
-    <label htmlFor={name}>
-      {name}&nbsp;
-      <input type="checkbox" name={name} onChange={() => {}} />
+    <label htmlFor={value}>
+      {value}&nbsp;
+      <input type="checkbox" name={name} value={value} onChange={handleChange} />
     </label>
   </>
 )
@@ -69,38 +75,69 @@ const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
           <div className="imageContainer">
             <img src={imageSource} alt={mdata.name!} />
           </div>
-          <tr>ID: {id}</tr>
-          <tr>Owner: {owner}</tr>
-          <tr>Author: {author}</tr>
-          <tr>Category: {category}</tr>
+          <tr>ID:&nbsp;{id}</tr>
+          <tr>Owner:&nbsp;{owner}</tr>
+          <tr>Author:&nbsp;{author}</tr>
+          <tr>Category:&nbsp;{category}</tr>
         </tbody>
       </Card>
     </Link>
   )
 }
+
 export const NftExplorerPage: React.FC<Props> = () => {
-  const assets: NFT[] = useNft("").resultOr([])
-  const filters: NFTFilter = useNftFilters().resultOr({
+  const [filters, setFilters] = useState<NFTFilter>({
     owners: [],
     authors: [],
-    categories: []
+    categories: [],
+    id: ""
   })
+  const [assets, setAssets] = useState<NFT[]>([])
+  useEffect(() => {
+    setAssets(
+      fetchNft(
+        `owner:${filters.owners.join()} authors:${filters.authors.join()} categories:${filters.categories.join()}`
+      )
+    )
+  }, [filters])
+
+  const allFilters: NFTFilter = useNftFilters()
+
+  const handleFilter: (event: React.ChangeEvent<HTMLInputElement>) => void = (e) => {
+    const { checked, name, value } = e.target
+    if (checked) {
+      if (!filters[name]?.includes(value)) {
+        const newFilters = {}
+        newFilters[name] = filters[name]
+        newFilters[name].push(value)
+        setFilters({ ...filters, ...newFilters })
+      }
+    }
+    if (!checked) {
+      if (filters[name]?.includes(value)) {
+        const newFilters = {}
+        newFilters[name] = filters[name].filter((f: string) => f !== value)
+        setFilters({ ...filters, ...newFilters })
+      }
+    }
+  }
+
   return (
     <PageWrapper>
       <SideBar>
         <strong>Owner</strong>
-        {filters.owners.map((owner) => (
-          <FilterCheckbox name={owner} />
+        {allFilters.owners.map((owner) => (
+          <FilterCheckbox name="owners" value={owner} handleChange={handleFilter} />
         ))}
         <br />
         <strong>Author</strong>
-        {filters.authors.map((author) => (
-          <FilterCheckbox name={author} />
+        {allFilters.authors.map((author) => (
+          <FilterCheckbox name="authors" value={author} handleChange={handleFilter} />
         ))}
         <br />
         <strong>Category</strong>
-        {filters.categories.map((category) => (
-          <FilterCheckbox name={category} />
+        {allFilters.categories.map((category) => (
+          <FilterCheckbox name="categories" value={category} handleChange={handleFilter} />
         ))}
         <br />
       </SideBar>

@@ -4,6 +4,7 @@ import styled from "@emotion/styled"
 
 const Card = styled.table`
   max-width: 200px;
+  margin: 50px;
   .imageContainer {
     width: 200px;
     height: 300px;
@@ -20,7 +21,7 @@ const Card = styled.table`
 `
 
 export const NftAssetPage: React.FC<{ assetId: string }> = ({ assetId }) => {
-  const asset: NFT | undefined = useSingleNFT(assetId).resultOr(undefined)
+  const asset: NFT | undefined = useSingleNFT(assetId)
   if (!asset) return <div>asset not found</div>
 
   const { id, owner, author, category, idata, mdata } = asset
