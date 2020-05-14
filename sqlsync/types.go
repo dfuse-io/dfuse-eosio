@@ -22,7 +22,7 @@ type Table struct {
 }
 
 type account struct {
-	tables map[string]*Table
+	tables map[eos.TableName]*Table
 	abi    *eos.ABI
 }
 

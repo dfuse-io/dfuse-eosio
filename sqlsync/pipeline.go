@@ -10,7 +10,36 @@ import (
 	"go.uber.org/zap"
 )
 
-func extractTables(abi *eos.ABI) map[string]*Table {
+var parsableFieldTypes = []string{
+	"name",
+	"string",
+	"symbol",
+	"bool",
+	"int64",
+	"uint64",
+	"int32",
+	"uint32",
+	"asset",
+}
+
+func extractTables(abi *eos.ABI) map[eos.TableName]*Table {
+	out := make(map[eos.TableName]*Table)
+	for _, table := range abi.Tables {
+
+		var mappings []Mapping
+		for i := 0; i < len(table.KeyNames); i++ {
+			mappings = append(mappings, Mapping{
+				ChainField: table.KeyNames[i],
+				DBField:    string(table.KeyNames[i]),
+				KeepJSON:   !stringInFilter(table.KeyTypes[i], parsableFieldTypes),
+				Type:       table.KeyTypes[i],
+			})
+		}
+		out[table.Name] = &Table{
+			mappings: mappings,
+		}
+	}
+
 	return nil
 }
 
