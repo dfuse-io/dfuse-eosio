@@ -12,6 +12,7 @@ import (
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
+	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )
 
@@ -89,18 +90,6 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 	return nil
 }
 
-var parsableFieldTypes = []string{
-	"name",
-	"string",
-	"symbol",
-	"bool",
-	"int64",
-	"uint64",
-	"int32",
-	"uint32",
-	"asset",
-}
-
 func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.AccountName]*account, error) {
 	out := make(map[eos.AccountName]*account)
 	abi, err := s.getABI("simpleassets", uint32(startBlock.Num()))
@@ -116,18 +105,6 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 	return out, nil
 }
 
-var chainToSQLTypes = map[string]string{
-	"name":   "varchar(13) NOT NULL",
-	"string": "varchar(1024) NOT NULL",
-	"symbol": "varchar(8) NOT NULL",
-	"bool":   "boolean",
-	"int64":  "int NOT NULL",
-	"uint64": "int unsigned NOT NULL",
-	"int32":  "int NOT NULL", // make smaller
-	"uint32": "int unsigned NOT NULL",
-	"asset":  "varchar(64) NOT NULL",
-}
-
 func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 	// s.db.createTables
 
@@ -137,10 +114,10 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 		zlog.Info("bootstrapping SQL tables for account", zap.String("account", string(acctName)), zap.Int("tables", len(acct.tables)))
 
 		for _, tbl := range acct.tables {
-			tblName := acct.name + "_" + tbl.name
-			stmt := "CREATE TABLE " + tblName + `(
+			stmt := "CREATE TABLE " + tbl.dbName + `(
   _scope varchar(13) NOT NULL,
   _key varchar(13) NOT NULL,
+  _payer varchar(13) NOT NULL,
 `
 			for _, field := range tbl.mappings {
 				stmt = stmt + " " + field.ChainField + " "
@@ -156,7 +133,7 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 			zlog.Debug("creating table", zap.String("stmt", stmt))
 			_, err := s.db.db.ExecContext(context.Background(), stmt)
 			if err != nil {
-				return fmt.Errorf("create table %s for account %s: %w", tblName, acctName, err)
+				return fmt.Errorf("create table %s for account %s: %w", tbl.dbName, acctName, err)
 			}
 		}
 	}
@@ -165,21 +142,103 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 }
 
 func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
+	ctx := context.Background()
+
+	atBlock := uint32(startBlock.Num())
+
 	for acctName, acct := range s.watchedAccounts {
-		for _, tbl := range acct.tables {
+		for eosTableName, tbl := range acct.tables {
 			// get all scopes for that table in that account, and insert all rows
-			stmt := "INSERT INTO " + tbl.name + "(_scope, _key"
+			stmt := "INSERT INTO " + tbl.dbName + "(_scope, _key, _payer"
 			for _, field := range tbl.mappings {
 				stmt = stmt + ", " + field.DBField
 			}
-			stmt = stmt + ") VALUES (" + strings.TrimLeft(strings.Repeat(",?", len(tbl.mappings)), ",") + ")"
+			stmt = stmt + ") VALUES (?,?,?" + strings.Repeat(",?", len(tbl.mappings)) + ")"
 
-			_, err := s.db.db.ExecContext(context.Background(), stmt)
+			scopesResp, err := s.fluxdb.GetTableScopes(ctx, atBlock, &fluxdb.GetTableScopesRequest{
+				Account: acctName,
+				Table:   eosTableName,
+			})
 			if err != nil {
-				return fmt.Errorf("create table %s for account %s: %w", tbl.name, acctName, err)
+				return fmt.Errorf("get table scopes: %w", err)
 			}
+
+			scopes := scopesResp.Scopes
+
+			chunkSize := 1000
+			for i := 0; i < len(scopes); i += chunkSize {
+				scopesChunk := scopes[i : i+min(len(scopes)-i, chunkSize)]
+				fmt.Println("Getting scopes", eosTableName, scopesChunk)
+				resp, err := s.fluxdb.GetTablesMultiScopes(ctx, atBlock, &fluxdb.GetTablesMultiScopesRequest{
+					Account: acctName,
+					KeyType: "name",
+					Table:   eosTableName,
+					Scopes:  scopesChunk,
+					JSON:    true, // TODO: this could/should be done locally, and ideally sped up like crazy, decoding directly to the types useful to SQL. eos-go/abidecoder needs to be boosted for that to happen
+				})
+				if err != nil {
+					return fmt.Errorf("get tables multi scopes: %w", err)
+				}
+
+				for _, tblResp := range resp.Tables {
+					scopeResp := tblResp.Scope
+					result := gjson.ParseBytes(tblResp.Rows)
+					var innerErr error
+					result.ForEach(func(k, v gjson.Result) bool {
+						if !v.Exists() {
+							return false
+						}
+
+						// fmt.Println("ONE ROW:", v.Raw)
+
+						values := []interface{}{
+							scopeResp,
+							v.Get("key").String(),
+							v.Get("payer").String(),
+						}
+
+						decoded := v.Get("json")
+						for _, m := range tbl.mappings {
+							val := decoded.Get(m.ChainField)
+							if m.KeepJSON {
+								values = append(values, val.Raw)
+							} else {
+								convertedValue, err := mapToSQLType(val, m.Type)
+								if err != nil {
+									innerErr = fmt.Errorf("converting raw JSON %q to %s: %w", val.Raw, m.Type, err)
+									return false
+								}
+								values = append(values, convertedValue)
+							}
+						}
+						if err := innerErr; err != nil {
+							return false
+						}
+
+						//fmt.Printf("Inserting into %w, %q: %v\n", tbl.dbName, stmt, values)
+						_, err := s.db.db.ExecContext(ctx, stmt, values...)
+						if err != nil {
+							innerErr = fmt.Errorf("insert into %s: %w", tbl.dbName, err)
+							return false
+						}
+
+						return true
+					})
+					if err := innerErr; err != nil {
+						return err
+					}
+				}
+			}
+
 		}
 	}
 
 	return nil
+}
+
+func min(a, b int) int {
+	if a > b {
+		return b
+	}
+	return a
 }

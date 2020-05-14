@@ -1,6 +1,12 @@
 package sqlsync
 
-import "github.com/eoscanada/eos-go"
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/eoscanada/eos-go"
+	"github.com/tidwall/gjson"
+)
 
 // Must contain ALL fields. If ABI to JSON decoding didn't produce a given field (in ORDER, according to our ABI -> SQL mapping)
 type Row []interface{}
@@ -18,8 +24,9 @@ type Mapping struct {
 }
 
 type Table struct {
-	name     string
-	mappings Mappings
+	chainName string
+	dbName    string
+	mappings  Mappings
 }
 
 type account struct {
@@ -43,32 +50,92 @@ func (a *account) extractTables() {
 			})
 		}
 		out[table.Name] = &Table{
-			name:     a.name + "_" + string(table.Name),
-			mappings: mappings,
+			chainName: string(table.Name),
+			dbName:    a.name + "_" + string(table.Name), // TODO: allow custom mapping of chain names to db name
+			mappings:  mappings,
 		}
 	}
 	a.tables = out
 }
 
-func init() {
-	//	r := Row{}
-	//	abiDecoded := abi.DecodeStruct("sasset", binaryFromFluxDB)
-	//	for _, mapping := range tables {
-	//		result := gjson.ParseBytes(abiDecoded, mapping.ChainField)
-	//		switch mapping.Type {
-	//		case "string":
-	//			r = append(r, result.String())
-	//		case "raw":
-	//			r = append(r, result.Raw)
-	//		case "simpleznumber":
+var parsableFieldTypes = []string{
+	"name",
+	"string",
+	"symbol",
+	"bool",
+	"int64",
+	"uint64",
+	"int32",
+	"uint32",
+	"asset",
+}
+
+var chainToSQLTypes = map[string]string{
+	"name":   "varchar(13) NOT NULL",
+	"string": "varchar(1024) NOT NULL",
+	"symbol": "varchar(8) NOT NULL",
+	"bool":   "boolean",
+	"int64":  "int NOT NULL",
+	"uint64": "int unsigned NOT NULL",
+	"int32":  "int NOT NULL", // make smaller
+	"uint32": "int unsigned NOT NULL",
+	"asset":  "varchar(64) NOT NULL",
+}
+
+func mapToSQLType(val gjson.Result, typ string) (out interface{}, err error) {
+	// WHAT-IF: We could short-circuit this TOTALLY by implementing
+	// hooks in the ABI decoder so we could map native EOS types
+	// directly to SQL interface{} value types.
 	//
-	//			r = append(r, result.Number)
-	//		}
-	//		if mapping.KeepJSON {
-	//			r = append(r, result.Raw)
-	//		} else {
-	//			// or check the field from ABI to pick another type
-	//			r = append(r, result.Str)
-	//		}
-	//	}
+	// Right now, we'll be doing binary -> JSON, then JSON -> SQL
+	// through its declared type in ABI + JSON representation (!!)
+	notSupported := func() error {
+		return fmt.Errorf("json type %s not supported for chain type %s", val.Type.String(), typ)
+	}
+
+	switch typ {
+	case "name":
+		out = val.String()
+	case "string":
+		out = val.String()
+	case "bool":
+		switch val.Type {
+		case gjson.True:
+			out = true
+		case gjson.False:
+			out = false
+		default:
+			err = notSupported()
+		}
+	case "asset":
+		// TODO: check what we mean according to desired mapping
+		// we could decide that an `asset` would be split into 2-3 fields,
+		// where would this occur?
+		out = val.String()
+	case "int64":
+		switch val.Type {
+		case gjson.Null, gjson.False, gjson.True, gjson.JSON:
+			err = notSupported()
+		case gjson.String:
+			// interprete the string
+			out, err = strconv.ParseInt(val.Str, 10, 64)
+		case gjson.Number:
+			out, err = strconv.ParseInt(val.Raw, 10, 64)
+		}
+	case "uint64":
+		switch val.Type {
+		case gjson.Null, gjson.False, gjson.True, gjson.JSON:
+			err = notSupported()
+		case gjson.String:
+			// interprete the string
+			out, err = strconv.ParseUint(val.Str, 10, 64)
+		case gjson.Number:
+			out, err = strconv.ParseUint(val.Raw, 10, 64)
+		}
+
+	default:
+		err = notSupported()
+	}
+
+	return
 }
