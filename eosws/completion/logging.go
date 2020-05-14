@@ -15,11 +15,12 @@
 package completion
 
 import (
+	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
 var zlog = zap.NewNop()
 
-func SetLogger(logger *zap.Logger) {
-	zlog = logger
+func init() {
+	logging.Register("github.com/dfuse-io/eosws/completion", &zlog)
 }
