@@ -3,6 +3,7 @@ package sqlsync
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
@@ -73,6 +74,7 @@ func (s *SQLSync) bootstrapFromFlux(startBlock bstream.BlockRef) error {
 	// s.db.createTables
 
 	// get all tables that are in watchedAccounts
+	zlog.Info("bootstrapping SQL database", zap.Int("accounts", len(s.watchedAccounts)))
 	for acctName, acct := range s.watchedAccounts {
 
 		for tblName, tbl := range acct.tables {
@@ -91,6 +93,7 @@ func (s *SQLSync) bootstrapFromFlux(startBlock bstream.BlockRef) error {
 
 			stmt += ` PRIMARY KEY (_scope, _key)
 );`
+			zlog.Info("creating table", zap.String("stmt", stmt))
 			_, err := s.db.db.ExecContext(context.Background(), stmt)
 			if err != nil {
 				return fmt.Errorf("create table %s for account %s: %w", tblName, acctName, err)
@@ -117,7 +120,12 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 		}
 	}
 
-	s.db.db.Close()
+	if err := s.db.db.Close(); err != nil {
+		return err
+	}
+
+	time.Sleep(1 * time.Hour)
+
 	s.setupPipeline(startBlock)
 
 	zlog.Info("launching pipeline")

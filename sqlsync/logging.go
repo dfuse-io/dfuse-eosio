@@ -15,11 +15,12 @@
 package sqlsync
 
 import (
+	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
 var zlog = zap.NewNop()
 
-func SetLogger(l *zap.Logger) {
-	zlog = l
+func init() {
+	logging.Register("github.com/dfuse-io/sqlsync", &zlog)
 }

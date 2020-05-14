@@ -820,7 +820,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("sqlsync-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String("sqlsync-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
-			cmd.Flags().String("sqlsync-sql-dsn", "sqlite://{dfuse-data-dir}/storage/sqlsync", "SQL DSN (URL)")
+			cmd.Flags().String("sqlsync-sql-dsn", "sqlite://{dfuse-data-dir}/sqlsync.sqlite", "SQL DSN (URL)")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
