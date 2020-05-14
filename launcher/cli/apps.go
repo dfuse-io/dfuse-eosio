@@ -39,6 +39,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	sqlsyncApp "github.com/dfuse-io/dfuse-eosio/sqlsync/app/sqlsync"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
@@ -806,6 +807,34 @@ func init() {
 			}, &forkresolverApp.Modules{
 				Dmesh:       modules.SearchDmeshClient,
 				BlockMapper: mapper,
+			}), nil
+		},
+	})
+
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "sqlsync",
+		Title:       "SQLSync",
+		Description: "syncs chain state to SQL endpoint",
+		MetricsID:   "sqlsync",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/sqlsync.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("sqlsync-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().String("sqlsync-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
+			cmd.Flags().String("sqlsync-sql-dsn", "sqlite://{dfuse-data-dir}/storage/sqlsync", "SQL DSN (URL)")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			return sqlsyncApp.New(&sqlsyncApp.Config{
+				HTTPListenAddr:  viper.GetString("sqlsync-http-listen-addr"),
+				FluxHTTPAddr:    viper.GetString("sqlsync-fluxdb-addr"),
+				SQLDSN:          mustReplaceDataDir(dfuseDataDir, viper.GetString("sqlsync-sql-dsn")),
+				BlockStreamAddr: viper.GetString("common-blockstream-addr"),
+				BlockmetaAddr:   viper.GetString("common-blockmeta-addr"),
+				SourceStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}), nil
 		},
 	})
