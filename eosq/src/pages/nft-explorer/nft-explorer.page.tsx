@@ -1,16 +1,18 @@
 import * as React from "react"
 import { RouteComponentProps } from "react-router-dom"
-import { useNft, useNftOwners, NFT } from "../../hooks/use-nft"
+import { useNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
 import styled from "@emotion/styled"
 
 const PageWrapper = styled.div`
   display: grid;
-  grid-template-columns: 100px auto;
+  grid-template-columns: 250px auto;
 `
 
 const SideBar = styled.form`
-  display: table;
+  display: flex;
+  flex-direction: column;
 `
+
 const Content = styled.div`
   display: grid;
   grid-gap: 20px;
@@ -19,6 +21,19 @@ const Content = styled.div`
 
 const Card = styled.table`
   max-width: 200px;
+  .imageContainer {
+    width: 200px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+    }
+  }
 `
 
 interface Props extends RouteComponentProps<any> {}
@@ -34,11 +49,14 @@ const FilterCheckbox: React.FC<{ name: string }> = ({ name }) => (
 
 const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
   const { id, owner, author, category, idata, mdata } = asset
-  const imageSource = mdata.img ? `https://ipfs.io/ipfs/${mdata.img}` : "/images/not-found.png"
+  const imageLink = mdata.img.includes("http") ? mdata.img : `https://ipfs.io/ipfs/${mdata.img}`
+  const imageSource = mdata.img ? imageLink : "/images/not-found.png"
   return (
     <Card>
       <tbody>
-        <img src={`https://ipfs.io/ipfs/${mdata.img}`} alt={mdata.name!} />
+        <div className="imageContainer">
+          <img src={imageSource} alt={mdata.name!} />
+        </div>
         <tr>ID: {id}</tr>
         <tr>Owner: {owner}</tr>
         <tr>Author: {author}</tr>
@@ -48,15 +66,31 @@ const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
   )
 }
 export const NftExplorerPage: React.FC<Props> = () => {
-  const assets = useNft("").resultOr([])
-  const owners = useNftOwners().resultOr([])
-  console.log(owners)
+  const assets: NFT[] = useNft("").resultOr([])
+  const filters: NFTFilter = useNftFilters().resultOr({
+    owners: [],
+    authors: [],
+    categories: []
+  })
+  console.log(filters)
   return (
     <PageWrapper>
       <SideBar>
-        {owners.map((owner) => (
+        <strong>Owner</strong>
+        {filters.owners.map((owner) => (
           <FilterCheckbox name={owner} />
         ))}
+        <br />
+        <strong>Author</strong>
+        {filters.authors.map((author) => (
+          <FilterCheckbox name={author} />
+        ))}
+        <br />
+        <strong>Category</strong>
+        {filters.categories.map((category) => (
+          <FilterCheckbox name={category} />
+        ))}
+        <br />
       </SideBar>
       <Content>
         {assets.map((asset) => (

@@ -13,6 +13,12 @@ export type NFT = {
   mdata: any
 }
 
+export type NFTFilter = {
+  owners: string[]
+  authors: string[]
+  categories: string[]
+}
+
 // const document = gql`
 //   query($query: String!) {
 //     nft(query: $query) {
@@ -46,11 +52,17 @@ export function useNft(query: string): PromiseState<NFT[], GraphqlResponseError[
   return promiseStateResolved(balances)
 }
 
-const onlyUnique = (value: string, index: number, self: string[]) => {
+const onlyUnique = (value: any, index: number, self: any[]) => {
   return self.indexOf(value) === index
 }
 
-export function useNftOwners(): PromiseState<string[], GraphqlResponseError[]> {
+export function useNftFilters(): PromiseState<NFTFilter, GraphqlResponseError[]> {
   const owners = data.rows.map((r) => r.owner).filter(onlyUnique)
-  return promiseStateResolved(owners)
+  const authors = data.rows.map((r) => r.author).filter(onlyUnique)
+  const categories = data.rows.map((r) => r.category).filter(onlyUnique)
+  return promiseStateResolved({
+    owners,
+    authors,
+    categories
+  })
 }
