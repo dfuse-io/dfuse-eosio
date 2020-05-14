@@ -160,10 +160,21 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 				Table:   eosTableName,
 			})
 			if err != nil {
-				return fmt.Errorf("get table scopes: %w", err)
+				// FIXME: wut? we have it listed in the ABI flux
+				// provided to us, and flux says it's not in the list
+				// of tables?? Is it because there's no data actually?
+				// If that,s the case, let's use the error code to
+				// know we don't store anything.
+				zlog.Error("get table scopes, skipping", zap.Error(err))
+				//return fmt.Errorf("get table scopes: %w", err)
+				continue
 			}
 
 			scopes := scopesResp.Scopes
+			if len(scopes) > 1500 {
+				zlog.Info("truncating table to 1500 rows", zap.String("table", tbl.dbName))
+				scopes = scopes[:1500]
+			}
 
 			chunkSize := 1000
 			for i := 0; i < len(scopes); i += chunkSize {
@@ -232,6 +243,8 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 
 		}
 	}
+
+	zlog.Info("bootstrap done")
 
 	return nil
 }
