@@ -73,6 +73,7 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 		s.bootstrapFromFlux(startBlock)
 	}
 
+	s.db.db.Close()
 	s.setupPipeline(startBlock)
 
 	zlog.Info("launching pipeline")

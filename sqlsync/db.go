@@ -72,6 +72,10 @@ func NewDB(dsnString string) (*DB, error) {
 			dsn = u.Path // for sqlite:///tmp/mama.sqlite
 		}
 		db, err = sql.Open("sqlite3", dsn)
+		if err != nil {
+			return nil, err
+		}
+		err = db.Ping() // force create empty file at least, to see if it works
 	}
 	if err != nil {
 		return nil, err
