@@ -45,3 +45,12 @@ export function useNft(query: string): PromiseState<NFT[], GraphqlResponseError[
 
   return promiseStateResolved(balances)
 }
+
+const onlyUnique = (value: string, index: number, self: string[]) => {
+  return self.indexOf(value) === index
+}
+
+export function useNftOwners(): PromiseState<string[], GraphqlResponseError[]> {
+  const owners = data.rows.map((r) => r.owner).filter(onlyUnique)
+  return promiseStateResolved(owners)
+}
