@@ -2,6 +2,7 @@ package sqlsync
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
@@ -39,7 +40,6 @@ func extractTables(abi *eos.ABI) map[eos.TableName]*Table {
 			mappings: mappings,
 		}
 	}
-
 	return nil
 }
 
@@ -57,7 +57,49 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 	return out, nil
 }
 
+var chainToSQLTypes = map[string]string{
+	"name":   "varchar(13) NOT NULL",
+	"string": "varchar(1024) NOT NULL",
+	"symbol": "varchar(8) NOT NULL",
+	"bool":   "boolean",
+	"int64":  "int NOT NULL",
+	"uint64": "int unsigned NOT NULL",
+	"int32":  "int NOT NULL", // make smaller
+	"uint32": "int unsigned NOT NULL",
+	"asset":  "varchar(64) NOT NULL",
+}
+
 func (s *SQLSync) bootstrapFromFlux(startBlock bstream.BlockRef) error {
+	// s.db.createTables
+
+	// get all tables that are in watchedAccounts
+	for acctName, acct := range s.watchedAccounts {
+
+		for tblName, tbl := range acct.tables {
+			stmt := "CREATE TABLE IF NOT EXISTS " + string(tblName) + `(
+  _scope varchar(13) NOT NULL,
+  _key varchar(13) NOT NULL,
+`
+			for _, field := range tbl.mappings {
+				stmt = stmt + " " + field.ChainField + " "
+				if field.KeepJSON {
+					stmt = stmt + "text NOT NULL,"
+				} else {
+					stmt = stmt + chainToSQLTypes[field.Type] + " NOT NULL,"
+				}
+			}
+
+			stmt += ` PRIMARY KEY (_scope, _key)
+);`
+			_, err := s.db.db.ExecContext(context.Background(), stmt)
+			if err != nil {
+				return fmt.Errorf("create table %s for account %s: %w", tblName, acctName, err)
+			}
+		}
+	}
+
+	// get snapshots
+
 	//s.fluxdb.GetTable()
 	return nil
 }
@@ -70,7 +112,9 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 	s.watchedAccounts = accs
 
 	if bootstrapRequired {
-		s.bootstrapFromFlux(startBlock)
+		if err := s.bootstrapFromFlux(startBlock); err != nil {
+			return err
+		}
 	}
 
 	s.db.db.Close()
