@@ -1,5 +1,7 @@
 package sqlsync
 
+import "github.com/eoscanada/eos-go"
+
 // Must contain ALL fields. If ABI to JSON decoding didn't produce a given field (in ORDER, according to our ABI -> SQL mapping)
 type Row []interface{}
 
@@ -13,6 +15,15 @@ type Mapping struct {
 	DBField    string
 	Type       string
 	KeepJSON   bool
+}
+
+type Table struct {
+	mappings Mappings
+}
+
+type account struct {
+	tables map[string]*Table
+	abi    *eos.ABI
 }
 
 func init() {

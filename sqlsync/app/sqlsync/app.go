@@ -21,18 +21,21 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream"
 	_ "github.com/dfuse-io/dauth/null" // auth plugin
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	"github.com/dfuse-io/dfuse-eosio/sqlsync"
+	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/dfuse-io/shutter"
+	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
 type Config struct {
 	SQLDSN          string
 	BlockStreamAddr string
+	BlockmetaAddr   string
 	SourceStoreURL  string
 	FluxHTTPAddr    string
 	HTTPListenAddr  string // for healthz only
@@ -53,22 +56,10 @@ func New(config *Config) *App {
 func (a *App) Run() error {
 	zlog.Info("running sqlsync app", zap.Reflect("config", a.Config))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	a.OnTerminating(func(_ error) { cancel() })
-
 	blocksStore, err := dstore.NewDBinStore(a.Config.SourceStoreURL)
 	if err != nil {
 		return fmt.Errorf("setting up source blocks store: %w", err)
 	}
-
-	liveSourceFactory := bstream.SourceFactory(func(h bstream.Handler) bstream.Source {
-		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h)
-	})
-
-	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
-		return src
-	})
 
 	fluxClient := fluxdb.NewClient(a.Config.FluxHTTPAddr, http.DefaultTransport)
 
@@ -77,16 +68,40 @@ func (a *App) Run() error {
 		return fmt.Errorf("sql db setup: %w", err)
 	}
 
-	sqlSyncer := sqlsync.NewSQLSync(db, fluxClient, liveSourceFactory, fileSourceFactory)
+	var startBlockRef bstream.BlockRef
+	var bootstrapRequired bool
+	if db.Empty() {
+		blockmetaConn, err := dgrpc.NewInternalClient(a.Config.BlockmetaAddr)
+		if err != nil {
+			return fmt.Errorf("failed getting blockmeta grpc client: %w", err)
+		}
+		blockidCli := pbblockmeta.NewBlockIDClient(blockmetaConn)
+		libResp, err := blockidCli.LIBID(context.Background(), &pbblockmeta.LIBRequest{})
+		if err != nil {
+			return err
+		}
+		startBlockRef = bstream.NewBlockRef(libResp.Id, uint64(eos.BlockNum(libResp.Id)))
+		bootstrapRequired = true
+
+	} else {
+		sb, err := db.GetStartBlock()
+		if err != nil {
+			return err
+		}
+		startBlockRef = sb
+
+	}
+
+	sqlSyncer := sqlsync.NewSQLSync(db, fluxClient, a.Config.BlockStreamAddr, blocksStore)
 
 	go func() {
 		zlog.Info("starting sql syncer pipeline")
-		go a.Shutdown(sqlSyncer.Launch())
+		go a.Shutdown(sqlSyncer.Launch(bootstrapRequired, startBlockRef))
 	}()
 
 	httpServer := &http.Server{Addr: a.Config.HTTPListenAddr, Handler: sqlSyncer.HealthzHandler()}
 	go func() {
-		zlog.Info("serving HTTP", zap.String("listen_addr", a.Config.HTTPListenAddr))
+		zlog.Info("serving HTTP healthz", zap.String("listen_addr", a.Config.HTTPListenAddr))
 		go a.Shutdown(httpServer.ListenAndServe())
 	}()
 

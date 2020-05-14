@@ -1,6 +1,7 @@
 package sqlsync
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
@@ -15,12 +17,23 @@ import (
 
 type SQLSync struct {
 	*shutter.Shutter
+	db     *DB
+	fluxdb fluxdb.Client
 
 	source bstream.Source
+
+	watchedAccounts map[eos.AccountName]*account
+	blockstreamAddr string
+	blocksStore     dstore.Store
 }
 
 func (t *SQLSync) getABI(contract eos.AccountName, blockNum uint32) (*eos.ABI, error) {
-	return nil, nil
+	resp, err := t.fluxdb.GetABI(context.Background(), blockNum, contract)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.ABI, nil
 }
 
 func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract eos.AccountName, blocknum uint32) (json.RawMessage, error) {
@@ -32,9 +45,13 @@ func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract
 	return decodeTableRow(data, tableName, abi)
 }
 
-func NewSQLSync(db *DB, fluxCli fluxdb.Client, liveSourceFactory bstream.SourceFactory, fileSourceFactory bstream.SourceFromNumFactory) *SQLSync {
+func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store) *SQLSync {
 	return &SQLSync{
-		Shutter: shutter.New(),
+		Shutter:         shutter.New(),
+		blockstreamAddr: blockstreamAddr,
+		blocksStore:     blocksStore,
+		db:              db,
+		fluxdb:          fluxCli,
 	}
 }
 

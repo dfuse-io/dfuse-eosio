@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	_ "github.com/go-sql-driver/mysql" // FIXME: Have those be registered by the CALLER
 	_ "github.com/mattn/go-sqlite3"    // FIXME: Have this be registered by the CALLER
 )
@@ -29,6 +30,15 @@ var BEGIN_TRANSACTION = ""
 
 type DB struct {
 	db *sql.DB
+}
+
+func (d *DB) Empty() bool {
+	//FIXME
+	return true
+}
+func (d *DB) GetStartBlock() (bstream.BlockRef, error) {
+	//FIXME
+	return nil, nil
 }
 
 func NewDB(dsnString string) (*DB, error) {
