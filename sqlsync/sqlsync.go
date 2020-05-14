@@ -137,7 +137,8 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 		zlog.Info("bootstrapping SQL tables for account", zap.String("account", string(acctName)), zap.Int("tables", len(acct.tables)))
 
 		for _, tbl := range acct.tables {
-			stmt := "CREATE TABLE IF NOT EXISTS " + string(tbl.name) + `(
+			tblName := acct.name + "_" + tbl.name
+			stmt := "CREATE TABLE " + tblName + `(
   _scope varchar(13) NOT NULL,
   _key varchar(13) NOT NULL,
 `
@@ -155,7 +156,7 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 			zlog.Debug("creating table", zap.String("stmt", stmt))
 			_, err := s.db.db.ExecContext(context.Background(), stmt)
 			if err != nil {
-				return fmt.Errorf("create table %s for account %s: %w", tbl.name, acctName, err)
+				return fmt.Errorf("create table %s for account %s: %w", tblName, acctName, err)
 			}
 		}
 	}
@@ -167,7 +168,7 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 	for acctName, acct := range s.watchedAccounts {
 		for _, tbl := range acct.tables {
 			// get all scopes for that table in that account, and insert all rows
-			stmt := "INSERT INTO " + tbl.name + "(_scope, _primkey"
+			stmt := "INSERT INTO " + tbl.name + "(_scope, _key"
 			for _, field := range tbl.mappings {
 				stmt = stmt + ", " + field.DBField
 			}
