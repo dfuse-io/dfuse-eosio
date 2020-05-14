@@ -5,10 +5,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
-	_ "github.com/dfuse-io/dfuse-eosio/codecs/deos"
+	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dstore"
-	"github.com/eoscanada/bstream/forkable"
-	pbbstream "github.com/eoscanada/bstream/pb/dfuse/bstream/v1"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 )
 

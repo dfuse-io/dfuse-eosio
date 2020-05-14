@@ -4,7 +4,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/dfuse-io/sqlsync"
+	"github.com/dfuse-io/dfuse-eosio/sqlsync"
 	"go.uber.org/zap"
 )
 

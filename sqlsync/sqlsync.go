@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codec"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
@@ -34,7 +34,7 @@ func NewSQLSync() *SQLSync {
 
 func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	// forkable setup will only yield irreversible blocks
-	blk := block.ToNative().(*codec.Block)
+	blk := block.ToNative().(*pbcodec.Block)
 
 	if (blk.Number % 120) == 0 {
 		zlog.Info("process blk 1/120", zap.String("block_id", block.ID()), zap.Uint64("blocker_number", block.Number))
@@ -71,14 +71,14 @@ func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	}
 }
 
-func shouldProcessDbop(dbop *pbdeos.DBOp) bool {
+func shouldProcessDbop(dbop *pbcodec.DBOp) bool {
 	//	if dbop.TableName == string(...) {
 	//		return true
 	//	}
 	//	return false
 }
 
-func shouldProcessAction(actionTrace *pbdeos.ActionTrace) bool {
+func shouldProcessAction(actionTrace *pbcodec.ActionTrace) bool {
 	if actionTrace.Action.Name == "close" {
 		return true
 	}

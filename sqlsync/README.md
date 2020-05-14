@@ -37,3 +37,6 @@ Design:
     * Flush all BatchInserters
     * Write _marker_
     * Commit trx
+
+
+eosc -u https://mainnet.wax.dfuse.io get abi simpleassets|less
