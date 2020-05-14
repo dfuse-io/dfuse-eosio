@@ -3,8 +3,10 @@ package sqlsync
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
@@ -17,6 +19,10 @@ type SQLSync struct {
 	source bstream.Source
 }
 
+func (t *SQLSync) getABI(contract eos.AccountName, blockNum uint32) (*eos.ABI, error) {
+	return nil, nil
+}
+
 func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract eos.AccountName, blocknum uint32) (json.RawMessage, error) {
 	abi, err := t.getABI(contract, blocknum)
 	if err != nil {
@@ -26,7 +32,7 @@ func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract
 	return decodeTableRow(data, tableName, abi)
 }
 
-func NewSQLSync() *SQLSync {
+func NewSQLSync(db *DB, fluxCli fluxdb.Client, liveSourceFactory bstream.SourceFactory, fileSourceFactory bstream.SourceFromNumFactory) *SQLSync {
 	return &SQLSync{
 		Shutter: shutter.New(),
 	}
@@ -54,6 +60,7 @@ func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
 				zlog.Info("using db row old data")
 				rowData = dbop.OldData
 			}
+			contract := eos.AccountName("whatever")
 			row, err := t.decodeDBOpToRow(rowData, eos.TableName(dbop.TableName), contract, uint32(block.Number))
 			if err != nil {
 				zlogger.Error("cannot decode table row",
@@ -63,12 +70,13 @@ func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
 					zap.Error(err))
 				continue
 			}
+			_ = row
 
 			switch dbop.TableName {
 			}
 		}
-		return nil
 	}
+	return nil
 }
 
 func shouldProcessDbop(dbop *pbcodec.DBOp) bool {
@@ -76,6 +84,7 @@ func shouldProcessDbop(dbop *pbcodec.DBOp) bool {
 	//		return true
 	//	}
 	//	return false
+	return false
 }
 
 func shouldProcessAction(actionTrace *pbcodec.ActionTrace) bool {
@@ -83,4 +92,16 @@ func shouldProcessAction(actionTrace *pbcodec.ActionTrace) bool {
 		return true
 	}
 	return false
+}
+
+func (s *SQLSync) HealthzHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if false {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("not ready"))
+			return
+		}
+		w.Write([]byte("ok"))
+		return
+	})
 }

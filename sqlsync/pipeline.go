@@ -7,9 +7,22 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dstore"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 )
+
+func (s *SQLSync) Launch() error {
+	zlog.Info("launching pipeline")
+	go s.source.Run()
+
+	<-s.source.Terminated()
+	if err := s.source.Err(); err != nil {
+		zlog.Error("source shutdown with error", zap.Error(err))
+		return err
+	}
+	zlog.Info("source is done")
+
+	return nil
+}
 
 func (t *SQLSync) SetupPipeline(startBlock bstream.BlockRef, blockstreamAddr string, blocksStore dstore.Store) {
 
@@ -20,7 +33,7 @@ func (t *SQLSync) SetupPipeline(startBlock bstream.BlockRef, blockstreamAddr str
 		}
 
 		archivedBlockSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
-			src := bstream.NewFileSource(pbbstream.Protocol_EOS, blocksStore, startBlockRef.Num(), 1, nil, subHandler)
+			src := bstream.NewFileSource(blocksStore, startBlockRef.Num(), 1, nil, subHandler)
 			return src
 		})
 
@@ -57,7 +70,7 @@ func (t *SQLSync) SetupPipeline(startBlock bstream.BlockRef, blockstreamAddr str
 
 	t.source = bstream.NewEternalSource(sf, forkableHandler)
 
-	t.OnShutdown(func(e error) {
+	t.OnTerminating(func(e error) {
 		t.source.Shutdown(e)
 	})
 }

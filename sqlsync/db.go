@@ -31,7 +31,7 @@ type DB struct {
 	db *sql.DB
 }
 
-func New(dsnString string) (*DB, error) {
+func NewDB(dsnString string) (*DB, error) {
 	u, err := url.Parse(dsnString)
 	if err != nil {
 		return nil, err
@@ -43,13 +43,13 @@ func New(dsnString string) (*DB, error) {
 	case "mysql":
 		BEGIN_TRANSACTION = "START TRANSACTION "
 		INSERT_IGNORE = "INSERT IGNORE "
-		vals.Set("parseTime", "true")
 
 		var pw string
 		if u.User != nil {
 			pass, _ := u.User.Password()
 			pw = fmt.Sprintf("%s:%s@", u.User.Username(), pass)
 		}
+		vals := u.Query()
 		dsn := fmt.Sprintf("%s(%s)%s?%s", pw, u.Host, u.Path, vals.Encode())
 
 		db, err = sql.Open("mysql", dsn)
