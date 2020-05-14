@@ -19,7 +19,8 @@ export const Paths = {
   producers: "/producers",
   viewTransactionSearch: "/search",
 
-  nftExplorer: "/nft"
+  nftExplorer: "/nft",
+  viewNft: "/nft/:id"
 }
 
 export const Links = {
@@ -42,5 +43,6 @@ export const Links = {
   viewTransaction: compile(Paths.viewTransaction),
   viewTransactionSearch: compile(Paths.viewTransactionSearch),
 
-  nftExplorer: compile(Paths.nftExplorer)
+  nftExplorer: compile(Paths.nftExplorer),
+  viewNft: compile(Paths.viewNft)
 }

@@ -28,6 +28,7 @@ import { handleVisibilityChange, VISIBILITYCHANGE } from "../../helpers/focus.he
 import { Config, EosqNetwork } from "../../models/config"
 import { getDfuseClient } from "../../data/dfuse"
 import { NftExplorerPage } from "../../pages/nft-explorer/nft-explorer.page"
+import { NftAssetPage } from "../../pages/nft-explorer/nft-asset.page"
 
 const SkewedCell = styled(Cell)`
   position: relative;
@@ -246,8 +247,14 @@ class AppContainer extends React.Component<Props, State> {
           component={TransactionSearchResultPage}
         />
         <Route exact={true} path={Paths.nftExplorer} component={NftExplorerPage} />
+        <Route
+          exact={true}
+          path={Paths.viewNft}
+          render={(props) => {
+            return <NftAssetPage assetId={props.match.params.id} {...props} />
+          }}
+        />
         <Route exact={true} path={Paths.serverError} component={ServerError} />
-
         <Route component={NotFound} />
       </Switch>
     )

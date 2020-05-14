@@ -52,6 +52,13 @@ export function useNft(query: string): PromiseState<NFT[], GraphqlResponseError[
   return promiseStateResolved(balances)
 }
 
+// TODO: potentially merge with general purpose GQL hook
+export function useSingleNFT(id: string): PromiseState<NFT | undefined, GraphqlResponseError[]> {
+  const asset: NFT | undefined = data.rows.find((r) => r.id === id)
+
+  return promiseStateResolved(asset)
+}
+
 const onlyUnique = (value: any, index: number, self: any[]) => {
   return self.indexOf(value) === index
 }

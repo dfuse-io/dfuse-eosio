@@ -1,7 +1,7 @@
 import * as React from "react"
-import { RouteComponentProps } from "react-router-dom"
-import { useNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
+import { RouteComponentProps, Link } from "react-router-dom"
 import styled from "@emotion/styled"
+import { useNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
 
 const PageWrapper = styled.div`
   display: grid;
@@ -9,11 +9,22 @@ const PageWrapper = styled.div`
 `
 
 const SideBar = styled.form`
+  padding: 20px;
+  background-color: #c4caff;
   display: flex;
   flex-direction: column;
+  label,
+  strong {
+    font-size: 21px;
+  }
+  input {
+    width: 18px;
+    height: 18px;
+  }
 `
 
 const Content = styled.div`
+  padding: 20px;
   display: grid;
   grid-gap: 20px;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -41,7 +52,7 @@ interface Props extends RouteComponentProps<any> {}
 const FilterCheckbox: React.FC<{ name: string }> = ({ name }) => (
   <>
     <label htmlFor={name}>
-      {name}
+      {name}&nbsp;
       <input type="checkbox" name={name} onChange={() => {}} />
     </label>
   </>
@@ -52,17 +63,19 @@ const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
   const imageLink = mdata.img.includes("http") ? mdata.img : `https://ipfs.io/ipfs/${mdata.img}`
   const imageSource = mdata.img ? imageLink : "/images/not-found.png"
   return (
-    <Card>
-      <tbody>
-        <div className="imageContainer">
-          <img src={imageSource} alt={mdata.name!} />
-        </div>
-        <tr>ID: {id}</tr>
-        <tr>Owner: {owner}</tr>
-        <tr>Author: {author}</tr>
-        <tr>Category: {category}</tr>
-      </tbody>
-    </Card>
+    <Link to={`nft/${id}`}>
+      <Card>
+        <tbody>
+          <div className="imageContainer">
+            <img src={imageSource} alt={mdata.name!} />
+          </div>
+          <tr>ID: {id}</tr>
+          <tr>Owner: {owner}</tr>
+          <tr>Author: {author}</tr>
+          <tr>Category: {category}</tr>
+        </tbody>
+      </Card>
+    </Link>
   )
 }
 export const NftExplorerPage: React.FC<Props> = () => {
@@ -72,7 +85,6 @@ export const NftExplorerPage: React.FC<Props> = () => {
     authors: [],
     categories: []
   })
-  console.log(filters)
   return (
     <PageWrapper>
       <SideBar>
