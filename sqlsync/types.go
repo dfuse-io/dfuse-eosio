@@ -35,7 +35,7 @@ type account struct {
 	abi    *eos.ABI
 }
 
-func (a *account) extractTables() {
+func (a *account) extractTables(tablePrefix string) {
 	out := make(map[eos.TableName]*Table)
 	for _, table := range a.abi.Tables {
 		var mappings []Mapping
@@ -51,7 +51,7 @@ func (a *account) extractTables() {
 		}
 		out[table.Name] = &Table{
 			chainName: string(table.Name),
-			dbName:    a.name + "_" + string(table.Name), // TODO: allow custom mapping of chain names to db name
+			dbName:    tablePrefix + a.name + "_" + string(table.Name), // TODO: allow custom mapping of chain names to db name
 			mappings:  mappings,
 		}
 	}

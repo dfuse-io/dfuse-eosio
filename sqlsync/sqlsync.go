@@ -17,8 +17,9 @@ import (
 
 type SQLSync struct {
 	*shutter.Shutter
-	db     *DB
-	fluxdb fluxdb.Client
+	db            *DB
+	fluxdb        fluxdb.Client
+	dbTablePrefix string
 
 	source bstream.Source
 
@@ -100,7 +101,7 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 		abi:  abi,
 		name: "simpleassets",
 	}
-	out["simpleassets"].extractTables()
+	out["simpleassets"].extractTables(s.dbTablePrefix)
 	return out, nil
 }
 
