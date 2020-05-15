@@ -961,9 +961,8 @@ func init() {
 				EosNodeManagerAPIAddr: viper.GetString("dashboard-eos-node-manager-api-addr"),
 				//NodeosAPIHTTPServingAddr: viper.GetString("dashboard-mindreader-manager-api-addr"),
 			}, &dashboard.Modules{
-				Launcher:      modules.Launcher,
-				MetricManager: modules.MetricManager,
-				DmeshClient:   modules.SearchDmeshClient,
+				Launcher:    modules.Launcher,
+				DmeshClient: modules.SearchDmeshClient,
 			}), nil
 		},
 	})

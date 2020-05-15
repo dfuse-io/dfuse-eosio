@@ -33,10 +33,10 @@ const DEFAULT_MF_CHAN_SIZE int = 1024
 
 type AppMeta struct {
 	Title string
-	Id    string
+	ID    string
 }
 type Manager struct {
-	metricUrl         string
+	metricURL         string
 	polling           time.Duration
 	metricNameFilter  []string
 	metridIDToAppMeta map[string]*AppMeta
@@ -45,9 +45,9 @@ type Manager struct {
 	metricSubscriptionLock sync.RWMutex
 }
 
-func NewManager(metricUrl string, metricTypeFilter []string, polling time.Duration, metricIDMap map[string]*AppMeta) *Manager {
+func NewManager(metricURL string, metricTypeFilter []string, polling time.Duration, metricIDMap map[string]*AppMeta) *Manager {
 	return &Manager{
-		metricUrl:          metricUrl,
+		metricURL:          metricURL,
 		metricNameFilter:   metricTypeFilter,
 		polling:            polling,
 		metricSubscription: make(map[string][]*subscription),
@@ -151,7 +151,7 @@ func (m *Manager) consumeMetricStream() (time.Time, []byte, error) {
 	zlog.Debug("consuming metric stream")
 	mfChan := make(chan *dto.MetricFamily, DEFAULT_MF_CHAN_SIZE)
 
-	response, err := http.Get(m.metricUrl)
+	response, err := http.Get(m.metricURL)
 	if err != nil {
 		return time.Now(), nil, fmt.Errorf("unable to get http response: %w", err)
 	}
