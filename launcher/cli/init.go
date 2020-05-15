@@ -48,7 +48,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	toRun := []string{"all"}
+	toRun := []string{"all", "-sqlsync"}
 	if !runProducer {
 		toRun = append(toRun, "-node-manager")
 	}
