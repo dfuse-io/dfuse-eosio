@@ -69,6 +69,8 @@ func (t *SQLSync) ProcessBlock(block *bstream.Block, obj interface{}) error {
 		zlog.Info("process blk 1/120", zap.String("block_id", block.ID()), zap.Uint64("blocker_number", block.Number))
 	}
 
+
+
 	for _, trx := range blk.TransactionTraces {
 		zlogger := zlog.With(zap.Uint64("blk_id", block.Num()), zap.String("trx_id", trx.Id))
 

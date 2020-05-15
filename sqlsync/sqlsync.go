@@ -20,7 +20,7 @@ type SQLSync struct {
 	db     *DB
 	fluxdb fluxdb.Client
 
-	tablePrefix  string
+	tablePrefix    string
 	truncateScopes int
 
 	source bstream.Source
@@ -51,7 +51,7 @@ func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract
 func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store, truncateScopes int, tablePrefix string) *SQLSync {
 	return &SQLSync{
 		Shutter:         shutter.New(),
-		truncateScopes:    truncateScopes,
+		truncateScopes:  truncateScopes,
 		tablePrefix:     tablePrefix,
 		blockstreamAddr: blockstreamAddr,
 		blocksStore:     blocksStore,
@@ -111,6 +111,17 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 
 func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 	// s.db.createTables
+
+	_, err := s.db.db.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS sqlsync_markers (
+  table_prefix char(64) NOT NULL,
+  block_id char(64) NOT NULL,
+  block_num `+chainToSQLTypes["uint64"]+` NOT NULL,
+
+  PRIMARY KEY (table_prefix)
+)`)
+	if err != nil {
+		return fmt.Errorf("creating sqlsync_marker table: %w", err)
+	}
 
 	// get all tables that are in watchedAccounts
 	zlog.Info("bootstrapping SQL database", zap.Int("accounts", len(s.watchedAccounts)))
