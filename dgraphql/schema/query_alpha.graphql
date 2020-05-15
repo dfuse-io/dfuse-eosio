@@ -10,7 +10,7 @@ type Query {
   """
   Return the list of NFTs matching search query
   """
-  searchNfts(query: String!): [NftAsset!]
+  searchNfts(query: String!): NftAssets!
   """
   Return the list of available NFT filters
   """

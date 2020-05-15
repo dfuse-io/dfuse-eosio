@@ -1,3 +1,7 @@
+type NftAssets {
+  assets: [NftAsset!]
+}
+
 type NftAsset {
   """
   id of the asset
