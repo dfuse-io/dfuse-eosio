@@ -234,8 +234,6 @@ github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGY
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743 h1:tmyq6kn6XN2UoccqW812Vr1zO9RUzbVedsP+L3iD7Qc=
 github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
-github.com/dfuse-io/fluxdb-client v0.0.0-20200514151418-039f5fdfe395 h1:oKxBhCp1j33cf/iIZd/8ZylYzyNu+bXr8KODuF60v/A=
-github.com/dfuse-io/fluxdb-client v0.0.0-20200514151418-039f5fdfe395/go.mod h1:q6FrlmxlMnwjzpm0p4eIA/QqGKuRZvDU5ILD82jmWqU=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0 h1:J5o67BQHTqQJsP2krc9770evS3TmkbltKKYMDmq2a3k=
@@ -296,7 +294,6 @@ github.com/envoyproxy/go-control-plane v0.9.1-0.20191026205805-5f8ba28d4473/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/eoscanada/eos-go v0.8.5/go.mod h1:RKrm2XzZEZWxSMTRqH5QOyJ1fb/qKEjs2ix1aQl0sk4=
 github.com/eoscanada/eos-go v0.8.10-0.20190329223853-84b552870f2a/go.mod h1:RKrm2XzZEZWxSMTRqH5QOyJ1fb/qKEjs2ix1aQl0sk4=
-github.com/eoscanada/eos-go v0.8.16/go.mod h1:RKrm2XzZEZWxSMTRqH5QOyJ1fb/qKEjs2ix1aQl0sk4=
 github.com/eoscanada/eos-go v0.9.1-0.20200415144303-2adb25bcdeca/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef h1:dgDINeBMr/GQUqQqz1st2RHRivszsh2v2tahwX2ZqMU=
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
@@ -504,7 +501,6 @@ github.com/klauspost/compress v1.4.0/go.mod h1:RyIbtBH6LamlWaDj8nUwkbUhJ87Yi3uG0
 github.com/klauspost/compress v1.10.2 h1:Znfn6hXZAHaLPNnlqUYRrBSReFHYybslgv4PTiyz6P0=
 github.com/klauspost/compress v1.10.2/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/cpuid v0.0.0-20180405133222-e7e905edc00e/go.mod h1:Pj4uuM528wm8OyEC2QMXAi2YiTZ96dNQPGgoMS4s3ek=
-github.com/koding/websocketproxy v0.0.0-20181220232114-7ed82d81a28c/go.mod h1:Nn5wlyECw3iJrzi0AhIWg+AJUb4PlRQVW4/3XHH1LZA=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
@@ -548,8 +544,6 @@ github.com/mattn/go-isatty v0.0.4/go.mod h1:M+lRXTBqGeGNdLjl/ufCoiOlB5xdOkqRJdNx
 github.com/mattn/go-isatty v0.0.8 h1:HLtExJ+uU2HOZ+wI0Tt5DtUDrx8yhUqDcp7fYERX4CE=
 github.com/mattn/go-isatty v0.0.8/go.mod h1:Iq45c/XA43vh69/j3iqttzPXn0bhXyGjM0Hdxcsrc5s=
 github.com/mattn/go-runewidth v0.0.2/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
-github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJKjyR5WD3HYQSd+U=
-github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/microcosm-cc/bluemonday v1.0.1/go.mod h1:hsXNsILzKxV+sX77C5b8FSuKF00vh2OMYv+xgHpAMF4=
@@ -765,7 +759,6 @@ github.com/thedevsaddam/govalidator v1.9.9/go.mod h1:Ilx8u7cg5g3LXbSS943cx5kczyN
 github.com/tidwall/gjson v1.1.5/go.mod h1:c/nTNbUr0E0OrXEhq1pwa8iEgc2DOt4ZZqAt1HtCkPA=
 github.com/tidwall/gjson v1.2.1/go.mod h1:c/nTNbUr0E0OrXEhq1pwa8iEgc2DOt4ZZqAt1HtCkPA=
 github.com/tidwall/gjson v1.3.2/go.mod h1:P256ACg0Mn+j1RXIDXoss50DeIABTYK1PULOJHhxOls=
-github.com/tidwall/gjson v1.3.5/go.mod h1:P256ACg0Mn+j1RXIDXoss50DeIABTYK1PULOJHhxOls=
 github.com/tidwall/gjson v1.5.0 h1:QCssIUI7J0RStkzIcI4A7O6P8rDA5wi5IPf70uqKSxg=
 github.com/tidwall/gjson v1.5.0/go.mod h1:P256ACg0Mn+j1RXIDXoss50DeIABTYK1PULOJHhxOls=
 github.com/tidwall/match v1.0.1 h1:PnKP62LPNxHKTwvHHZZzdOAOCtsJTjo6dZLCwpKm5xc=
