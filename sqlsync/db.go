@@ -135,6 +135,18 @@ func NewDB(dsnString string) (*DB, error) {
 		return nil, err
 	}
 
+	chainToSQLTypes = map[string]string{
+		"name":   "varchar(13) NOT NULL",
+		"string": "varchar(1024) NOT NULL",
+		"symbol": "varchar(8) NOT NULL",
+		"bool":   "boolean",
+		"int64":  "int NOT NULL",
+		"uint64": SQL_UINT64,
+		"int32":  "int NOT NULL", // make smaller
+		"uint32": SQL_UINT32,
+		"asset":  "varchar(64) NOT NULL",
+	}
+
 	return &DB{
 		db:                    db,
 		paramsPlaceholderFunc: func(p int) string { return genParamsPlaceholder(p, questionMarks) },
