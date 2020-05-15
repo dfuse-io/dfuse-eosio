@@ -822,7 +822,7 @@ func init() {
 			cmd.Flags().String("sqlsync-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
 			cmd.Flags().String("sqlsync-sql-dsn", "sqlite://{dfuse-data-dir}/sqlsync.sqlite", "SQL DSN (URL)")
 			cmd.Flags().String("sqlsync-table-prefix", "", "Prefix to add to each table created in the SQL database. For example: v2_")
-			cmd.Flags().Int("sqlsync-truncate-bootstrap", 0, "Truncate the number of rows we insert from initial snapshot, in each table (to speed up bootstrapping)")
+			cmd.Flags().Int("sqlsync-truncate-bootstrap", 0, "Truncate the number of scopes we'll query to build the initial snapshot for each table (to speed up bootstrapping)")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {

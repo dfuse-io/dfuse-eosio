@@ -21,7 +21,7 @@ type SQLSync struct {
 	fluxdb fluxdb.Client
 
 	tablePrefix  string
-	truncateRows int
+	truncateScopes int
 
 	source bstream.Source
 
@@ -48,10 +48,10 @@ func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract
 	return decodeTableRow(data, tableName, abi)
 }
 
-func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store, truncateRows int, tablePrefix string) *SQLSync {
+func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store, truncateScopes int, tablePrefix string) *SQLSync {
 	return &SQLSync{
 		Shutter:         shutter.New(),
-		truncateRows:    truncateRows,
+		truncateScopes:    truncateScopes,
 		tablePrefix:     tablePrefix,
 		blockstreamAddr: blockstreamAddr,
 		blocksStore:     blocksStore,
@@ -176,9 +176,9 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 			}
 
 			scopes := scopesResp.Scopes
-			if s.truncateRows != 0 && len(scopes) > s.truncateRows {
-				zlog.Info("truncating table", zap.String("table", tbl.dbName), zap.Int("max_rows", s.truncateRows))
-				scopes = scopes[:s.truncateRows]
+			if s.truncateScopes != 0 && len(scopes) > s.truncateScopes {
+				zlog.Info("truncating the number of scopes we retreve", zap.String("table", tbl.dbName), zap.Int("max_scopes", s.truncateScopes))
+				scopes = scopes[:s.truncateScopes]
 			}
 
 			chunkSize := 1000
