@@ -17,7 +17,7 @@ if (!windowTS.TopLevelConfig) {
     on_demand: false,
 
     dfuse_io_endpoint: "mainnet.eos.dfuse.io",
-    dfuse_io_api_key: "",
+    dfuse_io_api_key: "web_3706983ad12ac620e121a15341c12dc6",
     dfuse_auth_endpoint: "https://auth.dfuse.io",
     display_price: true,
     price_ticker_name: "EOS",

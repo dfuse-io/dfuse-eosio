@@ -9,6 +9,12 @@ import App from "./App"
 import "./i18n"
 import "./index.css"
 import { initializeDfuseClientFromConfig } from "./data/dfuse"
+import { ApolloProvider } from "@apollo/react-hooks"
+import ApolloClient from "apollo-boost"
+
+const client = new ApolloClient({
+  uri: "http://localhost:8080/v1/graphql"
+})
 
 const browserHistory = createBrowserHistory()
 const routingStore = new RouterStore()
@@ -21,11 +27,13 @@ const stores = {
 
 const renderApp = (NextApp: any) =>
   render(
-    <Provider {...stores}>
-      <Router history={history}>
-        <NextApp />
-      </Router>
-    </Provider>,
+    <ApolloProvider client={client}>
+      <Provider {...stores}>
+        <Router history={history}>
+          <NextApp />
+        </Router>
+      </Provider>
+    </ApolloProvider>,
     document.querySelector("#root")
   )
 

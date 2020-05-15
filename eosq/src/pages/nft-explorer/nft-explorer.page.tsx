@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { RouteComponentProps, Link } from "react-router-dom"
 import styled from "@emotion/styled"
-import { fetchNft, useNftFilters, NFT, NFTFilter } from "../../hooks/use-nft"
+import { useNft, useNftFilters, NFT, NFTFilter } from "../../hooks/nft"
 
 const PageWrapper = styled.div`
   display: grid;
@@ -55,30 +55,46 @@ const FilterCheckbox: React.FC<{
   name: string
   value: string
   handleChange: ((event: React.ChangeEvent<HTMLInputElement>) => void) | undefined
-}> = ({ name, value, handleChange }) => (
-  <>
-    <label htmlFor={value}>
-      {value}&nbsp;
-      <input type="checkbox" name={name} value={value} onChange={handleChange} />
-    </label>
-  </>
-)
+}> = ({ name, value, handleChange }) => {
+  return (
+    <>
+      <label htmlFor={value}>
+        {value}&nbsp;
+        <input type="checkbox" name={name} value={value} onChange={handleChange} />
+      </label>
+    </>
+  )
+}
 
 const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
   const { id, owner, author, category, idata, mdata } = asset
-  const imageLink = mdata.img.includes("http") ? mdata.img : `https://ipfs.io/ipfs/${mdata.img}`
-  const imageSource = mdata.img ? imageLink : "/images/not-found.png"
+  let imageLink
+  if (mdata && (mdata.img || mdata.backimg)) {
+    if (mdata.img) {
+      if (mdata.img.includes("http")) {
+        imageLink = mdata.img
+      } else {
+        imageLink = `https://ipfs.io/ipfs/${mdata.img}`
+      }
+    } else if (mdata.backimg.includes("http")) {
+      imageLink = mdata.backimg
+    } else {
+      imageLink = `https://ipfs.io/ipfs/${mdata.img}`
+    }
+  } else {
+    imageLink = "/images/not-found.png"
+  }
   return (
     <Link to={`nft/${id}`}>
       <Card>
         <tbody>
           <div className="imageContainer">
-            <img src={imageSource} alt={mdata.name!} />
+            <img src={imageLink} alt={mdata.name!} />
           </div>
           <tr>ID:&nbsp;{id}</tr>
           <tr>Owner:&nbsp;{owner}</tr>
           <tr>Author:&nbsp;{author}</tr>
-          <tr>Category:&nbsp;{category}</tr>
+          {category && <tr>Category:&nbsp;{category}</tr>}
         </tbody>
       </Card>
     </Link>
@@ -92,16 +108,11 @@ export const NftExplorerPage: React.FC<Props> = () => {
     categories: [],
     id: ""
   })
-  const [assets, setAssets] = useState<NFT[]>([])
-  useEffect(() => {
-    setAssets(
-      fetchNft(
-        `owner:${filters.owners.join()} authors:${filters.authors.join()} categories:${filters.categories.join()}`
-      )
-    )
-  }, [filters])
-
   const allFilters: NFTFilter = useNftFilters()
+  const assets = useNft(filters)
+
+  console.log(filters)
+  console.log(assets)
 
   const handleFilter: (event: React.ChangeEvent<HTMLInputElement>) => void = (e) => {
     const { checked, name, value } = e.target
@@ -125,26 +136,21 @@ export const NftExplorerPage: React.FC<Props> = () => {
   return (
     <PageWrapper>
       <SideBar>
-        <strong>Owner</strong>
-        {allFilters.owners.map((owner) => (
-          <FilterCheckbox name="owners" value={owner} handleChange={handleFilter} />
-        ))}
-        <br />
         <strong>Author</strong>
-        {allFilters.authors.map((author) => (
-          <FilterCheckbox name="authors" value={author} handleChange={handleFilter} />
-        ))}
+        {allFilters.authors.length > 0 &&
+          allFilters.authors.map((author) => (
+            <FilterCheckbox name="authors" value={author} handleChange={handleFilter} />
+          ))}
         <br />
         <strong>Category</strong>
-        {allFilters.categories.map((category) => (
-          <FilterCheckbox name="categories" value={category} handleChange={handleFilter} />
-        ))}
+        {allFilters.categories.length > 0 &&
+          allFilters.categories.map((category) => (
+            <FilterCheckbox name="categories" value={category} handleChange={handleFilter} />
+          ))}
         <br />
       </SideBar>
       <Content>
-        {assets.map((asset) => (
-          <RenderAssetItem asset={asset} />
-        ))}
+        {assets.length > 0 && assets.map((asset) => <RenderAssetItem asset={asset} />)}
       </Content>
     </PageWrapper>
   )

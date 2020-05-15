@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useSingleNFT, NFT } from "../../hooks/use-nft"
+import { useSingleNFT, NFT } from "../../hooks/nft"
 import styled from "@emotion/styled"
 
 const Card = styled.table`
@@ -25,13 +25,19 @@ export const NftAssetPage: React.FC<{ assetId: string }> = ({ assetId }) => {
   if (!asset) return <div>asset not found</div>
 
   const { id, owner, author, category, idata, mdata } = asset
-  const imageLink = mdata.img.includes("http") ? mdata.img : `https://ipfs.io/ipfs/${mdata.img}`
-  const imageSource = mdata.img ? imageLink : "/images/not-found.png"
+  let imageLink
+  if (!mdata || !mdata.img) {
+    imageLink = "/images/not-found.png"
+  } else if (mdata.image.includes("http")) {
+    imageLink = mdata.img
+  } else {
+    imageLink = `https://ipfs.io/ipfs/${mdata.img}`
+  }
   return (
     <Card>
       <tbody>
         <div className="imageContainer">
-          <img src={imageSource} alt={mdata.name!} />
+          <img src={imageLink} alt={mdata.name!} />
         </div>
         <tr>ID: {id}</tr>
         <tr>Owner: {owner}</tr>
