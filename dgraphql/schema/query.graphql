@@ -1,85 +1,114 @@
 type Query {
-    """
-    Search the blockchain forward for transaction *execution traces* based on `query`.
+  """
+  Search the blockchain forward for transaction *execution traces* based on `query`.
 
-    When the returned `cursor` is empty, it means you have reached the end of the specified block
-    range.
+  When the returned `cursor` is empty, it means you have reached the end of the specified block
+  range.
 
-    WARN: always consider the `undo` field in forward searches, which signal that the matching element
-    was in fact REMOVED from the chain because of blocks reorganization.
+  WARN: always consider the `undo` field in forward searches, which signal that the matching element
+  was in fact REMOVED from the chain because of blocks reorganization.
 
-    See also the streaming version under `Subscription`
-    """
-    searchTransactionsForward(
-        "dfuse Search Query Language string"
-        query: String!
+  See also the streaming version under `Subscription`
+  """
+  searchTransactionsForward(
+    "dfuse Search Query Language string"
+    query: String!
 
-        "Lower block num boundary, inclusively. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
-        lowBlockNum: Int64
+    "Lower block num boundary, inclusively. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+    lowBlockNum: Int64
 
-        "Higher block num boundary, inclusively. A zero or negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
-        highBlockNum: Int64
+    "Higher block num boundary, inclusively. A zero or negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+    highBlockNum: Int64
 
-        "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
-        cursor: String
+    "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
+    cursor: String
 
-        "Limit the number of results per page of results (defaults to 100)."
-        limit: Int64 = 100
+    "Limit the number of results per page of results (defaults to 100)."
+    limit: Int64 = 100
 
-        "When true, only stream back results once they pass the irreversibility boundary. Otherwise, allow fetching results up to the head block."
-        irreversibleOnly: Boolean = false
-    ): SearchTransactionsForwardResponse!
+    "When true, only stream back results once they pass the irreversibility boundary. Otherwise, allow fetching results up to the head block."
+    irreversibleOnly: Boolean = false
+  ): SearchTransactionsForwardResponse!
 
-    """
-    Search the blockchain backward for transaction *execution traces* based on `query`.
+  """
+  Search the blockchain backward for transaction *execution traces* based on `query`.
 
-    When the returned `cursor` is empty, it means you have reached the end of the specified block
-    range.
+  When the returned `cursor` is empty, it means you have reached the end of the specified block
+  range.
 
-    See also the streaming version under `Subscription`
-    """
-    searchTransactionsBackward(
-        "dfuse Search Query Language string"
-        query: String!
+  See also the streaming version under `Subscription`
+  """
+  searchTransactionsBackward(
+    "dfuse Search Query Language string"
+    query: String!
 
-        "Lower block num boundary, inclusively. A value of 0 means the beginning of the chain. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
-        lowBlockNum: Int64
+    "Lower block num boundary, inclusively. A value of 0 means the beginning of the chain. A negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+    lowBlockNum: Int64
 
-        "Higher block num boundary, inclusively. A zero or negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
-        highBlockNum: Int64
+    "Higher block num boundary, inclusively. A zero or negative value means a block relative to the head or last irreversible block (depending on `irreversibleOnly`)."
+    highBlockNum: Int64
 
-        "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
-        cursor: String
+    "Opaque data piece that you can pass back to continue your search if it ever disconnected. Retrieve it from the `cursor` field in the responses of this call. It is safe to use the same cursor in BOTH directions (forward and backward)."
+    cursor: String
 
-        "Limit the number of results per page of results (defaults to 100)."
-        limit: Int64 = 100
+    "Limit the number of results per page of results (defaults to 100)."
+    limit: Int64 = 100
 
-        "When true, only stream back results once they pass the irreversibility boundary. Otherwise, allow fetching results up to the head block."
-        irreversibleOnly: Boolean = false
-    ): SearchTransactionsBackwardResponse!
+    "When true, only stream back results once they pass the irreversibility boundary. Otherwise, allow fetching results up to the head block."
+    irreversibleOnly: Boolean = false
+  ): SearchTransactionsBackwardResponse!
 
-    # ------------------------------------------------------
-    # BLOCK META
-    # ------------------------------------------------------
-    """
-    Return the block ID found around the given `time`, based on the `comparator` provided.
-    """
-    blockIDByTime(
-        "Timestamp for comparison, in format 2006-01-02T15:04:05Z or 2006-01-02T15:04:05.123Z"
-        time: Time!
+  # ------------------------------------------------------
+  # BLOCK META
+  # ------------------------------------------------------
+  """
+  Return the block ID found around the given `time`, based on the `comparator` provided.
+  """
+  blockIDByTime(
+    "Timestamp for comparison, in format 2006-01-02T15:04:05Z or 2006-01-02T15:04:05.123Z"
+    time: Time!
 
-        ""
-        comparator: COMPARATOR = LTE
-    ): BlockIDResponse!
+    ""
+    comparator: COMPARATOR = LTE
+  ): BlockIDResponse!
 
-    # ------------------------------------------------------
-    # ACCOUNT META
-    # ------------------------------------------------------
-    """
-    Return the block Number where given `account` was created.
-    """
-    blockIDAtAccountCreation(
-        ""
-        account: String!
-    ): BlockIDResponse!
+  # ------------------------------------------------------
+  # ACCOUNT META
+  # ------------------------------------------------------
+  """
+  Return the block Number where given `account` was created.
+  """
+  blockIDAtAccountCreation("" account: String!): BlockIDResponse!
+
+  # ------------------------------------------------------
+  # ACCOUNT META
+  # ------------------------------------------------------
+  """
+  Return the block Number where given `account` was created.
+  """
+  blockIDAtAccountCreation("" account: String!): BlockIDResponse!
+
+  # ------------------------------------------------------
+  # ACCOUNT META
+  # ------------------------------------------------------
+  """
+  Return the block Number where given `account` was created.
+  """
+  blockIDAtAccountCreation("" account: String!): BlockIDResponse!
+
+  # ------------------------------------------------------
+  # ACCOUNT META
+  # ------------------------------------------------------
+  """
+  Return the block Number where given `account` was created.
+  """
+  blockIDAtAccountCreation("" account: String!): BlockIDResponse!
+
+  # ------------------------------------------------------
+  # ACCOUNT META
+  # ------------------------------------------------------
+  """
+  Return the block Number where given `account` was created.
+  """
+  blockIDAtAccountCreation("" account: String!): BlockIDResponse!
 }

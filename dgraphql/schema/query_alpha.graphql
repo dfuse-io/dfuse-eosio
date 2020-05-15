@@ -1,8 +1,18 @@
 type Query {
-    """ALPHA Get a single block by its ID or its number. You cannot specify both."""
-    block(
-        id: String,
-        num: Uint32
-    ): Block
-}
+  """
+  ALPHA Get a single block by its ID or its number. You cannot specify both.
+  """
+  block(id: String, num: Uint32): Block
 
+  # ------------------------------------------------------
+  # NFT
+  # ------------------------------------------------------
+  """
+  Return the list of NFTs matching search query
+  """
+  searchNfts(query: String!): [NftAsset!]
+  """
+  Return the list of available NFT filters
+  """
+  nftFilters(): NftFilters!
+}

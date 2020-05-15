@@ -1,0 +1,48 @@
+type NftAsset {
+  """
+  id of the asset
+  """
+  id: String!
+
+  """
+  owner of the asset
+  """
+  owner: String!
+
+  """
+  author of the asset
+  """
+  author: String!
+
+  """
+  category of the asset
+  """
+  category: String
+
+  """
+  data regarding image of the asset in JSON
+  """
+  idata: String
+
+  """
+  metadata of the asset in JSON
+  """
+  mdata: String
+}
+
+type NftFilters {
+  """
+  available owners
+  """
+  owners: [String!]
+
+  """
+  available authors
+  """
+  authors: [String!]
+
+  """
+  available categories
+  """
+  categories: [String!]
+}

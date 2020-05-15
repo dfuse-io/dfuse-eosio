@@ -28,8 +28,8 @@ export type NFTFilter = {
 //         owner
 //         author
 //         category
-//         idata
-//         mdata
+//         idata.rows
+//         mdata.rows
 //       }
 //     }
 //   }
