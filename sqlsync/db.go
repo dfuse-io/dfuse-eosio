@@ -26,7 +26,7 @@ import (
 	// FIXME: Have those be registered by the CALLER
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	// _ "github.com/mattn/go-sqlite3" // this requires CGO_ENABLED so we disable it by default
 )
 
 var INSERT_IGNORE = ""
@@ -91,19 +91,19 @@ func NewDB(dsnString string) (*DB, error) {
 
 		db, err = sql.Open("mysql", dsn)
 
-	case "sqlite3", "sqlite":
-		BEGIN_TRANSACTION = "BEGIN TRANSACTION "
-		INSERT_IGNORE = "INSERT OR IGNORE "
-		questionMarks = true
-		dsn := u.Host
-		if dsn == "" {
-			dsn = u.Path // for sqlite:///tmp/mama.sqlite
-		}
-		db, err = sql.Open("sqlite3", dsn)
-		if err != nil {
-			return nil, err
-		}
-		err = db.Ping() // force create empty file at least, to see if it works
+		//	case "sqlite3", "sqlite":
+		//		BEGIN_TRANSACTION = "BEGIN TRANSACTION "
+		//		INSERT_IGNORE = "INSERT OR IGNORE "
+		//		questionMarks = true
+		//		dsn := u.Host
+		//		if dsn == "" {
+		//			dsn = u.Path // for sqlite:///tmp/mama.sqlite
+		//		}
+		//		db, err = sql.Open("sqlite3", dsn)
+		//		if err != nil {
+		//			return nil, err
+		//		}
+		//		err = db.Ping() // force create empty file at least, to see if it works
 
 	case "postgres":
 		BEGIN_TRANSACTION = "START TRANSACTION "

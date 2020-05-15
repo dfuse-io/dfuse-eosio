@@ -820,7 +820,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("sqlsync-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String("sqlsync-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
-			cmd.Flags().String("sqlsync-sql-dsn", "sqlite://{dfuse-data-dir}/sqlsync.sqlite", "SQL DSN (URL)")
+			cmd.Flags().String("sqlsync-sql-dsn", "postgres://postgres:postgres@localhost:5432/postgres", "SQL DSN (URL)")
 			cmd.Flags().String("sqlsync-table-prefix", "", "Prefix to add to each table created in the SQL database. For example: v2_")
 			cmd.Flags().Int("sqlsync-truncate-bootstrap", 0, "Truncate the number of scopes we'll query to build the initial snapshot for each table (to speed up bootstrapping)")
 			return nil

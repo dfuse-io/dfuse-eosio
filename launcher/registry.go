@@ -63,6 +63,9 @@ func ParseAppsFromArgs(args []string) (apps []string) {
 					if app == "search-forkresolver" {
 						continue // keep this until we fix search-forkresolver here
 					}
+					if app == "sqlsync" {
+						continue // we don't want this normally
+					}
 					apps = append(apps, app)
 				}
 			} else {
