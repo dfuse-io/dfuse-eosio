@@ -23,9 +23,6 @@ const buildQuery = (filters: NFTFilter) => {
   if (filters.id && filters.id !== "") {
     filtersString = `id: {_eq: ${filters.id}}`
   }
-
-  console.log(filtersString)
-
   const fetchAssetQuery = gql`
     {
       v2_simpleassets_sassets(limit: 20, where: {${filtersString}}) {
