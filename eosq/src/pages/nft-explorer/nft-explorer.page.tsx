@@ -69,27 +69,28 @@ const FilterCheckbox: React.FC<{
 const RenderAssetItem: React.FC<{ asset: NFT }> = ({ asset }) => {
   const { id, owner, author, category, idata, mdata } = asset
   let imageLink
-  if (mdata && (mdata.img || mdata.backimg)) {
-    if (mdata.img) {
-      if (mdata.img.includes("http")) {
-        imageLink = mdata.img
-      } else {
-        imageLink = `https://ipfs.io/ipfs/${mdata.img}`
-      }
-    } else if (mdata.backimg.includes("http")) {
-      imageLink = mdata.backimg
-    } else {
-      imageLink = `https://ipfs.io/ipfs/${mdata.img}`
-    }
-  } else {
+  const jsonData = JSON.parse(mdata)
+  if (!jsonData || (!jsonData.img && !jsonData.backimg)) {
     imageLink = "/images/not-found.png"
+  } else if (jsonData.img) {
+    if (jsonData.img.includes("http")) {
+      imageLink = jsonData.img
+    } else {
+      imageLink = `https://ipfs.io/ipfs/${jsonData.img}`
+    }
+  } else if (jsonData.backimg) {
+    if (jsonData.backimg.includes("http")) {
+      imageLink = jsonData.backimg
+    } else {
+      imageLink = `https://ipfs.io/ipfs/${jsonData.img}`
+    }
   }
   return (
     <Link to={`nft/${id}`}>
       <Card>
         <tbody>
           <div className="imageContainer">
-            <img src={imageLink} alt={mdata.name!} />
+            <img src={imageLink} alt={jsonData?.name} />
           </div>
           <tr>ID:&nbsp;{id}</tr>
           <tr>Owner:&nbsp;{owner}</tr>
@@ -110,10 +111,6 @@ export const NftExplorerPage: React.FC<Props> = () => {
   })
   const allFilters: NFTFilter = useNftFilters()
   const assets = useNft(filters)
-
-  console.log(filters)
-  console.log(assets)
-
   const handleFilter: (event: React.ChangeEvent<HTMLInputElement>) => void = (e) => {
     const { checked, name, value } = e.target
     if (checked) {
