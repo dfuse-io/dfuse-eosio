@@ -28,7 +28,7 @@ const buildQuery = (filters: NFTFilter) => {
 
   const fetchAssetQuery = gql`
     {
-      simpleassets_sassets(limit: 20, where: {${filtersString}}) {
+      v2_simpleassets_sassets(limit: 20, where: {${filtersString}}) {
         id
         author
         owner
@@ -43,7 +43,7 @@ const buildQuery = (filters: NFTFilter) => {
 
 const allAuthorsQuery = gql`
   {
-    simpleassets_sassets(distinct_on: author) {
+    v2_simpleassets_sassets(distinct_on: author) {
       author
     }
   }
@@ -51,7 +51,7 @@ const allAuthorsQuery = gql`
 
 const allCategoriesQuery = gql`
   {
-    simpleassets_sassets(distinct_on: category) {
+    v2_simpleassets_sassets(distinct_on: category) {
       category
     }
   }
@@ -77,24 +77,25 @@ export function useNft(filters: NFTFilter): NFT[] {
   const query = buildQuery(filters)
   const { loading, error, data } = useQuery(query)
   if (loading || error) return []
-  return data.simpleassets_sassets as NFT[]
+  return data.v2_simpleassets_sassets as NFT[]
 }
 
 export function useSingleNFT(id: string): NFT | undefined {
   const query = buildQuery({ id } as NFTFilter)
   const { loading, error, data } = useQuery(query)
-  if (loading || error || !data.simpleassets_sassets || data.simpleassets_sassets.length <= 0)
+  if (loading || error || !data.v2_simpleassets_sassets || data.v2_simpleassets_sassets.length <= 0)
     return undefined
-  return data.simpleassets_sassets[0] as NFT
+  return data.v2_simpleassets_sassets[0] as NFT
 }
 
 export function useNftFilters(): NFTFilter {
   const authorsRes = useQuery(allAuthorsQuery).data
   const authors =
-    authorsRes?.simpleassets_sassets?.map((a: any) => (typeof a === "string" ? a : a.author)) || []
+    authorsRes?.v2_simpleassets_sassets?.map((a: any) => (typeof a === "string" ? a : a.author)) ||
+    []
   const categoriesRes = useQuery(allCategoriesQuery).data
   const categories =
-    categoriesRes?.simpleassets_sassets?.map((c: any) =>
+    categoriesRes?.v2_simpleassets_sassets?.map((c: any) =>
       typeof c === "string" ? c : c.category
     ) || []
   return {
