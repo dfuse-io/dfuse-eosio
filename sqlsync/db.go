@@ -15,6 +15,7 @@
 package sqlsync
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/url"
@@ -39,13 +40,14 @@ type DB struct {
 	paramsPlaceholderFunc func(int) string
 }
 
-func (d *DB) Empty() bool {
-	//FIXME
-	return true
-}
-func (d *DB) GetStartBlock() (bstream.BlockRef, error) {
-	//FIXME
-	return nil, nil
+func (d *DB) GetStartBlock(tablePrefix string) (bstream.BlockRef, error) {
+	var blockID string
+	var blockNum uint64
+	err := d.db.QueryRowContext(context.Background(), `SELECT block_id, block_num FROM sqlsync_markers WHERE table_prefix = $1`, tablePrefix).Scan(&blockID, &blockNum)
+	if err != nil {
+		return nil, err
+	}
+	return bstream.NewBlockRef(blockID, blockNum), nil
 }
 
 func genParamsPlaceholder(params int, questionMark bool) string {
@@ -91,19 +93,19 @@ func NewDB(dsnString string) (*DB, error) {
 
 		db, err = sql.Open("mysql", dsn)
 
-		//	case "sqlite3", "sqlite":
-		//		BEGIN_TRANSACTION = "BEGIN TRANSACTION "
-		//		INSERT_IGNORE = "INSERT OR IGNORE "
-		//		questionMarks = true
-		//		dsn := u.Host
-		//		if dsn == "" {
-		//			dsn = u.Path // for sqlite:///tmp/mama.sqlite
-		//		}
-		//		db, err = sql.Open("sqlite3", dsn)
-		//		if err != nil {
-		//			return nil, err
-		//		}
-		//		err = db.Ping() // force create empty file at least, to see if it works
+	case "sqlite3", "sqlite":
+		BEGIN_TRANSACTION = "BEGIN TRANSACTION "
+		INSERT_IGNORE = "INSERT OR IGNORE "
+		questionMarks = true
+		dsn := u.Host
+		if dsn == "" {
+			dsn = u.Path // for sqlite:///tmp/mama.sqlite
+		}
+		db, err = sql.Open("sqlite3", dsn)
+		if err != nil {
+			return nil, err
+		}
+		err = db.Ping() // force create empty file at least, to see if it works
 
 	case "postgres":
 		BEGIN_TRANSACTION = "START TRANSACTION "

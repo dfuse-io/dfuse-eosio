@@ -2,9 +2,7 @@ package sqlsync
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
@@ -25,27 +23,9 @@ type SQLSync struct {
 
 	source bstream.Source
 
-	watchedAccounts map[eos.AccountName]*account
+	watchedAccounts map[string]*account // account name -> account struct
 	blockstreamAddr string
 	blocksStore     dstore.Store
-}
-
-func (t *SQLSync) getABI(contract eos.AccountName, blockNum uint32) (*eos.ABI, error) {
-	resp, err := t.fluxdb.GetABI(context.Background(), blockNum, contract)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.ABI, nil
-}
-
-func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract eos.AccountName, blocknum uint32) (json.RawMessage, error) {
-	abi, err := t.getABI(contract, blocknum)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get ABI: %w", err)
-	}
-
-	return decodeTableRow(data, tableName, abi)
 }
 
 func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store, truncateScopes int, tablePrefix string) *SQLSync {
@@ -73,11 +53,7 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 		}
 	}
 
-	if err := s.db.db.Close(); err != nil {
-		return err
-	}
-
-	time.Sleep(1 * time.Hour)
+	zlog.Info("setting up pipeline")
 
 	s.setupPipeline(startBlock)
 
@@ -91,11 +67,18 @@ func (s *SQLSync) Launch(bootstrapRequired bool, startBlock bstream.BlockRef) er
 	}
 	zlog.Info("source is done")
 
+	if err := s.db.db.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.AccountName]*account, error) {
-	out := make(map[eos.AccountName]*account)
+func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[string]*account, error) {
+
+	// TODO: use the command-line flags for what to watch.
+
+	out := make(map[string]*account)
 	abi, err := s.getABI("simpleassets", uint32(startBlock.Num()))
 	if err != nil {
 		return nil, err
@@ -109,9 +92,16 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 	return out, nil
 }
 
-func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
-	// s.db.createTables
+func (t *SQLSync) getABI(contract eos.AccountName, blockNum uint32) (*eos.ABI, error) {
+	resp, err := t.fluxdb.GetABI(context.Background(), blockNum, contract)
+	if err != nil {
+		return nil, err
+	}
 
+	return resp.ABI, nil
+}
+
+func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 	_, err := s.db.db.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS sqlsync_markers (
   table_prefix char(64) NOT NULL,
   block_id char(64) NOT NULL,
@@ -120,7 +110,7 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
   PRIMARY KEY (table_prefix)
 )`)
 	if err != nil {
-		return fmt.Errorf("creating sqlsync_marker table: %w", err)
+		return fmt.Errorf("creating sqlsync_markers table: %w", err)
 	}
 
 	// get all tables that are in watchedAccounts
@@ -129,22 +119,8 @@ func (s *SQLSync) bootstrapDatabase(startBlock bstream.BlockRef) error {
 		zlog.Info("bootstrapping SQL tables for account", zap.String("account", string(acctName)), zap.Int("tables", len(acct.tables)))
 
 		for _, tbl := range acct.tables {
-			stmt := "CREATE TABLE " + tbl.dbName + `(
-  _scope varchar(13) NOT NULL,
-  _key varchar(13) NOT NULL,
-  _payer varchar(13) NOT NULL,
-`
-			for _, field := range tbl.mappings {
-				stmt = stmt + " " + field.ChainField + " "
-				if field.KeepJSON {
-					stmt = stmt + "text NOT NULL,"
-				} else {
-					stmt = stmt + chainToSQLTypes[field.Type] + " NOT NULL,"
-				}
-			}
+			stmt := tbl.createTableStatement()
 
-			stmt += ` PRIMARY KEY (_scope, _key)
-);`
 			zlog.Debug("creating table", zap.String("stmt", stmt))
 			_, err := s.db.db.ExecContext(context.Background(), stmt)
 			if err != nil {
@@ -164,16 +140,9 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 	for acctName, acct := range s.watchedAccounts {
 		for eosTableName, tbl := range acct.tables {
 			// get all scopes for that table in that account, and insert all rows
-			stmt := "INSERT INTO " + tbl.dbName + "(_scope, _key, _payer"
-			for _, field := range tbl.mappings {
-				stmt = stmt + ", " + field.DBField
-			}
-			stmt = stmt + ") VALUES " + s.db.paramsPlaceholderFunc(3+len(tbl.mappings))
-			zlog.Debug("initial snapshot: sending SQL statement", zap.String("stmt", stmt))
-
 			scopesResp, err := s.fluxdb.GetTableScopes(ctx, atBlock, &fluxdb.GetTableScopesRequest{
-				Account: acctName,
-				Table:   eosTableName,
+				Account: eos.AccountName(acctName),
+				Table:   eos.TableName(eosTableName),
 			})
 			if err != nil {
 				// FIXME: wut? we have it listed in the ABI flux
@@ -188,7 +157,7 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 
 			scopes := scopesResp.Scopes
 			if s.truncateScopes != 0 && len(scopes) > s.truncateScopes {
-				zlog.Info("truncating the number of scopes we retreve", zap.String("table", tbl.dbName), zap.Int("max_scopes", s.truncateScopes))
+				zlog.Info("truncating the number of scopes we retrieve", zap.String("table", tbl.dbName), zap.Int("max_scopes", s.truncateScopes))
 				scopes = scopes[:s.truncateScopes]
 			}
 
@@ -196,9 +165,9 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 			for i := 0; i < len(scopes); i += chunkSize {
 				scopesChunk := scopes[i : i+min(len(scopes)-i, chunkSize)]
 				resp, err := s.fluxdb.GetTablesMultiScopes(ctx, atBlock, &fluxdb.GetTablesMultiScopesRequest{
-					Account: acctName,
+					Account: eos.AccountName(acctName),
 					KeyType: "name",
-					Table:   eosTableName,
+					Table:   eos.TableName(eosTableName),
 					Scopes:  scopesChunk,
 					JSON:    true, // TODO: this could/should be done locally, and ideally sped up like crazy, decoding directly to the types useful to SQL. eos-go/abidecoder needs to be boosted for that to happen
 				})
@@ -217,32 +186,19 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 
 						// fmt.Println("ONE ROW:", v.Raw)
 
-						values := []interface{}{
+						stmt, values, err := tbl.insertStatement(
+							s.db,
 							scopeResp,
 							v.Get("key").String(),
 							v.Get("payer").String(),
-						}
-
-						decoded := v.Get("json")
-						for _, m := range tbl.mappings {
-							val := decoded.Get(m.ChainField)
-							if m.KeepJSON {
-								values = append(values, val.Raw)
-							} else {
-								convertedValue, err := mapToSQLType(val, m.Type)
-								if err != nil {
-									innerErr = fmt.Errorf("converting raw JSON %q to %s: %w", val.Raw, m.Type, err)
-									return false
-								}
-								values = append(values, convertedValue)
-							}
-						}
-						if err := innerErr; err != nil {
+							v.Get("json"),
+						)
+						if err != nil {
+							innerErr = err
 							return false
 						}
 
-						//fmt.Printf("Inserting into %w, %q: %v\n", tbl.dbName, stmt, values)
-						_, err := s.db.db.ExecContext(ctx, stmt, values...)
+						_, err = s.db.db.ExecContext(ctx, stmt, values...)
 						if err != nil {
 							innerErr = fmt.Errorf("insert into %s: %w", tbl.dbName, err)
 							return false

@@ -41,6 +41,7 @@ type Config struct {
 	HTTPListenAddr  string // for healthz only
 	TablePrefix     string
 	TruncateRows    int
+	Contracts       []string
 }
 
 type App struct {
@@ -70,9 +71,11 @@ func (a *App) Run() error {
 		return fmt.Errorf("sql db setup: %w", err)
 	}
 
-	var startBlockRef bstream.BlockRef
-	var bootstrapRequired bool
-	if db.Empty() {
+	startBlockRef, _ := db.GetStartBlock(a.Config.TablePrefix)
+	// FIXME: for now we're ignoring the `err` here.. we should check if there's a fatal SQL connectivity issue, or simply that the row isn't there..
+	bootstrapRequired := false
+	if startBlockRef == nil {
+		zlog.Info("start block not found, bootstrapping")
 		blockmetaConn, err := dgrpc.NewInternalClient(a.Config.BlockmetaAddr)
 		if err != nil {
 			return fmt.Errorf("failed getting blockmeta grpc client: %w", err)
@@ -84,14 +87,8 @@ func (a *App) Run() error {
 		}
 		startBlockRef = bstream.NewBlockRef(libResp.Id, uint64(eos.BlockNum(libResp.Id)))
 		bootstrapRequired = true
-
 	} else {
-		sb, err := db.GetStartBlock()
-		if err != nil {
-			return err
-		}
-		startBlockRef = sb
-
+		zlog.Info("start block found, bootstrapping", zap.String("block_id", startBlockRef.ID()), zap.Uint64("block_num", startBlockRef.Num()))
 	}
 
 	sqlSyncer := sqlsync.NewSQLSync(db, fluxClient, a.Config.BlockStreamAddr, blocksStore, a.Config.TruncateRows, a.Config.TablePrefix)

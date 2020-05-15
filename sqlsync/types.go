@@ -3,6 +3,7 @@ package sqlsync
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
@@ -29,14 +30,93 @@ type Table struct {
 	mappings  Mappings
 }
 
+func (t *Table) createTableStatement() string {
+	stmt := "CREATE TABLE " + t.dbName + `(
+  _scope varchar(13) NOT NULL,
+  _key varchar(13) NOT NULL,
+  _payer varchar(13) NOT NULL,
+`
+	for _, field := range t.mappings {
+		stmt = stmt + " " + field.ChainField + " "
+		if field.KeepJSON {
+			stmt = stmt + "text NOT NULL,"
+		} else {
+			stmt = stmt + chainToSQLTypes[field.Type] + " NOT NULL,"
+		}
+	}
+
+	stmt += ` PRIMARY KEY (_scope, _key)
+);`
+	return stmt
+}
+
+func (t *Table) insertStatement(db *DB, scope, key, payer string, jsonData gjson.Result) (string, []interface{}, error) {
+	stmt := "INSERT INTO " + t.dbName + "(_scope, _key, _payer"
+	for _, field := range t.mappings {
+		stmt = stmt + ", " + field.DBField
+	}
+	stmt = stmt + ") VALUES " + db.paramsPlaceholderFunc(3+len(t.mappings))
+
+	values := []interface{}{scope, key, payer}
+	fieldValues, err := t.valuesList(jsonData)
+	if err != nil {
+		return "", nil, err
+	}
+	values = append(values, fieldValues...)
+
+	return stmt, values, nil
+}
+
+func (t *Table) updateStatement(db *DB, scope, key, payer string, jsonData gjson.Result) (string, []interface{}, error) {
+	s := db.paramsPlaceholderFunc(3 + len(t.mappings))
+	s = strings.Trim(s, "()")
+	placeHolders := strings.Split(s, ",")
+
+	stmt := "UPDATE " + t.dbName + " SET _payer = " + placeHolders[0]
+	for idx, field := range t.mappings {
+		stmt = stmt + fmt.Sprintf(", %s = %s", field.DBField, placeHolders[idx+1])
+	}
+	stmt = stmt + " WHERE _scope = " + placeHolders[len(t.mappings)+1] + " AND _key = " + placeHolders[len(t.mappings)+2]
+
+	values := []interface{}{payer}
+	fieldValues, err := t.valuesList(jsonData)
+	if err != nil {
+		return "", nil, err
+	}
+	values = append(values, fieldValues...)
+	values = append(values, scope, key)
+
+	return stmt, values, nil
+}
+
+func (t *Table) valuesList(jsonData gjson.Result) (out []interface{}, err error) {
+	for _, m := range t.mappings {
+		val := jsonData.Get(m.ChainField)
+		if m.KeepJSON {
+			out = append(out, val.Raw)
+		} else {
+			convertedValue, err := mapToSQLType(val, m.Type)
+			if err != nil {
+				return nil, fmt.Errorf("converting raw JSON %q to %s: %w", val.Raw, m.Type, err)
+			}
+			out = append(out, convertedValue)
+		}
+	}
+	return
+}
+
+func (t *Table) deleteStatement() string {
+	return fmt.Sprintf("DELETE FROM %s WHERE _scope = $1 AND _key = $2", t.dbName)
+}
+
 type account struct {
-	tables map[eos.TableName]*Table
+	tables map[string]*Table // table name -> table def
 	name   string
 	abi    *eos.ABI
 }
 
 func (a *account) extractTables(tablePrefix string) {
-	out := make(map[eos.TableName]*Table)
+	out := make(map[string]*Table)
 	for _, table := range a.abi.Tables {
 		var mappings []Mapping
 		struc := a.abi.StructForName(table.Type)
@@ -49,7 +129,7 @@ func (a *account) extractTables(tablePrefix string) {
 				Type:       field.Type,
 			})
 		}
-		out[table.Name] = &Table{
+		out[string(table.Name)] = &Table{
 			chainName: string(table.Name),
 			dbName:    tablePrefix + a.name + "_" + string(table.Name), // TODO: allow custom mapping of chain names to db name
 			mappings:  mappings,

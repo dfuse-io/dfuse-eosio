@@ -1,42 +1,54 @@
-dfuse Connector to SQL
-======================
+# dfuse Connector to SQL
 
-Design:
+This application is used to synchronize EOSIO tables to a SQL database.
 
-* Start process
-  * hard-configured for `simpleassets`
-  * read database DSN flag
-* Get the ABI at HEAD (figure out the latest irreversible block processed by FluxDB)
-  * Retrieve the `lib_num` in the response
-  * Get the ABI at `lib_num`
-* Open SQL database
-* Loop all the 8-10 tables of `simpleassets`:
-  * Get create table statement, by calling a (hard-coded) `abi_to_sql` (with
-    potential overrides from a declarative file eventually)
-  * Send CREATE TABLE statements
-* Fetch a snapshot of all these tables before sync'ing:
-  * For all 8-10 tables:
-    * Get all the scopes at `lib_num`, with json=false
-    * ABI decode incoming rows
-    * Map to a `.csv`
-    * Stash into a BatcherInserter for each table
-  * Open transaction
-  * For each table:
-    * Flush each table with INSERT INTO
-  * Write a _marker_ (written block ref) in the DB to know where we
-    were at (to read and pickup in Pipeline mode)
-  * Commit transaction
-* Start Pipeline:
-  * Read the _marker_
-  * Kickstart a Joining source + Live + whatever's needed
-  * ProcessBlock:
-    * Watch out ABI changes. What if it changes? oh oh!
-    * Loop through all transactions, actions, identify the tables that match this contract
-      * Each change to a table is added to a its corresponding BatchInserter
-    * Open SQL trx
-    * Flush all BatchInserters
-    * Write _marker_
-    * Commit trx
+Features:
+
+* Bootstrap from any block height (from FluxDB, and eventually from a portable state snapshot).
+* Sync modes:
+    * Only irreversible state
+    * Real-time, handling reorgnaizations/micro-forks.
+* Consistent SQL querying, given each block's changes is committed as a single SQL transaction.
+* Mapping of on-chain fields to different fields in SQL
+    * Denormalization of nested structs on-chain, into their own fields in SQL
 
 
-eosc -u https://mainnet.wax.dfuse.io get abi simpleassets|less
+## Usage
+
+Simplest way to start is:
+
+    dfuseeos start sqlsync
+
+But you will want to connect it somewhere:
+
+    dfuseeos --config-file= --skip-checks \
+             --common-blockmeta-addr=localhost:9000 \
+             --common-blockstream-addr=localhost:9001 \
+             --common-blocks-store-url=gs://dfuseio-global-blocks-us/wax-mainnet/v3  \
+             --sqlsync-fluxdb-addr=http://localhost:9002  \
+             --sqlsync-sql-dsn postgres://postgres:secret@localhost:5432/postgres  \
+             start sqlsync -vvv
+
+with port-forwarding for `blockmeta` on port 9000, and a `relayer` or
+`mindreader` on port 9001, in addition to port-forward to `fluxdb`
+listening on 9002 (to its http port).  Try something like:
+
+    kc port-forward svc/blockmeta-v2 9000 & kc port-forward svc/relayer-v2 9001:9000 & kc port-forward svc/fluxdb-server-v2 9002:80 &
+
+
+### Starting postgres
+
+Start a local postgres:
+
+    docker run --rm -ti --name psql -p 5432:5432 -e POSTGRES_PASSWORD=secret postgres
+
+Go inside with:
+
+    docker exec -ti -e POSTGRES_PASSWORD=secret psql psql -U postgres
+
+
+### Deploy Hasura for GraphQL querying
+
+You can deploy Hasura on K8s using:
+
+    https://github.com/hasura/graphql-engine/blob/stable/install-manifests/kubernetes/deployment.yaml
