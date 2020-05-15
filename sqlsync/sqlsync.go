@@ -17,9 +17,11 @@ import (
 
 type SQLSync struct {
 	*shutter.Shutter
-	db            *DB
-	fluxdb        fluxdb.Client
-	dbTablePrefix string
+	db     *DB
+	fluxdb fluxdb.Client
+
+	tablePrefix  string
+	truncateRows int
 
 	source bstream.Source
 
@@ -46,9 +48,11 @@ func (t *SQLSync) decodeDBOpToRow(data []byte, tableName eos.TableName, contract
 	return decodeTableRow(data, tableName, abi)
 }
 
-func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store) *SQLSync {
+func NewSQLSync(db *DB, fluxCli fluxdb.Client, blockstreamAddr string, blocksStore dstore.Store, truncateRows int, tablePrefix string) *SQLSync {
 	return &SQLSync{
 		Shutter:         shutter.New(),
+		truncateRows:    truncateRows,
+		tablePrefix:     tablePrefix,
 		blockstreamAddr: blockstreamAddr,
 		blocksStore:     blocksStore,
 		db:              db,
@@ -101,7 +105,7 @@ func (s *SQLSync) getWatchedAccounts(startBlock bstream.BlockRef) (map[eos.Accou
 		abi:  abi,
 		name: "simpleassets",
 	}
-	out["simpleassets"].extractTables(s.dbTablePrefix)
+	out["simpleassets"].extractTables(s.tablePrefix)
 	return out, nil
 }
 
@@ -172,9 +176,9 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 			}
 
 			scopes := scopesResp.Scopes
-			if len(scopes) > 1500 {
-				zlog.Info("truncating table to 1500 rows", zap.String("table", tbl.dbName))
-				scopes = scopes[:1500]
+			if s.truncateRows != 0 && len(scopes) > s.truncateRows {
+				zlog.Info("truncating table", zap.String("table", tbl.dbName), zap.Int("max_rows", s.truncateRows))
+				scopes = scopes[:s.truncateRows]
 			}
 
 			chunkSize := 1000

@@ -39,6 +39,8 @@ type Config struct {
 	SourceStoreURL  string
 	FluxHTTPAddr    string
 	HTTPListenAddr  string // for healthz only
+	TablePrefix     string
+	TruncateRows    int
 }
 
 type App struct {
@@ -92,7 +94,7 @@ func (a *App) Run() error {
 
 	}
 
-	sqlSyncer := sqlsync.NewSQLSync(db, fluxClient, a.Config.BlockStreamAddr, blocksStore)
+	sqlSyncer := sqlsync.NewSQLSync(db, fluxClient, a.Config.BlockStreamAddr, blocksStore, a.Config.TruncateRows, a.Config.TablePrefix)
 
 	go func() {
 		zlog.Info("starting sql syncer pipeline")
