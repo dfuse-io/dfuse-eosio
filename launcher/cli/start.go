@@ -27,7 +27,6 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
-	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
@@ -83,7 +82,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	modules := &launcher.RuntimeModules{
 		SearchDmeshClient: meshClient,
-		MetricManager:     metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta()),
 	}
 
 	err = bstream.ValidateRegistry()
@@ -110,8 +108,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		userLog.Error("unable to launch", zap.Error(err))
 		os.Exit(1)
 	}
-
-	go modules.MetricManager.Launch()
 
 	printWelcomeMessage()
 

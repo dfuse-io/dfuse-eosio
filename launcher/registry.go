@@ -20,7 +20,7 @@ func GetMetricAppMeta() map[string]*metrics.AppMeta {
 	for _, appDef := range AppRegistry {
 		mapping[appDef.MetricsID] = &metrics.AppMeta{
 			Title: appDef.Title,
-			Id:    appDef.ID,
+			ID:    appDef.ID,
 		}
 	}
 	return mapping
