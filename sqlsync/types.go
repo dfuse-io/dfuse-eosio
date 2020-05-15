@@ -76,9 +76,9 @@ var chainToSQLTypes = map[string]string{
 	"symbol": "varchar(8) NOT NULL",
 	"bool":   "boolean",
 	"int64":  "int NOT NULL",
-	"uint64": "int unsigned NOT NULL",
+	"uint64": SQL_UINT64,
 	"int32":  "int NOT NULL", // make smaller
-	"uint32": "int unsigned NOT NULL",
+	"uint32": SQL_UINT32,
 	"asset":  "varchar(64) NOT NULL",
 }
 

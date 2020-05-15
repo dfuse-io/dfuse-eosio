@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -153,7 +152,8 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 			for _, field := range tbl.mappings {
 				stmt = stmt + ", " + field.DBField
 			}
-			stmt = stmt + ") VALUES (?,?,?" + strings.Repeat(",?", len(tbl.mappings)) + ")"
+			stmt = stmt + ") VALUES " + s.db.paramsPlaceholderFunc(3+len(tbl.mappings))
+			zlog.Debug("initial snapshot: sending SQL statement", zap.String("stmt", stmt))
 
 			scopesResp, err := s.fluxdb.GetTableScopes(ctx, atBlock, &fluxdb.GetTableScopesRequest{
 				Account: acctName,
@@ -179,7 +179,6 @@ func (s *SQLSync) fetchInitialSnapshots(startBlock bstream.BlockRef) error {
 			chunkSize := 1000
 			for i := 0; i < len(scopes); i += chunkSize {
 				scopesChunk := scopes[i : i+min(len(scopes)-i, chunkSize)]
-				fmt.Println("Getting scopes", eosTableName, scopesChunk)
 				resp, err := s.fluxdb.GetTablesMultiScopes(ctx, atBlock, &fluxdb.GetTablesMultiScopesRequest{
 					Account: acctName,
 					KeyType: "name",

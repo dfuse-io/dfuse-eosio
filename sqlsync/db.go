@@ -18,18 +18,25 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	_ "github.com/go-sql-driver/mysql" // FIXME: Have those be registered by the CALLER
-	_ "github.com/mattn/go-sqlite3"    // FIXME: Have this be registered by the CALLER
+
+	// FIXME: Have those be registered by the CALLER
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var INSERT_IGNORE = ""
 var BEGIN_TRANSACTION = ""
+var SQL_UINT64 = "int unsigned NOT NULL"
+var SQL_UINT32 = "int unsigned NOT NULL"
 
 type DB struct {
-	db *sql.DB
+	db                    *sql.DB
+	paramsPlaceholderFunc func(int) string
 }
 
 func (d *DB) Empty() bool {
@@ -41,6 +48,24 @@ func (d *DB) GetStartBlock() (bstream.BlockRef, error) {
 	return nil, nil
 }
 
+func genParamsPlaceholder(params int, questionMark bool) string {
+	out := "("
+	for i := 1; i < params; i++ {
+
+		if questionMark {
+			out = fmt.Sprintf("%s?,", out)
+		} else {
+			out = fmt.Sprintf("%s$%d,", out, i)
+		}
+	}
+	if questionMark {
+		out = fmt.Sprintf("%s?)", out)
+	} else {
+		out = fmt.Sprintf("%s$%d)", out, params)
+	}
+	return out
+}
+
 func NewDB(dsnString string) (*DB, error) {
 	u, err := url.Parse(dsnString)
 	if err != nil {
@@ -48,11 +73,13 @@ func NewDB(dsnString string) (*DB, error) {
 	}
 
 	var db *sql.DB
+	var questionMarks bool
 
 	switch u.Scheme {
 	case "mysql":
 		BEGIN_TRANSACTION = "START TRANSACTION "
 		INSERT_IGNORE = "INSERT IGNORE "
+		questionMarks = true
 
 		var pw string
 		if u.User != nil {
@@ -67,7 +94,8 @@ func NewDB(dsnString string) (*DB, error) {
 	case "sqlite3", "sqlite":
 		BEGIN_TRANSACTION = "BEGIN TRANSACTION "
 		INSERT_IGNORE = "INSERT OR IGNORE "
-		dsn := u.Host // for sqlite://:memory:
+		questionMarks = true
+		dsn := u.Host
 		if dsn == "" {
 			dsn = u.Path // for sqlite:///tmp/mama.sqlite
 		}
@@ -76,13 +104,40 @@ func NewDB(dsnString string) (*DB, error) {
 			return nil, err
 		}
 		err = db.Ping() // force create empty file at least, to see if it works
+
+	case "postgres":
+		BEGIN_TRANSACTION = "START TRANSACTION "
+		INSERT_IGNORE = "INSERT IGNORE "
+		questionMarks = false
+
+		SQL_UINT64 = "bigint NOT NULL"
+		SQL_UINT32 = "int NOT NULL"
+
+		var user, password string
+		if u.User != nil {
+			user = u.User.Username()
+			password, _ = u.User.Password()
+		}
+
+		hostOnly := strings.TrimSuffix(u.Host, ":"+u.Port())
+		dsn := fmt.Sprintf("host=%s port=%s user=%s "+
+			"password=%s dbname=%s sslmode=disable",
+			hostOnly, u.Port(), user, password, strings.TrimLeft(u.Path, "/"))
+
+		db, err = sql.Open("postgres", dsn)
+		if err != nil {
+			return nil, err
+		}
+		err = db.Ping()
+
 	}
 	if err != nil {
 		return nil, err
 	}
 
 	return &DB{
-		db: db,
+		db:                    db,
+		paramsPlaceholderFunc: func(p int) string { return genParamsPlaceholder(p, questionMarks) },
 	}, nil
 }
 
