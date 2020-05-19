@@ -5,17 +5,23 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/coreos/etcd/store"
+	eosdb "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
+	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
 	"github.com/dfuse-io/jsonpb"
-	"github.com/dfuse-io/kvdb"
+	"github.com/dfuse-io/kvdb/store"
+	_ "github.com/dfuse-io/kvdb/store/badger"
+	_ "github.com/dfuse-io/kvdb/store/bigkv"
+	_ "github.com/dfuse-io/kvdb/store/tikv"
+	"github.com/golang/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"google.golang.org/protobuf/proto"
 )
 
 var kvCmd = &cobra.Command{Use: "kv", Short: "Read from a KVStore"}
+var kvBlkIrrCmd = &cobra.Command{Use: "blkirr", Short: "read irr blks from KVStore", RunE: kvBlkIrr, Args: cobra.ExactArgs(1)}
+var kvTrxCmd = &cobra.Command{Use: "trx", Short: "read trx from KVStore", RunE: kvtrxE, Args: cobra.ExactArgs(1)}
+var kvTrxTracesCmd = &cobra.Command{Use: "trxtraces", Short: "read trx traces from KVStore", RunE: kvtrxTracesE, Args: cobra.ExactArgs(1)}
 var kvPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from KVStore", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
 var kvScanCmd = &cobra.Command{Use: "scan", Short: "scan read from KVStore", RunE: kvScan, Args: cobra.ExactArgs(2)}
 var kvGetCmd = &cobra.Command{Use: "get", Short: "get key from KVStore", RunE: kvGet, Args: cobra.ExactArgs(1)}
@@ -24,40 +30,39 @@ func init() {
 	Cmd.AddCommand(kvCmd)
 
 	kvCmd.AddCommand(kvPrefixCmd)
+	kvCmd.AddCommand(kvBlkIrrCmd)
 	kvCmd.AddCommand(kvScanCmd)
+	kvCmd.AddCommand(kvTrxCmd)
+	kvCmd.AddCommand(kvTrxTracesCmd)
 	kvCmd.AddCommand(kvGetCmd)
 
-	kvCmd.PersistentFlags().StringP("store", "s", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
-	kvCmd.PersistentFlags().IntP("depth", "d", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
+	kvCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
+	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
+	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
+}
 
-	kvScanCmd.Flags().IntP("limit", "l", 100, "limit the number of rows when doing scan")
+func kvBlkIrr(cmd *cobra.Command, args []string) (err error) {
+	return get(eosdb.Keys.PackIrrBlocksKey(args[0]))
+}
+
+func kvtrxE(cmd *cobra.Command, args []string) (err error) {
+	return getPrefix(eosdb.Keys.PackTrxsPrefix(args[0]))
+}
+
+func kvtrxTracesE(cmd *cobra.Command, args []string) (err error) {
+	return getPrefix(eosdb.Keys.PackTrxTracesPrefix(args[0]))
 }
 
 func kvPrefix(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("store")) // FIXME: grab the right flags
-	if err != nil {
-		return err
-	}
-
 	prefix, err := hex.DecodeString(args[0])
 	if err != nil {
 		return fmt.Errorf("error decoding prefix %q: %s", args[0], err)
 	}
-	it := kv.Prefix(context.Background(), prefix)
-	for it.Next() {
-		item := it.Item()
-
-		doKVPrint(item.Key, item.Value)
-	}
-	if err := it.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return getPrefix(prefix)
 }
 
 func kvScan(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("store"))
+	kv, err := store.New(viper.GetString("dsn"))
 	if err != nil {
 		return err
 	}
@@ -76,8 +81,7 @@ func kvScan(cmd *cobra.Command, args []string) (err error) {
 	it := kv.Scan(context.Background(), start, end, limit)
 	for it.Next() {
 		item := it.Item()
-
-		doKVPrint(item.Key, item.Value)
+		printKVEntity(item.Key, item.Value, false, true)
 	}
 	if err := it.Err(); err != nil {
 		return err
@@ -87,29 +91,58 @@ func kvScan(cmd *cobra.Command, args []string) (err error) {
 }
 
 func kvGet(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("store"))
-	if err != nil {
-		return err
-	}
-
 	key, err := hex.DecodeString(args[0])
 	if err != nil {
 		return fmt.Errorf("error decoding range start %q: %s", args[0], err)
 	}
+	return get(key)
+}
 
-	val, err := kv.Get(context.Background(), key)
-	if err == kvdb.ErrNotFound {
-		os.Exit(1)
+func get(key []byte) error {
+	kv, err := store.New(viper.GetString("dsn"))
+	if err != nil {
+		return err
 	}
 
-	doKVPrint(key, val)
+	val, err := kv.Get(context.Background(), key)
+	if err == store.ErrNotFound {
+		fmt.Printf("key %q not found\n", hex.EncodeToString(key))
+		return nil
+	}
+
+	printKVEntity(key, val, false, true)
 
 	return nil
 }
 
-func doKVPrint(key, val []byte, asHex bool, indented bool) error {
+func getPrefix(prefix []byte) error {
+	kv, err := store.New(viper.GetString("dsn"))
+	if err != nil {
+		return err
+	}
+
+	it := kv.Prefix(context.Background(), prefix)
+	for it.Next() {
+		item := it.Item()
+		printKVEntity(item.Key, item.Value, true, true)
+	}
+	if err := it.Err(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func printKVEntity(key, val []byte, asHex bool, indented bool) (err error) {
 	if asHex {
 		fmt.Println(hex.EncodeToString(key), hex.EncodeToString(val))
+		return nil
+	}
+
+	pbmarsh := jsonpb.Marshaler{
+		EnumsAsInts:  false,
+		EmitDefaults: true,
+		OrigName:     true,
 	}
 
 	row := map[string]interface{}{
@@ -117,17 +150,31 @@ func doKVPrint(key, val []byte, asHex bool, indented bool) error {
 	}
 
 	switch key[0] {
-	case 0x00:
-		// decode as a transaction, add the key elements to the formatted row as _ fields
-		//protoMessage := getProtoMap(protocol, key)
-		row["data"] = nil
+	case eosdb.TblPrefixTrxs:
+		protoMessage := &pbeosdb.TrxRow{}
+		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
+	case eosdb.TblPrefixBlocks:
+		protoMessage := &pbeosdb.BlockRow{}
+		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
+	case eosdb.TblPrefixIrrBlks:
+		row["data"] = val[0] == 0x01
+	case eosdb.TblPrefixImplTrxs:
+		protoMessage := &pbeosdb.ImplicitTrxRow{}
+		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
+	case eosdb.TblPrefixDtrxs:
+		protoMessage := &pbeosdb.DtrxRow{}
+		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
+	case eosdb.TblPrefixTrxTraces:
+		protoMessage := &pbeosdb.TrxTraceRow{}
+		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
 	}
 
-	cnt, err := json.Marshal(formatedRow)
+	cnt, err := json.Marshal(row)
 	if err != nil {
 		return err
 	}
 	fmt.Println(string(cnt))
+	return nil
 }
 
 func decodePayload(marshaler jsonpb.Marshaler, obj proto.Message, bytes []byte) (out json.RawMessage, err error) {
@@ -136,7 +183,8 @@ func decodePayload(marshaler jsonpb.Marshaler, obj proto.Message, bytes []byte) 
 		return nil, fmt.Errorf("proto unmarshal: %s", err)
 	}
 
-	cnt, err := marshaler.MarshalToString(obj)
+	cnt, err := marshaler.MarshalToString(
+		obj)
 	if err != nil {
 		return nil, fmt.Errorf("json marshal: %s", err)
 	}
