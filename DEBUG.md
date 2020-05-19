@@ -104,3 +104,16 @@ Formatting:
 - Logger name always displayed
 - Caller always displayed, but package version trimmed out (unless -vvvv or more present)
 - Stacktrace always displayed (if present)
+
+#### Changing log levels at runtime
+
+You can switch the log levels of a given component by sending an HTTP request on port 1065 (configurable via --log-level-switcher-addr flag) like this:
+
+```
+curl localhost:1065 -XPOST -d '{"level": "debug","inputs":"bstream"}'
+curl localhost:1065 -XPOST -d '{"level": "info","inputs":".*"}'
+curl localhost:1065 -XPOST -d '{"level": "warn","inputs":"merger,bstream,manageos,mindreader"}'
+```
+
+The last called regexp will override previous matches.
+

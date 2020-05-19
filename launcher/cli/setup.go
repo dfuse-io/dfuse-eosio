@@ -22,6 +22,7 @@ import (
 
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetrics"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +42,7 @@ func setup() {
 	}
 
 	go func() {
-		listenAddr := "localhost:6060"
+		listenAddr := viper.GetString("global-pprof-listen-addr")
 		err := http.ListenAndServe(listenAddr, nil)
 		if err != nil {
 			userLog.Debug("unable to start profiling server", zap.Error(err), zap.String("listen_addr", listenAddr))
