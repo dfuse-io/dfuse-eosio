@@ -44,7 +44,6 @@ p2p-max-nodes-per-host = 5
 connection-cleanup-period = 15
 
 # HTTP
-access-control-allow-origin = *
 http-server-address = 127.0.0.1:8888
 http-max-response-time-ms = 1000
 http-validate-host = 0
@@ -57,7 +56,6 @@ signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5
 `
 
 var mindreaderLocalConfigIni = `# General settings
-access-control-allow-origin = *
 http-server-address = 127.0.0.1:9888
 agent-name = dfuse for EOSIO
 p2p-server-address = 127.0.0.1:9877

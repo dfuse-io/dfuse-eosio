@@ -63,6 +63,7 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/minio/highwayhash v1.0.0
+	github.com/pingcap/log v0.0.0-20191012051959-b742a5d432e9
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0

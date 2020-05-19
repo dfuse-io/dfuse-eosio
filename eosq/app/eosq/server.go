@@ -48,7 +48,7 @@ type Server struct {
 
 func newServer(config *Config) *Server {
 	box := rice.MustFindBox("../../eosq-build").HTTPBox()
-
+	zlog.Debug("new server")
 	return &Server{
 		Shutter:        shutter.New(),
 		config:         config,
@@ -181,6 +181,15 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		panic(fmt.Errorf("failed to get index from rice box: %w", err))
 	}
 
+	an := []interface{}{}
+	if config.AvailableNetworks != "" {
+		err := json.Unmarshal([]byte(config.AvailableNetworks), &an)
+		if err != nil {
+			panic(fmt.Errorf("failed to unmarshall available network json: %w", err))
+		}
+	}
+	zlog.Debug("available network", zap.String("config string", config.AvailableNetworks), zap.Reflect("available network", an))
+
 	host, secure := sanitizeAPIEndpoint(config.APIEndpointURL)
 	indexConfig := map[string]interface{}{
 		"version":             1,
@@ -191,7 +200,7 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		"dfuse_auth_endpoint": config.AuthEndpointURL,
 		"display_price":       false,
 		"price_ticker_name":   "EOS",
-		"available_networks":  []interface{}{},
+		"available_networks":  an,
 		"secure":              secure,
 		"disable_segments":    true,
 		"disable_sentry":      true,

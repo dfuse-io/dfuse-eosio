@@ -19,11 +19,12 @@ import (
 )
 
 type Config struct {
-	APIEndpointURL  string
-	HTTPListenAddr  string
-	AuthEndpointURL string
-	ApiKey          string
-	Environement    string
+	APIEndpointURL    string
+	HTTPListenAddr    string
+	AuthEndpointURL   string
+	ApiKey            string
+	Environement      string
+	AvailableNetworks string
 }
 
 type App struct {
@@ -31,6 +32,14 @@ type App struct {
 	config *Config
 	Ready  chan interface{}
 	ready  bool
+}
+
+type Network struct {
+	Id     string
+	Name   string
+	IsTest bool
+	Logo   string
+	URL    string
 }
 
 func New(config *Config) *App {
@@ -42,8 +51,9 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
-	s := newServer(a.config)
 
+	zlog.Info("running eosq")
+	s := newServer(a.config)
 	a.OnTerminating(s.Shutdown)
 
 	go func() {

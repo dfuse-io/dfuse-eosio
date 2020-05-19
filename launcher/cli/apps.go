@@ -932,16 +932,18 @@ to find how to install it.`)
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
+			cmd.Flags().String("eosq-available-networks", "", "json string to configure the networks section of eosq.")
 			return nil
 		},
 
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
-				HTTPListenAddr:  viper.GetString("eosq-http-listen-addr"),
-				APIEndpointURL:  viper.GetString("eosq-api-endpoint-url"),
-				AuthEndpointURL: viper.GetString("eosq-auth-url"),
-				ApiKey:          viper.GetString("eosq-api-key"),
-				Environement:    viper.GetString("eosq-environment"),
+				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
+				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
+				AuthEndpointURL:   viper.GetString("eosq-auth-url"),
+				ApiKey:            viper.GetString("eosq-api-key"),
+				Environement:      viper.GetString("eosq-environment"),
+				AvailableNetworks: viper.GetString("eosq-available-networks"),
 			}), nil
 		},
 	})
