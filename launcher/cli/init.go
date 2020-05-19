@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	"github.com/dfuse-io/dfuse-eosio/tools"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,6 +34,7 @@ var initCmd = &cobra.Command{Use: "init", Short: "Initializes dfuse's local envi
 
 func init() {
 	RootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(tools.Cmd)
 }
 
 func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
