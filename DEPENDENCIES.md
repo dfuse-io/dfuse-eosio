@@ -59,15 +59,15 @@ brew remove eosio
 #### Ubuntu 18.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio_2.0.5-1-ubuntu-18.04_amd64.deb
-sudo apt install ./eosio_2.0.5-1-ubuntu-18.04_amd64.deb
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio_2.0.5-dm.12.0-1-ubuntu-18.04_amd64.deb
+sudo apt install ./eosio_2.0.5-dm.12.0-1-ubuntu-18.04_amd64.deb
 ```
 
 #### Ubuntu 16.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio_2.0.5-1-ubuntu-16.04_amd64.deb
-sudo apt install ./eosio_2.0.5-1-ubuntu-16.04_amd64.deb
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio_2.0.5-dm.12.0-1-ubuntu-16.04_amd64.deb
+sudo apt install ./eosio_2.0.5-dm.12.0-1-ubuntu-16.04_amd64.deb
 ```
 
 #### Ubuntu Package Uninstall
@@ -81,8 +81,8 @@ sudo apt remove eosio
 #### RPM Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm/eosio-2.0.5-1.el7.x86_64.rpm
-sudo yum install ./eosio-2.0.5-1.el7.x86_64.rpm
+wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio-2.0.5-dm.12.0-1.el7.x86_64.rpm
+sudo yum install ./eosio-2.0.5-dm.12.0-1.el7.x86_64.rpm
 ```
 
 #### RPM Package Uninstall

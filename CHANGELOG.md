@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      },
    ]
 ```   
+* [Breaking] To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
 * [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
 * Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
@@ -25,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+* We improve by 4x times the performance of dfuse instrumented `nodeos` binary on heavy EOS Mainnet blocks. This required changes to `nodeos` data exchange format, so you will need to upgrade it, see the `Breaking` change entry at top of this section.
 * Fixed behavior of `--eosq-api-endpoint-url` to allow specifying protocol (ex: https://api.mydomain.com)
 * The `kvdb-loader` application was renamed `trxdb-loader`. In general what was (confusingly) named `kvdb` is now `trxdb`, so that `kvdb` can now take on its full meaning of a lean key-value storage abstraction (which is also used by FluxDB).
    * All `--kvdb-loader` flags have been renamed to `--trxdb-loader`.

@@ -97,7 +97,7 @@ func (m *Manager) promMetricToAppResponse(p *promMetric) (out []*pbdashboard.App
 				}
 
 				out = append(out, &pbdashboard.AppMetricsResponse{
-					Id:    appMeta.Id,
+					Id:    appMeta.ID,
 					Title: appMeta.Title,
 					Metrics: []*pbdashboard.Metric{
 						{
@@ -114,7 +114,7 @@ func (m *Manager) promMetricToAppResponse(p *promMetric) (out []*pbdashboard.App
 		default:
 		}
 	} else {
-		zlog.Error("unknown prometheus metric name", zap.String("metric_type", mtype))
+		//zlog.Error("unknown prometheus metric name", zap.String("metric_type", mtype))
 	}
 	return out
 }

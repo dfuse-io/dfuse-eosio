@@ -83,17 +83,20 @@ Formatting:
 - Caller always displayed, full path, with package version present
 - Stacktrace always displayed (if present)
 
-#### Environment variable `DEBUG="<regexp>"`
+#### Environment variable `DEBUG="app1,app2"`
 
-Overrides behavior of verbosity for packages matching the `<regexp>` value
+Overrides behavior of verbosity for specific app(s) value
 as well as changing the formatting rules. For example, you can run:
 
 ```
-DEBUG="github.com/dfuse-io/bstream.*" dfuseeos start
+DEBUG="mindreader,dgraphql" dfuseeos start
 ```
 
-Which will keep the level behavior of verbosity 0 but will set all loggers
-registered matching `github.com/dfuse-io/bstream.*` to `DEBUG` level.
+Which will keep the level behavior of verbosity 0 but will set loggers
+of app `mindreader` and `dgraphql` to `DEBUG` level.
+
+The value can also be a regular expression, in which case it matches the
+logger registration performed by a single package.
 
 Formatting:
 

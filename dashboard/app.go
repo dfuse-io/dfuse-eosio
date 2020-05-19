@@ -15,6 +15,8 @@
 package dashboard
 
 import (
+	"time"
+
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/dfuse-eosio/metrics"
 	dmeshCli "github.com/dfuse-io/dmesh/client"
@@ -22,9 +24,9 @@ import (
 )
 
 type Config struct {
-	EosNodeManagerAPIAddr    string
-	GRPCListenAddr           string
-	HTTPListenAddr           string
+	EosNodeManagerAPIAddr string
+	GRPCListenAddr        string
+	HTTPListenAddr        string
 }
 
 type Modules struct {
@@ -53,6 +55,10 @@ func New(config *Config, modules *Modules) *App {
 
 func (a *App) Run() error {
 	s := newServer(a.config, a.modules)
+
+	// Launch MetricManager
+	mgr := metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta())
+	go mgr.Launch()
 
 	a.OnTerminating(s.Shutdown)
 
