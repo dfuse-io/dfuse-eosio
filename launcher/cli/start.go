@@ -49,8 +49,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 
-	maybeCheckNodeosVersion()
-
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
@@ -103,6 +101,10 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		viper.SetDefault(k, v)
 	}
 
+	if containsApp(apps, "mindreader") {
+		maybeCheckNodeosVersion()
+	}
+
 	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
 	if err = launch.Launch(apps); err != nil {
 		userLog.Error("unable to launch", zap.Error(err))
@@ -153,4 +155,14 @@ Your instance should be ready in a few seconds, here some relevant links:
 `, "\n")
 
 	userLog.Printf(message, DashboardHTTPListenAddr, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
+}
+
+func containsApp(apps []string, searchedApp string) bool {
+	for _, app := range apps {
+		if app == searchedApp {
+			return true
+		}
+	}
+
+	return false
 }
