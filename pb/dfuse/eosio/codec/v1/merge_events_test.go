@@ -60,9 +60,8 @@ func TestMergeTransactionEvents(t *testing.T) {
 				return true
 			},
 			expect: &TransactionLifecycle{
-				Id:                   "trx1",
-				TransactionReceipt:   &TransactionReceipt{Index: 1},
-				CreationIrreversible: true,
+				Id:                 "trx1",
+				TransactionReceipt: &TransactionReceipt{Index: 1},
 			},
 		},
 		{
@@ -100,7 +99,6 @@ func TestMergeTransactionEvents(t *testing.T) {
 				TransactionReceipt:    &TransactionReceipt{Index: 3},
 				ExecutionTrace:        &TransactionTrace{Index: 6},
 				ExecutionIrreversible: true,
-				CreationIrreversible:  true,
 			},
 		},
 		{

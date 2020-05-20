@@ -234,6 +234,8 @@ github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGY
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743 h1:tmyq6kn6XN2UoccqW812Vr1zO9RUzbVedsP+L3iD7Qc=
 github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
+github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
+github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0 h1:J5o67BQHTqQJsP2krc9770evS3TmkbltKKYMDmq2a3k=

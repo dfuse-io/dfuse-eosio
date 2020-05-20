@@ -64,7 +64,6 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.TransactionReceipt = ev.Addition.Receipt
 			out.Transaction = ev.Addition.Transaction
 			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
-			out.CreationIrreversible = evi.Irreversible
 
 		case *TransactionEvent_InternalAddition:
 			if skip(&intAdditionsIrr) {
@@ -72,7 +71,6 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			}
 
 			out.Transaction = ev.InternalAddition.Transaction
-			out.CreationIrreversible = evi.Irreversible
 
 		case *TransactionEvent_Execution:
 			if skip(&execIrr) {

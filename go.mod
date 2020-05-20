@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.0
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
-	github.com/dfuse-io/eosws-go v0.0.0-20191011181529-0eb3d4ce8743
+	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
 	github.com/dfuse-io/kvdb v0.0.0-20200508203924-c107cb0b2fa2
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39

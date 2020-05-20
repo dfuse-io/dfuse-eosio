@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+* [Breaking] `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
+* [Breaking] `eosws` transaction lifecycle field `dTrx_cancelation_irreversible` changed to `dtrx_cancelationI_irreversible`
+  
 ### Added
 * Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
 * Flag: --pprof-listen-addr (default: 6060)

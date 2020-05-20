@@ -65,12 +65,12 @@ func ToV1TransactionLifecycle(in *pbcodec.TransactionLifecycle) (*v1.Transaction
 		// DBOps:                   ToV1DBOps(in.DbOps),
 		// RAMOps:                  ToV1RAMOps(in.RamOps),
 		// TableOps:                ToV1TableOps(in.TableOps),
-		PubKeys:                 codec.PublicKeysToEOS(in.PublicKeys),
-		CreatedBy:               createdBy,
-		CanceledBy:              canceledBy,
-		ExecutionIrreversible:   in.ExecutionIrreversible,
-		CreationIrreversible:    in.CreationIrreversible,
-		CancelationIrreversible: in.CancelationIrreversible,
+		PubKeys:                     codec.PublicKeysToEOS(in.PublicKeys),
+		CreatedBy:                   createdBy,
+		CanceledBy:                  canceledBy,
+		ExecutionIrreversible:       in.ExecutionIrreversible,
+		DTrxCreationIrreversible:    in.CreationIrreversible,
+		DTrxCancelationIrreversible: in.CancelationIrreversible,
 	}
 
 	if in.ExecutionTrace != nil {
