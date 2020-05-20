@@ -30,9 +30,8 @@ type Config struct {
 }
 
 type Modules struct {
-	Launcher      *launcher.Launcher
-	MetricManager *metrics.Manager
-	DmeshClient   dmeshCli.SearchClient
+	Launcher    *launcher.Launcher
+	DmeshClient dmeshCli.SearchClient
 }
 
 type App struct {
@@ -54,11 +53,11 @@ func New(config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
-	s := newServer(a.config, a.modules)
-
 	// Launch MetricManager
 	mgr := metrics.NewManager("http://localhost:9102/metrics", []string{"head_block_time_drift", "head_block_number"}, 5*time.Second, launcher.GetMetricAppMeta())
 	go mgr.Launch()
+
+	s := newServer(a.config, a.modules, mgr)
 
 	a.OnTerminating(s.Shutdown)
 
