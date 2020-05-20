@@ -60,10 +60,6 @@ func PendingScheduleToDEOS(in *eos.PendingSchedule) *pbcodec.PendingProducerSche
 }
 
 func ProducerToLastProducedToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastProduced {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out := make([]*pbcodec.ProducerToLastProduced, len(in))
 	for i, elem := range in {
 		out[i] = &pbcodec.ProducerToLastProduced{
@@ -75,10 +71,6 @@ func ProducerToLastProducedToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.P
 }
 
 func ProducerToLastImpliedIrbToDEOS(in []eos.PairAccountNameBlockNum) []*pbcodec.ProducerToLastImpliedIRB {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out := make([]*pbcodec.ProducerToLastImpliedIRB, len(in))
 	for i, elem := range in {
 		out[i] = &pbcodec.ProducerToLastImpliedIRB{
@@ -97,10 +89,6 @@ func BlockrootMerkleToDEOS(merkle *eos.MerkleRoot) *pbcodec.BlockRootMerkle {
 }
 
 func checksumsToBytesSlices(in []eos.Checksum256) [][]byte {
-	if len(in) <= 0 {
-		return [][]byte{}
-	}
-
 	out := make([][]byte, len(in))
 	for i, s := range in {
 		out[i] = s
@@ -232,10 +220,6 @@ func ProducerAuthorityScheduleToEOS(in *pbcodec.ProducerAuthoritySchedule) *eos.
 }
 
 func ProducerKeysToDEOS(in []eos.ProducerKey) (out []*pbcodec.ProducerKey) {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out = make([]*pbcodec.ProducerKey, len(in))
 	for i, key := range in {
 		out[i] = &pbcodec.ProducerKey{
@@ -247,10 +231,6 @@ func ProducerKeysToDEOS(in []eos.ProducerKey) (out []*pbcodec.ProducerKey) {
 }
 
 func ProducerKeysToEOS(in []*pbcodec.ProducerKey) (out []eos.ProducerKey) {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out = make([]eos.ProducerKey, len(in))
 	for i, producer := range in {
 		// panic on error instead?
@@ -265,10 +245,6 @@ func ProducerKeysToEOS(in []*pbcodec.ProducerKey) (out []eos.ProducerKey) {
 }
 
 func PublicKeysToEOS(in []string) (out []*ecc.PublicKey) {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out = make([]*ecc.PublicKey, len(in))
 	for i, inkey := range in {
 		// panic on error instead?
@@ -280,10 +256,6 @@ func PublicKeysToEOS(in []string) (out []*ecc.PublicKey) {
 }
 
 func ExtensionsToDEOS(in []*eos.Extension) (out []*pbcodec.Extension) {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out = make([]*pbcodec.Extension, len(in))
 	for i, extension := range in {
 		out[i] = &pbcodec.Extension{
@@ -296,10 +268,6 @@ func ExtensionsToDEOS(in []*eos.Extension) (out []*pbcodec.Extension) {
 }
 
 func ExtensionsToEOS(in []*pbcodec.Extension) (out []*eos.Extension) {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out = make([]*eos.Extension, len(in))
 	for i, extension := range in {
 		out[i] = &eos.Extension{
@@ -377,9 +345,6 @@ func TransactionReceiptHeaderToEOS(in *pbcodec.TransactionReceiptHeader) *eos.Tr
 }
 
 func SignaturesToDEOS(in []ecc.Signature) (out []string) {
-	if len(in) <= 0 {
-		return nil
-	}
 
 	out = make([]string, len(in))
 	for i, signature := range in {
@@ -389,10 +354,6 @@ func SignaturesToDEOS(in []ecc.Signature) (out []string) {
 }
 
 func SignaturesToEOS(in []string) []ecc.Signature {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out := make([]ecc.Signature, len(in))
 	for i, signature := range in {
 		sig, err := ecc.NewSignature(signature)
