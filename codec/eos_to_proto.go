@@ -98,52 +98,28 @@ func BlockrootMerkleToDEOS(merkle *eos.MerkleRoot) *pbcodec.BlockRootMerkle {
 
 func checksumsToBytesSlices(in []eos.Checksum256) [][]byte {
 	if len(in) <= 0 {
-		return nil
+		return [][]byte{}
 	}
 
 	out := make([][]byte, len(in))
 	for i, s := range in {
-		out[i] = []byte(s)
+		out[i] = s
 	}
 	return out
 }
 
 func hexBytesToBytesSlices(in []eos.HexBytes) [][]byte {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out := make([][]byte, len(in))
 	for i, s := range in {
-		out[i] = []byte(s)
+		out[i] = s
 	}
 	return out
 }
 
 func bytesSlicesToHexBytes(in [][]byte) []eos.HexBytes {
-	if len(in) <= 0 {
-		return nil
-	}
-
 	out := make([]eos.HexBytes, len(in))
 	for i, s := range in {
-		out[i] = []byte(s)
-	}
-	return out
-}
-
-func mustHexStringArrayToBytesSlices(in []string) [][]byte {
-	if len(in) <= 0 {
-		return nil
-	}
-
-	out := make([][]byte, len(in))
-	for i, s := range in {
-		b, err := hex.DecodeString(s)
-		if err != nil {
-			panic("invalid hex string")
-		}
-		out[i] = b
+		out[i] = s
 	}
 	return out
 }
