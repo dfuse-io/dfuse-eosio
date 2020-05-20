@@ -245,6 +245,9 @@ func ProducerKeysToEOS(in []*pbcodec.ProducerKey) (out []eos.ProducerKey) {
 }
 
 func PublicKeysToEOS(in []string) (out []*ecc.PublicKey) {
+	if len(in) <= 0 {
+		return nil
+	}
 	out = make([]*ecc.PublicKey, len(in))
 	for i, inkey := range in {
 		// panic on error instead?
