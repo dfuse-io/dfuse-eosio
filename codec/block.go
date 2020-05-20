@@ -15,10 +15,12 @@
 package codec
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dstore"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/proto"
 )
@@ -44,4 +46,25 @@ func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {
 		PayloadVersion: 1,
 		PayloadBuffer:  content,
 	}, nil
+}
+
+func DPoSLIBNumAtBlockHeightFromBlockStore(blockHeight uint64, blocksStore dstore.Store) (uint64, error) {
+	var dposLibNum uint32
+	var errFound = errors.New("found")
+	num := uint32(blockHeight)
+	fs := bstream.NewFileSource(blocksStore, blockHeight, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+		blk := block.ToNative().(*pbcodec.Block)
+
+		if blk.Number == num {
+			dposLibNum = blk.DposIrreversibleBlocknum
+			return errFound
+		}
+
+		return nil
+	}))
+	fs.Run()
+	if dposLibNum != 0 {
+		return uint64(dposLibNum), nil
+	}
+	return 0, fs.Err()
 }
