@@ -268,6 +268,10 @@ func ExtensionsToDEOS(in []*eos.Extension) (out []*pbcodec.Extension) {
 }
 
 func ExtensionsToEOS(in []*pbcodec.Extension) (out []*eos.Extension) {
+	if len(in) <= 0 {
+		return nil
+	}
+
 	out = make([]*eos.Extension, len(in))
 	for i, extension := range in {
 		out[i] = &eos.Extension{
