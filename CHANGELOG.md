@@ -8,10 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
 * Flag: --pprof-listen-addr (default: 6060)
-
+* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb 
 
 ## [v0.1.0-beta3] 2020-05-13
-* Added command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb 
+
+### Added
 * Added `--eosq-available-networks` json string to configure the network section of eosq. 
 ``` [
      {
@@ -22,18 +23,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
        "url": "https://www.example.com/"
      },
    ]
-```   
+```
 * [Breaking] To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
 * [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
 * Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
+* Added `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` to allow keeping a few (default:5) snapshots only in the store
 
 ### Removed
-
 * Removed the `--merger-store-timeout` flag.  Not needed anymore, as some sensible timeouts have been put here and there, using the latest `dstore@v0.1.0` that is context-aware.
 
 ### Changed
 
+* [Breaking] flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
+* [Breaking] flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
+* Mindreader now has "producer" plugin enabled to allow taking snapshots
+* Mindreader now runs with "NoBlocksLog" option (deleting blocks.log on restart)
+* Node-manager and Mindreader now make dfuseeos shutdown when nodeos crashes.
+* Node-manager and Mindreader now try to restore from snapshot if they crash within 10 seconds of starting (ex: dirty state)
+* fixes dmetrics duplicate registration error (race condition)
 * We improve by 4x times the performance of dfuse instrumented `nodeos` binary on heavy EOS Mainnet blocks. This required changes to `nodeos` data exchange format, so you will need to upgrade it, see the `Breaking` change entry at top of this section.
 * Fixed behavior of `--eosq-api-endpoint-url` to allow specifying protocol (ex: https://api.mydomain.com)
 * The `kvdb-loader` application was renamed `trxdb-loader`. In general what was (confusingly) named `kvdb` is now `trxdb`, so that `kvdb` can now take on its full meaning of a lean key-value storage abstraction (which is also used by FluxDB).
