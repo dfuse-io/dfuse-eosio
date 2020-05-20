@@ -41,13 +41,14 @@ func setup() {
 		userLog.Warn("unable to adjust ulimit max open files value, it might causes problem along the road", zap.Error(err))
 	}
 
-	go func() {
-		listenAddr := viper.GetString("global-pprof-listen-addr")
-		err := http.ListenAndServe(listenAddr, nil)
-		if err != nil {
-			userLog.Debug("unable to start profiling server", zap.Error(err), zap.String("listen_addr", listenAddr))
-		}
-	}()
+	if listenAddr := viper.GetString("global-pprof-listen-addr"); listenAddr != "" {
+		go func() {
+			err := http.ListenAndServe(listenAddr, nil)
+			if err != nil {
+				userLog.Debug("unable to start profiling server", zap.Error(err), zap.String("listen_addr", listenAddr))
+			}
+		}()
+	}
 }
 
 const osxDefaultMaximalOpenFilesLimit uint64 = 24576

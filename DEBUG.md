@@ -107,7 +107,7 @@ Formatting:
 
 #### Changing log levels at runtime
 
-You can switch the log levels of a given component by sending an HTTP request on port 1065 (configurable via --log-level-switcher-addr flag) like this:
+You can switch the log levels of a given component by sending an HTTP request on port 1065 (configurable via --log-level-switcher-listen-addr flag) like this:
 
 ```
 curl localhost:1065 -XPOST -d '{"level": "debug","inputs":"bstream"}'

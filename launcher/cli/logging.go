@@ -62,7 +62,7 @@ func setupLogger() {
 	verbosity := viper.GetInt("global-verbose")
 	logformat := viper.GetString("global-log-format")
 	logToFile := viper.GetBool("global-log-to-file")
-	listenAddr := viper.GetString("global-log-level-switcher-addr")
+	listenAddr := viper.GetString("global-log-level-switcher-listen-addr")
 
 	// TODO: The logger expect that the dataDir already exists...
 
@@ -107,9 +107,9 @@ func setupLogger() {
 
 	if listenAddr != "" {
 		go func() {
-			userLog.Debug("starting atomic level switcher on" + listenAddr)
+			userLog.Debug("starting atomic level switcher", zap.String("listen_addr", listenAddr))
 			if err := http.ListenAndServe(listenAddr, http.HandlerFunc(handleHTTPLogChange)); err != nil {
-				userLog.Warn("failed listening on :1065 to switch log level:", zap.Error(err))
+				userLog.Warn("failed starting atomic level switcher", zap.Error(err), zap.String("listen_addr", listenAddr))
 			}
 		}()
 	}
@@ -144,15 +144,15 @@ func handleHTTPLogChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch strings.ToLower(in.Level) {
-	case "":
-		http.Error(w, fmt.Sprintf("level not defined: %s", err), 400)
-		return
 	case "warn", "warning":
 		changeLoggersLevel(in.Inputs, zap.WarnLevel)
 	case "info":
 		changeLoggersLevel(in.Inputs, zap.InfoLevel)
 	case "debug":
 		changeLoggersLevel(in.Inputs, zap.DebugLevel)
+	default:
+		http.Error(w, fmt.Sprintf("invalid value for 'level': %s", in.Level), 400)
+		return
 	}
 
 	w.Write([]byte("ok"))
