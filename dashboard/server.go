@@ -26,6 +26,7 @@ import (
 	dashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
 	pbdashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
 	core "github.com/dfuse-io/dfuse-eosio/launcher"
+	"github.com/dfuse-io/dfuse-eosio/metrics"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/shutter"
 	"github.com/golang/protobuf/ptypes"
@@ -44,15 +45,17 @@ type server struct {
 	grpcServer        *grpc.Server
 	grpcToHTTPServer  *grpcweb.WrappedGrpcServer
 	managerController *core.Controller
+	metricsManager    *metrics.Manager
 	box               *rice.HTTPBox
 }
 
-func newServer(config *Config, modules *Modules) *server {
+func newServer(config *Config, modules *Modules, metricsManager *metrics.Manager) *server {
 	return &server{
 		Shutter:           shutter.New(),
 		config:            config,
 		modules:           modules,
 		managerController: core.NewController(config.EosNodeManagerAPIAddr),
+		metricsManager:    metricsManager,
 		box:               rice.MustFindBox("dashboard-build").HTTPBox(),
 	}
 }
@@ -168,8 +171,8 @@ func (s *server) AppsList(ctx context.Context, req *pbdashboard.AppsListRequest)
 }
 
 func (s *server) AppsMetrics(req *pbdashboard.AppsMetricsRequest, stream pbdashboard.Dashboard_AppsMetricsServer) error {
-	sub := s.modules.MetricManager.Subscribe(req.FilterAppId)
-	defer s.modules.MetricManager.Unsubscribe(req.FilterAppId, sub)
+	sub := s.metricsManager.Subscribe(req.FilterAppId)
+	defer s.metricsManager.Unsubscribe(req.FilterAppId, sub)
 
 	for {
 		select {
