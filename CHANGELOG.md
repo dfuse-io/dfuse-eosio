@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [v0.1.0-beta3] 2020-05-13
+* Added command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb 
 * Added `--eosq-available-networks` json string to configure the network section of eosq. 
 ``` [
      {

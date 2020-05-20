@@ -11,13 +11,13 @@ import (
 )
 
 const (
-	tblPrefixTrxs      = 0x00
-	tblPrefixBlocks    = 0x01
-	tblPrefixIrrBlks   = 0x02
-	tblPrefixImplTrxs  = 0x03
-	tblPrefixDtrxs     = 0x04
-	tblPrefixTrxTraces = 0x05
-	tblPrefixAccts     = 0x06
+	TblPrefixTrxs      = 0x00
+	TblPrefixBlocks    = 0x01
+	TblPrefixIrrBlks   = 0x02
+	TblPrefixImplTrxs  = 0x03
+	TblPrefixDtrxs     = 0x04
+	TblPrefixTrxTraces = 0x05
+	TblPrefixAccts     = 0x06
 
 	idxPrefixTimelineFwd = 0x80
 	idxPrefixTimelineBck = 0x81
@@ -36,7 +36,7 @@ func (Keyer) PackBlocksKey(blockID string) []byte {
 	if err != nil {
 		panic(fmt.Sprintf("invalid block ID %q: %s", blockID, err))
 	}
-	return append([]byte{tblPrefixBlocks}, id...)
+	return append([]byte{TblPrefixBlocks}, id...)
 }
 
 func (Keyer) UnpackBlocksKey(key []byte) (blockID string) {
@@ -48,11 +48,11 @@ func (Keyer) PackBlockNumPrefix(blockNum uint32) []byte {
 	if err != nil {
 		panic(fmt.Sprintf("invalid block num %d: %s", blockNum, err))
 	}
-	return append([]byte{tblPrefixBlocks}, hexBlockNum...)
+	return append([]byte{TblPrefixBlocks}, hexBlockNum...)
 }
 
-func (Keyer) StartOfBlocksTable() []byte { return []byte{tblPrefixBlocks} }
-func (Keyer) EndOfBlocksTable() []byte   { return []byte{tblPrefixBlocks + 1} }
+func (Keyer) StartOfBlocksTable() []byte { return []byte{TblPrefixBlocks} }
+func (Keyer) EndOfBlocksTable() []byte   { return []byte{TblPrefixBlocks + 1} }
 
 // Irr Blocks virt table
 
@@ -61,7 +61,7 @@ func (Keyer) PackIrrBlocksKey(blockID string) []byte {
 	if err != nil {
 		panic(fmt.Sprintf("invalid irr block ID %q: %s", blockID, err))
 	}
-	return append([]byte{tblPrefixIrrBlks}, id...)
+	return append([]byte{TblPrefixIrrBlks}, id...)
 }
 
 func (Keyer) UnpackIrrBlocksKey(key []byte) (blockID string) {
@@ -73,16 +73,16 @@ func (Keyer) PackIrrBlockNumPrefix(blockNum uint32) []byte {
 	if err != nil {
 		panic(fmt.Sprintf("invalid block num %d: %s", blockNum, err))
 	}
-	return append([]byte{tblPrefixIrrBlks}, hexBlockNum...)
+	return append([]byte{TblPrefixIrrBlks}, hexBlockNum...)
 }
 
-func (Keyer) StartOfIrrBlockTable() []byte { return []byte{tblPrefixIrrBlks} }
-func (Keyer) EndOfIrrBlockTable() []byte   { return []byte{tblPrefixIrrBlks + 1} }
+func (Keyer) StartOfIrrBlockTable() []byte { return []byte{TblPrefixIrrBlks} }
+func (Keyer) EndOfIrrBlockTable() []byte   { return []byte{TblPrefixIrrBlks + 1} }
 
 // Trx virt table
 
 func (k Keyer) PackTrxsKey(trxID string, blockID string) []byte {
-	return k.packTrxBlockIDKey(tblPrefixTrxs, trxID, blockID)
+	return k.packTrxBlockIDKey(TblPrefixTrxs, trxID, blockID)
 }
 
 func (k Keyer) UnpackTrxsKey(key []byte) (trxID, blockID string) {
@@ -90,15 +90,15 @@ func (k Keyer) UnpackTrxsKey(key []byte) (trxID, blockID string) {
 }
 
 func (k Keyer) PackTrxsPrefix(trxID string) []byte {
-	return k.packTrxPrefix(tblPrefixTrxs, trxID)
+	return k.packTrxPrefix(TblPrefixTrxs, trxID)
 }
 
-func (Keyer) StartOfTrxsTable() []byte { return []byte{tblPrefixTrxs} }
-func (Keyer) EndOfTrxsTable() []byte   { return []byte{tblPrefixTrxs + 1} }
+func (Keyer) StartOfTrxsTable() []byte { return []byte{TblPrefixTrxs} }
+func (Keyer) EndOfTrxsTable() []byte   { return []byte{TblPrefixTrxs + 1} }
 
 // TrxTrace virt table
 func (k Keyer) PackTrxTracesKey(trxID, blockID string) []byte {
-	return k.packTrxBlockIDKey(tblPrefixTrxTraces, trxID, blockID)
+	return k.packTrxBlockIDKey(TblPrefixTrxTraces, trxID, blockID)
 }
 
 func (k Keyer) UnpackTrxTracesKey(key []byte) (trxID, blockID string) {
@@ -106,16 +106,16 @@ func (k Keyer) UnpackTrxTracesKey(key []byte) (trxID, blockID string) {
 }
 
 func (k Keyer) PackTrxTracesPrefix(trxID string) []byte {
-	return k.packTrxPrefix(tblPrefixTrxTraces, trxID)
+	return k.packTrxPrefix(TblPrefixTrxTraces, trxID)
 }
 
-func (Keyer) StartOfTrxTracesTable() []byte { return []byte{tblPrefixTrxTraces} }
-func (Keyer) EndOfTrxTracesTable() []byte   { return []byte{tblPrefixTrxTraces + 1} }
+func (Keyer) StartOfTrxTracesTable() []byte { return []byte{TblPrefixTrxTraces} }
+func (Keyer) EndOfTrxTracesTable() []byte   { return []byte{TblPrefixTrxTraces + 1} }
 
 // Implicit trx virt table
 
 func (k Keyer) PackImplicitTrxsKey(trxID, blockID string) []byte {
-	return k.packTrxBlockIDKey(tblPrefixImplTrxs, trxID, blockID)
+	return k.packTrxBlockIDKey(TblPrefixImplTrxs, trxID, blockID)
 }
 
 func (k Keyer) UnpackImplicitTrxsKey(key []byte) (trxID, blockID string) {
@@ -123,16 +123,16 @@ func (k Keyer) UnpackImplicitTrxsKey(key []byte) (trxID, blockID string) {
 }
 
 func (k Keyer) PackImplicitTrxsPrefix(trxID string) []byte {
-	return k.packTrxPrefix(tblPrefixImplTrxs, trxID)
+	return k.packTrxPrefix(TblPrefixImplTrxs, trxID)
 }
 
-func (Keyer) StartOfImplicitTrxsTable() []byte { return []byte{tblPrefixImplTrxs} }
-func (Keyer) EndOfImplicitTrxsTable() []byte   { return []byte{tblPrefixImplTrxs + 1} }
+func (Keyer) StartOfImplicitTrxsTable() []byte { return []byte{TblPrefixImplTrxs} }
+func (Keyer) EndOfImplicitTrxsTable() []byte   { return []byte{TblPrefixImplTrxs + 1} }
 
 // Dtrx virt table
 
 func (k Keyer) PackDtrxsKey(trxID, blockID string) []byte {
-	return k.packTrxBlockIDKey(tblPrefixDtrxs, trxID, blockID)
+	return k.packTrxBlockIDKey(TblPrefixDtrxs, trxID, blockID)
 }
 
 func (k Keyer) UnpackDtrxsKey(key []byte) (trxID, blockID string) {
@@ -140,11 +140,11 @@ func (k Keyer) UnpackDtrxsKey(key []byte) (trxID, blockID string) {
 }
 
 func (k Keyer) PackDtrxsPrefix(trxID string) []byte {
-	return k.packTrxPrefix(tblPrefixDtrxs, trxID)
+	return k.packTrxPrefix(TblPrefixDtrxs, trxID)
 }
 
-func (Keyer) StartOfDtrxsTable() []byte { return []byte{tblPrefixDtrxs} }
-func (Keyer) EndOfDtrxsTable() []byte   { return []byte{tblPrefixDtrxs + 1} }
+func (Keyer) StartOfDtrxsTable() []byte { return []byte{TblPrefixDtrxs} }
+func (Keyer) EndOfDtrxsTable() []byte   { return []byte{TblPrefixDtrxs + 1} }
 
 // Account virt table
 
@@ -154,7 +154,7 @@ func (Keyer) PackAccountKey(accountName string) []byte {
 		panic(fmt.Sprintf("invalid account name %q: %s", accountName, err))
 	}
 	b := make([]byte, 9)
-	b[0] = tblPrefixAccts
+	b[0] = TblPrefixAccts
 	binary.LittleEndian.PutUint64(b[1:], name)
 	return b
 }
@@ -164,8 +164,8 @@ func (Keyer) UnpackAccountKey(key []byte) string {
 	return eos.NameToString(i)
 }
 
-func (Keyer) StartOfAccountTable() []byte { return []byte{tblPrefixAccts} }
-func (Keyer) EndOfAccountTable() []byte   { return []byte{tblPrefixAccts + 1} }
+func (Keyer) StartOfAccountTable() []byte { return []byte{TblPrefixAccts} }
+func (Keyer) EndOfAccountTable() []byte   { return []byte{TblPrefixAccts + 1} }
 
 // Timeline indexes
 
