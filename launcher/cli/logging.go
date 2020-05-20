@@ -15,15 +15,18 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/blendle/zapdriver"
-	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
 	"github.com/dfuse-io/logging"
 	"github.com/spf13/viper"
@@ -59,6 +62,7 @@ func setupLogger() {
 	verbosity := viper.GetInt("global-verbose")
 	logformat := viper.GetString("global-log-format")
 	logToFile := viper.GetBool("global-log-to-file")
+	listenAddr := viper.GetString("global-log-level-switcher-listen-addr")
 
 	// TODO: The logger expect that the dataDir already exists...
 
@@ -100,6 +104,58 @@ func setupLogger() {
 
 	// Hijack standard Golang `log` and redirect it to our common logger
 	zap.RedirectStdLogAt(commonLogger, zap.DebugLevel)
+
+	if listenAddr != "" {
+		go func() {
+			userLog.Debug("starting atomic level switcher", zap.String("listen_addr", listenAddr))
+			if err := http.ListenAndServe(listenAddr, http.HandlerFunc(handleHTTPLogChange)); err != nil {
+				userLog.Warn("failed starting atomic level switcher", zap.Error(err), zap.String("listen_addr", listenAddr))
+			}
+		}()
+	}
+
+}
+
+type logChangeReq struct {
+	Inputs string `json:"inputs"`
+	Level  string `json:"level"`
+}
+
+func handleHTTPLogChange(w http.ResponseWriter, r *http.Request) {
+
+	b, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("cannot read body: %s", err), 400)
+		return
+	}
+
+	// Unmarshal
+	var in logChangeReq
+	err = json.Unmarshal(b, &in)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("cannot unmarshal JSON body: %s", err), 400)
+		return
+	}
+
+	if in.Inputs == "" {
+		http.Error(w, fmt.Sprintf("inputs not defined, should be comma-separated list of words or a regular expressions: %s", err), 400)
+		return
+	}
+
+	switch strings.ToLower(in.Level) {
+	case "warn", "warning":
+		changeLoggersLevel(in.Inputs, zap.WarnLevel)
+	case "info":
+		changeLoggersLevel(in.Inputs, zap.InfoLevel)
+	case "debug":
+		changeLoggersLevel(in.Inputs, zap.DebugLevel)
+	default:
+		http.Error(w, fmt.Sprintf("invalid value for 'level': %s", in.Level), 400)
+		return
+	}
+
+	w.Write([]byte("ok"))
 }
 
 var appToAtomicLevel = map[string]zap.AtomicLevel{}
