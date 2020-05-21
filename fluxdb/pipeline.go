@@ -54,7 +54,7 @@ func BuildReprocessingPipeline(handler bstream.Handler, blocksStore dstore.Store
 	return source
 }
 
-func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBlock, handler bstream.Handler, liveSource bool, blocksStore dstore.Store, publisherAddr string, parallelDownloadCount int) {
+func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBlock, handler bstream.Handler, blocksStore dstore.Store, publisherAddr string, parallelDownloadCount int) {
 	sf := bstream.SourceFromRefFactory(func(startBlock bstream.BlockRef, h bstream.Handler) bstream.Source {
 		forkHandler := forkable.New(h, forkable.WithExclusiveLIB(startBlock), forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible))
 
@@ -63,17 +63,14 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 		// just before.
 		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, forkHandler)
 
-		var liveSourceFactory bstream.SourceFactory
-		if liveSource {
-			liveSourceFactory = bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
-				return blockstream.NewSource(
-					context.Background(),
-					publisherAddr,
-					250,
-					bstream.NewPreprocessor(PreprocessBlock, subHandler),
-				)
-			})
-		}
+		liveSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
+			return blockstream.NewSource(
+				context.Background(),
+				publisherAddr,
+				250,
+				bstream.NewPreprocessor(PreprocessBlock, subHandler),
+			)
+		})
 
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			fs := bstream.NewFileSource(

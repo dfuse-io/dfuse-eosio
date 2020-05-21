@@ -53,15 +53,16 @@ func New(kvStore store.KVStore) *FluxDB {
 	}
 }
 
-func (fdb *FluxDB) Launch(devMode bool, httpListenAddr string) {
+func (fdb *FluxDB) Launch(enablePipeline bool, httpListenAddr string) {
 	fdb.OnTerminating(func(e error) {
-		zlog.Info("shutting down fluxdb's source")
-		fdb.source.Shutdown(e)
-		zlog.Info("source shutdown")
+		if fdb.source != nil {
+			zlog.Info("shutting down fluxdb's source")
+			fdb.source.Shutdown(e)
+			zlog.Info("source shutdown")
+		}
 	})
 
-	if devMode {
-		// in dev mode we do not want to run the pipeline just a read
+	if !enablePipeline {
 		zlog.Info("not using a pipeline, waiting forever (serve mode)")
 		fdb.SpeculativeWritesFetcher = func(ctx context.Context, headBlockID string, upToBlockNum uint32) (speculativeWrites []*WriteRequest) {
 			return nil
