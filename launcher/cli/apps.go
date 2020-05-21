@@ -631,6 +631,9 @@ func init() {
 			} else {
 				startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
 			}
+			if len(startBlockResolvers) == 0 {
+				return nil, fmt.Errorf("no StartBlockResolver could be set for search indexer")
+			}
 
 			return indexerApp.New(&indexerApp.Config{
 				HTTPListenAddr:        viper.GetString("search-indexer-http-listen-addr"),
@@ -648,8 +651,8 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockMapper:         mapper,
-				StartBlockResolvers: startBlockResolvers,
+				BlockMapper:        mapper,
+				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
 			}), nil
 		},
 	})
