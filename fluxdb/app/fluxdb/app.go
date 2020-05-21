@@ -50,8 +50,8 @@ type Config struct {
 	ReprocShardCount    uint64
 
 	// Available for reproc-shard only
-	ReprocShardStartBlockNum uint64
-	ReprocShardStopBlockNum  uint64
+	ReprocSharderStartBlockNum uint64
+	ReprocSharderStopBlockNum  uint64
 
 	// Available for reproc-injector only
 	ReprocInjectorShardIndex uint64
@@ -146,10 +146,10 @@ func (a *App) startReprocSharder(blocksStore dstore.Store) error {
 		return fmt.Errorf("unable to create shards store at %s: %w", a.config.ReprocShardStoreURL, err)
 	}
 
-	shardingPipe := fluxdb.NewSharder(shardsStore, int(a.config.ReprocShardCount), uint32(a.config.ReprocShardStartBlockNum), uint32(a.config.ReprocShardStopBlockNum))
+	shardingPipe := fluxdb.NewSharder(shardsStore, int(a.config.ReprocShardCount), uint32(a.config.ReprocSharderStartBlockNum), uint32(a.config.ReprocSharderStopBlockNum))
 
 	// FIXME: We should use the new `DPoSLIBNumAtBlockHeightFromBlockStore` to go back as far as neede!
-	source := fluxdb.BuildReprocessingPipeline(shardingPipe, blocksStore, a.config.ReprocShardStartBlockNum, 400, 2)
+	source := fluxdb.BuildReprocessingPipeline(shardingPipe, blocksStore, a.config.ReprocSharderStartBlockNum, 400, 2)
 
 	a.OnTerminating(func(e error) {
 		source.Shutdown(nil)
