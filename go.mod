@@ -19,7 +19,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200520211406-2b44b8c4cbd4
-	github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005
+	github.com/dfuse-io/bstream v0.0.0-20200521131344-08cfb5f2ac91
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0

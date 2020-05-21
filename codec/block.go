@@ -15,6 +15,7 @@
 package codec
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -48,23 +49,30 @@ func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {
 	}, nil
 }
 
-func DPoSLIBNumAtBlockHeightFromBlockStore(blockHeight uint64, blocksStore dstore.Store) (uint64, error) {
-	var dposLibNum uint32
-	var errFound = errors.New("found")
-	num := uint32(blockHeight)
-	fs := bstream.NewFileSource(blocksStore, blockHeight, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
-		blk := block.ToNative().(*pbcodec.Block)
+func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockResolverFunc {
+	return func(ctx context.Context, targetBlockNum uint64) (uint64, string, error) {
+		var dposLibNum uint32
+		var errFound = errors.New("found")
+		num := uint32(targetBlockNum)
+		fs := bstream.NewFileSource(blocksStore, targetBlockNum, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+			blk := block.ToNative().(*pbcodec.Block)
 
-		if blk.Number == num {
-			dposLibNum = blk.DposIrreversibleBlocknum
-			return errFound
+			if blk.Number == num {
+				dposLibNum = blk.DposIrreversibleBlocknum
+				return errFound
+			}
+
+			return nil
+		}))
+		go fs.Run()
+		select {
+		case <-ctx.Done():
+			return 0, "", ctx.Err()
+		case <-fs.Terminated():
 		}
-
-		return nil
-	}))
-	fs.Run()
-	if dposLibNum != 0 {
-		return uint64(dposLibNum), nil
+		if dposLibNum != 0 {
+			return uint64(dposLibNum), "", nil
+		}
+		return 0, "", fs.Err()
 	}
-	return 0, fs.Err()
 }
