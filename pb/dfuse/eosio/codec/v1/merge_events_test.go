@@ -155,3 +155,61 @@ func TestMergeTransactionEvents(t *testing.T) {
 		})
 	}
 }
+
+func Test_deepMergeTransactionTrace(t *testing.T) {
+	a := TransactionTrace{
+		Id:               "trx1",
+		DbOps:            []*DBOp{{Operation: DBOp_OPERATION_INSERT}},
+		DtrxOps:          []*DTrxOp{{Operation: DTrxOp_OPERATION_PUSH_CREATE}},
+		FeatureOps:       []*FeatureOp{{Kind: "featureA"}},
+		PermOps:          []*PermOp{{Operation: PermOp_OPERATION_INSERT}},
+		RamOps:           []*RAMOp{{Operation: RAMOp_OPERATION_DEFERRED_TRX_PUSHED}},
+		RamCorrectionOps: []*RAMCorrectionOp{{CorrectionId: "correctionA"}},
+		RlimitOps:        []*RlimitOp{{Operation: RlimitOp_OPERATION_INSERT}},
+		TableOps:         []*TableOp{{Operation: TableOp_OPERATION_INSERT}},
+	}
+	b := TransactionTrace{
+		Id:               "trx1",
+		DbOps:            []*DBOp{{Operation: DBOp_OPERATION_UPDATE}},
+		DtrxOps:          []*DTrxOp{{Operation: DTrxOp_OPERATION_CANCEL}},
+		FeatureOps:       []*FeatureOp{{Kind: "featureB"}},
+		PermOps:          []*PermOp{{Operation: PermOp_OPERATION_UPDATE}},
+		RamOps:           []*RAMOp{{Operation: RAMOp_OPERATION_DEFERRED_TRX_REMOVED}},
+		RamCorrectionOps: []*RAMCorrectionOp{{CorrectionId: "correctionB"}},
+		RlimitOps:        []*RlimitOp{{Operation: RlimitOp_OPERATION_UPDATE}},
+		TableOps:         []*TableOp{{Operation: TableOp_OPERATION_REMOVE}},
+	}
+	r1 := deepMergeTransactionTrace(&a, &b)
+	assert.Equal(t, []*DBOp{{Operation: DBOp_OPERATION_INSERT}, {Operation: DBOp_OPERATION_UPDATE}}, r1.DbOps)
+	assert.Equal(t, []*DTrxOp{{Operation: DTrxOp_OPERATION_PUSH_CREATE}, {Operation: DTrxOp_OPERATION_CANCEL}}, r1.DtrxOps)
+	assert.Equal(t, []*FeatureOp{{Kind: "featureA"}, {Kind: "featureB"}}, r1.FeatureOps)
+	assert.Equal(t, []*PermOp{{Operation: PermOp_OPERATION_INSERT}, {Operation: PermOp_OPERATION_UPDATE}}, r1.PermOps)
+	assert.Equal(t, []*RAMOp{{Operation: RAMOp_OPERATION_DEFERRED_TRX_PUSHED}, {Operation: RAMOp_OPERATION_DEFERRED_TRX_REMOVED}}, r1.RamOps)
+	assert.Equal(t, []*RAMCorrectionOp{{CorrectionId: "correctionA"}, {CorrectionId: "correctionB"}}, r1.RamCorrectionOps)
+	assert.Equal(t, []*RlimitOp{{Operation: RlimitOp_OPERATION_INSERT}, {Operation: RlimitOp_OPERATION_UPDATE}}, r1.RlimitOps)
+	assert.Equal(t, []*TableOp{{Operation: TableOp_OPERATION_INSERT}, {Operation: TableOp_OPERATION_REMOVE}}, r1.TableOps)
+
+	d := TransactionTrace{
+		Id: "trx1",
+	}
+	r2 := deepMergeTransactionTrace(&a, &d)
+	assert.Equal(t, []*DBOp{{Operation: DBOp_OPERATION_INSERT}}, r2.DbOps)
+	assert.Equal(t, []*DTrxOp{{Operation: DTrxOp_OPERATION_PUSH_CREATE}}, r2.DtrxOps)
+	assert.Equal(t, []*FeatureOp{{Kind: "featureA"}}, r2.FeatureOps)
+	assert.Equal(t, []*PermOp{{Operation: PermOp_OPERATION_INSERT}}, r2.PermOps)
+	assert.Equal(t, []*RAMOp{{Operation: RAMOp_OPERATION_DEFERRED_TRX_PUSHED}}, r2.RamOps)
+	assert.Equal(t, []*RAMCorrectionOp{{CorrectionId: "correctionA"}}, r2.RamCorrectionOps)
+	assert.Equal(t, []*RlimitOp{{Operation: RlimitOp_OPERATION_INSERT}}, r2.RlimitOps)
+	assert.Equal(t, []*TableOp{{Operation: TableOp_OPERATION_INSERT}}, r2.TableOps)
+
+	r3 := deepMergeTransactionTrace(nil, &b)
+	assert.Equal(t, []*DBOp{{Operation: DBOp_OPERATION_UPDATE}}, r3.DbOps)
+	assert.Equal(t, []*DTrxOp{{Operation: DTrxOp_OPERATION_CANCEL}}, r3.DtrxOps)
+	assert.Equal(t, []*FeatureOp{{Kind: "featureB"}}, r3.FeatureOps)
+	assert.Equal(t, []*PermOp{{Operation: PermOp_OPERATION_UPDATE}}, r3.PermOps)
+	assert.Equal(t, []*RAMOp{{Operation: RAMOp_OPERATION_DEFERRED_TRX_REMOVED}}, r3.RamOps)
+	assert.Equal(t, []*RAMCorrectionOp{{CorrectionId: "correctionB"}}, r3.RamCorrectionOps)
+	assert.Equal(t, []*RlimitOp{{Operation: RlimitOp_OPERATION_UPDATE}}, r3.RlimitOps)
+	assert.Equal(t, []*TableOp{{Operation: TableOp_OPERATION_REMOVE}}, r3.TableOps)
+
+}

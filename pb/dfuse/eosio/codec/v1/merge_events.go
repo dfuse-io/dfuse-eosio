@@ -56,45 +56,37 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 		}
 
 		switch ev := evi.Event.(type) {
-		case *TransactionEvent_Addition: // 00
+		case *TransactionEvent_Addition:
 			if skip(&additionsIrr) {
 				continue
 			}
-
 			out.TransactionReceipt = ev.Addition.Receipt
 			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
-			// the DtrxScheduling event's transaction is the one we would
-			// want to represent the final merged transaction. Since we have no
-			// guaranty on the order of the events inputted into the merger
-			// we do a sanity check and insure that we are not overriding an already
-			// specified transaction
-			if out.Transaction == nil {
-				out.Transaction = ev.Addition.Transaction
-			}
+			out.Transaction = ev.Addition.Transaction
 
-		case *TransactionEvent_InternalAddition: // 00
+		case *TransactionEvent_InternalAddition:
 			if skip(&intAdditionsIrr) {
 				continue
 			}
+			out.Transaction = ev.InternalAddition.Transaction
 
-			// the DtrxScheduling event's transaction is the one we would
-			// want to represent the final merged transaction. Since we have no
-			// guaranty on the order of the events inputted into the merger
-			// we do a sanity check and insure that we are not overriding an already
-			// specified transaction
-			if out.Transaction == nil {
-				out.Transaction = ev.InternalAddition.Transaction
-			}
-		case *TransactionEvent_Execution: // 05
+		case *TransactionEvent_Execution:
 			if skip(&execIrr) {
 				continue
 			}
+			// In the case of a deferred transaction push (using CLI and `--delay-sec`)
+			// it will have 2 execution traces, the first one when the delayed transaction got
+			// pushed on the chain for later execution (that costs ram...) and the second
+			// when the the transaction actually got executed. Thus we must merge the
+			// RamOps, DbOps, DtrxOps, etc... to ensure that we have an accurate representation
+			// of the execution trace
+			mergedExectuionTrace := deepMergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
+			out.ExecutionTrace = &mergedExectuionTrace
 
-			out.ExecutionTrace = ev.Execution.Trace
 			out.ExecutionBlockHeader = ev.Execution.BlockHeader
 			out.ExecutionIrreversible = evi.Irreversible
 
-		case *TransactionEvent_DtrxScheduling: // 04
+		case *TransactionEvent_DtrxScheduling:
 			if skip(&dtrxCreateIrr) {
 				continue
 			}
@@ -103,7 +95,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.Transaction = ev.DtrxScheduling.Transaction
 			out.CreationIrreversible = evi.Irreversible
 
-		case *TransactionEvent_DtrxCancellation: // 04
+		case *TransactionEvent_DtrxCancellation:
 			if skip(&dtrxCancelIrr) {
 				continue
 			}
@@ -167,4 +159,21 @@ func getTransactionLifeCycleStatus(lifeCycle *TransactionLifecycle) TransactionS
 
 	// Expired Failed Executed
 	return lifeCycle.ExecutionTrace.Receipt.Status
+}
+
+// the way this is use tells us that other can never be nil.
+func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
+	if base == nil {
+		return *other
+	}
+	trace := *base
+	trace.DbOps = append(base.DbOps, other.DbOps...)
+	trace.DtrxOps = append(base.DtrxOps, other.DtrxOps...)
+	trace.FeatureOps = append(base.FeatureOps, other.FeatureOps...)
+	trace.PermOps = append(base.PermOps, other.PermOps...)
+	trace.RamOps = append(base.RamOps, other.RamOps...)
+	trace.RamCorrectionOps = append(base.RamCorrectionOps, other.RamCorrectionOps...)
+	trace.RlimitOps = append(base.RlimitOps, other.RlimitOps...)
+	trace.TableOps = append(base.TableOps, other.TableOps...)
+	return trace
 }
