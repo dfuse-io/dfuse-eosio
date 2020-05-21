@@ -263,7 +263,6 @@ func (a *Action) UnmarshalData(into interface{}) error {
 //
 /// DTrxOp
 //
-
 func (op *DTrxOp) IsCreateOperation() bool {
 	return op.Operation == DTrxOp_OPERATION_MODIFY_CREATE ||
 		op.Operation == DTrxOp_OPERATION_CREATE ||
@@ -272,6 +271,10 @@ func (op *DTrxOp) IsCreateOperation() bool {
 
 func (op *DTrxOp) IsCancelOperation() bool {
 	return op.Operation == DTrxOp_OPERATION_MODIFY_CANCEL || op.Operation == DTrxOp_OPERATION_CANCEL
+}
+
+func (op *DTrxOp) IsFailedOperation() bool {
+	return op.Operation == DTrxOp_OPERATION_FAILED
 }
 
 func (op *DTrxOp) LegacyOperation() string {

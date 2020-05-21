@@ -56,23 +56,36 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 		}
 
 		switch ev := evi.Event.(type) {
-		case *TransactionEvent_Addition:
+		case *TransactionEvent_Addition: // 00
 			if skip(&additionsIrr) {
 				continue
 			}
 
 			out.TransactionReceipt = ev.Addition.Receipt
-			out.Transaction = ev.Addition.Transaction
 			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
+			// the DtrxScheduling event's transaction is the one we would
+			// want to represent the final merged transaction. Since we have no
+			// guaranty on the order of the events inputted into the merger
+			// we do a sanity check and insure that we are not overriding an already
+			// specified transaction
+			if out.Transaction == nil {
+				out.Transaction = ev.Addition.Transaction
+			}
 
-		case *TransactionEvent_InternalAddition:
+		case *TransactionEvent_InternalAddition: // 00
 			if skip(&intAdditionsIrr) {
 				continue
 			}
 
-			out.Transaction = ev.InternalAddition.Transaction
-
-		case *TransactionEvent_Execution:
+			// the DtrxScheduling event's transaction is the one we would
+			// want to represent the final merged transaction. Since we have no
+			// guaranty on the order of the events inputted into the merger
+			// we do a sanity check and insure that we are not overriding an already
+			// specified transaction
+			if out.Transaction == nil {
+				out.Transaction = ev.InternalAddition.Transaction
+			}
+		case *TransactionEvent_Execution: // 05
 			if skip(&execIrr) {
 				continue
 			}
@@ -81,7 +94,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.ExecutionBlockHeader = ev.Execution.BlockHeader
 			out.ExecutionIrreversible = evi.Irreversible
 
-		case *TransactionEvent_DtrxScheduling:
+		case *TransactionEvent_DtrxScheduling: // 04
 			if skip(&dtrxCreateIrr) {
 				continue
 			}
@@ -90,7 +103,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.Transaction = ev.DtrxScheduling.Transaction
 			out.CreationIrreversible = evi.Irreversible
 
-		case *TransactionEvent_DtrxCancellation:
+		case *TransactionEvent_DtrxCancellation: // 04
 			if skip(&dtrxCancelIrr) {
 				continue
 			}

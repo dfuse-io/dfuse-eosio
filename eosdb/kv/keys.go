@@ -21,6 +21,10 @@ const (
 
 	idxPrefixTimelineFwd = 0x80
 	idxPrefixTimelineBck = 0x81
+
+	dtrxSuffixCreated   = 0x90
+	dtrxSuffixCancelled = 0x91
+	dtrxSuffixFailed    = 0x92
 )
 
 var Keys Keyer
@@ -130,13 +134,32 @@ func (Keyer) StartOfImplicitTrxsTable() []byte { return []byte{TblPrefixImplTrxs
 func (Keyer) EndOfImplicitTrxsTable() []byte   { return []byte{TblPrefixImplTrxs + 1} }
 
 // Dtrx virt table
+func (k Keyer) PackDtrxsKeyCreated(trxID, blockID string) []byte {
+	return k.packDtrxsKey(trxID, blockID, dtrxSuffixCreated)
+}
 
-func (k Keyer) PackDtrxsKey(trxID, blockID string) []byte {
-	return k.packTrxBlockIDKey(TblPrefixDtrxs, trxID, blockID)
+func (k Keyer) PackDtrxsKeyFailed(trxID, blockID string) []byte {
+	return k.packDtrxsKey(trxID, blockID, dtrxSuffixFailed)
+}
+
+func (k Keyer) PackDtrxsKeyCancelled(trxID, blockID string) []byte {
+	return k.packDtrxsKey(trxID, blockID, dtrxSuffixCancelled)
+}
+
+func (k Keyer) packDtrxsKey(trxID, blockID string, dtrxSuffix byte) []byte {
+	id, err := hex.DecodeString(trxID + blockID)
+	if err != nil {
+		panic(fmt.Sprintf("invalid trx ID %q or block ID %q: %s", trxID, blockID, err))
+	}
+	key := append([]byte{TblPrefixDtrxs}, id...)
+	return append(key, []byte{dtrxSuffix}...)
 }
 
 func (k Keyer) UnpackDtrxsKey(key []byte) (trxID, blockID string) {
-	return k.unpackTrxBlockIDKey(key)
+	if len(key) != 66 {
+		panic("invalid key length")
+	}
+	return hex.EncodeToString(key[1:33]), hex.EncodeToString(key[33:65])
 }
 
 func (k Keyer) PackDtrxsPrefix(trxID string) []byte {
@@ -219,8 +242,6 @@ func (Keyer) EndOfTimelineIndex(fwd bool) []byte {
 	}
 	return []byte{idxPrefixTimelineBck + 1}
 }
-
-// Common
 
 func (Keyer) packTrxBlockIDKey(prefix byte, trxID, blockID string) []byte {
 	id, err := hex.DecodeString(trxID + blockID)
