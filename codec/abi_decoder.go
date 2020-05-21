@@ -209,7 +209,7 @@ func (c *ABIDecoder) processTransaction(trxTrace *pbcodec.TransactionTrace) erro
 	}
 
 	for _, dtrxOp := range trxTrace.DtrxOps {
-		// A deferred transaction push in the blockchain (using CLI and `--delay-sec`) does not any action trace,
+		// A deferred transaction push in the blockchain (using CLI and `--delay-sec`) does not have any action trace,
 		// let's use the most recent active ABI global sequence in those cases.
 		globalSequence := mostRecentActiveABI
 		if dtrxOp.Operation != pbcodec.DTrxOp_OPERATION_PUSH_CREATE {

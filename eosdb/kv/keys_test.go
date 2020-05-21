@@ -30,3 +30,38 @@ func TestKeyer_PackTimelineKey(t *testing.T) {
 	require.Equal(t, expectedBlockID, blockID)
 	require.Equal(t, expectedBlockTime, blockTime)
 }
+
+func TestKeyer_PackDtrxsKeyCreated(t *testing.T) {
+	expectedBlockID := "0000001aafcedbf5e651b27bee47c8a28de01635b5029ac2ce32896a1bcb1615"
+	expectedTrxID := "f2c8602f6d2b8241894383b22614a82740338d3f5c34961c0c82b382ac9e11ae"
+
+	packed := Keys.PackDtrxsKeyCreated(expectedTrxID, expectedBlockID)
+	trxID, blockID := Keys.UnpackDtrxsKey(packed)
+	require.Equal(t, uint8(dtrxSuffixCreated), packed[65])
+	require.Equal(t, expectedBlockID, blockID)
+	require.Equal(t, expectedTrxID, trxID)
+}
+
+func TestKeyer_PackDtrxsKeyCancelled(t *testing.T) {
+	expectedBlockID := "0000001aafcedbf5e651b27bee47c8a28de01635b5029ac2ce32896a1bcb1615"
+	expectedTrxID := "f2c8602f6d2b8241894383b22614a82740338d3f5c34961c0c82b382ac9e11ae"
+
+	packed := Keys.PackDtrxsKeyCancelled(expectedTrxID, expectedBlockID)
+	trxID, blockID := Keys.UnpackDtrxsKey(packed)
+	require.Equal(t, uint8(dtrxSuffixCancelled), packed[65])
+	require.Equal(t, expectedBlockID, blockID)
+	require.Equal(t, expectedTrxID, trxID)
+
+}
+
+func TestKeyer_PackDtrxsKeyFailed(t *testing.T) {
+	expectedBlockID := "0000001aafcedbf5e651b27bee47c8a28de01635b5029ac2ce32896a1bcb1615"
+	expectedTrxID := "f2c8602f6d2b8241894383b22614a82740338d3f5c34961c0c82b382ac9e11ae"
+
+	packed := Keys.PackDtrxsKeyFailed(expectedTrxID, expectedBlockID)
+	trxID, blockID := Keys.UnpackDtrxsKey(packed)
+	require.Equal(t, uint8(dtrxSuffixFailed), packed[65])
+	require.Equal(t, expectedBlockID, blockID)
+	require.Equal(t, expectedTrxID, trxID)
+
+}
