@@ -17,6 +17,8 @@ package pbcodec
 import (
 	"fmt"
 	"sort"
+
+	"go.uber.org/zap"
 )
 
 func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(blockID string) bool) *TransactionLifecycle {
@@ -57,7 +59,9 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 
 		switch ev := evi.Event.(type) {
 		case *TransactionEvent_Addition:
+			zlog.Debug("merging: addition event", zap.String("trx_id", evi.Id))
 			if skip(&additionsIrr) {
+				zlog.Debug("merging: addition event SKIPPING", zap.String("trx_id", evi.Id))
 				continue
 			}
 			out.TransactionReceipt = ev.Addition.Receipt
@@ -65,13 +69,27 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.Transaction = ev.Addition.Transaction
 
 		case *TransactionEvent_InternalAddition:
+			zlog.Debug("merging: internal addition event", zap.String("trx_id", evi.Id))
 			if skip(&intAdditionsIrr) {
+				zlog.Debug("merging: internal addition event SKIPPING", zap.String("trx_id", evi.Id))
 				continue
 			}
 			out.Transaction = ev.InternalAddition.Transaction
 
 		case *TransactionEvent_Execution:
+			if ev.Execution.Trace.Receipt != nil {
+				zlog.Debug("merging: execution event", zap.String("trx_id", evi.Id), zap.String("status", ev.Execution.Trace.Receipt.Status.String()))
+			} else {
+				zlog.Debug("merging: execution event", zap.String("trx_id", evi.Id))
+			}
+
 			if skip(&execIrr) {
+				if ev.Execution.Trace.Receipt != nil {
+					zlog.Debug("merging: execution event SKIPPING", zap.String("trx_id", evi.Id), zap.String("status", ev.Execution.Trace.Receipt.Status.String()))
+				} else {
+					zlog.Debug("merging: execution event SKIPPING", zap.String("trx_id", evi.Id))
+				}
+
 				continue
 			}
 			// In the case of a deferred transaction push (using CLI and `--delay-sec`)
@@ -87,20 +105,26 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			out.ExecutionIrreversible = evi.Irreversible
 
 		case *TransactionEvent_DtrxScheduling:
+			zlog.Debug("merging: dtrx scheduling event", zap.String("trx_id", evi.Id))
 			if skip(&dtrxCreateIrr) {
+				zlog.Debug("merging: dtrx scheduling event SKIPPING", zap.String("trx_id", evi.Id))
 				continue
 			}
 
 			out.CreatedBy = ev.DtrxScheduling.CreatedBy
 			out.Transaction = ev.DtrxScheduling.Transaction
+			out.Transaction = ev.DtrxScheduling.Transaction
 			out.CreationIrreversible = evi.Irreversible
 
 		case *TransactionEvent_DtrxCancellation:
+			zlog.Debug("merging: dtrx cancellation event", zap.String("trx_id", evi.Id))
 			if skip(&dtrxCancelIrr) {
+				zlog.Debug("merging: dtrx cancellation event SKIPPING", zap.String("trx_id", evi.Id))
 				continue
 			}
 
 			if execIrr {
+				zlog.Debug("merging: dtrx cancellation event SKIPPING BETA", zap.String("trx_id", evi.Id))
 				continue
 			}
 
@@ -163,9 +187,18 @@ func getTransactionLifeCycleStatus(lifeCycle *TransactionLifecycle) TransactionS
 
 // the way this is use tells us that other can never be nil.
 func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
+	zlog.Debug("deep merging transaction traces",
+		zap.String("other_trx_id", other.Id),
+	)
 	if base == nil {
+		zlog.Debug("based not defined returning others")
 		return *other
+
 	}
+	zlog.Debug("merging transaction traces",
+		zap.String("base_trx_id", base.Id),
+		zap.String("other_trx_id", other.Id),
+	)
 	trace := *base
 	trace.DbOps = append(base.DbOps, other.DbOps...)
 	trace.DtrxOps = append(base.DtrxOps, other.DtrxOps...)
