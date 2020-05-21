@@ -256,6 +256,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7 h1:f22fXz2Yt0ukRy+
 github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
 github.com/dfuse-io/relayer v0.0.0-20200428165403-4830385b8321 h1:tvZ7zQ8dqisrJIhV1wD1kTLZ4EbJs5Xi7jD9CKplpwI=
 github.com/dfuse-io/relayer v0.0.0-20200428165403-4830385b8321/go.mod h1:PtRbKs7SpIHmJx1mlNLFf7uMVpcM+q9nNXQyxp8fYA4=
+github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3 h1:CyFMS1Ot7k/I1zKCOl9sAdB5MOTEelbfPSRJzviqSw8=
+github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3/go.mod h1:PtRbKs7SpIHmJx1mlNLFf7uMVpcM+q9nNXQyxp8fYA4=
 github.com/dfuse-io/search v0.0.0-20200505163545-3dd677c79956 h1:wbw1zdhuCWaFTv8BphWcQIdif4T5HXzNNGpqUwrdkXw=
 github.com/dfuse-io/search v0.0.0-20200505163545-3dd677c79956/go.mod h1:Eo2fahi4IpejKac8NYFGuLr/67BcfVVKWylburL5Z9s=
 github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237 h1:SPZXhXyMKFk0it75YzUzCvBcTg7qOpCL1ChSkHnPT0U=
