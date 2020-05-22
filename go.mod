@@ -19,7 +19,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200520211406-2b44b8c4cbd4
-	github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005
+	github.com/dfuse-io/bstream v0.0.0-20200521210312-6605c52f17f2
 	github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
@@ -39,9 +39,9 @@ require (
 	github.com/dfuse-io/manageos v0.0.0-20200513125910-693572e329bc
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200416162543-0b634dd507d7
+	github.com/dfuse-io/pbgo v0.0.6-0.20200521184130-14ac4bd51a73
 	github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
-	github.com/dfuse-io/search v0.0.0-20200505163545-3dd677c79956
+	github.com/dfuse-io/search v0.0.0-20200521210838-d9a47b4b03f7
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a

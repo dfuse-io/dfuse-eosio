@@ -41,10 +41,13 @@ import (
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
+	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dstore"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
 	"github.com/dfuse-io/manageos/mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	archiveApp "github.com/dfuse-io/search/app/archive"
 	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
@@ -589,7 +592,6 @@ func init() {
 			cmd.Flags().Int("search-indexer-start-block", 0, "Start indexing from block num")
 			cmd.Flags().Uint("search-indexer-stop-block", 0, "Stop indexing at block num")
 			cmd.Flags().Bool("search-indexer-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stoip block")
-			cmd.Flags().Uint("search-indexer-num-blocks-before-start", 0, "Number of blocks to fetch before start block")
 			cmd.Flags().Bool("search-indexer-verbose", false, "Verbose logging")
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")
@@ -610,25 +612,47 @@ func init() {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
 			}
 
+			var startBlockResolvers []bstream.StartBlockResolver
+			blockmetaAddr := viper.GetString("common-blockmeta-addr")
+			if blockmetaAddr != "" {
+				conn, err := dgrpc.NewInternalClient(blockmetaAddr)
+				if err != nil {
+					userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
+				} else {
+					blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
+					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolverFunc(pbblockmeta.StartBlockResolver(blockmetaCli)))
+				}
+			}
+
+			blocksStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
+			blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
+			if err != nil {
+				userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
+			} else {
+				startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
+			}
+			if len(startBlockResolvers) == 0 {
+				return nil, fmt.Errorf("no StartBlockResolver could be set for search indexer")
+			}
+
 			return indexerApp.New(&indexerApp.Config{
-				HTTPListenAddr:                      viper.GetString("search-indexer-http-listen-addr"),
-				GRPCListenAddr:                      viper.GetString("search-indexer-grpc-listen-addr"),
-				BlockstreamAddr:                     viper.GetString("common-blockstream-addr"),
-				ShardSize:                           viper.GetUint64("search-indexer-shard-size"),
-				StartBlock:                          int64(viper.GetInt("search-indexer-start-block")),
-				StopBlock:                           viper.GetUint64("search-indexer-stop-block"),
-				IsVerbose:                           viper.GetBool("search-indexer-verbose"),
-				EnableBatchMode:                     viper.GetBool("search-indexer-enable-batch-mode"),
-				BlockmetaAddr:                       viper.GetString("common-blockmeta-addr"),
-				NumberOfBlocksToFetchBeforeStarting: viper.GetUint64("search-indexer-num-blocks-before-start"),
-				EnableUpload:                        viper.GetBool("search-indexer-enable-upload"),
-				DeleteAfterUpload:                   viper.GetBool("search-indexer-delete-after-upload"),
-				EnableIndexTruncation:               viper.GetBool("search-indexer-enable-index-truncation"),
-				WritablePath:                        mustReplaceDataDir(dfuseDataDir, viper.GetString("search-indexer-writable-path")),
-				IndicesStoreURL:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
-				BlocksStoreURL:                      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				HTTPListenAddr:        viper.GetString("search-indexer-http-listen-addr"),
+				GRPCListenAddr:        viper.GetString("search-indexer-grpc-listen-addr"),
+				BlockstreamAddr:       viper.GetString("common-blockstream-addr"),
+				ShardSize:             viper.GetUint64("search-indexer-shard-size"),
+				StartBlock:            int64(viper.GetInt("search-indexer-start-block")),
+				StopBlock:             viper.GetUint64("search-indexer-stop-block"),
+				IsVerbose:             viper.GetBool("search-indexer-verbose"),
+				EnableBatchMode:       viper.GetBool("search-indexer-enable-batch-mode"),
+				EnableUpload:          viper.GetBool("search-indexer-enable-upload"),
+				DeleteAfterUpload:     viper.GetBool("search-indexer-delete-after-upload"),
+				EnableIndexTruncation: viper.GetBool("search-indexer-enable-index-truncation"),
+				WritablePath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-indexer-writable-path")),
+				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
+				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockMapper: mapper,
+				BlockMapper:        mapper,
+				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
 			}), nil
 		},
 	})

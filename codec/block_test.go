@@ -15,6 +15,7 @@
 package codec
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -23,7 +24,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_DPoSLIBNumAtBlockHeightFromBlockStore(t *testing.T) {
+func Test_BlockstoreStartBlockResolver_Canceled(t *testing.T) {
+	bs := dstore.NewMockStore(nil)
+	resolver := BlockstoreStartBlockResolver(bs)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	found, irrID, err := resolver(ctx, 10)
+	require.Equal(t, context.Canceled, err)
+	assert.Equal(t, uint64(0), found)
+	assert.Equal(t, "", irrID)
+}
+
+func Test_BlockstoreStartBlockResolver(t *testing.T) {
 	sourceStoreURL := os.Getenv("TEST_SOURCE_STORE_URL") // based on eos-mainnet chain
 	if sourceStoreURL == "" {
 		t.Skip()
@@ -31,8 +45,10 @@ func Test_DPoSLIBNumAtBlockHeightFromBlockStore(t *testing.T) {
 	bs, err := dstore.NewDBinStore(sourceStoreURL)
 	require.NoError(t, err)
 
-	found, err := DPoSLIBNumAtBlockHeightFromBlockStore(1000000, bs)
+	resolver := BlockstoreStartBlockResolver(bs)
+	found, irrID, err := resolver(context.Background(), 1000001)
 	require.NoError(t, err)
 	assert.Equal(t, uint64(999673), found)
+	assert.Equal(t, "", irrID)
 
 }
