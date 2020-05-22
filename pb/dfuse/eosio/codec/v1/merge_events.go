@@ -42,18 +42,18 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 		}
 
 		skip := func(seenIrrMark *bool) bool {
-			if *seenIrrMark && !inCanonicalChain(evi.BlockId) {
-				// if you have seen IRR skip this event
+			if *seenIrrMark && !evi.Irreversible {
+				// if you have seen IRR and you are aren't an IRR event SKIP
 				return true
 			}
 
 			if !evi.Irreversible && !inCanonicalChain(evi.BlockId) {
-				// if you aren't an event from IRR and you aren't in the longest chian skip it
+				// IF YOU ARE NOT IRR AND YOU ARE NOT IN THE LONGEST CHAIN SKIP
 				return true
 			}
 
 			if evi.Irreversible {
-				//if you are irr skip futeu
+				// IF YOU ARE IRR MARK AS IRR SEEN
 				*seenIrrMark = true
 			}
 
@@ -127,7 +127,6 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			}
 
 			if execIrr {
-				zlog.Debug("merging: dtrx cancellation event SKIPPING BETA", zap.String("trx_id", evi.Id))
 				continue
 			}
 
@@ -160,7 +159,7 @@ func sortEvents(events []*TransactionEvent) []*TransactionEvent {
 		if events[i].BlockNum == events[j].BlockNum {
 			return events[i].Irreversible
 		}
-		return (events[i].BlockNum < events[j].BlockNum)
+		return (events[i].BlockNum < events[j].BlockNum) // from low to high
 	})
 	return events
 }
@@ -205,7 +204,7 @@ func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
 		zap.String("base_trx_id", base.Id),
 		zap.String("other_trx_id", other.Id),
 	)
-	trace := *base
+	trace := *other
 
 	if trace.Receipt != nil &&
 		other.Receipt != nil &&
@@ -215,13 +214,13 @@ func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
 		trace.Receipt.Status = other.Receipt.Status
 	}
 
-	trace.DbOps = append(base.DbOps, other.DbOps...)
-	trace.DtrxOps = append(base.DtrxOps, other.DtrxOps...)
-	trace.FeatureOps = append(base.FeatureOps, other.FeatureOps...)
-	trace.PermOps = append(base.PermOps, other.PermOps...)
-	trace.RamOps = append(base.RamOps, other.RamOps...)
-	trace.RamCorrectionOps = append(base.RamCorrectionOps, other.RamCorrectionOps...)
-	trace.RlimitOps = append(base.RlimitOps, other.RlimitOps...)
-	trace.TableOps = append(base.TableOps, other.TableOps...)
+	trace.DbOps = append(base.DbOps, base.DbOps...)
+	trace.DtrxOps = append(base.DtrxOps, base.DtrxOps...)
+	trace.FeatureOps = append(base.FeatureOps, base.FeatureOps...)
+	trace.PermOps = append(base.PermOps, base.PermOps...)
+	trace.RamOps = append(base.RamOps, base.RamOps...)
+	trace.RamCorrectionOps = append(base.RamCorrectionOps, base.RamCorrectionOps...)
+	trace.RlimitOps = append(base.RlimitOps, base.RlimitOps...)
+	trace.TableOps = append(base.TableOps, base.TableOps...)
 	return trace
 }
