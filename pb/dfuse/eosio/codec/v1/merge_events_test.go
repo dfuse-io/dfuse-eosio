@@ -15,6 +15,7 @@
 package pbcodec
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -62,102 +63,102 @@ func TestMergeTransactionEvents(t *testing.T) {
 		canonicalChain func(t *testing.T, id string) bool
 		expect         *TransactionLifecycle
 	}{
-		//{
-		//	name: "single, irreversible event",
-		//	events: []*TransactionEvent{
-		//		{Id: "trx1", BlockId: "abc", Irreversible: true, Event: NewTestAddEvent(1)},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		fmt.Println("CHECKED", id)
-		//		return true
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                 "trx1",
-		//		TransactionReceipt: &TransactionReceipt{Index: 1},
-		//	},
-		//},
-		//{
-		//	name: "two additions, none irr, check canonical chain",
-		//	events: []*TransactionEvent{
-		//		{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestAddEvent(1)}, // skip this one since it isn't IRR and is NOT in the longest chain
-		//		{Id: "trx1", BlockId: "b", Irreversible: false, Event: NewTestAddEvent(2)},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		return id == "b"
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                 "trx1",
-		//		TransactionReceipt: &TransactionReceipt{Index: 2},
-		//	},
-		//},
-		//{
-		//	name: "multiple, select the irr of each kind, never call canonical chain",
-		//	events: []*TransactionEvent{
-		//		{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestAddEvent(1)},
-		//		{Id: "trx1", BlockId: "b", Irreversible: false, Event: NewTestAddEvent(2)},
-		//		{Id: "trx1", BlockId: "c", Irreversible: true, Event: NewTestAddEvent(3)},
-		//
-		//		{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestExecEvent(4)},
-		//		{Id: "trx1", BlockId: "e", Irreversible: false, Event: NewTestExecEvent(5)},
-		//		{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		t.Error("we said never call canonicalChain!")
-		//		return true
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                    "trx1",
-		//		TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-		//		TransactionReceipt:    &TransactionReceipt{Index: 3},
-		//		ExecutionTrace:        &TransactionTrace{Index: 6},
-		//		ExecutionIrreversible: true,
-		//	},
-		//},
-		//{
-		//	name: "multiple, select one of each, ignore dtrx cancels if execution irreversible",
-		//	events: []*TransactionEvent{
-		//		{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestDtrxCreateEvent("1")},
-		//		{Id: "trx1", BlockId: "b", Irreversible: true, Event: NewTestDtrxCreateEvent("2")},
-		//		{Id: "trx1", BlockId: "c", Irreversible: false, Event: NewTestDtrxCreateEvent("3")},
-		//
-		//		{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestExecEvent(4)},
-		//		{Id: "trx1", BlockId: "e", Irreversible: false, Event: NewTestExecEvent(5)},
-		//		{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
-		//
-		//		{Id: "trx1", BlockId: "call1", Irreversible: false, Event: NewTestDtrxCancelEvent("1")},
-		//		{Id: "trx1", BlockId: "call2", Irreversible: false, Event: NewTestDtrxCancelEvent("2")},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		if id == "call1" || id == "call2" {
-		//			return true
-		//		}
-		//		t.Error("don't call canonicalChain otherwise")
-		//		return true
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                    "trx1",
-		//		TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-		//		ExecutionTrace:        &TransactionTrace{Index: 6},
-		//		ExecutionIrreversible: true,
-		//		CreationIrreversible:  true,
-		//		CreatedBy:             &ExtDTrxOp{SourceTransactionId: "2"}},
-		//},
-		//{
-		//	name: "cancellation arrives before irreversible execution, should not show cancelled at all",
-		//	events: []*TransactionEvent{
-		//		{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestDtrxCancelEvent("1")},
-		//		{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		return true
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                    "trx1",
-		//		TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-		//		ExecutionTrace:        &TransactionTrace{Index: 6},
-		//		ExecutionIrreversible: true,
-		//	},
-		//},
+		{
+			name: "single, irreversible event",
+			events: []*TransactionEvent{
+				{Id: "trx1", BlockId: "abc", Irreversible: true, Event: NewTestAddEvent(1)},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				fmt.Println("CHECKED", id)
+				return true
+			},
+			expect: &TransactionLifecycle{
+				Id:                 "trx1",
+				TransactionReceipt: &TransactionReceipt{Index: 1},
+			},
+		},
+		{
+			name: "two additions, none irr, check canonical chain",
+			events: []*TransactionEvent{
+				{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestAddEvent(1)}, // skip this one since it isn't IRR and is NOT in the longest chain
+				{Id: "trx1", BlockId: "b", Irreversible: false, Event: NewTestAddEvent(2)},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				return id == "b"
+			},
+			expect: &TransactionLifecycle{
+				Id:                 "trx1",
+				TransactionReceipt: &TransactionReceipt{Index: 2},
+			},
+		},
+		{
+			name: "multiple, select the irr of each kind, never call canonical chain",
+			events: []*TransactionEvent{
+				{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestAddEvent(1)},
+				{Id: "trx1", BlockId: "b", Irreversible: false, Event: NewTestAddEvent(2)},
+				{Id: "trx1", BlockId: "c", Irreversible: true, Event: NewTestAddEvent(3)},
+
+				{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestExecEvent(4)},
+				{Id: "trx1", BlockId: "e", Irreversible: false, Event: NewTestExecEvent(5)},
+				{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				t.Error("we said never call canonicalChain!")
+				return true
+			},
+			expect: &TransactionLifecycle{
+				Id:                    "trx1",
+				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
+				TransactionReceipt:    &TransactionReceipt{Index: 3},
+				ExecutionTrace:        &TransactionTrace{Index: 6},
+				ExecutionIrreversible: true,
+			},
+		},
+		{
+			name: "multiple, select one of each, ignore dtrx cancels if execution irreversible",
+			events: []*TransactionEvent{
+				{Id: "trx1", BlockId: "a", Irreversible: false, Event: NewTestDtrxCreateEvent("1")},
+				{Id: "trx1", BlockId: "b", Irreversible: true, Event: NewTestDtrxCreateEvent("2")},
+				{Id: "trx1", BlockId: "c", Irreversible: false, Event: NewTestDtrxCreateEvent("3")},
+
+				{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestExecEvent(4)},
+				{Id: "trx1", BlockId: "e", Irreversible: false, Event: NewTestExecEvent(5)},
+				{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
+
+				{Id: "trx1", BlockId: "call1", Irreversible: false, Event: NewTestDtrxCancelEvent("1")},
+				{Id: "trx1", BlockId: "call2", Irreversible: false, Event: NewTestDtrxCancelEvent("2")},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				if id == "call1" || id == "call2" {
+					return true
+				}
+				t.Error("don't call canonicalChain otherwise")
+				return true
+			},
+			expect: &TransactionLifecycle{
+				Id:                    "trx1",
+				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
+				ExecutionTrace:        &TransactionTrace{Index: 6},
+				ExecutionIrreversible: true,
+				CreationIrreversible:  true,
+				CreatedBy:             &ExtDTrxOp{SourceTransactionId: "2"}},
+		},
+		{
+			name: "cancellation arrives before irreversible execution, should not show cancelled at all",
+			events: []*TransactionEvent{
+				{Id: "trx1", BlockId: "d", Irreversible: false, Event: NewTestDtrxCancelEvent("1")},
+				{Id: "trx1", BlockId: "f", Irreversible: true, Event: NewTestExecEvent(6)},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				return true
+			},
+			expect: &TransactionLifecycle{
+				Id:                    "trx1",
+				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
+				ExecutionTrace:        &TransactionTrace{Index: 6},
+				ExecutionIrreversible: true,
+			},
+		},
 		{
 			name: "dev1: deferred transaction push, has multiple execution traces, execution succeeded",
 			events: []*TransactionEvent{
@@ -272,9 +273,9 @@ func TestMergeTransactionEvents(t *testing.T) {
 					Transaction: &Transaction{
 						Actions: []*Action{
 							{
-								Account: "eosio.token",
-								Name:    "transfer",
-								//JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
+								Account:  "eosio.token",
+								Name:     "transfer",
+								JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
 							},
 						},
 					},
@@ -290,7 +291,7 @@ func TestMergeTransactionEvents(t *testing.T) {
 						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 					},
 					Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-					Index: 6,
+					Index: 2,
 					RamOps: []*RAMOp{
 						{
 							Operation:   RAMOp_OPERATION_DEFERRED_TRX_PUSHED,
@@ -323,9 +324,18 @@ func TestMergeTransactionEvents(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			res := MergeTransactionEvents(test.events, func(id string) bool { return test.canonicalChain(t, id) })
-			fmt.Println("expected receipt: ", test.expect.TransactionReceipt.Index)
-			fmt.Println("got receipt: ", test.expect.TransactionReceipt.Index)
-			assert.Equal(t, test.expect, res)
+
+			jsonExpected, err := json.Marshal(test.expect)
+			if err != nil {
+				panic("unable to marshal expected response")
+			}
+
+			jsonActual, err := json.Marshal(res)
+			if err != nil {
+				panic("unable to marshal actual response")
+			}
+			assert.JSONEq(t, string(jsonExpected), string(jsonActual))
+
 		})
 	}
 }

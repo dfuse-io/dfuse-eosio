@@ -156,8 +156,11 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 
 func sortEvents(events []*TransactionEvent) []*TransactionEvent {
 	sort.Slice(events, func(i, j int) bool {
-		// TEST that this does INDEED sort
-		return events[i].Irreversible
+
+		if events[i].BlockNum == events[j].BlockNum {
+			return events[i].Irreversible
+		}
+		return (events[i].BlockNum < events[j].BlockNum)
 	})
 	return events
 }
@@ -204,7 +207,11 @@ func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
 	)
 	trace := *base
 
-	if trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_DELAYED && other.Receipt.Status != TransactionStatus_TRANSACTIONSTATUS_DELAYED {
+	if trace.Receipt != nil &&
+		other.Receipt != nil &&
+		trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_DELAYED &&
+		other.Receipt.Status != TransactionStatus_TRANSACTIONSTATUS_DELAYED {
+
 		trace.Receipt.Status = other.Receipt.Status
 	}
 
