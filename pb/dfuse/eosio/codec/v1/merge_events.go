@@ -42,15 +42,18 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 		}
 
 		skip := func(seenIrrMark *bool) bool {
-			if *seenIrrMark {
+			if *seenIrrMark && !inCanonicalChain(evi.BlockId) {
+				// if you have seen IRR skip this event
 				return true
 			}
 
 			if !evi.Irreversible && !inCanonicalChain(evi.BlockId) {
+				// if you aren't an event from IRR and you aren't in the longest chian skip it
 				return true
 			}
 
 			if evi.Irreversible {
+				//if you are irr skip futeu
 				*seenIrrMark = true
 			}
 
@@ -200,6 +203,11 @@ func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
 		zap.String("other_trx_id", other.Id),
 	)
 	trace := *base
+
+	if trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_DELAYED && other.Receipt.Status != TransactionStatus_TRANSACTIONSTATUS_DELAYED {
+		trace.Receipt.Status = other.Receipt.Status
+	}
+
 	trace.DbOps = append(base.DbOps, other.DbOps...)
 	trace.DtrxOps = append(base.DtrxOps, other.DtrxOps...)
 	trace.FeatureOps = append(base.FeatureOps, other.FeatureOps...)
