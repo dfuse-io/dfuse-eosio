@@ -15,7 +15,6 @@
 package pbcodec
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -130,10 +129,9 @@ func TestMergeTransactionEvents(t *testing.T) {
 				{Id: "trx1", BlockId: "5d", Irreversible: false, Event: NewTestDtrxCancelEvent("2")},
 			},
 			canonicalChain: func(t *testing.T, id string) bool {
-				if id == "5b" || id == "5d" {
+				if id == "5b" {
 					return true
 				}
-				t.Error("don't call canonicalChain otherwise")
 				return false
 			},
 			expect: &TransactionLifecycle{
@@ -160,183 +158,172 @@ func TestMergeTransactionEvents(t *testing.T) {
 				ExecutionIrreversible: true,
 			},
 		},
-		//{
-		//	name: "dev1: deferred transaction push, has multiple execution traces, execution succeeded",
-		//	events: []*TransactionEvent{
-		//		{
-		//			Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
-		//			Irreversible: true,
-		//			Event: &TransactionEvent_Addition{Addition: &TransactionEvent_Added{
-		//				Receipt: &TransactionReceipt{Index: uint64(1)},
-		//				Transaction: &SignedTransaction{
-		//					Transaction: &Transaction{
-		//						Actions: []*Action{
-		//							{
-		//								Account:  "eosio.token",
-		//								Name:     "transfer",
-		//								JsonData: "",
-		//							},
-		//						},
-		//					},
-		//				},
-		//				PublicKeys: &PublicKeys{
-		//					PublicKeys: []string{"EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"},
-		//				},
-		//			}},
-		//		},
-		//		{
-		//			Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
-		//			Irreversible: true,
-		//			Event: &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
-		//				Trace: &TransactionTrace{
-		//					Receipt: &TransactionReceiptHeader{
-		//						Status: TransactionStatus_TRANSACTIONSTATUS_DELAYED,
-		//					},
-		//					Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//					Index: uint64(2),
-		//					RamOps: []*RAMOp{
-		//						{
-		//							Operation:   RAMOp_OPERATION_DEFERRED_TRX_PUSHED,
-		//							ActionIndex: 0,
-		//							Payer:       "eosio",
-		//							Delta:       371,
-		//							Usage:       1182644,
-		//							Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
-		//							UniqueKey:   "9",
-		//							Action:      RAMOp_ACTION_PUSH,
-		//						},
-		//					},
-		//				},
-		//			}},
-		//		},
-		//		{
-		//			Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
-		//			Irreversible: true,
-		//			Event: &TransactionEvent_DtrxScheduling{DtrxScheduling: &TransactionEvent_DtrxScheduled{
-		//				Transaction: &SignedTransaction{
-		//					Transaction: &Transaction{
-		//						Actions: []*Action{
-		//							{
-		//								Account:  "eosio.token",
-		//								Name:     "transfer",
-		//								JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
-		//							},
-		//						},
-		//					},
-		//				},
-		//				CreatedBy: &ExtDTrxOp{
-		//					SourceTransactionId: "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//					DtrxOp: &DTrxOp{
-		//						Operation: DTrxOp_OPERATION_PUSH_CREATE,
-		//					},
-		//				},
-		//			}},
-		//		},
-		//		{
-		//			Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			BlockId:      "0000002e7936c0363549d9f1bfc737e75a42a02d9e6cf72437e347f36580cfd8",
-		//			Irreversible: true,
-		//			Event: &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
-		//				Trace: &TransactionTrace{
-		//					Receipt: &TransactionReceiptHeader{
-		//						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
-		//					},
-		//					Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//					Index: uint64(1),
-		//					RamOps: []*RAMOp{
-		//						{
-		//							Operation:   RAMOp_OPERATION_DEFERRED_TRX_REMOVED,
-		//							ActionIndex: 0,
-		//							Payer:       "eosio",
-		//							Delta:       -371,
-		//							Usage:       1182273,
-		//							Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
-		//							UniqueKey:   "9",
-		//							Action:      RAMOp_ACTION_REMOVE,
-		//						},
-		//					},
-		//				},
-		//			}},
-		//		},
-		//	},
-		//	canonicalChain: func(t *testing.T, id string) bool {
-		//		return true
-		//	},
-		//	expect: &TransactionLifecycle{
-		//		Id:                 "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//		TransactionStatus:  TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
-		//		TransactionReceipt: &TransactionReceipt{Index: uint64(1)},
-		//		PublicKeys:         []string{"EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"},
-		//		Transaction: &SignedTransaction{
-		//			Transaction: &Transaction{
-		//				Actions: []*Action{
-		//					{
-		//						Account:  "eosio.token",
-		//						Name:     "transfer",
-		//						JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
-		//					},
-		//				},
-		//			},
-		//		},
-		//		CreatedBy: &ExtDTrxOp{
-		//			SourceTransactionId: "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			DtrxOp: &DTrxOp{
-		//				Operation: DTrxOp_OPERATION_PUSH_CREATE,
-		//			},
-		//		},
-		//		ExecutionTrace: &TransactionTrace{
-		//			Receipt: &TransactionReceiptHeader{
-		//				Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
-		//			},
-		//			Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
-		//			Index: 2,
-		//			RamOps: []*RAMOp{
-		//				{
-		//					Operation:   RAMOp_OPERATION_DEFERRED_TRX_PUSHED,
-		//					ActionIndex: 0,
-		//					Payer:       "eosio",
-		//					Delta:       371,
-		//					Usage:       1182644,
-		//					Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
-		//					UniqueKey:   "9",
-		//					Action:      RAMOp_ACTION_PUSH,
-		//				},
-		//				{
-		//					Operation:   RAMOp_OPERATION_DEFERRED_TRX_REMOVED,
-		//					ActionIndex: 0,
-		//					Payer:       "eosio",
-		//					Delta:       -371,
-		//					Usage:       1182273,
-		//					Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
-		//					UniqueKey:   "9",
-		//					Action:      RAMOp_ACTION_REMOVE,
-		//				},
-		//			},
-		//		},
-		//		CreationIrreversible:  true,
-		//		ExecutionIrreversible: true,
-		//	},
-		//},
+		{
+			name: "dev1: deferred transaction push, has multiple execution traces, execution succeeded",
+			events: []*TransactionEvent{
+				{
+					Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
+					Irreversible: true,
+					Event: &TransactionEvent_Addition{Addition: &TransactionEvent_Added{
+						Receipt: &TransactionReceipt{Index: uint64(1)},
+						Transaction: &SignedTransaction{
+							Transaction: &Transaction{
+								Actions: []*Action{
+									{
+										Account:  "eosio.token",
+										Name:     "transfer",
+										JsonData: "",
+									},
+								},
+							},
+						},
+						PublicKeys: &PublicKeys{
+							PublicKeys: []string{"EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"},
+						},
+					}},
+				},
+				{
+					Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
+					Irreversible: true,
+					Event: &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
+						Trace: &TransactionTrace{
+							Receipt: &TransactionReceiptHeader{
+								Status: TransactionStatus_TRANSACTIONSTATUS_DELAYED,
+							},
+							Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+							Index: uint64(2),
+							RamOps: []*RAMOp{
+								{
+									Operation:   RAMOp_OPERATION_DEFERRED_TRX_PUSHED,
+									ActionIndex: 0,
+									Payer:       "eosio",
+									Delta:       371,
+									Usage:       1182644,
+									Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
+									UniqueKey:   "9",
+									Action:      RAMOp_ACTION_PUSH,
+								},
+							},
+						},
+					}},
+				},
+				{
+					Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					BlockId:      "0000002ca98c204ec8f93e91332baf2a0eea5edd4e9f262bfb3e9b997d6f2415",
+					Irreversible: true,
+					Event: &TransactionEvent_DtrxScheduling{DtrxScheduling: &TransactionEvent_DtrxScheduled{
+						Transaction: &SignedTransaction{
+							Transaction: &Transaction{
+								Actions: []*Action{
+									{
+										Account:  "eosio.token",
+										Name:     "transfer",
+										JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
+									},
+								},
+							},
+						},
+						CreatedBy: &ExtDTrxOp{
+							SourceTransactionId: "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+							DtrxOp: &DTrxOp{
+								Operation: DTrxOp_OPERATION_PUSH_CREATE,
+							},
+						},
+					}},
+				},
+				{
+					Id:           "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					BlockId:      "0000002e7936c0363549d9f1bfc737e75a42a02d9e6cf72437e347f36580cfd8",
+					Irreversible: true,
+					Event: &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
+						Trace: &TransactionTrace{
+							Receipt: &TransactionReceiptHeader{
+								Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+							},
+							Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+							Index: uint64(1),
+							RamOps: []*RAMOp{
+								{
+									Operation:   RAMOp_OPERATION_DEFERRED_TRX_REMOVED,
+									ActionIndex: 0,
+									Payer:       "eosio",
+									Delta:       -371,
+									Usage:       1182273,
+									Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
+									UniqueKey:   "9",
+									Action:      RAMOp_ACTION_REMOVE,
+								},
+							},
+						},
+					}},
+				},
+			},
+			canonicalChain: func(t *testing.T, id string) bool {
+				return true
+			},
+			expect: &TransactionLifecycle{
+				Id:                 "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+				TransactionStatus:  TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+				TransactionReceipt: &TransactionReceipt{Index: uint64(1)},
+				PublicKeys:         []string{"EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"},
+				Transaction: &SignedTransaction{
+					Transaction: &Transaction{
+						Actions: []*Action{
+							{
+								Account:  "eosio.token",
+								Name:     "transfer",
+								JsonData: "{\"from\":\"eosio\",\"to\":\"battlefield1\",\"quantity\":\"1.0000 EOS\",\"memo\":\"push delayed trx\"}",
+							},
+						},
+					},
+				},
+				CreatedBy: &ExtDTrxOp{
+					SourceTransactionId: "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					DtrxOp: &DTrxOp{
+						Operation: DTrxOp_OPERATION_PUSH_CREATE,
+					},
+				},
+				ExecutionTrace: &TransactionTrace{
+					Receipt: &TransactionReceiptHeader{
+						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					},
+					Id:    "480a4adde14100097abec586d1dec805b3bfdb48c9efed5695ca02c61ea043bd",
+					Index: 1,
+					RamOps: []*RAMOp{
+						{
+							Operation:   RAMOp_OPERATION_DEFERRED_TRX_REMOVED,
+							ActionIndex: 0,
+							Payer:       "eosio",
+							Delta:       -371,
+							Usage:       1182273,
+							Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
+							UniqueKey:   "9",
+							Action:      RAMOp_ACTION_REMOVE,
+						},
+						{
+							Operation:   RAMOp_OPERATION_DEFERRED_TRX_PUSHED,
+							ActionIndex: 0,
+							Payer:       "eosio",
+							Delta:       371,
+							Usage:       1182644,
+							Namespace:   RAMOp_NAMESPACE_DEFERRED_TRX,
+							UniqueKey:   "9",
+							Action:      RAMOp_ACTION_PUSH,
+						},
+					},
+				},
+				CreationIrreversible:  true,
+				ExecutionIrreversible: true,
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			res := MergeTransactionEvents(test.events, func(id string) bool { return test.canonicalChain(t, id) })
-
-			jsonExpected, err := json.Marshal(test.expect)
-			if err != nil {
-				panic("unable to marshal expected response")
-			}
-
-			jsonActual, err := json.Marshal(res)
-			if err != nil {
-				panic("unable to marshal actual response")
-			}
-			assert.JSONEq(t, string(jsonExpected), string(jsonActual))
-
+			assert.Equal(t, test.expect, res)
 		})
 	}
 }

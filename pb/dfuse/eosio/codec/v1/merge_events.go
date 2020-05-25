@@ -69,7 +69,9 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			}
 			out.TransactionReceipt = ev.Addition.Receipt
 			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
-			out.Transaction = ev.Addition.Transaction
+			if out.Transaction == nil {
+				out.Transaction = ev.Addition.Transaction
+			}
 
 		case *TransactionEvent_InternalAddition:
 			zlog.Debug("merging: internal addition event", zap.String("trx_id", evi.Id))
@@ -101,8 +103,11 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			// when the the transaction actually got executed. Thus we must merge the
 			// RamOps, DbOps, DtrxOps, etc... to ensure that we have an accurate representation
 			// of the execution trace
-			mergedExectuionTrace := deepMergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
-			out.ExecutionTrace = &mergedExectuionTrace
+			if out.ExecutionTrace == nil {
+				out.ExecutionTrace = ev.Execution.Trace
+			} else {
+				out.ExecutionTrace = deepMergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
+			}
 
 			out.ExecutionBlockHeader = ev.Execution.BlockHeader
 			out.ExecutionIrreversible = evi.Irreversible
@@ -115,7 +120,6 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			}
 
 			out.CreatedBy = ev.DtrxScheduling.CreatedBy
-			out.Transaction = ev.DtrxScheduling.Transaction
 			out.Transaction = ev.DtrxScheduling.Transaction
 			out.CreationIrreversible = evi.Irreversible
 
@@ -155,11 +159,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 
 func sortEvents(events []*TransactionEvent) []*TransactionEvent {
 	sort.Slice(events, func(i, j int) bool {
-
-		if events[i].BlockNum == events[j].BlockNum {
-			return events[i].Irreversible
-		}
-		return (events[i].BlockNum < events[j].BlockNum) // from low to high
+		return events[i].Irreversible
 	})
 	return events
 }
@@ -191,36 +191,21 @@ func getTransactionLifeCycleStatus(lifeCycle *TransactionLifecycle) TransactionS
 }
 
 // the way this is use tells us that other can never be nil.
-func deepMergeTransactionTrace(base, other *TransactionTrace) TransactionTrace {
-	zlog.Debug("deep merging transaction traces",
-		zap.String("other_trx_id", other.Id),
-	)
-	if base == nil {
-		zlog.Debug("based not defined returning others")
-		return *other
-
+func deepMergeTransactionTrace(current, other *TransactionTrace) (out *TransactionTrace) {
+	var toMerge *TransactionTrace
+	if current.Receipt != nil && current.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+		out = current
+		toMerge = other
+	} else if other.Receipt != nil && other.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+		out = other
+		toMerge = current
+	} else {
+		zlog.Warn("attempt to merge two non executed transaction traces, this should never happen",
+			zap.String("trx_id", current.Id),
+		)
 	}
-	zlog.Debug("merging transaction traces",
-		zap.String("base_trx_id", base.Id),
-		zap.String("other_trx_id", other.Id),
-	)
-	trace := *other
+	out.RamOps = append(out.RamOps, toMerge.RamOps...)
+	out.RlimitOps = append(out.RlimitOps, toMerge.RlimitOps...)
 
-	if trace.Receipt != nil &&
-		other.Receipt != nil &&
-		trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_DELAYED &&
-		other.Receipt.Status != TransactionStatus_TRANSACTIONSTATUS_DELAYED {
-
-		trace.Receipt.Status = other.Receipt.Status
-	}
-
-	trace.DbOps = append(base.DbOps, base.DbOps...)
-	trace.DtrxOps = append(base.DtrxOps, base.DtrxOps...)
-	trace.FeatureOps = append(base.FeatureOps, base.FeatureOps...)
-	trace.PermOps = append(base.PermOps, base.PermOps...)
-	trace.RamOps = append(base.RamOps, base.RamOps...)
-	trace.RamCorrectionOps = append(base.RamCorrectionOps, base.RamCorrectionOps...)
-	trace.RlimitOps = append(base.RlimitOps, base.RlimitOps...)
-	trace.TableOps = append(base.TableOps, base.TableOps...)
-	return trace
+	return out
 }
