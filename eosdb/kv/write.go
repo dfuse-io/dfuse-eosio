@@ -64,12 +64,6 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 			continue
 		}
 
-		if trxReceipt.Status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_DELAYED {
-			// This means we are dealing with a deferred transaction push (using CLI and `--delay-sec`),
-			//and that it will be handled through DtrxOps already
-			continue
-		}
-
 		signedTransaction, err := codec.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
 		if err != nil {
 			return fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %s", err)
