@@ -3,8 +3,6 @@ package kv
 import (
 	"context"
 
-	"go.uber.org/zap"
-
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
 	"github.com/dfuse-io/kvdb"
@@ -42,58 +40,30 @@ func (db *DB) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string
 }
 
 func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	zlog.Debug("get transaction events", zap.String("trx_prefix", idPrefix))
-
 	evs, err := db.getTransactionAdditionEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
 	}
 	out = append(out, evs...)
-	zlog.Debug("added transaction addition events", zap.Int("event_count", len(out)))
 
 	evs, err = db.getTransactionExecutionEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
 	}
 	out = append(out, evs...)
-	zlog.Debug("added transaction execution events", zap.Int("event_count", len(out)))
 
 	evs, err = db.getTransactionDtrxEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
 	}
 	out = append(out, evs...)
-	zlog.Debug("added transaction dtrx events", zap.Int("event_count", len(out)))
 
 	evs, err = db.getTransactionImplicitEvents(ctx, idPrefix)
 	if err != nil {
 		return nil, err
 	}
 	out = append(out, evs...)
-	zlog.Debug("added transaction implicit events", zap.Int("event_count", len(out)))
 
-	for _, o := range out {
-		var typeStr string
-		switch o.Event.(type) {
-		case *pbcodec.TransactionEvent_Addition:
-			typeStr = "addition"
-		case *pbcodec.TransactionEvent_InternalAddition:
-			typeStr = "internal addition"
-		case *pbcodec.TransactionEvent_Execution:
-			typeStr = "execution"
-		case *pbcodec.TransactionEvent_DtrxScheduling:
-			typeStr = "dtrx scheduling"
-		case *pbcodec.TransactionEvent_DtrxCancellation:
-			typeStr = "dtrx cancellation"
-		default:
-			typeStr = "unknown type"
-		}
-		zlog.Debug("trx event",
-			zap.String("trx_id", o.Id),
-			zap.String("blk_id", o.BlockId),
-			zap.String("event_type", typeStr),
-		)
-	}
 	return
 }
 
