@@ -39,7 +39,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
+	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
@@ -188,11 +188,12 @@ func init() {
 	})
 
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "mindreader",
-		Title:       "deep-mind reader node",
-		Description: "Blocks reading node",
-		MetricsID:   "mindreader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		ID:                  "mindreader",
+		Title:               "deep-mind reader node",
+		Description:         "Blocks reading node",
+		MetricsID:           "mindreader",
+		CleanShutdownErrors: []error{nodeosMindreaderApp.ErrEndBlockReached},
+		Logger:              launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
@@ -454,11 +455,12 @@ func init() {
 	})
 
 	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "trxdb-loader",
-		Title:       "DB loader",
-		Description: "Main blocks and transactions database",
-		MetricsID:   "trxdb-loader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
+		ID:                  "trxdb-loader",
+		Title:               "DB loader",
+		Description:         "Main blocks and transactions database",
+		MetricsID:           "trxdb-loader",
+		CleanShutdownErrors: []error{trxdbLoaderApp.ErrEndBlockReached},
+		Logger:              launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "number of blocks batched together for database write")
@@ -480,7 +482,7 @@ func init() {
 				return nil, err
 			}
 
-			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
+			return trxdbLoaderApp.New(&trxdbLoaderApp.Config{
 				ChainId:                   viper.GetString("common-chain-id"),
 				ProcessingType:            viper.GetString("trxdb-loader-processing-type"),
 				BlockStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),

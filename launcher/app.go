@@ -7,14 +7,15 @@ import (
 )
 
 type AppDef struct {
-	ID            string
-	Title         string
-	Description   string
-	MetricsID     string
-	Logger        *LoggingDef
-	RegisterFlags func(cmd *cobra.Command) error
-	InitFunc      func(modules *RuntimeModules) error
-	FactoryFunc   func(modules *RuntimeModules) (App, error)
+	ID                  string
+	Title               string
+	Description         string
+	MetricsID           string
+	Logger              *LoggingDef
+	RegisterFlags       func(cmd *cobra.Command) error
+	InitFunc            func(modules *RuntimeModules) error
+	FactoryFunc         func(modules *RuntimeModules) (App, error)
+	CleanShutdownErrors []error
 }
 
 type LoggingDef struct {

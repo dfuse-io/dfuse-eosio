@@ -23,14 +23,16 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/shutter"
 	eosgo "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
+
+var ErrEndBlockReached error
 
 type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error)
 
@@ -253,7 +255,7 @@ func (l *BigtableLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *fo
 				l.Shutdown(err)
 				return err
 			}
-			l.Shutdown(nil)
+			l.Shutdown(ErrEndBlockReached)
 			return nil
 		}
 
@@ -370,7 +372,7 @@ func (l *BigtableLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *for
 				return err
 			}
 
-			l.Shutdown(nil)
+			l.Shutdown(ErrEndBlockReached)
 			return nil
 		}
 	}

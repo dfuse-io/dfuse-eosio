@@ -126,7 +126,11 @@ func (l *Launcher) Launch(appNames []string) error {
 				if err := app.Err(); err != nil {
 					l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
 						l.FirstAppError = err
-						userLog.FatalAppError(appID, err)
+						if clean, _ := IsCleanShutdownError(err); clean {
+							userLog.FatalCleanShutdown(appID, err)
+						} else {
+							userLog.FatalAppError(appID, err)
+						}
 					})
 					userLog.Error("app terminating with error", zap.String("app_id", appID), zap.Error(err))
 				}
