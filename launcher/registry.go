@@ -11,17 +11,6 @@ import (
 
 var AppRegistry = map[string]*AppDef{}
 
-func IsCleanShutdownError(err error) (bool, string) {
-	for _, app := range AppRegistry {
-		for _, e := range app.CleanShutdownErrors {
-			if err == e {
-				return true, app.Title
-			}
-		}
-	}
-	return false, ""
-}
-
 func RegisterApp(appDef *AppDef) {
 	AppRegistry[appDef.ID] = appDef
 }

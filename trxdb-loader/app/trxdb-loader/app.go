@@ -17,7 +17,6 @@ package trxdb_loader
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -46,8 +45,6 @@ type Config struct {
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
 }
 
-var ErrEndBlockReached = errors.New("end block reached")
-
 type App struct {
 	*shutter.Shutter
 	Config *Config
@@ -62,7 +59,6 @@ func New(config *Config) *App {
 
 func (a *App) Run() error {
 	zlog.Info("launching kvdb loader", zap.Reflect("config", a.Config))
-	trxdbloader.ErrEndBlockReached = ErrEndBlockReached
 
 	dmetrics.Register(metrics.Metricset)
 

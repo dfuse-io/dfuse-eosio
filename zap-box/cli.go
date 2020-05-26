@@ -62,10 +62,3 @@ func (l *CLILogger) FatalAppError(app string, err error) {
 		"\n################################################################\n", app, err)
 	l.base.Check(zap.ErrorLevel, msg).Write()
 }
-
-func (l *CLILogger) FatalCleanShutdown(app string, err error) {
-	msg := fmt.Sprintf("\n################################################################\n"+
-		"Clean shutdown from app %s:\n\n%s"+
-		"\n################################################################\n", app, err)
-	l.base.Check(zap.ErrorLevel, msg).Write()
-}
