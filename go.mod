@@ -13,7 +13,7 @@ require (
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blendle/zapdriver v1.3.1
-	github.com/blevesearch/bleve v0.8.0
+	github.com/blevesearch/bleve v1.0.9
 	github.com/coreos/bbolt v1.3.2
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
@@ -41,7 +41,7 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200521184130-14ac4bd51a73
 	github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
-	github.com/dfuse-io/search v0.0.0-20200526003515-e40a8e8e97fa
+	github.com/dfuse-io/search v0.0.0-20200526192337-b09636232179
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -94,8 +94,6 @@ require (
 replace github.com/ugorji/go/codec => github.com/ugorji/go v1.1.2
 
 replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d
-
-replace github.com/blevesearch/bleve => github.com/fproulx-eoscanada/bleve v0.0.0-20190823192325-db63d5f16d8b
 
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
