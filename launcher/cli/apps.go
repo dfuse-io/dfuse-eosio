@@ -92,7 +92,8 @@ func init() {
 		cmd.Flags().Duration("search-common-mesh-publish-interval", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
 		cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
 		cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
-		cmd.Flags().String("search-common-dfuse-hooks-action-name", "", "[COMMON] The dfuse Hooks event action name to intercept")
+		cmd.Flags().String("search-common-dfuse-events-action-name", "", "[COMMON] The dfuse Events action name to intercept")
+		cmd.Flags().Bool("search-common-dfuse-events-unrestricted", false, "[COMMON] Flag to disable all restrictions of dfuse Events specialize indexing, for example for a private deployment")
 		cmd.Flags().String("search-common-indices-store-url", IndicesStoreURL, "[COMMON] Indices path to read or write index shards Used by: search-indexer, search-archiver.")
 
 		return nil
@@ -604,7 +605,8 @@ func init() {
 				return nil, err
 			}
 			mapper, err := eosSearch.NewEOSBlockMapper(
-				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-dfuse-events-action-name"),
+				viper.GetBool("search-common-dfuse-events-unrestricted"),
 				viper.GetString("search-common-action-filter-on-expr"),
 				viper.GetString("search-common-action-filter-out-expr"),
 			)
@@ -769,7 +771,8 @@ func init() {
 				return nil, err
 			}
 			mapper, err := eosSearch.NewEOSBlockMapper(
-				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-dfuse-events-action-name"),
+				viper.GetBool("search-common-dfuse-events-unrestricted"),
 				viper.GetString("search-common-action-filter-on-expr"),
 				viper.GetString("search-common-action-filter-out-expr"),
 			)
@@ -812,7 +815,8 @@ func init() {
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			mapper, err := eosSearch.NewEOSBlockMapper(
-				viper.GetString("search-common-dfuse-hooks-action-name"),
+				viper.GetString("search-common-dfuse-events-action-name"),
+				viper.GetBool("search-common-dfuse-events-unrestricted"),
 				viper.GetString("search-common-action-filter-on-expr"),
 				viper.GetString("search-common-action-filter-out-expr"),
 			)

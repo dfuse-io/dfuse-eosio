@@ -6,18 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+* [Breaking] `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
 * [Breaking] `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
 * [Breaking] `eosws` transaction lifecycle field `dTrx_cancelation_irreversible` changed to `dtrx_cancelationI_irreversible`
-  
+
 ### Added
-* Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
-* Flag: --pprof-listen-addr (default: 6060)
-* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb 
+* Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
+* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: `--pprof-listen-addr` (default: 6060)
+* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
 
 ## [v0.1.0-beta3] 2020-05-13
 
 ### Added
-* Added `--eosq-available-networks` json string to configure the network section of eosq. 
+* Added `--eosq-available-networks` json string to configure the network section of eosq.
 ``` [
      {
        "id": "id.1",

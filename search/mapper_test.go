@@ -94,12 +94,12 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 				]
 			}`,
 		)},
-		{"dfuse-hooks-at-input-not-indexed", deosTestBlock(t, "00000001a", nil,
+		{"dfuse-events-at-input-not-indexed", deosTestBlock(t, "00000001a", nil,
 			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[{"receipt": {"receiver":"dfuseiohooks"}, "action": {"name":"event","account":"dfuseiohooks","json_data":"{\"data\":\"key=value\"}"}}]
 			}`,
 		)},
-		{"dfuse-hooks-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
+		{"dfuse-events-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
 			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"event","account":"eosio","json_data":"{}"}, "action_ordinal":1},
@@ -107,7 +107,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 				]
 			}`,
 		)},
-		{"dfuse-hooks-deep-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
+		{"dfuse-events-deep-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
 			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"topevent","account":"eosio","json_data":"{}"}, "action_ordinal":1},
@@ -120,7 +120,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "", "")
+			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", false, "", "")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -385,7 +385,7 @@ func TestFilterOut(t *testing.T) {
 			map[string]interface{}{
 				"account":  "badacct",
 				"receiver": "badrecv",
-				"data": map[string]interface{}{},
+				"data":     map[string]interface{}{},
 			},
 			true,
 		},
@@ -393,7 +393,7 @@ func TestFilterOut(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mapper, err := NewEOSBlockMapper("", test.filterOn, test.filterOut)
+			mapper, err := NewEOSBlockMapper("", false, test.filterOn, test.filterOut)
 			assert.NoError(t, err)
 
 			assert.Equal(t, test.expectedPass, mapper.shouldIndexAction(test.message))
@@ -402,9 +402,9 @@ func TestFilterOut(t *testing.T) {
 }
 
 func TestCompileCELPrograms(t *testing.T) {
-	_, err := NewEOSBlockMapper("", "bro = '", "")
+	_, err := NewEOSBlockMapper("", false, "bro = '", "")
 	require.Error(t, err)
 
-	_, err = NewEOSBlockMapper("", "", "ken")
+	_, err = NewEOSBlockMapper("", false, "", "ken")
 	require.Error(t, err)
 }
