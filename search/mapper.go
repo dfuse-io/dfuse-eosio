@@ -20,14 +20,22 @@ import (
 
 type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
+// eventsConfig contains specific configuration for the correct indexation of
+// dfuse Events, our special methodology to index the action from your smart contract
+// the way the developer like it.
+type eventsConfig struct {
+	actionName   string
+	unrestricted bool
+}
+
 type EOSBlockMapper struct {
-	hooksActionName  string
+	eventsConfig     eventsConfig
 	restrictions     []*restriction
 	filterOnProgram  cel.Program
 	filterOutProgram cel.Program
 }
 
-func NewEOSBlockMapper(hooksActionName string, filterOn, filterOut string) (*EOSBlockMapper, error) {
+func NewEOSBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, filterOut string) (*EOSBlockMapper, error) {
 	fonProgram, err := buildCELProgram("true", filterOn)
 	if err != nil {
 		return nil, err
@@ -39,7 +47,10 @@ func NewEOSBlockMapper(hooksActionName string, filterOn, filterOut string) (*EOS
 	}
 
 	return &EOSBlockMapper{
-		hooksActionName:  hooksActionName,
+		eventsConfig: eventsConfig{
+			actionName:   eventsActionName,
+			unrestricted: eventsUnrestricted,
+		},
 		filterOnProgram:  fonProgram,
 		filterOutProgram: foutProgram,
 	}, nil
@@ -260,8 +271,8 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 			data["notif"] = receiver != account
 			data["input"] = actTrace.CreatorActionOrdinal == 0
 			data["scheduled"] = scheduled
-			if actTrace.SimpleName() == m.hooksActionName && actTrace.CreatorActionOrdinal != 0 {
-				eventFields := tokenizeEvent(actTrace.GetData("key").String(), actTrace.GetData("data").String())
+			if actTrace.SimpleName() == m.eventsConfig.actionName && actTrace.CreatorActionOrdinal != 0 {
+				eventFields := tokenizeEvent(m.eventsConfig, actTrace.GetData("key").String(), actTrace.GetData("data").String())
 				if len(eventFields) > 0 {
 					tokenizedActions[actTrace.CreatorActionOrdinal].data["event"] = eventFields
 				}

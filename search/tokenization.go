@@ -138,35 +138,34 @@ func tokenizeEOSDataObject(data string) map[string]interface{} {
 	return out
 }
 
-func tokenizeEvent(key string, data string) url.Values {
+func tokenizeEvent(config eventsConfig, authKey string, data string) url.Values {
 	out, err := url.ParseQuery(data)
 	if err != nil {
-		zlog.Debug("error parsing dfuseiohooks", zap.Error(err))
+		zlog.Debug("error parsing dfuse events 'data' field", zap.Error(err))
 		return nil
 	}
 
-	var authKey bool
+	isRestricted := !config.unrestricted
 
 	for k, vals := range out {
-		// 16 chars keys for everyone
-		if len(k) > 16 {
-			zlog.Debug("dfuse hooks event field name too long", zap.String("field_prefix", k[:16]))
+		if isRestricted && len(k) > 16 {
+			zlog.Debug("dfuse events field name too long", zap.String("field_prefix", k[:16]))
 			return nil
 		}
 
-		if !authKey {
+		if isRestricted {
 			// For free keys, limit to 64 chars chars the key
 			for _, v := range vals {
 				if len(v) > 64 {
-					zlog.Debug("dfuse hooks event field value too long", zap.String("field", k), zap.Int("value_size", len(v)))
+					zlog.Debug("dfuse events field value too long", zap.String("field", k), zap.Int("value_size", len(v)))
 					return nil
 				}
 			}
 		}
 	}
 
-	if !authKey && len(out) > 3 {
-		zlog.Debug("dfuse hooks event has more than 3 fields", zap.Int("field_count", len(out)))
+	if isRestricted && len(out) > 3 {
+		zlog.Debug("dfuse events has more than 3 fields", zap.Int("field_count", len(out)))
 		return nil
 	}
 
