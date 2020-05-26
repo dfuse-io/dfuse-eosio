@@ -203,6 +203,8 @@ github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3j
 github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.0-20200521210312-6605c52f17f2 h1:xnfbuJubfkPVQilL/q8dKaJMgvRLaZF3Ausdem68D6M=
 github.com/dfuse-io/bstream v0.0.0-20200521210312-6605c52f17f2/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
+github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a h1:rnOpbwTJ5YU3LcOktydBGOCTsBXF8zKxwkTo+DFgh+8=
+github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286 h1:qd49qPoLflezURhZJaPpDv3O6uAtEVBJXet77Q0N6+k=
 github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286/go.mod h1:obh8aJXWndrj0HSW+EYd/HQZiyLYg+fHdOWFMUUtyYM=
 github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb h1:yrE/Ncb9PAjdN7w5Ixx47Oy1kQQdluBfuv7c8D9UaPQ=
@@ -260,6 +262,8 @@ github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3 h1:CyFMS1Ot7k/I1z
 github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3/go.mod h1:PtRbKs7SpIHmJx1mlNLFf7uMVpcM+q9nNXQyxp8fYA4=
 github.com/dfuse-io/search v0.0.0-20200521210838-d9a47b4b03f7 h1:sS0SNItwETQtj8FsPzFUcYA1Rxmyx51ahAz/Di1eEeo=
 github.com/dfuse-io/search v0.0.0-20200521210838-d9a47b4b03f7/go.mod h1:tS+/4UzWZBKPRm8J5BvAkf+jsLLoeQSGP8EpfZ6DClo=
+github.com/dfuse-io/search v0.0.0-20200526003515-e40a8e8e97fa h1:90eW2Sv5zbWq2uPxVmr7xGThPgX6pq9yoXk5d/1GxWw=
+github.com/dfuse-io/search v0.0.0-20200526003515-e40a8e8e97fa/go.mod h1:GJrSRtEa/et+uFXZNmo+omyAJw3bB1S12VWD1vluuwk=
 github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237 h1:SPZXhXyMKFk0it75YzUzCvBcTg7qOpCL1ChSkHnPT0U=
 github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237/go.mod h1:5UkhG18wwYZE8DXAoyGumCBVk0Bu4dSTcQMdpZnm28k=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
