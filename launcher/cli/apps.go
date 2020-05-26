@@ -39,7 +39,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	kvdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
+	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
@@ -480,7 +480,7 @@ func init() {
 				return nil, err
 			}
 
-			return kvdbLoaderApp.New(&kvdbLoaderApp.Config{
+			return trxdbLoaderApp.New(&trxdbLoaderApp.Config{
 				ChainId:                   viper.GetString("common-chain-id"),
 				ProcessingType:            viper.GetString("trxdb-loader-processing-type"),
 				BlockStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
