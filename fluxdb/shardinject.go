@@ -82,9 +82,9 @@ func (s *ShardInjector) Run() (err error) {
 			return err
 		}
 		if fileFirst > startAfterNum+1 {
-			return fmt.Errorf("file %s starts at block %d, we were expecting to start right after %d", filename, fileFirst, startAfter)
+			return fmt.Errorf("file %s starts at block %d, we were expecting to start right after %d, there is a hole in your block range files", filename, fileFirst, startAfter)
 		}
-		if startAfterNum > fileLast {
+		if startAfterNum >= fileLast {
 			zlog.Info("skipping shard file", zap.String("filename", filename), zap.Uint32("start_after", startAfterNum))
 			return nil
 		}
