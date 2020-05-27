@@ -64,7 +64,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 				continue
 			}
 			out.TransactionReceipt = ev.Addition.Receipt
-			out.PublicKeys = ev.Addition.PublicKeys.PublicKey
+			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
 			if out.Transaction == nil {
 				out.Transaction = ev.Addition.Transaction
 			}
@@ -130,7 +130,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 				continue
 			}
 
-			if execIrr &&
+			if execIrr && (out.ExecutionTrace != nil) && (out.ExecutionTrace.Receipt != nil) &&
 				((out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
 					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
 					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL)) {

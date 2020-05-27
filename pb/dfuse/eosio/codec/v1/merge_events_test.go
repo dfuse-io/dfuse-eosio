@@ -106,10 +106,15 @@ func TestMergeTransactionEvents(t *testing.T) {
 				return true
 			},
 			expect: &TransactionLifecycle{
-				Id:                    "trx1",
-				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-				TransactionReceipt:    &TransactionReceipt{Index: 3},
-				ExecutionTrace:        &TransactionTrace{Index: 6},
+				Id:                 "trx1",
+				TransactionStatus:  TransactionStatus_TRANSACTIONSTATUS_EXECUTED, // no receipt, ignore
+				TransactionReceipt: &TransactionReceipt{Index: 3},
+				ExecutionTrace: &TransactionTrace{
+					Receipt: &TransactionReceiptHeader{
+						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					},
+					Index: 6,
+				},
 				ExecutionIrreversible: true,
 			},
 		},
@@ -135,9 +140,14 @@ func TestMergeTransactionEvents(t *testing.T) {
 				return false
 			},
 			expect: &TransactionLifecycle{
-				Id:                    "trx1",
-				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-				ExecutionTrace:        &TransactionTrace{Index: 5},
+				Id:                "trx1",
+				TransactionStatus: TransactionStatus_TRANSACTIONSTATUS_EXECUTED, // no receipt, ignore
+				ExecutionTrace: &TransactionTrace{
+					Receipt: &TransactionReceiptHeader{
+						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					},
+					Index: 5,
+				},
 				ExecutionIrreversible: true,
 				CreationIrreversible:  true,
 				CreatedBy:             &ExtDTrxOp{SourceTransactionId: "2"}},
@@ -152,9 +162,14 @@ func TestMergeTransactionEvents(t *testing.T) {
 				return true
 			},
 			expect: &TransactionLifecycle{
-				Id:                    "trx1",
-				TransactionStatus:     TransactionStatus_TRANSACTIONSTATUS_HARDFAIL, // no receipt, ignore
-				ExecutionTrace:        &TransactionTrace{Index: 6},
+				Id:                "trx1",
+				TransactionStatus: TransactionStatus_TRANSACTIONSTATUS_EXECUTED, // no receipt, ignore
+				ExecutionTrace: &TransactionTrace{
+					Receipt: &TransactionReceiptHeader{
+						Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+					},
+					Index: 6,
+				},
 				ExecutionIrreversible: true,
 			},
 		},

@@ -33,9 +33,20 @@ func NewTestIntAddEvent(prefix int) *TransactionEvent_InternalAddition {
 	}}
 }
 
+func NewSimpleTestExecEvent(idx int) *TransactionEvent_Execution {
+	return &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
+		Trace: &TransactionTrace{
+			Index: uint64(idx),
+		},
+	}}
+}
+
 func NewTestExecEvent(idx int) *TransactionEvent_Execution {
 	return &TransactionEvent_Execution{Execution: &TransactionEvent_Executed{
 		Trace: &TransactionTrace{
+			Receipt: &TransactionReceiptHeader{
+				Status: TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
+			},
 			Index: uint64(idx),
 		},
 	}}
