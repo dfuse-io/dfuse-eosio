@@ -290,7 +290,7 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 
 func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd string, onRow func(key string, value []byte) error) error {
 
-	zlog.Info("scanning range", zap.String("start", keyStart), zap.String("end", keyEnd))
+	zlog.Debug("scanning range", zap.String("start", keyStart), zap.String("end", keyEnd))
 	startKey := packKey(table, keyStart)
 	var endKey []byte
 
@@ -365,7 +365,7 @@ func (b *batch) FlushIfFull(ctx context.Context) error {
 		return nil
 	}
 
-	b.zlog.Info("flushing a full batch set", zap.Int("count", b.count))
+	b.zlog.Debug("flushing a full batch set", zap.Int("count", b.count))
 	if err := b.Flush(ctx); err != nil {
 		return derr.Wrap(err, "flushing batch set")
 	}
@@ -377,7 +377,7 @@ func (b *batch) Flush(ctx context.Context) error {
 	ctx, span := dtracing.StartSpan(ctx, "flush batch set")
 	defer span.End()
 
-	b.zlog.Info("flushing batch set")
+	b.zlog.Debug("flushing batch set")
 
 	tableNames := []byte{
 		tblPrefixABIs,
@@ -396,7 +396,7 @@ func (b *batch) Flush(ctx context.Context) error {
 			continue
 		}
 
-		b.zlog.Info("applying bulk update", zap.String("table_name", TblPrefixName[tblName]), zap.Int("mutation_count", len(muts)))
+		b.zlog.Debug("applying bulk update", zap.String("table_name", TblPrefixName[tblName]), zap.Int("mutation_count", len(muts)))
 		ctx, span := dtracing.StartSpan(ctx, "apply bulk updates", "table", tblName, "mutation_count", len(muts))
 
 		for key, value := range muts {
