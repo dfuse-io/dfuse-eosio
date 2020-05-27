@@ -46,6 +46,11 @@ func (s *ShardInjector) Run() (err error) {
 		cancelInjector()
 	})
 
+	startAfter, err := s.db.getLastBlock(ctx)
+	if err != nil {
+		return err
+	}
+
 	err = s.shardsStore.Walk(ctx, "", "", func(filename string) error {
 		zlog.Info("processing shard file", zap.String("filename", filename))
 
@@ -55,7 +60,7 @@ func (s *ShardInjector) Run() (err error) {
 		}
 		defer reader.Close()
 
-		requests, err := readWriteRequestsForBatch(reader)
+		requests, err := readWriteRequestsForBatch(reader, uint32(startAfter.Num()))
 		if err != nil {
 			return fmt.Errorf("unable to read all write requests in batch %q: %w", filename, err)
 		}
@@ -75,7 +80,7 @@ func (s *ShardInjector) Run() (err error) {
 	return nil
 }
 
-func readWriteRequestsForBatch(reader io.Reader) ([]*WriteRequest, error) {
+func readWriteRequestsForBatch(reader io.Reader, startAfter uint32) ([]*WriteRequest, error) {
 	decoder := gob.NewDecoder(reader)
 
 	var requests []*WriteRequest
@@ -88,6 +93,10 @@ func readWriteRequestsForBatch(reader io.Reader) ([]*WriteRequest, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to read WriteRequest: %w", err)
 		}
+		if req.BlockNum <= startAfter {
+			continue
+		}
 		requests = append(requests, req)
+
 	}
 }
