@@ -19,6 +19,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
@@ -40,6 +42,28 @@ func NewShardInjector(shardsStore dstore.Store, db *FluxDB) *ShardInjector {
 	}
 }
 
+func parseFileName(filename string) (first, last uint32, err error) {
+	vals := strings.Split(filename, "-")
+	if len(vals) != 2 {
+		err = fmt.Errorf("cannot parse filename: %s", filename)
+		return
+	}
+
+	first64, err := strconv.ParseUint(vals[0], 10, 32)
+	if err != nil {
+		return 0, 0, err
+	}
+	first = uint32(first64)
+
+	last64, err := strconv.ParseUint(vals[1], 10, 32)
+	if err != nil {
+		return 0, 0, err
+	}
+	last = uint32(last64)
+
+	return
+}
+
 func (s *ShardInjector) Run() (err error) {
 	ctx, cancelInjector := context.WithCancel(context.Background())
 	s.Shutter.OnTerminating(func(_ error) {
@@ -50,8 +74,20 @@ func (s *ShardInjector) Run() (err error) {
 	if err != nil {
 		return err
 	}
+	startAfterNum := uint32(startAfter.Num())
 
 	err = s.shardsStore.Walk(ctx, "", "", func(filename string) error {
+		fileFirst, fileLast, err := parseFileName(filename)
+		if err != nil {
+			return err
+		}
+		if fileFirst > startAfterNum+1 {
+			return fmt.Errorf("file %s starts at block %d, we were expecting to start right after %d", filename, fileFirst, startAfter)
+		}
+		if startAfterNum > fileLast {
+			zlog.Info("skipping shard file", zap.String("filename", filename), zap.Uint32("start_after", startAfterNum))
+		}
+
 		zlog.Info("processing shard file", zap.String("filename", filename))
 
 		reader, err := s.shardsStore.OpenObject(ctx, filename)
@@ -60,7 +96,7 @@ func (s *ShardInjector) Run() (err error) {
 		}
 		defer reader.Close()
 
-		requests, err := readWriteRequestsForBatch(reader, uint32(startAfter.Num()))
+		requests, err := readWriteRequestsForBatch(reader, startAfterNum)
 		if err != nil {
 			return fmt.Errorf("unable to read all write requests in batch %q: %w", filename, err)
 		}
@@ -70,6 +106,7 @@ func (s *ShardInjector) Run() (err error) {
 			return fmt.Errorf("write batch %q: %w", filename, err)
 		}
 
+		startAfterNum = fileLast
 		return nil
 	})
 
