@@ -41,7 +41,7 @@ func AppBlockNumHigherThanLIBError(ctx context.Context, chosenBlockNum, lastWrit
 // Data Errors
 
 func DataABINotFoundError(ctx context.Context, account string, blockNum uint32) *derr.ErrorResponse {
-	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_abi_not_found_error"), "Cannot find an ABI for request account at this block num.",
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_abi_not_found_error"), "Cannot find an ABI for request account at this block height.",
 		"account", account,
 		"block_num", blockNum,
 	)
@@ -54,23 +54,22 @@ func DataDecodingRowError(ctx context.Context, hexData string) *derr.ErrorRespon
 }
 
 func DataPublicKeyNotFoundError(ctx context.Context, publicKey string) *derr.ErrorResponse {
-	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_public_key_not_found_error"), "This public key does not exist.",
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_public_key_not_found_error"), "This public key does not exist at this block height.",
 		"public_key", publicKey,
 	)
 }
 
 func DataTableNotFoundError(ctx context.Context, account eos.AccountName, table eos.TableName) *derr.ErrorResponse {
-	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_table_not_found_error"), "Table does not exist in ABI.",
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_table_not_found_error"), "Table does not exist in ABI at this block height.",
 		"account", account,
 		"table", table,
 	)
 }
 
-// account eos.AccountName, table eos.TableName,
-func DataRowNotFoundError(ctx context.Context, primaryKey string) *derr.ErrorResponse {
-	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_row_not_found_error"), "Row does not exist in table.",
-		// "account", account,
-		// "table", table,
+func DataRowNotFoundError(ctx context.Context, account eos.AccountName, table eos.TableName, primaryKey string) *derr.ErrorResponse {
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_row_not_found_error"), "Row does not exist in table at this block height.",
+		"account", account,
+		"table", table,
 		"primary_key", primaryKey,
 	)
 }

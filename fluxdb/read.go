@@ -25,10 +25,10 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
+	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -190,6 +190,10 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 	err = fdb.readSingle(ctx, tableKey, primaryKeyString, r.BlockNum, rowUpdated, rowDeleted)
 	if err != nil {
 		return nil, derr.Wrapf(err, "unable to read single row for table key %q and primary key %d", tableKey, r.PrimaryKey)
+	}
+
+	if rowData == nil {
+		return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
 	}
 
 	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
@@ -593,6 +597,8 @@ func (fdb *FluxDB) read(
 	return nil
 }
 
+var errRowNotFound = errors.New("row not found")
+
 func (fdb *FluxDB) readSingle(
 	ctx context.Context,
 	tableKey string,
@@ -615,38 +621,35 @@ func (fdb *FluxDB) readSingle(
 	firstRowKey := tableKey + ":00000000"
 	lastRowKey := tableKey + ":" + HexBlockNum(blockNum+1)
 
-	if idx != nil {
+	if idx != nil && idx.Map[primaryKey] != 0 {
 		zlog.Debug("index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
 		firstRowKey = tableKey + ":" + HexBlockNum(idx.AtBlockNum+1)
 
 		if idx.Map[primaryKey] == 0 {
-			// FIXME (MATT): Need to pass correct account/table pair here, extract from tablekey it seems, but is it possible?
-			//               Otherwise, we might want to push the error upstream and let upstream deal with not found and
-			//               turn it into proper derr error.
-			return DataRowNotFoundError(ctx, primaryKey)
-		}
+			zlog.Debug("index does not contain primary key, probably the key came after taking table index snaphost")
+		} else {
+			rowKey := fmt.Sprintf("%s:%08x:%s", tableKey, idx.Map[primaryKey], primaryKey)
+			err := fdb.store.FetchTabletRow(ctx, rowKey, func(rowKey string, value []byte) error {
+				if len(value) == 0 {
+					return fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
+				}
 
-		rowKey := fmt.Sprintf("%s:%08x:%s", tableKey, idx.Map[primaryKey], primaryKey)
-		err := fdb.store.FetchTabletRow(ctx, rowKey, func(rowKey string, value []byte) error {
-			if len(value) == 0 {
-				return fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
-			}
+				_, rowBlockNum, primaryKey, err := explodeWritableRowKey(rowKey)
+				if err != nil {
+					return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
+				}
 
-			_, rowBlockNum, primaryKey, err := explodeWritableRowKey(rowKey)
+				err = rowUpdated(rowBlockNum, primaryKey, value)
+				if err != nil {
+					return derr.Wrapf(err, "rowUpdated callback failed for row %q (indexed rows)", rowKey)
+				}
+
+				return nil
+			})
+
 			if err != nil {
-				return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
+				return err
 			}
-
-			err = rowUpdated(rowBlockNum, primaryKey, value)
-			if err != nil {
-				return derr.Wrapf(err, "rowUpdated callback failed for row %q (indexed rows)", rowKey)
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return err
 		}
 
 		zlog.Debug("finished reconciling index")
