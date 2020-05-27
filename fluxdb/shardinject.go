@@ -86,6 +86,7 @@ func (s *ShardInjector) Run() (err error) {
 		}
 		if startAfterNum > fileLast {
 			zlog.Info("skipping shard file", zap.String("filename", filename), zap.Uint32("start_after", startAfterNum))
+			return nil
 		}
 
 		zlog.Info("processing shard file", zap.String("filename", filename))
