@@ -459,8 +459,8 @@ func init() {
 				HTTPListenAddr:             viper.GetString("fluxdb-http-listen-addr"),
 				ReprocShardStoreURL:        mustReplaceDataDir(dfuseDataDir, viper.GetString("fluxdb-reproc-shard-store-url")),
 				ReprocShardCount:           viper.GetUint64("fluxdb-reproc-shard-count"),
-				ReprocSharderStartBlockNum: viper.GetUint64("fluxdb-reproc-sharder-start-block-num"),
-				ReprocSharderStopBlockNum:  viper.GetUint64("fluxdb-reproc-sharder-stop-block-num"),
+				ReprocSharderStartBlockNum: viper.GetUint64("fluxdb-reproc-shard-start-block-num"),
+				ReprocSharderStopBlockNum:  viper.GetUint64("fluxdb-reproc-shard-stop-block-num"),
 				ReprocInjectorShardIndex:   viper.GetUint64("fluxdb-reproc-injector-shard-index"),
 			}), nil
 		},
