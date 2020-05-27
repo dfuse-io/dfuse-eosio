@@ -109,7 +109,12 @@ func (l *Launcher) Launch(appNames []string) error {
 			userLog.Debug("launching app", zap.String("app", appID))
 			err := app.Run()
 			if err != nil {
-				userLog.FatalAppError(appID, fmt.Errorf("unable to start: %w", err))
+				l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
+					l.FirstShutdownAppError = err
+					l.FirstShutdownAppName = appID
+					userLog.FatalAppError(appID, fmt.Errorf("unable to start: %w", err))
+				})
+				l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_STOPPED)
 				l.Shutdown(nil)
 			}
 		}(appID, app)

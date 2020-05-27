@@ -16,14 +16,17 @@ package fluxdb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
@@ -31,15 +34,27 @@ import (
 )
 
 type Config struct {
-	StoreDSN           string // Storage connection string
-	EnableLivePipeline bool   // connecs to a live source, can be turn off when doing re-processing
-	BlockStreamAddr    string // gRPC endpoint to get real-time blocks
-	ThreadsNum         int    // Number of threads of parallel processing
-	EnableServerMode   bool   // Enables flux server mode, launch a server
-	EnableInjectMode   bool   // Enables flux inject mode, writes into kvd
-	HTTPListenAddr     string // Address to server FluxDB queries on
-	EnableDevMode      bool   // Set to true to have a fluxdb not syncing with an actual live block source (**never** use this in prod)
-	BlockStoreURL      string // dbin blocks store
+	StoreDSN                 string // Storage connection string
+	BlockStreamAddr          string // gRPC endpoint to get real-time blocks
+	ThreadsNum               int    // Number of threads of parallel processing
+	EnableServerMode         bool   // Enables flux server mode, launch a server
+	EnableInjectMode         bool   // Enables flux inject mode, writes into kvd
+	EnablePipeline           bool   // Connects to blocks pipeline, can be used to have a development server only fluxdb
+	EnableReprocSharderMode  bool   // Enables flux reproc shard mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set
+	EnableReprocInjectorMode bool   // Enables flux reproc injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set
+	HTTPListenAddr           string // Address to server FluxDB queries on
+	BlockStoreURL            string // dbin blocks store
+
+	// Available for reproc mode only (either reproc shard or reproc injector)
+	ReprocShardStoreURL string
+	ReprocShardCount    uint64
+
+	// Available for reproc-shard only
+	ReprocSharderStartBlockNum uint64
+	ReprocSharderStopBlockNum  uint64
+
+	// Available for reproc-injector only
+	ReprocInjectorShardIndex uint64
 }
 
 type App struct {
@@ -56,6 +71,9 @@ func New(config *Config) *App {
 
 func (a *App) Run() error {
 	zlog.Info("running fluxdb", zap.Reflect("config", a.config))
+	if err := a.config.validate(); err != nil {
+		return fmt.Errorf("invalid app config: %w", err)
+	}
 
 	dmetrics.Register(metrics.MetricSet)
 
@@ -64,26 +82,44 @@ func (a *App) Run() error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	db := fluxdb.New(kvStore)
-
-	zlog.Info("initiating fluxdb pipeline")
-	fluxDBHandler := fluxdb.NewHandler(db)
-
-	db.SpeculativeWritesFetcher = fluxDBHandler.FetchSpeculativeWrites
-	db.HeadBlock = fluxDBHandler.HeadBlock
-
 	blocksStore, err := dstore.NewDBinStore(a.config.BlockStoreURL)
 	if err != nil {
 		return fmt.Errorf("setting up source blocks store: %w", err)
 	}
 
-	db.BuildPipeline(fluxDBHandler.InitializeStartBlockID, fluxDBHandler, a.config.EnableLivePipeline, blocksStore, a.config.BlockStreamAddr, a.config.ThreadsNum)
+	if a.config.EnableInjectMode || a.config.EnableServerMode {
+		return a.startStandard(blocksStore, kvStore)
+	}
+
+	if a.config.EnableReprocSharderMode {
+		return a.startReprocSharder(blocksStore)
+	}
+
+	if a.config.EnableReprocInjectorMode {
+		return a.startReprocInjector(kvStore)
+	}
+
+	return errors.New("invalid configuration, don't know what to start for fluxdb")
+}
+
+func (a *App) startStandard(blocksStore dstore.Store, kvStore store.KVStore) error {
+	db := fluxdb.New(kvStore)
+
+	zlog.Info("initiating fluxdb handler")
+	fluxDBHandler := fluxdb.NewHandler(db)
+
+	db.SpeculativeWritesFetcher = fluxDBHandler.FetchSpeculativeWrites
+	db.HeadBlock = fluxDBHandler.HeadBlock
 
 	a.OnTerminating(func(e error) {
 		db.Shutdown(nil)
 	})
 
 	db.OnTerminated(a.Shutdown)
+
+	if a.config.EnableInjectMode || a.config.EnablePipeline {
+		db.BuildPipeline(fluxDBHandler.InitializeStartBlockID, fluxDBHandler, blocksStore, a.config.BlockStreamAddr, a.config.ThreadsNum)
+	}
 
 	if a.config.EnableInjectMode {
 		zlog.Info("setting up injector mode write")
@@ -99,8 +135,79 @@ func (a *App) Run() error {
 		go startHealthCheckServer(db, a.config.HTTPListenAddr)
 	}
 
-	go db.Launch(a.config.EnableDevMode, a.config.HTTPListenAddr)
+	go db.Launch(a.config.EnablePipeline, a.config.HTTPListenAddr)
 
+	return nil
+}
+
+func (a *App) startReprocSharder(blocksStore dstore.Store) error {
+	shardsStore, err := dstore.NewStore(a.config.ReprocShardStoreURL, "shard.zst", "zstd", true)
+	if err != nil {
+		return fmt.Errorf("unable to create shards store at %s: %w", a.config.ReprocShardStoreURL, err)
+	}
+
+	shardingPipe := fluxdb.NewSharder(shardsStore, int(a.config.ReprocShardCount), uint32(a.config.ReprocSharderStartBlockNum), uint32(a.config.ReprocSharderStopBlockNum))
+
+	// FIXME: We should use the new `DPoSLIBNumAtBlockHeightFromBlockStore` to go back as far as neede!
+	source := fluxdb.BuildReprocessingPipeline(shardingPipe, blocksStore, a.config.ReprocSharderStartBlockNum, 400, 2)
+
+	a.OnTerminating(func(e error) {
+		source.Shutdown(nil)
+	})
+
+	source.OnTerminated(func(err error) {
+		// FIXME: This `HasSuffix` is sh**ty, need to replace with a better pattern, `source.Shutdown(nil)` is one of them
+		if strings.HasSuffix(err.Error(), fluxdb.ErrCleanSourceStop.Error()) {
+			err = nil
+		}
+
+		a.Shutdown(err)
+	})
+
+	source.Run()
+
+	// Wait for either source to complete or the app being killed
+	select {
+	case <-a.Terminating():
+	case <-source.Terminated():
+	}
+
+	return nil
+}
+
+func (a *App) startReprocInjector(kvStore store.KVStore) error {
+	db := fluxdb.New(kvStore)
+
+	db.SetSharding(int(a.config.ReprocInjectorShardIndex), int(a.config.ReprocShardCount))
+	if err := db.CheckCleanDBForSharding(); err != nil {
+		return fmt.Errorf("db is not clean before injecting shards: %w", err)
+	}
+
+	shardStoreFullURL := a.config.ReprocShardStoreURL + "/" + fmt.Sprintf("%03d", a.config.ReprocInjectorShardIndex)
+	zlog.Info("using shards url", zap.String("store_url", shardStoreFullURL))
+
+	shardStore, err := dstore.NewStore(shardStoreFullURL, "shard.zst", "zstd", true)
+	if err != nil {
+		return fmt.Errorf("unable to create shards store at %s: %w", shardStoreFullURL, err)
+	}
+
+	shardInjector := fluxdb.NewShardInjector(shardStore, db)
+
+	a.OnTerminating(func(e error) {
+		shardInjector.Shutdown(nil)
+	})
+
+	shardInjector.OnTerminated(a.Shutdown)
+
+	if err := shardInjector.Run(); err != nil {
+		return fmt.Errorf("injector failed: %w", err)
+	}
+
+	if err := db.VerifyAllShardsWritten(); err != nil {
+		return fmt.Errorf("verify all shards written: %w", err)
+	}
+
+	a.Shutdown(nil)
 	return nil
 }
 
@@ -138,4 +245,33 @@ func startHealthCheckServer(fdb *fluxdb.FluxDB, httpListenAddr string) {
 	zlog.Info("listening & serving HTTP content", zap.String("http_listen_addr", httpListenAddr))
 	err := http.ListenAndServe(httpListenAddr, http.DefaultServeMux)
 	zlog.Error("unable to start inject health check HTTP server", zap.Error(err))
+}
+
+func (config *Config) validate() error {
+	server := config.EnableServerMode
+	injector := config.EnableInjectMode
+	reprocSharder := config.EnableReprocSharderMode
+	reprocInjector := config.EnableReprocInjectorMode
+
+	if !server && !injector && !reprocSharder && !reprocInjector {
+		return errors.New("no mode selected, one of enable server, enable injector, enable reproc sharder or enable reproc injector must be set")
+	}
+
+	if reprocSharder && (server || injector || reprocInjector) {
+		return errors.New("reproc sharder mode is an exclusive option, cannot be set while any of enable server, enable injector or enable reproc injector is set")
+	}
+
+	if reprocInjector && (server || injector || reprocSharder) {
+		return errors.New("reproc injector mode is an exclusive option, cannot be set while any of enable server, enable injector or enable reproc injector is set")
+	}
+
+	if (reprocSharder || reprocInjector) && config.ReprocShardCount <= 0 {
+		return errors.New("reproc mode requires you to set a shard count value higher than 0")
+	}
+
+	if reprocInjector && config.ReprocInjectorShardIndex >= config.ReprocShardCount {
+		return fmt.Errorf("reproc injector mode shard index invalid, got index %d but it's outside possible value for a shard count of %d", config.ReprocInjectorShardIndex, config.ReprocShardCount)
+	}
+
+	return nil
 }

@@ -424,11 +424,17 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into its database")
+			cmd.Flags().Bool("fluxdb-enable-reproc-sharder-mode", false, "[BATCH] Enables flux reproc shard mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set")
+			cmd.Flags().Bool("fluxdb-enable-reproc-injector-mode", false, "[BATCH] Enables flux reproc injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set")
+			cmd.Flags().Bool("fluxdb-enable-pipeline", true, "Enables fluxdb without a blocks pipeline, useful for running a development server (**do not** use this in prod)")
 			cmd.Flags().String("fluxdb-statedb-dsn", FluxDSN, "kvdb connection string to State database")
-			cmd.Flags().Bool("fluxdb-live", true, "Connect to a live source, can be turn off when doing re-processing")
-			cmd.Flags().Bool("fluxdb-enable-dev-mode", false, "Enable dev mode, enables fluxdb without a live pipeline (**do not** use this in prod)")
 			cmd.Flags().Int("fluxdb-max-threads", 2, "Number of threads of parallel processing")
 			cmd.Flags().String("fluxdb-http-listen-addr", FluxDBServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().String("fluxdb-reproc-shard-store-url", "file://{dfuse-data-dir}/statedb/reproc-shards", "[BATCH] Storage url where all reproc shard write requests should be written to")
+			cmd.Flags().Uint64("fluxdb-reproc-shard-count", 0, "[BATCH] Number of shards to split in (in 'reproc-sharder' mode), or join (in 'reproc-injector' mode)")
+			cmd.Flags().Uint64("fluxdb-reproc-shard-start-block-num", 0, "[BATCH] Start processing block logs at this height, must be on a 100-blocks boundary")
+			cmd.Flags().Uint64("fluxdb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing block logs at this height, must be on a 100-blocks boundary")
+			cmd.Flags().Uint64("fluxdb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -441,15 +447,21 @@ func init() {
 				return nil, err
 			}
 			return fluxdbApp.New(&fluxdbApp.Config{
-				EnableServerMode:   viper.GetBool("fluxdb-enable-server-mode"),
-				EnableInjectMode:   viper.GetBool("fluxdb-enable-inject-mode"),
-				StoreDSN:           mustReplaceDataDir(absDataDir, viper.GetString("fluxdb-statedb-dsn")),
-				EnableLivePipeline: viper.GetBool("fluxdb-live"),
-				BlockStreamAddr:    viper.GetString("common-blockstream-addr"),
-				BlockStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				EnableDevMode:      viper.GetBool("fluxdb-enable-dev-mode"),
-				ThreadsNum:         viper.GetInt("fluxdb-max-threads"),
-				HTTPListenAddr:     viper.GetString("fluxdb-http-listen-addr"),
+				EnableServerMode:           viper.GetBool("fluxdb-enable-server-mode"),
+				EnableInjectMode:           viper.GetBool("fluxdb-enable-inject-mode"),
+				EnableReprocSharderMode:    viper.GetBool("fluxdb-enable-reproc-sharder-mode"),
+				EnableReprocInjectorMode:   viper.GetBool("fluxdb-enable-reproc-injector-mode"),
+				EnablePipeline:             viper.GetBool("fluxdb-enable-pipeline"),
+				StoreDSN:                   mustReplaceDataDir(absDataDir, viper.GetString("fluxdb-statedb-dsn")),
+				BlockStreamAddr:            viper.GetString("common-blockstream-addr"),
+				BlockStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				ThreadsNum:                 viper.GetInt("fluxdb-max-threads"),
+				HTTPListenAddr:             viper.GetString("fluxdb-http-listen-addr"),
+				ReprocShardStoreURL:        mustReplaceDataDir(dfuseDataDir, viper.GetString("fluxdb-reproc-shard-store-url")),
+				ReprocShardCount:           viper.GetUint64("fluxdb-reproc-shard-count"),
+				ReprocSharderStartBlockNum: viper.GetUint64("fluxdb-reproc-shard-start-block-num"),
+				ReprocSharderStopBlockNum:  viper.GetUint64("fluxdb-reproc-shard-stop-block-num"),
+				ReprocInjectorShardIndex:   viper.GetUint64("fluxdb-reproc-injector-shard-index"),
 			}), nil
 		},
 	})
@@ -550,10 +562,10 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicahe", "path where the cache store is state")
+			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicache", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-cache", false, "Export cache and exit")
-			cmd.Flags().String("abicodec-export-cache-url", "{dfuse-data-dir}/storage/abicahe", "path where the exported cache will reside")
+			cmd.Flags().String("abicodec-export-cache-url", "{dfuse-data-dir}/storage/abicache", "path where the exported cache will reside")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {

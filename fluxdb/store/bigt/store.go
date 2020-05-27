@@ -22,8 +22,8 @@ import (
 	"cloud.google.com/go/bigtable"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/dtracing"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"
 	"go.uber.org/zap"
 	"google.golang.org/api/option"
@@ -345,7 +345,7 @@ func (b *batch) Flush(ctx context.Context) error {
 	ctx, span := dtracing.StartSpan(ctx, "flush batch set")
 	defer span.End()
 
-	b.zlog.Info("flushing batch set")
+	b.zlog.Debug("flushing batch set")
 
 	tableNames := []string{
 		"abi",
@@ -385,7 +385,7 @@ func (b *batch) Flush(ctx context.Context) error {
 			vals = append(vals, v)
 		}
 
-		b.zlog.Info("applying bulk update", zap.String("table_name", tblName), zap.Int("mutation_count", len(muts)), zap.Int("size", b.size))
+		b.zlog.Debug("applying bulk update", zap.String("table_name", tblName), zap.Int("mutation_count", len(muts)), zap.Int("size", b.size))
 		ctx, span := dtracing.StartSpan(ctx, "apply bulk updates", "table", tblName, "mutation_count", len(muts))
 
 		errors, err := tbl.ApplyBulk(ctx, keys, vals)

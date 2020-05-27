@@ -24,8 +24,8 @@ import (
 	"github.com/coreos/bbolt"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/dtracing"
 	"github.com/hidal-go/hidalgo/kv"
 	kvbbolt "github.com/hidal-go/hidalgo/kv/bbolt"
 	"go.uber.org/zap"
@@ -427,7 +427,7 @@ func (b *batch) Flush(ctx context.Context) error {
 	ctx, span := dtracing.StartSpan(ctx, "flush batch set")
 	defer span.End()
 
-	b.zlog.Info("flushing batch set")
+	b.zlog.Debug("flushing batch set")
 
 	tableNames := []string{
 		b.store.tblABIs,
@@ -446,7 +446,7 @@ func (b *batch) Flush(ctx context.Context) error {
 			continue
 		}
 
-		b.zlog.Info("applying bulk update", zap.String("table_name", tblName), zap.Int("mutation_count", len(muts)))
+		b.zlog.Debug("applying bulk update", zap.String("table_name", tblName), zap.Int("mutation_count", len(muts)))
 		ctx, span := dtracing.StartSpan(ctx, "apply bulk updates", "table", tblName, "mutation_count", len(muts))
 
 		err := kv.Update(ctx, b.store.db, func(tx kv.Tx) error {

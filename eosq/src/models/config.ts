@@ -11,18 +11,51 @@ const isLocalhost = Boolean(
 
 if (!windowTS.TopLevelConfig) {
   windowTS.TopLevelConfig = {
-    version: 1,
-
-    current_network: "eos-mainnet",
-    on_demand: false,
-
-    dfuse_io_endpoint: "mainnet.eos.dfuse.io",
-    dfuse_io_api_key: "",
-    dfuse_auth_endpoint: "https://auth.dfuse.io",
+    current_network: "custom",
+    dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_ENDPOINT || "localhost:8080",
+    dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_0123456789abcdef",
+    dfuse_io_endpoint: process.env.REACT_APP_DFUSE_ENDPOINT || "localhost:8080",
     display_price: true,
+    on_demand: false,
     price_ticker_name: "EOS",
-
-    available_networks: []
+    version: 1,
+    available_networks: [
+      {
+        id: "custom",
+        is_test: true,
+        logo: "/images/eos-mainnet.png",
+        name: "Custom Network",
+        url: process.env.REACT_APP_DFUSE_ENDPOINT || "http://localhost:8080"
+      },
+      {
+        id: "eos-mainnet",
+        is_test: false,
+        logo: "/images/eos-mainnet.png",
+        name: "EOS Mainnet",
+        url: "https://eosq.app"
+      },
+      {
+        id: "eos-worbli",
+        is_test: false,
+        logo: "/images/eos-worbli.png",
+        name: "Worbli",
+        url: "https://worbli.eosq.app"
+      },
+      {
+        id: "eos-kylin",
+        is_test: true,
+        logo: "/images/eos-jungle.png",
+        name: "CryptoKylin",
+        url: "https://kylin.eosq.app"
+      },
+      {
+        id: "wax-mainnet",
+        is_test: true,
+        logo: "/images/wax-mainnet.png",
+        name: "WAX Mainnet",
+        url: "https://wax.eosq.app"
+      }
+    ]
   }
 }
 
