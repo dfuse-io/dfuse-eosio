@@ -17,6 +17,8 @@ package pbcodec
 import (
 	"fmt"
 	"sort"
+
+	"go.uber.org/zap"
 )
 
 func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(blockID string) bool) *TransactionLifecycle {
@@ -40,15 +42,18 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 		}
 
 		skip := func(seenIrrMark *bool) bool {
-			if *seenIrrMark {
+			if *seenIrrMark && !evi.Irreversible {
+				// if you have seen IRR and you are aren't an IRR event SKIP
 				return true
 			}
 
 			if !evi.Irreversible && !inCanonicalChain(evi.BlockId) {
+				// IF YOU ARE NOT IRR AND YOU ARE NOT IN THE LONGEST CHAIN SKIP
 				return true
 			}
 
 			if evi.Irreversible {
+				// IF YOU ARE IRR MARK AS IRR SEEN
 				*seenIrrMark = true
 			}
 
@@ -60,26 +65,54 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			if skip(&additionsIrr) {
 				continue
 			}
-
 			out.TransactionReceipt = ev.Addition.Receipt
-			out.Transaction = ev.Addition.Transaction
 			out.PublicKeys = ev.Addition.PublicKeys.PublicKeys
+			if out.Transaction == nil {
+				out.Transaction = ev.Addition.Transaction
+			}
 
 		case *TransactionEvent_InternalAddition:
 			if skip(&intAdditionsIrr) {
 				continue
 			}
-
 			out.Transaction = ev.InternalAddition.Transaction
 
 		case *TransactionEvent_Execution:
 			if skip(&execIrr) {
 				continue
 			}
+			// In the case of a deferred transaction push (using CLI and `--delay-sec`)
+			// it will have 2 execution traces, the first one when the delayed transaction got
+			// pushed on the chain for later execution (that costs ram...) and the second
+			// when the the transaction actually got executed. Thus we must merge the
+			// RamOps & RlimitOps  to ensure that we have an accurate representation
+			// of the execution trace
+			if out.ExecutionTrace == nil {
+				out.ExecutionTrace = ev.Execution.Trace
+				out.ExecutionBlockHeader = ev.Execution.BlockHeader
+				out.ExecutionIrreversible = evi.Irreversible
+			} else {
+				if out.ExecutionTrace.Receipt != nil &&
+					out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+					// the first one we processed is the Execution trace
+					out.ExecutionTrace = mergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
 
-			out.ExecutionTrace = ev.Execution.Trace
-			out.ExecutionBlockHeader = ev.Execution.BlockHeader
-			out.ExecutionIrreversible = evi.Irreversible
+				} else if ev.Execution.Trace.Receipt != nil &&
+					ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+					// the second one (current one) is the Execution Trace
+					out.ExecutionTrace = mergeTransactionTrace(ev.Execution.Trace, out.ExecutionTrace)
+					// since the second one is the execution trace, we must take
+					// its blocker header and irreversible flat for the execution details
+					out.ExecutionBlockHeader = ev.Execution.BlockHeader
+					out.ExecutionIrreversible = evi.Irreversible
+
+				} else {
+					zlog.Warn("attempt to merge two non executed transaction traces, this should never happen",
+						zap.String("trx_id", out.ExecutionTrace.Id),
+					)
+				}
+
+			}
 
 		case *TransactionEvent_DtrxScheduling:
 			if skip(&dtrxCreateIrr) {
@@ -124,8 +157,13 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 
 func sortEvents(events []*TransactionEvent) []*TransactionEvent {
 	sort.Slice(events, func(i, j int) bool {
-		// TEST that this does INDEED sort
-		return events[i].Irreversible
+		if events[i].Irreversible && events[j].Irreversible {
+			// if both events are irreversible sort by block number from lowest to highest
+			return events[i].BlockNum < events[j].BlockNum
+		} else {
+			// if both are not irreversible sort by irreversibility
+			return events[i].Irreversible
+		}
 	})
 	return events
 }
@@ -154,4 +192,11 @@ func getTransactionLifeCycleStatus(lifeCycle *TransactionLifecycle) TransactionS
 
 	// Expired Failed Executed
 	return lifeCycle.ExecutionTrace.Receipt.Status
+}
+
+func mergeTransactionTrace(executionTrace, otherTrace *TransactionTrace) (out *TransactionTrace) {
+	out = executionTrace
+	out.RamOps = append(otherTrace.RamOps, out.RamOps...)
+	out.RlimitOps = append(otherTrace.RlimitOps, out.RlimitOps...)
+	return out
 }

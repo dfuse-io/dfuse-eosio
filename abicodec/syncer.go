@@ -76,14 +76,17 @@ func (s *ABISyncer) cleanup(error) {
 }
 
 func (s *ABISyncer) Sync() {
+
 	for {
 		zlog.Info("starting ABI syncer")
 		err := s.streamABIChanges()
-		if err != nil && !errors.Is(err, context.Canceled) {
-			zlog.Info("the search stream ended with error", zap.Error(err))
+		zlog.Info("abi codec stream abi changes", zap.Error(err))
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				zlog.Info("the search stream ended with error", zap.Error(err))
+			}
 		}
 
-		zlog.Info("waiting before startng ABI syncer")
 		select {
 		case <-s.syncCtx.Done():
 			return

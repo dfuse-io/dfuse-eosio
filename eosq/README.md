@@ -4,42 +4,46 @@ EOSIO block explorer
 
 ## Quick start
 
-This alternate start assumes you have yarn and go installed on your system.
+This guide assumes you have `yarn` and `go` installed on your system.
 
-* Copy `config-example.json` to `server/config.json`
+* In the first terminal, build the dfuse single binary:
 
-* Add a valid `dfuse_io_api_key` in `server/config.json`
+      go install ../cmd/dfuseeos
 
-* In the first terminal:
+    then run the binary with:
+
+      dfuseeos start
+
+* In the second terminal, install dependencies for the `eosq` React app:
 
       yarn install
+    
+    then run the React app in development mode:
+
       yarn start
 
-* In the second terminal, start the go server:
-
-      go install -v ./server && server
-
-* In your browser, connect to your instance via http://localhost:8001.
+* In your browser, connect to your instance via http://localhost:3000.
 
 ## Build as single binary within dfuse for EOSIO
 
-First, you will need to grab https://github.com/GeertJohan/go.rice with `go get github.com/GeertJohan/go.rice/rice`
+* First, you will need to grab https://github.com/GeertJohan/go.rice with `go get github.com/GeertJohan/go.rice/rice`
 
-Then,
-* yarn build # will create or update the `build` folder
+* Then create the React build with:
+        
+      yarn build
 
-Then either:
-* go generate
+* Next, run either:
 
-or
+      go generate
 
-* goreleaser (from root /)
+    OR
+
+      goreleaser (from root /)
 
 ## File structure
 
-./     small Go server to inject configuration in dfuse-box mode
-src    JS code
-server another small Go server to run stand-alone eosq server
+- `src` JS code
+- `app` Go code which wraps the React build into a `go` module to be run by `dfuseeos`
 
 ## JS File structure
 
@@ -64,11 +68,10 @@ server another small Go server to run stand-alone eosq server
 
 * Material-ui
 * Emotion
-* Fortawesome PRO
+* Fortawesome Free
 * @dfuse/client
 * i18next
 * nvd3/d3
 * mobx
 * react-scripts
 * Typescript
-

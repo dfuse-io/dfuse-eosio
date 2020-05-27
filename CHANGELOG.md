@@ -6,15 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+* [Breaking] `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
 * [Breaking] `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
 * [Breaking] `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
 * [Breaking] `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
 * [Breaking] `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 
 ### Added
-* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
-* Flag: `--pprof-listen-addr` (default: 6060)
-* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
+* Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: --pprof-listen-addr (default: 6060)
+* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb 
+* Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
 
 ## [v0.1.0-beta3] 2020-05-13
 

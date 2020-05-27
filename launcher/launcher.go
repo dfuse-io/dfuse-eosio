@@ -28,7 +28,8 @@ import (
 type Launcher struct {
 	*shutter.Shutter
 
-	FirstAppError error
+	FirstShutdownAppError error
+	FirstShutdownAppName  string
 
 	config  *DfuseConfig
 	modules *RuntimeModules
@@ -125,10 +126,16 @@ func (l *Launcher) Launch(appNames []string) error {
 				userLog.Debug("app terminating", zap.String("app_id", appID))
 				if err := app.Err(); err != nil {
 					l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
-						l.FirstAppError = err
+						l.FirstShutdownAppError = err
+						l.FirstShutdownAppName = appID
 						userLog.FatalAppError(appID, err)
 					})
 					userLog.Error("app terminating with error", zap.String("app_id", appID), zap.Error(err))
+				} else {
+					l.shutdownFatalLogOnce.Do(func() {
+						l.FirstShutdownAppName = appID
+						userLog.Printf("app %s triggered clean shutdown", appID)
+					})
 				}
 				l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_STOPPED)
 

@@ -170,7 +170,7 @@ export class PillTabContentComponent extends React.Component<Props, State> {
   }
 
   renderDisplayFullContentButton() {
-    return !this.props.displayFullContentButton ? (
+    return this.props.displayFullContentButton ? (
       <Cell float="right">
         <LinkStyledText color={theme.colors.link} onClick={() => this.props.onDisplayFullContent()}>
           Show Full Content

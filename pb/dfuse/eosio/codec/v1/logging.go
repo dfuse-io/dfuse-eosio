@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sql
+package pbcodec
 
 import (
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
-var zlog *zap.Logger
+var zlog = zap.NewNop()
 
 func init() {
-	logging.Register("github.com/dfuse-io/kvdb/eosdb/sql", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse/eosio/codec/v1/logging.go", &zlog)
 }

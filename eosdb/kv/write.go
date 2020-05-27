@@ -59,7 +59,8 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 	for _, trxReceipt := range blk.Transactions {
 		if trxReceipt.PackedTransaction == nil {
-			// This means we deal with a deferred transaction receipt, and that it has been handled through DtrxOps already
+			// This means we deal with a deferred transaction receipt, and that it
+			// has been handled through DtrxOps already
 			continue
 		}
 
@@ -99,16 +100,21 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 			extDtrxOp := dtrxOp.ToExtDTrxOp(blk, trxTrace)
 
 			dtrxRow := &pbeosdb.DtrxRow{}
+
+			var key []byte
 			if dtrxOp.IsCreateOperation() {
 				dtrxRow.SignedTrx = dtrxOp.Transaction
 				dtrxRow.CreatedBy = extDtrxOp
+				key = Keys.PackDtrxsKeyCreated(dtrxOp.TransactionId, blk.Id)
 			} else if dtrxOp.IsCancelOperation() {
 				dtrxRow.CanceledBy = extDtrxOp
+				key = Keys.PackDtrxsKeyCancelled(dtrxOp.TransactionId, blk.Id)
+			} else if dtrxOp.IsFailedOperation() {
+				key = Keys.PackDtrxsKeyFailed(dtrxOp.TransactionId, blk.Id)
+			} else {
+				return fmt.Errorf("put dtrxRow: handle dtrxOp Operation: unknown dtrxOp operation for trx id %s at action %d", trxTrace.Id, dtrxOp.ActionIndex)
 			}
 
-			// TODO: check make sure this is like bigtable implementation.
-			key := Keys.PackDtrxsKey(dtrxOp.TransactionId, blk.Id)
-			//zlog.Debug("put dtrxRow", zap.String("trx_id", trxTrace.Id), zap.ByteString("key", key))
 			if err := db.store.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
 				return fmt.Errorf("put dtrxRow: write to db: %w", err)
 			}
