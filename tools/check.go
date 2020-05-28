@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dstore"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,17 +19,49 @@ var checkBlocksCmd = &cobra.Command{
 	// TODO: Not sure, it's now a required thing, but we could probably use the same logic as `start`
 	//       and avoid altogether passing the args. If this would also load the config and everything else,
 	//       that would be much more seamless!
-	Use:   "blocks [store-url]",
+	Use:   "blocks {store-url}",
 	Short: "Checks for any holes in merged blocks as well as ensuring merged blocks integrity",
 	Args:  cobra.ExactArgs(1),
 	RunE:  checkBlocksE,
+}
+var checkFluxShardsCmd = &cobra.Command{
+	Use:   "flux-shards {dsn} {shard-count}",
+	Short: "Checks to see if all shards are aligned in flux reprocessing",
+	Args:  cobra.ExactArgs(2),
+	RunE:  checkFluxShardsE,
 }
 
 func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkBlocksCmd)
+	checkCmd.AddCommand(checkFluxShardsCmd)
 
 	checkBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
+}
+
+func checkFluxShardsE(cmd *cobra.Command, args []string) error {
+	cmd.SilenceUsage = true
+
+	storeDSN := args[0]
+	shards := args[1]
+	shardsInt, err := strconv.ParseInt(shards, 10, 32)
+	if err != nil {
+		return fmt.Errorf("shards arg parsing: %w", err)
+	}
+
+	kvStore, err := fluxdb.NewKVStore(storeDSN)
+	if err != nil {
+		return fmt.Errorf("unable to create store: %w", err)
+	}
+
+	fdb := fluxdb.New(kvStore)
+	fdb.SetSharding(0, int(shardsInt))
+	lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
+	if err != nil {
+		return err
+	}
+	fmt.Println("last block: ", lastBlock)
+	return nil
 }
 
 func checkBlocksE(cmd *cobra.Command, args []string) error {

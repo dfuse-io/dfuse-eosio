@@ -22,9 +22,8 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
-	"go.uber.org/zap"
+	"github.com/dfuse-io/dtracing"
 )
 
 func (fdb *FluxDB) WriteBatch(ctx context.Context, w []*WriteRequest) error {
@@ -62,41 +61,52 @@ func (fdb *FluxDB) WriteBatch(ctx context.Context, w []*WriteRequest) error {
 	return nil
 }
 
-func (fdb *FluxDB) VerifyAllShardsWritten() error {
-	ctx := context.Background()
-
+func (fdb *FluxDB) VerifyAllShardsWritten(ctx context.Context) (string, error) {
 	seen := make(map[string]string)
-	err := fdb.store.ScanLastShardsWrittenBlock(ctx, "shard-", func(key string, blockRef bstream.BlockRef) error {
+	if err := fdb.store.ScanLastShardsWrittenBlock(ctx, "shard-", func(key string, blockRef bstream.BlockRef) error {
 		seen[strings.TrimPrefix(key, "shard-")] = blockRef.ID()
 		return nil
-	})
-
-	if err != nil {
-		return err
+	}); err != nil {
+		return "", err
 	}
 
-	var lastSeenBlock string
+	shardToBlockID := make(map[string]string)
+
+	var referenceBlock string
 	for i := 0; i < fdb.shardCount; i++ {
 		key := fmt.Sprintf("%03d", i)
-		seenBlock := seen[key]
-		if seenBlock == "" {
-			zlog.Info("verify all shards written: NO, shard missing", zap.String("missing", key))
-			return nil
-		}
-		if lastSeenBlock == "" {
-			lastSeenBlock = seenBlock
-			continue
-		}
-		if seenBlock != lastSeenBlock {
-			zlog.Info("verify all shards written: NO, block mismatch", zap.String("first_shard", lastSeenBlock), zap.String("second_shard", seenBlock))
-			return nil
+		shardToBlockID[key] = seen[key]
+		if i == 0 {
+			referenceBlock = seen[key]
 		}
 	}
 
-	zlog.Info("verify all shards written: YES, marking block for real-time injector", zap.String("block_id", lastSeenBlock))
+	var faultyShards []string
+	var missingShards []string
+	for key, seenBlock := range shardToBlockID {
+		if seenBlock == "" {
+			missingShards = append(missingShards, key)
+		}
+		if seenBlock != referenceBlock {
+			faultyShards = append(faultyShards, key)
+		}
+	}
 
+	var err error
+	if missingShards != nil {
+		err = fmt.Errorf("missing shards: %v", missingShards)
+	}
+	if faultyShards != nil {
+		err = fmt.Errorf("shards not matching reference block %s: %v. %s", referenceBlock, faultyShards, err)
+	}
+
+	return referenceBlock, err
+
+}
+
+func (fdb *FluxDB) UpdateGlobalLastBlockID(ctx context.Context, blockID string) error {
 	batch := fdb.store.NewBatch(zlog)
-	batch.SetLast(lastBlockRowKey, []byte(lastSeenBlock))
+	batch.SetLast(lastBlockRowKey, []byte(blockID))
 	if err := batch.Flush(ctx); err != nil {
 		return fmt.Errorf("flushing last block marker: %s", err)
 	}
