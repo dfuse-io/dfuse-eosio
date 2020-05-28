@@ -110,7 +110,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		os.Exit(1)
 	}
 
-	printWelcomeMessage()
+	printWelcomeMessage(apps)
 
 	signalHandler := derr.SetupSignalHandler(0 * time.Second)
 	select {
@@ -144,17 +144,31 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-func printWelcomeMessage() {
-	message := strings.TrimLeft(`
-Your instance should be ready in a few seconds, here some relevant links:
+func printWelcomeMessage(apps []string) {
+	hasDashboard := containsApp(apps, "dashboard")
+	hasAPIProxy := containsApp(apps, "apiproxy")
+	if !hasDashboard && !hasAPIProxy {
+		// No welcome message to print, advanced usage
+		return
+	}
 
-  Dashboard:        http://localhost%s
+	format := "Your instance should be ready in a few seconds, here some relevant links:\n"
+	var formatArgs []interface{}
 
-  Explorer & APIs:  http://localhost%s
-  GraphiQL:         http://localhost%s/graphiql
-`, "\n")
+	if hasDashboard {
+		format += "\n"
+		format += "  Dashboard:        http://localhost%s\n"
+		formatArgs = append(formatArgs, DashboardHTTPListenAddr)
+	}
 
-	userLog.Printf(message, DashboardHTTPListenAddr, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
+	if hasAPIProxy {
+		format += "\n"
+		format += "  Explorer & APIs:  http://localhost%s\n"
+		format += "  GraphiQL:         http://localhost%s/graphiql\n"
+		formatArgs = append(formatArgs, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
+	}
+
+	userLog.Printf(format, formatArgs...)
 }
 
 func containsApp(apps []string, searchedApp string) bool {
