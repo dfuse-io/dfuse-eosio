@@ -66,7 +66,7 @@ func parseFileName(filename string) (first, last uint32, err error) {
 
 func (s *ShardInjector) Run() (err error) {
 	ctx, cancelInjector := context.WithCancel(context.Background())
-	s.Shutter.OnTerminating(func(_ error) {
+	s.OnTerminating(func(_ error) {
 		cancelInjector()
 	})
 
@@ -74,6 +74,8 @@ func (s *ShardInjector) Run() (err error) {
 	if err != nil {
 		return err
 	}
+
+	zlog.Info("starting back shard injector", zap.Stringer("block", startAfter))
 	startAfterNum := uint32(startAfter.Num())
 
 	err = s.shardsStore.Walk(ctx, "", "", func(filename string) error {
@@ -81,10 +83,11 @@ func (s *ShardInjector) Run() (err error) {
 		if err != nil {
 			return err
 		}
+
 		if fileFirst > startAfterNum+1 {
 			return fmt.Errorf("file %s starts at block %d, we were expecting to start right after %d, there is a hole in your block range files", filename, fileFirst, startAfter)
 		}
-		if startAfterNum >= fileLast {
+		if fileLast <= startAfterNum {
 			zlog.Info("skipping shard file", zap.String("filename", filename), zap.Uint32("start_after", startAfterNum))
 			return nil
 		}
