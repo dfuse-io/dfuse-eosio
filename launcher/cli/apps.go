@@ -25,7 +25,7 @@ import (
 
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
 	"github.com/dfuse-io/bstream"
-	_ "github.com/dfuse-io/dauth/null" // register plugin
+	_ "github.com/dfuse-io/dauth/authenticator/null" // register plugin
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
