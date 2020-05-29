@@ -20,15 +20,15 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200520211406-2b44b8c4cbd4
 	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
-	github.com/dfuse-io/dauth v0.0.0-20200529152628-18790f0c0b3c
+	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200529165051-1fcafd730e21
+	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251
 	github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
-	github.com/dfuse-io/dmetering v0.0.0-20200529152951-0c90b6c54930
+	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.0
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
@@ -62,6 +62,8 @@ require (
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/manifoldco/promptui v0.7.0
 	github.com/minio/highwayhash v1.0.0
+	github.com/onsi/ginkgo v1.11.0 // indirect
+	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
