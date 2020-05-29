@@ -23,7 +23,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200529152628-18790f0c0b3c
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200428160855-57e0abb636c6
+	github.com/dfuse-io/dgraphql v0.0.0-20200529165051-1fcafd730e21
 	github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4

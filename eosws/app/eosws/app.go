@@ -30,8 +30,8 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth/authenticator"
-	dauthMiddleware "github.com/dfuse-io/dauth/middleware"
-	_ "github.com/dfuse-io/dauth/null" // auth plugin
+	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
+	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
