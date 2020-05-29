@@ -29,7 +29,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	dauthMiddleware "github.com/dfuse-io/dauth/middleware"
 	_ "github.com/dfuse-io/dauth/null" // auth plugin
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
@@ -282,14 +282,14 @@ func (a *App) Run() error {
 
 	wsHandler := eosws.NewWebsocketHandler(abiGetter, accountGetter, db, subscriptionHub, fluxClient, voteTallyHub, headInfoHub, priceHub, irrFinder, a.Config.FilesourceRateLimitPerBlock)
 
-	auth, err := dauth.New(a.Config.AuthPlugin)
+	auth, err := authenticator.New(a.Config.AuthPlugin)
 	if err != nil {
 		return fmt.Errorf("unable to initialize dauth: %w", err)
 	}
 
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosws.DfuseErrorHandler).Handler
 	corsMiddleware := eosws.NewCORSMiddleware()
-	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials dauth.Credentials) error {
+	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
 		type authTier interface {
 			AuthenticatedTier() string
 		}

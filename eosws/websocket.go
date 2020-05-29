@@ -20,8 +20,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/dauth"
-
+	"github.com/dfuse-io/dauth/authenticator"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 
 	"github.com/dfuse-io/logging"
@@ -98,7 +97,7 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 
 	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		credentials := dauth.GetCredentials(ctx)
+		credentials := authenticator.GetCredentials(ctx)
 		// r.Trailer = http.Header{
 		// 	"X-Client-ID": []string{credentials.Id},
 		// }

@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"github.com/dfuse-io/dmetering"
@@ -47,13 +47,13 @@ type WSConn struct {
 	listenersLock     sync.Mutex
 	emitLock          sync.Mutex
 
-	creds dauth.Credentials
+	creds authenticator.Credentials
 
 	Context                  context.Context
 	filesourceBlockRateLimit time.Duration
 }
 
-func NewWSConn(wshand *WebsocketHandler, conn *websocket.Conn, db DB, creds dauth.Credentials, filesourceBlockRateLimit time.Duration, ctx context.Context) *WSConn {
+func NewWSConn(wshand *WebsocketHandler, conn *websocket.Conn, db DB, creds authenticator.Credentials, filesourceBlockRateLimit time.Duration, ctx context.Context) *WSConn {
 	// Each WS conn will have its own SubscribablePipeline ? Hooked into the main pipeline
 	// of the process, let's, for now, simply create a Joiner per socket
 	ws := &WSConn{

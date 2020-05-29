@@ -31,7 +31,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
@@ -219,7 +219,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 			)
 
 			conn, closer := newTestConnection(t, handler, &testCredentials{startBlock: 2})
-			// dauth.Credentials{
+			// authenticator.Credentials{
 			// 	StandardClaims: jwt.StandardClaims{Id: "testID"},
 			// 	Version:        1,
 			// 	Tier:           "beta-v1",
@@ -277,7 +277,7 @@ var defaultTraceID = "105445aa7843bc8bf206b12000100000"
 
 var defaultTestCredentials = &testCredentials{startBlock: 0}
 
-// dauth.Credentials{
+// authenticator.Credentials{
 // 	StandardClaims: jwt.StandardClaims{Id: "testID"},
 // 	Version:        1,
 // 	Tier:           "beta-v1",
@@ -285,12 +285,12 @@ var defaultTestCredentials = &testCredentials{startBlock: 0}
 // }
 
 func newTestConnection(t *testing.T, handler http.Handler, options ...interface{}) (*websocket.Conn, func()) {
-	credentials := dauth.Credentials(defaultTestCredentials)
+	credentials := authenticator.Credentials(defaultTestCredentials)
 	traceID := defaultTraceID
 
 	for _, option := range options {
 		switch value := option.(type) {
-		case dauth.Credentials:
+		case authenticator.Credentials:
 			credentials = value
 		case traceIDTestOpion:
 			traceID = string(value)
@@ -302,7 +302,7 @@ func newTestConnection(t *testing.T, handler http.Handler, options ...interface{
 	// Adds the required authKey to request context
 	testMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r.WithContext(dauth.WithCredentials(r.Context(), credentials)))
+			next.ServeHTTP(w, r.WithContext(authenticator.WithCredentials(r.Context(), credentials)))
 		})
 	}
 
