@@ -17,6 +17,8 @@ package dgraphql
 import (
 	"fmt"
 
+	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
+	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
@@ -29,10 +31,11 @@ import (
 
 type Config struct {
 	dgraphqlApp.Config
-	SearchAddr    string
-	ABICodecAddr  string
-	BlockMetaAddr string
-	KVDBDSN       string
+	RateLimiterPlugin string
+	SearchAddr        string
+	ABICodecAddr      string
+	BlockMetaAddr     string
+	KVDBDSN           string
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
@@ -82,8 +85,11 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
+	rateLimiter, err := drateLimiter.New(config.RateLimiterPlugin)
+	derr.Check("unable to initialize rate limiter", err)
+
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

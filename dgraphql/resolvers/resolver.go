@@ -22,8 +22,10 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 	"unicode/utf8"
 
+	rateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
@@ -48,23 +50,26 @@ import (
 
 // Root is the root resolver.
 type Root struct {
-	searchClient             pbsearch.RouterClient
-	trxsReader               eosdb.TransactionsReader
-	blocksReader             eosdb.BlocksReader
-	accountsReader           eosdb.AccountsReader
-	blockmetaClient          *pbblockmeta.Client
-	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
-	abiCodecClient           pbabicodec.DecoderClient
+	searchClient                  pbsearch.RouterClient
+	trxsReader                    eosdb.TransactionsReader
+	blocksReader                  eosdb.BlocksReader
+	accountsReader                eosdb.AccountsReader
+	blockmetaClient               *pbblockmeta.Client
+	chainDiscriminatorClient      *pbblockmeta.ChainDiscriminatorClient
+	abiCodecClient                pbabicodec.DecoderClient
+	requestRateLimiter            rateLimiter.RateLimiter
+	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient) (interface{}, error) {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter) (interface{}, error) {
 	return &Root{
-		searchClient:    searchClient,
-		trxsReader:      dbReader,
-		blocksReader:    dbReader,
-		accountsReader:  dbReader,
-		blockmetaClient: blockMetaClient,
-		abiCodecClient:  abiCodecClient,
+		searchClient:       searchClient,
+		trxsReader:         dbReader,
+		blocksReader:       dbReader,
+		accountsReader:     dbReader,
+		blockmetaClient:    blockMetaClient,
+		abiCodecClient:     abiCodecClient,
+		requestRateLimiter: requestRateLimiter,
 	}, nil
 }
 
@@ -80,6 +85,9 @@ type SearchArgs struct {
 }
 
 func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchArgs) (*SearchTransactionsForwardResponse, error) {
+	if err := r.rateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	res, err := r.querySearchTransactionsBoth(ctx, true, args)
 	if err != nil {
 		return nil, err
@@ -124,6 +132,10 @@ func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchAr
 }
 
 func (r *Root) QuerySearchTransactionsBackward(ctx context.Context, args SearchArgs) (*SearchTransactionsBackwardResponse, error) {
+	if err := r.rateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
+
 	res, err := r.querySearchTransactionsBoth(ctx, false, args)
 	if err != nil {
 		return nil, err
@@ -307,6 +319,9 @@ type StreamSearchArgs struct {
 }
 
 func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
+	if err := r.rateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	/////////////////////////////////////////////////////////////////////////
 	// DO NOT change this without updating BigQuery analytics
 	analytics.TrackUserEvent(ctx, "dgraphql", "SubscriptionSearchTransactionsForward", "StreamSearchArgs", args)
@@ -316,6 +331,9 @@ func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args S
 }
 
 func (r *Root) SubscriptionSearchTransactionsBackward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
+	if err := r.rateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	/////////////////////////////////////////////////////////////////////////
 	// DO NOT change this without updating BigQuery analytics
 	analytics.TrackUserEvent(ctx, "dgraphql", "SubscriptionSearchTransactionsBackward", "StreamSearchArgs", args)
