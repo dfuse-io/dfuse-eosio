@@ -38,7 +38,7 @@ type QueryBlockRequest struct {
 }
 
 func (r *Root) QueryBlock(ctx context.Context, req QueryBlockRequest) (*Block, error) {
-	if err := r.rateLimit(ctx, "block"); err != nil {
+	if err := r.RateLimit(ctx, "block"); err != nil {
 		return nil, err
 	}
 	zlogger := logging.Logger(ctx, zlog)

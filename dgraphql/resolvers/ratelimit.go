@@ -18,7 +18,7 @@ func init() {
 	ratelimiter.RegisterServices(services)
 }
 
-func (r *Root) rateLimit(ctx context.Context, method string) error {
+func (r *Root) RateLimit(ctx context.Context, method string) error {
 	if r.requestRateLimiter == nil {
 		return nil
 	}

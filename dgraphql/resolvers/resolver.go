@@ -85,7 +85,7 @@ type SearchArgs struct {
 }
 
 func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchArgs) (*SearchTransactionsForwardResponse, error) {
-	if err := r.rateLimit(ctx, "search"); err != nil {
+	if err := r.RateLimit(ctx, "search"); err != nil {
 		return nil, err
 	}
 	res, err := r.querySearchTransactionsBoth(ctx, true, args)
@@ -132,7 +132,7 @@ func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchAr
 }
 
 func (r *Root) QuerySearchTransactionsBackward(ctx context.Context, args SearchArgs) (*SearchTransactionsBackwardResponse, error) {
-	if err := r.rateLimit(ctx, "search"); err != nil {
+	if err := r.RateLimit(ctx, "search"); err != nil {
 		return nil, err
 	}
 
@@ -319,7 +319,7 @@ type StreamSearchArgs struct {
 }
 
 func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
-	if err := r.rateLimit(ctx, "search"); err != nil {
+	if err := r.RateLimit(ctx, "search"); err != nil {
 		return nil, err
 	}
 	/////////////////////////////////////////////////////////////////////////
@@ -331,7 +331,7 @@ func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args S
 }
 
 func (r *Root) SubscriptionSearchTransactionsBackward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
-	if err := r.rateLimit(ctx, "search"); err != nil {
+	if err := r.RateLimit(ctx, "search"); err != nil {
 		return nil, err
 	}
 	/////////////////////////////////////////////////////////////////////////

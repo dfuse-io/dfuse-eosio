@@ -40,7 +40,7 @@ type BlockIDAtAccountCreationArgs struct {
 }
 
 func (r *Root) QueryBlockIDAtAccountCreation(ctx context.Context, args BlockIDAtAccountCreationArgs) (*BlockIDResponse, error) {
-	if err := r.rateLimit(ctx, "blockmeta"); err != nil {
+	if err := r.RateLimit(ctx, "blockmeta"); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +102,7 @@ type BlockIDByTimeArgs struct {
 }
 
 func (r *Root) QueryBlockIDByTime(ctx context.Context, args BlockIDByTimeArgs) (*BlockIDResponse, error) {
-	if err := r.rateLimit(ctx, "blockmeta"); err != nil {
+	if err := r.RateLimit(ctx, "blockmeta"); err != nil {
 		return nil, err
 	}
 	zlogger := logging.Logger(ctx, zlog)
