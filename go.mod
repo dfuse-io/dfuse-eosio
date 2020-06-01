@@ -18,7 +18,7 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200520211406-2b44b8c4cbd4
+	github.com/dfuse-io/blockmeta v0.0.0-20200601140812-4c6dcfbbfc36
 	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
 	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
