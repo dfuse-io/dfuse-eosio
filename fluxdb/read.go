@@ -593,7 +593,7 @@ func (fdb *FluxDB) read(
 		return err
 	}
 
-	zlog.Info("finished reading rows from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
+	zlog.Debug("finished reading rows from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
 	return nil
 }
 
