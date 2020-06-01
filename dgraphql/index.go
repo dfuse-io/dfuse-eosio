@@ -17,6 +17,8 @@ package dgraphql
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
@@ -39,12 +41,9 @@ type Config struct {
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
-	schemas, err := SetupSchemas(&Config{
-		SearchAddr:    config.SearchAddr,
-		ABICodecAddr:  config.ABICodecAddr,
-		BlockMetaAddr: config.BlockMetaAddr,
-		KVDBDSN:       config.KVDBDSN,
-	})
+	zlog.Info("new dgraphql eosio app", zap.Reflect("config", config))
+
+	schemas, err := SetupSchemas(config)
 	if err != nil {
 		return nil, err
 	}
