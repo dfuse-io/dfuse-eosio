@@ -192,6 +192,15 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 		return nil, derr.Wrapf(err, "unable to read single row for table key %q and primary key %d", tableKey, r.PrimaryKey)
 	}
 
+	if rowData == nil {
+		return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
+	}
+
+	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
+	if err != nil {
+		return nil, err
+	}
+
 	zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
 	for _, blockWrite := range r.SpeculativeWrites {
 		for _, row := range blockWrite.TableDatas {
@@ -210,19 +219,6 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 				}
 			}
 		}
-	}
-
-	// This was added when fixing a bug with `/state/table/row` since the old location where it was used
-	// was not the right place. But when it was moved, it changed the behavior of the old API causing problem
-	// to existing customer. To retain old behavior, we now return an empty row data in all cases when a specific
-	// key is not found on a given table.
-	if rowData == nil {
-		return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
-	}
-
-	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
-	if err != nil {
-		return nil, err
 	}
 
 	return &ReadTableRowResponse{

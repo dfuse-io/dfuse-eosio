@@ -1,0 +1,36 @@
+package resolvers
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/dfuse-io/logging"
+
+	dauthenticator "github.com/dfuse-io/dauth/authenticator"
+	"go.uber.org/zap"
+)
+
+func (r *Root) rateLimit(ctx context.Context, method string) error {
+	if r.requestRateLimiter == nil {
+		return nil
+	}
+
+	zlogger := logging.Logger(ctx, zlog)
+
+	creds := dauthenticator.GetCredentials(ctx)
+	userID := creds.GetUserID()
+
+	if !r.requestRateLimiter.Gate(userID, method) {
+		if time.Since(r.requestRateLimiterLastLogTime) > 500*time.Millisecond {
+			zlogger.Info("rate limited user",
+				zap.String("sampling_frequency", "500ms"),
+				zap.String("user_id", userID),
+				zap.String("method", method),
+			)
+			r.requestRateLimiterLastLogTime = time.Now()
+		}
+		return fmt.Errorf("rate limited for method %s", method)
+	}
+	return nil
+}

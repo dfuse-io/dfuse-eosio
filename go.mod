@@ -20,7 +20,7 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200520211406-2b44b8c4cbd4
 	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
-	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
+	github.com/dfuse-io/dauth v0.0.0-20200601170943-e56dd5de7dc4
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251
@@ -98,3 +98,5 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/github.com/dfuse-io/dgraphql => /Users/julien/codebase/dfuse-io/dgraphql
