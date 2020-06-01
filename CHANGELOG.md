@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: --common-ratelimiter-plugin (default: nul://) to enable a rate limiter plugin
 * Flag: --pprof-listen-addr (default: 6060) 
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
 * Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb

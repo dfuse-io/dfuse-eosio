@@ -31,7 +31,7 @@ import (
 
 type Config struct {
 	dgraphqlApp.Config
-	RateLimiterPlugin string
+	RatelimiterPlugin string
 	SearchAddr        string
 	ABICodecAddr      string
 	BlockMetaAddr     string
@@ -85,7 +85,7 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
-	rateLimiter, err := drateLimiter.New(config.RateLimiterPlugin)
+	rateLimiter, err := drateLimiter.New(config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
 	zlog.Info("configuring resolver and parsing schemas")

@@ -74,9 +74,10 @@ func init() {
 		cmd.Flags().String("common-network-id", NetworkID, "Short network identifier, for billing purposes (usually maps namespaces on deployments). Used by: dgraphql")
 		cmd.Flags().String("common-chain-id", "", "Chain ID in hex. Used by: trxdb-loader (to reverse the signatures and extract public keys)") // TODO: eventually, pluck that from somewhere instead of asking for it here (!). You risk noticing its missing very late, and it'll require reprocessing if you want the pubkeys.
 
-		// Authentication and metering plugins
+		// Authentication, metering and rate limiter plugins
 		cmd.Flags().String("common-auth-plugin", "null://", "Auth plugin URI, see dfuse-io/dauth repository")
 		cmd.Flags().String("common-metering-plugin", "null://", "Metering plugin URI, see dfuse-io/dmetering repository")
+		cmd.Flags().String("common-ratelimiter-plugin", "null://", "Rate Limiter plugin URI, see dfuse-io/dauth repository")
 
 		// Database connection strings
 		cmd.Flags().String("common-trxdb-dsn", TrxdbDSN, "kvdb connection string to trxdb database. Used by: trxdb-loader, abicodec, eosws, dgraphql")
@@ -933,10 +934,11 @@ func init() {
 
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
-				SearchAddr:    viper.GetString("common-search-addr"),
-				ABICodecAddr:  viper.GetString("dgraphql-abi-addr"),
-				BlockMetaAddr: viper.GetString("common-blockmeta-addr"),
-				KVDBDSN:       mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				SearchAddr:        viper.GetString("common-search-addr"),
+				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
+				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
+				KVDBDSN:           mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields
