@@ -20,7 +20,7 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200601140812-4c6dcfbbfc36
 	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
-	github.com/dfuse-io/dauth v0.0.0-20200601170943-e56dd5de7dc4
+	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251

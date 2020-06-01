@@ -7,9 +7,16 @@ import (
 
 	"github.com/dfuse-io/logging"
 
-	dauthenticator "github.com/dfuse-io/dauth/authenticator"
+	"github.com/dfuse-io/dauth/authenticator"
+	"github.com/dfuse-io/dauth/ratelimiter"
+
 	"go.uber.org/zap"
 )
+
+func init() {
+	services := []string{"search", "block", "blockmeta"}
+	ratelimiter.RegisterServices(services)
+}
 
 func (r *Root) rateLimit(ctx context.Context, method string) error {
 	if r.requestRateLimiter == nil {
@@ -18,7 +25,7 @@ func (r *Root) rateLimit(ctx context.Context, method string) error {
 
 	zlogger := logging.Logger(ctx, zlog)
 
-	creds := dauthenticator.GetCredentials(ctx)
+	creds := authenticator.GetCredentials(ctx)
 	userID := creds.GetUserID()
 
 	if !r.requestRateLimiter.Gate(userID, method) {
