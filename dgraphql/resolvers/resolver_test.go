@@ -100,7 +100,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 			},
 			fromDB: map[string][]*pbcodec.TransactionEvent{
 				"trx123": {
-					{Id: "trx12399999999999999999", Event: pbcodec.NewTestExecEvent(5)},
+					{Id: "trx12399999999999999999", Event: pbcodec.NewSimpleTestExecEvent(5)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{
@@ -125,16 +125,16 @@ func TestSubscriptionSearchForward(t *testing.T) {
 			},
 			fromDB: map[string][]*pbcodec.TransactionEvent{
 				"trx000": {
-					{Id: "trx000boo", Event: pbcodec.NewTestExecEvent(5)},
+					{Id: "trx000boo", Event: pbcodec.NewSimpleTestExecEvent(5)},
 				},
 				"trx001": {
-					{Id: "trx001boo", Event: pbcodec.NewTestExecEvent(6)},
+					{Id: "trx001boo", Event: pbcodec.NewSimpleTestExecEvent(6)},
 				},
 				"trx002": {
-					{Id: "trx002boo", Event: pbcodec.NewTestExecEvent(7)},
+					{Id: "trx002boo", Event: pbcodec.NewSimpleTestExecEvent(7)},
 				},
 				"trx022": {
-					{Id: "trx022boo", Event: pbcodec.NewTestExecEvent(11)},
+					{Id: "trx022boo", Event: pbcodec.NewSimpleTestExecEvent(11)},
 				},
 			},
 			expect: []*SearchTransactionForwardResponse{

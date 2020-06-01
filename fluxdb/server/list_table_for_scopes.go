@@ -83,7 +83,7 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 		})
 	}
 
-	zlog.Info("waiting for all read requests to finish")
+	zlog.Debug("waiting for all read requests to finish")
 	if err := group.Wait(); err != nil {
 		writeError(ctx, w, derr.Wrap(err, "waiting for read requests"))
 		return
@@ -112,7 +112,6 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 
 type listTablesRowsForScopesRequest struct {
 	*readRequestCommon
-
 	Account string   `json:"account"`
 	Table   string   `json:"table"`
 	Scopes  []string `json:"scopes"`

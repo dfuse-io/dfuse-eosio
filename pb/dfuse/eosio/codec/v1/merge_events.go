@@ -27,9 +27,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 	}
 
 	sortEvents(events)
-
 	out := &TransactionLifecycle{}
-
 	var additionsIrr, intAdditionsIrr, execIrr, dtrxCreateIrr, dtrxCancelIrr bool
 	var trxID string
 	for _, evi := range events {
@@ -84,7 +82,7 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 			// In the case of a deferred transaction push (using CLI and `--delay-sec`)
 			// it will have 2 execution traces, the first one when the delayed transaction got
 			// pushed on the chain for later execution (that costs ram...) and the second
-			// when the the transaction actually got executed. Thus we must merge the
+			// when the the transaction actually got executed or hard failed. Thus we must merge the
 			// RamOps & RlimitOps  to ensure that we have an accurate representation
 			// of the execution trace
 			if out.ExecutionTrace == nil {
@@ -93,12 +91,16 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 				out.ExecutionIrreversible = evi.Irreversible
 			} else {
 				if out.ExecutionTrace.Receipt != nil &&
-					out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) {
 					// the first one we processed is the Execution trace
 					out.ExecutionTrace = mergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
 
 				} else if ev.Execution.Trace.Receipt != nil &&
-					ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
+					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
+					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
+					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) {
 					// the second one (current one) is the Execution Trace
 					out.ExecutionTrace = mergeTransactionTrace(ev.Execution.Trace, out.ExecutionTrace)
 					// since the second one is the execution trace, we must take
@@ -128,7 +130,10 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 				continue
 			}
 
-			if execIrr {
+			if execIrr && (out.ExecutionTrace != nil) && (out.ExecutionTrace.Receipt != nil) &&
+				((out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL)) {
 				continue
 			}
 

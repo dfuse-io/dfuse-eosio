@@ -19,51 +19,20 @@ import (
 )
 
 var kvCmd = &cobra.Command{Use: "kv", Short: "Read from a KVStore"}
-var kvBlkCmd = &cobra.Command{Use: "blk", Short: "read blk from KVStore", RunE: kvBlkE, Args: cobra.ExactArgs(1)}
-var kvBlkIrrCmd = &cobra.Command{Use: "blkirr", Short: "read irr blks from KVStore", RunE: kvBlkIrrE, Args: cobra.ExactArgs(1)}
-var kvTrxCmd = &cobra.Command{Use: "trx", Short: "read trx from KVStore", RunE: kvtrxE, Args: cobra.ExactArgs(1)}
-var kvTrxTracesCmd = &cobra.Command{Use: "trxtraces", Short: "read trx traces from KVStore", RunE: kvtrxTracesE, Args: cobra.ExactArgs(1)}
-var kvAccCmd = &cobra.Command{Use: "account", Short: "read account from KVStore", RunE: kvAccE, Args: cobra.ExactArgs(1)}
+
 var kvPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from KVStore", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
 var kvScanCmd = &cobra.Command{Use: "scan", Short: "scan read from KVStore", RunE: kvScan, Args: cobra.ExactArgs(2)}
 var kvGetCmd = &cobra.Command{Use: "get", Short: "get key from KVStore", RunE: kvGet, Args: cobra.ExactArgs(1)}
 
 func init() {
 	Cmd.AddCommand(kvCmd)
-
 	kvCmd.AddCommand(kvPrefixCmd)
-	kvCmd.AddCommand(kvBlkIrrCmd)
-	kvCmd.AddCommand(kvBlkCmd)
-	kvCmd.AddCommand(kvTrxCmd)
-	kvCmd.AddCommand(kvTrxTracesCmd)
-	kvCmd.AddCommand(kvAccCmd)
-
 	kvCmd.AddCommand(kvScanCmd)
 	kvCmd.AddCommand(kvGetCmd)
 
 	kvCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
 	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
 	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
-}
-
-func kvBlkIrrE(cmd *cobra.Command, args []string) (err error) {
-	return get(eosdb.Keys.PackIrrBlocksKey(args[0]))
-}
-
-func kvBlkE(cmd *cobra.Command, args []string) (err error) {
-	return get(eosdb.Keys.PackBlocksKey(args[0]))
-}
-
-func kvtrxE(cmd *cobra.Command, args []string) (err error) {
-	return getPrefix(eosdb.Keys.PackTrxsPrefix(args[0]))
-}
-
-func kvtrxTracesE(cmd *cobra.Command, args []string) (err error) {
-	return getPrefix(eosdb.Keys.PackTrxTracesPrefix(args[0]))
-}
-
-func kvAccE(cmd *cobra.Command, args []string) (err error) {
-	return get(eosdb.Keys.PackAccountKey(args[0]))
 }
 
 func kvPrefix(cmd *cobra.Command, args []string) (err error) {

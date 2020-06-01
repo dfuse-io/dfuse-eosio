@@ -21,10 +21,10 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
+	eos "github.com/eoscanada/eos-go"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 )
@@ -204,7 +204,6 @@ func (srv *EOSServer) readTableRow(
 			BlockNum:          blockNum,
 			SpeculativeWrites: speculativeWrites,
 		},
-
 		PrimaryKey: primaryKeyValue,
 	})
 

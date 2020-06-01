@@ -26,10 +26,7 @@ import (
 )
 
 type Launcher struct {
-	*shutter.Shutter
-
-	FirstShutdownAppError error
-	FirstShutdownAppName  string
+	shutter *shutter.Shutter
 
 	config  *DfuseConfig
 	modules *RuntimeModules
@@ -37,14 +34,15 @@ type Launcher struct {
 
 	appStatus              map[string]pbdashboard.AppStatus
 	appStatusSubscriptions []*subscription
+	appStatusLock          sync.RWMutex
 
-	activeStatusLock     sync.RWMutex
-	shutdownFatalLogOnce sync.Once
+	shutdownDoOnce     sync.Once
+	firstShutdownAppID string
 }
 
 func NewLauncher(config *DfuseConfig, modules *RuntimeModules) *Launcher {
 	l := &Launcher{
-		Shutter:   shutter.New(),
+		shutter:   shutter.New(),
 		apps:      make(map[string]App),
 		appStatus: make(map[string]pbdashboard.AppStatus),
 		config:    config,
@@ -54,6 +52,10 @@ func NewLauncher(config *DfuseConfig, modules *RuntimeModules) *Launcher {
 	// only the dashboard app that uses the launcher....
 	l.modules.Launcher = l
 	return l
+}
+
+func (l *Launcher) Close() {
+	l.shutter.Shutdown(nil)
 }
 
 func (l *Launcher) Launch(appNames []string) error {
@@ -85,7 +87,7 @@ func (l *Launcher) Launch(appNames []string) error {
 		if err != nil {
 			return fmt.Errorf("unable to create app %q: %w", appID, err)
 		}
-		l.OnTerminating(func(err error) {
+		l.shutter.OnTerminating(func(err error) {
 			go app.Shutdown(err)
 		})
 
@@ -93,9 +95,10 @@ func (l *Launcher) Launch(appNames []string) error {
 	}
 
 	for appID, app := range l.apps {
-		if l.IsTerminating() {
+		if l.shutter.IsTerminating() {
 			break
 		}
+
 		// run
 		go func(appID string, app App) {
 			defer (func() {
@@ -109,43 +112,22 @@ func (l *Launcher) Launch(appNames []string) error {
 			userLog.Debug("launching app", zap.String("app", appID))
 			err := app.Run()
 			if err != nil {
-				l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
-					l.FirstShutdownAppError = err
-					l.FirstShutdownAppName = appID
-					userLog.FatalAppError(appID, fmt.Errorf("unable to start: %w", err))
-				})
-				l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_STOPPED)
-				l.Shutdown(nil)
+				l.shutdownDueToApp(appID, err)
 			}
 		}(appID, app)
 	}
 
 	for appID, app := range l.apps {
-		if l.IsTerminating() {
+		if l.shutter.IsTerminating() {
 			break
 		}
+
 		// watch for shutdown
 		go func(appID string, app App) {
 			select {
 			case <-app.Terminating():
-				userLog.Debug("app terminating", zap.String("app_id", appID))
-				if err := app.Err(); err != nil {
-					l.shutdownFatalLogOnce.Do(func() { // pretty printing of error causing dfuse shutdown
-						l.FirstShutdownAppError = err
-						l.FirstShutdownAppName = appID
-						userLog.FatalAppError(appID, err)
-					})
-					userLog.Error("app terminating with error", zap.String("app_id", appID), zap.Error(err))
-				} else {
-					l.shutdownFatalLogOnce.Do(func() {
-						l.FirstShutdownAppName = appID
-						userLog.Printf("app %s triggered clean shutdown", appID)
-					})
-				}
-				l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_STOPPED)
-
-				l.Shutdown(nil)
-			case <-l.Terminating():
+				l.shutdownDueToApp(appID, app.Err())
+			case <-l.shutter.Terminating():
 			}
 		}(appID, app)
 	}
@@ -166,22 +148,62 @@ func (l *Launcher) Launch(appNames []string) error {
 	return nil
 }
 
+func (l *Launcher) Terminating() <-chan string {
+
+	ch := make(chan string, 1)
+
+	go func() {
+		<-l.shutter.Terminating()
+		ch <- l.firstShutdownAppID
+	}()
+
+	return ch
+}
+
+func (l *Launcher) Err() error {
+	return l.shutter.Err()
+}
+
+// shutdownDueToApp initiates a launcher shutdown process recording the app that initially triggered
+// the shutdown and calling the launcher `Shutdown` method with the error. The `err` can be `nil`
+// in which case we assume a clean shutdown. Otherwise, we assume a fatal error shutdown and log
+// the fatal error.
+func (l *Launcher) shutdownDueToApp(appID string, err error) {
+	l.shutdownDoOnce.Do(func() { // pretty printing of error causing dfuse shutdown
+		l.firstShutdownAppID = appID
+
+		if err != nil {
+			userLog.FatalAppError(appID, err)
+		} else {
+			userLog.Printf("app %s triggered clean shutdown", appID)
+		}
+	})
+
+	l.StoreAndStreamAppStatus(appID, pbdashboard.AppStatus_STOPPED)
+	l.shutter.Shutdown(err)
+}
+
+// shutdownIfRecoveringFromPanic is called with the result of `recover()` call in a `defer`
+// to handle any panic and shutdowns down the whole launcher if any recovered error was encountered.
 func (l *Launcher) shutdownIfRecoveringFromPanic(appID string, recovered interface{}) {
 	if recovered == nil {
 		return
 	}
 
 	err := fmt.Errorf("app %q panicked", appID)
-	if recoveredErr, ok := recovered.(error); ok {
-		err = fmt.Errorf("%s: %w\n%s", err.Error(), recoveredErr, string(debug.Stack()))
+	switch v := recovered.(type) {
+	case error:
+		err = fmt.Errorf("%s: %w\n%s", err.Error(), v, string(debug.Stack()))
+	default:
+		err = fmt.Errorf("%s: %s\n%s", err.Error(), v, string(debug.Stack()))
 	}
 
-	l.Shutdown(err)
+	l.shutdownDueToApp(appID, err)
 }
 
 func (l *Launcher) StoreAndStreamAppStatus(appID string, status pbdashboard.AppStatus) {
-	l.activeStatusLock.Lock()
-	defer l.activeStatusLock.Unlock()
+	l.appStatusLock.Lock()
+	defer l.appStatusLock.Unlock()
 
 	l.appStatus[appID] = status
 
@@ -196,8 +218,8 @@ func (l *Launcher) StoreAndStreamAppStatus(appID string, status pbdashboard.AppS
 }
 
 func (l *Launcher) GetAppStatus(appID string) pbdashboard.AppStatus {
-	l.activeStatusLock.RLock()
-	defer l.activeStatusLock.RUnlock()
+	l.appStatusLock.RLock()
+	defer l.appStatusLock.RUnlock()
 
 	if v, found := l.appStatus[appID]; found {
 		return v
@@ -207,7 +229,7 @@ func (l *Launcher) GetAppStatus(appID string) pbdashboard.AppStatus {
 }
 
 func (l *Launcher) GetAppIDs() (resp []string) {
-	for appID, _ := range l.apps {
+	for appID := range l.apps {
 		resp = append(resp, string(appID))
 	}
 	return resp
@@ -259,8 +281,8 @@ func (l *Launcher) SubscribeAppStatus() *subscription {
 	chanSize := 500
 	sub := newSubscription(chanSize)
 
-	l.activeStatusLock.Lock()
-	defer l.activeStatusLock.Unlock()
+	l.appStatusLock.Lock()
+	defer l.appStatusLock.Unlock()
 
 	l.appStatusSubscriptions = append(l.appStatusSubscriptions, sub)
 
@@ -273,8 +295,8 @@ func (l *Launcher) UnsubscribeAppStatus(sub *subscription) {
 		return
 	}
 
-	l.activeStatusLock.Lock()
-	defer l.activeStatusLock.Unlock()
+	l.appStatusLock.Lock()
+	defer l.appStatusLock.Unlock()
 
 	var filtered []*subscription
 	for _, candidate := range l.appStatusSubscriptions {

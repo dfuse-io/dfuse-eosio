@@ -15,7 +15,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -110,29 +109,24 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		os.Exit(1)
 	}
 
-	printWelcomeMessage()
+	printWelcomeMessage(apps)
 
 	signalHandler := derr.SetupSignalHandler(0 * time.Second)
 	select {
 	case <-signalHandler:
 		userLog.Printf("Received termination signal, quitting")
-	case <-launch.Terminating():
-		if launch.FirstShutdownAppError == nil {
-			userLog.Printf("Application %s triggered a Clean Shutdown, quitting", launch.FirstShutdownAppName)
+
+		go launch.Close()
+	case appID := <-launch.Terminating():
+		if launch.Err() == nil {
+			userLog.Printf("Application %s triggered a clean shutdown, quitting", appID)
 		} else {
-			userLog.Printf("Application %s shutdown unexpectedly, quitting", launch.FirstShutdownAppName)
-			userLog.Printf("One of the applications shutdown unexpectedly, quitting")
-			err = errors.New("unexpected termination")
+			userLog.Printf("Application %s shutdown unexpectedly, quitting", appID)
+			err = launch.Err()
 		}
 	}
 
-	// all sub apps will be shut down by launcher when dfuse shut down
-	go launch.Shutdown(nil)
-
-	// wait for all sub apps to terminate
 	launch.WaitForTermination()
-
-	userLog.Printf("Goodbye")
 
 	// At this point, everything is terminated, if we got an error
 	// we exit right away with status code 1. If we let the error go
@@ -141,20 +135,36 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 		os.Exit(1)
 	}
 
+	// If an error occurred, saying Goodbye is not greate
+	userLog.Printf("Goodbye")
 	return
 }
 
-func printWelcomeMessage() {
-	message := strings.TrimLeft(`
-Your instance should be ready in a few seconds, here some relevant links:
+func printWelcomeMessage(apps []string) {
+	hasDashboard := containsApp(apps, "dashboard")
+	hasAPIProxy := containsApp(apps, "apiproxy")
+	if !hasDashboard && !hasAPIProxy {
+		// No welcome message to print, advanced usage
+		return
+	}
 
-  Dashboard:        http://localhost%s
+	format := "Your instance should be ready in a few seconds, here some relevant links:\n"
+	var formatArgs []interface{}
 
-  Explorer & APIs:  http://localhost%s
-  GraphiQL:         http://localhost%s/graphiql
-`, "\n")
+	if hasDashboard {
+		format += "\n"
+		format += "  Dashboard:        http://localhost%s\n"
+		formatArgs = append(formatArgs, DashboardHTTPListenAddr)
+	}
 
-	userLog.Printf(message, DashboardHTTPListenAddr, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
+	if hasAPIProxy {
+		format += "\n"
+		format += "  Explorer & APIs:  http://localhost%s\n"
+		format += "  GraphiQL:         http://localhost%s/graphiql\n"
+		formatArgs = append(formatArgs, APIProxyHTTPListenAddr, APIProxyHTTPListenAddr)
+	}
+
+	userLog.Printf(format, formatArgs...)
 }
 
 func containsApp(apps []string, searchedApp string) bool {

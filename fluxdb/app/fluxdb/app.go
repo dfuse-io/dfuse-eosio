@@ -203,8 +203,18 @@ func (a *App) startReprocInjector(kvStore store.KVStore) error {
 		return fmt.Errorf("injector failed: %w", err)
 	}
 
-	if err := db.VerifyAllShardsWritten(); err != nil {
-		return fmt.Errorf("verify all shards written: %w", err)
+	ctx := context.Background()
+	lastBlock, err := db.VerifyAllShardsWritten(ctx)
+	if err != nil {
+		zlog.Info("all shards are not done yet, not updating lastBlockID", zap.Error(err))
+		a.Shutdown(nil)
+		return nil
+	}
+
+	err = db.UpdateGlobalLastBlockID(ctx, lastBlock)
+	if err != nil {
+		zlog.Error("cannot update lastBlockID", zap.Error(err))
+		return fmt.Errorf("cannot update lastBlockID: %w", err)
 	}
 
 	a.Shutdown(nil)
