@@ -32,6 +32,7 @@ import (
 	"github.com/dfuse-io/dauth/authenticator"
 	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
+	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
 	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
