@@ -66,7 +66,7 @@ go install -v ./cmd/dfuseeos
 This will install the binary in your `$GOPATH/bin` folder (normally
 `$HOME/go/bin`). Make sure this folder is in your `PATH` env variable.
 
-### Usage
+### Usage (creating a new local chain)
 
 1. Initialize a few configuration files in your working directory (`dfuse.yaml`, `mindreader/config.ini`, ...)
 
@@ -92,6 +92,11 @@ GraphiQL:         http://localhost:8080/graphiql
   * If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
 
 4. If you chose to have dfuse create a new chain for you, see [bootstrapping](./bootstrapping) for info on creating the initial accounts and interacting with the chain
+
+### Usage (syncing existing chain)
+
+* See [Syncing a chain partially](./PARTIAL_SYNC.md)
+* See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 
 ## Overview
 
