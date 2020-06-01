@@ -20,11 +20,11 @@ import (
 	"net/http"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/eoserr"
-	"github.com/dfuse-io/logging"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.opencensus.io/plugin/ochttp"
@@ -32,7 +32,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type AuthFeatureChecker = func(ctx context.Context, credentials dauth.Credentials) error
+type AuthFeatureChecker = func(ctx context.Context, credentials authenticator.Credentials) error
 
 type AuthFeatureMiddleware struct {
 	checker AuthFeatureChecker
@@ -112,7 +112,7 @@ func NewAuthFeatureMiddleware(checker AuthFeatureChecker) *AuthFeatureMiddleware
 func (middleware *AuthFeatureMiddleware) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		credentials := dauth.GetCredentials(ctx)
+		credentials := authenticator.GetCredentials(ctx)
 		if credentials == nil {
 			derr.WriteError(ctx, w, "credentials unavailable from context but should have been", derr.UnexpectedError(ctx, nil))
 			return

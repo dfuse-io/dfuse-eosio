@@ -149,11 +149,13 @@ func (l *Launcher) Launch(appNames []string) error {
 }
 
 func (l *Launcher) Terminating() <-chan string {
-	<-l.shutter.Terminating()
 
 	ch := make(chan string, 1)
-	ch <- l.firstShutdownAppID
-	close(ch)
+
+	go func() {
+		<-l.shutter.Terminating()
+		ch <- l.firstShutdownAppID
+	}()
 
 	return ch
 }
