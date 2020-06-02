@@ -18,12 +18,12 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200601140812-4c6dcfbbfc36
-	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
+	github.com/dfuse-io/blockmeta v0.0.0-20200602201207-f1981d03ef4c
+	github.com/dfuse-io/bstream v0.0.0-20200602201235-217b145d1844
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
-	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
+	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251
+	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
 	github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -39,7 +39,7 @@ require (
 	github.com/dfuse-io/manageos v0.0.0-20200526160232-e2ca69a7ba54
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200521184130-14ac4bd51a73
+	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
 	github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
 	github.com/dfuse-io/search v0.0.0-20200602133443-49c54a184641
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
@@ -50,7 +50,7 @@ require (
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
-	github.com/golang/protobuf v1.3.4
+	github.com/golang/protobuf v1.3.5
 	github.com/google/cel-go v0.4.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
