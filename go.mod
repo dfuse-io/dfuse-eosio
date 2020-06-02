@@ -18,13 +18,13 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200601140812-4c6dcfbbfc36
-	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
+	github.com/dfuse-io/blockmeta v0.0.0-20200602201207-f1981d03ef4c
+	github.com/dfuse-io/bstream v0.0.0-20200602201235-217b145d1844
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
-	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
+	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251
-	github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5
+	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
+	github.com/dfuse-io/dgrpc v0.0.0-20200602203441-eded01d2c0e7
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
@@ -33,24 +33,23 @@ require (
 	github.com/dfuse-io/dstore v0.1.0
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200602125205-c5972897ff23
+	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
+	github.com/dfuse-io/kvdb v0.0.0-20200602202107-57a39c2bae3f
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
 	github.com/dfuse-io/manageos v0.0.0-20200602202743-e7b5ceabc141
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200521184130-14ac4bd51a73
-	github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
-	github.com/dfuse-io/search v0.0.0-20200602133443-49c54a184641
-	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
+	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
+	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
+	github.com/dfuse-io/search v0.0.0-20200602204840-b7a4beaf3809
+	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200507122837-271bfac45a78
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
-	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
-	github.com/golang/protobuf v1.3.4
+	github.com/golang/protobuf v1.3.5
 	github.com/google/cel-go v0.4.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3

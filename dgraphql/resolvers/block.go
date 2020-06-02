@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbgraphql "github.com/dfuse-io/pbgo/dfuse/graphql/v1"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )
 
