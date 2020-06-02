@@ -51,8 +51,10 @@ import (
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	archiveApp "github.com/dfuse-io/search/app/archive"
+    archiveBigQueryApp "github.com/dfuse-io/search/app/archive-bigquery"
 	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
+    indexerBigQueryApp  "github.com/dfuse-io/search/app/indexer-bigquery"
 	liveApp "github.com/dfuse-io/search/app/live"
 	routerApp "github.com/dfuse-io/search/app/router"
 	"github.com/spf13/cobra"
@@ -672,6 +674,77 @@ func init() {
 		},
 	})
 
+	// Search Indexer BigQuery
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "search-indexer-bigquery",
+		Title:       "Search indexer BigQuery",
+		Description: "Indexes transactions for search for BigQuery",
+		MetricsID:   "indexerBigQuery",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer-bigquery|app/indexer-bigquery).*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("search-indexer-bigquery-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().Int("search-indexer-bigquery-start-block", 0, "Start indexing from block num")
+			cmd.Flags().Uint("search-indexer-bigquery-stop-block", 0, "Stop indexing at block num")
+			cmd.Flags().Bool("search-indexer-bigquery-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stop block")
+			cmd.Flags().Bool("search-indexer-bigquery-verbose", false, "Verbose logging")
+			cmd.Flags().String("search-indexer-bigquery-writable-path", "{dfuse-data-dir}/search/indexer-bigquery", "Writable base path for storing index files")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			mapper, err := eosSearch.NewEOSBlockMapper(
+				viper.GetString("search-common-dfuse-events-action-name"),
+				viper.GetBool("search-common-dfuse-events-unrestricted"),
+				viper.GetString("search-common-action-filter-on-expr"),
+				viper.GetString("search-common-action-filter-out-expr"),
+			)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+			}
+
+			var startBlockResolvers []bstream.StartBlockResolver
+			blockmetaAddr := viper.GetString("common-blockmeta-addr")
+			if blockmetaAddr != "" {
+				conn, err := dgrpc.NewInternalClient(blockmetaAddr)
+				if err != nil {
+					userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
+				} else {
+					blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
+					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolverFunc(pbblockmeta.StartBlockResolver(blockmetaCli)))
+				}
+			}
+
+			blocksStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
+			blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
+			if err != nil {
+				userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
+			} else {
+				startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
+			}
+			if len(startBlockResolvers) == 0 {
+				return nil, fmt.Errorf("no StartBlockResolver could be set for search indexer")
+			}
+
+			return indexerBigQueryApp.New(&indexerBigQueryApp.Config{
+				GRPCListenAddr:        viper.GetString("search-indexer-bigquery-grpc-listen-addr"),
+				BlockstreamAddr:       viper.GetString("common-blockstream-addr"),
+				StartBlock:            int64(viper.GetInt("search-indexer-bigquery-start-block")),
+				StopBlock:             viper.GetUint64("search-indexer-bigquery-stop-block"),
+				IsVerbose:             viper.GetBool("search-indexer-bigquery-verbose"),
+				EnableBatchMode:       viper.GetBool("search-indexer-bigquery-enable-batch-mode"),
+				WritablePath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-indexer-bigquery-writable-path")),
+				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
+				BlocksStoreURL:        blocksStoreURL,
+			}, &indexerBigQueryApp.Modules{
+				BlockMapper:        mapper,
+				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
+			}), nil
+		},
+	})
+
 	// Search Router
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-router",
@@ -760,6 +833,36 @@ func init() {
 			}), nil
 		},
 	})
+
+	// Search Archive-BigQuery
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "search-archive-bigquery",
+		Title:       "Search archive BigQuery-backed",
+		Description: "Serves historical search queries via BigQuery",
+		MetricsID:   "archive-bigquery",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive_bigquery|app/archive_bigquery).*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			// These flags are scoped to search, since they are shared between search-router, search-live, search-archive, etc....
+			cmd.Flags().String("search-archive-bigquery-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("search-archive-bigquery-http-listen-addr", ArchiveHTTPServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().Uint32("search-archive-bigquery-tier-level", 10, "Level of the search tier")
+			cmd.Flags().Duration("search-archive-bigquery-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			return archiveBigQueryApp.New(&archiveBigQueryApp.Config{
+				ServiceVersion:          viper.GetString("search-common-mesh-service-version"),
+				TierLevel:               viper.GetUint32("search-archive-bigquery-tier-level"),
+				GRPCListenAddr:          viper.GetString("search-archive-bigquery-grpc-listen-addr"),
+				PublishInterval:         viper.GetDuration("search-common-mesh-publish-interval"),
+				BigQueryDSN:             viper.GetString("search-archive-bigquery-bigquery-dsn"),
+				ShutdownDelay:           viper.GetDuration("search-archive-shutdown-delay"),
+			}, &archiveBigQueryApp.Modules{
+				Dmesh: modules.SearchDmeshClient,
+			}), nil
+		},
+	})
+
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-live",
