@@ -214,6 +214,7 @@ func init() {
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
+			cmd.Flags().Bool("mindreader-discard-after-stop-num", false, "ignore remaining blocks being processed after stop num (only useful if we discard the mindreader data after reprocessing a chunk of blocks)")
 			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown nodeos/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
@@ -241,9 +242,7 @@ func init() {
 				return nil, err
 			}
 			archiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))
-			if viper.GetBool("mindreader-merge-and-store-directly") {
-				archiveStoreURL = mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
-			}
+			mergeArchiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
 
 			var startUpFunc func()
 			if viper.GetBool("mindreader-start-failure-handler") {
@@ -297,10 +296,12 @@ func init() {
 				SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
 				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
 				ArchiveStoreURL:            archiveStoreURL,
+				MergeArchiveStoreURL:       mergeArchiveStoreURL,
 				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
 				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
 				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
 				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
+				DiscardAfterStopBlock:      viper.GetBool("mindreader-discard-after-stop-num"),
 				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
 				WorkingDir:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
 				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
