@@ -29,8 +29,9 @@ import (
 )
 
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	it := db.store.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
-	defer it.Close()
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -107,8 +108,9 @@ func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbtrxdb.Bloc
 func (db *DB) GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (ref bstream.BlockRef, err error) {
 	zlog.Debug("get closest irr id at block num", zap.Uint32("block_num", num))
 
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	it := db.store.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
-	defer it.Close()
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err
@@ -122,6 +124,9 @@ func (db *DB) GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32
 }
 
 func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bstream.BlockRef, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	blk, err := db.GetBlock(ctx, ID)
 	if err != nil {
 		return nil, fmt.Errorf("get irreversible id at block id: get block: %w", err)
@@ -131,7 +136,6 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 
 	zlog.Debug("get irr block by num", zap.Uint32("block_num", dposIrrNum))
 	it := db.store.Scan(ctx, Keys.PackIrrBlockNumPrefix(dposIrrNum), Keys.PackIrrBlockNumPrefix(dposIrrNum-1), 1)
-	defer it.Close()
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err
@@ -152,8 +156,9 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 }
 
 func (db *DB) BlockIDAt(ctx context.Context, start time.Time) (id string, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	it := db.store.Scan(ctx, Keys.PackTimelinePrefix(true, start), Keys.EndOfTimelineIndex(true), 1)
-	defer it.Close()
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -178,8 +183,10 @@ func (db *DB) BlockIDBefore(ctx context.Context, start time.Time, inclusive bool
 }
 
 func (db *DB) blockIDAround(ctx context.Context, fwd bool, start time.Time, inclusive bool) (id string, foundTime time.Time, err error) {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	it := db.store.Scan(ctx, Keys.PackTimelinePrefix(fwd, start), Keys.EndOfTimelineIndex(fwd), 4) // supports 3 blocks at the *same* timestamp, should be pretty rare..
-	defer it.Close()
 
 	for it.Next() {
 		foundTime, id = Keys.UnpackTimelineKey(fwd, it.Item().Key)
