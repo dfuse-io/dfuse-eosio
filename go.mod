@@ -24,7 +24,7 @@ require (
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
-	github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5
+	github.com/dfuse-io/dgrpc v0.0.0-20200602203441-eded01d2c0e7
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
@@ -48,7 +48,6 @@ require (
 	github.com/eoscanada/eos-go v0.9.1-0.20200507122837-271bfac45a78
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
-	github.com/gogo/protobuf v1.3.1
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.3.5
 	github.com/google/cel-go v0.4.1
