@@ -683,6 +683,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer-bigquery|app/indexer-bigquery).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-bigquery-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().Uint64("search-indexer-bigquery-shard-size", 10000, "Number of blocks to store in a given AVRO file")
 			cmd.Flags().Int("search-indexer-bigquery-start-block", 0, "Start indexing from block num")
 			cmd.Flags().Uint("search-indexer-bigquery-stop-block", 0, "Stop indexing at block num")
 			cmd.Flags().Bool("search-indexer-bigquery-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stop block")
@@ -731,6 +732,7 @@ func init() {
 			return indexerBigQueryApp.New(&indexerBigQueryApp.Config{
 				GRPCListenAddr:        viper.GetString("search-indexer-bigquery-grpc-listen-addr"),
 				BlockstreamAddr:       viper.GetString("common-blockstream-addr"),
+				ShardSize:             viper.GetUint64("search-indexer-bigquery-shard-size"),
 				StartBlock:            int64(viper.GetInt("search-indexer-bigquery-start-block")),
 				StopBlock:             viper.GetUint64("search-indexer-bigquery-stop-block"),
 				IsVerbose:             viper.GetBool("search-indexer-bigquery-verbose"),

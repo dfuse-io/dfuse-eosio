@@ -53,19 +53,19 @@ func TestETHTokenizationEvent(t *testing.T) {
 
 		// Unrestricted tests
 		{
-			name:         "unrestricted, key longer than 16 chars",
+			name:         "Unrestricted, key longer than 16 chars",
 			unrestricted: true,
 			data:         "keyislongerthan16characters=value",
 			expect:       "keyislongerthan16characters=value",
 		},
 		{
-			name:         "unrestricted, more than 3 fields",
+			name:         "Unrestricted, more than 3 fields",
 			unrestricted: true,
 			data:         "key1=value1&key2=value2&key3=value3&key4=value4",
 			expect:       "key1=value1&key2=value2&key3=value3&key4=value4",
 		},
 		{
-			name:         "unrestricted, value longer than 64 chars",
+			name:         "Unrestricted, value longer than 64 chars",
 			unrestricted: true,
 			data:         "key=fieldislongerwaylongerthan64characterswhichishardtypeandensurewearegood&key2=ok",
 			expect:       "key=fieldislongerwaylongerthan64characterswhichishardtypeandensurewearegood&key2=ok",
@@ -74,7 +74,7 @@ func TestETHTokenizationEvent(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res := tokenizeEvent(eventsConfig{actionName: "", unrestricted: test.unrestricted}, test.key, test.data)
+			res := tokenizeEvent(EventsConfig{ActionName: "", Unrestricted: test.unrestricted}, test.key, test.data)
 			assert.Equal(t, test.expect, res.Encode())
 		})
 	}
