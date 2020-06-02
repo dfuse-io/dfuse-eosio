@@ -49,6 +49,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 		blockNum           uint32
 		expectedABIAtIndex int
 		expectedVersion    string
+		expectedCacheSize  int
 	}{
 		{
 			name:               "first one",
@@ -58,6 +59,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 0,
 			expectedVersion:    "version.1",
+			expectedCacheSize:  1,
 		},
 		{
 			name: "Second one",
@@ -74,6 +76,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.2",
+			expectedCacheSize:  2,
 		},
 		{
 			name: "To middle",
@@ -94,6 +97,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.2",
+			expectedCacheSize:  3,
 		},
 		{
 			name: "To the end",
@@ -114,6 +118,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           10,
 			expectedABIAtIndex: 2,
 			expectedVersion:    "version.3",
+			expectedCacheSize:  3,
 		},
 		{
 			name: "Replace",
@@ -134,6 +139,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           3,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.3",
+			expectedCacheSize:  2,
 		},
 	}
 
@@ -147,6 +153,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			cache.Abis = c.items
 			cache.SetABIAtBlockNum(c.account, c.blockNum, NewTestABI(c.version))
 			assert.Equal(t, c.expectedVersion, cache.Abis[c.account][c.expectedABIAtIndex].ABI.Version)
+			assert.Equal(t, c.expectedCacheSize, len(cache.Abis[c.account]))
 		})
 	}
 

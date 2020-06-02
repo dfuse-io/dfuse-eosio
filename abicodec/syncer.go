@@ -25,9 +25,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
@@ -141,6 +141,7 @@ func (s *ABISyncer) streamABIChanges() error {
 		for _, action := range match.MatchingActions {
 			s.handleABIAction(blockRef, transactionID, action, match.Undo)
 		}
+		s.cache.SetCursor(match.Cursor)
 	}
 }
 

@@ -108,11 +108,13 @@ func (c *DefaultCache) SetABIAtBlockNum(account string, blockNum uint32, abi *eo
 
 	if accountItems, ok := c.Abis[account]; ok {
 
+		replace := false
 		var newItemIndex int
 		for i := len(accountItems) - 1; i >= 0; i-- {
 			item := accountItems[i]
 			if item.BlockNum == blockNum {
 				newItemIndex = i
+				replace = true
 				break
 			}
 			if item.BlockNum < blockNum {
@@ -125,7 +127,11 @@ func (c *DefaultCache) SetABIAtBlockNum(account string, blockNum uint32, abi *eo
 			BlockNum: blockNum,
 			ABI:      abi,
 		}
-		accountItems = append(accountItems[:newItemIndex], append([]*ABICacheItem{newItem}, accountItems[newItemIndex:]...)...)
+		if replace {
+			accountItems[newItemIndex] = newItem
+		} else {
+			accountItems = append(accountItems[:newItemIndex], append([]*ABICacheItem{newItem}, accountItems[newItemIndex:]...)...)
+		}
 		c.Abis[account] = accountItems
 		return
 	}
