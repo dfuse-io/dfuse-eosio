@@ -20,7 +20,7 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.0-20200601140812-4c6dcfbbfc36
 	github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a
-	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
+	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200529171858-cfb2e116f251
@@ -34,14 +34,14 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0
-	github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3
+	github.com/dfuse-io/kvdb v0.0.0-20200602125205-c5972897ff23
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
 	github.com/dfuse-io/manageos v0.0.0-20200529154942-578742069362
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200521184130-14ac4bd51a73
 	github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
-	github.com/dfuse-io/search v0.0.0-20200526192337-b09636232179
+	github.com/dfuse-io/search v0.0.0-20200602133443-49c54a184641
 	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -98,3 +98,5 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/github.com/dfuse-io/dgraphql => /Users/julien/codebase/dfuse-io/dgraphql

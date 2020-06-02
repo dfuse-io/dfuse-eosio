@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dgraphql"
@@ -156,7 +156,7 @@ func TestSubscriptionSearchForward(t *testing.T) {
 
 			root := &Root{
 				searchClient: pbsearch.NewTestRouterClient(test.fromRouter),
-				trxsReader:   eosdb.NewTestTransactionsReader(test.fromDB),
+				trxsReader:   trxdb.NewTestTransactionsReader(test.fromDB),
 			}
 
 			res, err := root.streamSearchTracesBoth(true, ctx, StreamSearchArgs{})

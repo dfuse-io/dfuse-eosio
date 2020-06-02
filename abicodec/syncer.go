@@ -25,9 +25,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
@@ -48,7 +48,7 @@ type ABISyncer struct {
 	cancelSyncer func()
 }
 
-func NewSyncer(cache Cache, dbReader eosdb.DBReader, searchAddr string, onLive func()) (*ABISyncer, error) {
+func NewSyncer(cache Cache, dbReader trxdb.DBReader, searchAddr string, onLive func()) (*ABISyncer, error) {
 	zlog.Info("initializing syncer", zap.String("search_addr", searchAddr))
 	searchConn, err := dgrpc.NewInternalClient(searchAddr)
 	if err != nil {
@@ -141,6 +141,7 @@ func (s *ABISyncer) streamABIChanges() error {
 		for _, action := range match.MatchingActions {
 			s.handleABIAction(blockRef, transactionID, action, match.Undo)
 		}
+		s.cache.SetCursor(match.Cursor)
 	}
 }
 

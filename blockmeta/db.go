@@ -20,12 +20,12 @@ import (
 
 	"github.com/dfuse-io/blockmeta"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"go.uber.org/zap"
 )
 
 type EOSBlockmetaDB struct {
-	Driver eosdb.Driver
+	Driver trxdb.Driver
 }
 
 func (db *EOSBlockmetaDB) BlockIDAt(ctx context.Context, start time.Time) (id string, err error) {

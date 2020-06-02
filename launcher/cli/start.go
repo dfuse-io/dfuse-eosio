@@ -24,7 +24,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
-	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
+	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/dfuse-io/dhammer"
@@ -20,7 +20,7 @@ import (
 type EOSClient struct {
 	*searchclient.CommonClient
 
-	dbReader eosdb.DBReader
+	dbReader trxdb.DBReader
 }
 
 type EOSStreamMatchesClient interface {
@@ -36,7 +36,7 @@ type EOSSearchMatch struct {
 	MatchingActions  []*pbcodec.ActionTrace
 }
 
-func NewEOSClient(cc *grpc.ClientConn, dbReader eosdb.DBReader) *EOSClient {
+func NewEOSClient(cc *grpc.ClientConn, dbReader trxdb.DBReader) *EOSClient {
 	return &EOSClient{searchclient.NewCommonClient(cc), dbReader}
 }
 

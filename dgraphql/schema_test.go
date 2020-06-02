@@ -23,7 +23,7 @@ import (
 )
 
 func TestSchema(t *testing.T) {
-	resolver, err := resolvers.NewRoot(nil, nil, nil, nil)
+	resolver, err := resolvers.NewRoot(nil, nil, nil, nil, nil)
 	require.NoError(t, err)
 
 	// This makes the necessary parsing of all schemas to ensure resolver correctly

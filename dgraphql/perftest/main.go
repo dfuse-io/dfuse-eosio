@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dhammer"
 )
@@ -33,7 +33,7 @@ var batchSize = flag.Int("max-batch-size", 15, "maximum batch size")
 func main() {
 	flag.Parse()
 
-	cli, err := eosdb.New("bigtable://dev.dev/test")
+	cli, err := trxdb.New("bigtable://dev.dev/test")
 	if err != nil {
 		panic(err)
 	}

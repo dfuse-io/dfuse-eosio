@@ -157,7 +157,7 @@ func (a *App) startReprocSharder(blocksStore dstore.Store) error {
 
 	source.OnTerminated(func(err error) {
 		// FIXME: This `HasSuffix` is sh**ty, need to replace with a better pattern, `source.Shutdown(nil)` is one of them
-		if strings.HasSuffix(err.Error(), fluxdb.ErrCleanSourceStop.Error()) {
+		if err != nil && strings.HasSuffix(err.Error(), fluxdb.ErrCleanSourceStop.Error()) {
 			err = nil
 		}
 

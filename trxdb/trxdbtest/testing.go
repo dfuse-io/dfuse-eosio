@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eosdbtest
+package trxdbtest
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
@@ -32,7 +32,7 @@ import (
 )
 
 type DriverCleanupFunc func()
-type DriverFactory func() (eosdb.Driver, DriverCleanupFunc)
+type DriverFactory func() (trxdb.Driver, DriverCleanupFunc)
 
 func TestAll(t *testing.T, driverName string, driverFactory DriverFactory) {
 	TestAllAccountsReader(t, driverName, driverFactory)

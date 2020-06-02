@@ -21,9 +21,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
@@ -74,7 +74,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 			PublicKeys: codec.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
 		}
 
-		trxRow := &pbeosdb.TrxRow{
+		trxRow := &pbtrxdb.TrxRow{
 			Receipt:    trxReceipt,
 			SignedTrx:  signedTrx,
 			PublicKeys: pubKeyProto,
@@ -99,7 +99,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 		for _, dtrxOp := range trxTrace.DtrxOps {
 			extDtrxOp := dtrxOp.ToExtDTrxOp(blk, trxTrace)
 
-			dtrxRow := &pbeosdb.DtrxRow{}
+			dtrxRow := &pbtrxdb.DtrxRow{}
 
 			var key []byte
 			if dtrxOp.IsCreateOperation() {
@@ -120,7 +120,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 			}
 		}
 
-		trxTraceRow := &pbeosdb.TrxTraceRow{
+		trxTraceRow := &pbtrxdb.TrxTraceRow{
 			BlockHeader: blk.Header,
 			TrxTrace:    trxTrace,
 		}
@@ -140,7 +140,7 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 		return fmt.Errorf("block time to proto: %w", err)
 	}
 
-	acctRow := &pbeosdb.AccountRow{
+	acctRow := &pbtrxdb.AccountRow{
 		Name:      act.GetData("name").String(),
 		Creator:   act.GetData("creator").String(),
 		BlockTime: t,
@@ -159,7 +159,7 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
 
 	for _, trxOp := range blk.ImplicitTransactionOps {
-		implTrxRow := &pbeosdb.ImplicitTrxRow{
+		implTrxRow := &pbtrxdb.ImplicitTrxRow{
 			Name:      trxOp.Name,
 			SignedTrx: trxOp.Transaction,
 		}
@@ -178,17 +178,17 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) e
 func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbcodec.TransactionRefs) {
 	implicitTrxRefs = &pbcodec.TransactionRefs{}
 	for _, trxOp := range blk.ImplicitTransactionOps {
-		implicitTrxRefs.Hashes = append(implicitTrxRefs.Hashes, eosdb.MustHexDecode(trxOp.TransactionId))
+		implicitTrxRefs.Hashes = append(implicitTrxRefs.Hashes, trxdb.MustHexDecode(trxOp.TransactionId))
 	}
 
 	trxRefs = &pbcodec.TransactionRefs{}
 	for _, trx := range blk.Transactions {
-		trxRefs.Hashes = append(trxRefs.Hashes, eosdb.MustHexDecode(trx.Id))
+		trxRefs.Hashes = append(trxRefs.Hashes, trxdb.MustHexDecode(trx.Id))
 	}
 
 	tracesRefs = &pbcodec.TransactionRefs{}
 	for _, trx := range blk.TransactionTraces {
-		tracesRefs.Hashes = append(tracesRefs.Hashes, eosdb.MustHexDecode(trx.Id))
+		tracesRefs.Hashes = append(tracesRefs.Hashes, trxdb.MustHexDecode(trx.Id))
 	}
 
 	return
@@ -205,7 +205,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 	blk.Transactions = nil
 	blk.TransactionTraces = nil
 
-	blockRow := &pbeosdb.BlockRow{
+	blockRow := &pbtrxdb.BlockRow{
 		Block:           blk,
 		ImplicitTrxRefs: implicitTrxRefs,
 		TrxRefs:         trxRefs,

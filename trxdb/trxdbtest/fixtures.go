@@ -1,4 +1,4 @@
-package eosdbtest
+package trxdbtest
 
 import (
 	"encoding/hex"

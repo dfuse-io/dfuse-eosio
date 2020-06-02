@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	eosdb "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
-	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
+	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/kvdb/store"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -132,25 +132,25 @@ func printKVEntity(key, val []byte, asHex bool, indented bool) (err error) {
 	}
 
 	switch key[0] {
-	case eosdb.TblPrefixTrxs:
-		protoMessage := &pbeosdb.TrxRow{}
+	case trxdb.TblPrefixTrxs:
+		protoMessage := &pbtrxdb.TrxRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
-	case eosdb.TblPrefixBlocks:
-		protoMessage := &pbeosdb.BlockRow{}
+	case trxdb.TblPrefixBlocks:
+		protoMessage := &pbtrxdb.BlockRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
-	case eosdb.TblPrefixIrrBlks:
+	case trxdb.TblPrefixIrrBlks:
 		row["data"] = val[0] == 0x01
-	case eosdb.TblPrefixImplTrxs:
-		protoMessage := &pbeosdb.ImplicitTrxRow{}
+	case trxdb.TblPrefixImplTrxs:
+		protoMessage := &pbtrxdb.ImplicitTrxRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
-	case eosdb.TblPrefixDtrxs:
-		protoMessage := &pbeosdb.DtrxRow{}
+	case trxdb.TblPrefixDtrxs:
+		protoMessage := &pbtrxdb.DtrxRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
-	case eosdb.TblPrefixTrxTraces:
-		protoMessage := &pbeosdb.TrxTraceRow{}
+	case trxdb.TblPrefixTrxTraces:
+		protoMessage := &pbtrxdb.TrxTraceRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
-	case eosdb.TblPrefixAccts:
-		protoMessage := &pbeosdb.AccountRow{}
+	case trxdb.TblPrefixAccts:
+		protoMessage := &pbtrxdb.AccountRow{}
 		row["data"], err = decodePayload(pbmarsh, protoMessage, val)
 	}
 

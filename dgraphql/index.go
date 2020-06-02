@@ -17,8 +17,12 @@ package dgraphql
 import (
 	"fmt"
 
+	"go.uber.org/zap"
+
+	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
+	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
@@ -29,19 +33,17 @@ import (
 
 type Config struct {
 	dgraphqlApp.Config
-	SearchAddr    string
-	ABICodecAddr  string
-	BlockMetaAddr string
-	KVDBDSN       string
+	RatelimiterPlugin string
+	SearchAddr        string
+	ABICodecAddr      string
+	BlockMetaAddr     string
+	KVDBDSN           string
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
-	schemas, err := SetupSchemas(&Config{
-		SearchAddr:    config.SearchAddr,
-		ABICodecAddr:  config.ABICodecAddr,
-		BlockMetaAddr: config.BlockMetaAddr,
-		KVDBDSN:       config.KVDBDSN,
-	})
+	zlog.Info("new dgraphql eosio app", zap.Reflect("config", config))
+
+	schemas, err := SetupSchemas(config)
 	if err != nil {
 		return nil, err
 	}
@@ -56,9 +58,9 @@ var RootResolverFactory = eosResolver.NewRoot
 
 func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := eosdb.New(config.KVDBDSN)
+	dbReader, err := trxdb.New(config.KVDBDSN)
 	if err != nil {
-		return nil, fmt.Errorf("invalid eosdb connection info provided: %w", err)
+		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}
 
 	zlog.Info("creating abicodec grpc client")
@@ -82,8 +84,11 @@ func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
+	rateLimiter, err := drateLimiter.New(config.RatelimiterPlugin)
+	derr.Check("unable to initialize rate limiter", err)
+
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
@@ -37,7 +37,7 @@ import (
 )
 
 type DB interface {
-	eosdb.DBReader
+	trxdb.DBReader
 
 	// GetLastWrittenBlockID(ctx context.Context) (out string, err error)
 	// GetBlock(ctx context.Context, id string) (*mdl.BlockRow, error)
@@ -54,16 +54,16 @@ type DB interface {
 	// ListAccountNames(ctx context.Context, concurrentReadCount uint32) (accountNames []eos.AccountName, err error)
 }
 
-// EOSDB
+// TRXDB
 
-type EOSDB struct {
-	eosdb.DBReader
+type TRXDB struct {
+	trxdb.DBReader
 
 	chainDiscriminator func(blockID string) bool
 }
 
-func NewEOSDB(dbReader eosdb.DBReader) *EOSDB {
-	return &EOSDB{
+func NewTRXDB(dbReader trxdb.DBReader) *TRXDB {
+	return &TRXDB{
 		DBReader: dbReader,
 		// TODO: implement real discriminator
 		chainDiscriminator: func(blockID string) bool {
@@ -72,7 +72,7 @@ func NewEOSDB(dbReader eosdb.DBReader) *EOSDB {
 	}
 }
 
-func (db *EOSDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
+func (db *TRXDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
 	evs, err := db.GetTransactionEvents(ctx, id)
 	if err == kvdb.ErrNotFound {
 		return nil, DBTrxNotFoundError(ctx, id)
@@ -86,7 +86,7 @@ func (db *EOSDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.Tr
 	return
 }
 
-func (db *EOSDB) GetTransactions(ctx context.Context, ids []string) (out []*pbcodec.TransactionLifecycle, err error) {
+func (db *TRXDB) GetTransactions(ctx context.Context, ids []string) (out []*pbcodec.TransactionLifecycle, err error) {
 	evs, err := db.GetTransactionEventsBatch(ctx, ids)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (db *EOSDB) GetTransactions(ctx context.Context, ids []string) (out []*pbco
 	return
 }
 
-func (db *EOSDB) ListTransactionsForBlockID(ctx context.Context, blockID string, startKey string, limit int) (*mdl.TransactionList, error) {
+func (db *TRXDB) ListTransactionsForBlockID(ctx context.Context, blockID string, startKey string, limit int) (*mdl.TransactionList, error) {
 	if limit < 1 {
 		return &mdl.TransactionList{
 			Cursor: startKey,
@@ -172,7 +172,7 @@ func (db *EOSDB) ListTransactionsForBlockID(ctx context.Context, blockID string,
 	}, nil
 }
 
-func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string, limit int) (*mdl.TransactionList, error) {
+func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string, limit int) (*mdl.TransactionList, error) {
 	if limit < 1 {
 		return &mdl.TransactionList{
 			Cursor: startKey,
@@ -337,7 +337,7 @@ func (db *EOSDB) ListMostRecentTransactions(ctx context.Context, startKey string
 	return out, nil
 }
 
-func (db *EOSDB) GetBlock(ctx context.Context, id string) (out *pbcodec.BlockWithRefs, err error) {
+func (db *TRXDB) GetBlock(ctx context.Context, id string) (out *pbcodec.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlock(ctx, id)
 	if err == eos.ErrNotFound {
 		return nil, DBBlockNotFoundError(ctx, id)
@@ -346,7 +346,7 @@ func (db *EOSDB) GetBlock(ctx context.Context, id string) (out *pbcodec.BlockWit
 	return
 }
 
-func (db *EOSDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.BlockWithRefs, err error) {
+func (db *TRXDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlockByNum(ctx, num)
 	if err == kvdb.ErrNotFound {
 		return nil, DBBlockNotFoundError(ctx, string(num))
@@ -358,7 +358,7 @@ func (db *EOSDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.
 	return
 }
 
-func (db *EOSDB) GetAccount(ctx context.Context, name string) (account *pbcodec.AccountCreationRef, err error) {
+func (db *TRXDB) GetAccount(ctx context.Context, name string) (account *pbcodec.AccountCreationRef, err error) {
 	account, err = db.DBReader.GetAccount(ctx, name)
 	if err == kvdb.ErrNotFound {
 		return nil, DBAccountNotFoundError(ctx, name)
@@ -373,8 +373,8 @@ func (db *EOSDB) GetAccount(ctx context.Context, name string) (account *pbcodec.
 // MOCK MOCK
 
 type MockDB struct {
-	eosdb.TimelineExplorer
-	eosdb.TransactionsReader
+	trxdb.TimelineExplorer
+	trxdb.TransactionsReader
 	path string
 }
 

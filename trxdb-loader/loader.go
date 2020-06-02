@@ -22,7 +22,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
@@ -37,7 +37,7 @@ type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObje
 type BigtableLoader struct {
 	*shutter.Shutter
 	processingJob             Job
-	db                        eosdb.DBWriter
+	db                        trxdb.DBWriter
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
@@ -55,7 +55,7 @@ func NewBigtableLoader(
 	blockStreamAddr string,
 	blocksStore dstore.Store,
 	batchSize uint64,
-	db eosdb.DBWriter,
+	db trxdb.DBWriter,
 	parallelFileDownloadCount int,
 ) *BigtableLoader {
 	loader := &BigtableLoader{

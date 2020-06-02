@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb/store"
 )
 
@@ -28,21 +28,21 @@ type DB struct {
 	// Required only when writing
 	writerChainID []byte
 
-	enc *eosdb.ProtoEncoder
-	dec *eosdb.ProtoDecoder
+	enc *trxdb.ProtoEncoder
+	dec *trxdb.ProtoDecoder
 }
 
-var dbCachePool = make(map[string]eosdb.Driver)
+var dbCachePool = make(map[string]trxdb.Driver)
 var dbCachePoolLock sync.Mutex
 
 func init() {
-	eosdb.Register("badger", New)
-	eosdb.Register("tikv", New)
-	eosdb.Register("bigkv", New)
-	eosdb.Register("cznickv", New)
+	trxdb.Register("badger", New)
+	trxdb.Register("tikv", New)
+	trxdb.Register("bigkv", New)
+	trxdb.Register("cznickv", New)
 }
 
-func New(dsnString string, opts ...eosdb.Option) (eosdb.Driver, error) {
+func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
 	dbCachePoolLock.Lock()
 	defer dbCachePoolLock.Unlock()
 
@@ -54,10 +54,10 @@ func New(dsnString string, opts ...eosdb.Option) (eosdb.Driver, error) {
 			return nil, fmt.Errorf("badger new: open badger db: %w", err)
 		}
 
-		db = eosdb.Driver(&DB{
+		db = trxdb.Driver(&DB{
 			store: kvStore,
-			enc:   eosdb.NewProtoEncoder(),
-			dec:   eosdb.NewProtoDecoder(),
+			enc:   trxdb.NewProtoEncoder(),
+			dec:   trxdb.NewProtoDecoder(),
 		})
 		dbCachePool[dsnString] = db
 	}

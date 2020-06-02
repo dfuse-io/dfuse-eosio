@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eosdbtest
+package trxdbtest
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
@@ -143,7 +143,7 @@ func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 	}
 }
 
-func putAccount(t *testing.T, creator, account string, db eosdb.Driver) {
+func putAccount(t *testing.T, creator, account string, db trxdb.Driver) {
 	actions := []string{`{"id":"a1","action_traces": [{"receiver":"eosio","action": {"account":"eosio","name":"newaccount"}}]}`}
 	blk := TestBlock(t, "00000002aa", "00000001aa", actions...)
 	blk.TransactionTraces[0].ActionTraces[0].Action.JsonData = fmt.Sprintf(`
