@@ -40,9 +40,9 @@ require (
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
- github.com/dfuse-io/relayer v0.0.0-20200519135437-29dc2d13d6a3
- github.com/dfuse-io/search v0.0.0-20200602133443-49c54a184641
- github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
+	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
+	github.com/dfuse-io/search v0.0.0-20200602133443-49c54a184641
+	github.com/dfuse-io/search-client v0.0.0-20200415184433-b2f6b5938237
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200507122837-271bfac45a78
