@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eosdb
+package trxdb
 
 import (
+	"os"
+
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
-var zlog *zap.Logger
-
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/eosdb", &zlog)
+	if os.Getenv("DEBUG") != "" {
+		logging.Override(logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel)))
+	}
 }

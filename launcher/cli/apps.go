@@ -33,7 +33,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
@@ -533,14 +533,14 @@ func init() {
 				return nil, err
 			}
 
-			eosDBClient, err := eosdb.New(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")))
+			trxdbClient, err := trxdb.New(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")))
 			if err != nil {
 				return nil, err
 			}
 
 			//todo: add db to a modules struct in blockmeta
 			db := &dblockmeta.EOSBlockmetaDB{
-				Driver: eosDBClient,
+				Driver: trxdbClient,
 			}
 
 			return blockmetaApp.New(&blockmetaApp.Config{

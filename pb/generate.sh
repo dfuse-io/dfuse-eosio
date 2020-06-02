@@ -26,7 +26,7 @@ function main() {
 
   generate "dfuse/eosio/abicodec/v1/abicodec.proto"
   generate "dfuse/eosio/codec/v1/codec.proto"
-  generate "dfuse/eosio/eosdb/v1/eosdb.proto"
+  generate "dfuse/eosio/trxdb/v1/trxdb.proto"
   generate "dfuse/eosio/funnel/v1/funnel.proto"
   generate "dfuse/eosio/search/v1/search.proto"
 

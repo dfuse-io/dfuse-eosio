@@ -21,7 +21,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dmetrics"
@@ -79,9 +79,9 @@ func (a *App) Run() error {
 		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
 
-	db, err := eosdb.New(a.Config.KvdbDsn)
+	db, err := trxdb.New(a.Config.KvdbDsn)
 	if err != nil {
-		return fmt.Errorf("unable to create eosdb: %w", err)
+		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
 	// FIXME: make sure we call CLOSE() at the end!
 	//defer db.Close()

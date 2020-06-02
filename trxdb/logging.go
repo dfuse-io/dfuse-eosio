@@ -12,25 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eosdb
+package trxdb
 
 import (
-	"encoding/hex"
-	"fmt"
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
 )
 
-func MustHexDecode(input string) []byte {
-	value, err := hex.DecodeString(input)
-	if err != nil {
-		panic(fmt.Errorf("should have been possible to transform decode %q as hex: %s", input, err))
-	}
+var zlog *zap.Logger
 
-	return value
-}
-
-func BoolPtr(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
+func init() {
+	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb", &zlog)
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
@@ -70,7 +70,7 @@ func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []
 func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackTrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbeosdb.TrxRow{}
+		row := &pbtrxdb.TrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackTrxsKey(it.Item().Key)
@@ -113,7 +113,7 @@ func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string)
 func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackImplicitTrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbeosdb.ImplicitTrxRow{}
+		row := &pbtrxdb.ImplicitTrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackImplicitTrxsKey(it.Item().Key)
@@ -146,7 +146,7 @@ func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string)
 func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackTrxTracesPrefix(idPrefix))
 	for it.Next() {
-		row := &pbeosdb.TrxTraceRow{}
+		row := &pbtrxdb.TrxTraceRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackTrxTracesKey(it.Item().Key)
@@ -182,7 +182,7 @@ func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string
 func (db *DB) getTransactionDtrxEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
 	it := db.store.Prefix(ctx, Keys.PackDtrxsPrefix(idPrefix))
 	for it.Next() {
-		row := &pbeosdb.DtrxRow{}
+		row := &pbtrxdb.DtrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
 
 		trxID, blockID := Keys.UnpackDtrxsKey(it.Item().Key)

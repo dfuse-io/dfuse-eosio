@@ -33,7 +33,7 @@ import (
 	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
@@ -120,12 +120,12 @@ func (a *App) Run() error {
 	}
 	api := eos.New(apiURLStr)
 
-	kdb, err := eosdb.New(a.Config.KVDBDSN)
+	kdb, err := trxdb.New(a.Config.KVDBDSN)
 	if err != nil {
-		return fmt.Errorf("eosdb setup: %w", err)
+		return fmt.Errorf("trxdb setup: %w", err)
 	}
 
-	db := eosws.NewEOSDB(kdb)
+	db := eosws.NewTRXDB(kdb)
 
 	completionInstance, err := completion.New(ctx, db)
 	if err != nil {

@@ -22,7 +22,7 @@ import (
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
@@ -58,9 +58,9 @@ var RootResolverFactory = eosResolver.NewRoot
 
 func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := eosdb.New(config.KVDBDSN)
+	dbReader, err := trxdb.New(config.KVDBDSN)
 	if err != nil {
-		return nil, fmt.Errorf("invalid eosdb connection info provided: %w", err)
+		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}
 
 	zlog.Info("creating abicodec grpc client")

@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb/mdl"
+	"github.com/dfuse-io/dfuse-eosio/trxdb/mdl"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	v0 "github.com/dfuse-io/eosws-go/mdl/v0"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"

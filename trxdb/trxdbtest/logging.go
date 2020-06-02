@@ -12,16 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eosdb
+package trxdbtest
 
-import "google.golang.org/grpc"
+import (
+	"go.uber.org/zap"
+)
 
-type Option interface {
-	option()
-}
-
-func WithGRPCConn(conn *grpc.ClientConn) Option { return &GRPCConn{conn} }
-
-type GRPCConn struct{ ClientConn *grpc.ClientConn }
-
-func (GRPCConn) option() {}
+var zlog *zap.Logger

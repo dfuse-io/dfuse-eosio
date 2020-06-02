@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
@@ -69,7 +69,7 @@ func (a *App) Run() error {
 	backuper.OnTerminated(a.Shutdown)
 	a.OnTerminating(backuper.Shutdown)
 
-	dbReader, err := eosdb.New(a.config.KvdbDSN)
+	dbReader, err := trxdb.New(a.config.KvdbDSN)
 	if err != nil {
 		return fmt.Errorf("unable to init KVDB connection: %w", err)
 	}

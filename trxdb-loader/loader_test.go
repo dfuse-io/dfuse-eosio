@@ -26,8 +26,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	_ "github.com/dfuse-io/dfuse-eosio/eosdb/kv"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
+	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -41,9 +41,9 @@ import (
 
 type chainIDOption = string
 
-func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, eosdb.Driver, func()) {
+func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, trxdb.Driver, func()) {
 
-	db, err := eosdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true")
+	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true")
 	require.NoError(t, err)
 
 	l := NewBigtableLoader("", nil, 1, db, 1)
@@ -73,7 +73,7 @@ func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, eosdb.Dri
 }
 
 func TestBigtableLoader(t *testing.T) {
-	loader, eosdbDriver, cleanup := newLoader(t)
+	loader, trxdbDriver, cleanup := newLoader(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -91,7 +91,7 @@ func TestBigtableLoader(t *testing.T) {
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
 	require.NoError(t, loader.db.Flush(ctx))
 
-	resp, err := eosdbDriver.GetBlock(ctx, blockID)
+	resp, err := trxdbDriver.GetBlock(ctx, blockID)
 	require.NoError(t, err)
 	assert.Equal(t, blockID, resp.Block.Id)
 	assert.True(t, resp.Irreversible)
@@ -99,7 +99,7 @@ func TestBigtableLoader(t *testing.T) {
 
 func TestBigtableLoader_Timeline(t *testing.T) {
 	t.Skip() // not yet ready without sqlite
-	loader, eosdbDriver, cleanup := newLoader(t)
+	loader, trxdbDriver, cleanup := newLoader(t)
 	defer cleanup()
 
 	ctx := context.Background()
@@ -115,24 +115,24 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
 	require.NoError(t, fkable.ProcessBlock(blk, nil))
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
-	require.NoError(t, eosdbDriver.Flush(ctx))
+	require.NoError(t, trxdbDriver.Flush(ctx))
 
-	respID, _, err := eosdbDriver.BlockIDBefore(ctx, blk.Time(), true) // direct timestamp
+	respID, _, err := trxdbDriver.BlockIDBefore(ctx, blk.Time(), true) // direct timestamp
 	assert.NoError(t, err)
 	assert.Equal(t, blockID, respID)
 
-	respID, _, err = eosdbDriver.BlockIDBefore(ctx, blk.Time(), true) // direct timestamp
+	respID, _, err = trxdbDriver.BlockIDBefore(ctx, blk.Time(), true) // direct timestamp
 	assert.NoError(t, err)
 	assert.Equal(t, blockID, respID)
 
-	respID, _, err = eosdbDriver.BlockIDAfter(ctx, time.Time{}, true) // first block since epoch
+	respID, _, err = trxdbDriver.BlockIDAfter(ctx, time.Time{}, true) // first block since epoch
 	assert.NoError(t, err)
 	assert.Equal(t, blockID, respID)
 
-	respID, _, err = eosdbDriver.BlockIDBefore(ctx, blk.Time().Add(-time.Second), true) // nothing before
+	respID, _, err = trxdbDriver.BlockIDBefore(ctx, blk.Time().Add(-time.Second), true) // nothing before
 	assert.Error(t, err)
 
-	respID, _, err = eosdbDriver.BlockIDAfter(ctx, blk.Time().Add(time.Second), true) // nothing after
+	respID, _, err = trxdbDriver.BlockIDAfter(ctx, blk.Time().Add(time.Second), true) // nothing after
 	assert.Error(t, err)
 }
 

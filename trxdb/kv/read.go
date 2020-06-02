@@ -21,7 +21,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbeosdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/eosdb/v1"
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
@@ -55,7 +55,7 @@ func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbcodec.BlockWithRe
 		return nil, fmt.Errorf("unable to get block: %w", err)
 	}
 
-	blockRow := &pbeosdb.BlockRow{}
+	blockRow := &pbtrxdb.BlockRow{}
 	db.dec.MustInto(value, blockRow)
 	return db.blockRowToBlockWithRef(ctx, blockRow)
 }
@@ -66,7 +66,7 @@ func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.Blo
 	for it.Next() {
 		kv := it.Item()
 
-		blockRow := &pbeosdb.BlockRow{}
+		blockRow := &pbtrxdb.BlockRow{}
 		db.dec.MustInto(kv.Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -84,7 +84,7 @@ func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.Blo
 	return
 }
 
-func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbeosdb.BlockRow) (*pbcodec.BlockWithRefs, error) {
+func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbtrxdb.BlockRow) (*pbcodec.BlockWithRefs, error) {
 	blk := &pbcodec.BlockWithRefs{
 		Id:                      blockRow.Block.Id,
 		Block:                   blockRow.Block,
@@ -200,7 +200,7 @@ func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (o
 	zlog.Debug("list blocks", zap.Uint32("high_block_num", highBlockNum), zap.Int("limit", limit))
 	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.EndOfBlocksTable(), limit)
 	for it.Next() {
-		blockRow := &pbeosdb.BlockRow{}
+		blockRow := &pbtrxdb.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -221,7 +221,7 @@ func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uin
 	zlog.Debug("list sibling blocks", zap.Uint32("high_block_num", highBlockNum), zap.Uint32("low_block_num", lowBlockNum))
 	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.PackBlockNumPrefix(lowBlockNum), 0)
 	for it.Next() {
-		blockRow := &pbeosdb.BlockRow{}
+		blockRow := &pbtrxdb.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
 		blk, err := db.blockRowToBlockWithRef(ctx, blockRow)
 		if err != nil {
@@ -247,7 +247,7 @@ func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbcodec.Acco
 		return nil, fmt.Errorf("unable to get account: %w", err)
 	}
 
-	acctRow := &pbeosdb.AccountRow{}
+	acctRow := &pbtrxdb.AccountRow{}
 	db.dec.MustInto(value, acctRow)
 	return &pbcodec.AccountCreationRef{
 		Account:       acctRow.Name,
@@ -266,7 +266,7 @@ func (db *DB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) 
 
 	it := db.store.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), 0)
 	for it.Next() {
-		acctRow := &pbeosdb.AccountRow{}
+		acctRow := &pbtrxdb.AccountRow{}
 		db.dec.MustInto(it.Item().Value, acctRow)
 		out = append(out, acctRow.Name)
 	}

@@ -41,14 +41,14 @@ import (
 )
 
 type SearchEngine struct {
-	eosdb        DB
+	trxdb        DB
 	httpClient   *http.Client
 	searchClient pbsearch.RouterClient
 }
 
 func NewSearchEngine(db DB, searchClient pbsearch.RouterClient) *SearchEngine {
 	return &SearchEngine{
-		eosdb:        db,
+		trxdb:        db,
 		searchClient: searchClient,
 		httpClient: &http.Client{Transport: &ochttp.Transport{
 			Propagation: &stackdriverPropagation.HTTPFormat{},
@@ -205,7 +205,7 @@ func (s *SearchEngine) fillSearchClientResponse(
 	}
 
 	zlogger.Debug("fetching transactions from bigtable", zap.Int("count", len(trxIDS)))
-	lifecycles, err := s.eosdb.GetTransactions(ctx, trxIDS)
+	lifecycles, err := s.trxdb.GetTransactions(ctx, trxIDS)
 	if err != nil {
 		return nil, derr.Wrap(err, "unable to get transactions from database")
 	}

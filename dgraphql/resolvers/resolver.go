@@ -28,7 +28,7 @@ import (
 	rateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
@@ -51,9 +51,9 @@ import (
 // Root is the root resolver.
 type Root struct {
 	searchClient                  pbsearch.RouterClient
-	trxsReader                    eosdb.TransactionsReader
-	blocksReader                  eosdb.BlocksReader
-	accountsReader                eosdb.AccountsReader
+	trxsReader                    trxdb.TransactionsReader
+	blocksReader                  trxdb.BlocksReader
+	accountsReader                trxdb.AccountsReader
 	blockmetaClient               *pbblockmeta.Client
 	chainDiscriminatorClient      *pbblockmeta.ChainDiscriminatorClient
 	abiCodecClient                pbabicodec.DecoderClient
@@ -61,7 +61,7 @@ type Root struct {
 	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter) (interface{}, error) {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter) (interface{}, error) {
 	return &Root{
 		searchClient:       searchClient,
 		trxsReader:         dbReader,

@@ -12,15 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kv
+package trxdb
 
 import (
-	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
+	"encoding/hex"
+	"fmt"
 )
 
-var zlog *zap.Logger
+func MustHexDecode(input string) []byte {
+	value, err := hex.DecodeString(input)
+	if err != nil {
+		panic(fmt.Errorf("should have been possible to transform decode %q as hex: %s", input, err))
+	}
 
-func init() {
-	logging.Register("github.com/dfuse-io/kvdb/eosdb/kv", &zlog)
+	return value
+}
+
+func BoolPtr(b *bool) bool {
+	if b == nil {
+		return false
+	}
+	return *b
 }

@@ -46,7 +46,7 @@ type Hub struct {
 	HeadBlockTime  time.Time `json:"head_block_time"`
 	TimeLatencySec int64     `json:"time_latency_sec"`
 }
-type EOSDB struct {
+type TRXDB struct {
 	HeadBlock    uint32 `json:"head_block"`
 	BlockLatency int    `json:"block_latency"`
 }
@@ -66,14 +66,14 @@ type Merger struct {
 type Healthz struct {
 	Errors  []string `json:"errors"`
 	Hub     *Hub     `json:"hub,omitempty"`
-	EOSDB   *EOSDB   `json:"eosdb,omitempty"`
+	TRXDB   *TRXDB   `json:"trxdb,omitempty"`
 	Flux    *Flux    `json:"flux,omitempty"`
 	Search  *Search  `json:"search,omitempty"`
 	Merger  *Merger  `json:"merger,omitempty"`
 	Healthy struct {
 		Hub    *bool `json:"hub,omitempty"`
 		Merger *bool `json:"merger,omitempty"`
-		EOSDB  *bool `json:"eosdb,omitempty"`
+		TRXDB  *bool `json:"trxdb,omitempty"`
 		Flux   *bool `json:"flux,omitempty"`
 		Search *bool `json:"search,omitempty"`
 	} `json:"healthy"`
@@ -254,18 +254,18 @@ func healthCheckBigTable(h *Healthz, wg *sync.WaitGroup, db eosws.DB, r *http.Re
 			close(done)
 			return
 		}
-		h.EOSDB = &EOSDB{}
+		h.TRXDB = &TRXDB{}
 		if len(bigTableHeadBlocks) == 1 {
 			bgHeadBlock := bigTableHeadBlocks[0]
 			blockNum := eos.BlockNum(bgHeadBlock.Id)
-			h.EOSDB.HeadBlock = blockNum
-			h.EOSDB.BlockLatency = int(headBlockNum - blockNum)
+			h.TRXDB.HeadBlock = blockNum
+			h.TRXDB.BlockLatency = int(headBlockNum - blockNum)
 			if blockNum > headBlockNum {
-				h.EOSDB.BlockLatency = 0
+				h.TRXDB.BlockLatency = 0
 			}
 		}
-		isHealthy := h.EOSDB.BlockLatency < maxBlockLatencyStreams
-		h.Healthy.EOSDB = newBool(isHealthy)
+		isHealthy := h.TRXDB.BlockLatency < maxBlockLatencyStreams
+		h.Healthy.TRXDB = newBool(isHealthy)
 		close(done)
 	}()
 
@@ -273,7 +273,7 @@ func healthCheckBigTable(h *Healthz, wg *sync.WaitGroup, db eosws.DB, r *http.Re
 	case <-done:
 	case <-time.After(maxSubsystemResponseTime):
 		h.Errors = append(h.Errors, "Big Table health check time out")
-		h.Healthy.EOSDB = newBool(false)
+		h.Healthy.TRXDB = newBool(false)
 	}
 
 }
