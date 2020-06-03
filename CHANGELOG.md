@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [Breaking] `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
 * [Breaking] `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
 * [Breaking] `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
+* `mindreader` ContinuityChecker is not enabled by default anymore
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
+* Flag: --mindreader-fail-on-non-contiguous-block (default:false) to enable the ContinuityChecker
 * Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
 * Flag: --common-ratelimiter-plugin (default: nul://) to enable a rate limiter plugin
 * Flag: --pprof-listen-addr (default: 6060)
@@ -40,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      },
    ]
 ```
+* Added `--eosq-default-network` string to configure the default network eosq	
+* Added `--eosq-disable-analytics` bool to configure eosq analytics
+* Added `--eosq-display-price` bool to configure if eosq displays prices
+* Added `--eosq-price-ticker` string to configure if eosq price ticker
+* Added `--eosq-on-demand` bool to configure if eosq serves an on-demand network
+* Added `--eosq-disable-tokenmeta` bool to configure if eosq disables tokenmenta
+
 * [Breaking] To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
 * [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)

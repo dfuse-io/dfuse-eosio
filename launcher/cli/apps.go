@@ -33,13 +33,13 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
@@ -228,6 +228,7 @@ func init() {
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
+			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the nodeos if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			return nil
 		},
 		InitFunc: func(modules *launcher.RuntimeModules) error {
@@ -270,23 +271,24 @@ func init() {
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				MetricID:            "mindreader",
-				ManagerAPIAddress:   viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:    viper.GetString("mindreader-nodeos-api-addr"),
-				ConnectionWatchdog:  viper.GetBool("mindreader-connection-watchdog"),
-				NodeosConfigDir:     viper.GetString("mindreader-config-dir"),
-				NodeosBinPath:       viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:       mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
-				ProducerHostname:    viper.GetString("mindreader-producer-hostname"),
-				TrustedProducer:     viper.GetString("mindreader-trusted-producer"),
-				ReadinessMaxLatency: viper.GetDuration("mindreader-readiness-max-latency"),
-				NodeosExtraArgs:     viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BackupTag:           viper.GetString("mindreader-backup-tag"),
-				NoBlocksLog:         viper.GetBool("mindreader-no-blocks-log"),
-				BootstrapDataURL:    viper.GetString("mindreader-bootstrap-data-url"),
-				DebugDeepMind:       viper.GetBool("mindreader-debug-deep-mind"),
-				LogToZap:            viper.GetBool("mindreader-log-to-zap"),
+				MetricID:                  "mindreader",
+				ManagerAPIAddress:         viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:          viper.GetString("mindreader-nodeos-api-addr"),
+				ConnectionWatchdog:        viper.GetBool("mindreader-connection-watchdog"),
+				NodeosConfigDir:           viper.GetString("mindreader-config-dir"),
+				NodeosBinPath:             viper.GetString("mindreader-nodeos-path"),
+				NodeosDataDir:             mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
+				ProducerHostname:          viper.GetString("mindreader-producer-hostname"),
+				TrustedProducer:           viper.GetString("mindreader-trusted-producer"),
+				ReadinessMaxLatency:       viper.GetDuration("mindreader-readiness-max-latency"),
+				NodeosExtraArgs:           viper.GetStringSlice("mindreader-nodeos-args"),
+				BackupStoreURL:            mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+				BackupTag:                 viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:               viper.GetBool("mindreader-no-blocks-log"),
+				BootstrapDataURL:          viper.GetString("mindreader-bootstrap-data-url"),
+				DebugDeepMind:             viper.GetBool("mindreader-debug-deep-mind"),
+				LogToZap:                  viper.GetBool("mindreader-log-to-zap"),
+				FailOnNonContinuousBlocks: viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
@@ -971,17 +973,29 @@ func init() {
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
 			cmd.Flags().String("eosq-available-networks", "", "json string to configure the networks section of eosq.")
+			cmd.Flags().String("eosq-default-network", "local", "Default network that is displayed. It should correspond to an `id` in the available networks")
+			cmd.Flags().Bool("eosq-disable-analytics", true, "Disables sentry and segment")
+			cmd.Flags().Bool("eosq-display-price", false, "Should display prices via our price API")
+			cmd.Flags().String("eosq-price-ticker-name", "EOS", "The price ticker")
+			cmd.Flags().Bool("eosq-on-demand", false, "Is eosq deployed for an on-demand network")
+			cmd.Flags().Bool("eosq-disable-tokenmeta", true, "Disables tokenmeta calls from eosq")
 			return nil
 		},
 
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
-				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
-				AuthEndpointURL:   viper.GetString("eosq-auth-url"),
-				ApiKey:            viper.GetString("eosq-api-key"),
 				Environement:      viper.GetString("eosq-environment"),
+				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
+				ApiKey:            viper.GetString("eosq-api-key"),
+				AuthEndpointURL:   viper.GetString("eosq-auth-url"),
 				AvailableNetworks: viper.GetString("eosq-available-networks"),
+				DisableAnalytics:  viper.GetBool("eosq-disable-analytics"),
+				DefaultNetwork:    viper.GetString("eosq-default-network"),
+				DisplayPrice:      viper.GetBool("eosq-display-price"),
+				PriceTickerName:   viper.GetString("eosq-price-ticker-name"),
+				OnDemand:          viper.GetBool("eosq-on-demand"),
+				DisableTokenmeta:  viper.GetBool("eosq-disable-tokenmeta"),
 			}), nil
 		},
 	})
