@@ -216,9 +216,9 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 	// was not the right place. But when it was moved, it changed the behavior of the old API causing problem
 	// to existing customer. To retain old behavior, we now return an empty row data in all cases when a specific
 	// key is not found on a given table.
-	if rowData == nil {
-		return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
-	}
+	// if rowData == nil {
+	// 	return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
+	// }
 
 	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
 	if err != nil {
