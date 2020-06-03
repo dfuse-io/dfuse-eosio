@@ -228,6 +228,7 @@ func init() {
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
+			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the nodeos if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			return nil
 		},
 		InitFunc: func(modules *launcher.RuntimeModules) error {
@@ -270,23 +271,24 @@ func init() {
 			}
 
 			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				MetricID:            "mindreader",
-				ManagerAPIAddress:   viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:    viper.GetString("mindreader-nodeos-api-addr"),
-				ConnectionWatchdog:  viper.GetBool("mindreader-connection-watchdog"),
-				NodeosConfigDir:     viper.GetString("mindreader-config-dir"),
-				NodeosBinPath:       viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:       mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
-				ProducerHostname:    viper.GetString("mindreader-producer-hostname"),
-				TrustedProducer:     viper.GetString("mindreader-trusted-producer"),
-				ReadinessMaxLatency: viper.GetDuration("mindreader-readiness-max-latency"),
-				NodeosExtraArgs:     viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BackupTag:           viper.GetString("mindreader-backup-tag"),
-				NoBlocksLog:         viper.GetBool("mindreader-no-blocks-log"),
-				BootstrapDataURL:    viper.GetString("mindreader-bootstrap-data-url"),
-				DebugDeepMind:       viper.GetBool("mindreader-debug-deep-mind"),
-				LogToZap:            viper.GetBool("mindreader-log-to-zap"),
+				MetricID:                  "mindreader",
+				ManagerAPIAddress:         viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:          viper.GetString("mindreader-nodeos-api-addr"),
+				ConnectionWatchdog:        viper.GetBool("mindreader-connection-watchdog"),
+				NodeosConfigDir:           viper.GetString("mindreader-config-dir"),
+				NodeosBinPath:             viper.GetString("mindreader-nodeos-path"),
+				NodeosDataDir:             mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
+				ProducerHostname:          viper.GetString("mindreader-producer-hostname"),
+				TrustedProducer:           viper.GetString("mindreader-trusted-producer"),
+				ReadinessMaxLatency:       viper.GetDuration("mindreader-readiness-max-latency"),
+				NodeosExtraArgs:           viper.GetStringSlice("mindreader-nodeos-args"),
+				BackupStoreURL:            mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+				BackupTag:                 viper.GetString("mindreader-backup-tag"),
+				NoBlocksLog:               viper.GetBool("mindreader-no-blocks-log"),
+				BootstrapDataURL:          viper.GetString("mindreader-bootstrap-data-url"),
+				DebugDeepMind:             viper.GetBool("mindreader-debug-deep-mind"),
+				LogToZap:                  viper.GetBool("mindreader-log-to-zap"),
+				FailOnNonContinuousBlocks: viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
