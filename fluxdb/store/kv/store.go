@@ -228,7 +228,6 @@ func (s *KVStore) fetchKey(ctx context.Context, table byte, key string) (out []b
 	kvKey := packKey(table, key)
 
 	out, err = s.db.Get(ctx, kvKey)
-
 	if err == kv.ErrNotFound {
 		return nil, store.ErrNotFound
 	}
@@ -252,6 +251,7 @@ func (s *KVStore) fetchKeys(ctx context.Context, table byte, keys []string) (out
 	for itr.Next() {
 		values = append(values, itr.Item())
 	}
+
 	if err := itr.Err(); err != nil {
 		return nil, fmt.Errorf("unable to fetch table %q keys (%d): %w", TblPrefixName[table], len(keys), err)
 	}
@@ -265,9 +265,12 @@ func (s *KVStore) fetchKeys(ctx context.Context, table byte, keys []string) (out
 }
 
 func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, onRow func(key string, value []byte) error) error {
-
 	kvPrefix := packKey(table, prefixKey)
-	itr := s.db.Prefix(ctx, kvPrefix)
+
+	itrCtx, cancelIterator := context.WithCancel(ctx)
+	defer cancelIterator()
+
+	itr := s.db.Prefix(itrCtx, kvPrefix)
 	for itr.Next() {
 		item := itr.Item()
 		t, key := unpackKey(item.Key)
@@ -278,7 +281,7 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 		}
 
 		if err != nil {
-			return fmt.Errorf("scan prefic: unable to process for table %q with key %q: %w", TblPrefixName[t], key, err)
+			return fmt.Errorf("scan prefix: unable to process for table %q with key %q: %w", TblPrefixName[t], key, err)
 		}
 	}
 	if err := itr.Err(); err != nil {
@@ -289,7 +292,6 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 }
 
 func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd string, onRow func(key string, value []byte) error) error {
-
 	zlog.Debug("scanning range", zap.String("start", keyStart), zap.String("end", keyEnd))
 	startKey := packKey(table, keyStart)
 	var endKey []byte
@@ -301,8 +303,11 @@ func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd st
 		endKey = []byte{table + 1}
 	}
 
+	itrCtx, cancelIterator := context.WithCancel(ctx)
+	defer cancelIterator()
+
 	// TODO: we need to fix this limit
-	itr := s.db.Scan(ctx, startKey, endKey, 0)
+	itr := s.db.Scan(itrCtx, startKey, endKey, 0)
 
 	for itr.Next() {
 		item := itr.Item()
