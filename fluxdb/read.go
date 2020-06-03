@@ -347,7 +347,7 @@ func (fdb *FluxDB) ReadLinkedPermissions(ctx context.Context, blockNum uint32, a
 		return nil, derr.Wrapf(err, "unable to read rows for table key %q", tableKey)
 	}
 
-	zlog.Debug("handling speculative writes#", zap.Int("write_count", len(speculativeWrites)))
+	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
 	for _, blockWrite := range speculativeWrites {
 		for _, row := range blockWrite.AuthLinks {
 			if row.Account != N(string(account)) {
