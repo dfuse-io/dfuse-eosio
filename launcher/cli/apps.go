@@ -33,13 +33,13 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
@@ -971,17 +971,30 @@ func init() {
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
 			cmd.Flags().String("eosq-available-networks", "", "json string to configure the networks section of eosq.")
+			cmd.Flags().Bool("eosq-enable-analytics", false, "Enables sentry and segment")
+			cmd.Flags().String("eosq-default-network", "local", "Default network that is displayed. It should correspond to an `id` in the available networks")
+			cmd.Flags().Bool("eosq-disable-analytics", true, "Disables sentry and segment")
+			cmd.Flags().Bool("eosq-display-price", false, "Should display prices via our price API")
+			cmd.Flags().String("eosq-price-ticker-name", "EOS", "The price ticker")
+			cmd.Flags().Bool("eosq-on-demand", false, "Is eosq deployed for an on-demand network")
+			cmd.Flags().Bool("eosq-disable-tokenmeta", true, "Disables tokenmeta calls from eosq")
 			return nil
 		},
 
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
-				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
-				AuthEndpointURL:   viper.GetString("eosq-auth-url"),
-				ApiKey:            viper.GetString("eosq-api-key"),
 				Environement:      viper.GetString("eosq-environment"),
+				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
+				ApiKey:            viper.GetString("eosq-api-key"),
+				AuthEndpointURL:   viper.GetString("eosq-auth-url"),
 				AvailableNetworks: viper.GetString("eosq-available-networks"),
+				DisableAnalytics:  viper.GetBool("eosq-disable-analytics"),
+				DefaultNetwork:    viper.GetString("eosq-default-network"),
+				DisplayPrice:      viper.GetBool("eosq-display-price"),
+				PriceTickerName:   viper.GetString("eosq-price-ticker-name"),
+				OnDemand:          viper.GetBool("eosq-on-demand"),
+				DisableTokenmeta:  viper.GetBool("eosq-disable-tokenmeta"),
 			}), nil
 		},
 	})

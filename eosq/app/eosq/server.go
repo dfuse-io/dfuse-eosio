@@ -193,18 +193,18 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 	host, secure := sanitizeAPIEndpoint(config.APIEndpointURL)
 	indexConfig := map[string]interface{}{
 		"version":             1,
-		"current_network":     "local",
-		"on_demand":           false,
 		"dfuse_io_endpoint":   host,
 		"dfuse_io_api_key":    config.ApiKey,
 		"dfuse_auth_endpoint": config.AuthEndpointURL,
-		"display_price":       false,
-		"price_ticker_name":   "EOS",
 		"available_networks":  an,
 		"secure":              secure,
-		"disable_segments":    true,
-		"disable_sentry":      true,
-		"disable_token_meta":  true,
+		"current_network":     config.DefaultNetwork,
+		"display_price":       config.DisplayPrice,
+		"price_ticker_name":   config.PriceTickerName,
+		"on_demand":           config.OnDemand,
+		"disable_segments":    config.DisableAnalytics,
+		"disable_sentry":      config.DisableAnalytics,
+		"disable_token_meta":  config.DisableTokenmeta,
 	}
 
 	tpl, err := template.New("index.html").Funcs(template.FuncMap{

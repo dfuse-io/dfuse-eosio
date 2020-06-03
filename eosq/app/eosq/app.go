@@ -19,12 +19,19 @@ import (
 )
 
 type Config struct {
-	APIEndpointURL    string
-	HTTPListenAddr    string
-	AuthEndpointURL   string
-	ApiKey            string
-	Environement      string
-	AvailableNetworks string
+	HTTPListenAddr string
+	Environement   string // i.e: production
+	// EOSQ configruation payload
+	APIEndpointURL    string // i.e: https://dev1.api.dfuse.dev
+	ApiKey            string // i.e: web_XXXXXXXXXXXXXXXXXXXXXX
+	AuthEndpointURL   string // i.e: https://auth.dfuse.io
+	AvailableNetworks string // this is a JSON string ie: '[{"id": "eos-mainnet", "is_test": false, "logo": "/images/eos-mainnet.png", "name": "EOS Mainnet", "url": "https://eosq.app"}]'
+	DisableAnalytics  bool   // Disables sentry and segment
+	DefaultNetwork    string // The default network that is displayed, should correspond to an id in the avaiable networks
+	DisplayPrice      bool   // Should eosq display prices
+	PriceTickerName   string // the Price ticker name i.e. EOS
+	OnDemand          bool   // If this instance of eoqs is for an on-demand network
+	DisableTokenmeta  bool   // Disables tokenmeta calls from eosq
 }
 
 type App struct {
