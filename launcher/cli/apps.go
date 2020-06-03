@@ -971,7 +971,6 @@ func init() {
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
 			cmd.Flags().String("eosq-available-networks", "", "json string to configure the networks section of eosq.")
-			cmd.Flags().Bool("eosq-enable-analytics", false, "Enables sentry and segment")
 			cmd.Flags().String("eosq-default-network", "local", "Default network that is displayed. It should correspond to an `id` in the available networks")
 			cmd.Flags().Bool("eosq-disable-analytics", true, "Disables sentry and segment")
 			cmd.Flags().Bool("eosq-display-price", false, "Should display prices via our price API")

@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      },
    ]
 ```
+* Added `--eosq-default-network` string to configure the default network eosq	
+* Added `--eosq-disable-analytics` bool to configure eosq analytics
+* Added `--eosq-display-price` bool to configure if eosq displays prices
+* Added `--eosq-price-ticker` string to configure if eosq price ticker
+* Added `--eosq-on-demand` bool to configure if eosq serves an on-demand network
+* Added `--eosq-disable-tokenmeta` bool to configure if eosq disables tokenmenta
+
 * [Breaking] To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
 * [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
