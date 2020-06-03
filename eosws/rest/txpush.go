@@ -58,7 +58,7 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	deleteCORSHeaders(r)
 
 	pushTransactionGuaranteeOption := r.Header.Get("X-Eos-Push-Guarantee")
-	if r.URL.EscapedPath() != "/v1/chain/push_transaction" || pushTransactionGuaranteeOption == "" {
+	if (r.URL.EscapedPath() != "/v1/chain/push_transaction" && r.URL.EscapedPath() != "/v1/chain/send_transaction") || pushTransactionGuaranteeOption == "" {
 		t.dumbAPIProxy.ServeHTTP(w, r)
 		return
 	}
@@ -163,7 +163,14 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
 	timedoutContext, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	pushResp, err := t.API.PushTransactionRaw(timedoutContext, tx)
+
+	var pushResp json.RawMessage
+	if r.URL.EscapedPath() == "/v1/chain/push_transaction" {
+		pushResp, err = t.API.PushTransactionRaw(timedoutContext, tx)
+	} else {
+		pushResp, err = t.API.SendTransactionRaw(timedoutContext, tx)
+	}
+
 	cancel()
 	if err != nil {
 		if err.Error() == context.Canceled.Error() {
@@ -175,7 +182,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			apiErrCnt, err := json.Marshal(apiErr)
 			if err == nil {
 				w.WriteHeader(apiErr.Code)
-				w.Write([]byte(apiErrCnt))
+				w.Write(apiErrCnt)
 				return
 			}
 		}

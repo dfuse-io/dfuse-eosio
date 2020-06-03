@@ -56,6 +56,7 @@ func (p *proxy) Launch() error {
 	router.PathPrefix("/graphql").Handler(p.dgraphqlProxy)
 	router.PathPrefix("/graphiql").Handler(p.dgraphqlProxy)
 	router.PathPrefix("/v1/chain/push_transaction").Handler(p.eoswsProxy)
+	router.PathPrefix("/v1/chain/send_transaction").Handler(p.eoswsProxy)
 	router.PathPrefix("/v1/chain").Handler(p.nodeosProxy)
 	router.PathPrefix("/v1/stream").Handler(p.eoswsProxy)
 	router.PathPrefix("/v1").Handler(p.eoswsProxy)
