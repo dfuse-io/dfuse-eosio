@@ -138,14 +138,14 @@ func tokenizeEOSDataObject(data string) map[string]interface{} {
 	return out
 }
 
-func tokenizeEvent(config EventsConfig, authKey string, data string) url.Values {
+func tokenizeEvent(config eventsConfig, authKey string, data string) url.Values {
 	out, err := url.ParseQuery(data)
 	if err != nil {
 		zlog.Debug("error parsing dfuse events 'data' field", zap.Error(err))
 		return nil
 	}
 
-	isRestricted := !config.Unrestricted
+	isRestricted := !config.unrestricted
 
 	for k, vals := range out {
 		if isRestricted && len(k) > 16 {

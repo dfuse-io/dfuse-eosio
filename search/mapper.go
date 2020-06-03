@@ -1,8 +1,8 @@
 package search
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/google/cel-go/checker/decls"
 	"strings"
 
 	"github.com/blevesearch/bleve"
@@ -10,44 +10,46 @@ import (
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/search"
 	"github.com/google/cel-go/cel"
+	"github.com/google/cel-go/checker/decls"
 	"github.com/google/cel-go/common/types"
 	"go.uber.org/zap"
 )
 
 type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
-// EventsConfig contains specific configuration for the correct indexation of
+// eventsConfig contains specific configuration for the correct indexation of
 // dfuse Events, our special methodology to index the action from your smart contract
 // the way the developer like it.
-type EventsConfig struct {
-	ActionName   string
-	Unrestricted bool
+type eventsConfig struct {
+	actionName   string
+	unrestricted bool
 }
 
 type EOSBlockMapper struct {
-	eventsConfig     EventsConfig
+	eventsConfig     eventsConfig
+	restrictions     []*restriction
 	filterOnProgram  cel.Program
 	filterOutProgram cel.Program
 }
 
 func NewEOSBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, filterOut string) (*EOSBlockMapper, error) {
-	fonProgram, err := BuildCELProgram("true", filterOn)
+	fonProgram, err := buildCELProgram("true", filterOn)
 	if err != nil {
 		return nil, err
 	}
 
-	foutProgram, err := BuildCELProgram("false", filterOut)
+	foutProgram, err := buildCELProgram("false", filterOut)
 	if err != nil {
 		return nil, err
 	}
 
 	return &EOSBlockMapper{
-		eventsConfig: EventsConfig{
-			ActionName:   eventsActionName,
-			Unrestricted: eventsUnrestricted,
+		eventsConfig: eventsConfig{
+			actionName:   eventsActionName,
+			unrestricted: eventsUnrestricted,
 		},
 		filterOnProgram:  fonProgram,
 		filterOutProgram: foutProgram,
@@ -141,6 +143,78 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	return docsList, nil
 }
 
+func parseRestrictionsJSON(JSONStr string) ([]*restriction, error) {
+	var restrictions []*restriction
+	if JSONStr == "" {
+		return nil, nil
+	}
+	err := json.Unmarshal([]byte(JSONStr), &restrictions)
+	return restrictions, err
+
+}
+
+// example: `{"account":"eosio.token","data.to":"someaccount"}` will not Pass()
+// true for an action that matches EXACTLY those two conditions
+type restriction map[string]string
+
+func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
+	actionData, _ := actionWrapper["data"].(map[string]interface{})
+
+	for k, v := range r {
+		if strings.HasPrefix(k, "data.") {
+			if val, ok := actionData[k[5:]]; !ok || val != v {
+				return true
+			}
+			continue
+		}
+		if val, ok := actionWrapper[k]; !ok || val != v {
+			return true
+		}
+	}
+	return false
+}
+
+func buildCELProgram(noopProgram string, programString string) (cel.Program, error) {
+	stripped := strings.TrimSpace(programString)
+	if stripped == "" || stripped == noopProgram {
+		return nil, nil
+	}
+
+	env, err := cel.NewEnv(
+		cel.Declarations(
+			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil), // "table", "key" => string
+			decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
+			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
+			decls.NewIdent("receiver", decls.String, nil),
+			decls.NewIdent("account", decls.String, nil),
+			decls.NewIdent("action", decls.String, nil),
+			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
+			decls.NewIdent("input", decls.Bool, nil),
+			decls.NewIdent("notif", decls.Bool, nil),
+			decls.NewIdent("scheduled", decls.Bool, nil),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	exprAst, issues := env.Compile(programString)
+	if issues != nil && issues.Err() != nil {
+		return nil, fmt.Errorf("filter expression parse/check error: %w", issues.Err())
+	}
+
+	if exprAst.ResultType() != decls.Bool {
+		return nil, fmt.Errorf("filter expression should return a boolean, returned %s", exprAst.ResultType())
+	}
+
+	prg, err := env.Program(exprAst)
+	if err != nil {
+		return nil, fmt.Errorf("cel program construction error: %w", err)
+	}
+
+	return prg, nil
+}
+
 func (m *EOSBlockMapper) shouldIndexAction(doc map[string]interface{}) bool {
 	filterOnResult := m.filterMatches(m.filterOnProgram, true, doc)
 	filterOutResult := m.filterMatches(m.filterOutProgram, false, doc)
@@ -172,7 +246,7 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 		trxIndex++
 
 		trxID := trxTrace.Id
-		if !IsTrxTraceIndexable(trxTrace) {
+		if !isTrxTraceIndexable(trxTrace) {
 			continue
 		}
 
@@ -197,7 +271,7 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 			data["notif"] = receiver != account
 			data["input"] = actTrace.CreatorActionOrdinal == 0
 			data["scheduled"] = scheduled
-			if actTrace.SimpleName() == m.eventsConfig.ActionName && actTrace.CreatorActionOrdinal != 0 {
+			if actTrace.SimpleName() == m.eventsConfig.actionName && actTrace.CreatorActionOrdinal != 0 {
 				eventFields := tokenizeEvent(m.eventsConfig, actTrace.GetData("key").String(), actTrace.GetData("data").String())
 				if len(eventFields) > 0 {
 					tokenizedActions[actTrace.CreatorActionOrdinal].data["event"] = eventFields
@@ -236,6 +310,20 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 		}
 	}
 	return nil
+}
+
+func isTrxTraceIndexable(trxTrace *pbcodec.TransactionTrace) bool {
+	if trxTrace.Receipt == nil {
+		return false
+	}
+
+	status := trxTrace.Receipt.Status
+	if status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL {
+		// We index `eosio:onerror` transaction that are in soft_fail state since it means a valid `onerror` handler execution
+		return len(trxTrace.ActionTraces) >= 1 && trxTrace.ActionTraces[0].SimpleName() == "eosio:onerror"
+	}
+
+	return status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
 }
 
 func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
@@ -284,61 +372,6 @@ func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string
 	}
 
 	return opData
-}
-
-func BuildCELProgram(noopProgram string, programString string) (cel.Program, error) {
-	stripped := strings.TrimSpace(programString)
-	if stripped == "" || stripped == noopProgram {
-		return nil, nil
-	}
-
-	env, err := cel.NewEnv(
-		cel.Declarations(
-			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil), // "table", "key" => string
-			decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
-			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
-			decls.NewIdent("receiver", decls.String, nil),
-			decls.NewIdent("account", decls.String, nil),
-			decls.NewIdent("action", decls.String, nil),
-			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
-			decls.NewIdent("input", decls.Bool, nil),
-			decls.NewIdent("notif", decls.Bool, nil),
-			decls.NewIdent("scheduled", decls.Bool, nil),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	exprAst, issues := env.Compile(programString)
-	if issues != nil && issues.Err() != nil {
-		return nil, fmt.Errorf("filter expression parse/check error: %w", issues.Err())
-	}
-
-	if exprAst.ResultType() != decls.Bool {
-		return nil, fmt.Errorf("filter expression should return a boolean, returned %s", exprAst.ResultType())
-	}
-
-	prg, err := env.Program(exprAst)
-	if err != nil {
-		return nil, fmt.Errorf("cel program construction error: %w", err)
-	}
-
-	return prg, nil
-}
-
-func IsTrxTraceIndexable(trxTrace *pbcodec.TransactionTrace) bool {
-	if trxTrace.Receipt == nil {
-		return false
-	}
-
-	status := trxTrace.Receipt.Status
-	if status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL {
-		// We index `eosio:onerror` transaction that are in soft_fail state since it means a valid `onerror` handler execution
-		return len(trxTrace.ActionTraces) >= 1 && trxTrace.ActionTraces[0].SimpleName() == "eosio:onerror"
-	}
-
-	return status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
 }
 
 func EOSDocumentID(blockNum uint64, transactionID string, actionIndex int) string {

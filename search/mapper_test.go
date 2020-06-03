@@ -233,6 +233,18 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	return pbblock
 }
 
+func TestParseRestrictionsJSON(t *testing.T) {
+	// very shallow test, but we dont want to test actual golang JSON unmarshalling,
+	// just the general format of our restrictions
+	emptyRests, err := parseRestrictionsJSON("")
+	assert.NoError(t, err)
+	require.Len(t, emptyRests, 0)
+
+	rests, err := parseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
+	require.NoError(t, err)
+	assert.Len(t, rests, 4)
+}
+
 func TestFilterOut(t *testing.T) {
 	tests := []struct {
 		name         string
