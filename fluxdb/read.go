@@ -101,7 +101,7 @@ func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *Re
 		return nil
 	}
 
-	rowDeleted := func(blockNum uint32, primaryKey string) error {
+	rowDeleted := func(_ uint32, primaryKey string) error {
 		delete(rowData, primaryKey)
 		return nil
 	}
@@ -177,7 +177,7 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 		return nil
 	}
 
-	rowDeleted := func(blockNum uint32, candidatePrimaryKey string) error {
+	rowDeleted := func(_ uint32, candidatePrimaryKey string) error {
 		if candidatePrimaryKey != primaryKeyString {
 			return errors.New("logic error, should never happen, the read single should yield only results related to primary key")
 		}
@@ -251,13 +251,13 @@ func (fdb *FluxDB) ReadKeyAccounts(
 	)
 
 	rows := map[string]interface{}{}
-	rowUpdated := func(blockNum uint32, primaryKey string, value []byte) error {
+	rowUpdated := func(_ uint32, primaryKey string, _ []byte) error {
 		zlogger.Debug("row updated", zap.String("primary_key", primaryKey))
 		rows[primaryKey] = nil
 		return nil
 	}
 
-	rowDeleted := func(blockNum uint32, primaryKey string) error {
+	rowDeleted := func(_ uint32, primaryKey string) error {
 		zlogger.Debug("row deleted", zap.String("primary_key", primaryKey))
 		delete(rows, primaryKey)
 		return nil
@@ -317,7 +317,7 @@ func (fdb *FluxDB) ReadLinkedPermissions(ctx context.Context, blockNum uint32, a
 	zlog.Debug("reading linked permissions", zap.String("account", string(account)), zap.Uint32("block_num", blockNum))
 
 	rowData := make(map[string]*LinkedPermission)
-	rowUpdated := func(blockNum uint32, primaryKey string, value []byte) error {
+	rowUpdated := func(_ uint32, primaryKey string, value []byte) error {
 		primaryKeyBuffer := make([]byte, indexPrimaryKeyByteCountByTableKey("al:"))
 		err := authLinkIndexPrimaryKeyWriter(primaryKey, primaryKeyBuffer)
 		if err != nil {
@@ -336,7 +336,7 @@ func (fdb *FluxDB) ReadLinkedPermissions(ctx context.Context, blockNum uint32, a
 		return nil
 	}
 
-	rowDeleted := func(blockNum uint32, primaryKey string) error {
+	rowDeleted := func(_ uint32, primaryKey string) error {
 		delete(rowData, primaryKey)
 		return nil
 	}
@@ -410,12 +410,12 @@ func (fdb *FluxDB) ReadTableScopes(
 	)
 
 	rows := map[string]interface{}{}
-	rowUpdated := func(blockNum uint32, primaryKey string, value []byte) error {
+	rowUpdated := func(_ uint32, primaryKey string, _ []byte) error {
 		rows[primaryKey] = nil
 		return nil
 	}
 
-	rowDeleted := func(blockNum uint32, primaryKey string) error {
+	rowDeleted := func(_ uint32, primaryKey string) error {
 		delete(rows, primaryKey)
 		return nil
 	}
@@ -522,7 +522,6 @@ func (fdb *FluxDB) read(
 				chunkEnd = max
 			}
 
-			// TODO: triple check boundaries, EASY off-by-one issue here..
 			keysChunk := keys[chunkStart:chunkEnd]
 
 			zlog.Debug("reading index rows chunk", zap.Int("key_count", len(keysChunk)))
