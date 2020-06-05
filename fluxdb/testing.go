@@ -16,9 +16,9 @@ package fluxdb
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/derr"
 	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/require"
 )
@@ -34,14 +34,14 @@ func writeRequests(requests ...*WriteRequest) []*WriteRequest {
 func writePackedABI(blockNum uint32, account uint64, packedABI []byte) *WriteRequest {
 	return &WriteRequest{
 		BlockNum: blockNum,
-		ABIs:     []*ABIRow{&ABIRow{account, blockNum, packedABI}},
+		// ABIs:     []*ABIRow{&ABIRow{account, blockNum, packedABI}},
 	}
 }
 
 func writeABI(blockNum uint32, account uint64, abi *eos.ABI) *WriteRequest {
 	bytes, err := eos.MarshalBinary(abi)
 	if err != nil {
-		panic(derr.Wrap(err, "unable to encode abi"))
+		panic(fmt.Errorf("unable to encode abi: %w", err))
 	}
 
 	if len(bytes) == 0 {
@@ -57,7 +57,7 @@ func writeEmptyABI(blockNum uint32, account uint64) *WriteRequest {
 
 func tableDataRows(blockNum uint32, rows ...*TableDataRow) *WriteRequest {
 	return &WriteRequest{
-		BlockNum:   blockNum,
-		TableDatas: rows,
+		BlockNum: blockNum,
+		// TableDatas: rows,
 	}
 }

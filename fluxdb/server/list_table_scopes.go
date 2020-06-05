@@ -15,14 +15,15 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
+	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +42,7 @@ func (srv *EOSServer) listTableScopesHandler(w http.ResponseWriter, r *http.Requ
 
 	scopes, actualBlockNum, err := srv.listTableScopes(ctx, request.Account, request.Table, request.BlockNum)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "list table scopes"))
+		writeError(ctx, w, fmt.Errorf("list table scopes: %w", err))
 		return
 	}
 

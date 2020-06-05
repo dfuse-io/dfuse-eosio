@@ -33,7 +33,13 @@ import (
 
 var ErrCleanSourceStop = errors.New("clean source stop")
 
-func BuildReprocessingPipeline(handler bstream.Handler, blocksStore dstore.Store, startBlockNum uint64, numBlocksBeforeStart uint64, parallelDownloadCount int) bstream.Source {
+func BuildReprocessingPipeline(
+	handler bstream.Handler,
+	blocksStore dstore.Store,
+	startBlockNum uint64,
+	numBlocksBeforeStart uint64,
+	parallelDownloadCount int,
+) bstream.Source {
 	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, handler)
 	gate.MaxHoldOff = 1000
 
@@ -111,7 +117,6 @@ type FluxDBHandler struct {
 	batchOpen         time.Time
 	batchClose        time.Time
 	batchWritableRows int
-	abisWritten       int
 
 	lastBlockIDCheck time.Time
 }
@@ -230,20 +235,14 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 				req := newIrrBlk.Obj.(*WriteRequest)
 
 				p.batchWrites = append(p.batchWrites, req)
-				p.batchWritableRows += len(req.AuthLinks) +
-					len(req.AuthLinks) +
-					len(req.AuthLinks) +
-					len(req.KeyAccounts) +
-					len(req.TableDatas) +
-					len(req.TableScopes)
-				p.abisWritten += len(req.ABIs)
+				p.batchWritableRows += len(req.FluxRows)
 			}
 
 			if p.batchWritableRows > 5000 || now.After(p.batchClose) || p.writeOnEachIrreversibleStep {
 				defer func() {
 					p.batchWrites = nil
 					p.batchWritableRows = 0
-					p.abisWritten = 0
+					// p.abisWritten = 0
 				}()
 
 				err := p.db.WriteBatch(p.ctx, p.batchWrites)
@@ -259,7 +258,6 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 					zap.Duration("batch_elapsed_per_block", timePerBlock),
 					zap.Int("batch_write_count", len(p.batchWrites)),
 					zap.Int("batch_writable_row_count", p.batchWritableRows),
-					zap.Int("batch_writable_abi_count", p.abisWritten),
 				)
 			}
 

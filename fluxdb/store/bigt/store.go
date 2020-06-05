@@ -21,7 +21,6 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 	basebigt "github.com/dfuse-io/kvdb/base/bigt"
@@ -171,7 +170,7 @@ func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bo
 	}, bigtable.LimitRows(1), bigtable.RowFilter(filters))
 
 	if err != nil {
-		return false, derr.Wrapf(err, "unable to read rows for row prefix key %s", keyPrefix)
+		return false, fmt.Errorf("unable to read rows for row prefix key %s: %w", keyPrefix, err)
 	}
 
 	return exists, nil
@@ -180,7 +179,7 @@ func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bo
 func (s *KVStore) FetchTabletRow(ctx context.Context, key string, onTabletRow store.OnTabletRow) error {
 	row, err := s.tblRows.ReadRow(ctx, key)
 	if err != nil {
-		return derr.Wrapf(err, "read tablet row %q", key)
+		return fmt.Errorf("read tablet row %q: %w", key, err)
 	}
 
 	item, ok := btRowItem(row, rowFamilyName, rowColumnName)
@@ -335,7 +334,7 @@ func (b *batch) FlushIfFull(ctx context.Context) error {
 	// Size greater than 75 MB (actual real limit near 100 MB)
 	b.zlog.Info("flushing a full batch set", zap.Int("size", b.size))
 	if err := b.Flush(ctx); err != nil {
-		return derr.Wrap(err, "flushing batch set")
+		return fmt.Errorf("flushing batch set: %w", err)
 	}
 
 	return nil
@@ -391,7 +390,7 @@ func (b *batch) Flush(ctx context.Context) error {
 		errors, err := tbl.ApplyBulk(ctx, keys, vals)
 		if err != nil {
 			span.End()
-			return derr.Wrap(err, "apply bulk")
+			return fmt.Errorf("apply bulk: %w", err)
 		}
 
 		if len(errors) != 0 {

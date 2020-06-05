@@ -15,14 +15,12 @@
 package fluxdb
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/eoscanada/eos-go"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,25 +43,14 @@ func TestPreprocessBlock_TableOps(t *testing.T) {
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)
 
-	tableScopeRows := req.(*WriteRequest).TableScopes
-	tableScopeRowKey := func(row *TableScopeRow) string {
-		return strings.Join([]string{
-			eos.NameToString(row.Account),
-			eos.NameToString(row.Table),
-			eos.NameToString(row.Scope),
-			eos.NameToString(row.Payer),
-		}, "/")
-	}
+	rows := sortedFluxRows(req.(*WriteRequest).FluxRows, 3)
 
-	sort.Slice(tableScopeRows, func(i, j int) bool {
-		return tableScopeRowKey(tableScopeRows[i]) < tableScopeRowKey(tableScopeRows[j])
-	})
-
-	assert.Equal(t, []*TableScopeRow{
-		{N("another"), N("scope1"), N("table1"), true, N("another")},
-		{N("eosio"), N("scope"), N("table1"), true, N("eosio")},
-		{N("john"), N("scope2"), N("table3"), false, N("john")},
-	}, tableScopeRows)
+	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
+	assert.Equal(t, []string{
+		"tbl:another:scope1:table1:00000003:another",
+		"tbl:eosio:scope:table1:00000003:eosio",
+		"tbl:john:scope2:table3:00000003:john",
+	}, rows)
 }
 
 func TestPreprocessBlock_DbOps(t *testing.T) {
@@ -174,9 +161,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 			req, err := PreprocessBlock(bstreamBlock)
 			require.NoError(t, err)
 
-			dataRows := req.(*WriteRequest).TableDatas
-
-			assert.ElementsMatch(t, test.expect, dataRows)
+			assert.ElementsMatch(t, test.expect, req.(*WriteRequest).FluxRows)
 		})
 	}
 }
@@ -226,21 +211,15 @@ func TestPreprocessBlock_PermOps(t *testing.T) {
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)
 
-	keyAccountRows := req.(*WriteRequest).KeyAccounts
-	key := func(row *KeyAccountRow) string {
-		return fmt.Sprintf("%s:%s:%s", row.PublicKey, eos.NameToString(row.Account), eos.NameToString(row.Permission))
-	}
+	rows := sortedFluxRows(req.(*WriteRequest).FluxRows, 3)
 
-	sort.Slice(keyAccountRows, func(i, j int) bool {
-		return key(keyAccountRows[i]) < key(keyAccountRows[j])
-	})
-
+	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
 	assert.Equal(t, []*KeyAccountRow{
 		{"k1", N("eosio"), N("owner"), false},
 		{"k2", N("eosio"), N("active"), false},
 		{"k2", N("eosio"), N("owner"), true},
 		{"k3", N("eosio"), N("owner"), false},
-	}, keyAccountRows)
+	}, rows)
 }
 
 func newBlock(blockID string, trxIDs []string) *pbcodec.Block {
@@ -293,4 +272,12 @@ func newPermOpData(account string, permission string, publicKeys []string) *pbco
 			Keys: authKeys,
 		},
 	}
+}
+
+func sortedFluxRows(rows []Row, blockNum uint32) []Row {
+	sort.Slice(rows, func(i, j int) bool {
+		return rows[i].Key(blockNum).String() < rows[j].Key(blockNum).String()
+	})
+
+	return rows
 }

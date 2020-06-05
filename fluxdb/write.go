@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 )
@@ -31,30 +30,29 @@ func (fdb *FluxDB) WriteBatch(ctx context.Context, w []*WriteRequest) error {
 	defer span.End()
 
 	if err := fdb.isNextBlock(ctx, w[0].BlockNum); err != nil {
-		return derr.Wrap(err, "next block check")
+		return fmt.Errorf("next block check: %w", err)
 	}
 
 	batch := fdb.store.NewBatch(zlog)
 
 	for _, req := range w {
-
 		if err := fdb.writeBlock(ctx, batch, req); err != nil {
-			return derr.Wrap(err, "write block")
+			return fmt.Errorf("write block: %w", err)
 		}
 
 		if err := batch.FlushIfFull(ctx); err != nil {
-			return derr.Wrap(err, "flushing if full")
+			return fmt.Errorf("flushing if full: %w", err)
 		}
 	}
 
 	if err := batch.Flush(ctx); err != nil {
-		return derr.Wrap(err, "flush")
+		return fmt.Errorf("flush: %w", err)
 	}
 
 	if sched := fdb.idxCache.IndexingSchedule(); len(sched) != 0 {
 		err := fdb.IndexTables(ctx)
 		if err != nil {
-			return derr.Wrap(err, "index tables")
+			return fmt.Errorf("index tables: %w", err)
 		}
 	}
 
@@ -115,26 +113,26 @@ func (fdb *FluxDB) UpdateGlobalLastBlockID(ctx context.Context, blockID string) 
 }
 
 func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRequest) (err error) {
-	for _, row := range w.AllWritableRows() {
+	for _, row := range w.FluxRows {
 		var value []byte
-		if !row.isDeletion() {
-			value = row.buildData()
+		if !isDeletionFluxRow(row) {
+			value = row.Data()
 		}
 
-		batch.SetRow(row.rowKey(w.BlockNum), value)
+		batch.SetRow(string(row.Key()), value)
 
-		tableKey := row.tableKey()
-		fdb.idxCache.IncCount(tableKey)
-		if fdb.idxCache.shouldTriggerIndexing(tableKey) {
-			fdb.idxCache.ScheduleIndex(tableKey, w.BlockNum)
+		tabletKey := string(row.Tablet().Key())
+		fdb.idxCache.IncCount(tabletKey)
+		if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
+			fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
 		}
 	}
 
-	for _, abi := range w.ABIs {
-		key := fmt.Sprintf("%s:%s", HexName(abi.Account), HexRevBlockNum(w.BlockNum))
+	// for _, abi := range w.ABIs {
+	// 	key := fmt.Sprintf("%s:%s", HexName(abi.Account), HexRevBlockNum(w.BlockNum))
 
-		batch.SetABI(key, abi.PackedABI)
-	}
+	// 	batch.SetABI(key, abi.PackedABI)
+	// }
 
 	batch.SetLast(fdb.lastBlockKey(), []byte(hex.EncodeToString(w.BlockID)))
 

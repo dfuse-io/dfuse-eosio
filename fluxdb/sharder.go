@@ -29,8 +29,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var fluxShardContentType = "FSR"
-
 type Sharder struct {
 	shardsStore dstore.Store
 	startBlock  uint32
@@ -38,7 +36,7 @@ type Sharder struct {
 	shardCount  int
 
 	// A slice of shards, each shard is itself a slice of WriteRequest, one per block processed in this batch.
-	// So, assuming 2 shards with 5 blocs, that would yield `[0][#5, #6, #7, #8, #9], [1][#5, #6, #7, #8, #9]`.
+	// So, assuming 2 shards with 5 blockss, that would yield `[0][#5, #6, #7, #8, #9], [1][#5, #6, #7, #8, #9]`.
 	buffers     []*bytes.Buffer
 	gobEncoders []*gob.Encoder
 }
@@ -82,7 +80,7 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 
 	// Compute the N shard write requests, 1 write request per shard, the slice index is the shard index
 	shardedRequests := make([]*WriteRequest, s.shardCount)
-	for _, row := range unshardedRequest.AllWritableRows() {
+	for _, row := range unshardedRequest.FluxRows {
 		shardIndex := s.goesToShard(row)
 
 		var shardedRequest *WriteRequest
@@ -91,7 +89,7 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 			shardedRequests[shardIndex] = shardedRequest
 		}
 
-		shardedRequest.appendRow(row)
+		shardedRequest.FluxRows = append(shardedRequest.FluxRows, row)
 	}
 
 	// Loop over N shards computed above, and assign them correctly to the global shards slice
@@ -99,10 +97,6 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 		shardedRequest := shardedRequests[shardIndex]
 		if shardedRequest == nil {
 			shardedRequest = &WriteRequest{}
-		}
-
-		if shardIndex == 0 {
-			shardedRequest.ABIs = unshardedRequest.ABIs
 		}
 
 		shardedRequest.BlockNum = unshardedRequest.BlockNum
@@ -118,8 +112,8 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 
 var emptyHashKey [32]byte
 
-func (s *Sharder) goesToShard(row writableRow) int {
-	bigInt := highwayhash.Sum64([]byte(row.tableKey()), emptyHashKey[:])
+func (s *Sharder) goesToShard(row Row) int {
+	bigInt := highwayhash.Sum64([]byte(row.Tablet().Key()), emptyHashKey[:])
 	elementShard := bigInt % uint64(s.shardCount)
 	return int(elementShard)
 }

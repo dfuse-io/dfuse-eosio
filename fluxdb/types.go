@@ -15,10 +15,127 @@
 package fluxdb
 
 import (
-	"crypto/md5"
-	"encoding/binary"
+	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
+	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 )
+
+/// New Architecture (Proposal)
+
+type RowKey string
+type TabletKey string
+type PrimaryKey string
+
+type Row interface {
+	Key() RowKey
+
+	Tablet() Tablet
+	BlockNum() uint32
+	PrimaryKey() PrimaryKey
+
+	Data() []byte
+}
+
+func ExplodeRowKey(rowKey string) (collection, tablet, blockNum, primaryKey string, err error) {
+	parts := strings.Split(rowKey, "/")
+	if len(parts) != 4 {
+		err = errors.New("all row key have 4 segments separated by '/' (`<collection/tablet/blockNum/primaryKey>`)")
+		return
+	}
+
+	return parts[0], parts[1], parts[2], parts[3], nil
+}
+
+func NewTabletRow(pbRow pbfluxdb.TabletRow) TabletRow {
+	return TabletRow{
+		TabletRow: pbRow,
+	}
+}
+
+type TabletRow struct {
+	pbfluxdb.TabletRow
+}
+
+func (r *TabletRow) BlockNum() uint32 {
+	value, err := strconv.ParseInt(r.BlockNumKey, 10, 32)
+	if err != nil {
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value", r.BlockNumKey))
+	}
+
+	return uint32(value)
+}
+
+func (r *TabletRow) Key() RowKey {
+	return RowKey(r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey + "/" + r.PrimKey)
+}
+
+func (r *TabletRow) PrimaryKey() PrimaryKey {
+	return PrimaryKey(r.PrimKey)
+}
+
+func (r *TabletRow) Tablet() Tablet {
+	factory := knownTabletFactory[r.Collection]
+	if factory == nil {
+		panic(fmt.Errorf(`no know tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
+	}
+
+	return factory(&r.TabletRow)
+}
+
+func (r *TabletRow) Data() []byte {
+	return r.Payload
+}
+
+func isDeletionFluxRow(row Row) bool {
+	return row.Data() == nil
+}
+
+// Tablet is a block-aware virtual table containing all the rows at any given
+// block height for a given table key. Let's assume we want to store the
+// balance over a fixed set of accounts at any block height. In this case, one
+// tablet would represent a single account, each actual row being the balance
+// of the account at all block height.
+type Tablet interface {
+	Key() TabletKey
+
+	RowKeyPrefix(blockNum uint32) string
+	RowKey(blockNum uint32, primaryKey PrimaryKey) RowKey
+
+	ReadRow(rowKey string, value []byte) (Row, error)
+
+	String() string
+}
+
+type IndexableTablet interface {
+	PrimaryKeyByteCount() int
+	EncodePrimaryKey(buffer []byte, primaryKey string) error
+	DecodePrimaryKey(buffer []byte) (primaryKey string, err error)
+}
+
+type SingleRowTablet interface {
+	SingleRowOnly() bool
+}
+
+type TabletFactory = func(row *pbfluxdb.TabletRow) Tablet
+
+var knownTabletFactory map[string]TabletFactory
+
+func RegisterTabletFactory(collection string, factory TabletFactory) {
+	if knownTabletFactory == nil {
+		knownTabletFactory = map[string]TabletFactory{}
+	}
+
+	if _, exists := knownTabletFactory[collection]; exists {
+		panic(fmt.Errorf("tablet prefix %q is already registered, they all must be unique among registered ones"))
+	}
+
+	knownTabletFactory[collection] = factory
+}
+
+///
 
 type ReadTableRequest struct {
 	Account, Scope, Table uint64
@@ -65,100 +182,14 @@ type LinkedPermission struct {
 }
 
 type WriteRequest struct {
-	ABIs []*ABIRow
-
-	AuthLinks   []*AuthLinkRow
-	KeyAccounts []*KeyAccountRow
-	TableDatas  []*TableDataRow
-	TableScopes []*TableScopeRow
+	FluxRows []Row
 
 	BlockNum uint32
 	BlockID  []byte
 }
 
-func (req *WriteRequest) purgeShardedRows(shardIdx, shardCount uint32) {
-	include := func(row writableRow) bool {
-		h := md5.New()
-		_, _ = h.Write([]byte(row.tableKey()))
-		md5Hash := h.Sum(nil)
-
-		bigInt := binary.LittleEndian.Uint32(md5Hash)
-		elementShard := bigInt % shardCount
-		inCurrentShard := shardIdx == elementShard
-
-		return inCurrentShard
-	}
-
-	var newAuthLinks []*AuthLinkRow
-	for _, el := range req.AuthLinks {
-		if include(el) {
-			newAuthLinks = append(newAuthLinks, el)
-		}
-	}
-	req.AuthLinks = newAuthLinks
-
-	var newKeyAccounts []*KeyAccountRow
-	for _, el := range req.KeyAccounts {
-		if include(el) {
-			newKeyAccounts = append(newKeyAccounts, el)
-		}
-	}
-	req.KeyAccounts = newKeyAccounts
-
-	var newTableDatas []*TableDataRow
-	for _, el := range req.TableDatas {
-		if include(el) {
-			newTableDatas = append(newTableDatas, el)
-		}
-	}
-	req.TableDatas = newTableDatas
-
-	var newTableScopes []*TableScopeRow
-	for _, el := range req.TableScopes {
-		if include(el) {
-			newTableScopes = append(newTableScopes, el)
-		}
-	}
-	req.TableScopes = newTableScopes
-
-	if shardIdx != 0 {
-		req.ABIs = nil
-	}
-}
-
-func (req *WriteRequest) appendRow(row interface{}) {
-	switch obj := row.(type) {
-	case *AuthLinkRow:
-		req.AuthLinks = append(req.AuthLinks, obj)
-	case *KeyAccountRow:
-		req.KeyAccounts = append(req.KeyAccounts, obj)
-	case *TableDataRow:
-		req.TableDatas = append(req.TableDatas, obj)
-	case *TableScopeRow:
-		req.TableScopes = append(req.TableScopes, obj)
-	default:
-		panic(fmt.Sprintf("unsupported writable row: %T", row))
-	}
-}
-
-func (req *WriteRequest) AllWritableRows() (out []writableRow) {
-	for _, el := range req.AuthLinks {
-		out = append(out, el)
-	}
-
-	for _, el := range req.KeyAccounts {
-		out = append(out, el)
-	}
-
-	for _, el := range req.TableDatas {
-		out = append(out, el)
-	}
-
-	for _, el := range req.TableScopes {
-		out = append(out, el)
-	}
-
-	return
+func (r *WriteRequest) AppendFluxRow(row Row) {
+	r.FluxRows = append(r.FluxRows, row)
 }
 
 var emptyRowData = []byte{1}

@@ -15,11 +15,13 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
 	"go.uber.org/zap"
@@ -40,23 +42,21 @@ func (srv *EOSServer) listTableRowsHandler(w http.ResponseWriter, r *http.Reques
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, request.IrreversibleOnly)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "prepare read failed"))
+		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
 	}
 
-	responseRows, err := srv.readTable(
+	responseRows, err := srv.readTable2(
 		ctx,
 		actualBlockNum,
-		request.Account,
-		request.Table,
-		request.Scope,
+		fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table),
 		request.readRequestCommon,
 		getKeyConverterForType(request.KeyType),
 		speculativeWrites,
 	)
 
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "read rows failed"))
+		writeError(ctx, w, fmt.Errorf("read rows failed: %w", err))
 		return
 	}
 

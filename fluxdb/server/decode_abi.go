@@ -17,14 +17,15 @@ package server
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
 	"github.com/dfuse-io/derr"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
+	eos "github.com/eoscanada/eos-go"
 	"github.com/francoispqt/gojay"
 	"go.uber.org/zap"
 )
@@ -36,7 +37,7 @@ func (srv *EOSServer) decodeABIHandler(w http.ResponseWriter, r *http.Request) {
 	request := &decodeABIRequest{}
 	err := extractDecodeABIRequest(r, request)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "extracting request"))
+		writeError(ctx, w, fmt.Errorf("extracting request: %w", err))
 		return
 	}
 
@@ -46,7 +47,7 @@ func (srv *EOSServer) decodeABIHandler(w http.ResponseWriter, r *http.Request) {
 	tableName := request.Table
 	abiRow, abi, err := srv.fetchABI(ctx, string(account), request.BlockNum, true)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "fetch ABI"))
+		writeError(ctx, w, fmt.Errorf("fetch ABI: %w", err))
 		return
 	}
 

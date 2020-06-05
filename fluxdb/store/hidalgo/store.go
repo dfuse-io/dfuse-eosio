@@ -23,7 +23,6 @@ import (
 
 	"github.com/coreos/bbolt"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 	"github.com/hidal-go/hidalgo/kv"
@@ -417,7 +416,7 @@ func (b *batch) FlushIfFull(ctx context.Context) error {
 
 	b.zlog.Info("flushing a full batch set", zap.Int("count", b.count))
 	if err := b.Flush(ctx); err != nil {
-		return derr.Wrap(err, "flushing batch set")
+		return fmt.Errorf("flushing batch set: %w", err)
 	}
 
 	return nil
@@ -462,7 +461,7 @@ func (b *batch) Flush(ctx context.Context) error {
 		span.End()
 
 		if err != nil {
-			return derr.Wrap(err, "apply bulk")
+			return fmt.Errorf("apply bulk: %w", err)
 		}
 	}
 

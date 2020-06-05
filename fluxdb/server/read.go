@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
@@ -39,7 +38,7 @@ func (srv *EOSServer) prepareRead(
 
 	lastWrittenBlock, err := srv.db.FetchLastWrittenBlock(ctx)
 	if err != nil {
-		err = derr.Wrap(err, "unable to retrieve last written block id")
+		err = fmt.Errorf("unable to retrieve last written block id: %w", err)
 		return
 	}
 	lastWrittenBlockNum := uint32(lastWrittenBlock.Num())
@@ -114,14 +113,14 @@ func (srv *EOSServer) readTable(
 	})
 
 	if err != nil {
-		return nil, derr.Wrap(err, "unable to retrieve rows from database")
+		return nil, fmt.Errorf("unable to retrieve rows from database: %w", err)
 	}
 
 	zlog.Debug("read rows results", zap.Int("row_count", len(resp.Rows)))
 
 	var abiObj *eos.ABI
 	if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-		return nil, derr.Wrapf(err, "unable to decode packed ABI %q to JSON", resp.ABI.PackedABI)
+		return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
 	}
 
 	out := &readTableResponse{}
@@ -174,6 +173,93 @@ func (srv *EOSServer) readTable(
 	return out, nil
 }
 
+func (srv *EOSServer) readTable2(
+	ctx context.Context,
+	blockNum uint32,
+	tablet fluxdb.ContractStateTablet,
+	request *readRequestCommon,
+	keyConverter KeyConverter,
+	speculativeWrites []*fluxdb.WriteRequest,
+) (*readTableResponse, error) {
+	ctx, span := dtracing.StartSpan(ctx, "read contract state")
+	defer span.End()
+
+	zlog := logging.Logger(ctx, zlog)
+	zlog.Debug("read contract state", zap.Stringer("tablet", tablet))
+
+	rows, err := srv.db.Read2(
+		ctx,
+		blockNum,
+		tablet,
+		speculativeWrites,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows from database: %w", err)
+	}
+
+	zlog.Debug("read rows results", zap.Int("row_count", len(rows)))
+
+	// TODO: Fetch ABI!
+
+	// var abiObj *eos.ABI
+	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
+	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
+	// }
+
+	out := &readTableResponse{}
+	// if request.WithABI {
+	// 	out.ABI = abiObj
+	// }
+
+	// code, scope, table := tablet.Explode()
+
+	// tableName := eos.TableName(tablet.Key())
+	// tableDef := abiObj.TableForName(tableName)
+	// if tableDef == nil {
+	// 	return nil, fluxdb.DataTableNotFoundError(ctx, eos.AccountName(account), tableName)
+	// }
+
+	zlog.Debug("post-processing each row (maybe convert to JSON)")
+	for _, row := range rows {
+		var data interface{}
+		// if request.ToJSON {
+		// 	data = &onTheFlyABISerializer{
+		// 		// abi:        abiObj,
+		// 		// abiRow:     resp.ABI,
+		// 		// structType: tableDef.Type,
+		// 		data: row.(fluxdb.ContractStateRow).Payload,
+		// 	}
+		// } else {
+		// 	data = row.Data
+		// }
+
+		data = row.(*fluxdb.ContractStateRow).RowData()
+
+		var blockNum uint32
+		if request.WithBlockNum {
+			blockNum = row.BlockNum()
+		}
+
+		rowKey, err := keyConverter.ToString(fluxdb.NA(eos.Name(row.PrimaryKey())))
+		if err != nil {
+			return nil, fmt.Errorf("unable to convert key: %s", err)
+		}
+
+		out.Rows = append(out.Rows, &tableRow{
+			Key:      rowKey,
+			Payer:    row.(*fluxdb.ContractStateRow).Payer(),
+			Data:     data,
+			BlockNum: blockNum,
+		})
+	}
+
+	span.Annotate([]trace.Attribute{
+		trace.Int64Attribute("rows", int64(len(out.Rows))),
+	}, "read operation")
+
+	return out, nil
+}
+
 func (srv *EOSServer) readTableRow(
 	ctx context.Context,
 	blockNum uint32,
@@ -193,7 +279,7 @@ func (srv *EOSServer) readTableRow(
 
 	primaryKeyValue, err := keyConverter.FromString(primaryKey)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to convert key %q to uint64", primaryKey)
+		return nil, fmt.Errorf("unable to convert key %q to uint64: %w", primaryKey, err)
 	}
 
 	resp, err := srv.db.ReadTableRow(ctx, &fluxdb.ReadTableRowRequest{
@@ -208,12 +294,12 @@ func (srv *EOSServer) readTableRow(
 	})
 
 	if err != nil {
-		return nil, derr.Wrap(err, "unable to retrieve single row from database")
+		return nil, fmt.Errorf("unable to retrieve single row from database: %w", err)
 	}
 
 	var abiObj *eos.ABI
 	if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-		return nil, derr.Wrapf(err, "unable to decode packed ABI %q to JSON", resp.ABI.PackedABI)
+		return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
 	}
 
 	out := &readTableRowResponse{}
@@ -267,20 +353,20 @@ func (srv *EOSServer) listKeyAccounts(
 ) (accountNames []eos.AccountName, actualBlockNum uint32, err error) {
 	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		err = derr.Wrap(err, "unable to prepare read")
+		err = fmt.Errorf("unable to prepare read: %w", err)
 		return
 	}
 
 	accountNames, err = srv.db.ReadKeyAccounts(ctx, uint32(actualBlockNum), publicKey, speculativeWrites)
 	if err != nil {
-		err = derr.Wrap(err, "unable to read key accounts from db")
+		err = fmt.Errorf("unable to read key accounts from db: %w", err)
 		return
 	}
 
 	if len(accountNames) == 0 {
 		seen, err := srv.db.HasSeenPublicKeyOnce(ctx, publicKey)
 		if err != nil {
-			return nil, actualBlockNum, derr.Wrap(err, "unable to know if public key was seen once in db")
+			return nil, actualBlockNum, fmt.Errorf("unable to know if public key was seen once in db: %w", err)
 		}
 
 		if !seen {
@@ -299,13 +385,13 @@ func (srv *EOSServer) listTableScopes(
 ) (scopes []eos.Name, actualBlockNum uint32, err error) {
 	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		err = derr.Wrap(err, "unable to prepare read")
+		err = fmt.Errorf("unable to prepare read: %w", err)
 		return
 	}
 
 	scopes, err = srv.db.ReadTableScopes(ctx, uint32(actualBlockNum), account, table, speculativeWrites)
 	if err != nil {
-		err = derr.Wrap(err, "unable to read table scopes from db")
+		err = fmt.Errorf("unable to read table scopes from db: %w", err)
 		return
 	}
 
@@ -313,7 +399,7 @@ func (srv *EOSServer) listTableScopes(
 		logging.Logger(ctx, zlog).Debug("no scopes found for request, checking if we ever see this table")
 		seen, err := srv.db.HasSeenTableOnce(ctx, account, table)
 		if err != nil {
-			return nil, actualBlockNum, derr.Wrap(err, "unable to know if table was seen once in db")
+			return nil, actualBlockNum, fmt.Errorf("unable to know if table was seen once in db: %w", err)
 		}
 
 		if !seen {
@@ -330,20 +416,20 @@ func (srv *EOSServer) fetchABI(
 	blockNum uint32,
 	toJSON bool,
 ) (abiRow *fluxdb.ABIRow, abiObj *eos.ABI, err error) {
-	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
-	if err != nil {
-		return
-	}
+	// actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
+	// if err != nil {
+	// 	return
+	// }
 
-	abiRow, err = srv.db.GetABI(ctx, uint32(actualBlockNum), fluxdb.N(account), speculativeWrites)
-	if err != nil {
-		err = derr.Wrap(err, "fetching ABI from db")
-		return
-	}
+	// abiRow, err = srv.db.GetABI(ctx, uint32(actualBlockNum), fluxdb.N(account), speculativeWrites)
+	// if err != nil {
+	// 	err = fmt.Errorf("fetching ABI from db: %w", err)
+	// 	return
+	// }
 
 	if toJSON {
 		if err = eos.UnmarshalBinary(abiRow.PackedABI, &abiObj); err != nil {
-			err = derr.Wrapf(err, "failed to decode packed ABI %q to JSON", abiRow.PackedABI)
+			err = fmt.Errorf("failed to decode packed ABI %q to JSON: %w", abiRow.PackedABI, err)
 			return
 		}
 	}

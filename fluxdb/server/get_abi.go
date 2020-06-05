@@ -15,14 +15,15 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
+	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -41,7 +42,7 @@ func (srv *EOSServer) getABIHandler(w http.ResponseWriter, r *http.Request) {
 
 	abiRow, abi, err := srv.fetchABI(ctx, string(request.Account), request.BlockNum, request.ToJSON)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "fetch ABI"))
+		writeError(ctx, w, fmt.Errorf("fetch ABI: %w", err))
 		return
 	}
 

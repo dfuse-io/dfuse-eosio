@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
@@ -32,53 +31,53 @@ import (
 	"go.uber.org/zap"
 )
 
-func (fdb *FluxDB) GetABI(ctx context.Context, blockNum uint32, account uint64, speculativeWrites []*WriteRequest) (out *ABIRow, err error) {
-	ctx, span := dtracing.StartSpan(ctx, "get abi", "account", eos.NameToString(account), "block_num", blockNum)
-	defer span.End()
+// func (fdb *FluxDB) GetABI(ctx context.Context, blockNum uint32, account uint64, speculativeWrites []*WriteRequest) (out *ABIRow, err error) {
+// 	ctx, span := dtracing.StartSpan(ctx, "get abi", "account", eos.NameToString(account), "block_num", blockNum)
+// 	defer span.End()
 
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("fetching ABI", zap.Uint64("account", account), zap.Uint32("block_num", blockNum))
+// 	zlog := logging.Logger(ctx, zlog)
+// 	zlog.Debug("fetching ABI", zap.Uint64("account", account), zap.Uint32("block_num", blockNum))
 
-	out = &ABIRow{
-		Account: account,
-	}
+// 	out = &ABIRow{
+// 		Account: account,
+// 	}
 
-	prefixKey := HexName(account) + ":"
-	firstKey := prefixKey + HexRevBlockNum(blockNum)
-	lastKey := prefixKey + HexRevBlockNum(0)
+// 	prefixKey := HexName(account) + ":"
+// 	firstKey := prefixKey + HexRevBlockNum(blockNum)
+// 	lastKey := prefixKey + HexRevBlockNum(0)
 
-	zlog.Debug("reading ABI rows", zap.String("first_key", firstKey), zap.String("last_key", lastKey))
-	rowKey, rawABI, err := fdb.store.FetchABI(ctx, prefixKey, firstKey, lastKey)
-	if err != nil && err != store.ErrNotFound {
-		return nil, err
-	}
+// 	zlog.Debug("reading ABI rows", zap.String("first_key", firstKey), zap.String("last_key", lastKey))
+// 	rowKey, rawABI, err := fdb.store.FetchABI(ctx, prefixKey, firstKey, lastKey)
+// 	if err != nil && err != store.ErrNotFound {
+// 		return nil, err
+// 	}
 
-	if err != store.ErrNotFound {
-		abiBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
-		if err != nil {
-			return nil, fmt.Errorf("couldn't infer block num in table ABI's row key: %w", err)
-		}
+// 	if err != store.ErrNotFound {
+// 		abiBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("couldn't infer block num in table ABI's row key: %w", err)
+// 		}
 
-		out.BlockNum = abiBlockNum
-		out.PackedABI = rawABI
-	}
+// 		out.BlockNum = abiBlockNum
+// 		out.PackedABI = rawABI
+// 	}
 
-	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
-	for _, blockWrite := range speculativeWrites {
-		for _, speculativeABI := range blockWrite.ABIs {
-			if speculativeABI.Account == account {
-				zlog.Debug("updating ABI", zap.Uint32("block_num", blockWrite.BlockNum))
-				out = speculativeABI
-			}
-		}
-	}
+// 	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+// 	for _, blockWrite := range speculativeWrites {
+// 		for _, speculativeABI := range blockWrite.ABIs {
+// 			if speculativeABI.Account == account {
+// 				zlog.Debug("updating ABI", zap.Uint32("block_num", blockWrite.BlockNum))
+// 				out = speculativeABI
+// 			}
+// 		}
+// 	}
 
-	if len(out.PackedABI) == 0 {
-		return nil, DataABINotFoundError(ctx, eos.NameToString(account), blockNum)
-	}
+// 	if len(out.PackedABI) == 0 {
+// 		return nil, DataABINotFoundError(ctx, eos.NameToString(account), blockNum)
+// 	}
 
-	return
-}
+// 	return
+// }
 
 func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *ReadTableResponse, err error) {
 	zlog := logging.Logger(ctx, zlog)
@@ -93,7 +92,7 @@ func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *Re
 		payer := big.Uint64(value)
 		tableDataPrimaryKey, err := strconv.ParseUint(primaryKey, 16, 64)
 		if err != nil {
-			return derr.Wrap(err, "unable to transform table data primary key to uint64")
+			return fmt.Errorf("unable to transform table data primary key to uint64: %w", err)
 		}
 
 		rowData[primaryKey] = &TableRow{tableDataPrimaryKey, payer, value[8:], blockNum}
@@ -109,35 +108,35 @@ func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *Re
 	tableKey := r.tableKey()
 	err = fdb.read(ctx, tableKey, r.BlockNum, rowUpdated, rowDeleted)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to read rows for table key %q", tableKey)
+		return nil, fmt.Errorf("unable to read rows for table key %q: %w", tableKey, err)
 	}
 
-	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
-	if err != nil {
-		return nil, err
-	}
+	// abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
-	for _, blockWrite := range r.SpeculativeWrites {
-		for _, row := range blockWrite.TableDatas {
-			if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table {
-				continue
-			}
+	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
+	// for _, blockWrite := range r.SpeculativeWrites {
+	// 	for _, row := range blockWrite.FluxRows {
+	// 		if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table {
+	// 			continue
+	// 		}
 
-			stringPrimaryKey := fmt.Sprintf("%016x", row.PrimKey)
+	// 		stringPrimaryKey := fmt.Sprintf("%016x", row.PrimKey)
 
-			if row.Deletion {
-				delete(rowData, stringPrimaryKey)
-			} else {
-				rowData[stringPrimaryKey] = &TableRow{
-					Key:      row.PrimKey,
-					Payer:    row.Payer,
-					Data:     row.Data,
-					BlockNum: blockWrite.BlockNum,
-				}
-			}
-		}
-	}
+	// 		if row.Deletion {
+	// 			delete(rowData, stringPrimaryKey)
+	// 		} else {
+	// 			rowData[stringPrimaryKey] = &TableRow{
+	// 				Key:      row.PrimKey,
+	// 				Payer:    row.Payer,
+	// 				Data:     row.Data,
+	// 				BlockNum: blockWrite.BlockNum,
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	zlog.Debug("post-processing table rows", zap.Int("row_count", len(rowData)))
 	var rows []*TableRow
@@ -149,7 +148,7 @@ func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *Re
 	sort.Slice(rows, func(i, j int) bool { return rows[i].Key < rows[j].Key })
 
 	return &ReadTableResponse{
-		ABI:  abi,
+		// ABI:  abi,
 		Rows: rows,
 	}, nil
 }
@@ -189,28 +188,28 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 	tableKey := r.tableKey()
 	err = fdb.readSingle(ctx, tableKey, primaryKeyString, r.BlockNum, rowUpdated, rowDeleted)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to read single row for table key %q and primary key %d", tableKey, r.PrimaryKey)
+		return nil, fmt.Errorf("unable to read single row for table key %q and primary key %d: %w", tableKey, r.PrimaryKey, err)
 	}
 
-	zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
-	for _, blockWrite := range r.SpeculativeWrites {
-		for _, row := range blockWrite.TableDatas {
-			if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table || r.PrimaryKey != row.PrimKey {
-				continue
-			}
+	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
+	// for _, blockWrite := range r.SpeculativeWrites {
+	// 	for _, row := range blockWrite.TableDatas {
+	// 		if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table || r.PrimaryKey != row.PrimKey {
+	// 			continue
+	// 		}
 
-			if row.Deletion {
-				rowData = nil
-			} else {
-				rowData = &TableRow{
-					Key:      row.PrimKey,
-					Payer:    row.Payer,
-					Data:     row.Data,
-					BlockNum: blockWrite.BlockNum,
-				}
-			}
-		}
-	}
+	// 		if row.Deletion {
+	// 			rowData = nil
+	// 		} else {
+	// 			rowData = &TableRow{
+	// 				Key:      row.PrimKey,
+	// 				Payer:    row.Payer,
+	// 				Data:     row.Data,
+	// 				BlockNum: blockWrite.BlockNum,
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	// This was added when fixing a bug with `/state/table/row` since the old location where it was used
 	// was not the right place. But when it was moved, it changed the behavior of the old API causing problem
@@ -220,13 +219,13 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 	// 	return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
 	// }
 
-	abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
-	if err != nil {
-		return nil, err
-	}
+	// abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return &ReadTableRowResponse{
-		ABI: abi,
+		// ABI: abi,
 		Row: rowData,
 	}, nil
 }
@@ -266,26 +265,26 @@ func (fdb *FluxDB) ReadKeyAccounts(
 	tableKey := fmt.Sprintf("ka2:%s", publicKey)
 	err = fdb.read(ctx, tableKey, blockNum, rowUpdated, rowDeleted)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to read rows for table key %q", tableKey)
+		return nil, fmt.Errorf("unable to read rows for table key %q: %w", tableKey, err)
 	}
 
-	zlogger.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
-	for _, blockWrite := range speculativeWrites {
-		for _, keyAccountRow := range blockWrite.KeyAccounts {
-			if keyAccountRow.PublicKey != publicKey {
-				continue
-			}
+	// zlogger.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+	// for _, blockWrite := range speculativeWrites {
+	// 	for _, keyAccountRow := range blockWrite.KeyAccounts {
+	// 		if keyAccountRow.PublicKey != publicKey {
+	// 			continue
+	// 		}
 
-			zlogger.Debug("updating key account", zap.Reflect("table_scope_row", keyAccountRow))
-			stringPrimaryKey := fmt.Sprintf("%016x:%016x", keyAccountRow.Account, keyAccountRow.Permission)
+	// 		zlogger.Debug("updating key account", zap.Reflect("table_scope_row", keyAccountRow))
+	// 		stringPrimaryKey := fmt.Sprintf("%016x:%016x", keyAccountRow.Account, keyAccountRow.Permission)
 
-			if keyAccountRow.Deletion {
-				delete(rows, stringPrimaryKey)
-			} else {
-				rows[stringPrimaryKey] = nil
-			}
-		}
-	}
+	// 		if keyAccountRow.Deletion {
+	// 			delete(rows, stringPrimaryKey)
+	// 		} else {
+	// 			rows[stringPrimaryKey] = nil
+	// 		}
+	// 	}
+	// }
 
 	zlogger.Debug("post-processing key accounts", zap.Int("key_account_count", len(rows)))
 	buffer := make([]byte, indexPrimaryKeyByteCountByTableKey("ka2:"))
@@ -294,7 +293,7 @@ func (fdb *FluxDB) ReadKeyAccounts(
 	for primaryKey := range rows {
 		err := keyAccountIndexPrimaryKeyWriter(primaryKey, buffer)
 		if err != nil {
-			return nil, derr.Wrapf(err, "unable to transform key account primary key %s", primaryKey)
+			return nil, fmt.Errorf("unable to transform key account primary key %s: %w", primaryKey, err)
 		}
 
 		accountNameSet[eos.NameToString(big.Uint64(buffer))] = true
@@ -321,7 +320,7 @@ func (fdb *FluxDB) ReadLinkedPermissions(ctx context.Context, blockNum uint32, a
 		primaryKeyBuffer := make([]byte, indexPrimaryKeyByteCountByTableKey("al:"))
 		err := authLinkIndexPrimaryKeyWriter(primaryKey, primaryKeyBuffer)
 		if err != nil {
-			return derr.Wrap(err, "unable to transform auth link primary key")
+			return fmt.Errorf("unable to transform auth link primary key: %w", err)
 		}
 
 		contract := big.Uint64(primaryKeyBuffer)
@@ -344,30 +343,30 @@ func (fdb *FluxDB) ReadLinkedPermissions(ctx context.Context, blockNum uint32, a
 	tableKey := fmt.Sprintf("al:%016x", N(string(account)))
 	err = fdb.read(ctx, tableKey, blockNum, rowUpdated, rowDeleted)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to read rows for table key %q", tableKey)
+		return nil, fmt.Errorf("unable to read rows for table key %q: %w", tableKey, err)
 	}
 
-	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
-	for _, blockWrite := range speculativeWrites {
-		for _, row := range blockWrite.AuthLinks {
-			if row.Account != N(string(account)) {
-				continue
-			}
+	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+	// for _, blockWrite := range speculativeWrites {
+	// 	for _, row := range blockWrite.AuthLinks {
+	// 		if row.Account != N(string(account)) {
+	// 			continue
+	// 		}
 
-			zlog.Debug("updating auth link", zap.Reflect("auth_link_row", row))
-			stringPrimaryKey := fmt.Sprintf("%016x:%016x", row.Contract, row.Action)
+	// 		zlog.Debug("updating auth link", zap.Reflect("auth_link_row", row))
+	// 		stringPrimaryKey := fmt.Sprintf("%016x:%016x", row.Contract, row.Action)
 
-			if row.Deletion {
-				delete(rowData, stringPrimaryKey)
-			} else {
-				rowData[stringPrimaryKey] = &LinkedPermission{
-					Contract:       eos.NameToString(row.Contract),
-					Action:         eos.NameToString(row.Action),
-					PermissionName: eos.NameToString(row.PermissionName),
-				}
-			}
-		}
-	}
+	// 		if row.Deletion {
+	// 			delete(rowData, stringPrimaryKey)
+	// 		} else {
+	// 			rowData[stringPrimaryKey] = &LinkedPermission{
+	// 				Contract:       eos.NameToString(row.Contract),
+	// 				Action:         eos.NameToString(row.Action),
+	// 				PermissionName: eos.NameToString(row.PermissionName),
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	zlog.Debug("post-processing linked permissions", zap.Int("link_permission_count", len(rowData)))
 	var output []*LinkedPermission
@@ -426,26 +425,26 @@ func (fdb *FluxDB) ReadTableScopes(
 	tableKey := fmt.Sprintf("ts:%016x:%016x", accountName, tableName)
 	err = fdb.read(ctx, tableKey, blockNum, rowUpdated, rowDeleted)
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to read rows for table key %q", tableKey)
+		return nil, fmt.Errorf("unable to read rows for table key %q: %w", tableKey, err)
 	}
 
-	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
-	for _, blockWrite := range speculativeWrites {
-		for _, tableScopeRow := range blockWrite.TableScopes {
-			if tableScopeRow.Account != accountName || tableScopeRow.Table != tableName {
-				continue
-			}
+	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+	// for _, blockWrite := range speculativeWrites {
+	// 	for _, tableScopeRow := range blockWrite.TableScopes {
+	// 		if tableScopeRow.Account != accountName || tableScopeRow.Table != tableName {
+	// 			continue
+	// 		}
 
-			zlog.Debug("updating table scope", zap.Reflect("table_scope_row", tableScopeRow))
-			stringPrimaryKey := fmt.Sprintf("%016x", tableScopeRow.Scope)
+	// 		zlog.Debug("updating table scope", zap.Reflect("table_scope_row", tableScopeRow))
+	// 		stringPrimaryKey := fmt.Sprintf("%016x", tableScopeRow.Scope)
 
-			if tableScopeRow.Deletion {
-				delete(rows, stringPrimaryKey)
-			} else {
-				rows[stringPrimaryKey] = nil
-			}
-		}
-	}
+	// 		if tableScopeRow.Deletion {
+	// 			delete(rows, stringPrimaryKey)
+	// 		} else {
+	// 			rows[stringPrimaryKey] = nil
+	// 		}
+	// 	}
+	// }
 
 	zlog.Debug("post-processing table scopes", zap.Int("table_scope_count", len(rows)))
 	buffer := make([]byte, indexPrimaryKeyByteCountByTableKey("ts:"))
@@ -453,7 +452,7 @@ func (fdb *FluxDB) ReadTableScopes(
 	for primaryKey := range rows {
 		err := tableScopeIndexPrimaryKeyWriter(primaryKey, buffer)
 		if err != nil {
-			return nil, derr.Wrap(err, "unable to transform table scope primary key")
+			return nil, fmt.Errorf("unable to transform table scope primary key: %w", err)
 		}
 
 		scopes = append(scopes, eos.Name(eos.NameToString(big.Uint64(buffer))))
@@ -500,7 +499,7 @@ func (fdb *FluxDB) read(
 
 	if idx != nil {
 		zlog.Debug("index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
-		firstRowKey = tableKey + ":" + HexBlockNum(idx.AtBlockNum+1)
+		firstRowKey = tableKey + "/" + HexBlockNum(idx.AtBlockNum+1)
 
 		var keys []string
 		for primaryKey, blockNum := range idx.Map {
@@ -538,7 +537,7 @@ func (fdb *FluxDB) read(
 
 				err = rowUpdated(rowBlockNum, primaryKey, value)
 				if err != nil {
-					return derr.Wrapf(err, "rowUpdated callback failed for row %q (indexed rows)", rowKey)
+					return fmt.Errorf("rowUpdated callback failed for row %q (indexed rows): %w", rowKey, err)
 				}
 
 				keyRead = true
@@ -546,7 +545,7 @@ func (fdb *FluxDB) read(
 			})
 
 			if err != nil {
-				return derr.Wrap(err, "reading keys chunks")
+				return fmt.Errorf("reading keys chunks: %w", err)
 			}
 
 			if !keyRead {
@@ -576,7 +575,7 @@ func (fdb *FluxDB) read(
 		if len(value) == 0 {
 			err := rowDeleted(rowBlockNum, primaryKey)
 			if err != nil {
-				return derr.Wrapf(err, "rowDeleted callback failed for row %q (live rows)", rowKey)
+				return fmt.Errorf("rowDeleted callback failed for row %q (live rows): %w", rowKey, err)
 			}
 
 			deletedCount++
@@ -585,7 +584,7 @@ func (fdb *FluxDB) read(
 
 		err = rowUpdated(rowBlockNum, primaryKey, value)
 		if err != nil {
-			return derr.Wrapf(err, "rowUpdated callback failed for row %q (live rows)", rowKey)
+			return fmt.Errorf("rowUpdated callback failed for row %q (live rows): %w", rowKey, err)
 		}
 
 		updatedCount++
@@ -600,7 +599,155 @@ func (fdb *FluxDB) read(
 	return nil
 }
 
-var errRowNotFound = errors.New("row not found")
+func (fdb *FluxDB) Read2(
+	ctx context.Context,
+	blockNum uint32,
+	tablet Tablet,
+	speculativeWrites []*WriteRequest,
+) ([]Row, error) {
+	ctx, span := dtracing.StartSpan(ctx, "read table", "tablet", tablet, "block_num", blockNum)
+	defer span.End()
+
+	zlog := logging.Logger(ctx, zlog)
+	zlog.Debug("reading rows from database", zap.Stringer("tablet", tablet), zap.Uint32("block_num", blockNum))
+
+	firstRowKey := tablet.RowKeyPrefix(0)
+	lastRowKey := tablet.RowKeyPrefix(blockNum + 1)
+	rowByPrimaryKey := map[string]Row{}
+
+	var idx *TableIndex
+	if _, isIndexableTablet := tablet.(IndexableTablet); isIndexableTablet {
+		var err error
+		idx, err = fdb.getIndex2(ctx, blockNum, tablet)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if idx != nil {
+		zlog.Debug("index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
+		firstRowKey = tablet.RowKeyPrefix(idx.AtBlockNum + 1)
+
+		// Let's pre-allocated `rowByPrimaryKey` and `keys`, `rows` is likely to need at least as much rows as in the index itself
+		rowByPrimaryKey = make(map[string]Row, len(idx.Map))
+		keys := make([]string, len(idx.Map))
+
+		i := 0
+		for primaryKey, blockNum := range idx.Map {
+			keys[i] = string(tablet.RowKey(blockNum, PrimaryKey(primaryKey)))
+			i++
+		}
+
+		// Fetch all rows in the index.. could be millions
+		// We need to batch so that the RowList, when serialized, doesn't blow up 1MB
+		// We should batch in 10,000 key reads, we can parallelize those...
+		chunkSize := 5000
+		chunks := int(math.Ceil(float64(len(keys)) / float64(chunkSize)))
+
+		zlog.Debug("reading index rows chunks", zap.Int("chunk_count", chunks))
+		for i := 0; i < chunks; i++ {
+			chunkStart := i * chunkSize
+			chunkEnd := (i + 1) * chunkSize
+			max := len(keys)
+			if max < chunkEnd {
+				chunkEnd = max
+			}
+
+			keysChunk := keys[chunkStart:chunkEnd]
+
+			zlog.Debug("reading index rows chunk", zap.Int("key_count", len(keysChunk)))
+
+			keyRead := false
+			err := fdb.store.FetchTabletRows(ctx, keysChunk, func(rowKey string, value []byte) error {
+				if len(value) == 0 {
+					return fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
+				}
+
+				fluxRow, err := tablet.ReadRow(rowKey, value)
+				if err != nil {
+					return fmt.Errorf("failed to create indexed row %s: %w", rowKey, err)
+				}
+
+				rowByPrimaryKey[string(fluxRow.PrimaryKey())] = fluxRow
+
+				keyRead = true
+				return nil
+			})
+
+			if err != nil {
+				return nil, fmt.Errorf("reading keys for index chunk %d: %w", i, err)
+			}
+
+			if !keyRead {
+				return nil, fmt.Errorf("reading a indexed key yielded no row: %s", keysChunk)
+			}
+		}
+
+		zlog.Debug("finished reconciling index")
+	}
+
+	// check for latest index based on r.BlockNum
+	// go through keys from last index's `AtBlockNum`, through to `BlockNum`
+	// fetch all the keys within the index
+	// parse all rows following the index, and keep the latest, so simply override with incoming rows..
+
+	zlog.Debug("reading rows range from database", zap.String("first_row_key", firstRowKey), zap.String("last_row_key", lastRowKey))
+
+	deletedCount := 0
+	updatedCount := 0
+
+	err := fdb.store.ScanTabletRows(ctx, firstRowKey, lastRowKey, func(rowKey string, value []byte) error {
+		fluxRow, err := tablet.ReadRow(rowKey, value)
+		if err != nil {
+			return fmt.Errorf("failed to create row %s: %w", rowKey, err)
+		}
+
+		if isDeletionFluxRow(fluxRow) {
+			deletedCount++
+			delete(rowByPrimaryKey, string(fluxRow.PrimaryKey()))
+
+			return nil
+		}
+
+		updatedCount++
+		rowByPrimaryKey[string(fluxRow.PrimaryKey())] = fluxRow
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	zlog.Debug("read rows handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+	for _, writeRequest := range speculativeWrites {
+		for _, row := range writeRequest.FluxRows {
+			if row.Tablet() != tablet {
+				continue
+			}
+
+			if isDeletionFluxRow(row) {
+				delete(rowByPrimaryKey, string(row.PrimaryKey()))
+			} else {
+				rowByPrimaryKey[string(row.PrimaryKey())] = row
+			}
+		}
+	}
+
+	zlog.Debug("post-processing read rows", zap.Int("row_count", len(rowByPrimaryKey)))
+
+	i := 0
+	rows := make([]Row, len(rowByPrimaryKey))
+	for _, row := range rowByPrimaryKey {
+		rows[i] = row
+	}
+
+	zlog.Debug("sorting rows")
+	sort.Slice(rows, func(i, j int) bool { return string(rows[i].PrimaryKey()) < string(rows[j].PrimaryKey()) })
+
+	zlog.Info("finished reading rows from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
+	return rows, nil
+}
 
 func (fdb *FluxDB) readSingle(
 	ctx context.Context,
@@ -644,7 +791,7 @@ func (fdb *FluxDB) readSingle(
 
 				err = rowUpdated(rowBlockNum, primaryKey, value)
 				if err != nil {
-					return derr.Wrapf(err, "rowUpdated callback failed for row %q (indexed rows)", rowKey)
+					return fmt.Errorf("rowUpdated callback failed for row %q (indexed rows): %w", rowKey, err)
 				}
 
 				return nil
@@ -676,7 +823,7 @@ func (fdb *FluxDB) readSingle(
 		if len(value) == 0 {
 			err := rowDeleted(rowBlockNum, primaryKey)
 			if err != nil {
-				return derr.Wrapf(err, "rowDeleted callback failed for row %q", rowKey)
+				return fmt.Errorf("rowDeleted callback failed for row %q: %w", rowKey, err)
 			}
 
 			deletedCount++
@@ -685,7 +832,7 @@ func (fdb *FluxDB) readSingle(
 
 		err = rowUpdated(rowBlockNum, primaryKey, value)
 		if err != nil {
-			return derr.Wrapf(err, "rowUpdated callback failed for row %q", rowKey)
+			return fmt.Errorf("rowUpdated callback failed for row %q: %w", rowKey, err)
 		}
 
 		updatedCount++
@@ -765,7 +912,7 @@ func (fdb *FluxDB) FetchLastWrittenBlock(ctx context.Context) (lastWrittenBlock 
 
 	lastWrittenBlock, err = fdb.getLastBlock(ctx)
 	if err != nil {
-		err = derr.Wrap(err, "fetching last written block")
+		err = fmt.Errorf("fetching last written block: %w", err)
 	}
 
 	return

@@ -31,6 +31,10 @@ func N(name string) uint64 {
 	return out
 }
 
+func NA(name eos.Name) uint64 {
+	return eos.MustStringToName(string(name))
+}
+
 func EN(name string) uint64 {
 	out, _ := eos.ExtendedStringToName(name)
 	return out
@@ -44,10 +48,12 @@ func BlockNum(blockID string) uint32 {
 	if len(blockID) < 8 {
 		return 0
 	}
+
 	bin, err := hex.DecodeString(blockID[:8])
 	if err != nil {
-		return 0
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", blockID, err))
 	}
+
 	return big.Uint32(bin)
 }
 
@@ -62,8 +68,21 @@ func HexRevBlockNum(blockNum uint32) string {
 	return HexBlockNum(math.MaxUint32 - blockNum)
 }
 
+func BlockNumHexRev(revBlockNumKey string) uint32 {
+	return math.MaxUint32 - hexToBlockNum(revBlockNumKey)
+}
+
 func HexName(name uint64) string {
 	return fmt.Sprintf("%016x", name)
+}
+
+func hexToBlockNum(blockNumHex string) uint32 {
+	value, err := strconv.ParseInt(blockNumHex, 16, 32)
+	if err != nil {
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value", blockNumHex))
+	}
+
+	return uint32(value)
 }
 
 func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, primKey string, err error) {
@@ -79,7 +98,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = keyChunkToBlockNum(parts[2])
+		blockNum, err = KeyChunkToBlockNum(parts[2])
 		primKey = strings.Join(parts[3:5], ":")
 
 	// AccountResourceLimit arl:<account>:<blockNum>:<primaryKey>
@@ -90,7 +109,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = keyChunkToBlockNum(parts[2])
+		blockNum, err = KeyChunkToBlockNum(parts[2])
 		primKey = parts[3]
 
 	// BlockResourceLimit brl:<blockNum>:<primaryKey>
@@ -101,7 +120,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:1], ":")
-		blockNum, err = keyChunkToBlockNum(parts[1])
+		blockNum, err = KeyChunkToBlockNum(parts[1])
 		primKey = parts[2]
 
 	// KeyAccount ka2:<publicKey>:<blockNum>:<account>:<permission>
@@ -112,7 +131,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = keyChunkToBlockNum(parts[2])
+		blockNum, err = KeyChunkToBlockNum(parts[2])
 		primKey = strings.Join(parts[3:5], ":")
 
 	// TableData td:<account>:<table>:<scope>:<blockNum>:<rowPrimaryKey>
@@ -123,7 +142,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:4], ":")
-		blockNum, err = keyChunkToBlockNum(parts[4])
+		blockNum, err = KeyChunkToBlockNum(parts[4])
 		primKey = parts[5]
 
 	// TableScope ts:<account>:<table>:<blockNum>:<scope>
@@ -134,7 +153,7 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		}
 
 		tableKey = strings.Join(parts[0:3], ":")
-		blockNum, err = keyChunkToBlockNum(parts[3])
+		blockNum, err = KeyChunkToBlockNum(parts[3])
 		primKey = parts[4]
 
 	default:
@@ -177,7 +196,7 @@ func chunkKeyBlockNum(key string, prefixKey string) (blockNum uint32, err error)
 	return uint32(val), nil
 }
 
-func keyChunkToBlockNum(chunk string) (blockNum uint32, err error) {
+func KeyChunkToBlockNum(chunk string) (blockNum uint32, err error) {
 	if len(chunk) != 8 {
 		return 0, errors.New("block chunk should have length of 8")
 	}

@@ -15,6 +15,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"sort"
@@ -41,7 +42,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "prepare read failed"))
+		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
 	}
 
@@ -87,7 +88,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 
 	zlog.Info("waiting for all read requests to finish")
 	if err := group.Wait(); err != nil {
-		writeError(ctx, w, derr.Wrap(err, "waiting for all read request to complete"))
+		writeError(ctx, w, fmt.Errorf("waiting for all read request to complete: %w", err))
 		return
 	}
 

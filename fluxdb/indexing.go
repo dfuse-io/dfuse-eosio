@@ -21,9 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
+	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
@@ -57,7 +56,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 		zlog.Debug("indexing table", zap.String("table_key", tableKey), zap.Uint32("block_num", blockNum))
 
 		if err := batch.FlushIfFull(ctx); err != nil {
-			return derr.Wrap(err, "flush if full")
+			return fmt.Errorf("flush if full: %w", err)
 		}
 
 		zlog.Debug("checking if index already exist in cache")
@@ -68,7 +67,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 			var err error
 			index, err = fdb.getIndex(ctx, tableKey, blockNum)
 			if err != nil {
-				return derr.Wrapf(err, "get index %s (%d)", tableKey, blockNum)
+				return fmt.Errorf("get index %s (%d): %w", tableKey, blockNum, err)
 			}
 
 			if index == nil {
@@ -101,7 +100,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 		})
 
 		if err != nil {
-			return derr.Wrap(err, "read rows")
+			return fmt.Errorf("read rows: %w", err)
 		}
 
 		index.AtBlockNum = blockNum
@@ -116,7 +115,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 
 		snapshot, err := index.MarshalBinary(ctx, tableKey)
 		if err != nil {
-			return derr.Wrap(err, "unable to marshal table index to binary")
+			return fmt.Errorf("unable to marshal table index to binary: %w", err)
 		}
 
 		indexKey := tableKey + ":" + HexRevBlockNum(index.AtBlockNum)
@@ -135,7 +134,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 	}
 
 	if err := batch.Flush(ctx); err != nil {
-		return derr.Wrap(err, "final flush")
+		return fmt.Errorf("final flush: %w", err)
 	}
 
 	return nil
@@ -163,14 +162,95 @@ func (fdb *FluxDB) getIndex(ctx context.Context, tableKey string, blockNum uint3
 
 	indexBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
 	if err != nil {
-		return nil, derr.Wrap(err, "couldn't infer block num in table index's row key")
+		return nil, fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
 	}
 
 	index, err := NewTableIndexFromBinary(ctx, tableKey, indexBlockNum, rawIndex)
 	if err != nil {
-		return nil, derr.Wrap(err, "couldn't unmarshal binary index")
+		return nil, fmt.Errorf("couldn't unmarshal binary index: %w", err)
 	}
 
+	return index, nil
+}
+
+func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet) (index *TableIndex, err error) {
+	indexableTablet, ok := tablet.(IndexableTablet)
+	if !ok {
+		return nil, fmt.Errorf("received tablet of type %t is not indexable", tablet)
+	}
+
+	ctx, span := dtracing.StartSpan(ctx, "get index")
+	defer span.End()
+
+	zlog := logging.Logger(ctx, zlog)
+	zlog.Debug("fetching table index from database", zap.Stringer("tablet", tablet), zap.Uint32("block_num", blockNum))
+
+	tabletKey := string(tablet.Key())
+	prefixKey := tabletKey + ":"
+	startIndexKey := prefixKey + HexRevBlockNum(blockNum)
+
+	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
+
+	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
+	rowKey, rawIndex, err := fdb.store.FetchIndex(ctx, tabletKey, prefixKey, startIndexKey)
+	if err == store.ErrNotFound {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	indexBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
+	}
+
+	index, err = NewTableIndexFromBinary2(ctx, indexableTablet, indexBlockNum, rawIndex)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't unmarshal binary index: %w", err)
+	}
+
+	return index, nil
+
+	// var err2 error
+	// err = fdb.tblIndex.ReadRows(ctx, bigtable.InfiniteRange(startIndexKey), func(row bigtable.Row) bool {
+	// 	item, ok := btRowItem(row, indexFamilyName, indexColumnName)
+	// 	if !ok {
+	// 		err2 = fmt.Errorf("expected index family and column give no data: %q", item)
+	// 		return false
+	// 	}
+
+	// 	if !strings.HasPrefix(item.Row, prefixKey) {
+	// 		// Not found, or perhaps found ANOTHER ROW that isn't ours!
+	// 		return false
+	// 	}
+
+	// 	blockNum, err := chunkKeyRevBlockNum(item.Row, prefixKey)
+	// 	if err != nil {
+	// 		err2 = fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
+	// 		return false
+	// 	}
+
+	// 	index, err = NewTableIndexFromBinary2(ctx, indexableTablet, blockNum, item.Value)
+	// 	if err != nil {
+	// 		err2 = fmt.Errorf("couldn't unmarshal binary index: %w", err)
+	// 		return false
+	// 	}
+
+	// 	zlog.Debug("fetched table index", zap.Int("row_count", len(index.Map)))
+	// 	return false
+	// }, bigtable.LimitRows(1))
+
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// if err2 != nil {
+	// 	return nil, err2
+	// }
+
+	// The `index` variable can be null at this point, be warned!
 	return index, nil
 }
 
@@ -251,6 +331,38 @@ func NewTableIndex() *TableIndex {
 	return &TableIndex{Map: make(map[string]uint32)}
 }
 
+func NewTableIndexFromBinary2(ctx context.Context, tablet IndexableTablet, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
+	ctx, span := dtracing.StartSpan(ctx, "new table index from binary", "tablet", tablet, "block_num", atBlockNum)
+	defer span.End()
+
+	// Byte count for primary key + 4 bytes for block num value
+	primaryKeyByteCount := tablet.PrimaryKeyByteCount()
+	entryByteCount := primaryKeyByteCount + 4
+
+	// First 16 bytes are reserved to keep stats in there..
+	byteCount := len(buffer)
+	if (byteCount-16) < 0 || (byteCount-16)%entryByteCount != 0 {
+		return nil, fmt.Errorf("unable to unmarshal table index: %d bytes alignment + 16 bytes metadata is off (has %d bytes)", entryByteCount, byteCount)
+	}
+
+	mapping := map[string]uint32{}
+	for pos := 16; pos < byteCount; pos += entryByteCount {
+		primaryKey, err := tablet.DecodePrimaryKey(buffer[pos:])
+		if err != nil {
+			return nil, fmt.Errorf("unable to read primary key for tablet %q: %w", tablet, err)
+		}
+
+		blockNumPtr := big.Uint32(buffer[pos+primaryKeyByteCount:])
+		mapping[primaryKey] = blockNumPtr
+	}
+
+	return &TableIndex{
+		AtBlockNum: atBlockNum,
+		Squelched:  big.Uint32(buffer[:4]),
+		Map:        mapping,
+	}, nil
+}
+
 func NewTableIndexFromBinary(ctx context.Context, tableKey string, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
 	ctx, span := dtracing.StartSpan(ctx, "new table index from binary", "table_key", tableKey, "block_num", atBlockNum)
 	defer span.End()
@@ -278,7 +390,7 @@ func NewTableIndexFromBinary(ctx context.Context, tableKey string, atBlockNum ui
 	for pos := 16; pos < byteCount; pos += entryByteCount {
 		primaryKey, err := primaryKeyReader(buffer[pos:])
 		if err != nil {
-			return nil, derr.Wrapf(err, "unable to read primary key for table key %q", tableKey)
+			return nil, fmt.Errorf("unable to read primary key for table key %q: %w", tableKey, err)
 		}
 
 		blockNumPtr := big.Uint32(buffer[pos+primaryKeyByteCount:])
@@ -315,7 +427,31 @@ func (index *TableIndex) MarshalBinary(ctx context.Context, tableKey string) ([]
 	for primaryKey, blockNum := range index.Map {
 		err := primaryKeyWriter(primaryKey, snapshot[pos:])
 		if err != nil {
-			return nil, derr.Wrapf(err, "unable to read primary key for table key %q", tableKey)
+			return nil, fmt.Errorf("unable to read primary key for table key %q: %w", tableKey, err)
+		}
+
+		big.PutUint32(snapshot[pos+primaryKeyByteCount:], blockNum)
+		pos += entryByteCount
+	}
+
+	return snapshot, nil
+}
+
+func (index *TableIndex) MarshalBinary2(ctx context.Context, tablet IndexableTablet) ([]byte, error) {
+	ctx, span := dtracing.StartSpan(ctx, "marshal table index to binary", "tablet", tablet)
+	defer span.End()
+
+	primaryKeyByteCount := tablet.PrimaryKeyByteCount()
+	entryByteCount := primaryKeyByteCount + 4 // Byte count for primary key + 4 bytes for block num value
+
+	snapshot := make([]byte, entryByteCount*len(index.Map)+16)
+	big.PutUint32(snapshot, index.Squelched)
+
+	pos := 16
+	for primaryKey, blockNum := range index.Map {
+		err := tablet.EncodePrimaryKey(snapshot[pos:], primaryKey)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read primary key for tablet %q: %w", tablet, err)
 		}
 
 		big.PutUint32(snapshot[pos+primaryKeyByteCount:], blockNum)
@@ -430,7 +566,7 @@ func oneUint64PrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
 	return func(buffer []byte) (string, error) {
 		primaryKey, err := readOneUint64(buffer)
 		if err != nil {
-			return "", derr.Wrapf(err, "%s primary key reader", tag)
+			return "", fmt.Errorf("%s primary key reader: %w", tag, err)
 		}
 
 		return primaryKey, nil
@@ -445,12 +581,12 @@ func twoUint64PrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
 
 		chunk1, err := readOneUint64(buffer)
 		if err != nil {
-			return "", derr.Wrapf(err, "%s primary key reader, chunk #1", tag)
+			return "", fmt.Errorf("%s primary key reader, chunk #1: %w", tag, err)
 		}
 
 		chunk2, err := readOneUint64(buffer[8:])
 		if err != nil {
-			return "", derr.Wrapf(err, "%s primary key reader, chunk #2", tag)
+			return "", fmt.Errorf("%s primary key reader, chunk #2: %w", tag, err)
 		}
 
 		return strings.Join([]string{chunk1, chunk2}, ":"), nil
@@ -476,7 +612,7 @@ func oneBytePrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
 	return func(primaryKey string, buffer []byte) error {
 		value, err := strconv.ParseUint(primaryKey, 16, 8)
 		if err != nil {
-			return derr.Wrapf(err, "%s primary key writer: unable to transform primary key to byte", tag)
+			return fmt.Errorf("%s primary key writer: unable to transform primary key to byte: %w", tag, err)
 		}
 
 		buffer[0] = byte(value)
@@ -488,7 +624,7 @@ func oneUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
 	return func(primaryKey string, buffer []byte) error {
 		err := writeOneUint64(primaryKey, buffer)
 		if err != nil {
-			return derr.Wrapf(err, "%s primary key writer", tag)
+			return fmt.Errorf("%s primary key writer: %w", tag, err)
 		}
 
 		return nil
@@ -505,12 +641,12 @@ func twoUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
 
 		err := writeOneUint64(chunks[0], buffer)
 		if err != nil {
-			return derr.Wrapf(err, "%s primary key writer, chunk #1", tag)
+			return fmt.Errorf("%s primary key writer, chunk #1: %w", tag, err)
 		}
 
 		err = writeOneUint64(chunks[1], buffer[8:])
 		if err != nil {
-			return derr.Wrapf(err, "%s primary key writer, chunk #2", tag)
+			return fmt.Errorf("%s primary key writer, chunk #2: %w", tag, err)
 		}
 
 		return nil
@@ -520,7 +656,7 @@ func twoUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
 func writeOneUint64(primaryKey string, buffer []byte) error {
 	value, err := strconv.ParseUint(primaryKey, 16, 64)
 	if err != nil {
-		return derr.Wrap(err, "unable to transform primary key to uint64")
+		return fmt.Errorf("unable to transform primary key to uint64: %w", err)
 	}
 
 	big.PutUint64(buffer, value)

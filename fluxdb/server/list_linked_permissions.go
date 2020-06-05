@@ -15,15 +15,16 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
+	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -42,13 +43,13 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "prepare read failed"))
+		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
 	}
 
 	linkedPermissions, err := srv.db.ReadLinkedPermissions(ctx, actualBlockNum, request.Account, speculativeWrites)
 	if err != nil {
-		writeError(ctx, w, derr.Wrap(err, "reading linked permissions failed"))
+		writeError(ctx, w, fmt.Errorf("reading linked permissions failed: %w", err))
 		return
 	}
 

@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
@@ -28,20 +27,20 @@ import (
 
 func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 	if rawBlk.Num()%120 == 0 {
-		zlog.Info("pre-processing block (1/120)", zap.Stringer("block_id", rawBlk))
+		zlog.Info("pre-processing block (1/120)", zap.Stringer("block", rawBlk))
 	}
 
 	blockID, err := hex.DecodeString(rawBlk.ID())
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to decode block ID %q", rawBlk.ID())
+		return nil, fmt.Errorf("unable to decode block %q: %w", rawBlk, err)
 	}
 
 	blk := rawBlk.ToNative().(*pbcodec.Block)
 
 	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
-	lastKeyAccountOpForRowPath := map[string]*keyAccountOp{}
-	lastTableOpForTablePath := map[string]*pbcodec.TableOp{}
+	// lastKeyAccountOpForRowPath := map[string]*keyAccountOp{}
+	// lastTableOpForTablePath := map[string]*pbcodec.TableOp{}
 
 	req := &WriteRequest{
 		BlockNum: uint32(rawBlk.Num()),
@@ -69,52 +68,49 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 			}
 		}
 
-		for _, permOp := range trx.PermOps {
-			for _, keyAccountOp := range permOpToKeyAccountOps(permOp) {
-				lastKeyAccountOpForRowPath[keyAccountOp.rowPath] = keyAccountOp
-			}
-		}
+		// for _, permOp := range trx.PermOps {
+		// 	for _, keyAccountOp := range permOpToKeyAccountOps(permOp) {
+		// 		lastKeyAccountOpForRowPath[keyAccountOp.rowPath] = keyAccountOp
+		// 	}
+		// }
 
-		for _, tableOp := range trx.TableOps {
-			lastTableOpForTablePath[tableRowPath(tableOp)] = tableOp
-		}
+		// for _, tableOp := range trx.TableOps {
+		// 	lastTableOpForTablePath[tableRowPath(tableOp)] = tableOp
+		// }
 
-		for _, act := range trx.ActionTraces {
-			switch act.FullName() {
-			case "eosio:eosio:setabi":
-				abi, err := extractABIRow(uint32(rawBlk.Num()), act.Action)
-				if err != nil {
-					return nil, derr.Wrap(err, "extract abi: %s")
-				}
+		// for _, act := range trx.ActionTraces {
+		// 	switch act.FullName() {
+		// 	case "eosio:eosio:setabi":
+		// 		abi, err := extractABIRow(uint32(rawBlk.Num()), act.Action)
+		// 		if err != nil {
+		// 			return nil, fmt.Errorf("extract abi: %s: %w", err)
+		// 		}
 
-				req.ABIs = append(req.ABIs, abi)
+		// 		req.ABIs = append(req.ABIs, abi)
 
-			case "eosio:eosio:linkauth":
-				linkStruct, err := extractLinkAuthLinkRow(act.Action)
-				if err != nil {
-					return nil, derr.Wrap(err, "extract link auth")
-				}
+		// 	case "eosio:eosio:linkauth":
+		// 		linkStruct, err := extractLinkAuthLinkRow(act.Action)
+		// 		if err != nil {
+		// 			return nil, fmt.Errorf("extract link auth: %w", err)
+		// 		}
 
-				req.AuthLinks = append(req.AuthLinks, linkStruct)
+		// 		req.AuthLinks = append(req.AuthLinks, linkStruct)
 
-			case "eosio:eosio:unlinkauth":
-				linkStruct, err := extractUnlinkAuthLinkRow(act.Action)
-				if err != nil {
-					return nil, derr.Wrap(err, "extract unlink auth")
-				}
+		// 	case "eosio:eosio:unlinkauth":
+		// 		linkStruct, err := extractUnlinkAuthLinkRow(act.Action)
+		// 		if err != nil {
+		// 			return nil, fmt.Errorf("extract unlink auth: %w", err)
+		// 		}
 
-				req.AuthLinks = append(req.AuthLinks, linkStruct)
-			}
-		}
+		// 		req.AuthLinks = append(req.AuthLinks, linkStruct)
+		// 	}
+		// }
 	}
 
-	req.KeyAccounts = keyAccountOpsToWritableRows(lastKeyAccountOpForRowPath)
-	req.TableScopes = tableOpsToWritableRows(lastTableOpForTablePath)
+	// req.KeyAccounts = keyAccountOpsToWritableRows(lastKeyAccountOpForRowPath)
+	// req.TableScopes = tableOpsToWritableRows(lastTableOpForTablePath)
 
-	req.TableDatas, err = dbOpsToWritableRows(lastDbOpForRowPath)
-	if err != nil {
-		return nil, derr.Wrap(err, "unable to convert db ops to table data row")
-	}
+	addDBOpsAsFluxRows(req, lastDbOpForRowPath)
 
 	return req, nil
 }
@@ -163,6 +159,13 @@ func permOpDataToKeyAccountOps(operation keyAccountOperation, perm *pbcodec.Perm
 	return ops
 }
 
+func addDBOpsAsFluxRows(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
+	blockNum := request.BlockNum
+	for _, op := range latestDbOps {
+		request.AppendFluxRow(NewContractStateRow(blockNum, op))
+	}
+}
+
 func dbOpsToWritableRows(latestDbOps map[string]*pbcodec.DBOp) (rows []*TableDataRow, err error) {
 	for _, op := range latestDbOps {
 		rows = append(rows, &TableDataRow{
@@ -206,18 +209,18 @@ func tableOpsToWritableRows(latestTableOps map[string]*pbcodec.TableOp) (rows []
 	return
 }
 
-func extractABIRow(blockNum uint32, action *pbcodec.Action) (*ABIRow, error) {
-	var setABI *system.SetABI
-	if err := action.UnmarshalData(&setABI); err != nil {
-		return nil, err
-	}
+// func extractABIRow(blockNum uint32, action *pbcodec.Action) (*ABIRow, error) {
+// 	var setABI *system.SetABI
+// 	if err := action.UnmarshalData(&setABI); err != nil {
+// 		return nil, err
+// 	}
 
-	return &ABIRow{
-		Account:   N(string(setABI.Account)),
-		PackedABI: []byte(setABI.ABI),
-		BlockNum:  blockNum,
-	}, nil
-}
+// 	return &ABIRow{
+// 		Account:   N(string(setABI.Account)),
+// 		PackedABI: []byte(setABI.ABI),
+// 		BlockNum:  blockNum,
+// 	}, nil
+// }
 
 func extractLinkAuthLinkRow(action *pbcodec.Action) (*AuthLinkRow, error) {
 	var linkAuth *system.LinkAuth

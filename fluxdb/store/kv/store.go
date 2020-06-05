@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 	kv "github.com/dfuse-io/kvdb/store"
@@ -373,7 +372,7 @@ func (b *batch) FlushIfFull(ctx context.Context) error {
 
 	b.zlog.Debug("flushing a full batch set", zap.Int("count", b.count))
 	if err := b.Flush(ctx); err != nil {
-		return derr.Wrap(err, "flushing batch set")
+		return fmt.Errorf("flushing batch set: %w", err)
 	}
 
 	return nil
@@ -417,7 +416,7 @@ func (b *batch) Flush(ctx context.Context) error {
 
 	err := b.store.db.FlushPuts(ctx)
 	if err != nil {
-		return derr.Wrap(err, "apply bulk")
+		return fmt.Errorf("apply bulk: %w", err)
 	}
 
 	b.Reset()

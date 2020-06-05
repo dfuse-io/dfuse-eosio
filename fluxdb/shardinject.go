@@ -105,7 +105,6 @@ func (s *ShardInjector) Run() (err error) {
 			return fmt.Errorf("unable to read all write requests in batch %q: %w", filename, err)
 		}
 
-		// TODO: make sure the `LAST` is replaced by a shard-aware value.
 		if err := s.db.WriteBatch(ctx, requests); err != nil {
 			return fmt.Errorf("write batch %q: %w", filename, err)
 		}
