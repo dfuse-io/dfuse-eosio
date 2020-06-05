@@ -9,6 +9,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,6 +38,8 @@ func init() {
 	checkCmd.AddCommand(checkFluxShardsCmd)
 
 	checkBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
+	checkBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
+
 }
 
 func checkFluxShardsE(cmd *cobra.Command, args []string) error {
@@ -82,6 +85,7 @@ func checkBlocksE(cmd *cobra.Command, args []string) error {
 	// startTime := time.Now()
 	holeFound := false
 	checkIndividualSegment := viper.GetBool("individual-segment")
+	printIndividualSegmentStats := viper.GetBool("print-stats")
 
 	blocksStore, err := dstore.NewDBinStore(storeURL)
 	if err != nil {
@@ -100,7 +104,7 @@ func checkBlocksE(cmd *cobra.Command, args []string) error {
 		baseNum32 = uint32(baseNum)
 
 		if checkIndividualSegment {
-			validateBlockSegment(blocksStore, filename, fileBlockSize)
+			validateBlockSegment(blocksStore, filename, fileBlockSize, printIndividualSegmentStats)
 		}
 
 		if baseNum32 != expected {
@@ -131,7 +135,7 @@ func checkBlocksE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32) {
+func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, printIndividualSegmentStats bool) {
 	reader, err := store.OpenObject(context.Background(), segment)
 	if err != nil {
 		fmt.Printf("❌ Unable to read blocks segment %s: %s\n", segment, err)
@@ -151,6 +155,20 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 		block, err := readerFactory.Read()
 		if block != nil {
 			seenBlockCount++
+
+			if printIndividualSegmentStats {
+				payloadSize := len(block.PayloadBuffer)
+				eosBlock := block.ToNative().(*pbcodec.Block)
+				fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
+					block,
+					payloadSize,
+					eosBlock.GetTransactionCount(),
+					eosBlock.GetTransactionTraceCount(),
+					eosBlock.GetExecutedTotalActionCount(),
+					eosBlock.GetExecuteInputActionCount(),
+				)
+			}
+
 			continue
 		}
 
