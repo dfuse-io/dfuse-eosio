@@ -25,7 +25,7 @@ func NewEOSBigQueryBlockMapper(eventsActionName string, eventsUnrestricted bool,
 	// ex. { "name": "NEW_FIELD_NAME", "type": "string", "default": "" }
 	///////////////////////////////////////////////////
 	codec, err := goavro.NewCodec(`{
-		"namespace": "io.dfuse",
+			"namespace": "io.dfuse",
 		"name": "EOSAction",
 		"type": "record",
 		"fields": [
@@ -35,48 +35,35 @@ func NewEOSBigQueryBlockMapper(eventsActionName string, eventsUnrestricted bool,
 			{ "name": "trx_id", "type": "string" },
 			{ "name": "act_idx", "type": "long" },
 			{ "name": "trx_idx", "type": "long" },
-
+	
 			{ "name": "receiver", "type": "string" },
 			{ "name": "account", "type": "string" },
 			{ "name": "action", "type": "string" },
-			{ "name": "auth", "type": "string" },
+			{ "name": "auth", "type": "array", "items": "string" },
 			{ "name": "input", "type": "boolean" },
 			{ "name": "notif", "type": "boolean" },
 			{ "name": "scheduled", "type": "boolean" },
-
+	
 			{
-				"name": "db",
-				"type": {
-                	"type": "array",  
-                	"items":{
-                    	"name": "DBOp",
-                    	"type": "record",
-                    	"fields": [
-							{ "name": "key", "type": "string" },
-							{ "name": "table", "type": "string" }
-                    	]
-                	}
-            	}
-        	},
+				"name": "db", "type": ["null", {
+					"type": "map",
+					"values": { "type": "array", "items": "string" }
+				}],
+				"default": null
+       	},
 			{
-				"name": "ram",
-				"type": {
-                	"type": "array",  
-                	"items":{
-                    	"name": "DBOp",
-                    	"type": "record",
-                    	"fields": [
-							{ "name": "consumed", "type": "string" },
-							{ "name": "released", "type": "string" }
-                    	]
-                	}
-            	}
-        	},
-
+				"name": "ram", "type": ["null", {
+					"type": "map",
+					"values": { "type": "array", "items": "string" }
+				}],
+				"default": null
+       	},
+	
 			{ "name": "event", "type": "string" },
 			{ "name": "data", "type": "string" }
 		]
 	}`)
+
 	if err != nil {
 		return nil, err
 	}
@@ -96,11 +83,12 @@ func (m *EOSBigQueryBlockMapper) Map(block *bstream.Block) ([]map[string]interfa
 			return nil
 		}
 
-		// Add extra metadata
-		data["block_num"] = blk.Num()
+		// Add some more metadata or convert to please AVRO / BigQuery schema
+		data["block_num"] = int64(blk.Num())
 		data["block_id"] = blk.ID()
 		data["block_time"] = blk.MustTime()
 		data["trx_id"] = trxID
+		data["act_idx"] = idx
 
 		// Store nested stuff as JSON
 		if data["event"] != nil {
@@ -128,4 +116,8 @@ func (m *EOSBigQueryBlockMapper) Map(block *bstream.Block) ([]map[string]interfa
 	}
 
 	return mappedActionsList, nil
+}
+
+func (m *EOSBigQueryBlockMapper) GetCodec() *goavro.Codec {
+	return m.codec
 }

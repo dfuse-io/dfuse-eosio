@@ -326,7 +326,7 @@ func isTrxTraceIndexable(trxTrace *pbcodec.TransactionTrace) bool {
 	return status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
 }
 
-func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
+func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string]interface{} {
 	consumedRAM := make(map[string]bool)
 	releasedRAM := make(map[string]bool)
 	for _, ramop := range ramOps {
@@ -341,7 +341,7 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]str
 		}
 	}
 	// ram.changed:eoscanadacom
-	ramData := make(map[string][]string)
+	ramData := make(map[string]interface{})
 	if len(consumedRAM) != 0 {
 		ramData["consumed"] = toList(consumedRAM)
 	}
@@ -351,7 +351,7 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]str
 	return ramData
 }
 
-func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string {
+func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string]interface{} {
 	// db.key = []string{"accounts/eoscanadacom/.........eioh1"}
 	// db.table = []string{"accounts/eoscanadacom", "accounts"}
 	keys := make(map[string]bool)
@@ -362,7 +362,7 @@ func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string
 		tables[string(op.TableName)] = true
 	}
 
-	opData := make(map[string][]string)
+	opData := make(map[string]interface{})
 	if len(keys) != 0 {
 		opData["key"] = toList(keys)
 	}

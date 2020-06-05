@@ -696,7 +696,7 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			mapper, err := eosSearch.NewEOSBlockMapper(
+			mapper, err := eosSearch.NewEOSBigQueryBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
 				viper.GetString("search-common-action-filter-on-expr"),
@@ -741,7 +741,7 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerBigQueryApp.Modules{
-				BlockMapper:        mapper,
+				BigQueryBlockMapper: mapper,
 				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
 			}), nil
 		},
