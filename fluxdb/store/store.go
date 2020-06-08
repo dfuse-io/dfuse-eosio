@@ -61,8 +61,6 @@ type KVStore interface {
 	//        decide if this was required later on when we are close to finish the refactoring.
 	NewBatch(logger *zap.Logger) Batch
 
-	FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd string) (rowKey string, rawABI []byte, err error)
-
 	FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error)
 
 	HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error)
@@ -70,6 +68,8 @@ type KVStore interface {
 	FetchTabletRow(ctx context.Context, key string, onTabletRow OnTabletRow) error
 
 	FetchTabletRows(ctx context.Context, keys []string, onTabletRow OnTabletRow) error
+
+	ScanOneTableRow(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error)
 
 	ScanTabletRows(ctx context.Context, keyStart, keyEnd string, onTabletRow OnTabletRow) error
 

@@ -199,8 +199,6 @@ func (srv *EOSServer) readTable2(
 
 	zlog.Debug("read rows results", zap.Int("row_count", len(rows)))
 
-	// TODO: Fetch ABI!
-
 	// var abiObj *eos.ABI
 	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
 	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)

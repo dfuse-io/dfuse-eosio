@@ -94,8 +94,9 @@ func (fdb *FluxDB) VerifyAllShardsWritten(ctx context.Context) (string, error) {
 	if missingShards != nil {
 		err = fmt.Errorf("missing shards: %v", missingShards)
 	}
+
 	if faultyShards != nil {
-		err = fmt.Errorf("shards not matching reference block %s: %v. %s", referenceBlock, faultyShards, err)
+		err = fmt.Errorf("shards not matching reference block %s (shards %v): %w", referenceBlock, faultyShards, err)
 	}
 
 	return referenceBlock, err
@@ -106,7 +107,7 @@ func (fdb *FluxDB) UpdateGlobalLastBlockID(ctx context.Context, blockID string) 
 	batch := fdb.store.NewBatch(zlog)
 	batch.SetLast(lastBlockRowKey, []byte(blockID))
 	if err := batch.Flush(ctx); err != nil {
-		return fmt.Errorf("flushing last block marker: %s", err)
+		return fmt.Errorf("flushing last block marker: %w", err)
 	}
 
 	return nil
@@ -121,20 +122,17 @@ func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRe
 
 		batch.SetRow(string(row.Key()), value)
 
-		tabletKey := string(row.Tablet().Key())
-		fdb.idxCache.IncCount(tabletKey)
-		if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
-			fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
+		tablet := row.Tablet()
+		if _, ok := tablet.(IndexableTablet); ok {
+			tabletKey := string(tablet.Key())
+
+			fdb.idxCache.IncCount(tabletKey)
+			if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
+				fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
+			}
 		}
 	}
 
-	// for _, abi := range w.ABIs {
-	// 	key := fmt.Sprintf("%s:%s", HexName(abi.Account), HexRevBlockNum(w.BlockNum))
-
-	// 	batch.SetABI(key, abi.PackedABI)
-	// }
-
 	batch.SetLast(fdb.lastBlockKey(), []byte(hex.EncodeToString(w.BlockID)))
-
 	return nil
 }

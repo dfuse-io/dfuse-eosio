@@ -94,28 +94,20 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 	return newBatch(s, logger)
 }
 
-func (s *KVStore) FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd string) (rowKey string, rawABI []byte, err error) {
-	err = s.scanRange(ctx, s.tblABIs, keyStart, keyEnd, func(key string, value []byte) error {
-		if !strings.HasPrefix(key, prefixKey) {
-			return store.BreakScan
-		}
-
-		rowKey = key
-		rawABI = value
+func (s *KVStore) ScanOneTableRow(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
+	err = s.scanRange(ctx, s.tblABIs, keyStart, keyEnd, func(rowKey string, rowValue []byte) error {
+		key = rowKey
+		value = rowValue
 
 		// We only ever check a single row
 		return store.BreakScan
 	})
 
 	if err != nil && err != store.BreakScan {
-		return "", nil, fmt.Errorf("unable to fetch ABI for key prefix %q: %w", prefixKey, err)
+		return "", nil, fmt.Errorf("unable to fetch single tablet row (range [%s, %s[): %w", keyStart, keyEnd, err)
 	}
 
-	if rawABI == nil {
-		return "", nil, store.ErrNotFound
-	}
-
-	return rowKey, rawABI, nil
+	return key, value, nil
 }
 
 func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error) {

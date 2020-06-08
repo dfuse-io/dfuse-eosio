@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/logging"
-	"github.com/eoscanada/eos-go"
 	"github.com/hidal-go/hidalgo/kv"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -61,23 +60,6 @@ func Test_FetchLastWrittenBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	fmt.Println("Last written block: " + out.String())
-}
-
-func Test_FetchABI(t *testing.T) {
-	runOnlyIfPathIsSet(t)
-
-	ctx := context.Background()
-	store := testCreateStore(t)
-
-	_, packedABI, err := store.FetchABI(ctx, "5530ea0000000000:", "5530ea0000000000:fffff768", "5530ea0000000000:ffffffff")
-	require.NoError(t, err)
-
-	abi := &eos.ABI{}
-	abi.SetFitNodeos(true)
-	err = eos.UnmarshalBinary(packedABI, abi)
-	require.NoError(t, err)
-
-	//fmt.Println("Got a packed ABI: " + abi.Version + " @ " + strconv.FormatUint(uint64(blockNum), 10))
 }
 
 func PrintTable(t *testing.T, ctx context.Context, store *KVStore, bucket string, asString bool) {

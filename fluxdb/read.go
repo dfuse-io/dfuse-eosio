@@ -47,7 +47,63 @@ import (
 // 	lastKey := prefixKey + HexRevBlockNum(0)
 
 // 	zlog.Debug("reading ABI rows", zap.String("first_key", firstKey), zap.String("last_key", lastKey))
-// 	rowKey, rawABI, err := fdb.store.FetchABI(ctx, prefixKey, firstKey, lastKey)
+// 	rowKey, rawABI, err := fdb.store.ScanOneTableRow(ctx, prefixKey, firstKey, lastKey)
+// 	if err != nil && err != store.ErrNotFound {
+// 		return nil, err
+// 	}
+
+// 	if err != store.ErrNotFound {
+// 		abiBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("couldn't infer block num in table ABI's row key: %w", err)
+// 		}
+
+// 		out.BlockNum = abiBlockNum
+// 		out.PackedABI = rawABI
+// 	}
+
+// 	zlog.Debug("handling speculative writes", zap.Int("write_count", len(speculativeWrites)))
+// 	for _, blockWrite := range speculativeWrites {
+// 		for _, speculativeABI := range blockWrite.ABIs {
+// 			if speculativeABI.Account == account {
+// 				zlog.Debug("updating ABI", zap.Uint32("block_num", blockWrite.BlockNum))
+// 				out = speculativeABI
+// 			}
+// 		}
+// 	}
+
+// 	if len(out.PackedABI) == 0 {
+// 		return nil, DataABINotFoundError(ctx, eos.NameToString(account), blockNum)
+// 	}
+
+// 	return
+// }
+
+// func (fdb *FluxDB) GetABI(ctx context.Context, blockNum uint32, account string, speculativeWrites []*WriteRequest) (out *ABIRow, err error) {
+// 	ctx, span := dtracing.StartSpan(ctx, "get abi", "account", account, "block_num", blockNum)
+// 	defer span.End()
+
+// 	zlog := logging.Logger(ctx, zlog)
+// 	zlog.Debug("fetching ABI", zap.String("account", account), zap.Uint32("block_num", blockNum))
+
+// 	tablet := NewContractABITablet(account)
+// 	rows, err := fdb.Read2(
+// 		ctx,
+// 		blockNum,
+// 		tablet,
+// 		speculativeWrites,
+// 	)
+
+// 	out = &ABIRow{
+// 		Account: account,
+// 	}
+
+// 	prefixKey := HexName(account) + ":"
+// 	firstKey := prefixKey + HexRevBlockNum(blockNum)
+// 	lastKey := prefixKey + HexRevBlockNum(0)
+
+// 	zlog.Debug("reading ABI rows", zap.String("first_key", firstKey), zap.String("last_key", lastKey))
+// 	rowKey, rawABI, err := fdb.store.ScanOneTableRow(ctx, prefixKey, firstKey, lastKey)
 // 	if err != nil && err != store.ErrNotFound {
 // 		return nil, err
 // 	}
@@ -747,6 +803,58 @@ func (fdb *FluxDB) Read2(
 
 	zlog.Info("finished reading rows from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
 	return rows, nil
+}
+
+func (fdb *FluxDB) ReadSingleRowTablet2(
+	ctx context.Context,
+	blockNum uint32,
+	tablet Tablet,
+	speculativeWrites []*WriteRequest,
+) (Row, error) {
+	ctx, span := dtracing.StartSpan(ctx, "read single row tablet", "tablet", tablet, "block_num", blockNum)
+	defer span.End()
+
+	firstRowKey := tablet.RowKeyPrefix(0)
+	lastRowKey := tablet.RowKeyPrefix(blockNum + 1)
+
+	zlog := logging.Logger(ctx, zlog)
+	zlog.Debug("reading single row tablet from database", zap.Stringer("tablet", tablet), zap.Uint32("block_num", blockNum), zap.String("first_key", firstRowKey), zap.String("last_key", lastRowKey))
+
+	var row Row
+	rowKey, rowValue, err := fdb.store.ScanOneTableRow(ctx, firstRowKey, lastRowKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed database read: %w", err)
+	}
+
+	if rowKey != "" {
+		// Row deletion shortcut
+		if len(rowValue) <= 0 {
+			row = nil
+		} else {
+			row, err = tablet.ReadRow(rowKey, rowValue)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create single tablet row %s: %w", rowKey, err)
+			}
+		}
+	}
+
+	zlog.Debug("reading single row tablet from speculative writes", zap.Int("write_count", len(speculativeWrites)))
+	for _, writeRequest := range speculativeWrites {
+		for _, speculativeRow := range writeRequest.FluxRows {
+			if row.Tablet() != tablet {
+				continue
+			}
+
+			if isDeletionFluxRow(speculativeRow) {
+				row = nil
+			} else {
+				row = speculativeRow
+			}
+		}
+	}
+
+	zlog.Debug("finished reading single tablet row")
+	return row, nil
 }
 
 func (fdb *FluxDB) readSingle(

@@ -78,33 +78,33 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		// 	lastTableOpForTablePath[tableRowPath(tableOp)] = tableOp
 		// }
 
-		// for _, act := range trx.ActionTraces {
-		// 	switch act.FullName() {
-		// 	case "eosio:eosio:setabi":
-		// 		abi, err := extractABIRow(uint32(rawBlk.Num()), act.Action)
-		// 		if err != nil {
-		// 			return nil, fmt.Errorf("extract abi: %s: %w", err)
-		// 		}
+		for _, act := range trx.ActionTraces {
+			switch act.FullName() {
+			case "eosio:eosio:setabi":
+				abiRow, err := NewContractABIRow(uint32(rawBlk.Num()), act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract abi row: %w", err)
+				}
 
-		// 		req.ABIs = append(req.ABIs, abi)
+				req.AppendFluxRow(abiRow)
 
-		// 	case "eosio:eosio:linkauth":
-		// 		linkStruct, err := extractLinkAuthLinkRow(act.Action)
-		// 		if err != nil {
-		// 			return nil, fmt.Errorf("extract link auth: %w", err)
-		// 		}
+				// case "eosio:eosio:linkauth":
+				// 	linkStruct, err := extractLinkAuthLinkRow(act.Action)
+				// 	if err != nil {
+				// 		return nil, fmt.Errorf("extract link auth: %w", err)
+				// 	}
 
-		// 		req.AuthLinks = append(req.AuthLinks, linkStruct)
+				// 	req.AuthLinks = append(req.AuthLinks, linkStruct)
 
-		// 	case "eosio:eosio:unlinkauth":
-		// 		linkStruct, err := extractUnlinkAuthLinkRow(act.Action)
-		// 		if err != nil {
-		// 			return nil, fmt.Errorf("extract unlink auth: %w", err)
-		// 		}
+				// case "eosio:eosio:unlinkauth":
+				// 	linkStruct, err := extractUnlinkAuthLinkRow(act.Action)
+				// 	if err != nil {
+				// 		return nil, fmt.Errorf("extract unlink auth: %w", err)
+				// 	}
 
-		// 		req.AuthLinks = append(req.AuthLinks, linkStruct)
-		// 	}
-		// }
+				// 	req.AuthLinks = append(req.AuthLinks, linkStruct)
+			}
+		}
 	}
 
 	// req.KeyAccounts = keyAccountOpsToWritableRows(lastKeyAccountOpForRowPath)

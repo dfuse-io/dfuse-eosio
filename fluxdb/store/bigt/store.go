@@ -89,22 +89,17 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 	return newbatch(s, logger)
 }
 
-func (s *KVStore) FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd string) (rowKey string, rawABI []byte, err error) {
+func (s *KVStore) ScanOneTableRow(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
 	var err2 error
-	err = s.tblABIs.ReadRows(ctx, bigtable.NewRange(keyStart, keyEnd), func(row bigtable.Row) bool {
-		item, ok := btRowItem(row, abiFamilyName, abiColumnName)
+	err = s.tblRows.ReadRows(ctx, bigtable.NewRange(keyStart, keyEnd), func(row bigtable.Row) bool {
+		item, ok := btRowItem(row, rowFamilyName, rowColumnName)
 		if !ok {
-			err2 = fmt.Errorf("expected abi family and column give no data: %q", item)
+			err2 = fmt.Errorf("expected tablet row family and column give no data: %q", item)
 			return false
 		}
 
-		if !strings.HasPrefix(item.Row, prefixKey) {
-			err2 = store.ErrNotFound
-			return false
-		}
-
-		rowKey = row.Key()
-		rawABI = item.Value
+		key = row.Key()
+		value = item.Value
 
 		return false
 	}, bigtable.LimitRows(1))
@@ -117,11 +112,7 @@ func (s *KVStore) FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd stri
 		return "", nil, err2
 	}
 
-	if rawABI == nil {
-		return "", nil, store.ErrNotFound
-	}
-
-	return rowKey, rawABI, nil
+	return
 }
 
 func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error) {

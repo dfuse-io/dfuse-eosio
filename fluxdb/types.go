@@ -15,7 +15,6 @@
 package fluxdb
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -41,12 +40,22 @@ type Row interface {
 
 func ExplodeRowKey(rowKey string) (collection, tablet, blockNum, primaryKey string, err error) {
 	parts := strings.Split(rowKey, "/")
-	if len(parts) != 4 {
-		err = errors.New("all row key have 4 segments separated by '/' (`<collection/tablet/blockNum/primaryKey>`)")
-		return
+	if len(parts) == 3 {
+		return parts[0], parts[1], parts[2], parts[3], nil
 	}
 
-	return parts[0], parts[1], parts[2], parts[3], nil
+	err = fmt.Errorf("row key should have 4 segments separated by '/' (`<collection/tablet/blockNum/primaryKey>`), got %d segments", len(parts))
+	return
+}
+
+func ExplodeSingleRowKey(rowKey string) (collection, tablet, blockNum string, err error) {
+	parts := strings.Split(rowKey, "/")
+	if len(parts) == 3 {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	err = fmt.Errorf("single row key should have 3 segments separated by '/' (`<collection/tablet/blockNum>`), got %d segments", len(parts))
+	return
 }
 
 func NewTabletRow(pbRow pbfluxdb.TabletRow) TabletRow {
