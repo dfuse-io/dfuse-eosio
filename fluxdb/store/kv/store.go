@@ -72,7 +72,7 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 }
 
 func (s *KVStore) FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd string) (rowKey string, rawABI []byte, err error) {
-	err = s.scanRange(ctx, tblPrefixABIs, keyStart, keyEnd, func(key string, value []byte) error {
+	err = s.scanRange(ctx, tblPrefixABIs, keyStart, keyEnd, 1, func(key string, value []byte) error {
 		if !strings.HasPrefix(key, prefixKey) {
 			return store.BreakScan
 		}
@@ -96,7 +96,7 @@ func (s *KVStore) FetchABI(ctx context.Context, prefixKey, keyStart, keyEnd stri
 }
 
 func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error) {
-	err = s.scanInfiniteRange(ctx, tblPrefixIndex, keyStart, func(key string, value []byte) error {
+	err = s.scanInfiniteRange(ctx, tblPrefixIndex, keyStart, 1, func(key string, value []byte) error {
 		if !strings.HasPrefix(key, prefixKey) {
 			return store.BreakScan
 		}
@@ -120,7 +120,7 @@ func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart 
 }
 
 func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error) {
-	err = s.scanPrefix(ctx, tblPrefixRows, keyPrefix, func(key string, _ []byte) error {
+	err = s.scanPrefix(ctx, tblPrefixRows, keyPrefix, 1, func(_ string, _ []byte) error {
 		exists = true
 		return store.BreakScan
 	})
@@ -172,7 +172,7 @@ func (s *KVStore) FetchTabletRows(ctx context.Context, keys []string, onTabletRo
 }
 
 func (s *KVStore) ScanTabletRows(ctx context.Context, keyStart, keyEnd string, onTabletRow store.OnTabletRow) error {
-	err := s.scanRange(ctx, tblPrefixRows, keyStart, keyEnd, func(key string, value []byte) error {
+	err := s.scanRange(ctx, tblPrefixRows, keyStart, keyEnd, kv.Unlimited, func(key string, value []byte) error {
 		err := onTabletRow(key, value)
 		if err == store.BreakScan {
 			return store.BreakScan
@@ -203,7 +203,7 @@ func (s *KVStore) FetchLastWrittenBlock(ctx context.Context, key string) (out bs
 }
 
 func (s *KVStore) ScanLastShardsWrittenBlock(ctx context.Context, keyPrefix string, onBlockRef store.OnBlockRef) error {
-	err := s.scanPrefix(ctx, tblPrefixLast, keyPrefix, func(key string, value []byte) error {
+	err := s.scanPrefix(ctx, tblPrefixLast, keyPrefix, 1, func(key string, value []byte) error {
 		err := onBlockRef(key, bstream.BlockRefFromID(value))
 		if err == store.BreakScan {
 			return store.BreakScan
@@ -228,7 +228,6 @@ func (s *KVStore) fetchKey(ctx context.Context, table byte, key string) (out []b
 	kvKey := packKey(table, key)
 
 	out, err = s.db.Get(ctx, kvKey)
-
 	if err == kv.ErrNotFound {
 		return nil, store.ErrNotFound
 	}
@@ -246,12 +245,13 @@ func (s *KVStore) fetchKeys(ctx context.Context, table byte, keys []string) (out
 		kvKeys[i] = packKey(table, key)
 	}
 
-	var values []*kv.KV
 	itr := s.db.BatchGet(ctx, kvKeys)
 
+	var values []kv.KV
 	for itr.Next() {
 		values = append(values, itr.Item())
 	}
+
 	if err := itr.Err(); err != nil {
 		return nil, fmt.Errorf("unable to fetch table %q keys (%d): %w", TblPrefixName[table], len(keys), err)
 	}
@@ -264,10 +264,13 @@ func (s *KVStore) fetchKeys(ctx context.Context, table byte, keys []string) (out
 	return out, nil
 }
 
-func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, onRow func(key string, value []byte) error) error {
-
+func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, limit int, onRow func(key string, value []byte) error) error {
 	kvPrefix := packKey(table, prefixKey)
-	itr := s.db.Prefix(ctx, kvPrefix)
+
+	itrCtx, cancelIterator := context.WithCancel(ctx)
+	defer cancelIterator()
+
+	itr := s.db.Prefix(itrCtx, kvPrefix, limit)
 	for itr.Next() {
 		item := itr.Item()
 		t, key := unpackKey(item.Key)
@@ -278,7 +281,7 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 		}
 
 		if err != nil {
-			return fmt.Errorf("scan prefic: unable to process for table %q with key %q: %w", TblPrefixName[t], key, err)
+			return fmt.Errorf("scan prefix: unable to process for table %q with key %q: %w", TblPrefixName[t], key, err)
 		}
 	}
 	if err := itr.Err(); err != nil {
@@ -288,8 +291,7 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 	return nil
 }
 
-func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd string, onRow func(key string, value []byte) error) error {
-
+func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd string, limit int, onRow func(key string, value []byte) error) error {
 	zlog.Debug("scanning range", zap.String("start", keyStart), zap.String("end", keyEnd))
 	startKey := packKey(table, keyStart)
 	var endKey []byte
@@ -301,8 +303,10 @@ func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd st
 		endKey = []byte{table + 1}
 	}
 
-	// TODO: we need to fix this limit
-	itr := s.db.Scan(ctx, startKey, endKey, 0)
+	scanCtx, cancelScan := context.WithCancel(ctx)
+	defer cancelScan()
+
+	itr := s.db.Scan(scanCtx, startKey, endKey, limit)
 
 	for itr.Next() {
 		item := itr.Item()
@@ -316,14 +320,16 @@ func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd st
 			return fmt.Errorf("scan range: unable to process for table %q with key %q: %w", TblPrefixName[t], key, err)
 		}
 	}
+
 	if err := itr.Err(); err != nil {
 		return fmt.Errorf("unable to scan table %q keys with start key %q and end key %q: %w", TblPrefixName[table], keyStart, keyEnd, err)
 	}
+
 	return nil
 }
 
-func (s *KVStore) scanInfiniteRange(ctx context.Context, table byte, keyStart string, onRow func(key string, value []byte) error) error {
-	return s.scanRange(ctx, table, keyStart, "", onRow)
+func (s *KVStore) scanInfiniteRange(ctx context.Context, table byte, keyStart string, limit int, onRow func(key string, value []byte) error) error {
+	return s.scanRange(ctx, table, keyStart, "", limit, onRow)
 }
 
 // There is most probably lots of repetition between this batch and the bigtable version.

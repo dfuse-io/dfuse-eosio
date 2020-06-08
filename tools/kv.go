@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
+	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/kvdb/store"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -103,7 +103,7 @@ func getPrefix(prefix []byte) error {
 		return err
 	}
 
-	it := kv.Prefix(context.Background(), prefix)
+	it := kv.Prefix(context.Background(), prefix, store.Unlimited)
 	for it.Next() {
 		item := it.Item()
 		printKVEntity(item.Key, item.Value, false, true)

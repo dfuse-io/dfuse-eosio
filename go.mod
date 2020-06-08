@@ -34,14 +34,14 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
-	github.com/dfuse-io/kvdb v0.0.0-20200602202107-57a39c2bae3f
+	github.com/dfuse-io/kvdb v0.0.0-20200604062641-c40bd97e9fdf
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
 	github.com/dfuse-io/manageos v0.0.0-20200603173055-cd3a3e04a205
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
 	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
-	github.com/dfuse-io/search v0.0.0-20200602204840-b7a4beaf3809
+	github.com/dfuse-io/search v0.0.0-20200604141048-4ced372c8330
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -97,5 +97,3 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/github.com/dfuse-io/dgraphql => /Users/julien/codebase/dfuse-io/dgraphql

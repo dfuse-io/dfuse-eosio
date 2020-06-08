@@ -68,7 +68,7 @@ func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []
 }
 
 func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	it := db.store.Prefix(ctx, Keys.PackTrxsPrefix(idPrefix))
+	it := db.store.Prefix(ctx, Keys.PackTrxsPrefix(idPrefix), store.Unlimited)
 	for it.Next() {
 		row := &pbtrxdb.TrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
@@ -111,7 +111,7 @@ func (db *DB) getTransactionAdditionEvents(ctx context.Context, idPrefix string)
 }
 
 func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	it := db.store.Prefix(ctx, Keys.PackImplicitTrxsPrefix(idPrefix))
+	it := db.store.Prefix(ctx, Keys.PackImplicitTrxsPrefix(idPrefix), store.Unlimited)
 	for it.Next() {
 		row := &pbtrxdb.ImplicitTrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
@@ -144,7 +144,7 @@ func (db *DB) getTransactionImplicitEvents(ctx context.Context, idPrefix string)
 }
 
 func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	it := db.store.Prefix(ctx, Keys.PackTrxTracesPrefix(idPrefix))
+	it := db.store.Prefix(ctx, Keys.PackTrxTracesPrefix(idPrefix), store.Unlimited)
 	for it.Next() {
 		row := &pbtrxdb.TrxTraceRow{}
 		db.dec.MustInto(it.Item().Value, row)
@@ -180,7 +180,7 @@ func (db *DB) getTransactionExecutionEvents(ctx context.Context, idPrefix string
 }
 
 func (db *DB) getTransactionDtrxEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	it := db.store.Prefix(ctx, Keys.PackDtrxsPrefix(idPrefix))
+	it := db.store.Prefix(ctx, Keys.PackDtrxsPrefix(idPrefix), store.Unlimited)
 	for it.Next() {
 		row := &pbtrxdb.DtrxRow{}
 		db.dec.MustInto(it.Item().Value, row)
