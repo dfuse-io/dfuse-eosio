@@ -16,8 +16,7 @@ package apiproxy
 
 import (
 	"fmt"
-
-	"github.com/dfuse-io/dfuse-eosio/launcher"
+	"github.com/dfuse-io/dfuse-box/launcher"
 	"github.com/dfuse-io/shutter"
 )
 

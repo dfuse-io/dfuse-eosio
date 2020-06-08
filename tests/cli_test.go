@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/acarl005/stripansi"
-	dashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
+	dashboard "github.com/dfuse-io/dfuse-box/dashboard/pb"
 	"github.com/dfuse-io/dfuse-eosio/launcher/cli"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/stretchr/testify/require"

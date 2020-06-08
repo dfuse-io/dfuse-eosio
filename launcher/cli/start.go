@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"path/filepath"
 	"strings"
 	"time"
@@ -23,7 +24,6 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -61,9 +61,9 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 func Start(configFile string, dataDir string, args []string) (err error) {
 
-	config := &launcher.DfuseConfig{}
+	config := &launcher2.DfuseConfig{}
 	if configFile != "" {
-		config, err = launcher.ReadConfig(configFile)
+		config, err = launcher2.ReadConfig(configFile)
 		if err != nil {
 			return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
 		}
@@ -85,7 +85,7 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create dmesh client: %w", err)
 	}
 
-	modules := &launcher.RuntimeModules{
+	modules := &launcher2.RuntimeModules{
 		SearchDmeshClient: meshClient,
 	}
 
@@ -94,12 +94,12 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 		return fmt.Errorf("protocol specific hooks not configured correctly: %w", err)
 	}
 
-	launch := launcher.NewLauncher(config, modules)
+	launch := launcher2.NewLauncher(config, modules)
 	userLog.Debug("launcher created")
 
-	apps := launcher.ParseAppsFromArgs(args)
+	apps := launcher2.ParseAppsFromArgs(args)
 	if len(args) == 0 {
-		apps = launcher.ParseAppsFromArgs(config.Start.Args)
+		apps = launcher2.ParseAppsFromArgs(config.Start.Args)
 	}
 
 	// Set default values for flags in `start`

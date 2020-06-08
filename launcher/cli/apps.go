@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"io"
 	"math"
 	"os"
@@ -27,16 +28,15 @@ import (
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // register authenticator plugin
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // register ratelimiter plugin
+	"github.com/dfuse-io/dfuse-box/dashboard"
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
@@ -63,7 +63,7 @@ import (
 
 func init() {
 
-	launcher.RegisterCommonFlags = func(cmd *cobra.Command) error {
+	launcher2.RegisterCommonFlags = func(cmd *cobra.Command) error {
 		// Common stores configuration flags
 		cmd.Flags().String("common-backup-store-url", PitreosURL, "[COMMON] Store URL (with prefix) where to read or write backups.")
 		cmd.Flags().String("common-blocks-store-url", MergedBlocksStoreURL, "[COMMON] Store URL (with prefix) where to read/write. Used by: relayer, fluxdb, trxdb-loader, blockmeta, search-indexer, search-live, search-forkresolver, eosws")
@@ -101,12 +101,12 @@ func init() {
 		return nil
 	}
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "node-manager",
 		Title:       "Node manager",
 		Description: "Block producing node",
 		MetricsID:   "producer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
 			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
@@ -140,7 +140,7 @@ func init() {
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
+		InitFunc: func(modules *launcher2.RuntimeModules) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
 			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
@@ -148,7 +148,7 @@ func init() {
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -190,12 +190,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "mindreader",
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "mindreader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
@@ -231,13 +231,13 @@ func init() {
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the nodeos if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
+		InitFunc: func(modules *launcher2.RuntimeModules) error {
 			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
 				return err
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -316,12 +316,12 @@ func init() {
 	})
 
 	// Relayer
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "relayer",
 		Title:       "Relayer",
 		Description: "Serves blocks as a stream, with a buffer",
 		MetricsID:   "relayer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of Blockstream sources (mindreaders) to connect to for live block feeds (repeat flag as needed)")
@@ -333,7 +333,7 @@ func init() {
 			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -352,12 +352,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "merger",
 		Title:       "Merger",
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
 			cmd.Flags().String("merger-grpc-listen-addr", MergerServingAddr, "Address to listen for incoming gRPC requests")
@@ -375,7 +375,7 @@ func init() {
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
 		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
 		//        init flow and call init after the factory and giving it the instantiated app...
-		InitFunc: func(modules *launcher.RuntimeModules) error {
+		InitFunc: func(modules *launcher2.RuntimeModules) error {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return err
@@ -397,7 +397,7 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -420,12 +420,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "fluxdb",
 		Title:       "FluxDB",
 		Description: "Temporal chain state store",
 		MetricsID:   "fluxdb",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into its database")
@@ -442,7 +442,7 @@ func init() {
 			cmd.Flags().Uint64("fluxdb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -471,12 +471,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "trxdb-loader",
 		Title:       "DB loader",
 		Description: "Main blocks and transactions database",
 		MetricsID:   "trxdb-loader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "number of blocks batched together for database write")
@@ -488,7 +488,7 @@ func init() {
 			cmd.Flags().Bool("trxdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -516,12 +516,12 @@ func init() {
 	})
 
 	// Blockmeta
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "blockmeta",
 		Title:       "Blockmeta",
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not.")
@@ -530,7 +530,7 @@ func init() {
 			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -559,12 +559,12 @@ func init() {
 	})
 
 	// Abicodec
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "abicodec",
 		Title:       "ABI codec",
 		Description: "Decodes binary data against ABIs for different contracts",
 		MetricsID:   "abicodec",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicache", "path where the cache store is state")
@@ -573,7 +573,7 @@ func init() {
 			cmd.Flags().String("abicodec-export-cache-url", "{dfuse-data-dir}/storage/abicache", "path where the exported cache will reside")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -596,12 +596,12 @@ func init() {
 	})
 
 	// Search Indexer
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "search-indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
 		MetricsID:   "indexer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-indexer-http-listen-addr", IndexerHTTPServingAddr, "Address to listen for incoming http requests")
@@ -616,7 +616,7 @@ func init() {
 			cmd.Flags().String("search-indexer-writable-path", "{dfuse-data-dir}/search/indexer", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -677,12 +677,12 @@ func init() {
 	})
 
 	// Search Router
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "search-router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "router",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Router-specific flags
 			cmd.Flags().String("search-router-grpc-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
@@ -691,7 +691,7 @@ func init() {
 			cmd.Flags().Uint64("search-router-lib-delay-tolerance", 0, "Number of blocks above a backend's lib we allow a request query to be served (Live & Router)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			return routerApp.New(&routerApp.Config{
 				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
 				BlockmetaAddr:      viper.GetString("common-blockmeta-addr"),
@@ -706,12 +706,12 @@ func init() {
 	})
 
 	// Search Archive
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "search-archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
 		MetricsID:   "archive",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
 			cmd.Flags().String("search-archive-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -733,7 +733,7 @@ func init() {
 			cmd.Flags().String("search-archive-writable-path", "{dfuse-data-dir}/search/archiver", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -765,12 +765,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "search-live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
 		MetricsID:   "live",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -782,7 +782,7 @@ func init() {
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -818,19 +818,19 @@ func init() {
 	})
 
 	// Search Fork Resolver
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "search-forkresolver",
 		Title:       "Search fork resolver",
 		Description: "Search forks",
 		MetricsID:   "forkresolver",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("search-forkresolver-indices-path", "{dfuse-data-dir}/search/forkresolver", "Location for inflight indices")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
@@ -855,12 +855,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "eosws",
 		Title:       "EOSWS",
 		Description: "Serves websocket and http queries to clients",
 		MetricsID:   "eosws",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
@@ -877,7 +877,7 @@ func init() {
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -907,12 +907,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "dgraphql",
 		Title:       "GraphQL",
 		Description: "Serves GraphQL queries to clients",
 		MetricsID:   "dgraphql",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
@@ -925,7 +925,7 @@ func init() {
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -959,12 +959,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "eosq",
 		Title:       "Eosq",
 		Description: "EOSIO Block Explorer",
 		MetricsID:   "eosq",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
@@ -982,7 +982,7 @@ func init() {
 			return nil
 		},
 
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
 				Environement:      viper.GetString("eosq-environment"),
@@ -1000,12 +1000,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
 		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/dashboard.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-box/dashboard.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
@@ -1014,7 +1014,7 @@ func init() {
 			//cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader nodeos manager api")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			return dashboard.New(&dashboard.Config{
 				GRPCListenAddr:        viper.GetString("dashboard-grpc-listen-addr"),
 				HTTPListenAddr:        viper.GetString("dashboard-http-listen-addr"),
@@ -1027,12 +1027,12 @@ func init() {
 		},
 	})
 
-	launcher.RegisterApp(&launcher.AppDef{
+	launcher2.RegisterApp(&launcher2.AppDef{
 		ID:          "apiproxy",
 		Title:       "API Proxy",
 		Description: "Reverse proxies all API services under one port",
 		MetricsID:   "apiproxy",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
+		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "HTTP Listener address")
 			cmd.Flags().String("apiproxy-https-listen-addr", "", "If non-empty, will listen for HTTPS connections on this address")
@@ -1044,7 +1044,7 @@ func init() {
 			cmd.Flags().String("apiproxy-root-http-addr", EosqHTTPServingAddr, "What to serve at the root of the proxy (defaults to eosq)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
 			autocertDomains := strings.Split(viper.GetString("apiproxy-autocert-domains"), ",")
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {

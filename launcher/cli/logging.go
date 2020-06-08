@@ -17,6 +17,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -25,9 +26,8 @@ import (
 	"sync"
 
 	"github.com/blendle/zapdriver"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
+	zapbox "github.com/dfuse-io/dfuse-box/zap-box"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
 	"github.com/dfuse-io/logging"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -39,16 +39,16 @@ var userLog = zapbox.NewCLILogger(zap.NewNop())
 type zl = zapcore.Level
 
 // Core & Libraries
-var commongLoggingDef = &launcher.LoggingDef{
+var commongLoggingDef = &launcher2.LoggingDef{
 	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 }
 
-var dfuseLoggingDef = &launcher.LoggingDef{
+var dfuseLoggingDef = &launcher2.LoggingDef{
 	Levels: []zl{zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/dfuse-eosio(/metrics|/cmd/dfuseeos)?$",
 }
 
-var bstreamLoggingDef = &launcher.LoggingDef{
+var bstreamLoggingDef = &launcher2.LoggingDef{
 	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/bstream.*",
 }
@@ -75,7 +75,7 @@ func setupLogger() {
 	commonLogger := createLogger("common", commongLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat)
 	logging.Set(commonLogger)
 
-	for _, appDef := range launcher.AppRegistry {
+	for _, appDef := range launcher2.AppRegistry {
 		logging.Set(createLogger(appDef.ID, appDef.Logger, verbosity, logFileWriter, logStdoutWriter, logformat), appDef.Logger.Regex)
 	}
 	logging.Set(createLogger("dfuse", dfuseLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat), dfuseLoggingDef.Regex)
@@ -100,7 +100,7 @@ func setupLogger() {
 
 	// The userLog are wrapped, they need to be re-configured with newly set base instance to work correctly
 	userLog.ReconfigureReference()
-	launcher.UserLog().ReconfigureReference()
+	launcher2.UserLog().ReconfigureReference()
 
 	// Hijack standard Golang `log` and redirect it to our common logger
 	zap.RedirectStdLogAt(commonLogger, zap.DebugLevel)
@@ -161,7 +161,7 @@ func handleHTTPLogChange(w http.ResponseWriter, r *http.Request) {
 var appToAtomicLevel = map[string]zap.AtomicLevel{}
 var appToAtomicLevelLock sync.Mutex
 
-func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, fileSyncer zapcore.WriteSyncer, consoleSyncer zapcore.WriteSyncer, format string) *zap.Logger {
+func createLogger(appID string, loggingDef *launcher2.LoggingDef, verbosity int, fileSyncer zapcore.WriteSyncer, consoleSyncer zapcore.WriteSyncer, format string) *zap.Logger {
 
 	// It's ok for concurrent use here, we assume all logger are created in a single goroutine
 	appToAtomicLevel[appID] = zap.NewAtomicLevelAt(appLoggerLevel(loggingDef.Levels, verbosity))
@@ -192,7 +192,7 @@ func createLogger(appID string, loggingDef *launcher.LoggingDef, verbosity int, 
 func changeLoggersLevel(inputs string, level zapcore.Level) {
 	for _, input := range strings.Split(inputs, ",") {
 		normalizeInput := strings.Trim(input, " ")
-		if normalizeInput == "bstream" || normalizeInput == "dfuse" || launcher.AppRegistry[normalizeInput] != nil {
+		if normalizeInput == "bstream" || normalizeInput == "dfuse" || launcher2.AppRegistry[normalizeInput] != nil {
 			changeAppLogLevel(normalizeInput, level)
 		} else {
 			// Assumes it's a regex, we use the unnormalized input, just in case it had some spaces

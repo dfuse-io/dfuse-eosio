@@ -16,10 +16,10 @@ package cli
 
 import (
 	"fmt"
+	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"strings"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/spf13/cobra"
 )
 
@@ -49,10 +49,10 @@ func Main() {
 	RootCmd.PersistentFlags().String("log-level-switcher-listen-addr", "localhost:1065", "If non-empty, the process will listen on this address for json-formatted requests to change different logger levels (see DEBUG.md for more info)")
 	RootCmd.PersistentFlags().String("pprof-listen-addr", "localhost:6060", "If non-empty, the process will listen on this address for pprof analysis (see https://golang.org/pkg/net/http/pprof/)")
 
-	derr.Check("registering application flags", launcher.RegisterFlags(StartCmd))
+	derr.Check("registering application flags", launcher2.RegisterFlags(StartCmd))
 
 	var availableCmds []string
-	for app := range launcher.AppRegistry {
+	for app := range launcher2.AppRegistry {
 		availableCmds = append(availableCmds, app)
 	}
 	StartCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))

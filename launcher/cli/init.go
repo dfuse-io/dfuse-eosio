@@ -17,7 +17,7 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
+	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -77,8 +77,8 @@ func Init(runProducer bool, configFile string) error {
 		toRun = append(toRun, "-node-manager")
 	}
 
-	apps := launcher.ParseAppsFromArgs(toRun)
-	conf := &launcher.DfuseConfig{}
+	apps := launcher2.ParseAppsFromArgs(toRun)
+	conf := &launcher2.DfuseConfig{}
 	conf.Start.Args = apps
 	conf.Start.Flags = map[string]string{}
 
