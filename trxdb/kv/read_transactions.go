@@ -3,6 +3,7 @@ package kv
 import (
 	"bytes"
 	"context"
+	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
@@ -20,7 +21,7 @@ const (
 )
 
 func (db *DB) GetTransactionTraces(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	out, err = db.getTransactionEvents(ctx, idPrefix, TrxExecutionEvent)
+	out, err = db.getTransactionEvents(ctx, []string{idPrefix}, TrxExecutionEvent)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +30,7 @@ func (db *DB) GetTransactionTraces(ctx context.Context, idPrefix string) (out []
 }
 
 func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []*pbcodec.TransactionEvent, err error) {
-	out, err = db.getTransactionEvents(ctx, idPrefix)
+	out, err = db.getTransactionEvents(ctx, []string{idPrefix})
 	if err != nil {
 		return nil, err
 	}
@@ -37,38 +38,43 @@ func (db *DB) GetTransactionEvents(ctx context.Context, idPrefix string) (out []
 	return
 }
 
-func (db *DB) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
-	// OPTIMIZE: Parallelize access, or do requests to get things in parallel
-	for _, idPrefix := range idPrefixes {
-		trxResult, err := db.getTransactionEvents(ctx, idPrefix)
-		if err != nil {
-			return nil, err
+func splitEventsPerTrx(inPrefixes []string, flatEvents []*pbcodec.TransactionEvent) (out [][]*pbcodec.TransactionEvent) {
+	for _, pref := range inPrefixes {
+		var trxEvs []*pbcodec.TransactionEvent
+		for _, ev := range flatEvents {
+			if strings.HasPrefix(ev.Id, pref) {
+				trxEvs = append(trxEvs, ev)
+			}
 		}
-		out = append(out, trxResult)
+		out = append(out, trxEvs)
 	}
-	err = db.fillIrreversibilityDataArray(ctx, out)
+	return
+}
+
+func (db *DB) GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
+	flat, err := db.getTransactionEvents(ctx, idPrefixes)
+	if err != nil {
+		return nil, err
+	}
+	err = db.fillIrreversibilityData(ctx, flat)
+	if err != nil {
+		return nil, err
+	}
+	out = splitEventsPerTrx(idPrefixes, flat)
 	return
 }
 
 func (db *DB) GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) (out [][]*pbcodec.TransactionEvent, err error) {
-	// OPTIMIZE: Parallelize access, or do requests to get things in parallel
-	for _, idPrefix := range idPrefixes {
-		trxResult, err := db.getTransactionEvents(ctx, idPrefix, TrxExecutionEvent)
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, trxResult)
+	flat, err := db.getTransactionEvents(ctx, idPrefixes, TrxExecutionEvent)
+	if err != nil {
+		return nil, err
 	}
-	err = db.fillIrreversibilityDataArray(ctx, out)
+	err = db.fillIrreversibilityData(ctx, flat)
+	if err != nil {
+		return nil, err
+	}
+	out = splitEventsPerTrx(idPrefixes, flat)
 	return
-}
-
-func (db *DB) fillIrreversibilityDataArray(ctx context.Context, eventsArray [][]*pbcodec.TransactionEvent) error {
-	var flatEvs []*pbcodec.TransactionEvent
-	for _, evs := range eventsArray {
-		flatEvs = append(flatEvs, evs...)
-	}
-	return db.fillIrreversibilityData(ctx, flatEvs)
 }
 
 func (db *DB) fillIrreversibilityData(ctx context.Context, events []*pbcodec.TransactionEvent) error {
@@ -96,23 +102,25 @@ func (db *DB) fillIrreversibilityData(ctx context.Context, events []*pbcodec.Tra
 	return nil
 }
 
-func (db *DB) getTransactionEvents(ctx context.Context, idPrefix string, eventTypes ...TrxEventType) (out []*pbcodec.TransactionEvent, err error) {
+func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eventTypes ...TrxEventType) (out []*pbcodec.TransactionEvent, err error) {
 	var keys [][]byte
 	if len(eventTypes) == 0 { //default behavior is get all events
 		eventTypes = []TrxEventType{TrxAdditionEvent, TrxExecutionEvent, ImplicitTrxEvent, DtrxEvent}
 	}
-	for _, t := range eventTypes {
-		switch t {
-		case TrxAdditionEvent:
-			keys = append(keys, Keys.PackTrxsPrefix(idPrefix))
-		case TrxExecutionEvent:
-			keys = append(keys, Keys.PackTrxTracesPrefix(idPrefix))
-		case ImplicitTrxEvent:
-			keys = append(keys, Keys.PackImplicitTrxsPrefix(idPrefix))
-		case DtrxEvent:
-			keys = append(keys, Keys.PackDtrxsPrefix(idPrefix))
-		default:
-			panic("invalid trx event")
+	for _, idPrefix := range idPrefixes {
+		for _, t := range eventTypes {
+			switch t {
+			case TrxAdditionEvent:
+				keys = append(keys, Keys.PackTrxsPrefix(idPrefix))
+			case TrxExecutionEvent:
+				keys = append(keys, Keys.PackTrxTracesPrefix(idPrefix))
+			case ImplicitTrxEvent:
+				keys = append(keys, Keys.PackImplicitTrxsPrefix(idPrefix))
+			case DtrxEvent:
+				keys = append(keys, Keys.PackDtrxsPrefix(idPrefix))
+			default:
+				panic("invalid trx event")
+			}
 		}
 	}
 
