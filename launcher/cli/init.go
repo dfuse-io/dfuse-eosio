@@ -17,11 +17,11 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,6 +48,30 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
+	if err := Init(runProducer, configFile); err != nil {
+		return err
+	}
+
+	if runProducer {
+		userLog.Printf("")
+		userLog.Printf("Here the key pair controlling 'eosio' to interact with your local chain:")
+		userLog.Printf("")
+		userLog.Printf("  Public Key:  EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
+		userLog.Printf("  Private Key: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3")
+	} else {
+		userLog.Printf("")
+		userLog.Printf("IMPORANT: Move the remote network's 'genesis.json' file in './mindreader' directory")
+	}
+
+	userLog.Printf("")
+	userLog.Printf("Initialization completed, to kickstart your environment run:")
+	userLog.Printf("")
+	userLog.Printf("  dfuseeos start")
+
+	return nil
+}
+
+func Init(runProducer bool, configFile string) error {
 	toRun := []string{"all"}
 	if !runProducer {
 		toRun = append(toRun, "-node-manager")
@@ -58,6 +82,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	conf.Start.Args = apps
 	conf.Start.Flags = map[string]string{}
 
+	var err error
 	if runProducer {
 		userLog.Printf("")
 
@@ -117,22 +142,6 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 	if err = ioutil.WriteFile(configFile, configBytes, 0644); err != nil {
 		return fmt.Errorf("writing config file %s: %w", configFile, err)
 	}
-
-	if runProducer {
-		userLog.Printf("")
-		userLog.Printf("Here the key pair controlling 'eosio' to interact with your local chain:")
-		userLog.Printf("")
-		userLog.Printf("  Public Key:  EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
-		userLog.Printf("  Private Key: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3")
-	} else {
-		userLog.Printf("")
-		userLog.Printf("IMPORANT: Move the remote network's 'genesis.json' file in './mindreader' directory")
-	}
-
-	userLog.Printf("")
-	userLog.Printf("Initialization completed, to kickstart your environment run:")
-	userLog.Printf("")
-	userLog.Printf("  dfuseeos start")
 
 	return nil
 }

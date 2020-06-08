@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func autoBind(root *cobra.Command, prefix string) {
+func AutoBind(root *cobra.Command, prefix string) {
 	viper.SetEnvPrefix(strings.ToUpper(prefix))
 	viper.AutomaticEnv()
 	replacer := strings.NewReplacer("-", "_")
