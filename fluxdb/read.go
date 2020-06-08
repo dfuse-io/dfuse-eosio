@@ -231,10 +231,7 @@ func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (re
 	}, nil
 }
 
-func (fdb *FluxDB) HasSeenPublicKeyOnce(
-	ctx context.Context,
-	publicKey string,
-) (exists bool, err error) {
+func (fdb *FluxDB) HasSeenPublicKeyOnce(ctx context.Context, publicKey string) (exists bool, err error) {
 	return fdb.hasRowKeyPrefix(ctx, fmt.Sprintf("ka2:%s", publicKey))
 }
 

@@ -27,8 +27,8 @@ import (
 
 	strackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
 	"github.com/francoispqt/gojay"
 	"github.com/gorilla/mux"
@@ -72,6 +72,7 @@ func New(addr string, db *fluxdb.FluxDB) *EOSServer {
 	coreRouter.Methods("GET", "POST").Path("/v0/state/key_accounts").HandlerFunc(srv.listKeyAccountsHandler)
 	coreRouter.Methods("GET").Path("/v0/state/permission_links").HandlerFunc(srv.listLinkedPermissionsHandler)
 	coreRouter.Methods("GET").Path("/v0/state/table").HandlerFunc(srv.listTableRowsHandler)
+
 	coreRouter.Methods("GET").Path("/v0/state/table/row").HandlerFunc(srv.getTableRowHandler)
 	coreRouter.Methods("GET").Path("/v0/state/table_scopes").HandlerFunc(srv.listTableScopesHandler)
 	coreRouter.Methods("GET", "POST").Path("/v0/state/tables/accounts").HandlerFunc(srv.listTablesRowsForAccountsHandler)

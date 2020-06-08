@@ -58,7 +58,7 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	deleteCORSHeaders(r)
 
 	pushTransactionGuaranteeOption := r.Header.Get("X-Eos-Push-Guarantee")
-	if (r.URL.EscapedPath() != "/v1/chain/push_transaction" && r.URL.EscapedPath() != "/v1/chain/send_transaction") || pushTransactionGuaranteeOption == "" {
+	if isNotPushTransaction(r.URL.EscapedPath(), pushTransactionGuaranteeOption) {
 		t.dumbAPIProxy.ServeHTTP(w, r)
 		return
 	}
@@ -407,4 +407,8 @@ func traceExecutedInBlock(trxID string, blk *pbcodec.Block) *pbcodec.Transaction
 	}
 
 	return nil
+}
+
+func isNotPushTransaction(url, pushGuaranteeHeaderOption string) bool {
+	return (url != "/v1/chain/push_transaction" && url != "/v1/chain/send_transaction") || pushGuaranteeHeaderOption == ""
 }

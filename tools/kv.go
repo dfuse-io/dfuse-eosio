@@ -30,6 +30,7 @@ func init() {
 	kvCmd.AddCommand(kvScanCmd)
 	kvCmd.AddCommand(kvGetCmd)
 
+	kvCmd.PersistentFlags().Bool("flux", false, "Decode flux entry")
 	kvCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
 	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
 	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
@@ -131,6 +132,7 @@ func printKVEntity(key, val []byte, asHex bool, indented bool) (err error) {
 		"key": hex.EncodeToString(key),
 	}
 
+	if  viper.GetBool("flux")
 	switch key[0] {
 	case trxdb.TblPrefixTrxs:
 		protoMessage := &pbtrxdb.TrxRow{}

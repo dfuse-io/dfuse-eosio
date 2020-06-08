@@ -203,3 +203,38 @@ func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstr
 
 	return block
 }
+
+func Test_isNotPushTransaction(t *testing.T) {
+	cases := []struct {
+		name                string
+		url                 string
+		pushGuaranteeHeader string
+		expextValue         bool
+	}{
+		{
+			name:                "Golden path",
+			url:                 "http://loca.dfuse.io/v1/chain/get_info",
+			pushGuaranteeHeader: "",
+			expextValue:         true,
+		},
+		{
+			name:                "Push Transaction",
+			url:                 "http://loca.dfuse.io/v1/chain/push_transaction",
+			pushGuaranteeHeader: "",
+			expextValue:         false,
+		},
+		{
+			name:                "Send Transaction",
+			url:                 "http://loca.dfuse.io/v1/chain/send_trpansaction",
+			pushGuaranteeHeader: "",
+			expextValue:         false,
+		},
+		{
+			name:                "http://loca.dfuse.io/v1/chain/push_transaction",
+			url:                 "",
+			pushGuaranteeHeader: "",
+			expextValue:         true,
+		},
+	}
+
+}

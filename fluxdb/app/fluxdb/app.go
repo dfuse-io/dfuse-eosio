@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/fluxdb/grpc"
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
@@ -42,7 +44,8 @@ type Config struct {
 	EnablePipeline           bool   // Connects to blocks pipeline, can be used to have a development server only fluxdb
 	EnableReprocSharderMode  bool   // Enables flux reproc shard mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set
 	EnableReprocInjectorMode bool   // Enables flux reproc injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set
-	HTTPListenAddr           string // Address to server FluxDB queries on
+	HTTPListenAddr           string // Address to server FluxDB HTTP queries on
+	GRPCListenAddr           string // Address to server FluxDB GRPC queries on
 	BlockStoreURL            string // dbin blocks store
 
 	// Available for reproc mode only (either reproc shard or reproc injector)
@@ -128,8 +131,10 @@ func (a *App) startStandard(blocksStore dstore.Store, kvStore store.KVStore) err
 
 	if a.config.EnableServerMode {
 		zlog.Info("setting up server")
-		srv := server.New(a.config.HTTPListenAddr, db)
-		go srv.Serve()
+		httpServer := server.New(a.config.HTTPListenAddr, db)
+		go httpServer.Serve()
+		grpcServer := grpc.New(a.config.GRPCListenAddr, db)
+		go grpcServer.Serve()
 	} else {
 		zlog.Info("setting injecter mode health check")
 		go startHealthCheckServer(db, a.config.HTTPListenAddr)
