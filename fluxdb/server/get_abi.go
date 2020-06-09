@@ -40,28 +40,25 @@ func (srv *EOSServer) getABIHandler(w http.ResponseWriter, r *http.Request) {
 	request := extractGetABIRequest(r)
 	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
-	abiRow, err := srv.fetchABI(ctx, string(request.Account), request.BlockNum)
+	abiEntry, err := srv.fetchABI(ctx, string(request.Account), request.BlockNum)
 	if err != nil {
-		fmt.Printf("Got an error: %s\n", err)
 		writeError(ctx, w, fmt.Errorf("fetch ABI: %w", err))
 		return
 	}
 
-	fmt.Printf("Got a row of type %T\n", abiRow)
-
 	response := &getABIResponse{
-		BlockNum: abiRow.BlockNum(),
-		Account:  eos.AccountName(abiRow.TabletKey),
+		BlockNum: abiEntry.BlockNum(),
+		Account:  eos.AccountName(abiEntry.TabletKey),
 	}
 
 	if request.ToJSON {
-		response.ABI, err = abiRow.ABI()
+		response.ABI, err = abiEntry.ABI()
 		if err != nil {
 			writeError(ctx, w, fmt.Errorf("decode ABI: %w", err))
 			return
 		}
 	} else {
-		response.ABI = eos.HexBytes(abiRow.PackedABI())
+		response.ABI = eos.HexBytes(abiEntry.PackedABI())
 	}
 
 	writeResponse(ctx, w, response)

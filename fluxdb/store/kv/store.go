@@ -28,17 +28,15 @@ import (
 )
 
 var TblPrefixName = map[byte]string{
-	tblPrefixRows:  "tablet",
-	tblPrefixIndex: "index",
-	tblPrefixABIs:  "abi",
-	tblPrefixLast:  "block",
+	TblPrefixRows:  "tablet",
+	TblPrefixIndex: "index",
+	TblPrefixLast:  "block",
 }
 
 const (
-	tblPrefixRows  = 0x00
-	tblPrefixIndex = 0x01
-	tblPrefixABIs  = 0x02
-	tblPrefixLast  = 0x03
+	TblPrefixRows  = 0x00
+	TblPrefixIndex = 0x01
+	TblPrefixLast  = 0x03
 )
 
 var TableMapper = map[byte]string{}
@@ -71,7 +69,7 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 }
 
 func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
-	err = s.scanRange(ctx, tblPrefixRows, keyStart, keyEnd, 1, func(rowKey string, rowValye []byte) error {
+	err = s.scanRange(ctx, TblPrefixRows, keyStart, keyEnd, 1, func(rowKey string, rowValye []byte) error {
 		key = rowKey
 		value = rowValye
 
@@ -87,7 +85,7 @@ func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string)
 }
 
 func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error) {
-	err = s.scanInfiniteRange(ctx, tblPrefixIndex, keyStart, 1, func(key string, value []byte) error {
+	err = s.scanInfiniteRange(ctx, TblPrefixIndex, keyStart, 1, func(key string, value []byte) error {
 		if !strings.HasPrefix(key, prefixKey) {
 			return store.BreakScan
 		}
@@ -111,20 +109,20 @@ func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart 
 }
 
 func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error) {
-	err = s.scanPrefix(ctx, tblPrefixRows, keyPrefix, 1, func(_ string, _ []byte) error {
+	err = s.scanPrefix(ctx, TblPrefixRows, keyPrefix, 1, func(_ string, _ []byte) error {
 		exists = true
 		return store.BreakScan
 	})
 
 	if err != nil && err != store.BreakScan {
-		return false, fmt.Errorf("unable to determine if table %q has key prefix %q: %w", TblPrefixName[tblPrefixRows], keyPrefix, err)
+		return false, fmt.Errorf("unable to determine if table %q has key prefix %q: %w", TblPrefixName[TblPrefixRows], keyPrefix, err)
 	}
 
 	return exists, nil
 }
 
 func (s *KVStore) FetchTabletRow(ctx context.Context, key string, onTabletRow store.OnTabletRow) error {
-	value, err := s.fetchKey(ctx, tblPrefixRows, key)
+	value, err := s.fetchKey(ctx, TblPrefixRows, key)
 	if err != nil {
 		return err
 	}
@@ -138,32 +136,11 @@ func (s *KVStore) FetchTabletRow(ctx context.Context, key string, onTabletRow st
 }
 
 func (s *KVStore) FetchTabletRows(ctx context.Context, keys []string, onTabletRow store.OnTabletRow) error {
-	values, err := s.fetchKeys(ctx, tblPrefixRows, keys)
-	if err != nil {
-		return err
-	}
-
-	for i, value := range values {
-		// We must be prudent here, a `nil` value indicate a key not found, a `[]byte{}` indicates a found key without a value!
-		if value == nil {
-			continue
-		}
-
-		err = onTabletRow(keys[i], value)
-		if err == store.BreakScan {
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("on tablet row for key %q failed: %w", keys[i], err)
-		}
-	}
-
-	return nil
+	return s.fetchKeys(ctx, TblPrefixRows, keys, onTabletRow)
 }
 
 func (s *KVStore) ScanTabletRows(ctx context.Context, keyStart, keyEnd string, onTabletRow store.OnTabletRow) error {
-	err := s.scanRange(ctx, tblPrefixRows, keyStart, keyEnd, kv.Unlimited, func(key string, value []byte) error {
+	err := s.scanRange(ctx, TblPrefixRows, keyStart, keyEnd, kv.Unlimited, func(key string, value []byte) error {
 		err := onTabletRow(key, value)
 		if err == store.BreakScan {
 			return store.BreakScan
@@ -185,7 +162,7 @@ func (s *KVStore) ScanTabletRows(ctx context.Context, keyStart, keyEnd string, o
 
 func (s *KVStore) FetchLastWrittenBlock(ctx context.Context, key string) (out bstream.BlockRef, err error) {
 	zlog.Debug("fetching last written block", zap.String("key", key))
-	value, err := s.fetchKey(ctx, tblPrefixLast, key)
+	value, err := s.fetchKey(ctx, TblPrefixLast, key)
 	if err != nil {
 		return nil, err
 	}
@@ -194,21 +171,21 @@ func (s *KVStore) FetchLastWrittenBlock(ctx context.Context, key string) (out bs
 }
 
 func (s *KVStore) ScanLastShardsWrittenBlock(ctx context.Context, keyPrefix string, onBlockRef store.OnBlockRef) error {
-	err := s.scanPrefix(ctx, tblPrefixLast, keyPrefix, 1, func(key string, value []byte) error {
+	err := s.scanPrefix(ctx, TblPrefixLast, keyPrefix, 1, func(key string, value []byte) error {
 		err := onBlockRef(key, bstream.BlockRefFromID(value))
 		if err == store.BreakScan {
 			return store.BreakScan
 		}
 
 		if err != nil {
-			return fmt.Errorf("on block ref for table %q key %q failed: %w", tblPrefixRows, key, err)
+			return fmt.Errorf("on block ref for table %q key %q failed: %w", TblPrefixRows, key, err)
 		}
 
 		return nil
 	})
 
 	if err != nil && err != store.BreakScan {
-		return fmt.Errorf("unable to determine if table %q has key prefix %q: %w", tblPrefixLast, keyPrefix, err)
+		return fmt.Errorf("unable to determine if table %q has key prefix %q: %w", TblPrefixLast, keyPrefix, err)
 	}
 
 	return nil
@@ -230,29 +207,39 @@ func (s *KVStore) fetchKey(ctx context.Context, table byte, key string) (out []b
 	return out[1:], nil
 }
 
-func (s *KVStore) fetchKeys(ctx context.Context, table byte, keys []string) (out [][]byte, err error) {
+func (s *KVStore) fetchKeys(batchCtx context.Context, table byte, keys []string, onTabletRow store.OnTabletRow) error {
+	batchCtx, cancelBatch := context.WithCancel(batchCtx)
+	defer cancelBatch()
+
 	kvKeys := make([][]byte, len(keys))
 	for i, key := range keys {
 		kvKeys[i] = packKey(table, key)
 	}
 
-	itr := s.db.BatchGet(ctx, kvKeys)
+	itr := s.db.BatchGet(batchCtx, kvKeys)
 
-	var values []kv.KV
 	for itr.Next() {
-		values = append(values, itr.Item())
-	}
+		value := itr.Item().Value
+		// We must be prudent here, a `nil` value indicate a key not found, a `[]byte{}` indicates a found key without a value!
+		if value == nil {
+			continue
+		}
 
+		_, key := unpackKey(itr.Item().Key)
+		err := onTabletRow(key, value[1:])
+		if err == store.BreakScan {
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("on tablet row for key %q failed: %w", key, err)
+		}
+	}
 	if err := itr.Err(); err != nil {
-		return nil, fmt.Errorf("unable to fetch table %q keys (%d): %w", TblPrefixName[table], len(keys), err)
+		return fmt.Errorf("unable to fetch table %q keys (%d): %w", TblPrefixName[table], len(keys), err)
 	}
 
-	out = make([][]byte, len(values))
-	for i, value := range values {
-		out[i] = value.Value[1:]
-	}
-
-	return out, nil
+	return nil
 }
 
 func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, limit int, onRow func(key string, value []byte) error) error {
@@ -344,10 +331,9 @@ func newBatch(store *KVStore, logger *zap.Logger) *batch {
 func (b *batch) Reset() {
 	b.count = 0
 	b.tableMutations = map[byte]map[string][]byte{
-		tblPrefixABIs:  make(map[string][]byte),
-		tblPrefixRows:  make(map[string][]byte),
-		tblPrefixIndex: make(map[string][]byte),
-		tblPrefixLast:  make(map[string][]byte),
+		TblPrefixRows:  make(map[string][]byte),
+		TblPrefixIndex: make(map[string][]byte),
+		TblPrefixLast:  make(map[string][]byte),
 	}
 }
 
@@ -377,12 +363,11 @@ func (b *batch) Flush(ctx context.Context) error {
 	b.zlog.Debug("flushing batch set")
 
 	tableNames := []byte{
-		tblPrefixABIs,
-		tblPrefixRows,
-		tblPrefixIndex,
+		TblPrefixRows,
+		TblPrefixIndex,
 
 		// The table name `last` must always be the last table in this list!
-		tblPrefixLast,
+		TblPrefixLast,
 	}
 
 	// TODO: We could eventually parallelize this, but remember, last would need to be processed last, after all others!
@@ -421,20 +406,16 @@ func (b *batch) setTable(table byte, key string, value []byte) {
 	b.count++
 }
 
-func (b *batch) SetABI(key string, value []byte) {
-	b.setTable(tblPrefixABIs, key, value)
-}
-
 func (b *batch) SetRow(key string, value []byte) {
-	b.setTable(tblPrefixRows, key, value)
+	b.setTable(TblPrefixRows, key, value)
 }
 
 func (b *batch) SetLast(key string, value []byte) {
-	b.setTable(tblPrefixLast, key, value)
+	b.setTable(TblPrefixLast, key, value)
 }
 
 func (b *batch) SetIndex(key string, tableSnapshot []byte) {
-	b.setTable(tblPrefixIndex, key, tableSnapshot)
+	b.setTable(TblPrefixIndex, key, tableSnapshot)
 }
 
 func packKey(table byte, key string) []byte {

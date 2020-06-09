@@ -34,7 +34,6 @@ type KVStore struct {
 
 	tblRows  *bigtable.Table
 	tblIndex *bigtable.Table
-	tblABIs  *bigtable.Table
 	tblLast  *bigtable.Table
 }
 
@@ -60,8 +59,6 @@ func NewKVStore(ctx context.Context, dsnString string, opts ...option.ClientOpti
 	fdb.tblRows = client.Open(tblRows)
 	tblIndex := fmt.Sprintf("flux-%s-idxs", dsn.TablePrefix)
 	fdb.tblIndex = client.Open(tblIndex)
-	tblABIs := fmt.Sprintf("flux-%s-abis", dsn.TablePrefix)
-	fdb.tblABIs = client.Open(tblABIs)
 	tblLast := fmt.Sprintf("flux-%s-last", dsn.TablePrefix)
 	fdb.tblLast = client.Open(tblLast)
 
@@ -70,11 +67,10 @@ func NewKVStore(ctx context.Context, dsnString string, opts ...option.ClientOpti
 		if err != nil {
 			zlog.Warn("couldn't do admin tasks", zap.Error(err))
 		} else {
-			zlog.Info("creating tables", zap.Strings("tables", []string{tblRows, tblIndex, tblLast, tblABIs}))
+			zlog.Info("creating tables", zap.Strings("tables", []string{tblRows, tblIndex, tblLast}))
 			createTable(ctx, adminClient, tblRows, rowFamilyName)
 			createTable(ctx, adminClient, tblIndex, indexFamilyName)
 			createTable(ctx, adminClient, tblLast, lastBlockFamilyName)
-			createTable(ctx, adminClient, tblABIs, abiFamilyName)
 		}
 	}
 
@@ -352,8 +348,6 @@ func (b *batch) Flush(ctx context.Context) error {
 
 		var tbl *bigtable.Table
 		switch tblName {
-		case "abi":
-			tbl = b.store.tblABIs
 		case "row":
 			tbl = b.store.tblRows
 		case "index":
@@ -402,10 +396,6 @@ func (b *batch) setTable(table string, key, family, column string, value []byte)
 	mut.Set(family, column, bigtable.Now(), value)
 	b.tableMutations[table][key] = mut
 	b.size += len(value) + 100 /* 100 = overhead */
-}
-
-func (b *batch) SetABI(key string, value []byte) {
-	b.setTable("abi", key, abiFamilyName, abiColumnName, value)
 }
 
 func (b *batch) SetRow(key string, value []byte) {

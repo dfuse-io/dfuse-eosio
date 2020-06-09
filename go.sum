@@ -36,6 +36,7 @@ dmitri.shuralyov.com/html/belt v0.0.0-20180602232347-f7d459c86be0/go.mod h1:JLBr
 dmitri.shuralyov.com/service/change v0.0.0-20181023043359-a85b471d5412/go.mod h1:a1inKt/atXimZ4Mv927x+r7UpyzRUf4emIoiiSC2TN4=
 dmitri.shuralyov.com/state v0.0.0-20180228185332-28bcc343414c/go.mod h1:0PRwlb0D6DFvNNtx+9ybjezNCa8XF0xaYcETyp6rHWU=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
+github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 h1:HD8gA2tkByhMAwYaFAX9w2l7vxvBQ5NMoxDrkhqhtn4=
 github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9/go.mod h1:bOvUY6CB00SOBii9/FifXqc0awNKxLFCL/+pkDPuyl8=
 github.com/Azure/azure-pipeline-go v0.2.1 h1:OLBdZJ3yvOn2MezlWvbrBMTEUQC72zAftRZOMdj5HYo=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
@@ -280,6 +281,8 @@ github.com/dfuse-io/kvdb v0.0.0-20200603185019-a4638b4375f0 h1:vlMlVQmPQ0nmdO2Xh
 github.com/dfuse-io/kvdb v0.0.0-20200603185019-a4638b4375f0/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.0-20200604062641-c40bd97e9fdf h1:GzwV7iPUHvxuO7aK6Frh6TL7LH7969evLE7baD/+YTU=
 github.com/dfuse-io/kvdb v0.0.0-20200604062641-c40bd97e9fdf/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
+github.com/dfuse-io/kvdb v0.0.0-20200605220113-7e231334a020 h1:s2iJRs0tjA2NU2Pbq4TIrdZqWm/ev0UTr9hvUUeHVMY=
+github.com/dfuse-io/kvdb v0.0.0-20200605220113-7e231334a020/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39 h1:vQL3ZKf3mUWvp4hdqCKYJ3J80lshaS/DYE2pB24hWOQ=

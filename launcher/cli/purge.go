@@ -36,6 +36,16 @@ func dfusePurgeE(cmd *cobra.Command, args []string) error {
 
 	dataDir := viper.GetString("global-data-dir")
 
+	if err := Purge(dataDir); err != nil {
+		return err
+	}
+
+	userLog.Printf("Purged data. Start a fresh instance with 'dfuseeos start'")
+
+	return nil
+}
+
+func Purge(dataDir string) error {
 	purge, err := confirmPurgeAll(dataDir)
 	if err != nil {
 		return fmt.Errorf("unable to purge environment %w", err)
@@ -46,8 +56,6 @@ func dfusePurgeE(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("unable to correcty delete directory %q: %w", dataDir, err)
 		}
 	}
-
-	userLog.Printf("Purged data. Start a fresh instance with 'dfuseeos start'")
 
 	return nil
 }

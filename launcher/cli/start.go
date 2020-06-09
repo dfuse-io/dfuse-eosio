@@ -16,7 +16,6 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -24,8 +23,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
-	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
+	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
@@ -35,10 +34,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var startCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE, Args: cobra.ArbitraryArgs}
+var StartCmd = &cobra.Command{Use: "start", Short: "Starts `dfuse for EOSIO` services all at once", RunE: dfuseStartE, Args: cobra.ArbitraryArgs}
 
 func init() {
-	RootCmd.AddCommand(startCmd)
+	RootCmd.AddCommand(StartCmd)
 }
 
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
@@ -50,19 +49,29 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
+	err = Start(configFile, dataDir, args)
+	if err != nil {
+		return fmt.Errorf("unable to launch: %w", err)
+	}
+
+	// If an error occurred, saying Goodbye is not greate
+	userLog.Printf("Goodbye")
+	return
+}
+
+func Start(configFile string, dataDir string, args []string) (err error) {
+
 	config := &launcher.DfuseConfig{}
 	if configFile != "" {
 		config, err = launcher.ReadConfig(configFile)
 		if err != nil {
-			userLog.Error(fmt.Sprintf("Error reading config file. Did you 'dfuseeos init' ?  Error: %s", err))
-			return nil
+			return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
 		}
 	}
 
 	dataDirAbs, err := filepath.Abs(dataDir)
 	if err != nil {
-		userLog.Error("Unable to setup directory structure")
-		return nil
+		return fmt.Errorf("unable to setup directory structure: %w", err)
 	}
 
 	// TODO: directories are created in the app init funcs... but this does not belong to a specific application
@@ -82,8 +91,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	err = bstream.ValidateRegistry()
 	if err != nil {
-		userLog.Error("Protocol specific hooks not configured correctly", zap.Error(err))
-		os.Exit(1)
+		return fmt.Errorf("protocol specific hooks not configured correctly: %w", err)
 	}
 
 	launch := launcher.NewLauncher(config, modules)
@@ -105,8 +113,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 
 	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
 	if err = launch.Launch(apps); err != nil {
-		userLog.Error("unable to launch", zap.Error(err))
-		os.Exit(1)
+		return err
 	}
 
 	printWelcomeMessage(apps)
@@ -115,28 +122,18 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	select {
 	case <-signalHandler:
 		userLog.Printf("Received termination signal, quitting")
-
 		go launch.Close()
 	case appID := <-launch.Terminating():
 		if launch.Err() == nil {
 			userLog.Printf("Application %s triggered a clean shutdown, quitting", appID)
 		} else {
 			userLog.Printf("Application %s shutdown unexpectedly, quitting", appID)
-			err = launch.Err()
+			return launch.Err()
 		}
 	}
 
 	launch.WaitForTermination()
 
-	// At this point, everything is terminated, if we got an error
-	// we exit right away with status code 1. If we let the error go
-	// up on Cobra, it prints the error message.
-	if err != nil {
-		os.Exit(1)
-	}
-
-	// If an error occurred, saying Goodbye is not greate
-	userLog.Printf("Goodbye")
 	return
 }
 

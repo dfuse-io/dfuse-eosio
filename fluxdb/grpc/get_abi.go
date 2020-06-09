@@ -1,0 +1,69 @@
+package grpc
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/dfuse-io/derr"
+	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	"github.com/dfuse-io/logging"
+	"github.com/dfuse-io/validator"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+)
+
+func (s *Server) GetABI(ctx context.Context, request *pbfluxdb.GetABIRequest) (*pbfluxdb.GetABIResponse, error) {
+	zlogger := logging.Logger(ctx, zlog)
+	zlogger.Debug("get abi",
+		zap.String("contract", request.Contract),
+		zap.Uint64("block_num", request.BlockNum),
+	)
+
+	abiEntry, err := s.fetchABI(ctx, string(request.Contract), uint32(request.BlockNum))
+	if err != nil {
+		return nil, derr.Statusf(codes.Internal, "fetching ABI: %s", err)
+	}
+
+	if request.ToJson {
+		abi, err := abiEntry.ABI()
+		if err != nil {
+			return nil, derr.Statusf(codes.Internal, "failed to decode ABI to JSON: %s", err)
+		}
+
+		cnt, err := json.Marshal(abi)
+		if err != nil {
+			return nil, derr.Statusf(codes.Internal, "failed to marshal ABI to JSON: %s", err)
+		}
+
+		return &pbfluxdb.GetABIResponse{
+			BlockNum: uint64(abiEntry.BlockNum()),
+			JsonAbi:  string(cnt),
+		}, nil
+	}
+
+	return &pbfluxdb.GetABIResponse{
+		BlockNum: uint64(abiEntry.BlockNum()),
+		RawAbi:   abiEntry.PackedABI(),
+	}, nil
+
+}
+
+func validateGetABIRequest(request *pbfluxdb.GetABIRequest) error {
+	errors := validator.ValidateStruct(request, validator.Rules{
+		"contract":  []string{"required", "fluxdb.eos.name"},
+		"block_num": []string{"fluxdb.eos.blockNum"},
+		"to_json":   []string{"bool"},
+	})
+	if len(errors) == 0 {
+		return nil
+	}
+
+	msgs := []string{}
+	for _, errs := range errors {
+		msgs = append(msgs, errs...)
+	}
+
+	return fmt.Errorf("%s", strings.Join(msgs, ", "))
+}

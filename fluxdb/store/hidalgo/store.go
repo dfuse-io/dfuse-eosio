@@ -35,7 +35,6 @@ type KVStore struct {
 
 	tblRows  string
 	tblIndex string
-	tblABIs  string
 	tblLast  string
 }
 
@@ -68,12 +67,11 @@ func NewKVStore(ctx context.Context, dsnString string) (*KVStore, error) {
 		db:       db,
 		tblRows:  "tablet",
 		tblIndex: "index",
-		tblABIs:  "abi",
 		tblLast:  "block",
 	}
 
 	if kvdns.createTable {
-		tables := []string{store.tblRows, store.tblIndex, store.tblABIs, store.tblLast}
+		tables := []string{store.tblRows, store.tblIndex, store.tblLast}
 		zlog.Info("creating buckets", zap.Strings("tables", tables))
 		for _, table := range tables {
 			err := createBucket(ctx, db, table)
@@ -95,7 +93,7 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 }
 
 func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
-	err = s.scanRange(ctx, s.tblABIs, keyStart, keyEnd, func(rowKey string, rowValue []byte) error {
+	err = s.scanRange(ctx, s.tblRows, keyStart, keyEnd, func(rowKey string, rowValue []byte) error {
 		key = rowKey
 		value = rowValue
 
@@ -388,7 +386,6 @@ func newBatch(store *KVStore, logger *zap.Logger) *batch {
 func (b *batch) Reset() {
 	b.count = 0
 	b.tableMutations = map[string]map[string][]byte{
-		b.store.tblABIs:  make(map[string][]byte),
 		b.store.tblRows:  make(map[string][]byte),
 		b.store.tblIndex: make(map[string][]byte),
 		b.store.tblLast:  make(map[string][]byte),
@@ -421,7 +418,6 @@ func (b *batch) Flush(ctx context.Context) error {
 	b.zlog.Debug("flushing batch set")
 
 	tableNames := []string{
-		b.store.tblABIs,
 		b.store.tblRows,
 		b.store.tblIndex,
 
@@ -465,10 +461,6 @@ func (b *batch) Flush(ctx context.Context) error {
 func (b *batch) setTable(table, key string, value []byte) {
 	b.tableMutations[table][key] = value
 	b.count++
-}
-
-func (b *batch) SetABI(key string, value []byte) {
-	b.setTable(b.store.tblABIs, key, value)
 }
 
 func (b *batch) SetRow(key string, value []byte) {

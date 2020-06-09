@@ -34,7 +34,6 @@ type Batch interface {
 	// FIXME: Maybe the batch "adder/setter" should not event care about the key and compute
 	//        it straight? Since this is per storage engine, it would be a good place since
 	//        all saved element would pass through those methods...
-	SetABI(key string, value []byte)
 	SetRow(key string, value []byte)
 	SetLast(key string, value []byte)
 	SetIndex(key string, value []byte)

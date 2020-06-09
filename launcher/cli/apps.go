@@ -434,7 +434,8 @@ func init() {
 			cmd.Flags().Bool("fluxdb-enable-pipeline", true, "Enables fluxdb without a blocks pipeline, useful for running a development server (**do not** use this in prod)")
 			cmd.Flags().String("fluxdb-statedb-dsn", FluxDSN, "kvdb connection string to State database")
 			cmd.Flags().Int("fluxdb-max-threads", 2, "Number of threads of parallel processing")
-			cmd.Flags().String("fluxdb-http-listen-addr", FluxDBServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().String("fluxdb-http-listen-addr", FluxDBHTTPServingAddr, "Address to listen for incoming http requests")
+			cmd.Flags().String("fluxdb-grpc-listen-addr", FluxDBGrpcServingAddr, "Address to listen for incoming grpc requests")
 			cmd.Flags().String("fluxdb-reproc-shard-store-url", "file://{dfuse-data-dir}/statedb/reproc-shards", "[BATCH] Storage url where all reproc shard write requests should be written to")
 			cmd.Flags().Uint64("fluxdb-reproc-shard-count", 0, "[BATCH] Number of shards to split in (in 'reproc-sharder' mode), or join (in 'reproc-injector' mode)")
 			cmd.Flags().Uint64("fluxdb-reproc-shard-start-block-num", 0, "[BATCH] Start processing block logs at this height, must be on a 100-blocks boundary")
@@ -462,6 +463,7 @@ func init() {
 				BlockStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				ThreadsNum:                 viper.GetInt("fluxdb-max-threads"),
 				HTTPListenAddr:             viper.GetString("fluxdb-http-listen-addr"),
+				GRPCListenAddr:             viper.GetString("fluxdb-grpc-listen-addr"),
 				ReprocShardStoreURL:        mustReplaceDataDir(dfuseDataDir, viper.GetString("fluxdb-reproc-shard-store-url")),
 				ReprocShardCount:           viper.GetUint64("fluxdb-reproc-shard-count"),
 				ReprocSharderStartBlockNum: viper.GetUint64("fluxdb-reproc-shard-start-block-num"),
@@ -866,7 +868,7 @@ func init() {
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
-			cmd.Flags().String("eosws-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
+			cmd.Flags().String("eosws-fluxdb-addr", FluxDBHTTPServingAddr, "FluxDB server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
 			cmd.Flags().Bool("eosws-fetch-vote-tally", false, "Enable regularly fetching vote tally")
 			cmd.Flags().String("eosws-search-addr-secondary", "", "secondary search grpc endpoint")

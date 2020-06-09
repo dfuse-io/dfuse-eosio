@@ -35,7 +35,7 @@ func init() {
 
 func Main() {
 	cobra.OnInitialize(func() {
-		autoBind(RootCmd, "DFUSEEOS")
+		AutoBind(RootCmd, "DFUSEEOS")
 	})
 
 	RootCmd.PersistentFlags().StringP("data-dir", "d", "./dfuse-data", "Path to data storage for all components of dfuse")
@@ -49,14 +49,14 @@ func Main() {
 	RootCmd.PersistentFlags().String("log-level-switcher-listen-addr", "localhost:1065", "If non-empty, the process will listen on this address for json-formatted requests to change different logger levels (see DEBUG.md for more info)")
 	RootCmd.PersistentFlags().String("pprof-listen-addr", "localhost:6060", "If non-empty, the process will listen on this address for pprof analysis (see https://golang.org/pkg/net/http/pprof/)")
 
-	derr.Check("registering application flags", launcher.RegisterFlags(startCmd))
+	derr.Check("registering application flags", launcher.RegisterFlags(StartCmd))
 
 	var availableCmds []string
 	for app := range launcher.AppRegistry {
 		availableCmds = append(availableCmds, app)
 	}
-	startCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
-	startCmd.Example = startCmdExample
+	StartCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
+	StartCmd.Example = startCmdExample
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		setup()
