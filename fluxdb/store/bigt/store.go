@@ -89,7 +89,7 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 	return newbatch(s, logger)
 }
 
-func (s *KVStore) ScanOneTableRow(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
+func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
 	var err2 error
 	err = s.tblRows.ReadRows(ctx, bigtable.NewRange(keyStart, keyEnd), func(row bigtable.Row) bool {
 		item, ok := btRowItem(row, rowFamilyName, rowColumnName)

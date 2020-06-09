@@ -70,7 +70,7 @@ func (s *ShardInjector) Run() (err error) {
 		cancelInjector()
 	})
 
-	startAfter, err := s.db.getLastBlock(ctx)
+	startAfter, err := s.db.FetchLastWrittenBlock(ctx)
 	if err != nil {
 		return err
 	}

@@ -69,7 +69,7 @@ type KVStore interface {
 
 	FetchTabletRows(ctx context.Context, keys []string, onTabletRow OnTabletRow) error
 
-	ScanOneTableRow(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error)
+	FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error)
 
 	ScanTabletRows(ctx context.Context, keyStart, keyEnd string, onTabletRow OnTabletRow) error
 

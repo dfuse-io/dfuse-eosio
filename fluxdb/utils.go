@@ -26,6 +26,10 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
+func UN(name uint64) string {
+	return eos.NameToString(name)
+}
+
 func N(name string) uint64 {
 	out, _ := StringToName(name)
 	return out
@@ -90,17 +94,6 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 	partCount := len(parts)
 
 	switch {
-	// AuthLink al:<account>:<blockNum>:<contract>:<action>
-	case parts[0] == "al":
-		if partCount != 5 {
-			err = fmt.Errorf("auth link row key should have 5 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[2])
-		primKey = strings.Join(parts[3:5], ":")
-
 	// AccountResourceLimit arl:<account>:<blockNum>:<primaryKey>
 	case parts[0] == "arl":
 		if partCount != 4 {
@@ -133,17 +126,6 @@ func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, pri
 		tableKey = strings.Join(parts[0:2], ":")
 		blockNum, err = KeyChunkToBlockNum(parts[2])
 		primKey = strings.Join(parts[3:5], ":")
-
-	// TableData td:<account>:<table>:<scope>:<blockNum>:<rowPrimaryKey>
-	case parts[0] == "td":
-		if partCount != 6 {
-			err = fmt.Errorf("table data row key should have 6 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:4], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[4])
-		primKey = parts[5]
 
 	// TableScope ts:<account>:<table>:<blockNum>:<scope>
 	case parts[0] == "ts":

@@ -33,13 +33,13 @@ import (
 	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
 	"github.com/dfuse-io/dmetering"
@@ -516,7 +516,16 @@ func (a *App) Run() error {
 	go headInfoHub.Launch(context.Background())
 	go completionPipeline.Launch()
 
-	server := &http.Server{Addr: a.Config.HTTPListenAddr, Handler: handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed)}
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
+	}
+
+	server := &http.Server{
+		Addr:     a.Config.HTTPListenAddr,
+		Handler:  handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed),
+		ErrorLog: errorLogger,
+	}
 
 	go func() {
 		zlog.Info("serving HTTP", zap.String("listen_addr", a.Config.HTTPListenAddr))

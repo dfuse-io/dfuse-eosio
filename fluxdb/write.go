@@ -114,22 +114,28 @@ func (fdb *FluxDB) UpdateGlobalLastBlockID(ctx context.Context, blockID string) 
 }
 
 func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRequest) (err error) {
-	for _, row := range w.FluxRows {
+	for _, entry := range w.SigletEntries {
 		var value []byte
-		if !isDeletionFluxRow(row) {
-			value = row.Data()
+		if !isDeletionEntry(entry) {
+			value = entry.Value()
+		}
+
+		batch.SetRow(string(entry.Key()), value)
+	}
+
+	for _, row := range w.TabletRows {
+		var value []byte
+		if !isDeletionRow(row) {
+			value = row.Value()
 		}
 
 		batch.SetRow(string(row.Key()), value)
 
-		tablet := row.Tablet()
-		if _, ok := tablet.(IndexableTablet); ok {
-			tabletKey := string(tablet.Key())
+		tabletKey := string(row.Tablet().Key())
 
-			fdb.idxCache.IncCount(tabletKey)
-			if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
-				fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
-			}
+		fdb.idxCache.IncCount(tabletKey)
+		if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
+			fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
 		}
 	}
 

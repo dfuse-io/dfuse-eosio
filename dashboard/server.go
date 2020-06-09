@@ -97,9 +97,16 @@ func (s *server) Launch() error {
 	router := mux.NewRouter()
 	router.PathPrefix("/api").HandlerFunc(s.grcpToHTTPApiHandler)
 	router.PathPrefix("/").HandlerFunc(s.dashboardStaticHandler)
+
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
+	}
+
 	s.httpServer = &http.Server{
-		Addr:    s.config.HTTPListenAddr,
-		Handler: router,
+		Addr:     s.config.HTTPListenAddr,
+		Handler:  router,
+		ErrorLog: errorLogger,
 	}
 
 	zlog.Info("starting http server that wraps grpc server")

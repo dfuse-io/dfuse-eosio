@@ -21,13 +21,12 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
 )
 
 func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
-	if rawBlk.Num()%120 == 0 {
-		zlog.Info("pre-processing block (1/120)", zap.Stringer("block", rawBlk))
+	if rawBlk.Num()%600 == 0 {
+		zlog.Info("pre-processing block (printed each 600 blocks)", zap.Stringer("block", rawBlk))
 	}
 
 	blockID, err := hex.DecodeString(rawBlk.ID())
@@ -39,7 +38,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
-	// lastKeyAccountOpForRowPath := map[string]*keyAccountOp{}
+	lastKeyAccountForRowKey := map[string]*KeyAccountRow{}
 	// lastTableOpForTablePath := map[string]*pbcodec.TableOp{}
 
 	req := &WriteRequest{
@@ -68,11 +67,11 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 			}
 		}
 
-		// for _, permOp := range trx.PermOps {
-		// 	for _, keyAccountOp := range permOpToKeyAccountOps(permOp) {
-		// 		lastKeyAccountOpForRowPath[keyAccountOp.rowPath] = keyAccountOp
-		// 	}
-		// }
+		for _, permOp := range trx.PermOps {
+			for _, row := range permOpToKeyAccountRows(req.BlockNum, permOp) {
+				lastKeyAccountForRowKey[row.Key()] = row
+			}
+		}
 
 		// for _, tableOp := range trx.TableOps {
 		// 	lastTableOpForTablePath[tableRowPath(tableOp)] = tableOp
@@ -81,118 +80,82 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		for _, act := range trx.ActionTraces {
 			switch act.FullName() {
 			case "eosio:eosio:setabi":
-				abiRow, err := NewContractABIRow(uint32(rawBlk.Num()), act)
+				abiEntry, err := NewContractABIEntry(req.BlockNum, act)
 				if err != nil {
-					return nil, fmt.Errorf("unable to extract abi row: %w", err)
+					return nil, fmt.Errorf("unable to extract abi entry: %w", err)
 				}
 
-				req.AppendFluxRow(abiRow)
+				req.AppendSigletEntry(abiEntry)
 
-				// case "eosio:eosio:linkauth":
-				// 	linkStruct, err := extractLinkAuthLinkRow(act.Action)
-				// 	if err != nil {
-				// 		return nil, fmt.Errorf("extract link auth: %w", err)
-				// 	}
+			case "eosio:eosio:linkauth":
+				authLinkRow, err := NewInsertAuthLinkRow(req.BlockNum, act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract link auth: %w", err)
+				}
 
-				// 	req.AuthLinks = append(req.AuthLinks, linkStruct)
+				req.AppendTabletRow(authLinkRow)
 
-				// case "eosio:eosio:unlinkauth":
-				// 	linkStruct, err := extractUnlinkAuthLinkRow(act.Action)
-				// 	if err != nil {
-				// 		return nil, fmt.Errorf("extract unlink auth: %w", err)
-				// 	}
+			case "eosio:eosio:unlinkauth":
+				authLinkRow, err := NewDeleteAuthLinkRow(req.BlockNum, act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract unlink auth: %w", err)
+				}
 
-				// 	req.AuthLinks = append(req.AuthLinks, linkStruct)
+				req.AppendTabletRow(authLinkRow)
 			}
 		}
 	}
 
-	// req.KeyAccounts = keyAccountOpsToWritableRows(lastKeyAccountOpForRowPath)
 	// req.TableScopes = tableOpsToWritableRows(lastTableOpForTablePath)
 
-	addDBOpsAsFluxRows(req, lastDbOpForRowPath)
+	addDBOpsToWriteRequest(req, lastDbOpForRowPath)
+	addKeyAccountOpsToWriteRequest(req, lastKeyAccountForRowKey)
 
 	return req, nil
 }
 
-func permOpToKeyAccountOps(permOp *pbcodec.PermOp) []*keyAccountOp {
+func permOpToKeyAccountRows(blockNum uint32, permOp *pbcodec.PermOp) []*KeyAccountRow {
 	switch permOp.Operation {
 	case pbcodec.PermOp_OPERATION_INSERT:
-		return permOpDataToKeyAccountOps(keyAccountOperationInsert, permOp.NewPerm)
+		return permOpDataToKeyAccountOps(blockNum, permOp.NewPerm, false)
 	case pbcodec.PermOp_OPERATION_UPDATE:
-		var ops []*keyAccountOp
+		var ops []*KeyAccountRow
 
-		ops = append(ops, permOpDataToKeyAccountOps(keyAccountOperationRemove, permOp.OldPerm)...)
-		ops = append(ops, permOpDataToKeyAccountOps(keyAccountOperationInsert, permOp.NewPerm)...)
+		ops = append(ops, permOpDataToKeyAccountOps(blockNum, permOp.OldPerm, true)...)
+		ops = append(ops, permOpDataToKeyAccountOps(blockNum, permOp.NewPerm, false)...)
 
 		return ops
 	case pbcodec.PermOp_OPERATION_REMOVE:
-		return permOpDataToKeyAccountOps(keyAccountOperationRemove, permOp.OldPerm)
+		return permOpDataToKeyAccountOps(blockNum, permOp.OldPerm, true)
 	}
 
 	panic(fmt.Errorf("unknown perm op %s", permOp.Operation))
 }
 
-func permOpDataToKeyAccountOps(operation keyAccountOperation, perm *pbcodec.PermissionObject) []*keyAccountOp {
-	account := perm.Owner
-	permission := perm.Name
-
-	accountName := N(account)
-	permissionName := N(permission)
-
-	var ops []*keyAccountOp
-
-	if perm.Authority == nil {
-		return ops
+func permOpDataToKeyAccountOps(blockNum uint32, perm *pbcodec.PermissionObject, isDeletion bool) []*KeyAccountRow {
+	if perm.Authority == nil || len(perm.Authority.Keys) == 0 {
+		return nil
 	}
 
-	for _, key := range perm.Authority.Keys {
-		ops = append(ops, &keyAccountOp{
-			operation:  operation,
-			publicKey:  key.PublicKey,
-			account:    accountName,
-			permission: permissionName,
-			rowPath:    key.PublicKey + ":" + account + ":" + permission,
-		})
+	rows := make([]*KeyAccountRow, len(perm.Authority.Keys))
+	for i, key := range perm.Authority.Keys {
+		rows[i] = NewKeyAccountRow(blockNum, key.PublicKey, perm.Owner, perm.Name, isDeletion)
 	}
 
-	return ops
+	return rows
 }
 
-func addDBOpsAsFluxRows(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
+func addDBOpsToWriteRequest(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
 	blockNum := request.BlockNum
 	for _, op := range latestDbOps {
-		request.AppendFluxRow(NewContractStateRow(blockNum, op))
+		request.AppendTabletRow(NewContractStateRow(blockNum, op))
 	}
 }
 
-func dbOpsToWritableRows(latestDbOps map[string]*pbcodec.DBOp) (rows []*TableDataRow, err error) {
-	for _, op := range latestDbOps {
-		rows = append(rows, &TableDataRow{
-			Account:  N(op.Code),
-			Scope:    N(op.Scope),
-			Table:    N(op.TableName),
-			PrimKey:  N(op.PrimaryKey),
-			Payer:    N(op.NewPayer),
-			Deletion: op.Operation == pbcodec.DBOp_OPERATION_REMOVE,
-			Data:     op.NewData,
-		})
+func addKeyAccountOpsToWriteRequest(request *WriteRequest, lastKeyAccountForRowKey map[string]*KeyAccountRow) {
+	for _, row := range lastKeyAccountForRowKey {
+		request.AppendTabletRow(row)
 	}
-
-	return
-}
-
-func keyAccountOpsToWritableRows(latestKeyAccountOps map[string]*keyAccountOp) (rows []*KeyAccountRow) {
-	for _, op := range latestKeyAccountOps {
-		rows = append(rows, &KeyAccountRow{
-			PublicKey:  op.publicKey,
-			Account:    op.account,
-			Permission: op.permission,
-			Deletion:   op.operation == keyAccountOperationRemove,
-		})
-	}
-
-	return
 }
 
 func tableOpsToWritableRows(latestTableOps map[string]*pbcodec.TableOp) (rows []*TableScopeRow) {
@@ -209,72 +172,10 @@ func tableOpsToWritableRows(latestTableOps map[string]*pbcodec.TableOp) (rows []
 	return
 }
 
-// func extractABIRow(blockNum uint32, action *pbcodec.Action) (*ABIRow, error) {
-// 	var setABI *system.SetABI
-// 	if err := action.UnmarshalData(&setABI); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &ABIRow{
-// 		Account:   N(string(setABI.Account)),
-// 		PackedABI: []byte(setABI.ABI),
-// 		BlockNum:  blockNum,
-// 	}, nil
-// }
-
-func extractLinkAuthLinkRow(action *pbcodec.Action) (*AuthLinkRow, error) {
-	var linkAuth *system.LinkAuth
-	if err := action.UnmarshalData(&linkAuth); err != nil {
-		return nil, err
-	}
-
-	return &AuthLinkRow{
-		Account:        N(string(linkAuth.Account)),
-		Contract:       N(string(linkAuth.Code)),
-		Action:         N(string(linkAuth.Type)),
-		PermissionName: N(string(linkAuth.Requirement)),
-	}, nil
-}
-
-func extractUnlinkAuthLinkRow(action *pbcodec.Action) (*AuthLinkRow, error) {
-	var unlinkAuth *system.UnlinkAuth
-	if err := action.UnmarshalData(&unlinkAuth); err != nil {
-		return nil, err
-	}
-
-	return &AuthLinkRow{
-		Deletion: true,
-		Account:  N(string(unlinkAuth.Account)),
-		Contract: N(string(unlinkAuth.Code)),
-		Action:   N(string(unlinkAuth.Type)),
-	}, nil
-}
-
 func tableDataRowPath(op *pbcodec.DBOp) string {
 	return op.Code + "/" + op.Scope + "/" + op.TableName + "/" + op.PrimaryKey
 }
 
 func tableRowPath(op *pbcodec.TableOp) string {
 	return op.Code + "/" + op.Scope + "/" + op.TableName
-}
-
-// Represents a smaller transformation of a `pbcodec.PermOp` to an operation
-// that added or deleted an account/permission pair for a given public key.
-//
-// This is done because a single `pbcodec.PermOp` can results into multiple
-// account/permission pair being added or removed for a given public key.
-type keyAccountOperation int
-
-const (
-	keyAccountOperationInsert keyAccountOperation = iota
-	keyAccountOperationRemove
-)
-
-type keyAccountOp struct {
-	operation  keyAccountOperation
-	publicKey  string
-	account    uint64
-	permission uint64
-
-	rowPath string
 }

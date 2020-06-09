@@ -235,7 +235,7 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 				req := newIrrBlk.Obj.(*WriteRequest)
 
 				p.batchWrites = append(p.batchWrites, req)
-				p.batchWritableRows += len(req.FluxRows)
+				p.batchWritableRows += len(req.TabletRows)
 			}
 
 			if p.batchWritableRows > 5000 || now.After(p.batchClose) || p.writeOnEachIrreversibleStep {

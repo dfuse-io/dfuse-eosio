@@ -31,28 +31,26 @@ func TestReadWithSpeculative(t *testing.T) {
 	defer closer()
 
 	blockNum := uint32(123)
-	account := uint64(0)
-	scope := uint64(1)
-	table := uint64(2)
-	key := uint64(3)
-	offset, limit := uint32(0), uint32(0)
+	contract := "eosio"
+	scope := "eoscanada"
+	table := "delband"
+	key := "...........1"
 
-	executeWriteRequests(t, db, writeEmptyABI(blockNum, account))
+	writeBatchOfRequests(t, db, writeEmptyABI(t, blockNum, contract))
 
-	speculativeWrites := writeRequests(
-		tableDataRows(blockNum, &TableDataRow{account, scope, table, key, 5, true, nil}),
-	)
+	contractStateTablet := NewContractStateTablet(contract, scope, table)
+	speculativeWrites := []*WriteRequest{
+		tabletRows(blockNum, contractStateTablet.NewRow(blockNum, key, "", nil, true)),
+	}
 
-	resp, err := db.ReadTable(context.Background(), &ReadTableRequest{
-		account, scope, table, &key, 123, &offset, &limit, speculativeWrites,
-	})
+	rows, err := db.ReadTabletAt(context.Background(), 123, contractStateTablet, speculativeWrites)
 
 	require.NoError(t, err)
-	require.Len(t, resp.Rows, 0)
+	require.Len(t, rows, 0)
 }
 
 func TestReadGetABI(t *testing.T) {
-	acct := N("eosio")
+	acct := "eosio"
 	traceID := fixedTraceID("00000000000000000000000000000001")
 	spanContext := trace.SpanContext{TraceID: traceID}
 	ctx, _ := trace.StartSpanWithRemoteParent(context.Background(), "test", spanContext)
@@ -120,15 +118,17 @@ func TestReadGetABI(t *testing.T) {
 			defer closer()
 
 			for _, abiBlock := range test.abis {
-				executeWriteRequests(t, db, writePackedABI(abiBlock, acct, []byte(fmt.Sprintf("%d", abiBlock))))
+				writeBatchOfRequests(t, db, writePackedABI(t, abiBlock, acct, []byte(fmt.Sprintf("%d", abiBlock))))
 			}
 
-			abi, err := db.GetABI(ctx, test.fetchForBlock, acct, nil)
+			siglet := NewContractABISiglet(acct)
+			abiEntry, err := db.ReadSigletEntryAt(ctx, siglet, test.fetchForBlock, nil)
 			if test.expectedError != nil {
 				assertError(t, test.expectedError, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectedABI, string(abi.PackedABI))
+				require.NotNil(t, abiEntry, "abi entry is nil")
+				assert.Equal(t, test.expectedABI, string(abiEntry.(*ContractABIEntry).PackedABI()))
 			}
 		})
 	}

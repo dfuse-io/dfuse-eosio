@@ -46,7 +46,7 @@ func (srv *EOSServer) listTableRowsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	responseRows, err := srv.readTable2(
+	responseRows, err := srv.readContractStateTable(
 		ctx,
 		actualBlockNum,
 		fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table),

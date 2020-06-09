@@ -174,11 +174,6 @@ func (fdb *FluxDB) getIndex(ctx context.Context, tableKey string, blockNum uint3
 }
 
 func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet) (index *TableIndex, err error) {
-	indexableTablet, ok := tablet.(IndexableTablet)
-	if !ok {
-		return nil, fmt.Errorf("received tablet of type %t is not indexable", tablet)
-	}
-
 	ctx, span := dtracing.StartSpan(ctx, "get index")
 	defer span.End()
 
@@ -206,51 +201,11 @@ func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet
 		return nil, fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
 	}
 
-	index, err = NewTableIndexFromBinary2(ctx, indexableTablet, indexBlockNum, rawIndex)
+	index, err = NewTableIndexFromBinary2(ctx, tablet, indexBlockNum, rawIndex)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't unmarshal binary index: %w", err)
 	}
 
-	return index, nil
-
-	// var err2 error
-	// err = fdb.tblIndex.ReadRows(ctx, bigtable.InfiniteRange(startIndexKey), func(row bigtable.Row) bool {
-	// 	item, ok := btRowItem(row, indexFamilyName, indexColumnName)
-	// 	if !ok {
-	// 		err2 = fmt.Errorf("expected index family and column give no data: %q", item)
-	// 		return false
-	// 	}
-
-	// 	if !strings.HasPrefix(item.Row, prefixKey) {
-	// 		// Not found, or perhaps found ANOTHER ROW that isn't ours!
-	// 		return false
-	// 	}
-
-	// 	blockNum, err := chunkKeyRevBlockNum(item.Row, prefixKey)
-	// 	if err != nil {
-	// 		err2 = fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
-	// 		return false
-	// 	}
-
-	// 	index, err = NewTableIndexFromBinary2(ctx, indexableTablet, blockNum, item.Value)
-	// 	if err != nil {
-	// 		err2 = fmt.Errorf("couldn't unmarshal binary index: %w", err)
-	// 		return false
-	// 	}
-
-	// 	zlog.Debug("fetched table index", zap.Int("row_count", len(index.Map)))
-	// 	return false
-	// }, bigtable.LimitRows(1))
-
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if err2 != nil {
-	// 	return nil, err2
-	// }
-
-	// The `index` variable can be null at this point, be warned!
 	return index, nil
 }
 
@@ -331,7 +286,15 @@ func NewTableIndex() *TableIndex {
 	return &TableIndex{Map: make(map[string]uint32)}
 }
 
-func NewTableIndexFromBinary2(ctx context.Context, tablet IndexableTablet, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
+func (index *TableIndex) RowCount() int {
+	if index == nil {
+		return 0
+	}
+
+	return len(index.Map)
+}
+
+func NewTableIndexFromBinary2(ctx context.Context, tablet Tablet, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
 	ctx, span := dtracing.StartSpan(ctx, "new table index from binary", "tablet", tablet, "block_num", atBlockNum)
 	defer span.End()
 
@@ -437,7 +400,7 @@ func (index *TableIndex) MarshalBinary(ctx context.Context, tableKey string) ([]
 	return snapshot, nil
 }
 
-func (index *TableIndex) MarshalBinary2(ctx context.Context, tablet IndexableTablet) ([]byte, error) {
+func (index *TableIndex) MarshalBinary2(ctx context.Context, tablet Tablet) ([]byte, error) {
 	ctx, span := dtracing.StartSpan(ctx, "marshal table index to binary", "tablet", tablet)
 	defer span.End()
 
@@ -487,8 +450,6 @@ type indexPrimaryKeyWriter = func(primaryKey string, buffer []byte) error
 
 func indexPrimaryKeyByteCountByTableKey(tableKey string) int {
 	switch {
-	case strings.HasPrefix(tableKey, "al:"):
-		return 16
 	case strings.HasPrefix(tableKey, "arl:"):
 		return 1
 	// Block resource limit has no fields after prefix, so we must match without the :
@@ -496,8 +457,6 @@ func indexPrimaryKeyByteCountByTableKey(tableKey string) int {
 		return 1
 	case strings.HasPrefix(tableKey, "ka2:"):
 		return 16
-	case strings.HasPrefix(tableKey, "td:"):
-		return 8
 	case strings.HasPrefix(tableKey, "ts:"):
 		return 8
 	default:
@@ -507,8 +466,6 @@ func indexPrimaryKeyByteCountByTableKey(tableKey string) int {
 
 func indexPrimaryKeyReaderByTableKey(tableKey string) indexPrimaryKeyReader {
 	switch {
-	case strings.HasPrefix(tableKey, "al:"):
-		return authLinkIndexPrimaryKeyReader
 	case strings.HasPrefix(tableKey, "arl:"):
 		return accountResourceLimitIndexPrimaryKeyReader
 	// Block resource limit has no fields after prefix, so we must match without the :
@@ -516,8 +473,6 @@ func indexPrimaryKeyReaderByTableKey(tableKey string) indexPrimaryKeyReader {
 		return blockResourceLimitIndexPrimaryKeyReader
 	case strings.HasPrefix(tableKey, "ka2:"):
 		return keyAccountIndexPrimaryKeyReader
-	case strings.HasPrefix(tableKey, "td:"):
-		return tableDataIndexPrimaryKeyReader
 	case strings.HasPrefix(tableKey, "ts:"):
 		return tableScopeIndexPrimaryKeyReader
 	default:
@@ -527,8 +482,6 @@ func indexPrimaryKeyReaderByTableKey(tableKey string) indexPrimaryKeyReader {
 
 func indexPrimaryKeyWriterByTableKey(tableKey string) indexPrimaryKeyWriter {
 	switch {
-	case strings.HasPrefix(tableKey, "al:"):
-		return authLinkIndexPrimaryKeyWriter
 	case strings.HasPrefix(tableKey, "arl:"):
 		return accountResourceLimitIndexPrimaryKeyWriter
 	// Block resource limit has no fields after prefix, so we must match without the :
@@ -536,8 +489,6 @@ func indexPrimaryKeyWriterByTableKey(tableKey string) indexPrimaryKeyWriter {
 		return blockResourceLimitIndexPrimaryKeyWriter
 	case strings.HasPrefix(tableKey, "ka2:"):
 		return keyAccountIndexPrimaryKeyWriter
-	case strings.HasPrefix(tableKey, "td:"):
-		return tableDataIndexPrimaryKeyWriter
 	case strings.HasPrefix(tableKey, "ts:"):
 		return tableScopeIndexPrimaryKeyWriter
 	default:
@@ -545,11 +496,9 @@ func indexPrimaryKeyWriterByTableKey(tableKey string) indexPrimaryKeyWriter {
 	}
 }
 
-var authLinkIndexPrimaryKeyReader = twoUint64PrimaryKeyReaderFactory("auth link")
 var accountResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("account resource limit")
 var blockResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("block resource limit")
 var keyAccountIndexPrimaryKeyReader = twoUint64PrimaryKeyReaderFactory("key account")
-var tableDataIndexPrimaryKeyReader = oneUint64PrimaryKeyReaderFactory("table data")
 var tableScopeIndexPrimaryKeyReader = oneUint64PrimaryKeyReaderFactory("table scope")
 
 func oneBytePrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
@@ -601,11 +550,9 @@ func readOneUint64(buffer []byte) (string, error) {
 	return fmt.Sprintf("%016x", big.Uint64(buffer)), nil
 }
 
-var authLinkIndexPrimaryKeyWriter = twoUint64PrimaryKeyWriterFactory("auth link")
 var accountResourceLimitIndexPrimaryKeyWriter = oneBytePrimaryKeyWriterFactory("account resource limit")
 var blockResourceLimitIndexPrimaryKeyWriter = oneBytePrimaryKeyWriterFactory("block resource limit")
 var keyAccountIndexPrimaryKeyWriter = twoUint64PrimaryKeyWriterFactory("key account")
-var tableDataIndexPrimaryKeyWriter = oneUint64PrimaryKeyWriterFactory("table data")
 var tableScopeIndexPrimaryKeyWriter = oneUint64PrimaryKeyWriterFactory("table scope")
 
 func oneBytePrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {

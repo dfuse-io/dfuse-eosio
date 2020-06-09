@@ -43,7 +43,7 @@ func TestPreprocessBlock_TableOps(t *testing.T) {
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)
 
-	rows := sortedFluxRows(req.(*WriteRequest).FluxRows, 3)
+	rows := sortedFluxRows(req.(*WriteRequest).TabletRows, 3)
 
 	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
 	assert.Equal(t, []string{
@@ -161,7 +161,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 			req, err := PreprocessBlock(bstreamBlock)
 			require.NoError(t, err)
 
-			assert.ElementsMatch(t, test.expect, req.(*WriteRequest).FluxRows)
+			assert.ElementsMatch(t, test.expect, req.(*WriteRequest).TabletRows)
 		})
 	}
 }
@@ -211,7 +211,7 @@ func TestPreprocessBlock_PermOps(t *testing.T) {
 	req, err := PreprocessBlock(bstreamBlock)
 	require.NoError(t, err)
 
-	rows := sortedFluxRows(req.(*WriteRequest).FluxRows, 3)
+	rows := sortedFluxRows(req.(*WriteRequest).TabletRows, 3)
 
 	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
 	assert.Equal(t, []*KeyAccountRow{
@@ -274,9 +274,9 @@ func newPermOpData(account string, permission string, publicKeys []string) *pbco
 	}
 }
 
-func sortedFluxRows(rows []Row, blockNum uint32) []Row {
+func sortedFluxRows(rows []TabletRow, blockNum uint32) []TabletRow {
 	sort.Slice(rows, func(i, j int) bool {
-		return rows[i].Key(blockNum).String() < rows[j].Key(blockNum).String()
+		return rows[i].Key() < rows[j].Key()
 	})
 
 	return rows

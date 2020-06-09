@@ -15,8 +15,8 @@
 package server
 
 import (
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	eos "github.com/eoscanada/eos-go"
 )
 
 //
@@ -72,10 +72,10 @@ type readTableResponse struct {
 }
 
 type onTheFlyABISerializer struct {
-	abi        *eos.ABI
-	abiRow     *fluxdb.ABIRow
-	structType string
-	data       []byte
+	abi             *eos.ABI
+	abiAtBlockNum   uint32
+	tableTypeName   string
+	rowDataToDecode []byte
 }
 
 type getTableRowsResponse struct {

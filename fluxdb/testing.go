@@ -16,48 +16,39 @@ package fluxdb
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/require"
 )
 
-func executeWriteRequests(t *testing.T, db *FluxDB, requests ...*WriteRequest) {
+func writeBatchOfRequests(t *testing.T, db *FluxDB, requests ...*WriteRequest) {
 	require.NoError(t, db.WriteBatch(context.Background(), requests))
 }
 
-func writeRequests(requests ...*WriteRequest) []*WriteRequest {
-	return requests
+func writeABI(t *testing.T, blockNum uint32, contract string, abi *eos.ABI) *WriteRequest {
+	packedABI, err := eos.MarshalBinary(abi)
+	require.NoError(t, err, "marshal binary abi")
+
+	return writePackedABI(t, blockNum, contract, packedABI)
 }
 
-func writePackedABI(blockNum uint32, account uint64, packedABI []byte) *WriteRequest {
+func writeEmptyABI(t *testing.T, blockNum uint32, contract string) *WriteRequest {
+	return writeABI(t, blockNum, contract, &eos.ABI{})
+}
+
+func writePackedABI(t *testing.T, blockNum uint32, contract string, packedABI []byte) *WriteRequest {
 	return &WriteRequest{
 		BlockNum: blockNum,
-		// ABIs:     []*ABIRow{&ABIRow{account, blockNum, packedABI}},
+		SigletEntries: []SigletEntry{
+			NewContractABISiglet(contract).NewEntry(blockNum, packedABI),
+		},
 	}
 }
 
-func writeABI(blockNum uint32, account uint64, abi *eos.ABI) *WriteRequest {
-	bytes, err := eos.MarshalBinary(abi)
-	if err != nil {
-		panic(fmt.Errorf("unable to encode abi: %w", err))
-	}
-
-	if len(bytes) == 0 {
-		panic("encoded ABI should have at least 1 byte, use writeEmptyABI if you don't care about the actual content.")
-	}
-
-	return writePackedABI(blockNum, account, bytes)
-}
-
-func writeEmptyABI(blockNum uint32, account uint64) *WriteRequest {
-	return writePackedABI(blockNum, account, []byte("empty"))
-}
-
-func tableDataRows(blockNum uint32, rows ...*TableDataRow) *WriteRequest {
+func tabletRows(blockNum uint32, rows ...TabletRow) *WriteRequest {
 	return &WriteRequest{
-		BlockNum: blockNum,
-		// TableDatas: rows,
+		BlockNum:   blockNum,
+		TabletRows: rows,
 	}
 }

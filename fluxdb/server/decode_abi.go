@@ -45,9 +45,15 @@ func (srv *EOSServer) decodeABIHandler(w http.ResponseWriter, r *http.Request) {
 
 	account := request.Account
 	tableName := request.Table
-	abiRow, abi, err := srv.fetchABI(ctx, string(account), request.BlockNum, true)
+	abiEntry, err := srv.fetchABI(ctx, string(account), request.BlockNum)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("fetch ABI: %w", err))
+		return
+	}
+
+	abi, err := abiEntry.ABI()
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("decode ABI: %w", err))
 		return
 	}
 
@@ -58,7 +64,7 @@ func (srv *EOSServer) decodeABIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := &decodeABIResponse{
-		BlockNum: abiRow.BlockNum,
+		BlockNum: abiEntry.BlockNum(),
 		Account:  request.Account,
 		Table:    request.Table,
 	}

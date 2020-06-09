@@ -139,10 +139,10 @@ func (srv *EOSServer) readTable(
 		var data interface{}
 		if request.ToJSON {
 			data = &onTheFlyABISerializer{
-				abi:        abiObj,
-				abiRow:     resp.ABI,
-				structType: tableDef.Type,
-				data:       row.Data,
+				abi:             abiObj,
+				abiAtBlockNum:   resp.ABI.BlockNum,
+				tableTypeName:   tableDef.Type,
+				rowDataToDecode: row.Data,
 			}
 		} else {
 			data = row.Data
@@ -173,7 +173,7 @@ func (srv *EOSServer) readTable(
 	return out, nil
 }
 
-func (srv *EOSServer) readTable2(
+func (srv *EOSServer) readContractStateTable(
 	ctx context.Context,
 	blockNum uint32,
 	tablet fluxdb.ContractStateTablet,
@@ -181,71 +181,91 @@ func (srv *EOSServer) readTable2(
 	keyConverter KeyConverter,
 	speculativeWrites []*fluxdb.WriteRequest,
 ) (*readTableResponse, error) {
-	ctx, span := dtracing.StartSpan(ctx, "read contract state")
+	ctx, span := dtracing.StartSpan(ctx, "read contract state table")
 	defer span.End()
 
 	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("read contract state", zap.Stringer("tablet", tablet))
+	zlog.Debug("read contract state tablet", zap.Stringer("tablet", tablet))
 
-	rows, err := srv.db.Read2(
+	tabletRows, err := srv.db.ReadTabletAt(
 		ctx,
 		blockNum,
 		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows from database: %w", err)
+		return nil, fmt.Errorf("read tablet at: %w", err)
 	}
 
-	zlog.Debug("read rows results", zap.Int("row_count", len(rows)))
+	zlog.Debug("read rows results", zap.Int("row_count", len(tabletRows)))
 
-	// var abiObj *eos.ABI
-	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
-	// }
+	_, contract, _, table := tablet.Explode()
+	abiEntry, err := srv.db.ReadSigletEntryAt(ctx, fluxdb.NewContractABISiglet(contract), blockNum, speculativeWrites)
+	if err != nil {
+		return nil, fmt.Errorf("read abi at: %w", err)
+	}
+
+	var abi *eos.ABI
+	if abiEntry != nil {
+		abi, err = abiEntry.(*fluxdb.ContractABIEntry).ABI()
+		if err != nil {
+			return nil, fmt.Errorf("decode abi: %w", err)
+		}
+	}
 
 	out := &readTableResponse{}
-	// if request.WithABI {
-	// 	out.ABI = abiObj
-	// }
 
-	// code, scope, table := tablet.Explode()
+	if request.WithABI {
+		if abi == nil {
+			return nil, fluxdb.DataABINotFoundError(ctx, contract, blockNum)
+		}
 
-	// tableName := eos.TableName(tablet.Key())
-	// tableDef := abiObj.TableForName(tableName)
-	// if tableDef == nil {
-	// 	return nil, fluxdb.DataTableNotFoundError(ctx, eos.AccountName(account), tableName)
-	// }
+		out.ABI = abi
+	}
 
-	zlog.Debug("post-processing each row (maybe convert to JSON)")
-	for _, row := range rows {
+	tableTypeName := ""
+	if request.ToJSON {
+		if abi == nil {
+			return nil, fluxdb.DataABINotFoundError(ctx, contract, blockNum)
+		}
+
+		tableDef := abi.TableForName(eos.TableName(table))
+		if tableDef == nil {
+			return nil, fluxdb.DataTableNotFoundError(ctx, eos.AccountName(contract), eos.TableName(table))
+		}
+
+		tableTypeName = tableDef.Type
+	}
+
+	zlog.Debug("post-processing each table row (maybe convert to JSON)")
+	for _, tabletRow := range tabletRows {
+		contractStateRow := tabletRow.(*fluxdb.ContractStateRow)
+
 		var data interface{}
-		// if request.ToJSON {
-		// 	data = &onTheFlyABISerializer{
-		// 		// abi:        abiObj,
-		// 		// abiRow:     resp.ABI,
-		// 		// structType: tableDef.Type,
-		// 		data: row.(fluxdb.ContractStateRow).Payload,
-		// 	}
-		// } else {
-		// 	data = row.Data
-		// }
-
-		data = row.(*fluxdb.ContractStateRow).RowData()
+		if request.ToJSON {
+			data = &onTheFlyABISerializer{
+				abi:             abi,
+				abiAtBlockNum:   abiEntry.BlockNum(),
+				tableTypeName:   tableTypeName,
+				rowDataToDecode: contractStateRow.Data(),
+			}
+		} else {
+			data = contractStateRow.Data()
+		}
 
 		var blockNum uint32
 		if request.WithBlockNum {
-			blockNum = row.BlockNum()
+			blockNum = contractStateRow.BlockNum()
 		}
 
-		rowKey, err := keyConverter.ToString(fluxdb.NA(eos.Name(row.PrimaryKey())))
+		rowKey, err := keyConverter.ToString(fluxdb.NA(eos.Name(contractStateRow.PrimaryKey())))
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert key: %s", err)
 		}
 
 		out.Rows = append(out.Rows, &tableRow{
 			Key:      rowKey,
-			Payer:    row.(*fluxdb.ContractStateRow).Payer(),
+			Payer:    contractStateRow.Payer(),
 			Data:     data,
 			BlockNum: blockNum,
 		})
@@ -330,10 +350,10 @@ func (srv *EOSServer) readTableRow(
 
 	if request.ToJSON {
 		out.Row.Data = &onTheFlyABISerializer{
-			abi:        abiObj,
-			abiRow:     resp.ABI,
-			structType: tableDef.Type,
-			data:       resp.Row.Data,
+			abi:             abiObj,
+			abiAtBlockNum:   resp.ABI.BlockNum,
+			tableTypeName:   tableDef.Type,
+			rowDataToDecode: resp.Row.Data,
 		}
 	}
 
@@ -412,25 +432,17 @@ func (srv *EOSServer) fetchABI(
 	ctx context.Context,
 	account string,
 	blockNum uint32,
-	toJSON bool,
-) (abiRow *fluxdb.ABIRow, abiObj *eos.ABI, err error) {
-	// actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
-	// if err != nil {
-	// 	return
-	// }
-
-	// abiRow, err = srv.db.GetABI(ctx, uint32(actualBlockNum), fluxdb.N(account), speculativeWrites)
-	// if err != nil {
-	// 	err = fmt.Errorf("fetching ABI from db: %w", err)
-	// 	return
-	// }
-
-	if toJSON {
-		if err = eos.UnmarshalBinary(abiRow.PackedABI, &abiObj); err != nil {
-			err = fmt.Errorf("failed to decode packed ABI %q to JSON: %w", abiRow.PackedABI, err)
-			return
-		}
+) (*fluxdb.ContractABIEntry, error) {
+	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
+	if err != nil {
+		return nil, fmt.Errorf("speculative writes: %w", err)
 	}
 
-	return
+	siglet := fluxdb.NewContractABISiglet(account)
+	entry, err := srv.db.ReadSigletEntryAt(ctx, siglet, actualBlockNum, speculativeWrites)
+	if err != nil {
+		return nil, fmt.Errorf("db read: %w", err)
+	}
+
+	return entry.(*fluxdb.ContractABIEntry), nil
 }

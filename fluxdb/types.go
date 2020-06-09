@@ -16,104 +16,31 @@ package fluxdb
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 )
 
-/// New Architecture (Proposal)
-
-type RowKey string
-type TabletKey string
-type PrimaryKey string
-
-type Row interface {
-	Key() RowKey
-
-	Tablet() Tablet
-	BlockNum() uint32
-	PrimaryKey() PrimaryKey
-
-	Data() []byte
-}
-
-func ExplodeRowKey(rowKey string) (collection, tablet, blockNum, primaryKey string, err error) {
-	parts := strings.Split(rowKey, "/")
-	if len(parts) == 3 {
-		return parts[0], parts[1], parts[2], parts[3], nil
-	}
-
-	err = fmt.Errorf("row key should have 4 segments separated by '/' (`<collection/tablet/blockNum/primaryKey>`), got %d segments", len(parts))
-	return
-}
-
-func ExplodeSingleRowKey(rowKey string) (collection, tablet, blockNum string, err error) {
-	parts := strings.Split(rowKey, "/")
-	if len(parts) == 3 {
-		return parts[0], parts[1], parts[2], nil
-	}
-
-	err = fmt.Errorf("single row key should have 3 segments separated by '/' (`<collection/tablet/blockNum>`), got %d segments", len(parts))
-	return
-}
-
-func NewTabletRow(pbRow pbfluxdb.TabletRow) TabletRow {
-	return TabletRow{
-		TabletRow: pbRow,
-	}
-}
-
-type TabletRow struct {
-	pbfluxdb.TabletRow
-}
-
-func (r *TabletRow) BlockNum() uint32 {
-	value, err := strconv.ParseInt(r.BlockNumKey, 10, 32)
-	if err != nil {
-		panic(fmt.Errorf("value %q is not a valid block num uint32 value", r.BlockNumKey))
-	}
-
-	return uint32(value)
-}
-
-func (r *TabletRow) Key() RowKey {
-	return RowKey(r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey + "/" + r.PrimKey)
-}
-
-func (r *TabletRow) PrimaryKey() PrimaryKey {
-	return PrimaryKey(r.PrimKey)
-}
-
-func (r *TabletRow) Tablet() Tablet {
-	factory := knownTabletFactory[r.Collection]
-	if factory == nil {
-		panic(fmt.Errorf(`no know tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
-	}
-
-	return factory(&r.TabletRow)
-}
-
-func (r *TabletRow) Data() []byte {
-	return r.Payload
-}
-
-func isDeletionFluxRow(row Row) bool {
-	return row.Data() == nil
-}
+var collections = map[string]bool{}
 
 // Tablet is a block-aware virtual table containing all the rows at any given
-// block height for a given table key. Let's assume we want to store the
+// block height for a given element. Let's assume we want to store the
 // balance over a fixed set of accounts at any block height. In this case, one
 // tablet would represent a single account, each actual row being the balance
 // of the account at all block height.
+//
+// A Tablet always contain 0 to N rows, we maintain the state of each row
+// independently.
 type Tablet interface {
-	Key() TabletKey
+	NewRowFromKV(key string, value []byte) (TabletRow, error)
 
-	RowKeyPrefix(blockNum uint32) string
-	RowKey(blockNum uint32, primaryKey PrimaryKey) RowKey
+	Key() string
+	KeyAt(blockNum uint32) string
+	KeyForRowAt(blockNum uint32, primaryKey string) string
 
-	ReadRow(rowKey string, value []byte) (Row, error)
+	IndexableTablet
 
 	String() string
 }
@@ -124,24 +51,150 @@ type IndexableTablet interface {
 	DecodePrimaryKey(buffer []byte) (primaryKey string, err error)
 }
 
-type SingleRowTablet interface {
-	SingleRowOnly() bool
-}
-
 type TabletFactory = func(row *pbfluxdb.TabletRow) Tablet
 
-var knownTabletFactory map[string]TabletFactory
+var tabletFactories = map[string]TabletFactory{}
 
 func RegisterTabletFactory(collection string, factory TabletFactory) {
-	if knownTabletFactory == nil {
-		knownTabletFactory = map[string]TabletFactory{}
+	if collections[collection] {
+		panic(fmt.Errorf("collections %q is already registered, they all must be unique among registered ones"))
 	}
 
-	if _, exists := knownTabletFactory[collection]; exists {
-		panic(fmt.Errorf("tablet prefix %q is already registered, they all must be unique among registered ones"))
+	tabletFactories[collection] = factory
+}
+
+type TabletRow interface {
+	Key() string
+	Value() []byte
+
+	Tablet() Tablet
+	BlockNum() uint32
+	PrimaryKey() string
+}
+
+func ExplodeTabletRowKey(rowKey string) (collection, tablet, blockNum, primaryKey string, err error) {
+	parts := strings.Split(rowKey, "/")
+	if len(parts) == 4 {
+		return parts[0], parts[1], parts[2], parts[3], nil
 	}
 
-	knownTabletFactory[collection] = factory
+	err = fmt.Errorf("row key should have 4 segments separated by '/' (`<collection/tablet/blockNum/primaryKey>`), got %d segments", len(parts))
+	return
+}
+
+type BaseTabletRow struct {
+	pbfluxdb.TabletRow
+}
+
+func (r *BaseTabletRow) BlockNum() uint32 {
+	value, err := strconv.ParseUint(r.BlockNumKey, 16, 32)
+	if err != nil {
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.BlockNumKey, err))
+	}
+
+	return uint32(value)
+}
+
+func (r *BaseTabletRow) Key() string {
+	return r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey + "/" + r.PrimKey
+}
+
+func (r *BaseTabletRow) PrimaryKey() string {
+	return r.PrimKey
+}
+
+func (r *BaseTabletRow) Tablet() Tablet {
+	factory := tabletFactories[r.Collection]
+	if factory == nil {
+		panic(fmt.Errorf(`no know tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
+	}
+
+	return factory(&r.TabletRow)
+}
+
+func (r *BaseTabletRow) Value() []byte {
+	return r.Payload
+}
+
+func isDeletionRow(row TabletRow) bool {
+	return row.Value() == nil
+}
+
+// Siglet is a block-aware container for a single piece of information, for
+// example an account's balance.
+//
+// A Siglet always contain a single row key but stored at any block height.
+type Siglet interface {
+	Key() string
+	KeyAt(blockNum uint32) string
+
+	NewEntryFromKV(entryKey string, value []byte) (SigletEntry, error)
+
+	String() string
+}
+
+func ExplodeSigletEntryKey(rowKey string) (collection, tablet, blockNum string, err error) {
+	parts := strings.Split(rowKey, "/")
+	if len(parts) == 3 {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	err = fmt.Errorf("entry key should have 3 segments separated by '/' (`<collection/tablet/blockNum>`), got %d segments", len(parts))
+	return
+}
+
+type SigletEntry interface {
+	Key() string
+	Value() []byte
+
+	Siglet() Siglet
+	BlockNum() uint32
+}
+
+type SigletFactory = func(row *pbfluxdb.TabletRow) Siglet
+
+var sigletFactories = map[string]SigletFactory{}
+
+func RegisterSigletFactory(collection string, factory SigletFactory) {
+	if collections[collection] {
+		panic(fmt.Errorf("collection %q is already registered, they all must be unique among registered ones"))
+	}
+
+	sigletFactories[collection] = factory
+}
+
+type BaseSigletEntry struct {
+	pbfluxdb.TabletRow
+}
+
+func (r *BaseSigletEntry) BlockNum() uint32 {
+	value, err := strconv.ParseUint(r.BlockNumKey, 16, 32)
+	if err != nil {
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.BlockNumKey, err))
+	}
+
+	return math.MaxUint32 - uint32(value)
+}
+
+func (r *BaseSigletEntry) Key() string {
+	return r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey
+}
+
+func (r *BaseSigletEntry) Siglet() Siglet {
+	factory := sigletFactories[r.Collection]
+	if factory == nil {
+		panic(fmt.Errorf(`no know siglet factory for collection %s, register factories through a 'RegisterSigletFactory("prefix", func (...) { ... })' call`, r.Collection))
+	}
+
+	return factory(&r.TabletRow)
+}
+
+func (r *BaseSigletEntry) Value() []byte {
+	return r.Payload
+}
+
+func isDeletionEntry(entry SigletEntry) bool {
+	return entry.Value() == nil
 }
 
 ///
@@ -191,85 +244,19 @@ type LinkedPermission struct {
 }
 
 type WriteRequest struct {
-	FluxRows []Row
+	SigletEntries []SigletEntry
+	TabletRows    []TabletRow
 
 	BlockNum uint32
 	BlockID  []byte
 }
 
-func (r *WriteRequest) AppendFluxRow(row Row) {
-	r.FluxRows = append(r.FluxRows, row)
+func (r *WriteRequest) AppendSigletEntry(entry SigletEntry) {
+	r.SigletEntries = append(r.SigletEntries, entry)
 }
 
-var emptyRowData = []byte{1}
-
-type writableRow interface {
-	tableKey() string
-	rowKey(blockNum uint32) string
-	primKey() string
-
-	isDeletion() bool
-	// buildData *MUST* always be a non-zero amount of bytes, to distinguish from deletion, even if it's only padding.
-	buildData() []byte
-}
-
-type AuthLinkRow struct {
-	Deletion bool
-
-	Account  uint64
-	Contract uint64
-	Action   uint64
-
-	PermissionName uint64
-}
-
-func (r *AuthLinkRow) tableKey() string {
-	return fmt.Sprintf("al:%016x", r.Account)
-}
-
-func (r *AuthLinkRow) rowKey(blockNum uint32) string {
-	return fmt.Sprintf("%s:%08x:%s", r.tableKey(), blockNum, r.primKey())
-}
-
-func (r *AuthLinkRow) primKey() string {
-	return fmt.Sprintf("%016x:%016x", r.Contract, r.Action)
-}
-
-func (r *AuthLinkRow) isDeletion() bool {
-	return r.Deletion
-}
-
-func (r *AuthLinkRow) buildData() []byte {
-	value := make([]byte, 8)
-	big.PutUint64(value, r.PermissionName)
-	return value
-}
-
-type KeyAccountRow struct {
-	PublicKey  string
-	Account    uint64
-	Permission uint64
-	Deletion   bool
-}
-
-func (r *KeyAccountRow) tableKey() string {
-	return "ka2:" + r.PublicKey
-}
-
-func (r *KeyAccountRow) rowKey(blockNum uint32) string {
-	return fmt.Sprintf("%s:%08x:%s", r.tableKey(), blockNum, r.primKey())
-}
-
-func (r *KeyAccountRow) primKey() string {
-	return fmt.Sprintf("%016x:%016x", r.Account, r.Permission)
-}
-
-func (r *KeyAccountRow) isDeletion() bool {
-	return r.Deletion
-}
-
-func (r *KeyAccountRow) buildData() []byte {
-	return emptyRowData
+func (r *WriteRequest) AppendTabletRow(row TabletRow) {
+	r.TabletRows = append(r.TabletRows, row)
 }
 
 type TableDataRow struct {

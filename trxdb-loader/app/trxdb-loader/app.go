@@ -101,11 +101,17 @@ func (a *App) Run() error {
 		w.Write([]byte("ready\n"))
 	})
 
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
+	}
+
 	httpSrv := &http.Server{
 		Addr:         a.Config.HTTPListenAddr,
 		Handler:      healthzHandler,
 		ReadTimeout:  10 * time.Millisecond,
 		WriteTimeout: 10 * time.Millisecond,
+		ErrorLog:     errorLogger,
 	}
 	zlog.Info("starting webserver", zap.String("http_addr", a.Config.HTTPListenAddr))
 	go httpSrv.ListenAndServe()
