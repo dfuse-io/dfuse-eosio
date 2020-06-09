@@ -45,6 +45,7 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 }
 
 func processTableRow(tableRow *readTableRowResponse, ref *readReference) *pbfluxdb.TableRowResponse {
+	// TODO: pass , UpToBlockNum, LastIrreversibleBlockId, LastIrreversibleBlockNum in grpc header
 	payload := &pbfluxdb.TableRowResponse{
 		Key:                      tableRow.Row.Key,
 		Payer:                    tableRow.Row.Payer,

@@ -5,6 +5,12 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
+type readScopeTableResponse struct {
+	Contract string `json:"account"`
+	Scope    string `json:"scope"`
+	*readTableResponse
+}
+
 type readTableResponse struct {
 	ABI  *eos.ABI    `json:"abi"`
 	Rows []*tableRow `json:"rows"`
