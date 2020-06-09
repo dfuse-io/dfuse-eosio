@@ -119,9 +119,9 @@ func (srv *EOSServer) readTable(
 	zlog.Debug("read rows results", zap.Int("row_count", len(resp.Rows)))
 
 	var abiObj *eos.ABI
-	if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-		return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
-	}
+	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
+	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
+	// }
 
 	out := &readTableResponse{}
 	if request.WithABI {
@@ -139,8 +139,8 @@ func (srv *EOSServer) readTable(
 		var data interface{}
 		if request.ToJSON {
 			data = &onTheFlyABISerializer{
-				abi:             abiObj,
-				abiAtBlockNum:   resp.ABI.BlockNum,
+				abi: abiObj,
+				// abiAtBlockNum:   resp.ABI.BlockNum,
 				tableTypeName:   tableDef.Type,
 				rowDataToDecode: row.Data,
 			}
@@ -316,9 +316,9 @@ func (srv *EOSServer) readTableRow(
 	}
 
 	var abiObj *eos.ABI
-	if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-		return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
-	}
+	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
+	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
+	// }
 
 	out := &readTableRowResponse{}
 	if request.WithABI {
@@ -350,8 +350,8 @@ func (srv *EOSServer) readTableRow(
 
 	if request.ToJSON {
 		out.Row.Data = &onTheFlyABISerializer{
-			abi:             abiObj,
-			abiAtBlockNum:   resp.ABI.BlockNum,
+			abi: abiObj,
+			// abiAtBlockNum:   resp.ABI.BlockNum,
 			tableTypeName:   tableDef.Type,
 			rowDataToDecode: resp.Row.Data,
 		}

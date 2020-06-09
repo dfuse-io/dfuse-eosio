@@ -64,14 +64,14 @@ func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer st
 	return row
 }
 
-func (t ContractStateTablet) NewRowFromKV(rowKey string, value []byte) (TabletRow, error) {
+func (t ContractStateTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
 	if len(value) < 8 {
 		return nil, errors.New("contract state tablet row value should have at least 8 bytes (payer)")
 	}
 
-	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(rowKey)
+	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
-		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", rowKey, err)
+		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", key, err)
 	}
 
 	return &ContractStateRow{

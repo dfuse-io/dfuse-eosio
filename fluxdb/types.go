@@ -221,12 +221,12 @@ func (r *ReadTableRowRequest) primaryKeyString() string {
 }
 
 type ReadTableResponse struct {
-	ABI  *ABIRow
+	ABI  *ContractABIEntry
 	Rows []*TableRow
 }
 
 type ReadTableRowResponse struct {
-	ABI *ABIRow
+	ABI *ContractABIEntry
 	Row *TableRow
 }
 
@@ -257,69 +257,4 @@ func (r *WriteRequest) AppendSigletEntry(entry SigletEntry) {
 
 func (r *WriteRequest) AppendTabletRow(row TabletRow) {
 	r.TabletRows = append(r.TabletRows, row)
-}
-
-type TableDataRow struct {
-	Account, Scope, Table, PrimKey uint64
-	Payer                          uint64
-	Deletion                       bool
-	Data                           []byte
-}
-
-func (t *TableDataRow) tableKey() string {
-	return fmt.Sprintf("td:%016x:%016x:%016x", t.Account, t.Table, t.Scope)
-}
-
-func (t *TableDataRow) rowKey(blockNum uint32) string {
-	return fmt.Sprintf("%s:%08x:%s", t.tableKey(), blockNum, t.primKey())
-}
-
-func (t *TableDataRow) primKey() string {
-	return fmt.Sprintf("%016x", t.PrimKey)
-}
-
-func (t *TableDataRow) isDeletion() bool {
-	return t.Deletion
-}
-
-func (t *TableDataRow) buildData() []byte {
-	value := make([]byte, len(t.Data)+8)
-	big.PutUint64(value, t.Payer)
-	copy(value[8:], t.Data)
-	return value
-}
-
-type TableScopeRow struct {
-	Account, Scope, Table uint64
-	Deletion              bool
-	Payer                 uint64
-}
-
-func (t *TableScopeRow) tableKey() string {
-	return fmt.Sprintf("ts:%016x:%016x", t.Account, t.Table)
-}
-
-func (t *TableScopeRow) rowKey(blockNum uint32) string {
-	return fmt.Sprintf("%s:%08x:%s", t.tableKey(), blockNum, t.primKey())
-}
-
-func (t *TableScopeRow) primKey() string {
-	return fmt.Sprintf("%016x", t.Scope)
-}
-
-func (t *TableScopeRow) isDeletion() bool {
-	return t.Deletion
-}
-
-func (t *TableScopeRow) buildData() []byte {
-	value := make([]byte, 8)
-	big.PutUint64(value, t.Payer)
-
-	return value
-}
-
-type ABIRow struct {
-	Account   uint64
-	BlockNum  uint32 // in Read operation only
-	PackedABI []byte
 }

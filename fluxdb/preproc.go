@@ -38,8 +38,8 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
-	lastKeyAccountForRowKey := map[string]*KeyAccountRow{}
-	// lastTableOpForTablePath := map[string]*pbcodec.TableOp{}
+	lastKeyAccountForRowKey := map[string]TabletRow{}
+	lastContractTableScopeForRowKey := map[string]TabletRow{}
 
 	req := &WriteRequest{
 		BlockNum: uint32(rawBlk.Num()),
@@ -48,6 +48,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 	for _, trx := range blk.TransactionTraces {
 		for _, dbOp := range trx.DbOps {
+			// There is no change in this row, not sure how it got here, discarding it anyway
 			if dbOp.Operation == pbcodec.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {
 				continue
 			}
@@ -73,9 +74,10 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 			}
 		}
 
-		// for _, tableOp := range trx.TableOps {
-		// 	lastTableOpForTablePath[tableRowPath(tableOp)] = tableOp
-		// }
+		for _, tableOp := range trx.TableOps {
+			row := NewContractTableScopeRow(req.BlockNum, tableOp)
+			lastContractTableScopeForRowKey[row.Key()] = row
+		}
 
 		for _, act := range trx.ActionTraces {
 			switch act.FullName() {
@@ -106,33 +108,45 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		}
 	}
 
-	// req.TableScopes = tableOpsToWritableRows(lastTableOpForTablePath)
-
 	addDBOpsToWriteRequest(req, lastDbOpForRowPath)
-	addKeyAccountOpsToWriteRequest(req, lastKeyAccountForRowKey)
+	addTabletRowsToRequest(req, lastKeyAccountForRowKey)
+	addTabletRowsToRequest(req, lastContractTableScopeForRowKey)
 
 	return req, nil
+}
+
+func addDBOpsToWriteRequest(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
+	blockNum := request.BlockNum
+	for _, op := range latestDbOps {
+		request.AppendTabletRow(NewContractStateRow(blockNum, op))
+	}
+}
+
+func addTabletRowsToRequest(request *WriteRequest, tabletRowsMap map[string]TabletRow) {
+	for _, row := range tabletRowsMap {
+		request.AppendTabletRow(row)
+	}
 }
 
 func permOpToKeyAccountRows(blockNum uint32, permOp *pbcodec.PermOp) []*KeyAccountRow {
 	switch permOp.Operation {
 	case pbcodec.PermOp_OPERATION_INSERT:
-		return permOpDataToKeyAccountOps(blockNum, permOp.NewPerm, false)
+		return permToKeyAccountRows(blockNum, permOp.NewPerm, false)
 	case pbcodec.PermOp_OPERATION_UPDATE:
 		var ops []*KeyAccountRow
 
-		ops = append(ops, permOpDataToKeyAccountOps(blockNum, permOp.OldPerm, true)...)
-		ops = append(ops, permOpDataToKeyAccountOps(blockNum, permOp.NewPerm, false)...)
+		ops = append(ops, permToKeyAccountRows(blockNum, permOp.OldPerm, true)...)
+		ops = append(ops, permToKeyAccountRows(blockNum, permOp.NewPerm, false)...)
 
 		return ops
 	case pbcodec.PermOp_OPERATION_REMOVE:
-		return permOpDataToKeyAccountOps(blockNum, permOp.OldPerm, true)
+		return permToKeyAccountRows(blockNum, permOp.OldPerm, true)
 	}
 
 	panic(fmt.Errorf("unknown perm op %s", permOp.Operation))
 }
 
-func permOpDataToKeyAccountOps(blockNum uint32, perm *pbcodec.PermissionObject, isDeletion bool) []*KeyAccountRow {
+func permToKeyAccountRows(blockNum uint32, perm *pbcodec.PermissionObject, isDeletion bool) []*KeyAccountRow {
 	if perm.Authority == nil || len(perm.Authority.Keys) == 0 {
 		return nil
 	}
@@ -145,37 +159,6 @@ func permOpDataToKeyAccountOps(blockNum uint32, perm *pbcodec.PermissionObject, 
 	return rows
 }
 
-func addDBOpsToWriteRequest(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
-	blockNum := request.BlockNum
-	for _, op := range latestDbOps {
-		request.AppendTabletRow(NewContractStateRow(blockNum, op))
-	}
-}
-
-func addKeyAccountOpsToWriteRequest(request *WriteRequest, lastKeyAccountForRowKey map[string]*KeyAccountRow) {
-	for _, row := range lastKeyAccountForRowKey {
-		request.AppendTabletRow(row)
-	}
-}
-
-func tableOpsToWritableRows(latestTableOps map[string]*pbcodec.TableOp) (rows []*TableScopeRow) {
-	for _, op := range latestTableOps {
-		rows = append(rows, &TableScopeRow{
-			Account:  N(op.Code),
-			Scope:    N(op.Scope),
-			Table:    N(op.TableName),
-			Payer:    N(op.Payer),
-			Deletion: op.Operation == pbcodec.TableOp_OPERATION_REMOVE,
-		})
-	}
-
-	return
-}
-
 func tableDataRowPath(op *pbcodec.DBOp) string {
 	return op.Code + "/" + op.Scope + "/" + op.TableName + "/" + op.PrimaryKey
-}
-
-func tableRowPath(op *pbcodec.TableOp) string {
-	return op.Code + "/" + op.Scope + "/" + op.TableName
 }
