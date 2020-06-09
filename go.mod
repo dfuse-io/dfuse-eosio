@@ -23,6 +23,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
+	github.com/dfuse-io/dfuse-box v0.0.0-20200608182358-fea76dca7384
 	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
 	github.com/dfuse-io/dgrpc v0.0.0-20200602203441-eded01d2c0e7
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
@@ -46,7 +47,6 @@ require (
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200603180942-a183f4c66253
-	github.com/dfuse-io/dfuse-box v0.0.0-20200608182358-fea76dca7384
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
@@ -64,7 +64,6 @@ require (
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00 // indirect
 	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521 // indirect
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -96,3 +95,4 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
 
+replace github.com/dfuse-io/dfuse-box => /Users/cbillett/devel/dfuse/go/dfuse-box
