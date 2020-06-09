@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
@@ -21,11 +22,22 @@ func (s *Server) GetABI(ctx context.Context, request *pbfluxdb.GetABIRequest) (*
 		zap.Uint64("block_num", request.BlockNum),
 	)
 
-	abiEntry, err := s.fetchABI(ctx, string(request.Contract), uint32(request.BlockNum))
+	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, uint32(request.BlockNum), false)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "fetching ABI: %s", err)
+		return nil, fmt.Errorf("speculative writes: %w", err)
 	}
 
+	entry, err := s.db.ReadSigletEntryAt(ctx, fluxdb.NewContractABISiglet(request.Contract), actualBlockNum, speculativeWrites)
+	if err != nil {
+		return nil, fmt.Errorf("db read: %w", err)
+	}
+
+	// FIXME: Is this the semantic we want for not found ABI call?
+	if entry == nil {
+		return &pbfluxdb.GetABIResponse{}, nil
+	}
+
+	abiEntry := entry.(*fluxdb.ContractABIEntry)
 	if request.ToJson {
 		abi, err := abiEntry.ABI()
 		if err != nil {

@@ -117,6 +117,14 @@ func NewContractTableScopeRow(blockNum uint32, op *pbcodec.TableOp) *ContractTab
 	return tablet.NewRow(blockNum, op.Scope, payer, isDeletion)
 }
 
+func (r *ContractTableScopeRow) Scope() string {
+	return r.PrimKey
+}
+
 func (r *ContractTableScopeRow) Payer() string {
+	if r == nil || len(r.Payload) == 0 {
+		return ""
+	}
+
 	return eos.NameToString(binary.BigEndian.Uint64(r.Payload))
 }

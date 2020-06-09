@@ -128,6 +128,29 @@ func NewDeleteAuthLinkRow(blockNum uint32, actionTrace *pbcodec.ActionTrace) (*A
 	return tablet.NewRow(blockNum, string(unlinkAuth.Code), string(unlinkAuth.Type), string(""), true), nil
 }
 
+func (r *AuthLinkRow) Contract() string {
+	contract, _ := r.Explode()
+	return contract
+}
+
+func (r *AuthLinkRow) Action() string {
+	_, action := r.Explode()
+	return action
+}
+
+func (r *AuthLinkRow) Explode() (contract, action string) {
+	parts := strings.Split(r.PrimKey, ":")
+	if len(parts) > 0 {
+		contract = parts[0]
+	}
+
+	if len(parts) > 1 {
+		action = parts[1]
+	}
+
+	return
+}
+
 func (r *AuthLinkRow) Permission() eos.PermissionName {
 	return eos.PermissionName(eos.NameToString(binary.BigEndian.Uint64(r.Payload)))
 }

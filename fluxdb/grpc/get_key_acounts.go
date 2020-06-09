@@ -2,12 +2,14 @@ package grpc
 
 import (
 	"context"
+	"sort"
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 )
 
@@ -19,17 +21,23 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 	)
 
 	blockNum := uint32(request.BlockNum)
-
 	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
-	accountNames, err := s.db.ReadKeyAccounts(ctx, uint32(actualBlockNum), request.PublicKey, speculativeWrites)
+	tabletRows, err := s.db.ReadTabletAt(
+		ctx,
+		actualBlockNum,
+		fluxdb.NewKeyAccountTablet(request.PublicKey),
+		speculativeWrites,
+	)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "unable to read key accounts from db: %s", err)
+		return nil, derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", err)
 	}
 
+	zlogger.Debug("post-processing key accounts", zap.Int("key_account_count", len(tabletRows)))
+	accountNames := sortedUniqueKeyAccounts(tabletRows)
 	if len(accountNames) == 0 {
 		seen, err := s.db.HasSeenPublicKeyOnce(ctx, request.PublicKey)
 		if err != nil {
@@ -41,14 +49,32 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 		}
 	}
 
-	resp := &pbfluxdb.GetKeyAccountsResponse{
+	return &pbfluxdb.GetKeyAccountsResponse{
 		BlockNum: uint64(actualBlockNum),
-		Accounts: make([]string, len(accountNames)),
-	}
-	for itr, acc := range accountNames {
-		resp.Accounts[itr] = string(acc)
+		Accounts: accountNames,
+	}, nil
+}
+
+func sortedUniqueKeyAccounts(tabletRows []fluxdb.TabletRow) (out []string) {
+	if len(tabletRows) <= 0 {
+		return
 	}
 
-	return resp, nil
+	accountNameSet := map[string]bool{}
+	for _, tabletRow := range tabletRows {
+		accountNameSet[tabletRow.(*fluxdb.KeyAccountRow).Account()] = true
+	}
 
+	i := 0
+	out = make([]string, len(accountNameSet))
+	for account := range accountNameSet {
+		out[i] = account
+		i++
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		return out[i] < out[j]
+	})
+
+	return
 }

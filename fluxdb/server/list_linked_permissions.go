@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
@@ -30,7 +31,7 @@ import (
 
 func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	zlog := logging.Logger(ctx, zlog)
+	zlogger := logging.Logger(ctx, zlog)
 
 	errors := validateGetLinkedPermissionsRequest(r)
 	if len(errors) > 0 {
@@ -39,7 +40,7 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 	}
 
 	request := extractGetLinkedPermissionsRequest(r)
-	zlog.Debug("extracted request", zap.Reflect("request", request))
+	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
@@ -47,18 +48,45 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
-	linkedPermissions, err := srv.db.ReadLinkedPermissions(ctx, actualBlockNum, request.Account, speculativeWrites)
+	tabletRows, err := srv.db.ReadTabletAt(
+		ctx,
+		actualBlockNum,
+		fluxdb.NewAuthLinkTablet(string(request.Account)),
+		speculativeWrites,
+	)
 	if err != nil {
-		writeError(ctx, w, fmt.Errorf("reading linked permissions failed: %w", err))
+		writeError(ctx, w, fmt.Errorf("unable to read tablet at %d: %s", request.BlockNum, err))
 		return
 	}
 
-	response := &listLinkedPermissionsResponse{
+	resp := &listLinkedPermissionsResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-		LinkedPermissions:   linkedPermissions,
+		LinkedPermissions:   make([]*fluxdb.LinkedPermission, len(tabletRows)),
 	}
 
-	writeResponse(ctx, w, response)
+	for i, tabletRow := range tabletRows {
+		row := tabletRow.(*fluxdb.AuthLinkRow)
+		contract, action := row.Explode()
+
+		resp.LinkedPermissions[i] = &fluxdb.LinkedPermission{
+			Contract:       contract,
+			Action:         action,
+			PermissionName: string(row.Permission()),
+		}
+	}
+
+	zlogger.Debug("sorting linked permissions")
+	permissions := resp.LinkedPermissions
+	sort.Slice(permissions, func(i, j int) bool {
+		if permissions[i].Contract == permissions[j].Contract {
+			return permissions[i].Action < permissions[j].Action
+		}
+
+		return permissions[i].Contract < permissions[j].Contract
+	})
+	resp.LinkedPermissions = permissions
+
+	writeResponse(ctx, w, resp)
 }
 
 type listLinkedPermissionsRequest struct {

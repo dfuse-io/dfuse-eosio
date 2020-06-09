@@ -18,12 +18,13 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
-	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -40,14 +41,38 @@ func (srv *EOSServer) listKeyAccountsHandler(w http.ResponseWriter, r *http.Requ
 	request := extractListKeyAccountsRequest(r)
 	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
-	accountNames, actualBlockNum, err := srv.listKeyAccounts(ctx, request.PublicKey, request.BlockNum)
+	blockNum := uint32(request.BlockNum)
+	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		writeError(ctx, w, fmt.Errorf("list key accounts: %w", err))
+		writeError(ctx, w, fmt.Errorf("unable to prepare read: %w", err))
 		return
 	}
 
-	if accountNames == nil {
-		accountNames = []eos.AccountName{}
+	tabletRows, err := srv.db.ReadTabletAt(
+		ctx,
+		actualBlockNum,
+		fluxdb.NewKeyAccountTablet(request.PublicKey),
+		speculativeWrites,
+	)
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("unable to read tablet at %d: %s", blockNum, err))
+		return
+	}
+
+	zlogger.Debug("post-processing key accounts", zap.Int("key_account_count", len(tabletRows)))
+	accountNames := sortedUniqueKeyAccounts(tabletRows)
+	if len(accountNames) == 0 {
+		zlogger.Debug("no account found for request, checking if we ever seen this public key")
+		seen, err := srv.db.HasSeenPublicKeyOnce(ctx, request.PublicKey)
+		if err != nil {
+			writeError(ctx, w, fmt.Errorf("unable to know if public key was seen once in db: %w", err))
+			return
+		}
+
+		if !seen {
+			writeError(ctx, w, fluxdb.DataPublicKeyNotFoundError(ctx, request.PublicKey))
+			return
+		}
 	}
 
 	writeResponse(ctx, w, &listKeyAccountsResponse{
@@ -62,8 +87,8 @@ type listKeyAccountsRequest struct {
 }
 
 type listKeyAccountsResponse struct {
-	BlockNum     uint32            `json:"block_num"`
-	AccountNames []eos.AccountName `json:"account_names"`
+	BlockNum     uint32   `json:"block_num"`
+	AccountNames []string `json:"account_names"`
 }
 
 func validateListKeyAccountsRequest(r *http.Request) url.Values {
@@ -80,4 +105,28 @@ func extractListKeyAccountsRequest(r *http.Request) *listKeyAccountsRequest {
 		PublicKey: r.FormValue("public_key"),
 		BlockNum:  uint32(blockNum64),
 	}
+}
+
+func sortedUniqueKeyAccounts(tabletRows []fluxdb.TabletRow) (out []string) {
+	if len(tabletRows) <= 0 {
+		return
+	}
+
+	accountNameSet := map[string]bool{}
+	for _, tabletRow := range tabletRows {
+		accountNameSet[tabletRow.(*fluxdb.KeyAccountRow).Account()] = true
+	}
+
+	i := 0
+	out = make([]string, len(accountNameSet))
+	for account := range accountNameSet {
+		out[i] = account
+		i++
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		return out[i] < out[j]
+	})
+
+	return
 }

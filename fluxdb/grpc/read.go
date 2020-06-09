@@ -354,22 +354,3 @@ func (srv *Server) fetchHeadBlock(ctx context.Context, zlog *zap.Logger) (headBl
 
 	return
 }
-
-func (srv *Server) fetchABI(
-	ctx context.Context,
-	account string,
-	blockNum uint32,
-) (*fluxdb.ContractABIEntry, error) {
-	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
-	if err != nil {
-		return nil, fmt.Errorf("speculative writes: %w", err)
-	}
-
-	siglet := fluxdb.NewContractABISiglet(account)
-	entry, err := srv.db.ReadSigletEntryAt(ctx, siglet, actualBlockNum, speculativeWrites)
-	if err != nil {
-		return nil, fmt.Errorf("db read: %w", err)
-	}
-
-	return entry.(*fluxdb.ContractABIEntry), nil
-}

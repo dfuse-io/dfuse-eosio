@@ -111,3 +111,21 @@ func NewKeyAccountRow(blockNum uint32, publicKey, account, permission string, is
 	tablet := NewKeyAccountTablet(publicKey)
 	return tablet.NewRow(blockNum, account, permission, isDeletion)
 }
+
+func (r *KeyAccountRow) Account() string {
+	account, _ := r.Explode()
+	return account
+}
+
+func (r *KeyAccountRow) Explode() (account, permission string) {
+	parts := strings.Split(r.PrimKey, ":")
+	if len(parts) > 0 {
+		account = parts[0]
+	}
+
+	if len(parts) > 1 {
+		permission = parts[1]
+	}
+
+	return
+}

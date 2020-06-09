@@ -18,9 +18,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
 	eos "github.com/eoscanada/eos-go"
@@ -40,14 +42,41 @@ func (srv *EOSServer) listTableScopesHandler(w http.ResponseWriter, r *http.Requ
 	request := extractListTableScopesRequest(r)
 	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
-	scopes, actualBlockNum, err := srv.listTableScopes(ctx, request.Account, request.Table, request.BlockNum)
+	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
-		writeError(ctx, w, fmt.Errorf("list table scopes: %w", err))
+		writeError(ctx, w, fmt.Errorf("unable to prepare read: %w", err))
 		return
 	}
 
-	if scopes == nil {
-		scopes = []eos.Name{}
+	tabletRows, err := srv.db.ReadTabletAt(
+		ctx,
+		actualBlockNum,
+		fluxdb.NewContractTableScopeTablet(string(request.Account), string(request.Table)),
+		speculativeWrites,
+	)
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("unable to read tablet at %d: %s", actualBlockNum, err))
+		return
+	}
+
+	zlogger.Debug("post-processing table scopes", zap.Int("table_scope_count", len(tabletRows)))
+	scopes := sortedScopes(tabletRows)
+	if len(scopes) == 0 {
+		zlogger.Debug("no scopes found for request, checking if we ever seen this table")
+		seen, err := srv.db.HasSeenTableOnce(ctx, request.Account, request.Table)
+		if err != nil {
+			writeError(ctx, w, fmt.Errorf("unable to know if table scope was seen once in db: %w", err))
+			return
+		}
+
+		if !seen {
+			writeError(ctx, w, fluxdb.DataTableNotFoundError(ctx, request.Account, request.Table))
+			return
+		}
+	}
+
+	if len(scopes) <= 0 {
+		scopes = []string{}
 	}
 
 	writeResponse(ctx, w, &listTableScopesResponse{
@@ -63,8 +92,8 @@ type listTableScopesRequest struct {
 }
 
 type listTableScopesResponse struct {
-	BlockNum uint32     `json:"block_num"`
-	Scopes   []eos.Name `json:"scopes"`
+	BlockNum uint32   `json:"block_num"`
+	Scopes   []string `json:"scopes"`
 }
 
 func validateListTableScopesRequest(r *http.Request) url.Values {
@@ -83,4 +112,21 @@ func extractListTableScopesRequest(r *http.Request) *listTableScopesRequest {
 		Table:    eos.TableName(r.FormValue("table")),
 		BlockNum: uint32(blockNum64),
 	}
+}
+
+func sortedScopes(tabletRows []fluxdb.TabletRow) (out []string) {
+	if len(tabletRows) <= 0 {
+		return
+	}
+
+	out = make([]string, len(tabletRows))
+	for i, tabletRow := range tabletRows {
+		out[i] = tabletRow.(*fluxdb.ContractTableScopeRow).Scope()
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		return out[i] < out[j]
+	})
+
+	return
 }

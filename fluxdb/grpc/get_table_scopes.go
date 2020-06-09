@@ -1,7 +1,10 @@
 package grpc
 
 import (
+	"sort"
+
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/logging"
 	"github.com/eoscanada/eos-go"
@@ -24,20 +27,27 @@ func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream 
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
-	scopes, err := s.db.ReadTableScopes(ctx, actualBlockNum, contract, table, speculativeWrites)
+	tabletRows, err := s.db.ReadTabletAt(
+		ctx,
+		actualBlockNum,
+		fluxdb.NewContractTableScopeTablet(request.Contract, request.Table),
+		speculativeWrites,
+	)
 	if err != nil {
-		return derr.Statusf(codes.Internal, "unable to read table scopes from db: %s", err)
+		return derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", blockNum, err)
 	}
 
+	zlogger.Debug("post-processing table scopes", zap.Int("table_scope_count", len(tabletRows)))
+	scopes := sortedScopes(tabletRows)
 	if len(scopes) == 0 {
-		logging.Logger(ctx, zlog).Debug("no scopes found for request, checking if we ever see this table")
+		zlogger.Debug("no scopes found for request, checking if we ever see this table")
 		seen, err := s.db.HasSeenTableOnce(ctx, contract, table)
 		if err != nil {
-			return derr.Status(codes.Internal, "unable to know if table was seen once in db")
+			return derr.Statusf(codes.Internal, "unable to know if table was seen once in db: %s", err)
 		}
 
 		if !seen {
-			return derr.Status(codes.Internal, "table does not exist in ABI at this block height")
+			return derr.Statusf(codes.Internal, "table %s/%s does not exist in ABI at this block height", request.Contract, request.Table)
 		}
 	}
 
@@ -50,4 +60,21 @@ func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream 
 	}
 
 	return nil
+}
+
+func sortedScopes(tabletRows []fluxdb.TabletRow) (out []string) {
+	if len(tabletRows) <= 0 {
+		return
+	}
+
+	out = make([]string, len(tabletRows))
+	for i, tabletRow := range tabletRows {
+		out[i] = tabletRow.(*fluxdb.ContractTableScopeRow).Scope()
+	}
+
+	sort.Slice(out, func(i, j int) bool {
+		return out[i] < out[j]
+	})
+
+	return
 }
