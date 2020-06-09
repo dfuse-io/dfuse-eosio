@@ -29,23 +29,23 @@ func (s *Server) GetABI(ctx context.Context, request *pbfluxdb.GetABIRequest) (*
 	blockNum := uint32(request.BlockNum)
 	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "unable to prepare read", err)
+		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
 	abiRow, err := s.db.GetABI(ctx, uint32(actualBlockNum), fluxdb.N(request.Contract), speculativeWrites)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "fetching ABI from db: %w", err)
+		return nil, derr.Statusf(codes.Internal, "fetching ABI from db: %s", err)
 	}
 
 	if request.ToJson {
 		var abiObj *eos.ABI
 		if err = eos.UnmarshalBinary(abiRow.PackedABI, &abiObj); err != nil {
-			return nil, derr.Statusf(codes.Internal, "failed to decode packed ABI %q to JSON: %w", abiRow.PackedABI, err)
+			return nil, derr.Statusf(codes.Internal, "failed to decode packed ABI %q to JSON: %s", abiRow.PackedABI, err)
 		}
 
 		cnt, err := json.Marshal(abiObj)
 		if err != nil {
-			return nil, derr.Statusf(codes.Internal, "failed to marshal ABI: %w", err)
+			return nil, derr.Statusf(codes.Internal, "failed to marshal ABI: %s", err)
 		}
 
 		return &pbfluxdb.GetABIResponse{

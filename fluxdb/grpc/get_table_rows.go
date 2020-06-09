@@ -18,13 +18,13 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 	blockNum := uint32(request.BlockNum)
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := s.prepareRead(ctx, blockNum, request.IrreversibleOnly)
 	if err != nil {
-		return derr.Statusf(codes.Internal, "unable to prepare read", err)
+		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
 	responseRows, err := s.readTable(
 		ctx,
 		actualBlockNum,
-		request.Account,
+		request.Contract,
 		request.Table,
 		request.Scope,
 		request.KeyType,
@@ -35,16 +35,16 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 	)
 
 	if err != nil {
-		return derr.Wrapf(err, "read rows failed: %w", err)
+		return derr.Statusf(codes.Internal, "read rows failed: %s", err)
 	}
 
-	response := &getTableRowsResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-		readTableResponse:   responseRows,
+	ref := newReadReference(upToBlockID, lastWrittenBlockID)
+
+	for _, row := range responseRows.Rows {
+		stream.Send(processTableRow(&readTableRowResponse{
+			ABI: responseRows.ABI,
+			Row: row,
+		}, ref))
 	}
-
-	zlog.Debug("streaming response", zap.Int("row_count", len(response.readTableResponse.Rows)), zap.Reflect("common_response", response.commonStateResponse))
-	streamResponse(ctx, w, response)
-
-	panic("implement me")
+	return nil
 }

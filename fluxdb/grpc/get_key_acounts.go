@@ -22,18 +22,18 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 
 	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %w", err)
+		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
 	accountNames, err := s.db.ReadKeyAccounts(ctx, uint32(actualBlockNum), request.PublicKey, speculativeWrites)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "unable to read key accounts from db: %w", err)
+		return nil, derr.Statusf(codes.Internal, "unable to read key accounts from db: %s", err)
 	}
 
 	if len(accountNames) == 0 {
 		seen, err := s.db.HasSeenPublicKeyOnce(ctx, request.PublicKey)
 		if err != nil {
-			return nil, derr.Statusf(codes.Internal, "unable to know if public key was seen once in db: %w", err)
+			return nil, derr.Statusf(codes.Internal, "unable to know if public key was seen once in db: %s", err)
 		}
 
 		if !seen {

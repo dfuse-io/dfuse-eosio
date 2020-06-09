@@ -15,6 +15,22 @@ type readTableRowResponse struct {
 	Row *tableRow `json:"row"`
 }
 
+type readReference struct {
+	upToBlockId              string
+	upToBlockNum             uint64
+	lastIrreversibleBlockId  string
+	lastIrreversibleBlockNum uint64
+}
+
+func newReadReference(upToBlockID, lastWrittenBlockID string) *readReference {
+	return &readReference{
+		upToBlockId:              upToBlockID,
+		upToBlockNum:             uint64(fluxdb.BlockNum(upToBlockID)),
+		lastIrreversibleBlockId:  lastWrittenBlockID,
+		lastIrreversibleBlockNum: uint64(fluxdb.BlockNum(lastWrittenBlockID)),
+	}
+}
+
 type tableRow struct {
 	Key      string
 	Data     interface{}

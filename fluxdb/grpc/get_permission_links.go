@@ -24,12 +24,12 @@ func (s *Server) GetPermissionLinks(ctx context.Context, request *pbfluxdb.GetPe
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "fetching ABI from db: %w", err)
+		return nil, derr.Statusf(codes.Internal, "fetching ABI from db: %s", err)
 	}
 
 	linkedPermissions, err := s.db.ReadLinkedPermissions(ctx, actualBlockNum, eos.AccountName(request.Account), speculativeWrites)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "reading linked permissions failed: %w", err)
+		return nil, derr.Statusf(codes.Internal, "reading linked permissions failed: %s", err)
 	}
 
 	resp := &pbfluxdb.GetPermissionLinksResponse{
