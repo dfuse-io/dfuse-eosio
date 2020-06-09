@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/bigtable v1.2.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.6
 	github.com/GeertJohan/go.rice v1.0.0
+	github.com/ShinyTrinkets/overseer v0.3.0
 	github.com/abourget/llerrgroup v0.2.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
@@ -47,6 +48,7 @@ require (
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200603180942-a183f4c66253
+	github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
@@ -95,3 +97,5 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
 
 replace github.com/dfuse-io/dfuse-box => /Users/cbillett/devel/dfuse/go/dfuse-box
+
+replace github.com/dfuse-io/manageos => /Users/cbillett/devel/dfuse/go/manageos

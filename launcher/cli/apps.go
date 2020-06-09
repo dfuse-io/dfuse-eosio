@@ -16,7 +16,6 @@ package cli
 
 import (
 	"fmt"
-	launcher2 "github.com/dfuse-io/dfuse-box/launcher"
 	"io"
 	"math"
 	"os"
@@ -29,6 +28,7 @@ import (
 	_ "github.com/dfuse-io/dauth/authenticator/null" // register authenticator plugin
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // register ratelimiter plugin
 	"github.com/dfuse-io/dfuse-box/dashboard"
+	"github.com/dfuse-io/dfuse-box/launcher"
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
@@ -37,6 +37,7 @@ import (
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
+	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
@@ -44,9 +45,13 @@ import (
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/manageos"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
+	"github.com/dfuse-io/manageos/metrics"
 	"github.com/dfuse-io/manageos/mindreader"
+	"github.com/dfuse-io/manageos/operator"
+	"github.com/dfuse-io/manageos/profiler"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
@@ -63,7 +68,7 @@ import (
 
 func init() {
 
-	launcher2.RegisterCommonFlags = func(cmd *cobra.Command) error {
+	launcher.RegisterCommonFlags = func(cmd *cobra.Command) error {
 		// Common stores configuration flags
 		cmd.Flags().String("common-backup-store-url", PitreosURL, "[COMMON] Store URL (with prefix) where to read or write backups.")
 		cmd.Flags().String("common-blocks-store-url", MergedBlocksStoreURL, "[COMMON] Store URL (with prefix) where to read/write. Used by: relayer, fluxdb, trxdb-loader, blockmeta, search-indexer, search-live, search-forkresolver, eosws")
@@ -101,22 +106,22 @@ func init() {
 		return nil
 	}
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "node-manager",
 		Title:       "Node manager",
 		Description: "Block producing node",
 		MetricsID:   "producer",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "nodeos manager API address")
-			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
+			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "superviser manager API address")
+			cmd.Flags().String("node-manager-superviser-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying superviser")
 			cmd.Flags().Bool("node-manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("node-manager-config-dir", "./producer", "Directory for config files")
-			cmd.Flags().String("node-manager-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("node-manager-data-dir", "{dfuse-data-dir}/node-manager/data", "Directory for data (nodeos blocks and state)")
+			cmd.Flags().String("node-manager-superviser-path", NodeosBinPath, "Path to the superviser binary. Defaults to the superviser found in your PATH")
+			cmd.Flags().String("node-manager-data-dir", "{dfuse-data-dir}/node-manager/data", "Directory for data (superviser blocks and state)")
 			cmd.Flags().String("node-manager-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("node-manager-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
-			cmd.Flags().Duration("node-manager-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
+			cmd.Flags().Duration("node-manager-readiness-max-latency", 5*time.Second, "/healthz will return error until superviser head block time is within that duration to now")
 			cmd.Flags().String("node-manager-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().String("node-manager-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().Bool("node-manager-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
@@ -126,7 +131,7 @@ func init() {
 			cmd.Flags().Duration("node-manager-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().String("node-manager-backup-tag", "default", "tag to identify the backup")
 			cmd.Flags().Bool("node-manager-disable-profiler", true, "Disables the manageos profiler")
-			cmd.Flags().StringSlice("node-manager-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
+			cmd.Flags().StringSlice("node-manager-superviser-args", []string{}, "Extra arguments to be passed when executing superviser binary")
 			cmd.Flags().Bool("node-manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().Int("node-manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
 			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
@@ -140,49 +145,84 @@ func init() {
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher2.RuntimeModules) error {
-			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
+		InitFunc: func(modules *launcher.RuntimeModules) error {
+			// TODO: check if `~/.dfuse/binaries/superviser-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
+			if err := CheckNodeosInstallation(viper.GetString("node-manager-superviser-path")); err != nil {
 				return err
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
 			}
+
+			hostname, _ := os.Hostname()
+			metricID := "producer"
+			headBlockTimeDrift := metrics.NewHeadBlockTimeDrift(metricID)
+			headBlockNumber := metrics.NewHeadBlockNumber(metricID)
+
+			var p *profiler.Profiler
+			if !viper.GetBool("node-manager-disable-profiler") {
+				p = profiler.MaybeNew()
+			}
+
+			metricsAndReadinessManager := manageos.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
+			chainSuperviser, err := superviser.NewSuperviser(
+				viper.GetBool("node-manager-debug-deep-mind"),
+				metricsAndReadinessManager.UpdateHeadBlock,
+				&superviser.SuperviserOptions{
+					LocalNodeEndpoint: viper.GetString("node-manager-superviser-api-addr"),
+					ConfigDir:         viper.GetString("node-manager-config-dir"),
+					BinPath:           viper.GetString("node-manager-superviser-path"),
+					DataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-data-dir")),
+					Hostname:          hostname,
+					ProducerHostname:  viper.GetString("node-manager-producer-hostname"),
+					TrustedProducer:   viper.GetString("node-manager-trusted-producer"),
+					AdditionalArgs:    viper.GetStringSlice("node-manager-superviser-args"),
+					ForceProduction:   viper.GetBool("node-manager-force-production"),
+					LogToZap:          viper.GetBool("node-manager-log-to-zap"),
+				})
+			if err != nil {
+				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
+			}
+
+			chainOperator, err := operator.New(
+				chainSuperviser,
+				metricsAndReadinessManager,
+				&operator.Options{
+					BootstrapDataURL:           viper.GetString("node-manager-bootstrap-data-url"),
+					BackupTag:                  viper.GetString("node-manager-backup-tag"),
+					BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+					AutoRestoreSource:          viper.GetString("node-manager-auto-restore-source"),
+					ShutdownDelay:              viper.GetDuration("node-manager-shutdown-delay"),
+					RestoreBackupName:          viper.GetString("node-manager-restore-backup-name"),
+					RestoreSnapshotName:        viper.GetString("node-manager-restore-snapshot-name"),
+					SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-snapshot-store-url")),
+					StartFailureHandlerFunc:    nil,
+					NumberOfSnapshotsToKeep:    viper.GetInt("node-manager-number-of-snapshots-to-keep"),
+					EnableSupervisorMonitoring: true,
+					Profiler:                   p,
+				})
+
+			if err != nil {
+				return nil, fmt.Errorf("unable to create chain operator: %w", err)
+			}
+
 			return nodeosManagerApp.New(&nodeosManagerApp.Config{
-				MetricID:                "producer",
-				ManagerAPIAddress:       viper.GetString("node-manager-http-listen-addr"),
-				NodeosAPIAddress:        viper.GetString("node-manager-nodeos-api-addr"),
-				ConnectionWatchdog:      viper.GetBool("node-manager-connection-watchdog"),
-				NodeosConfigDir:         viper.GetString("node-manager-config-dir"),
-				NodeosBinPath:           viper.GetString("node-manager-nodeos-path"),
-				NodeosDataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-data-dir")),
-				ProducerHostname:        viper.GetString("node-manager-producer-hostname"),
-				TrustedProducer:         viper.GetString("node-manager-trusted-producer"),
-				ReadinessMaxLatency:     viper.GetDuration("node-manager-readiness-max-latency"),
-				ForceProduction:         viper.GetBool("node-manager-force-production"),
-				NodeosExtraArgs:         viper.GetStringSlice("node-manager-nodeos-args"),
-				BackupStoreURL:          mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BootstrapDataURL:        viper.GetString("node-manager-bootstrap-data-url"),
-				DebugDeepMind:           viper.GetBool("node-manager-debug-deep-mind"),
-				LogToZap:                viper.GetBool("node-manager-log-to-zap"),
-				AutoRestoreSource:       viper.GetString("node-manager-auto-restore-source"),
-				RestoreBackupName:       viper.GetString("node-manager-restore-backup-name"),
-				RestoreSnapshotName:     viper.GetString("node-manager-restore-snapshot-name"),
-				SnapshotStoreURL:        mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-snapshot-store-url")),
-				ShutdownDelay:           viper.GetDuration("node-manager-shutdown-delay"),
-				BackupTag:               viper.GetString("node-manager-backup-tag"),
-				AutoBackupModulo:        viper.GetInt("node-manager-auto-backup-modulo"),
-				AutoBackupPeriod:        viper.GetDuration("node-manager-auto-backup-period"),
-				AutoSnapshotModulo:      viper.GetInt("node-manager-auto-snapshot-modulo"),
-				AutoSnapshotPeriod:      viper.GetDuration("node-manager-auto-snapshot-period"),
-				NumberOfSnapshotsToKeep: viper.GetInt("node-manager-number-of-snapshots-to-keep"),
-				DisableProfiler:         viper.GetBool("node-manager-disable-profiler"),
-				StartFailureHandlerFunc: nil,
+				ManagerAPIAddress:  viper.GetString("node-manager-http-listen-addr"),
+				ConnectionWatchdog: viper.GetBool("node-manager-connection-watchdog"),
+				AutoBackupModulo:   viper.GetInt("node-manager-auto-backup-modulo"),
+				AutoBackupPeriod:   viper.GetDuration("node-manager-auto-backup-period"),
+				AutoSnapshotModulo: viper.GetInt("node-manager-auto-snapshot-modulo"),
+				AutoSnapshotPeriod: viper.GetDuration("node-manager-auto-snapshot-period"),
+				DisableProfiler:    viper.GetBool("node-manager-disable-profiler"),
+			}, &nodeosManagerApp.Modules{
+				Operator:                     chainOperator,
+				MetricsAndReadinessManager:   metricsAndReadinessManager,
+				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
 			}), nil
 
 			// Can we detect a nil interface
@@ -190,22 +230,22 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "mindreader",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
-			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
+			cmd.Flags().String("mindreader-superviser-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying superviser")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
-			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the nodeos found in your PATH")
-			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (nodeos blocks and state)")
+			cmd.Flags().String("mindreader-superviser-path", NodeosBinPath, "Path to the superviser binary. Defaults to the superviser found in your PATH")
+			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (superviser blocks and state)")
 			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
-			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
+			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until superviser head block time is within that duration to now")
 			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the manageos profiler")
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader/work", "Path where mindreader will stores its files")
@@ -215,9 +255,9 @@ func init() {
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
 			cmd.Flags().Bool("mindreader-discard-after-stop-num", false, "ignore remaining blocks being processed after stop num (only useful if we discard the mindreader data after reprocessing a chunk of blocks)")
-			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown nodeos/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
+			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
-			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
+			cmd.Flags().StringSlice("mindreader-superviser-args", []string{}, "Extra arguments to be passed when executing superviser binary")
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
@@ -228,16 +268,16 @@ func init() {
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
-			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the nodeos if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
+			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher2.RuntimeModules) error {
-			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
+		InitFunc: func(modules *launcher.RuntimeModules) error {
+			if err := CheckNodeosInstallation(viper.GetString("mindreader-superviser-path")); err != nil {
 				return err
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -249,8 +289,8 @@ func init() {
 			if viper.GetBool("mindreader-start-failure-handler") {
 				startUpFunc = func() {
 					userLog.Error(`*********************************************************************************
-* Mindreader failed to start nodeos process
-* To see nodeos logs...
+* Mindreader failed to start superviser process
+* To see superviser logs...
 * DEBUG="mindreader" dfuseeos start
 *********************************************************************************`)
 					os.Exit(1)
@@ -270,58 +310,110 @@ func init() {
 				return codec.BlockFromProto(blk)
 			}
 
-			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
-				MetricID:                  "mindreader",
-				ManagerAPIAddress:         viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:          viper.GetString("mindreader-nodeos-api-addr"),
-				ConnectionWatchdog:        viper.GetBool("mindreader-connection-watchdog"),
-				NodeosConfigDir:           viper.GetString("mindreader-config-dir"),
-				NodeosBinPath:             viper.GetString("mindreader-nodeos-path"),
-				NodeosDataDir:             mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
-				ProducerHostname:          viper.GetString("mindreader-producer-hostname"),
-				TrustedProducer:           viper.GetString("mindreader-trusted-producer"),
-				ReadinessMaxLatency:       viper.GetDuration("mindreader-readiness-max-latency"),
-				NodeosExtraArgs:           viper.GetStringSlice("mindreader-nodeos-args"),
-				BackupStoreURL:            mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BackupTag:                 viper.GetString("mindreader-backup-tag"),
-				NoBlocksLog:               viper.GetBool("mindreader-no-blocks-log"),
-				BootstrapDataURL:          viper.GetString("mindreader-bootstrap-data-url"),
-				DebugDeepMind:             viper.GetBool("mindreader-debug-deep-mind"),
-				LogToZap:                  viper.GetBool("mindreader-log-to-zap"),
-				FailOnNonContinuousBlocks: viper.GetBool("mindreader-fail-on-non-contiguous-block"),
+			var p *profiler.Profiler
+			if !viper.GetBool("mindreader-disable-profiler") {
+				p = profiler.MaybeNew()
+			}
 
-				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
-				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
-				NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
-				RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
-				RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
-				SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
-				ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
-				ArchiveStoreURL:            archiveStoreURL,
-				MergeArchiveStoreURL:       mergeArchiveStoreURL,
-				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
-				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
-				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
-				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
-				DiscardAfterStopBlock:      viper.GetBool("mindreader-discard-after-stop-num"),
-				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
-				WorkingDir:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
-				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
-				StartFailureHandlerFunc:    startUpFunc,
+			hostname, _ := os.Hostname()
+			metricID := "mindreader"
+			headBlockTimeDrift := metrics.NewHeadBlockTimeDrift(metricID)
+			headBlockNumber := metrics.NewHeadBlockNumber(metricID)
+
+			metricsAndReadinessManager := manageos.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
+			chainSuperviser, err := superviser.NewSuperviser(
+				viper.GetBool("node-manager-debug-deep-mind"),
+				metricsAndReadinessManager.UpdateHeadBlock,
+				&superviser.SuperviserOptions{
+					LocalNodeEndpoint: viper.GetString("mindreader-manager-api-addr"),
+					ConfigDir:         viper.GetString("mindreader-config-dir"),
+					BinPath:           viper.GetString("mindreader-superviser-path"),
+					DataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
+					Hostname:          hostname,
+					ProducerHostname:  viper.GetString("mindreader-producer-hostname"),
+					TrustedProducer:   viper.GetString("mindreader-trusted-producer"),
+					AdditionalArgs:    viper.GetStringSlice("mindreader-superviser-args"),
+					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
+				})
+			if err != nil {
+				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
+			}
+
+			chainOperator, err := operator.New(
+				chainSuperviser,
+				metricsAndReadinessManager,
+				&operator.Options{
+					BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
+					BackupTag:                  viper.GetString("mindreader-backup-tag"),
+					BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+					AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
+					ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
+					RestoreBackupName:          viper.GetString("mindreader-restore-snapshot-name"),
+					RestoreSnapshotName:        viper.GetString("mindreader-restore-backup-name"),
+					SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
+					NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
+					EnableSupervisorMonitoring: false,
+					Profiler:                   p,
+				})
+			//if a.Config.StartFailureHandlerFunc != nil {
+			//	chainOperator.RegisterStartFailureHandler(a.Config.StartFailureHandlerFunc)
+			//}
+
+			if err != nil {
+				return nil, fmt.Errorf("unable to create chain operator: %w", err)
+			}
+
+			logPlugin, err := mindreader.NewMindReaderPlugin(
+				archiveStoreURL,
+				mergeArchiveStoreURL,
+				viper.GetBool("mindreader-merge-and-store-directly"),
+				viper.GetBool("mindreader-discard-after-stop-num"),
+				mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
+				superviser.BlockFileNamer,
+				consoleReaderFactory,
+				consoleReaderBlockTransformer,
+				viper.GetUint64("mindreader-start-block-num"),
+				viper.GetUint64("mindreader-stop-block-num"),
+				viper.GetInt("mindreader-blocks-chan-capacity"),
+				metricsAndReadinessManager.UpdateHeadBlock,
+				chainOperator.SetMaintenance,
+				func() {
+					chainOperator.Shutdown(nil)
+				},
+				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			chainSuperviser.RegisterLogPlugin(logPlugin)
+
+			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
+				ManagerAPIAddress:       viper.GetString("mindreader-manager-api-addr"),
+				NodeosAPIAddress:        viper.GetString("mindreader-superviser-api-addr"),
+				ConnectionWatchdog:      viper.GetBool("mindreader-connection-watchdog"),
+				ReadinessMaxLatency:     viper.GetDuration("mindreader-readiness-max-latency"),
+				NoBlocksLog:             viper.GetBool("mindreader-no-blocks-log"),
+				DebugDeepMind:           viper.GetBool("mindreader-debug-deep-mind"),
+				AutoSnapshotPeriod:      viper.GetDuration("mindreader-auto-snapshot-period"),
+				NumberOfSnapshotsToKeep: viper.GetInt("mindreader-number-of-snapshots-to-keep"),
+				GRPCAddr:                viper.GetString("mindreader-grpc-listen-addr"),
+				StartFailureHandlerFunc: startUpFunc,
 			}, &nodeosMindreaderApp.Modules{
-				ConsoleReaderFactory:     consoleReaderFactory,
-				ConsoleReaderTransformer: consoleReaderBlockTransformer,
+				Operator:                     chainOperator,
+				LogPlugin:                    logPlugin,
+				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
 			}), nil
 		},
 	})
 
 	// Relayer
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "relayer",
 		Title:       "Relayer",
 		Description: "Serves blocks as a stream, with a buffer",
 		MetricsID:   "relayer",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of Blockstream sources (mindreaders) to connect to for live block feeds (repeat flag as needed)")
@@ -333,7 +425,7 @@ func init() {
 			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -352,12 +444,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "merger",
 		Title:       "Merger",
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between polling source store (higher for remote storage)")
 			cmd.Flags().String("merger-grpc-listen-addr", MergerServingAddr, "Address to listen for incoming gRPC requests")
@@ -375,7 +467,7 @@ func init() {
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
 		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
 		//        init flow and call init after the factory and giving it the instantiated app...
-		InitFunc: func(modules *launcher2.RuntimeModules) error {
+		InitFunc: func(modules *launcher.RuntimeModules) error {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return err
@@ -397,7 +489,7 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -420,12 +512,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "fluxdb",
 		Title:       "FluxDB",
 		Description: "Temporal chain state store",
 		MetricsID:   "fluxdb",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/fluxdb.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Bool("fluxdb-enable-server-mode", true, "Enables flux server mode, launch a server")
 			cmd.Flags().Bool("fluxdb-enable-inject-mode", true, "Enables flux inject mode, writes into its database")
@@ -442,7 +534,7 @@ func init() {
 			cmd.Flags().Uint64("fluxdb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -471,12 +563,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "trxdb-loader",
 		Title:       "DB loader",
 		Description: "Main blocks and transactions database",
 		MetricsID:   "trxdb-loader",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "number of blocks batched together for database write")
@@ -488,7 +580,7 @@ func init() {
 			cmd.Flags().Bool("trxdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -516,12 +608,12 @@ func init() {
 	})
 
 	// Blockmeta
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "blockmeta",
 		Title:       "Blockmeta",
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not.")
@@ -530,7 +622,7 @@ func init() {
 			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -559,12 +651,12 @@ func init() {
 	})
 
 	// Abicodec
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "abicodec",
 		Title:       "ABI codec",
 		Description: "Decodes binary data against ABIs for different contracts",
 		MetricsID:   "abicodec",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicache", "path where the cache store is state")
@@ -573,7 +665,7 @@ func init() {
 			cmd.Flags().String("abicodec-export-cache-url", "{dfuse-data-dir}/storage/abicache", "path where the exported cache will reside")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -596,12 +688,12 @@ func init() {
 	})
 
 	// Search Indexer
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-indexer",
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
 		MetricsID:   "indexer",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-indexer-http-listen-addr", IndexerHTTPServingAddr, "Address to listen for incoming http requests")
@@ -616,7 +708,7 @@ func init() {
 			cmd.Flags().String("search-indexer-writable-path", "{dfuse-data-dir}/search/indexer", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -677,12 +769,12 @@ func init() {
 	})
 
 	// Search Router
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-router",
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "router",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Router-specific flags
 			cmd.Flags().String("search-router-grpc-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")
@@ -691,7 +783,7 @@ func init() {
 			cmd.Flags().Uint64("search-router-lib-delay-tolerance", 0, "Number of blocks above a backend's lib we allow a request query to be served (Live & Router)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return routerApp.New(&routerApp.Config{
 				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
 				BlockmetaAddr:      viper.GetString("common-blockmeta-addr"),
@@ -706,12 +798,12 @@ func init() {
 	})
 
 	// Search Archive
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-archive",
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
 		MetricsID:   "archive",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
 			cmd.Flags().String("search-archive-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -733,7 +825,7 @@ func init() {
 			cmd.Flags().String("search-archive-writable-path", "{dfuse-data-dir}/search/archiver", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -765,12 +857,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-live",
 		Title:       "Search live",
 		Description: "Serves live search queries",
 		MetricsID:   "live",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
@@ -782,7 +874,7 @@ func init() {
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -818,19 +910,19 @@ func init() {
 	})
 
 	// Search Fork Resolver
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "search-forkresolver",
 		Title:       "Search fork resolver",
 		Description: "Search forks",
 		MetricsID:   "forkresolver",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkresolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkresolverHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("search-forkresolver-indices-path", "{dfuse-data-dir}/search/forkresolver", "Location for inflight indices")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
@@ -855,15 +947,15 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosws",
 		Title:       "EOSWS",
 		Description: "Serves websocket and http queries to clients",
 		MetricsID:   "eosws",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
-			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
+			cmd.Flags().String("eosws-superviser-rpc-addr", NodeosAPIAddr, "RPC endpoint of the superviser instance")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().String("eosws-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
@@ -873,18 +965,18 @@ func init() {
 			cmd.Flags().Duration("eosws-filesource-ratelimit", 2*time.Millisecond, "time to sleep between blocks coming from filesource to control replay speed")
 			cmd.Flags().String("eosws-healthz-secret", "", "Secret to access healthz")
 			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
-			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native nodeos APIs with authentication")
+			cmd.Flags().Bool("eosws-authenticate-superviser-api", false, "Gate access to native superviser APIs with authentication")
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
 			}
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
-				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
+				NodeosRPCEndpoint:           viper.GetString("eosws-superviser-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
 				KVDBDSN:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
@@ -892,7 +984,7 @@ func init() {
 				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
-				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
+				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-superviser-api"),
 				MeteringPlugin:              viper.GetString("common-metering-plugin"),
 				AuthPlugin:                  viper.GetString("common-auth-plugin"),
 				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),
@@ -907,12 +999,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dgraphql",
 		Title:       "GraphQL",
 		Description: "Serves GraphQL queries to clients",
 		MetricsID:   "dgraphql",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
@@ -925,7 +1017,7 @@ func init() {
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -959,12 +1051,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "eosq",
 		Title:       "Eosq",
 		Description: "EOSIO Block Explorer",
 		MetricsID:   "eosq",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
@@ -982,7 +1074,7 @@ func init() {
 			return nil
 		},
 
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
 				Environement:      viper.GetString("eosq-environment"),
@@ -1000,21 +1092,21 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "dashboard",
 		Title:       "Dashboard",
 		Description: "dfuse for EOSIO - dashboard",
 		MetricsID:   "dashboard",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-box/dashboard.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-box/dashboard.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
-			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the nodeos manager api")
+			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the superviser manager api")
 			// FIXME: we can re-add when the app actually makes use of it.
-			//cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader nodeos manager api")
+			//cmd.Flags().String("dashboard-mindreader-manager-api-addr", MindreaderNodeosAPIAddr, "Address of the mindreader superviser manager api")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
 				GRPCListenAddr:        viper.GetString("dashboard-grpc-listen-addr"),
 				HTTPListenAddr:        viper.GetString("dashboard-http-listen-addr"),
@@ -1027,12 +1119,12 @@ func init() {
 		},
 	})
 
-	launcher2.RegisterApp(&launcher2.AppDef{
+	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "apiproxy",
 		Title:       "API Proxy",
 		Description: "Reverse proxies all API services under one port",
 		MetricsID:   "apiproxy",
-		Logger:      launcher2.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/apiproxy.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("apiproxy-http-listen-addr", APIProxyHTTPListenAddr, "HTTP Listener address")
 			cmd.Flags().String("apiproxy-https-listen-addr", "", "If non-empty, will listen for HTTPS connections on this address")
@@ -1040,11 +1132,11 @@ func init() {
 			cmd.Flags().String("apiproxy-autocert-cache-dir", "{dfuse-data-dir}/api-proxy", "Path to directory where certificates will be saved to disk")
 			cmd.Flags().String("apiproxy-eosws-http-addr", EoswsHTTPServingAddr, "Target address of the eosws API endpoint")
 			cmd.Flags().String("apiproxy-dgraphql-http-addr", DgraphqlHTTPServingAddr, "Target address of the dgraphql API endpoint")
-			cmd.Flags().String("apiproxy-nodeos-http-addr", NodeosAPIAddr, "Address of a queriable nodeos instance")
+			cmd.Flags().String("apiproxy-superviser-http-addr", NodeosAPIAddr, "Address of a queriable superviser instance")
 			cmd.Flags().String("apiproxy-root-http-addr", EosqHTTPServingAddr, "What to serve at the root of the proxy (defaults to eosq)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher2.RuntimeModules) (launcher2.App, error) {
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			autocertDomains := strings.Split(viper.GetString("apiproxy-autocert-domains"), ",")
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
@@ -1057,7 +1149,7 @@ func init() {
 				AutocertCacheDir: mustReplaceDataDir(dfuseDataDir, viper.GetString("apiproxy-autocert-cache-dir")),
 				EoswsHTTPAddr:    viper.GetString("apiproxy-eosws-http-addr"),
 				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
-				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
+				NodeosHTTPAddr:   viper.GetString("apiproxy-superviser-http-addr"),
 				RootHTTPAddr:     viper.GetString("apiproxy-root-http-addr"),
 			}), nil
 		},

@@ -24,9 +24,11 @@ import (
 )
 
 var userLog = zapbox.NewCLILogger(zap.NewNop())
+var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos", userLog.LoggerReference())
+	logging.Register("github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos/userlog", userLog.LoggerReference())
+	logging.Register("github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos", &zlog)
 	// Core & Libraries
 	launcher.CommongLoggingDef = &launcher.LoggingDef{
 		Levels: []zapcore.Level{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
