@@ -130,6 +130,8 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 		if err := db.store.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
 			return fmt.Errorf("put trxTraceRow: write to db: %w", err)
 		}
+
+		codec.ReduplicateTransactionTrace(trxTrace)
 	}
 
 	return nil
