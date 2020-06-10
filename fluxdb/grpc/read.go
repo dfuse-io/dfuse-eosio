@@ -5,14 +5,13 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/eoscanada/eos-go"
-	"go.opencensus.io/trace"
-
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
+	"github.com/eoscanada/eos-go"
+	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 )
 
@@ -96,9 +95,9 @@ func (srv *Server) readContractStateTable(
 
 	zlog.Debug("read tablet rows results", zap.Int("row_count", len(tabletRows)))
 
-	var abi *eos.ABI
-	var abiAtBlockNum uint32
-	var tableTypeName string
+	serializationInfo := rowSerializationInfo{
+		toJSON: toJSON,
+	}
 
 	if toJSON {
 		_, contract, _, table := tablet.Explode()
@@ -111,59 +110,38 @@ func (srv *Server) readContractStateTable(
 			return nil, fluxdb.DataABINotFoundError(ctx, contract, blockNum)
 		}
 
-		abi, err = abiEntry.(*fluxdb.ContractABIEntry).ABI()
+		serializationInfo.abi, err = abiEntry.(*fluxdb.ContractABIEntry).ABI()
 		if err != nil {
 			return nil, fmt.Errorf("decode abi: %w", err)
 		}
 
-		if abi == nil {
+		if serializationInfo.abi == nil {
 			return nil, fluxdb.DataABINotFoundError(ctx, contract, blockNum)
 		}
 
-		tableDef := abi.TableForName(eos.TableName(table))
+		tableDef := serializationInfo.abi.TableForName(eos.TableName(table))
 		if tableDef == nil {
 			return nil, fluxdb.DataTableNotFoundError(ctx, eos.AccountName(contract), eos.TableName(table))
 		}
 
-		abiAtBlockNum = abiEntry.BlockNum()
-		tableTypeName = tableDef.Type
+		serializationInfo.abiAtBlockNum = abiEntry.BlockNum()
+		serializationInfo.tableTypeName = tableDef.Type
 	}
 
 	zlog.Debug("post-processing each tablet row (maybe convert to JSON)")
 	keyConverter := getKeyConverterForType(keyType)
 
-	out := &readTableResponse{}
-	for _, tabletRow := range tabletRows {
-		row := tabletRow.(*fluxdb.ContractStateRow)
+	out := &readTableResponse{
+		Rows: make([]*tableRow, len(tabletRows)),
+	}
 
-		var data interface{}
-		if toJSON {
-			data = &onTheFlyABISerializer{
-				abi:             abi,
-				abiAtBlockNum:   abiAtBlockNum,
-				tableTypeName:   tableTypeName,
-				rowDataToDecode: row.Data(),
-			}
-		} else {
-			data = row.Data()
-		}
-
-		var blockNum uint32
-		if withBlockNum {
-			blockNum = row.BlockNum()
-		}
-
-		primaryKey, err := keyConverter.ToString(fluxdb.N(row.PrimaryKey()))
+	for i, tabletRow := range tabletRows {
+		row, err := newTableRowResponse(tabletRow.(*fluxdb.ContractStateRow), keyConverter, &serializationInfo, withBlockNum)
 		if err != nil {
-			return nil, fmt.Errorf("unable to convert key: %s", err)
+			return nil, fmt.Errorf("unable to create table row: %w", err)
 		}
 
-		out.Rows = append(out.Rows, &tableRow{
-			Key:      primaryKey,
-			Payer:    row.Payer(),
-			Data:     data,
-			BlockNum: blockNum,
-		})
+		out.Rows[i] = row
 	}
 
 	span.Annotate([]trace.Attribute{
@@ -171,6 +149,49 @@ func (srv *Server) readContractStateTable(
 	}, "read contract state tablet")
 
 	return out, nil
+}
+
+type rowSerializationInfo struct {
+	toJSON        bool
+	abi           *eos.ABI
+	abiAtBlockNum uint32
+	tableTypeName string
+}
+
+func newTableRowResponse(
+	row *fluxdb.ContractStateRow,
+	keyConverter KeyConverter,
+	serializationInfo *rowSerializationInfo,
+	withBlockNum bool,
+) (*tableRow, error) {
+	var data interface{}
+	if serializationInfo.toJSON {
+		data = &onTheFlyABISerializer{
+			abi:             serializationInfo.abi,
+			abiAtBlockNum:   serializationInfo.abiAtBlockNum,
+			tableTypeName:   serializationInfo.tableTypeName,
+			rowDataToDecode: row.Data(),
+		}
+	} else {
+		data = row.Data()
+	}
+
+	var blockNum uint32
+	if withBlockNum {
+		blockNum = row.BlockNum()
+	}
+
+	primaryKey, err := keyConverter.ToString(fluxdb.N(row.PrimaryKey()))
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert key: %s", err)
+	}
+
+	return &tableRow{
+		Key:      primaryKey,
+		Payer:    row.Payer(),
+		Data:     data,
+		BlockNum: blockNum,
+	}, nil
 }
 
 func (srv *Server) readTableRow(

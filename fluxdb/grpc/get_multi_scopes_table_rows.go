@@ -36,7 +36,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 		scopes[i] = string(s)
 	}
 
-	nailer := dhammer.NewNailer(3, func(ctx context.Context, i interface{}) (interface{}, error) {
+	nailer := dhammer.NewNailer(64, func(ctx context.Context, i interface{}) (interface{}, error) {
 		scope := i.(string)
 
 		responseRows, err := s.readContractStateTable(
@@ -44,7 +44,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 			fluxdb.NewContractStateTablet(request.Contract, scope, request.Table),
 			actualBlockNum,
 			"",
-			true,
+			request.Json,
 			true,
 			speculativeWrites,
 		)
@@ -68,11 +68,12 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 
 	nailer.PushAll(ctx, scopes)
 
-	stream.SetTrailer(getMetadata(upToBlockID, lastWrittenBlockID))
+	stream.SetHeader(getMetadata(upToBlockID, lastWrittenBlockID))
 
 	for {
 		select {
 		case <-ctx.Done():
+			zlog.Debug("stream terminated prior completion")
 			return nil
 		case next, ok := <-nailer.Out:
 			if !ok {
@@ -82,5 +83,4 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 			stream.Send(next.(*pbfluxdb.TableRowsScopeResponse))
 		}
 	}
-	return nil
 }
