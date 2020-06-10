@@ -24,9 +24,10 @@ func init() {
 	Cmd.AddCommand(fluxCmd)
 	fluxCmd.AddCommand(fluxScanCmd)
 	fluxCmd.AddCommand(fluxPrefixCmd)
-
 	fluxCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
-	fluxScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
+
+	fluxScanCmd.Flags().Bool("unlimited", false, "scan will ignore the limit")
+	fluxCmd.PersistentFlags().Int("limit", 100, "limit the number of rows when doing scan or prefix")
 }
 
 func fluxScanE(cmd *cobra.Command, args []string) (err error) {
@@ -35,11 +36,15 @@ func fluxScanE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	start := append([]byte{0x00}, []byte("abi/eosio/ffffff8a")...)
-	end := append([]byte{0x00}, []byte("abi/eosio/ffffffff")...)
+	limit := viper.GetInt("limit")
+	if viper.GetBool("unlimited") {
+		limit = store.Unlimited
+	}
 
-	rangeScan(kv, start, end, store.Unlimited)
+	start := append([]byte{0x00}, []byte(args[0])...)
+	end := append([]byte{0x00}, []byte(args[1])...)
 
+	rangeScan(kv, start, end, limit)
 	return nil
 }
 
@@ -49,30 +54,11 @@ func prefixScanE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
-	//prefix := append([]byte{0x00}, []byte("abi/eosio/")...)
-	prefix := []byte{0x00}
-	prefixScan(kv, prefix, 1)
+	prefix := append([]byte{0x00}, []byte(args[0])...)
+	prefixScan(kv, prefix, viper.GetInt("limit"))
 	return nil
 }
 
-//func main() {
-//	cwd, err := os.Getwd()
-//	derr.Check("unable to get current working directory", err)
-//	databaseDir := filepath.Join(cwd, "dfuse-data", "storage", "statedb")
-//	dsn := "badger://" + databaseDir
-//	if len(os.Args) > 1 {
-//		dsn = os.Args[1]
-//	}
-//	fmt.Printf("Creation store to %q\n", dsn)
-//	kvStore, err := store.New(dsn)
-//	derr.Check("unable to create store", err)
-//	// prefixScan(kvStore, append([]byte{0x00}, []byte("abi/eosio/")...), 1)
-//	rangeScan(kvStore,
-//		append([]byte{0x00}, []byte("abi/eosio/ffffff8a")...),
-//		append([]byte{0x00}, []byte("abi/eosio/ffffffff")...),
-//		store.Unlimited,
-//	)
-//}
 func prefixScan(store store.KVStore, prefix []byte, limit int) {
 	prefixCtx, cancelScan := context.WithCancel(context.Background())
 	defer cancelScan()
@@ -111,5 +97,5 @@ func printIterator(it *store.Iterator) {
 	fmt.Printf("In %ss\n", time.Since(start))
 }
 func formatKey(key []byte) string {
-	return string(key)
+	return string(key[1:])
 }
