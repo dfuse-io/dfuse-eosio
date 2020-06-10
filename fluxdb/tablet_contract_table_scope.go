@@ -45,11 +45,16 @@ func (t ContractTableScopeTablet) KeyAt(blockNum uint32) string {
 	return string(t) + "/" + HexBlockNum(blockNum)
 }
 
-func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer string, isDeletion bool) *ContractTableScopeRow {
+func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer string, isDeletion bool) (*ContractTableScopeRow, error) {
+	_, tabletKey, err := ExplodeTabletKey(string(t))
+	if err != nil {
+		return nil, err
+	}
+
 	row := &ContractTableScopeRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
 			Collection:  ctblsPrefix,
-			TabletKey:   t.Key(),
+			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
 			PrimKey:     scope,
 		}},
@@ -60,7 +65,7 @@ func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer st
 		binary.BigEndian.PutUint64(row.Payload, NA(eos.Name(payer)))
 	}
 
-	return row
+	return row, nil
 }
 
 func (t ContractTableScopeTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
@@ -105,7 +110,7 @@ type ContractTableScopeRow struct {
 	BaseTabletRow
 }
 
-func NewContractTableScopeRow(blockNum uint32, op *pbcodec.TableOp) *ContractTableScopeRow {
+func NewContractTableScopeRow(blockNum uint32, op *pbcodec.TableOp) (*ContractTableScopeRow, error) {
 	tablet := NewContractTableScopeTablet(op.Code, op.TableName)
 	isDeletion := op.Operation == pbcodec.TableOp_OPERATION_REMOVE
 

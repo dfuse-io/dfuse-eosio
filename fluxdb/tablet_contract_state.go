@@ -45,11 +45,16 @@ func (t ContractStateTablet) KeyAt(blockNum uint32) string {
 	return string(t) + "/" + HexBlockNum(blockNum)
 }
 
-func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer string, data []byte, isDeletion bool) *ContractStateRow {
+func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer string, data []byte, isDeletion bool) (*ContractStateRow, error) {
+	_, tabletKey, err := ExplodeTabletKey(string(t))
+	if err != nil {
+		return nil, err
+	}
+
 	row := &ContractStateRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
 			Collection:  cstPrefix,
-			TabletKey:   t.Key(),
+			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
 			PrimKey:     primaryKey,
 		}},
@@ -61,7 +66,7 @@ func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer st
 		copy(row.Payload[8:], data)
 	}
 
-	return row
+	return row, nil
 }
 
 func (t ContractStateTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
@@ -110,7 +115,7 @@ type ContractStateRow struct {
 	BaseTabletRow
 }
 
-func NewContractStateRow(blockNum uint32, op *pbcodec.DBOp) *ContractStateRow {
+func NewContractStateRow(blockNum uint32, op *pbcodec.DBOp) (*ContractStateRow, error) {
 	tablet := NewContractStateTablet(op.Code, op.Scope, op.TableName)
 	isDeletion := op.Operation == pbcodec.DBOp_OPERATION_REMOVE
 

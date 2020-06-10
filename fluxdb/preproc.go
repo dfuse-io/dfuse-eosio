@@ -69,13 +69,22 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		}
 
 		for _, permOp := range trx.PermOps {
-			for _, row := range permOpToKeyAccountRows(req.BlockNum, permOp) {
+			rows, err := permOpToKeyAccountRows(req.BlockNum, permOp)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create key account rows for perm op: %w", err)
+			}
+
+			for _, row := range rows {
 				lastKeyAccountForRowKey[row.Key()] = row
 			}
 		}
 
 		for _, tableOp := range trx.TableOps {
-			row := NewContractTableScopeRow(req.BlockNum, tableOp)
+			row, err := NewContractTableScopeRow(req.BlockNum, tableOp)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create contract table scope row for table op: %w", err)
+			}
+
 			lastContractTableScopeForRowKey[row.Key()] = row
 		}
 
@@ -108,18 +117,28 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		}
 	}
 
-	addDBOpsToWriteRequest(req, lastDbOpForRowPath)
+	if err := addDBOpsToWriteRequest(req, lastDbOpForRowPath); err != nil {
+		return nil, fmt.Errorf("unable to add db ops to request: %w", err)
+	}
+
 	addTabletRowsToRequest(req, lastKeyAccountForRowKey)
 	addTabletRowsToRequest(req, lastContractTableScopeForRowKey)
 
 	return req, nil
 }
 
-func addDBOpsToWriteRequest(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) {
+func addDBOpsToWriteRequest(request *WriteRequest, latestDbOps map[string]*pbcodec.DBOp) error {
 	blockNum := request.BlockNum
 	for _, op := range latestDbOps {
-		request.AppendTabletRow(NewContractStateRow(blockNum, op))
+		row, err := NewContractStateRow(blockNum, op)
+		if err != nil {
+			return fmt.Errorf("unable to create row for db op: %w", err)
+		}
+
+		request.AppendTabletRow(row)
 	}
+
+	return nil
 }
 
 func addTabletRowsToRequest(request *WriteRequest, tabletRowsMap map[string]TabletRow) {
@@ -128,17 +147,26 @@ func addTabletRowsToRequest(request *WriteRequest, tabletRowsMap map[string]Tabl
 	}
 }
 
-func permOpToKeyAccountRows(blockNum uint32, permOp *pbcodec.PermOp) []*KeyAccountRow {
+func permOpToKeyAccountRows(blockNum uint32, permOp *pbcodec.PermOp) ([]*KeyAccountRow, error) {
 	switch permOp.Operation {
 	case pbcodec.PermOp_OPERATION_INSERT:
 		return permToKeyAccountRows(blockNum, permOp.NewPerm, false)
 	case pbcodec.PermOp_OPERATION_UPDATE:
-		var ops []*KeyAccountRow
+		var rows []*KeyAccountRow
+		deletedRows, err := permToKeyAccountRows(blockNum, permOp.OldPerm, true)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get key accounts from old perm: %w", err)
+		}
 
-		ops = append(ops, permToKeyAccountRows(blockNum, permOp.OldPerm, true)...)
-		ops = append(ops, permToKeyAccountRows(blockNum, permOp.NewPerm, false)...)
+		insertedRows, err := permToKeyAccountRows(blockNum, permOp.NewPerm, false)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get key accounts from new perm: %w", err)
+		}
 
-		return ops
+		rows = append(rows, deletedRows...)
+		rows = append(rows, insertedRows...)
+
+		return rows, nil
 	case pbcodec.PermOp_OPERATION_REMOVE:
 		return permToKeyAccountRows(blockNum, permOp.OldPerm, true)
 	}
@@ -146,17 +174,22 @@ func permOpToKeyAccountRows(blockNum uint32, permOp *pbcodec.PermOp) []*KeyAccou
 	panic(fmt.Errorf("unknown perm op %s", permOp.Operation))
 }
 
-func permToKeyAccountRows(blockNum uint32, perm *pbcodec.PermissionObject, isDeletion bool) []*KeyAccountRow {
+func permToKeyAccountRows(blockNum uint32, perm *pbcodec.PermissionObject, isDeletion bool) (rows []*KeyAccountRow, err error) {
 	if perm.Authority == nil || len(perm.Authority.Keys) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	rows := make([]*KeyAccountRow, len(perm.Authority.Keys))
+	rows = make([]*KeyAccountRow, len(perm.Authority.Keys))
 	for i, key := range perm.Authority.Keys {
-		rows[i] = NewKeyAccountRow(blockNum, key.PublicKey, perm.Owner, perm.Name, isDeletion)
+		rows[i], err = NewKeyAccountRow(blockNum, key.PublicKey, perm.Owner, perm.Name, isDeletion)
+		if err != nil {
+			if err != nil {
+				return nil, fmt.Errorf("unable to create key account row for permission object: %w", err)
+			}
+		}
 	}
 
-	return rows
+	return
 }
 
 func tableDataRowPath(op *pbcodec.DBOp) string {

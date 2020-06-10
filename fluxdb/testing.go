@@ -38,10 +38,13 @@ func writeEmptyABI(t *testing.T, blockNum uint32, contract string) *WriteRequest
 }
 
 func writePackedABI(t *testing.T, blockNum uint32, contract string, packedABI []byte) *WriteRequest {
+	entry, err := NewContractABISiglet(contract).NewEntry(blockNum, packedABI)
+	require.NoError(t, err)
+
 	return &WriteRequest{
 		BlockNum: blockNum,
 		SigletEntries: []SigletEntry{
-			NewContractABISiglet(contract).NewEntry(blockNum, packedABI),
+			entry,
 		},
 	}
 }

@@ -44,11 +44,16 @@ func (t AuthLinkTablet) KeyAt(blockNum uint32) string {
 	return string(t) + "/" + HexBlockNum(blockNum)
 }
 
-func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission string, isDeletion bool) *AuthLinkRow {
+func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission string, isDeletion bool) (*AuthLinkRow, error) {
+	_, tabletKey, err := ExplodeTabletKey(string(t))
+	if err != nil {
+		return nil, err
+	}
+
 	row := &AuthLinkRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
 			Collection:  alPrefix,
-			TabletKey:   t.Key(),
+			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
 			PrimKey:     contract + ":" + action,
 		}},
@@ -59,7 +64,7 @@ func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission str
 		binary.BigEndian.PutUint64(row.Payload, NA(eos.Name(permission)))
 	}
 
-	return row
+	return row, nil
 }
 
 func (t AuthLinkTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
@@ -67,14 +72,14 @@ func (t AuthLinkTablet) NewRowFromKV(key string, value []byte) (TabletRow, error
 		return nil, errors.New("auth link tablet row value should have at exactly 0 byte (deletion) or 8 bytes (permission)")
 	}
 
-	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
+	collection, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", key, err)
 	}
 
 	return &AuthLinkRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
-			Collection:  alPrefix,
+			Collection:  collection,
 			TabletKey:   tabletKey,
 			BlockNumKey: blockNumKey,
 			PrimKey:     primaryKey,
@@ -115,7 +120,7 @@ func NewInsertAuthLinkRow(blockNum uint32, actionTrace *pbcodec.ActionTrace) (*A
 	}
 
 	tablet := NewAuthLinkTablet(string(linkAuth.Account))
-	return tablet.NewRow(blockNum, string(linkAuth.Code), string(linkAuth.Type), string(linkAuth.Requirement), false), nil
+	return tablet.NewRow(blockNum, string(linkAuth.Code), string(linkAuth.Type), string(linkAuth.Requirement), false)
 }
 
 func NewDeleteAuthLinkRow(blockNum uint32, actionTrace *pbcodec.ActionTrace) (*AuthLinkRow, error) {
@@ -125,7 +130,7 @@ func NewDeleteAuthLinkRow(blockNum uint32, actionTrace *pbcodec.ActionTrace) (*A
 	}
 
 	tablet := NewAuthLinkTablet(string(unlinkAuth.Account))
-	return tablet.NewRow(blockNum, string(unlinkAuth.Code), string(unlinkAuth.Type), string(""), true), nil
+	return tablet.NewRow(blockNum, string(unlinkAuth.Code), string(unlinkAuth.Type), string(""), true)
 }
 
 func (r *AuthLinkRow) Contract() string {

@@ -32,15 +32,20 @@ func (t ContractABISiglet) KeyAt(blockNum uint32) string {
 	return string(t) + "/" + HexRevBlockNum(blockNum)
 }
 
-func (t ContractABISiglet) NewEntry(blockNum uint32, packedABI []byte) *ContractABIEntry {
+func (t ContractABISiglet) NewEntry(blockNum uint32, packedABI []byte) (*ContractABIEntry, error) {
+	_, sigletKey, err := ExplodeTabletKey(string(t))
+	if err != nil {
+		return nil, err
+	}
+
 	return &ContractABIEntry{
 		BaseSigletEntry: BaseSigletEntry{pbfluxdb.TabletRow{
 			Collection:  abiPrefix,
-			TabletKey:   t.Key(),
+			TabletKey:   sigletKey,
 			BlockNumKey: HexRevBlockNum(blockNum),
 			Payload:     packedABI,
 		}},
-	}
+	}, nil
 }
 
 func (t ContractABISiglet) NewEntryFromKV(key string, value []byte) (SigletEntry, error) {
@@ -48,7 +53,7 @@ func (t ContractABISiglet) NewEntryFromKV(key string, value []byte) (SigletEntry
 		return nil, errors.New("contract abi entry value should have at least 1 byte")
 	}
 
-	_, tabletKey, blockNumKey, err := ExplodeSigletEntryKey(key)
+	_, sigletKey, blockNumKey, err := ExplodeSigletEntryKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode siglet entry key %q: %s", key, err)
 	}
@@ -56,7 +61,7 @@ func (t ContractABISiglet) NewEntryFromKV(key string, value []byte) (SigletEntry
 	return &ContractABIEntry{
 		BaseSigletEntry: BaseSigletEntry{pbfluxdb.TabletRow{
 			Collection:  abiPrefix,
-			TabletKey:   tabletKey,
+			TabletKey:   sigletKey,
 			BlockNumKey: blockNumKey,
 			Payload:     value,
 		}},
@@ -77,7 +82,7 @@ func NewContractABIEntry(blockNum uint32, actionTrace *pbcodec.ActionTrace) (*Co
 		return nil, err
 	}
 
-	return NewContractABISiglet(string(setABI.Account)).NewEntry(blockNum, []byte(setABI.ABI)), nil
+	return NewContractABISiglet(string(setABI.Account)).NewEntry(blockNum, []byte(setABI.ABI))
 }
 
 func (r *ContractABIEntry) ABI() (*eos.ABI, error) {

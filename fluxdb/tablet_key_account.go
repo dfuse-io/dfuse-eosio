@@ -44,11 +44,16 @@ func (t KeyAccountTablet) KeyAt(blockNum uint32) string {
 // We actually don't use the payload, but it must be at least 1 byte because a 0 byte value represents a deletion
 var kaPayload = []byte{0x01}
 
-func (t KeyAccountTablet) NewRow(blockNum uint32, account, permission string, isDeletion bool) *KeyAccountRow {
+func (t KeyAccountTablet) NewRow(blockNum uint32, account, permission string, isDeletion bool) (*KeyAccountRow, error) {
+	_, tabletKey, err := ExplodeTabletKey(string(t))
+	if err != nil {
+		return nil, err
+	}
+
 	row := &KeyAccountRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
 			Collection:  kaPrefix,
-			TabletKey:   t.Key(),
+			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
 			PrimKey:     account + ":" + permission,
 		}},
@@ -58,7 +63,7 @@ func (t KeyAccountTablet) NewRow(blockNum uint32, account, permission string, is
 		row.Payload = kaPayload
 	}
 
-	return row
+	return row, nil
 }
 
 func (t KeyAccountTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
@@ -107,7 +112,7 @@ type KeyAccountRow struct {
 	BaseTabletRow
 }
 
-func NewKeyAccountRow(blockNum uint32, publicKey, account, permission string, isDeletion bool) *KeyAccountRow {
+func NewKeyAccountRow(blockNum uint32, publicKey, account, permission string, isDeletion bool) (*KeyAccountRow, error) {
 	tablet := NewKeyAccountTablet(publicKey)
 	return tablet.NewRow(blockNum, account, permission, isDeletion)
 }

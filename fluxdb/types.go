@@ -51,6 +51,16 @@ type IndexableTablet interface {
 	DecodePrimaryKey(buffer []byte) (primaryKey string, err error)
 }
 
+func ExplodeTabletKey(key string) (collection, tablet string, err error) {
+	parts := strings.Split(key, "/")
+	if len(parts) == 2 {
+		return parts[0], parts[1], nil
+	}
+
+	err = fmt.Errorf("tablet key should have 2 segments separated by '/' (`<collection/tablet>`), got %d segments", len(parts))
+	return
+}
+
 type TabletFactory = func(row *pbfluxdb.TabletRow) Tablet
 
 var tabletFactories = map[string]TabletFactory{}
@@ -72,8 +82,8 @@ type TabletRow interface {
 	PrimaryKey() string
 }
 
-func ExplodeTabletRowKey(rowKey string) (collection, tablet, blockNum, primaryKey string, err error) {
-	parts := strings.Split(rowKey, "/")
+func ExplodeTabletRowKey(key string) (collection, tablet, blockNum, primaryKey string, err error) {
+	parts := strings.Split(key, "/")
 	if len(parts) == 4 {
 		return parts[0], parts[1], parts[2], parts[3], nil
 	}
@@ -133,13 +143,13 @@ type Siglet interface {
 	String() string
 }
 
-func ExplodeSigletEntryKey(rowKey string) (collection, tablet, blockNum string, err error) {
-	parts := strings.Split(rowKey, "/")
-	if len(parts) == 3 {
-		return parts[0], parts[1], parts[2], nil
+func ExplodeSigletKey(key string) (collection, siglet string, err error) {
+	parts := strings.Split(key, "/")
+	if len(parts) == 2 {
+		return parts[0], parts[1], nil
 	}
 
-	err = fmt.Errorf("entry key should have 3 segments separated by '/' (`<collection/tablet/blockNum>`), got %d segments", len(parts))
+	err = fmt.Errorf("siglet key should have 2 segments separated by '/' (`<collection/siglet>`), got %d segments", len(parts))
 	return
 }
 
@@ -149,6 +159,16 @@ type SigletEntry interface {
 
 	Siglet() Siglet
 	BlockNum() uint32
+}
+
+func ExplodeSigletEntryKey(key string) (collection, tablet, blockNum string, err error) {
+	parts := strings.Split(key, "/")
+	if len(parts) == 3 {
+		return parts[0], parts[1], parts[2], nil
+	}
+
+	err = fmt.Errorf("siglet entry key should have 3 segments separated by '/' (`<collection/siglet/blockNum>`), got %d segments", len(parts))
+	return
 }
 
 type SigletFactory = func(row *pbfluxdb.TabletRow) Siglet
