@@ -350,7 +350,7 @@ func (t testTablet) PrimaryKeyByteCount() int {
 }
 
 func (t testTablet) EncodePrimaryKey(buffer []byte, primaryKey string) error {
-	binary.BigEndian.PutUint64(buffer, NA(eos.Name(primaryKey)))
+	binary.BigEndian.PutUint64(buffer, N(primaryKey))
 	return nil
 }
 

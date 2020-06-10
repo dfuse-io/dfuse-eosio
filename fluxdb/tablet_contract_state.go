@@ -62,7 +62,7 @@ func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer st
 
 	if !isDeletion {
 		row.Payload = make([]byte, len(data)+8)
-		binary.BigEndian.PutUint64(row.Payload, NA(eos.Name(payer)))
+		binary.BigEndian.PutUint64(row.Payload, N(payer))
 		copy(row.Payload[8:], data)
 	}
 
@@ -101,7 +101,7 @@ func (t ContractStateTablet) PrimaryKeyByteCount() int {
 }
 
 func (t ContractStateTablet) EncodePrimaryKey(buffer []byte, primaryKey string) error {
-	binary.BigEndian.PutUint64(buffer, NA(eos.Name(primaryKey)))
+	binary.BigEndian.PutUint64(buffer, N(primaryKey))
 	return nil
 }
 

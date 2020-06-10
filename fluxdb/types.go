@@ -217,52 +217,6 @@ func isDeletionEntry(entry SigletEntry) bool {
 	return len(entry.Value()) == 0
 }
 
-///
-
-type ReadTableRequest struct {
-	Account, Scope, Table uint64
-	Key                   *uint64
-	BlockNum              uint32
-	Offset, Limit         *uint32
-	SpeculativeWrites     []*WriteRequest
-}
-
-func (r *ReadTableRequest) tableKey() string {
-	return fmt.Sprintf("td:%016x:%016x:%016x", r.Account, r.Table, r.Scope)
-}
-
-type ReadTableRowRequest struct {
-	ReadTableRequest
-	PrimaryKey uint64
-}
-
-func (r *ReadTableRowRequest) primaryKeyString() string {
-	return fmt.Sprintf("%016x", r.PrimaryKey)
-}
-
-type ReadTableResponse struct {
-	ABI  *ContractABIEntry
-	Rows []*TableRow
-}
-
-type ReadTableRowResponse struct {
-	ABI *ContractABIEntry
-	Row *TableRow
-}
-
-type TableRow struct {
-	Key      uint64
-	Payer    uint64
-	Data     []byte
-	BlockNum uint32
-}
-
-type LinkedPermission struct {
-	Contract       string `json:"contract"`
-	Action         string `json:"action"`
-	PermissionName string `json:"permission_name"`
-}
-
 type WriteRequest struct {
 	SigletEntries []SigletEntry
 	TabletRows    []TabletRow

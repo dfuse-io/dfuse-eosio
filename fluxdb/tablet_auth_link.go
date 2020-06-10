@@ -61,7 +61,7 @@ func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission str
 
 	if !isDeletion {
 		row.Payload = make([]byte, 8)
-		binary.BigEndian.PutUint64(row.Payload, NA(eos.Name(permission)))
+		binary.BigEndian.PutUint64(row.Payload, N(permission))
 	}
 
 	return row, nil

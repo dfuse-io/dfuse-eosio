@@ -62,7 +62,7 @@ func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer st
 
 	if !isDeletion {
 		row.Payload = make([]byte, 8)
-		binary.BigEndian.PutUint64(row.Payload, NA(eos.Name(payer)))
+		binary.BigEndian.PutUint64(row.Payload, N(payer))
 	}
 
 	return row, nil
@@ -98,7 +98,7 @@ func (t ContractTableScopeTablet) PrimaryKeyByteCount() int {
 }
 
 func (t ContractTableScopeTablet) EncodePrimaryKey(buffer []byte, primaryKey string) error {
-	binary.BigEndian.PutUint64(buffer, NA(eos.Name(primaryKey)))
+	binary.BigEndian.PutUint64(buffer, N(primaryKey))
 	return nil
 }
 

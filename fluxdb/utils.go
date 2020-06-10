@@ -31,11 +31,6 @@ func UN(name uint64) string {
 }
 
 func N(name string) uint64 {
-	out, _ := StringToName(name)
-	return out
-}
-
-func NA(name eos.Name) uint64 {
 	return eos.MustStringToName(string(name))
 }
 
@@ -87,62 +82,6 @@ func hexToBlockNum(blockNumHex string) uint32 {
 	}
 
 	return uint32(value)
-}
-
-func explodeWritableRowKey(rowKey string) (tableKey string, blockNum uint32, primKey string, err error) {
-	parts := strings.Split(rowKey, ":")
-	partCount := len(parts)
-
-	switch {
-	// AccountResourceLimit arl:<account>:<blockNum>:<primaryKey>
-	case parts[0] == "arl":
-		if partCount != 4 {
-			err = fmt.Errorf("account resource limit row key should have 4 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[2])
-		primKey = parts[3]
-
-	// BlockResourceLimit brl:<blockNum>:<primaryKey>
-	case parts[0] == "brl":
-		if partCount != 3 {
-			err = fmt.Errorf("block resource limit row key should have 3 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:1], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[1])
-		primKey = parts[2]
-
-	// KeyAccount ka2:<publicKey>:<blockNum>:<account>:<permission>
-	case parts[0] == "ka2":
-		if partCount != 5 {
-			err = fmt.Errorf("key account row key should have 5 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:2], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[2])
-		primKey = strings.Join(parts[3:5], ":")
-
-	// TableScope ts:<account>:<table>:<blockNum>:<scope>
-	case parts[0] == "ts":
-		if partCount != 5 {
-			err = fmt.Errorf("table scope row key should have 5 parts, got %d", partCount)
-			return
-		}
-
-		tableKey = strings.Join(parts[0:3], ":")
-		blockNum, err = KeyChunkToBlockNum(parts[3])
-		primKey = parts[4]
-
-	default:
-		err = fmt.Errorf("don't know how to explode row key %q", rowKey)
-	}
-
-	return
 }
 
 // chunkKeyRevBlockNum returns the actual block num out of a

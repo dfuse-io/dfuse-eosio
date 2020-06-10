@@ -61,14 +61,14 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 
 	resp := &listLinkedPermissionsResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-		LinkedPermissions:   make([]*fluxdb.LinkedPermission, len(tabletRows)),
+		LinkedPermissions:   make([]*linkedPermission, len(tabletRows)),
 	}
 
 	for i, tabletRow := range tabletRows {
 		row := tabletRow.(*fluxdb.AuthLinkRow)
 		contract, action := row.Explode()
 
-		resp.LinkedPermissions[i] = &fluxdb.LinkedPermission{
+		resp.LinkedPermissions[i] = &linkedPermission{
 			Contract:       contract,
 			Action:         action,
 			PermissionName: string(row.Permission()),
@@ -97,7 +97,13 @@ type listLinkedPermissionsRequest struct {
 type listLinkedPermissionsResponse struct {
 	*commonStateResponse
 
-	LinkedPermissions []*fluxdb.LinkedPermission `json:"linked_permissions"`
+	LinkedPermissions []*linkedPermission `json:"linked_permissions"`
+}
+
+type linkedPermission struct {
+	Contract       string `json:"contract"`
+	Action         string `json:"action"`
+	PermissionName string `json:"permission_name"`
 }
 
 func validateGetLinkedPermissionsRequest(r *http.Request) url.Values {

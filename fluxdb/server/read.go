@@ -175,7 +175,7 @@ func (srv *EOSServer) readContractStateTable(
 			blockNum = contractStateRow.BlockNum()
 		}
 
-		rowKey, err := keyConverter.ToString(fluxdb.NA(eos.Name(contractStateRow.PrimaryKey())))
+		rowKey, err := keyConverter.ToString(fluxdb.N(contractStateRow.PrimaryKey()))
 		if err != nil {
 			return nil, fmt.Errorf("unable to convert key: %s", err)
 		}
