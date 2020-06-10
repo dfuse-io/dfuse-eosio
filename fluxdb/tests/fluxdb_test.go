@@ -17,10 +17,8 @@ package tests
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"testing"
 
@@ -29,7 +27,6 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/hidalgo"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/logging"
 	"github.com/gavv/httpexpect/v2"
@@ -46,21 +43,21 @@ func init() {
 	}
 }
 
-func TestFluxdb_HidalgoStore(t *testing.T) {
-	runAll(t, func() (store.KVStore, StoreCleanupFunc) {
-		dir, err := ioutil.TempDir("", "fluxdb-hidalgo")
-		require.NoError(t, err)
-
-		dsn := fmt.Sprintf("bbolt://%s?createTables=true", path.Join(dir, "db.bbolt"))
-		kvStore, err := hidalgo.NewKVStore(context.Background(), dsn)
-		require.NoError(t, err)
-
-		return kvStore, func() {
-			os.RemoveAll(dir)
-			kvStore.Close()
-		}
-	})
-}
+//func TestFluxdb_HidalgoStore(t *testing.T) {
+//	runAll(t, func() (store.KVStore, StoreCleanupFunc) {
+//		dir, err := ioutil.TempDir("", "fluxdb-hidalgo")
+//		require.NoError(t, err)
+//
+//		dsn := fmt.Sprintf("bbolt://%s?createTables=true", path.Join(dir, "db.bbolt"))
+//		kvStore, err := hidalgo.NewKVStore(context.Background(), dsn)
+//		require.NoError(t, err)
+//
+//		return kvStore, func() {
+//			os.RemoveAll(dir)
+//			kvStore.Close()
+//		}
+//	})
+//}
 
 //func TestFluxdb_BadgerStore(t *testing.T) {
 //	runAll(t, func() (store.KVStore, StoreCleanupFunc) {

@@ -496,6 +496,7 @@ func indexPrimaryKeyWriterByTableKey(tableKey string) indexPrimaryKeyWriter {
 	}
 }
 
+//var authLinkIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("account resource limit")
 var accountResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("account resource limit")
 var blockResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("block resource limit")
 var keyAccountIndexPrimaryKeyReader = twoUint64PrimaryKeyReaderFactory("key account")

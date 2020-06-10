@@ -33,7 +33,7 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 		speculativeWrites,
 	)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", err)
+		return nil, derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", actualBlockNum, err)
 	}
 
 	zlogger.Debug("post-processing key accounts", zap.Int("key_account_count", len(tabletRows)))

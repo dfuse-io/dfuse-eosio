@@ -380,5 +380,9 @@ func (srv *EOSServer) fetchABI(
 		return nil, fmt.Errorf("db read: %w", err)
 	}
 
+	if entry == nil {
+		return nil, nil
+	}
+
 	return entry.(*fluxdb.ContractABIEntry), nil
 }

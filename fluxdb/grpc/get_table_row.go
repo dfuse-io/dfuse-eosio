@@ -3,6 +3,8 @@ package grpc
 import (
 	"context"
 
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
@@ -11,7 +13,7 @@ import (
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 )
 
-func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowRequest) (*pbfluxdb.TableRowResponse, error) {
+func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowRequest) (*pbfluxdb.GetTableRowResponse, error) {
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get table row",
 		zap.Reflect("request", request),
@@ -31,7 +33,6 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 		request.Scope,
 		request.PrimaryKey,
 		request.KeyType,
-		request.WithAbi,
 		request.ToJson,
 		request.WithBlockNum,
 		speculativeWrites,
@@ -41,19 +42,21 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 		return nil, derr.Statusf(codes.Internal, "read table row failed: %s", err)
 	}
 
-	return processTableRow(tableRowResponse, newReadReference(upToBlockID, lastWrittenBlockID)), nil
+	return &pbfluxdb.GetTableRowResponse{
+		UpToBlockId:              upToBlockID,
+		UpToBlockNum:             uint64(fluxdb.BlockNum(upToBlockID)),
+		LastIrreversibleBlockId:  lastWrittenBlockID,
+		LastIrreversibleBlockNum: uint64(fluxdb.BlockNum(lastWrittenBlockID)),
+		Row:                      processTableRow(tableRowResponse),
+	}, nil
 }
 
-func processTableRow(tableRow *readTableRowResponse, ref *readReference) *pbfluxdb.TableRowResponse {
+func processTableRow(tableRow *readTableRowResponse) *pbfluxdb.TableRowResponse {
 	// TODO: pass , UpToBlockNum, LastIrreversibleBlockId, LastIrreversibleBlockNum in grpc header
 	payload := &pbfluxdb.TableRowResponse{
-		Key:                      tableRow.Row.Key,
-		Payer:                    tableRow.Row.Payer,
-		BlockNumber:              uint64(tableRow.Row.BlockNum),
-		UpToBlockId:              ref.upToBlockId,
-		UpToBlockNum:             ref.upToBlockNum,
-		LastIrreversibleBlockId:  ref.lastIrreversibleBlockId,
-		LastIrreversibleBlockNum: ref.lastIrreversibleBlockNum,
+		Key:         tableRow.Row.Key,
+		Payer:       tableRow.Row.Payer,
+		BlockNumber: uint64(tableRow.Row.BlockNum),
 	}
 	switch v := tableRow.Row.Data.(type) {
 	case []byte:

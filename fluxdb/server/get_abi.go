@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
@@ -43,6 +45,11 @@ func (srv *EOSServer) getABIHandler(w http.ResponseWriter, r *http.Request) {
 	abiEntry, err := srv.fetchABI(ctx, string(request.Account), request.BlockNum)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("fetch ABI: %w", err))
+		return
+	}
+
+	if abiEntry == nil {
+		writeError(ctx, w, fluxdb.DataABINotFoundError(ctx, string(request.Account), request.BlockNum))
 		return
 	}
 

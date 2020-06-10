@@ -248,6 +248,8 @@ github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1 h1:HPRgnmMbQw3P6H
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063 h1:kQgi/lEAFCOC2eu3Xm+nVUQaNQbqPnDBoEmGQUHxXAo=
 github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
+github.com/dfuse-io/dhammer v0.0.0-20200609184524-26b4b6894242 h1:rLG3EZvGqcSK+LsaB0Uo+SFziNuEWASBes4bPhrv/Uk=
+github.com/dfuse-io/dhammer v0.0.0-20200609184524-26b4b6894242/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSutKgJwa328F/bJ23rpWC8clt5LhCiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95 h1:D4k9BRsWzf8hXkICPZh0uhslU1f/nHc4vSfp80GA6jE=

@@ -74,7 +74,7 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 				return err
 			}
 
-			zlog.Debug("adding table read rows to response channel", zap.Int("row_count", len(response.Rows)))
+			zlog.Debug("adding  table read rows to response channel", zap.Int("row_count", len(response.Rows)))
 			tableResponses <- &getTableResponse{
 				Account:           request.Account,
 				Scope:             scope,

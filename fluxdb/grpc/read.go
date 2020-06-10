@@ -181,7 +181,6 @@ func (srv *Server) readTableRow(
 	scope string,
 	primaryKey string,
 	keyType string,
-	withABI bool,
 	toJSON bool,
 	withBlockNum bool,
 	speculativeWrites []*fluxdb.WriteRequest,
@@ -223,9 +222,6 @@ func (srv *Server) readTableRow(
 	// }
 
 	out := &readTableRowResponse{}
-	if withABI {
-		out.ABI = abiObj
-	}
 
 	tableName := eos.TableName(table)
 	tableDef := abiObj.TableForName(tableName)

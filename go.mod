@@ -25,7 +25,7 @@ require (
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
 	github.com/dfuse-io/dgrpc v0.0.0-20200602203441-eded01d2c0e7
-	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
+	github.com/dfuse-io/dhammer v0.0.0-20200609184524-26b4b6894242
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c

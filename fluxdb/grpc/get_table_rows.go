@@ -36,12 +36,13 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 		return derr.Statusf(codes.Internal, "read table rows failed: %s", err)
 	}
 
-	ref := newReadReference(upToBlockID, lastWrittenBlockID)
+	stream.SetTrailer(getMetadata(upToBlockID, lastWrittenBlockID))
+
 	for _, row := range responseRows.Rows {
 		stream.Send(processTableRow(&readTableRowResponse{
 			ABI: responseRows.ABI,
 			Row: row,
-		}, ref))
+		}))
 	}
 	return nil
 }
