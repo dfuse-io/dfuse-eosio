@@ -70,7 +70,7 @@ func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer st
 
 func (t ContractTableScopeTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
 	if len(value) != 0 && len(value) != 8 {
-		return nil, errors.New("contract table scope row value should have at 0 byte (deletion) or 8 bytes (payer)")
+		return nil, errors.New("contract table scope row value should have at 0 bytes (deletion) or 8 bytes (payer)")
 	}
 
 	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)

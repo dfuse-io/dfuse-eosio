@@ -20,7 +20,6 @@ import (
 	"net/url"
 
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/kv"
 	"go.uber.org/zap"
 )
@@ -41,8 +40,6 @@ func NewKVStore(dsnString string) (store.KVStore, error) {
 	zlog.Info("creating underlying kv store engine", zap.String("scheme", dsn.Scheme), zap.String("dsn", dsnString))
 
 	switch dsn.Scheme {
-	case "bigtable":
-		return bigt.NewKVStore(ctx, dsnString)
 	case "badger", "tikv", "bigkv":
 		return kv.NewStore(ctx, dsnString)
 	default:

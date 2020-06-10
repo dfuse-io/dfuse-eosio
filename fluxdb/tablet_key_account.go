@@ -67,8 +67,8 @@ func (t KeyAccountTablet) NewRow(blockNum uint32, account, permission string, is
 }
 
 func (t KeyAccountTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
-	if len(value) == 0 || len(value) == 1 {
-		return nil, errors.New("auth link tablet row value should have at exactly 0 byte (deletion) or 1 byte (existence)")
+	if len(value) != 0 && len(value) != 1 {
+		return nil, errors.New("auth link tablet row value should have at exactly 0 bytes (deletion) or 1 byte (existence)")
 	}
 
 	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)

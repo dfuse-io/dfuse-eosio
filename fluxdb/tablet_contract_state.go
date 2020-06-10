@@ -70,9 +70,8 @@ func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer st
 }
 
 func (t ContractStateTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
-	// how would we get a value lets then 8
-	if len(value) < 8 {
-		return nil, errors.New("contract state tablet row value should have at least 8 bytes (payer)")
+	if len(value) != 0 && len(value) < 8 {
+		return nil, errors.New("contract state tablet row value should have 0 bytes (deletion) or at least 8 bytes (payer)")
 	}
 
 	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)

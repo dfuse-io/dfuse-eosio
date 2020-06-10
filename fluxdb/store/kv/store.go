@@ -121,18 +121,8 @@ func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bo
 	return exists, nil
 }
 
-func (s *KVStore) FetchTabletRow(ctx context.Context, key string, onTabletRow store.OnTabletRow) error {
-	value, err := s.fetchKey(ctx, TblPrefixRows, key)
-	if err != nil {
-		return err
-	}
-
-	err = onTabletRow(key, value)
-	if err != nil && err != store.BreakScan {
-		return fmt.Errorf("on tablet row for key %q failed: %w", key, err)
-	}
-
-	return nil
+func (s *KVStore) FetchTabletRow(ctx context.Context, key string) (value []byte, err error) {
+	return s.fetchKey(ctx, TblPrefixRows, key)
 }
 
 func (s *KVStore) FetchTabletRows(ctx context.Context, keys []string, onTabletRow store.OnTabletRow) error {

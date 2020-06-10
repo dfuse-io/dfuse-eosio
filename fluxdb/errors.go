@@ -66,9 +66,10 @@ func DataTableNotFoundError(ctx context.Context, account eos.AccountName, table 
 	)
 }
 
-func DataRowNotFoundError(ctx context.Context, account eos.AccountName, table eos.TableName, primaryKey string) *derr.ErrorResponse {
+func DataRowNotFoundError(ctx context.Context, account eos.AccountName, table eos.TableName, scope eos.AccountName, primaryKey string) *derr.ErrorResponse {
 	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_row_not_found_error"), "Row does not exist in table at this block height.",
 		"account", account,
+		"scope", scope,
 		"table", table,
 		"primary_key", primaryKey,
 	)

@@ -105,83 +105,6 @@ func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *Re
 	}, nil
 }
 
-func (fdb *FluxDB) ReadTableRow(ctx context.Context, r *ReadTableRowRequest) (resp *ReadTableRowResponse, err error) {
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading state table row", zap.Reflect("request", r))
-
-	primaryKeyString := r.primaryKeyString()
-
-	var rowData *TableRow
-	rowUpdated := func(blockNum uint32, candidatePrimaryKey string, value []byte) error {
-		if len(value) < 8 {
-			return errors.New("table data index mappings should contain at least the payer")
-		}
-
-		if candidatePrimaryKey != primaryKeyString {
-			return errors.New("logic error, should never happen, the read single should yield only results related to primary key")
-		}
-
-		payer := big.Uint64(value)
-		data := value[8:]
-
-		rowData = &TableRow{r.PrimaryKey, payer, data, blockNum}
-		return nil
-	}
-
-	rowDeleted := func(_ uint32, candidatePrimaryKey string) error {
-		if candidatePrimaryKey != primaryKeyString {
-			return errors.New("logic error, should never happen, the read single should yield only results related to primary key")
-		}
-
-		rowData = nil
-		return nil
-	}
-
-	tableKey := r.tableKey()
-	err = fdb.readSingle(ctx, tableKey, primaryKeyString, r.BlockNum, rowUpdated, rowDeleted)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read single row for table key %q and primary key %d: %w", tableKey, r.PrimaryKey, err)
-	}
-
-	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
-	// for _, blockWrite := range r.SpeculativeWrites {
-	// 	for _, row := range blockWrite.TableDatas {
-	// 		if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table || r.PrimaryKey != row.PrimKey {
-	// 			continue
-	// 		}
-
-	// 		if row.Deletion {
-	// 			rowData = nil
-	// 		} else {
-	// 			rowData = &TableRow{
-	// 				Key:      row.PrimKey,
-	// 				Payer:    row.Payer,
-	// 				Data:     row.Data,
-	// 				BlockNum: blockWrite.BlockNum,
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// This was added when fixing a bug with `/state/table/row` since the old location where it was used
-	// was not the right place. But when it was moved, it changed the behavior of the old API causing problem
-	// to existing customer. To retain old behavior, we now return an empty row data in all cases when a specific
-	// key is not found on a given table.
-	// if rowData == nil {
-	// 	return nil, DataRowNotFoundError(ctx, eos.AccountName(eos.NameToString(r.Account)), eos.TableName(eos.NameToString(r.Table)), eos.NameToString(r.PrimaryKey))
-	// }
-
-	// abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	return &ReadTableRowResponse{
-		// ABI: abi,
-		Row: rowData,
-	}, nil
-}
-
 func (fdb *FluxDB) HasSeenPublicKeyOnce(ctx context.Context, publicKey string) (exists bool, err error) {
 	return fdb.hasRowKeyPrefix(ctx, fmt.Sprintf("ka2:%s", publicKey))
 }
@@ -477,6 +400,126 @@ func (fdb *FluxDB) ReadTabletAt(
 	return rows, nil
 }
 
+func (fdb *FluxDB) ReadTabletRowAt(
+	ctx context.Context,
+	blockNum uint32,
+	tablet Tablet,
+	primaryKey string,
+	speculativeWrites []*WriteRequest,
+) (TabletRow, error) {
+	ctx, span := dtracing.StartSpan(ctx, "read tablet row", "tablet", tablet, "block_num", blockNum)
+	defer span.End()
+
+	zlogger := logging.Logger(ctx, zlog)
+	zlogger.Debug("reading tablet row",
+		zap.Stringer("tablet", tablet),
+		zap.Uint32("block_num", blockNum),
+		zap.String("primary_key", primaryKey),
+	)
+
+	idx, err := fdb.getIndex2(ctx, blockNum, tablet)
+	if err != nil {
+		return nil, fmt.Errorf("fetch tablet index: %w", err)
+	}
+
+	startKey := tablet.KeyAt(0)
+	endKey := tablet.KeyAt(blockNum + 1)
+	var row TabletRow
+	if idx != nil {
+		zlogger.Debug("tablet index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
+		startKey = tablet.KeyAt(idx.AtBlockNum + 1)
+
+		if blockNum, ok := idx.Map[primaryKey]; ok {
+			rowKey := string(tablet.KeyForRowAt(blockNum, primaryKey))
+			zlogger.Debug("reading index row", zap.String("row_key", rowKey))
+
+			value, err := fdb.store.FetchTabletRow(ctx, rowKey)
+			if err == store.ErrNotFound {
+				return nil, fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
+			}
+			if err != nil {
+				return nil, fmt.Errorf("reading tablet index row %q: %w", rowKey, err)
+			}
+			if len(value) <= 0 {
+				row, err = tablet.NewRowFromKV(rowKey, value)
+				if err != nil {
+					return nil, fmt.Errorf("could not create table from key value with row key %q: %w", rowKey, err)
+				}
+			}
+
+		}
+		zlogger.Debug("finished reconciling index", zap.Bool("row_exist", row != nil))
+	}
+
+	zlogger.Debug("reading tablet row from database",
+		zap.Bool("row_exist", row != nil),
+		zap.Bool("index_found", idx != nil),
+		zap.String("start_key", startKey),
+		zap.String("end_key", endKey),
+	)
+
+	deletedCount := 0
+	updatedCount := 0
+
+	err = fdb.store.ScanTabletRows(ctx, startKey, endKey, func(key string, value []byte) error {
+		candidateRow, err := tablet.NewRowFromKV(key, value)
+		if err != nil {
+			return fmt.Errorf("tablet new row %s: %w", key, err)
+		}
+
+		if candidateRow.PrimaryKey() != primaryKey {
+			return nil
+		}
+
+		if isDeletionRow(candidateRow) {
+			row = nil
+			deletedCount++
+
+			return nil
+		}
+
+		updatedCount++
+		row = candidateRow
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	zlogger.Debug("reading tablet row from speculative writes",
+		zap.Int("deleted_count", deletedCount),
+		zap.Int("updated_count", updatedCount),
+		zap.Int("speculative_write_count", len(speculativeWrites)),
+	)
+
+	for _, speculativeWrite := range speculativeWrites {
+		for _, speculativeRow := range speculativeWrite.TabletRows {
+			if speculativeRow.Tablet() != tablet {
+				continue
+			}
+
+			if speculativeRow.PrimaryKey() != primaryKey {
+				continue
+			}
+
+			if isDeletionRow(speculativeRow) {
+				deletedCount++
+				row = nil
+			} else {
+				updatedCount++
+				row = speculativeRow
+			}
+		}
+	}
+
+	zlogger.Info("finished reading tablet row",
+		zap.Int("deleted_count", deletedCount),
+		zap.Int("updated_count", updatedCount),
+		zap.String("primary_key", primaryKey),
+	)
+	return row, nil
+}
+
 func (fdb *FluxDB) ReadSigletEntryAt(
 	ctx context.Context,
 	siglet Siglet,
@@ -524,104 +567,6 @@ func (fdb *FluxDB) ReadSigletEntryAt(
 
 	zlog.Debug("finished reading siglet entry", zap.Bool("entry_exist", entry != nil))
 	return entry, nil
-}
-
-func (fdb *FluxDB) readSingle(
-	ctx context.Context,
-	tableKey string,
-	primaryKey string,
-	blockNum uint32,
-	rowUpdated func(blockNum uint32, primaryKey string, value []byte) error,
-	rowDeleted func(blockNum uint32, primaryKey string) error,
-) error {
-	ctx, span := dtracing.StartSpan(ctx, "read single", "table_key", tableKey, "primary_key", primaryKey, "block_num", blockNum)
-	defer span.End()
-
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading single key from database", zap.String("table_key", tableKey), zap.String("primary_key", primaryKey), zap.Uint32("block_num", blockNum))
-
-	idx, err := fdb.getIndex(ctx, tableKey, blockNum)
-	if err != nil {
-		return err
-	}
-
-	firstRowKey := tableKey + ":00000000"
-	lastRowKey := tableKey + ":" + HexBlockNum(blockNum+1)
-
-	if idx != nil && idx.Map[primaryKey] != 0 {
-		zlog.Debug("index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
-		firstRowKey = tableKey + ":" + HexBlockNum(idx.AtBlockNum+1)
-
-		if idx.Map[primaryKey] == 0 {
-			zlog.Debug("index does not contain primary key, probably the key came after taking table index snaphost")
-		} else {
-			rowKey := fmt.Sprintf("%s:%08x:%s", tableKey, idx.Map[primaryKey], primaryKey)
-			err := fdb.store.FetchTabletRow(ctx, rowKey, func(rowKey string, value []byte) error {
-				if len(value) == 0 {
-					return fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
-				}
-
-				_, rowBlockNum, primaryKey, err := explodeWritableRowKey(rowKey)
-				if err != nil {
-					return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
-				}
-
-				err = rowUpdated(rowBlockNum, primaryKey, value)
-				if err != nil {
-					return fmt.Errorf("rowUpdated callback failed for row %q (indexed rows): %w", rowKey, err)
-				}
-
-				return nil
-			})
-
-			if err != nil {
-				return err
-			}
-		}
-
-		zlog.Debug("finished reconciling index")
-	}
-
-	zlog.Debug("reading rows range from database for single key retrieval", zap.String("first_row_key", firstRowKey), zap.String("last_row_key", lastRowKey))
-
-	deletedCount := 0
-	updatedCount := 0
-
-	err = fdb.store.ScanTabletRows(ctx, firstRowKey, lastRowKey, func(rowKey string, value []byte) error {
-		_, rowBlockNum, candidatePrimaryKey, err := explodeWritableRowKey(rowKey)
-		if err != nil {
-			return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
-		}
-
-		if candidatePrimaryKey != primaryKey {
-			return nil
-		}
-
-		if len(value) == 0 {
-			err := rowDeleted(rowBlockNum, primaryKey)
-			if err != nil {
-				return fmt.Errorf("rowDeleted callback failed for row %q: %w", rowKey, err)
-			}
-
-			deletedCount++
-			return nil
-		}
-
-		err = rowUpdated(rowBlockNum, primaryKey, value)
-		if err != nil {
-			return fmt.Errorf("rowUpdated callback failed for row %q: %w", rowKey, err)
-		}
-
-		updatedCount++
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	zlog.Info("finished reading single key from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
-	return nil
 }
 
 func (fdb *FluxDB) FetchLastWrittenBlock(ctx context.Context) (out bstream.BlockRef, err error) {

@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
@@ -46,15 +48,14 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	tableRowResponse, err := srv.readTableRow(
+	tableRowResponse, err := srv.readContractStateTableRow(
 		ctx,
+		fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table),
 		actualBlockNum,
-		request.Account,
-		request.Table,
-		request.Scope,
+		request.KeyType,
 		request.PrimaryKey,
-		request.readRequestCommon,
-		getKeyConverterForType(request.KeyType),
+		request.ToJSON,
+		request.WithBlockNum,
 		speculativeWrites,
 	)
 

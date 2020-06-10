@@ -22,11 +22,9 @@ import (
 	"testing"
 
 	"cloud.google.com/go/bigtable/bttest"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/kv"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc"
 )
 
 func TestExplodeRowKey(t *testing.T) {
@@ -185,16 +183,13 @@ func TestExplodeRowKey(t *testing.T) {
 }
 
 func TestChunking(t *testing.T) {
-	row := &TableDataRow{}
-	row.PrimKey = 1024
-	rowKey := row.rowKey(1)
+	row := mustCreateContractStateTabletRow("eosio", "eoscanadcom", "account", 1, "........ehbo5", "payer", nil, false)
 	assert.Equal(t,
 		"td:0000000000000000:0000000000000000:0000000000000000:00000001:0000000000000400",
-		rowKey)
+		row.Key())
 
-	primKey, ok := chunkKeyUint64(rowKey, 5)
-	assert.Equal(t, primKey, row.PrimKey)
-
+	primKey, ok := chunkKeyUint64(row.Key(), 5)
+	assert.Equal(t, primKey, row.PrimaryKey())
 	assert.True(t, ok)
 }
 
@@ -228,10 +223,8 @@ func Test_chunkKeyRevBlockNum(t *testing.T) {
 func NewTestDB(t *testing.T) (*FluxDB, func()) {
 	srv, err := bttest.NewServer("localhost:0")
 	require.NoError(t, err)
-	conn, err := grpc.Dial(srv.Addr, grpc.WithInsecure())
-	require.NoError(t, err)
 
-	kvStore, err := bigt.NewKVStore(context.Background(), "bigtable://dev.dev/test?createTables=true", option.WithGRPCConn(conn))
+	kvStore, err := kv.NewStore(context.Background(), "bigkv://dev.dev/test?createTables=true")
 	require.NoError(t, err)
 
 	db := New(kvStore)

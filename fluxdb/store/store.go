@@ -64,7 +64,7 @@ type KVStore interface {
 
 	HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error)
 
-	FetchTabletRow(ctx context.Context, key string, onTabletRow OnTabletRow) error
+	FetchTabletRow(ctx context.Context, key string) (value []byte, err error)
 
 	FetchTabletRows(ctx context.Context, keys []string, onTabletRow OnTabletRow) error
 

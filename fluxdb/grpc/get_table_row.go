@@ -25,14 +25,13 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
-	tableRowResponse, err := s.readTableRow(
+	tableRowResponse, err := s.readContractStateTableRow(
 		ctx,
+		fluxdb.
+			NewContractStateTablet(request.Contract, request.Scope, request.Table),
 		actualBlockNum,
-		request.Contract,
-		request.Table,
-		request.Scope,
-		request.PrimaryKey,
 		request.KeyType,
+		request.PrimaryKey,
 		request.ToJson,
 		request.WithBlockNum,
 		speculativeWrites,
@@ -52,7 +51,6 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 }
 
 func processTableRow(tableRow *readTableRowResponse) *pbfluxdb.TableRowResponse {
-	// TODO: pass , UpToBlockNum, LastIrreversibleBlockId, LastIrreversibleBlockNum in grpc header
 	payload := &pbfluxdb.TableRowResponse{
 		Key:         tableRow.Row.Key,
 		Payer:       tableRow.Row.Payer,

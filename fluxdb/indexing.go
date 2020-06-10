@@ -326,80 +326,6 @@ func NewTableIndexFromBinary2(ctx context.Context, tablet Tablet, atBlockNum uin
 	}, nil
 }
 
-func NewTableIndexFromBinary(ctx context.Context, tableKey string, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
-	ctx, span := dtracing.StartSpan(ctx, "new table index from binary", "table_key", tableKey, "block_num", atBlockNum)
-	defer span.End()
-
-	primaryKeyByteCount := indexPrimaryKeyByteCountByTableKey(tableKey)
-	if primaryKeyByteCount == 0 {
-		return nil, fmt.Errorf("unknown primary key byte count for table key %q", tableKey)
-	}
-
-	// Byte count for primary key + 4 bytes for block num value
-	entryByteCount := primaryKeyByteCount + 4
-
-	// First 16 bytes are reserved to keep stats in there..
-	byteCount := len(buffer)
-	if (byteCount-16) < 0 || (byteCount-16)%entryByteCount != 0 {
-		return nil, fmt.Errorf("unable to unmarshal table index: %d bytes alignment + 16 bytes metadata is off (has %d bytes)", entryByteCount, byteCount)
-	}
-
-	primaryKeyReader := indexPrimaryKeyReaderByTableKey(tableKey)
-	if primaryKeyReader == nil {
-		return nil, fmt.Errorf("unknown primary key writer for table key %q", tableKey)
-	}
-
-	mapping := map[string]uint32{}
-	for pos := 16; pos < byteCount; pos += entryByteCount {
-		primaryKey, err := primaryKeyReader(buffer[pos:])
-		if err != nil {
-			return nil, fmt.Errorf("unable to read primary key for table key %q: %w", tableKey, err)
-		}
-
-		blockNumPtr := big.Uint32(buffer[pos+primaryKeyByteCount:])
-		mapping[primaryKey] = blockNumPtr
-	}
-
-	return &TableIndex{
-		AtBlockNum: atBlockNum,
-		Squelched:  big.Uint32(buffer[:4]),
-		Map:        mapping,
-	}, nil
-}
-
-func (index *TableIndex) MarshalBinary(ctx context.Context, tableKey string) ([]byte, error) {
-	ctx, span := dtracing.StartSpan(ctx, "marshal table index to binary", "table_key", tableKey)
-	defer span.End()
-
-	primaryKeyByteCount := indexPrimaryKeyByteCountByTableKey(tableKey)
-	if primaryKeyByteCount == 0 {
-		return nil, fmt.Errorf("unknown primary key byte count for table key %q", tableKey)
-	}
-
-	primaryKeyWriter := indexPrimaryKeyWriterByTableKey(tableKey)
-	if primaryKeyWriter == nil {
-		return nil, fmt.Errorf("unknown primary key writer for table key %q", tableKey)
-	}
-
-	entryByteCount := primaryKeyByteCount + 4 // Byte count for primary key + 4 bytes for block num value
-
-	snapshot := make([]byte, entryByteCount*len(index.Map)+16)
-	big.PutUint32(snapshot, index.Squelched)
-
-	pos := 16
-	for primaryKey, blockNum := range index.Map {
-		err := primaryKeyWriter(primaryKey, snapshot[pos:])
-		if err != nil {
-			return nil, fmt.Errorf("unable to read primary key for table key %q: %w", tableKey, err)
-		}
-
-		big.PutUint32(snapshot[pos+primaryKeyByteCount:], blockNum)
-		pos += entryByteCount
-	}
-
-	return snapshot, nil
-}
-
 func (index *TableIndex) MarshalBinary2(ctx context.Context, tablet Tablet) ([]byte, error) {
 	ctx, span := dtracing.StartSpan(ctx, "marshal table index to binary", "tablet", tablet)
 	defer span.End()
@@ -448,81 +374,6 @@ func (index *TableIndex) String() string {
 type indexPrimaryKeyReader = func(buffer []byte) (string, error)
 type indexPrimaryKeyWriter = func(primaryKey string, buffer []byte) error
 
-func indexPrimaryKeyByteCountByTableKey(tableKey string) int {
-	switch {
-	case strings.HasPrefix(tableKey, "arl:"):
-		return 1
-	// Block resource limit has no fields after prefix, so we must match without the :
-	case strings.HasPrefix(tableKey, "brl"):
-		return 1
-	case strings.HasPrefix(tableKey, "ka2:"):
-		return 16
-	case strings.HasPrefix(tableKey, "ts:"):
-		return 8
-	default:
-		return 0
-	}
-}
-
-func indexPrimaryKeyReaderByTableKey(tableKey string) indexPrimaryKeyReader {
-	switch {
-	case strings.HasPrefix(tableKey, "arl:"):
-		return accountResourceLimitIndexPrimaryKeyReader
-	// Block resource limit has no fields after prefix, so we must match without the :
-	case strings.HasPrefix(tableKey, "brl"):
-		return blockResourceLimitIndexPrimaryKeyReader
-	case strings.HasPrefix(tableKey, "ka2:"):
-		return keyAccountIndexPrimaryKeyReader
-	case strings.HasPrefix(tableKey, "ts:"):
-		return tableScopeIndexPrimaryKeyReader
-	default:
-		return nil
-	}
-}
-
-func indexPrimaryKeyWriterByTableKey(tableKey string) indexPrimaryKeyWriter {
-	switch {
-	case strings.HasPrefix(tableKey, "arl:"):
-		return accountResourceLimitIndexPrimaryKeyWriter
-	// Block resource limit has no fields after prefix, so we must match without the :
-	case strings.HasPrefix(tableKey, "brl"):
-		return blockResourceLimitIndexPrimaryKeyWriter
-	case strings.HasPrefix(tableKey, "ka2:"):
-		return keyAccountIndexPrimaryKeyWriter
-	case strings.HasPrefix(tableKey, "ts:"):
-		return tableScopeIndexPrimaryKeyWriter
-	default:
-		return nil
-	}
-}
-
-//var authLinkIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("account resource limit")
-var accountResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("account resource limit")
-var blockResourceLimitIndexPrimaryKeyReader = oneBytePrimaryKeyReaderFactory("block resource limit")
-var keyAccountIndexPrimaryKeyReader = twoUint64PrimaryKeyReaderFactory("key account")
-var tableScopeIndexPrimaryKeyReader = oneUint64PrimaryKeyReaderFactory("table scope")
-
-func oneBytePrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
-	return func(buffer []byte) (string, error) {
-		if len(buffer) < 1 {
-			return "", fmt.Errorf("%s primary key reader: not enough bytes to read, %d bytes left, wants %d", tag, len(buffer), 1)
-		}
-
-		return fmt.Sprintf("%02x", buffer[0]), nil
-	}
-}
-
-func oneUint64PrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
-	return func(buffer []byte) (string, error) {
-		primaryKey, err := readOneUint64(buffer)
-		if err != nil {
-			return "", fmt.Errorf("%s primary key reader: %w", tag, err)
-		}
-
-		return primaryKey, nil
-	}
-}
-
 func twoUint64PrimaryKeyReaderFactory(tag string) indexPrimaryKeyReader {
 	return func(buffer []byte) (string, error) {
 		if len(buffer) < 16 {
@@ -549,34 +400,6 @@ func readOneUint64(buffer []byte) (string, error) {
 	}
 
 	return fmt.Sprintf("%016x", big.Uint64(buffer)), nil
-}
-
-var accountResourceLimitIndexPrimaryKeyWriter = oneBytePrimaryKeyWriterFactory("account resource limit")
-var blockResourceLimitIndexPrimaryKeyWriter = oneBytePrimaryKeyWriterFactory("block resource limit")
-var keyAccountIndexPrimaryKeyWriter = twoUint64PrimaryKeyWriterFactory("key account")
-var tableScopeIndexPrimaryKeyWriter = oneUint64PrimaryKeyWriterFactory("table scope")
-
-func oneBytePrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
-	return func(primaryKey string, buffer []byte) error {
-		value, err := strconv.ParseUint(primaryKey, 16, 8)
-		if err != nil {
-			return fmt.Errorf("%s primary key writer: unable to transform primary key to byte: %w", tag, err)
-		}
-
-		buffer[0] = byte(value)
-		return nil
-	}
-}
-
-func oneUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
-	return func(primaryKey string, buffer []byte) error {
-		err := writeOneUint64(primaryKey, buffer)
-		if err != nil {
-			return fmt.Errorf("%s primary key writer: %w", tag, err)
-		}
-
-		return nil
-	}
 }
 
 func twoUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {

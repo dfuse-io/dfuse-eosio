@@ -15,12 +15,10 @@ type readScopeTableResponse struct {
 }
 
 type readTableResponse struct {
-	ABI  *eos.ABI    `json:"abi"`
 	Rows []*tableRow `json:"rows"`
 }
 
 type readTableRowResponse struct {
-	ABI *eos.ABI  `json:"abi"`
 	Row *tableRow `json:"row"`
 }
 

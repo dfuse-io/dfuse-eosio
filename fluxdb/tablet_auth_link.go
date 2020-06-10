@@ -68,8 +68,9 @@ func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission str
 }
 
 func (t AuthLinkTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
-	if len(value) == 0 || len(value) == 8 {
-		return nil, errors.New("auth link tablet row value should have at exactly 0 byte (deletion) or 8 bytes (permission)")
+
+	if len(value) != 0 && len(value) != 8 {
+		return nil, errors.New("auth link tablet row value should have at exactly 0 bytes (deletion) or 8 bytes (permission)")
 	}
 
 	collection, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)

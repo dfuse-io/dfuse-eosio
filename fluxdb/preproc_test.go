@@ -57,7 +57,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 	tests := []struct {
 		name   string
 		input  []*pbcodec.DBOp
-		expect []*TableDataRow
+		expect []TabletRow
 	}{
 		{
 			name: "nothing if update doesn't change",
@@ -72,9 +72,9 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
 				testDBOp("INS", "eosio/scope/table1/key2", "/payer2", "/d2"),
 			},
-			expect: []*TableDataRow{
-				{N("eosio"), N("scope"), N("table1"), N("key1"), N("payer1"), false, []byte("d1")},
-				{N("eosio"), N("scope"), N("table1"), N("key2"), N("payer2"), false, []byte("d2")},
+			expect: []TabletRow{
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "payer1", []byte("d1"), false),
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key2", "payer2", []byte("d2"), false),
 			},
 		},
 		{
@@ -83,8 +83,8 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
 			},
-			expect: []*TableDataRow{
-				{N("eosio"), N("scope"), N("table1"), N("key1"), N("payer1"), false, []byte("d2")},
+			expect: []TabletRow{
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "payer1", []byte("d2"), false),
 			},
 		},
 		{
@@ -92,8 +92,8 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 			input: []*pbcodec.DBOp{
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d0/"),
 			},
-			expect: []*TableDataRow{
-				{N("eosio"), N("scope"), N("table1"), N("key1"), N(""), true, nil},
+			expect: []TabletRow{
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
 			},
 		},
 		{
@@ -103,8 +103,8 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d2/"),
 			},
-			expect: []*TableDataRow{
-				{N("eosio"), N("scope"), N("table1"), N("key1"), N(""), true, nil},
+			expect: []TabletRow{
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
 			},
 		},
 		{
@@ -115,8 +115,8 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d2"),
 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d2/"),
 			},
-			expect: []*TableDataRow{
-				{N("eosio"), N("scope"), N("table1"), N("key1"), N(""), true, nil},
+			expect: []TabletRow{
+				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
 			},
 		},
 		{
@@ -213,12 +213,11 @@ func TestPreprocessBlock_PermOps(t *testing.T) {
 
 	rows := sortedFluxRows(req.(*WriteRequest).TabletRows, 3)
 
-	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
 	assert.Equal(t, []*KeyAccountRow{
-		{"k1", N("eosio"), N("owner"), false},
-		{"k2", N("eosio"), N("active"), false},
-		{"k2", N("eosio"), N("owner"), true},
-		{"k3", N("eosio"), N("owner"), false},
+		mustCreateKeyAccountTabletRow("k1", 0, "eosio", "owner", false),
+		mustCreateKeyAccountTabletRow("k2", 0, "eosio", "active", false),
+		mustCreateKeyAccountTabletRow("k3", 0, "eosio", "owner", true),
+		mustCreateKeyAccountTabletRow("k4", 0, "eosio", "owner", false),
 	}, rows)
 }
 
@@ -280,4 +279,37 @@ func sortedFluxRows(rows []TabletRow, blockNum uint32) []TabletRow {
 	})
 
 	return rows
+}
+
+func mustCreateContractTableScopeTabletRow(contract, table string, blockNum uint32, scope string, payer string, isDeletion bool) TabletRow {
+	row, err := NewContractTableScopeTablet(contract, table).NewRow(blockNum, scope, payer, isDeletion)
+	if err != nil {
+		panic(err)
+	}
+	return row
+}
+
+func mustCreateContractStateTabletRow(contract, scope, table string, blockNum uint32, primaryKey string, payer string, data []byte, isDeletion bool) TabletRow {
+	row, err := NewContractStateTablet(contract, scope, table).NewRow(blockNum, primaryKey, payer, data, isDeletion)
+	if err != nil {
+		panic(err)
+	}
+	return row
+}
+
+func mustCreateAuthLinkTabletRow(account string, blockNum uint32, contract, action, permission string, isDeletion bool) TabletRow {
+	row, err := NewAuthLinkTablet(account).NewRow(blockNum, contract, action, permission, isDeletion)
+	if err != nil {
+		panic(err)
+	}
+	return row
+}
+
+func mustCreateKeyAccountTabletRow(publicKey string, blockNum uint32, account, permission string, isDeletion bool) *KeyAccountRow {
+	tablet := NewKeyAccountTablet(publicKey)
+	k, err := tablet.NewRow(blockNum, account, permission, isDeletion)
+	if err != nil {
+		panic(err)
+	}
+	return k
 }

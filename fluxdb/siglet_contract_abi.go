@@ -49,8 +49,8 @@ func (t ContractABISiglet) NewEntry(blockNum uint32, packedABI []byte) (*Contrac
 }
 
 func (t ContractABISiglet) NewEntryFromKV(key string, value []byte) (SigletEntry, error) {
-	if len(value) < 0 {
-		return nil, errors.New("contract abi entry value should have at least 1 byte")
+	if len(value) != 0 && len(value) < 1 {
+		return nil, errors.New("contract abi entry value should have 0 bytes (deletion) at-least 1 byte")
 	}
 
 	_, sigletKey, blockNumKey, err := ExplodeSigletEntryKey(key)

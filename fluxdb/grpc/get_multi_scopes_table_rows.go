@@ -59,7 +59,6 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 
 		for itr, row := range responseRows.Rows {
 			resp.Row[itr] = processTableRow(&readTableRowResponse{
-				ABI: responseRows.ABI,
 				Row: row,
 			})
 		}

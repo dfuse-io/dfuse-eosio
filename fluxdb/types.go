@@ -67,7 +67,7 @@ var tabletFactories = map[string]TabletFactory{}
 
 func RegisterTabletFactory(collection string, factory TabletFactory) {
 	if collections[collection] {
-		panic(fmt.Errorf("collections %q is already registered, they all must be unique among registered ones"))
+		panic(fmt.Errorf("collections %q is already registered, they all must be unique among registered ones", collection))
 	}
 
 	tabletFactories[collection] = factory
@@ -127,7 +127,7 @@ func (r *BaseTabletRow) Value() []byte {
 }
 
 func isDeletionRow(row TabletRow) bool {
-	return row.Value() == nil
+	return len(row.Value()) == 0
 }
 
 // Siglet is a block-aware container for a single piece of information, for
@@ -177,7 +177,7 @@ var sigletFactories = map[string]SigletFactory{}
 
 func RegisterSigletFactory(collection string, factory SigletFactory) {
 	if collections[collection] {
-		panic(fmt.Errorf("collection %q is already registered, they all must be unique among registered ones"))
+		panic(fmt.Errorf("collection %q is already registered, they all must be unique among registered ones", collection))
 	}
 
 	sigletFactories[collection] = factory
@@ -214,7 +214,7 @@ func (r *BaseSigletEntry) Value() []byte {
 }
 
 func isDeletionEntry(entry SigletEntry) bool {
-	return entry.Value() == nil
+	return len(entry.Value()) == 0
 }
 
 ///

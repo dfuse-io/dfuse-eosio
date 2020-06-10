@@ -40,7 +40,6 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 
 	for _, row := range responseRows.Rows {
 		stream.Send(processTableRow(&readTableRowResponse{
-			ABI: responseRows.ABI,
 			Row: row,
 		}))
 	}

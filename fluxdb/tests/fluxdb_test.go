@@ -22,18 +22,12 @@ import (
 	"strings"
 	"testing"
 
-	"cloud.google.com/go/bigtable/bttest"
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/bigt"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/logging"
 	"github.com/gavv/httpexpect/v2"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
-	"google.golang.org/api/option"
-	"google.golang.org/grpc"
 )
 
 func init() {
@@ -41,55 +35,6 @@ func init() {
 		logger, _ := zap.NewDevelopment()
 		logging.Override(logger)
 	}
-}
-
-//func TestFluxdb_HidalgoStore(t *testing.T) {
-//	runAll(t, func() (store.KVStore, StoreCleanupFunc) {
-//		dir, err := ioutil.TempDir("", "fluxdb-hidalgo")
-//		require.NoError(t, err)
-//
-//		dsn := fmt.Sprintf("bbolt://%s?createTables=true", path.Join(dir, "db.bbolt"))
-//		kvStore, err := hidalgo.NewKVStore(context.Background(), dsn)
-//		require.NoError(t, err)
-//
-//		return kvStore, func() {
-//			os.RemoveAll(dir)
-//			kvStore.Close()
-//		}
-//	})
-//}
-
-//func TestFluxdb_BadgerStore(t *testing.T) {
-//	runAll(t, func() (store.KVStore, StoreCleanupFunc) {
-//		dir, err := ioutil.TempDir("", "fluxdb-badger")
-//		require.NoError(t, err)
-//
-//		dsn := fmt.Sprintf("badger://%s", path.Join(dir, "flux.db"))
-//
-//		kvStore, err := badger.NewBadgerStore(context.Background(), dsn)
-//		require.NoError(t, err)
-//
-//		return kvStore, func() {
-//			os.RemoveAll(dir)
-//			kvStore.Close()
-//		}
-//	})
-//}
-
-func TestFluxdb_Bigtable(t *testing.T) {
-	runAll(t, func() (store.KVStore, StoreCleanupFunc) {
-		srv, err := bttest.NewServer("localhost:0")
-		require.NoError(t, err)
-		conn, err := grpc.Dial(srv.Addr, grpc.WithInsecure())
-		require.NoError(t, err)
-
-		kvStore, err := bigt.NewKVStore(context.Background(), "bigtable://dev.dev/test?createTables=true", option.WithGRPCConn(conn))
-		require.NoError(t, err)
-
-		return kvStore, func() {
-			srv.Close()
-		}
-	})
 }
 
 func runAll(t *testing.T, storeFactory StoreFactory) {

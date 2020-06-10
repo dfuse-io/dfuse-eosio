@@ -39,8 +39,11 @@ func TestReadWithSpeculative(t *testing.T) {
 	writeBatchOfRequests(t, db, writeEmptyABI(t, blockNum, contract))
 
 	contractStateTablet := NewContractStateTablet(contract, scope, table)
+	row, err := contractStateTablet.NewRow(blockNum, key, "", nil, true)
+	require.NoError(t, err)
+
 	speculativeWrites := []*WriteRequest{
-		tabletRows(blockNum, contractStateTablet.NewRow(blockNum, key, "", nil, true)),
+		tabletRows(blockNum, row),
 	}
 
 	rows, err := db.ReadTabletAt(context.Background(), 123, contractStateTablet, speculativeWrites)
