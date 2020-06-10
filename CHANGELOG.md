@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
 * Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
+* `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
 
 ## [v0.1.0-beta3] 2020-05-13
 
