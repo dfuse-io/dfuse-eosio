@@ -4,9 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/dfuse-io/dfuse-eosio/fluxdb"
-
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
@@ -21,7 +20,7 @@ func (s *Server) GetPermissionLinks(ctx context.Context, request *pbfluxdb.GetPe
 	)
 
 	blockNum := uint32(request.BlockNum)
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
@@ -33,15 +32,13 @@ func (s *Server) GetPermissionLinks(ctx context.Context, request *pbfluxdb.GetPe
 		speculativeWrites,
 	)
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", blockNum, err)
+		return nil, derr.Statusf(codes.Internal, "unable to read tablet at %d: %s", blockNum, err)
 	}
 
 	resp := &pbfluxdb.GetPermissionLinksResponse{
-		UpToBlockId:              upToBlockID,
-		UpToBlockNum:             uint64(fluxdb.BlockNum(upToBlockID)),
-		LastIrreversibleBlockId:  lastWrittenBlockID,
-		LastIrreversibleBlockNum: uint64(fluxdb.BlockNum(lastWrittenBlockID)),
-		Permissions:              make([]*pbfluxdb.LinkedPermission, len(tabletRows)),
+		UpToBlock:             &pbfluxdb.BlockRef{Num: upToBlock.Num(), Id: upToBlock.String()},
+		LastIrreversibleBlock: &pbfluxdb.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.String()},
+		Permissions:           make([]*pbfluxdb.LinkedPermission, len(tabletRows)),
 	}
 
 	for i, tabletRow := range tabletRows {

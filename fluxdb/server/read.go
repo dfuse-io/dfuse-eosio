@@ -32,17 +32,17 @@ func (srv *EOSServer) prepareRead(
 	ctx context.Context,
 	blockNum uint32,
 	irreversibleOnly bool,
-) (chosenBlockNum uint32, lastWrittenBlockID string, upToBlockID string, speculativeWrites []*fluxdb.WriteRequest, err error) {
+) (chosenBlockNum uint32, lastWrittenBlock bstream.BlockRef, upToBlock bstream.BlockRef, speculativeWrites []*fluxdb.WriteRequest, err error) {
 	zlog := logging.Logger(ctx, zlog)
 	zlog.Debug("performing prepare read operation")
 
-	lastWrittenBlock, err := srv.db.FetchLastWrittenBlock(ctx)
+	lastWrittenBlock, err = srv.db.FetchLastWrittenBlock(ctx)
 	if err != nil {
 		err = fmt.Errorf("unable to retrieve last written block id: %w", err)
 		return
 	}
-	lastWrittenBlockNum := uint32(lastWrittenBlock.Num())
 
+	lastWrittenBlockNum := uint32(lastWrittenBlock.Num())
 	if irreversibleOnly {
 		if blockNum > lastWrittenBlockNum {
 			err = fluxdb.AppBlockNumHigherThanLIBError(ctx, blockNum, lastWrittenBlockNum)
@@ -67,14 +67,14 @@ func (srv *EOSServer) prepareRead(
 	}
 
 	// If we're between lastWrittenBlockNum and headBlockNum, we need to apply whatever's between
-	zlog.Debug("fetching speculative writes", zap.String("head_block_id", headBlock.ID()), zap.Uint32("chosen_block_num", chosenBlockNum))
+	zlog.Debug("fetching speculative writes", zap.Stringer("head_block", headBlock), zap.Uint32("chosen_block_num", chosenBlockNum))
 	speculativeWrites = srv.db.SpeculativeWritesFetcher(ctx, headBlock.ID(), chosenBlockNum)
 
 	if len(speculativeWrites) >= 1 {
-		upToBlockID = hex.EncodeToString(speculativeWrites[len(speculativeWrites)-1].BlockID)
+		upToBlock = bstream.BlockRefFromID(hex.EncodeToString(speculativeWrites[len(speculativeWrites)-1].BlockID))
 		zlog.Debug("speculative writes present",
 			zap.Int("speculative_write_count", len(speculativeWrites)),
-			zap.String("up_to_block_id", upToBlockID),
+			zap.Stringer("up_to_block", upToBlock),
 		)
 	}
 
@@ -194,7 +194,7 @@ func (s *rowSerializationInfo) Decode(data []byte) ([]byte, error) {
 }
 
 func (s *EOSServer) newRowSerializationInfo(ctx context.Context, contract, table string, blockNum uint32, speculativeWrites []*fluxdb.WriteRequest) (*rowSerializationInfo, error) {
-	abiEntry, err := s.db.ReadSigletEntryAt(ctx, fluxdb.NewContractABISiglet(contract), blockNum, speculativeWrites)
+	abiEntry, err := s.db.ReadSingletEntryAt(ctx, fluxdb.NewContractABISinglet(contract), blockNum, speculativeWrites)
 	if err != nil {
 		return nil, fmt.Errorf("read abi at %d: %w", blockNum, err)
 	}
@@ -234,8 +234,8 @@ func (srv *EOSServer) fetchABI(
 		return nil, fmt.Errorf("unable to prepare read: %w", err)
 	}
 
-	siglet := fluxdb.NewContractABISiglet(account)
-	entry, err := srv.db.ReadSigletEntryAt(ctx, siglet, actualBlockNum, speculativeWrites)
+	singlet := fluxdb.NewContractABISinglet(account)
+	entry, err := srv.db.ReadSingletEntryAt(ctx, singlet, actualBlockNum, speculativeWrites)
 	if err != nil {
 		return nil, fmt.Errorf("db read: %w", err)
 	}

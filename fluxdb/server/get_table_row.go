@@ -42,7 +42,7 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 	request := extractGetTableRowRequest(r)
 	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, request.IrreversibleOnly)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, request.IrreversibleOnly)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
@@ -75,7 +75,7 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 		abi = serializationInfo.abi
 	}
 	response := &getTableRowResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+		commonStateResponse: newCommonGetResponse(upToBlock, lastWrittenBlock),
 		ABI:                 abi,
 		Row:                 row,
 	}

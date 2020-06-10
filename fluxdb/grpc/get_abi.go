@@ -27,7 +27,7 @@ func (s *Server) GetABI(ctx context.Context, request *pbfluxdb.GetABIRequest) (*
 		return nil, fmt.Errorf("speculative writes: %w", err)
 	}
 
-	entry, err := s.db.ReadSigletEntryAt(ctx, fluxdb.NewContractABISiglet(request.Contract), actualBlockNum, speculativeWrites)
+	entry, err := s.db.ReadSingletEntryAt(ctx, fluxdb.NewContractABISinglet(request.Contract), actualBlockNum, speculativeWrites)
 	if err != nil {
 		return nil, fmt.Errorf("db read: %w", err)
 	}

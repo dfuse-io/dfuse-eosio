@@ -43,7 +43,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 	request := extractListTablesRowsForAccountsRequest(r)
 	zlog.Debug("extracted request", zap.Reflect("request", request))
 
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
@@ -100,7 +100,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 	nailer.PushAll(ctx, accounts)
 
 	response := &getMultiTableRowsResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+		commonStateResponse: newCommonGetResponse(upToBlock, lastWrittenBlock),
 	}
 
 	for {

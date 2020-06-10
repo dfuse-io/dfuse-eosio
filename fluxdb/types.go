@@ -25,14 +25,21 @@ import (
 
 var collections = map[string]bool{}
 
-// Tablet is a block-aware virtual table containing all the rows at any given
-// block height for a given element. Let's assume we want to store the
-// balance over a fixed set of accounts at any block height. In this case, one
-// tablet would represent a single account, each actual row being the balance
-// of the account at all block height.
+// Tablet is a block-aware temporal table containing all the rows at any given
+// block height. Let's assume you have a token contract where the token and
+// there is multiple accounts owning this token. You could track the historical
+// values of balances at any block height using a Tablet implementation. The tablet
+// key would be `<contract>:<token>` while the rows would be each of the account
+// owning the token. The primary key of the row would be the account while the
+// value stored in the row would be the balance.
+//
+// By using the Tablet implementation and fluxdb library, you would then be able
+// to retrieve, at any block height, all accounts and their respective balance.
 //
 // A Tablet always contain 0 to N rows, we maintain the state of each row
-// independently.
+// independently. If a row mutates each block, we will have a total B versions
+// of this exact row in the database, B being the total count of blocks seen so
+// far.
 type Tablet interface {
 	NewRowFromKV(key string, value []byte) (TabletRow, error)
 
@@ -116,7 +123,7 @@ func (r *BaseTabletRow) PrimaryKey() string {
 func (r *BaseTabletRow) Tablet() Tablet {
 	factory := tabletFactories[r.Collection]
 	if factory == nil {
-		panic(fmt.Errorf(`no know tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
+		panic(fmt.Errorf(`no known tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
 	}
 
 	return factory(&r.TabletRow)
@@ -130,64 +137,64 @@ func isDeletionRow(row TabletRow) bool {
 	return len(row.Value()) == 0
 }
 
-// Siglet is a block-aware container for a single piece of information, for
+// Singlet is a block-aware container for a single piece of information, for
 // example an account's balance.
 //
-// A Siglet always contain a single row key but stored at any block height.
-type Siglet interface {
+// A Singlet always contain a single row key but stored at any block height.
+type Singlet interface {
 	Key() string
 	KeyAt(blockNum uint32) string
 
-	NewEntryFromKV(entryKey string, value []byte) (SigletEntry, error)
+	NewEntryFromKV(entryKey string, value []byte) (SingletEntry, error)
 
 	String() string
 }
 
-func ExplodeSigletKey(key string) (collection, siglet string, err error) {
+func ExplodeSingletKey(key string) (collection, singlet string, err error) {
 	parts := strings.Split(key, "/")
 	if len(parts) == 2 {
 		return parts[0], parts[1], nil
 	}
 
-	err = fmt.Errorf("siglet key should have 2 segments separated by '/' (`<collection/siglet>`), got %d segments", len(parts))
+	err = fmt.Errorf("singlet key should have 2 segments separated by '/' (`<collection/singlet>`), got %d segments", len(parts))
 	return
 }
 
-type SigletEntry interface {
+type SingletEntry interface {
 	Key() string
 	Value() []byte
 
-	Siglet() Siglet
+	Singlet() Singlet
 	BlockNum() uint32
 }
 
-func ExplodeSigletEntryKey(key string) (collection, tablet, blockNum string, err error) {
+func ExplodeSingletEntryKey(key string) (collection, tablet, blockNum string, err error) {
 	parts := strings.Split(key, "/")
 	if len(parts) == 3 {
 		return parts[0], parts[1], parts[2], nil
 	}
 
-	err = fmt.Errorf("siglet entry key should have 3 segments separated by '/' (`<collection/siglet/blockNum>`), got %d segments", len(parts))
+	err = fmt.Errorf("singlet entry key should have 3 segments separated by '/' (`<collection/singlet/blockNum>`), got %d segments", len(parts))
 	return
 }
 
-type SigletFactory = func(row *pbfluxdb.TabletRow) Siglet
+type SingletFactory = func(row *pbfluxdb.TabletRow) Singlet
 
-var sigletFactories = map[string]SigletFactory{}
+var singletFactories = map[string]SingletFactory{}
 
-func RegisterSigletFactory(collection string, factory SigletFactory) {
+func RegisterSingletFactory(collection string, factory SingletFactory) {
 	if collections[collection] {
 		panic(fmt.Errorf("collection %q is already registered, they all must be unique among registered ones", collection))
 	}
 
-	sigletFactories[collection] = factory
+	singletFactories[collection] = factory
 }
 
-type BaseSigletEntry struct {
+type BaseSingletEntry struct {
 	pbfluxdb.TabletRow
 }
 
-func (r *BaseSigletEntry) BlockNum() uint32 {
+func (r *BaseSingletEntry) BlockNum() uint32 {
 	value, err := strconv.ParseUint(r.BlockNumKey, 16, 32)
 	if err != nil {
 		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.BlockNumKey, err))
@@ -196,37 +203,37 @@ func (r *BaseSigletEntry) BlockNum() uint32 {
 	return math.MaxUint32 - uint32(value)
 }
 
-func (r *BaseSigletEntry) Key() string {
+func (r *BaseSingletEntry) Key() string {
 	return r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey
 }
 
-func (r *BaseSigletEntry) Siglet() Siglet {
-	factory := sigletFactories[r.Collection]
+func (r *BaseSingletEntry) Singlet() Singlet {
+	factory := singletFactories[r.Collection]
 	if factory == nil {
-		panic(fmt.Errorf(`no know siglet factory for collection %s, register factories through a 'RegisterSigletFactory("prefix", func (...) { ... })' call`, r.Collection))
+		panic(fmt.Errorf(`no known singlet factory for collection %s, register factories through a 'RegisterSingletFactory("prefix", func (...) { ... })' call`, r.Collection))
 	}
 
 	return factory(&r.TabletRow)
 }
 
-func (r *BaseSigletEntry) Value() []byte {
+func (r *BaseSingletEntry) Value() []byte {
 	return r.Payload
 }
 
-func isDeletionEntry(entry SigletEntry) bool {
+func isDeletionEntry(entry SingletEntry) bool {
 	return len(entry.Value()) == 0
 }
 
 type WriteRequest struct {
-	SigletEntries []SigletEntry
-	TabletRows    []TabletRow
+	SingletEntries []SingletEntry
+	TabletRows     []TabletRow
 
 	BlockNum uint32
 	BlockID  []byte
 }
 
-func (r *WriteRequest) AppendSigletEntry(entry SigletEntry) {
-	r.SigletEntries = append(r.SigletEntries, entry)
+func (r *WriteRequest) AppendSingletEntry(entry SingletEntry) {
+	r.SingletEntries = append(r.SingletEntries, entry)
 }
 
 func (r *WriteRequest) AppendTabletRow(row TabletRow) {

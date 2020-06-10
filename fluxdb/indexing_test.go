@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"testing"
 
-	eos "github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewTableIndexFromBinary(t *testing.T) {
+func TestTabletIndex_MarshalUnmarshalBinary(t *testing.T) {
 	type expected struct {
 		tableIndex *TableIndex
 		err        error
@@ -40,56 +39,22 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 		expected   expected
 	}{
 		{
-			"auth_link_valid",
-			NewAuthLinkTablet("eoscanadcom"),
+			"no_rows",
+			testTablet(""),
 			6,
 			[]byte{
 				0x00, 0x00, 0x00, 0x02, // Squelched count
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
 			},
 			expected{&TableIndex{
 				AtBlockNum: 6,
 				Squelched:  2,
-				Map: map[string]uint32{
-					"0000000000000002:0000000000000003": 4,
-				},
-			}, nil},
-		},
-		{
-			"key_account_valid",
-			NewKeyAccountTablet("EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"),
-			6,
-			[]byte{
-				0x00, 0x00, 0x00, 0x02, // Squelched count
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
-			},
-			expected{&TableIndex{
-				AtBlockNum: 6,
-				Squelched:  2,
-				Map: map[string]uint32{
-					"0000000000000002:0000000000000003": 4,
-				},
-			}, nil},
-		},
-		{
-			"key_account_valid/empty",
-			NewKeyAccountTablet("EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"),
-			0,
-			[]byte{
-				0x00, 0x00, 0x00, 0x00, // Squelched count
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-			},
-			expected{&TableIndex{
-				AtBlockNum: 0,
-				Squelched:  0,
 				Map:        map[string]uint32{},
 			}, nil},
 		},
 		{
-			"table_data_valid",
-			NewContractStateTablet("eosio", "eoscanadcom", "accounts"),
+			"multi_rows",
+			testTablet(""),
 			6,
 			[]byte{
 				0x00, 0x00, 0x00, 0x02, // Squelched count
@@ -107,22 +72,8 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 			}, nil},
 		},
 		{
-			"auth_link_misalign",
-			NewAuthLinkTablet("eoscanadcom"),
-			0,
-			[]byte{0x00},
-			expected{nil, errors.New("unable to unmarshal table index: 20 bytes alignment + 16 bytes metadata is off (has 1 bytes)")},
-		},
-		{
-			"key_account_misalign",
-			NewKeyAccountTablet("EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"),
-			0,
-			[]byte{0x00},
-			expected{nil, errors.New("unable to unmarshal table index: 20 bytes alignment + 16 bytes metadata is off (has 1 bytes)")},
-		},
-		{
-			"table_data_misalign",
-			NewContractStateTablet("eosio", "eoscanadacom", "accounts"),
+			"misalign",
+			testTablet(""),
 			0,
 			[]byte{0x00},
 			expected{nil, errors.New("unable to unmarshal table index: 12 bytes alignment + 16 bytes metadata is off (has 1 bytes)")},
@@ -138,82 +89,13 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 			require.Equal(t, test.expected.err, err)
 			if test.expected.err == nil {
 				assert.Equal(t, test.expected.tableIndex, tableIndex)
-			}
-		})
-	}
-}
 
-func TestTableIndexMarshalBinary(t *testing.T) {
-	type expected struct {
-		bytes []byte
-		err   error
-	}
+				bytes, err := tableIndex.MarshalBinary(ctx, test.tablet)
+				require.NoError(t, err)
 
-	tests := []struct {
-		name       string
-		tableKey   Tablet
-		tableIndex *TableIndex
-		expected   expected
-	}{
-		{
-			"auth_link",
-			NewAuthLinkTablet("eoscanadacom"),
-			&TableIndex{
-				AtBlockNum: 2,
-				Squelched:  1,
-				Map: map[string]uint32{
-					"0000000000000002:0000000000000003": 4,
-				},
-			},
-			expected{[]byte{
-				0x00, 0x00, 0x00, 0x01, // Squelched count
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
-			}, nil},
-		},
-		{
-			"key_account",
-			NewKeyAccountTablet("EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP"),
-			&TableIndex{
-				AtBlockNum: 2,
-				Squelched:  4,
-				Map: map[string]uint32{
-					"0000000000000002:0000000000000003": 4,
-				},
-			},
-			expected{[]byte{
-				0x00, 0x00, 0x00, 0x04, // Squelched count
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
-			}, nil},
-		},
-		{
-			"table_data",
-			NewContractStateTablet("eosio", "eoscanadacom", "accounts"),
-			&TableIndex{
-				AtBlockNum: 2,
-				Squelched:  4,
-				Map: map[string]uint32{
-					"............2": 4,
-				},
-			},
-			expected{[]byte{
-				0x00, 0x00, 0x00, 0x04, // Squelched count
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
-			}, nil},
-		},
-	}
-
-	ctx := context.Background()
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			bytes, err := test.tableIndex.MarshalBinary(ctx, test.tableKey)
-
-			require.Equal(t, test.expected.err, err)
-			if test.expected.err == nil {
-				assert.Equal(t, test.expected.bytes, bytes)
+				tableIndexFromBytes, err := NewTableIndexFromBinary(ctx, test.tablet, test.atBlockNum, bytes)
+				require.NoError(t, err)
+				assert.Equal(t, test.expected.tableIndex, tableIndexFromBytes)
 			}
 		})
 	}
@@ -329,7 +211,7 @@ func (t testTablet) EncodePrimaryKey(buffer []byte, primaryKey string) error {
 }
 
 func (t testTablet) DecodePrimaryKey(buffer []byte) (primaryKey string, err error) {
-	return eos.NameToString(binary.BigEndian.Uint64(buffer)), nil
+	return UN(binary.BigEndian.Uint64(buffer)), nil
 }
 
 func (t testTablet) String() string {

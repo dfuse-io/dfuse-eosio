@@ -18,7 +18,7 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 	)
 
 	blockNum := uint32(request.BlockNum)
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := s.prepareRead(ctx, blockNum, request.IrreversibleOnly)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := s.prepareRead(ctx, blockNum, request.IrreversibleOnly)
 	if err != nil {
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
@@ -46,10 +46,8 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 	}
 
 	return &pbfluxdb.GetTableRowResponse{
-		UpToBlockId:              upToBlockID,
-		UpToBlockNum:             uint64(fluxdb.BlockNum(upToBlockID)),
-		LastIrreversibleBlockId:  lastWrittenBlockID,
-		LastIrreversibleBlockNum: uint64(fluxdb.BlockNum(lastWrittenBlockID)),
-		Row:                      response,
+		UpToBlock:             &pbfluxdb.BlockRef{Num: upToBlock.Num(), Id: upToBlock.String()},
+		LastIrreversibleBlock: &pbfluxdb.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.String()},
+		Row:                   response,
 	}, nil
 }

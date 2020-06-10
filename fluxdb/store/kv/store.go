@@ -68,7 +68,7 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 	return newBatch(s, logger)
 }
 
-func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
+func (s *KVStore) FetchSingletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
 	err = s.scanRange(ctx, TblPrefixRows, keyStart, keyEnd, 1, func(rowKey string, rowValue []byte) error {
 		key = rowKey
 		value = rowValue

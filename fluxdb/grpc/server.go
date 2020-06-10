@@ -3,7 +3,9 @@ package grpc
 import (
 	"fmt"
 	"net"
+	"strconv"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/dgrpc"
@@ -42,11 +44,11 @@ func (s *Server) Serve() {
 	}
 }
 
-func newMetadata(upToBlockID, lastWrittenBlockID string) metadata.MD {
+func newMetadata(upToBlock, lastWrittenBlock bstream.BlockRef) metadata.MD {
 	md := metadata.New(map[string]string{})
-	md.Set("flux-up-to-block-id", upToBlockID)
-	md.Set("flux-up-to-block-num", fmt.Sprintf("%d", fluxdb.BlockNum(upToBlockID)))
-	md.Set("flux-last-irreversible-block-id", lastWrittenBlockID)
-	md.Set("flux-last-irreversible-block-num", fmt.Sprintf("%d", fluxdb.BlockNum(lastWrittenBlockID)))
+	md.Set("flux-up-to-block-id", upToBlock.ID())
+	md.Set("flux-up-to-block-num", strconv.FormatUint(upToBlock.Num(), 10))
+	md.Set("flux-last-irreversible-block-id", lastWrittenBlock.ID())
+	md.Set("flux-last-irreversible-block-num", strconv.FormatUint(lastWrittenBlock.Num(), 10))
 	return md
 }

@@ -299,40 +299,40 @@ func (fdb *FluxDB) ReadTabletRowAt(
 	return row, nil
 }
 
-func (fdb *FluxDB) ReadSigletEntryAt(
+func (fdb *FluxDB) ReadSingletEntryAt(
 	ctx context.Context,
-	siglet Siglet,
+	singlet Singlet,
 	blockNum uint32,
 	speculativeWrites []*WriteRequest,
-) (SigletEntry, error) {
-	ctx, span := dtracing.StartSpan(ctx, "read singlet entry", "siglet", siglet, "block_num", blockNum)
+) (SingletEntry, error) {
+	ctx, span := dtracing.StartSpan(ctx, "read singlet entry", "singlet", singlet, "block_num", blockNum)
 	defer span.End()
 
 	// We are using inverted block num, so we are scanning from highest block num (request block num) to lowest block (0)
-	startKey := siglet.KeyAt(blockNum)
-	endKey := siglet.KeyAt(0)
+	startKey := singlet.KeyAt(blockNum)
+	endKey := singlet.KeyAt(0)
 
 	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading siglet entry from database", zap.Stringer("siglet", siglet), zap.Uint32("block_num", blockNum), zap.String("start_key", startKey), zap.String("end_key", endKey))
+	zlog.Debug("reading singlet entry from database", zap.Stringer("singlet", singlet), zap.Uint32("block_num", blockNum), zap.String("start_key", startKey), zap.String("end_key", endKey))
 
-	var entry SigletEntry
-	key, value, err := fdb.store.FetchSigletEntry(ctx, startKey, endKey)
+	var entry SingletEntry
+	key, value, err := fdb.store.FetchSingletEntry(ctx, startKey, endKey)
 	if err != nil {
 		return nil, fmt.Errorf("db fetch single entry: %w", err)
 	}
 
 	// If there is a key set (record found) and the value is non-nil (it's a deleted entry), then populated entry
 	if key != "" && len(value) > 0 {
-		entry, err = siglet.NewEntryFromKV(key, value)
+		entry, err = singlet.NewEntryFromKV(key, value)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create single tablet row %s: %w", key, err)
 		}
 	}
 
-	zlog.Debug("reading siglet entry from speculative writes", zap.Bool("db_exist", entry != nil), zap.Int("speculative_write_count", len(speculativeWrites)))
+	zlog.Debug("reading singlet entry from speculative writes", zap.Bool("db_exist", entry != nil), zap.Int("speculative_write_count", len(speculativeWrites)))
 	for _, writeRequest := range speculativeWrites {
-		for _, speculativeEntry := range writeRequest.SigletEntries {
-			if entry.Siglet() != siglet {
+		for _, speculativeEntry := range writeRequest.SingletEntries {
+			if entry.Singlet() != singlet {
 				continue
 			}
 
@@ -344,7 +344,7 @@ func (fdb *FluxDB) ReadSigletEntryAt(
 		}
 	}
 
-	zlog.Debug("finished reading siglet entry", zap.Bool("entry_exist", entry != nil))
+	zlog.Debug("finished reading singlet entry", zap.Bool("entry_exist", entry != nil))
 	return entry, nil
 }
 

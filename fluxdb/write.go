@@ -116,7 +116,7 @@ func (fdb *FluxDB) UpdateGlobalLastBlockID(ctx context.Context, blockID string) 
 }
 
 func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRequest) (err error) {
-	for _, entry := range w.SigletEntries {
+	for _, entry := range w.SingletEntries {
 		var value []byte
 		if !isDeletionEntry(entry) {
 			value = entry.Value()

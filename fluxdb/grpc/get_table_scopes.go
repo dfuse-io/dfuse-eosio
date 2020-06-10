@@ -19,7 +19,7 @@ func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream 
 	)
 
 	blockNum := uint32(request.BlockNum)
-	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
@@ -49,7 +49,8 @@ func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream 
 		}
 	}
 
-	// TODO: pass block num in header
+	stream.SetHeader(newMetadata(upToBlock, lastWrittenBlock))
+
 	for _, scope := range scopes {
 		stream.Send(&pbfluxdb.TableScopeResponse{
 			BlockNum: uint64(actualBlockNum),

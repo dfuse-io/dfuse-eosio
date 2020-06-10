@@ -124,8 +124,8 @@ func TestReadGetABI(t *testing.T) {
 				writeBatchOfRequests(t, db, writePackedABI(t, abiBlock, acct, []byte(fmt.Sprintf("%d", abiBlock))))
 			}
 
-			siglet := NewContractABISiglet(acct)
-			abiEntry, err := db.ReadSigletEntryAt(ctx, siglet, test.fetchForBlock, nil)
+			singlet := NewContractABISinglet(acct)
+			abiEntry, err := db.ReadSingletEntryAt(ctx, singlet, test.fetchForBlock, nil)
 			if test.expectedNil {
 				require.Nil(t, abiEntry, "abi entry is not  nil")
 			} else {

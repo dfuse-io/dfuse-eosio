@@ -17,7 +17,7 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 	)
 
 	blockNum := uint32(request.BlockNum)
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := s.prepareRead(ctx, blockNum, request.IrreversibleOnly)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := s.prepareRead(ctx, blockNum, request.IrreversibleOnly)
 	if err != nil {
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
@@ -37,7 +37,7 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 
 	keyConverter := getKeyConverterForType(request.KeyType)
 
-	stream.SetHeader(newMetadata(upToBlockID, lastWrittenBlockID))
+	stream.SetHeader(newMetadata(upToBlock, lastWrittenBlock))
 	for _, row := range rows {
 		response, err := toTableRowResponse(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
 		if err != nil {

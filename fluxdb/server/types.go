@@ -17,6 +17,7 @@ package server
 import (
 	"fmt"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	eos "github.com/eoscanada/eos-go"
 )
@@ -47,12 +48,12 @@ type commonStateResponse struct {
 	LastIrreversibleBlockNum uint32 `json:"last_irreversible_block_num,omitempty"`
 }
 
-func newCommonGetResponse(upToBlockID string, lastIrreversibleBlockID string) *commonStateResponse {
+func newCommonGetResponse(upToBlock, lastIrreversibleBlock bstream.BlockRef) *commonStateResponse {
 	return &commonStateResponse{
-		UpToBlockID:              upToBlockID,
-		UpToBlockNum:             fluxdb.BlockNum(upToBlockID),
-		LastIrreversibleBlockID:  lastIrreversibleBlockID,
-		LastIrreversibleBlockNum: fluxdb.BlockNum(lastIrreversibleBlockID),
+		UpToBlockID:              upToBlock.ID(),
+		UpToBlockNum:             uint32(upToBlock.Num()),
+		LastIrreversibleBlockID:  lastIrreversibleBlock.ID(),
+		LastIrreversibleBlockNum: uint32(lastIrreversibleBlock.Num()),
 	}
 }
 

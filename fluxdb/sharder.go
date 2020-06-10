@@ -36,7 +36,7 @@ type Sharder struct {
 	shardCount  int
 
 	// A slice of shards, each shard is itself a slice of WriteRequest, one per block processed in this batch.
-	// So, assuming 2 shards with 5 blockss, that would yield `[0][#5, #6, #7, #8, #9], [1][#5, #6, #7, #8, #9]`.
+	// So, assuming 2 shards with 5 blocks, that would yield `[0][#5, #6, #7, #8, #9], [1][#5, #6, #7, #8, #9]`.
 	buffers     []*bytes.Buffer
 	gobEncoders []*gob.Encoder
 }
@@ -50,22 +50,24 @@ func NewSharder(shardsStore dstore.Store, shardCount int, startBlock, stopBlock 
 		startBlock:  startBlock,
 		stopBlock:   stopBlock,
 	}
+
 	for i := 0; i < shardCount; i++ {
 		buf := bytes.NewBuffer(nil)
 		s.buffers[i] = buf
 		s.gobEncoders[i] = gob.NewEncoder(buf)
 	}
+
 	return s
 }
 
 func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error {
-	if rawBlk.Num()%120 == 0 {
-		zlog.Info("processing block (1/120)", zap.Stringer("block", rawBlk))
+	if rawBlk.Num()%600 == 0 {
+		zlog.Info("processing block (printed each 600 blocks)", zap.Stringer("block", rawBlk))
 	}
 
 	fObj := rawObj.(*forkable.ForkableObject)
 	if fObj.Step != forkable.StepIrreversible {
-		panic("unsupported step")
+		panic("unsupported, received step is not irreversible")
 	}
 
 	unshardedRequest := fObj.Obj.(*WriteRequest)
@@ -80,8 +82,20 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 
 	// Compute the N shard write requests, 1 write request per shard, the slice index is the shard index
 	shardedRequests := make([]*WriteRequest, s.shardCount)
+	for _, entry := range unshardedRequest.SingletEntries {
+		shardIndex := s.goesToShard(entry.Key())
+
+		var shardedRequest *WriteRequest
+		if shardedRequest = shardedRequests[shardIndex]; shardedRequest == nil {
+			shardedRequest = &WriteRequest{}
+			shardedRequests[shardIndex] = shardedRequest
+		}
+
+		shardedRequest.SingletEntries = append(shardedRequest.SingletEntries, entry)
+	}
+
 	for _, row := range unshardedRequest.TabletRows {
-		shardIndex := s.goesToShard(row)
+		shardIndex := s.goesToShard(row.Key())
 
 		var shardedRequest *WriteRequest
 		if shardedRequest = shardedRequests[shardIndex]; shardedRequest == nil {
@@ -112,8 +126,8 @@ func (s *Sharder) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error 
 
 var emptyHashKey [32]byte
 
-func (s *Sharder) goesToShard(row TabletRow) int {
-	bigInt := highwayhash.Sum64([]byte(row.Tablet().Key()), emptyHashKey[:])
+func (s *Sharder) goesToShard(key string) int {
+	bigInt := highwayhash.Sum64([]byte(key), emptyHashKey[:])
 	elementShard := bigInt % uint64(s.shardCount)
 	return int(elementShard)
 }

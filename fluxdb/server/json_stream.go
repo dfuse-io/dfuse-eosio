@@ -21,7 +21,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/francoispqt/gojay"
 )
 
@@ -70,10 +69,10 @@ func (r *getMultiTableRowsResponse) IsNil() bool { return r == nil }
 func (r *commonStateResponse) MarshalJSONObject(enc *gojay.Encoder) {
 	if r.UpToBlockID != "" {
 		enc.AddStringKey("up_to_block_id", r.UpToBlockID)
-		enc.AddIntKey("up_to_block_num", int(fluxdb.BlockNum(r.UpToBlockID)))
+		enc.AddIntKey("up_to_block_num", int(r.UpToBlockNum))
 	}
 	enc.AddStringKey("last_irreversible_block_id", r.LastIrreversibleBlockID)
-	enc.AddIntKey("last_irreversible_block_num", int(fluxdb.BlockNum(r.LastIrreversibleBlockID)))
+	enc.AddIntKey("last_irreversible_block_num", int(r.LastIrreversibleBlockNum))
 }
 
 func (r *commonStateResponse) IsNil() bool { return r == nil }

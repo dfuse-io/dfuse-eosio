@@ -96,7 +96,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 					return nil, fmt.Errorf("unable to extract abi entry: %w", err)
 				}
 
-				req.AppendSigletEntry(abiEntry)
+				req.AppendSingletEntry(abiEntry)
 
 			case "eosio:eosio:linkauth":
 				authLinkRow, err := NewInsertAuthLinkRow(req.BlockNum, act)

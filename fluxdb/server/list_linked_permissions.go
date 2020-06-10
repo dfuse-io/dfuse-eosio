@@ -42,7 +42,7 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 	request := extractGetLinkedPermissionsRequest(r)
 	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	actualBlockNum, lastWrittenBlock, upToBlock, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
@@ -61,7 +61,7 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 	}
 
 	resp := &listLinkedPermissionsResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+		commonStateResponse: newCommonGetResponse(upToBlock, lastWrittenBlock),
 		LinkedPermissions:   make([]*linkedPermission, len(tabletRows)),
 	}
 

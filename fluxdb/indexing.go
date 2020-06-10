@@ -266,13 +266,13 @@ func NewTableIndexFromBinary(ctx context.Context, tablet Tablet, atBlockNum uint
 			return nil, fmt.Errorf("unable to read primary key for tablet %q: %w", tablet, err)
 		}
 
-		blockNumPtr := big.Uint32(buffer[pos+primaryKeyByteCount:])
+		blockNumPtr := bigEndian.Uint32(buffer[pos+primaryKeyByteCount:])
 		mapping[primaryKey] = blockNumPtr
 	}
 
 	return &TableIndex{
 		AtBlockNum: atBlockNum,
-		Squelched:  big.Uint32(buffer[:4]),
+		Squelched:  bigEndian.Uint32(buffer[:4]),
 		Map:        mapping,
 	}, nil
 }
@@ -285,7 +285,7 @@ func (index *TableIndex) MarshalBinary(ctx context.Context, tablet Tablet) ([]by
 	entryByteCount := primaryKeyByteCount + 4 // Byte count for primary key + 4 bytes for block num value
 
 	snapshot := make([]byte, entryByteCount*len(index.Map)+16)
-	big.PutUint32(snapshot, index.Squelched)
+	bigEndian.PutUint32(snapshot, index.Squelched)
 
 	pos := 16
 	for primaryKey, blockNum := range index.Map {
@@ -294,7 +294,7 @@ func (index *TableIndex) MarshalBinary(ctx context.Context, tablet Tablet) ([]by
 			return nil, fmt.Errorf("unable to read primary key for tablet %q: %w", tablet, err)
 		}
 
-		big.PutUint32(snapshot[pos+primaryKeyByteCount:], blockNum)
+		bigEndian.PutUint32(snapshot[pos+primaryKeyByteCount:], blockNum)
 		pos += entryByteCount
 	}
 
@@ -350,7 +350,7 @@ func readOneUint64(buffer []byte) (string, error) {
 		return "", fmt.Errorf("not enough bytes to read uint64, %d bytes left, wants %d", len(buffer), 8)
 	}
 
-	return fmt.Sprintf("%016x", big.Uint64(buffer)), nil
+	return fmt.Sprintf("%016x", bigEndian.Uint64(buffer)), nil
 }
 
 func twoUint64PrimaryKeyWriterFactory(tag string) indexPrimaryKeyWriter {
@@ -381,6 +381,6 @@ func writeOneUint64(primaryKey string, buffer []byte) error {
 		return fmt.Errorf("unable to transform primary key to uint64: %w", err)
 	}
 
-	big.PutUint64(buffer, value)
+	bigEndian.PutUint64(buffer, value)
 	return nil
 }
