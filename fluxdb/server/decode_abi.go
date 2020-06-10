@@ -51,6 +51,11 @@ func (srv *EOSServer) decodeABIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if abiEntry == nil {
+		writeError(ctx, w, fluxdb.DataABINotFoundError(ctx, string(account), request.BlockNum))
+		return
+	}
+
 	abi, err := abiEntry.ABI()
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("decode ABI: %w", err))

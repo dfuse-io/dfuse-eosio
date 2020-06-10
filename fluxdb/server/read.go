@@ -401,7 +401,7 @@ func (srv *EOSServer) fetchABI(
 ) (*fluxdb.ContractABIEntry, error) {
 	actualBlockNum, _, _, speculativeWrites, err := srv.prepareRead(ctx, blockNum, false)
 	if err != nil {
-		return nil, fmt.Errorf("speculative writes: %w", err)
+		return nil, fmt.Errorf("unable to prepare read: %w", err)
 	}
 
 	siglet := fluxdb.NewContractABISiglet(account)

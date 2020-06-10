@@ -3,14 +3,12 @@ package grpc
 import (
 	"context"
 
-	"github.com/dfuse-io/dfuse-eosio/fluxdb"
-
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
-
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 )
 
 func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowRequest) (*pbfluxdb.GetTableRowResponse, error) {
@@ -56,6 +54,7 @@ func processTableRow(tableRow *readTableRowResponse) *pbfluxdb.TableRowResponse 
 		Payer:       tableRow.Row.Payer,
 		BlockNumber: uint64(tableRow.Row.BlockNum),
 	}
+
 	switch v := tableRow.Row.Data.(type) {
 	case []byte:
 		payload.Data = v
@@ -73,5 +72,6 @@ func processTableRow(tableRow *readTableRowResponse) *pbfluxdb.TableRowResponse 
 			payload.Json = string(jsonData)
 		}
 	}
+
 	return payload
 }
