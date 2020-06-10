@@ -31,7 +31,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 	if request.ToJson {
 		serializationInfo, err = s.newRowSerializationInfo(ctx, request.Contract, request.Table, actualBlockNum, speculativeWrites)
 		if err != nil {
-			return fmt.Errorf("unable to obtain serialziation info: %w", err)
+			return derr.Statusf(codes.Internal, "unable to obtain serialziation info: %s", err)
 		}
 	}
 

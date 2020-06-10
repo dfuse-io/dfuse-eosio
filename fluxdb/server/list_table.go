@@ -46,12 +46,12 @@ func (srv *EOSServer) listTableRowsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	responseRows, err := srv.readContractStateTable(
+	tablet := fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table)
+	rows, serializationInfo, err := srv.readContractStateTable(
 		ctx,
+		tablet,
 		actualBlockNum,
-		fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table),
-		request.readRequestCommon,
-		getKeyConverterForType(request.KeyType),
+		request.ToJSON,
 		speculativeWrites,
 	)
 
@@ -62,7 +62,21 @@ func (srv *EOSServer) listTableRowsHandler(w http.ResponseWriter, r *http.Reques
 
 	response := &getTableRowsResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-		readTableResponse:   responseRows,
+		readTableResponse: &readTableResponse{
+			ABI:  serializationInfo.abi,
+			Rows: []*tableRow{},
+		},
+	}
+
+	keyConverter := getKeyConverterForType(request.KeyType)
+
+	for _, row := range rows {
+		tableRow, err := toTableRow(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+		if err != nil {
+			writeError(ctx, w, fmt.Errorf("creating table row failed: %w", err))
+			return
+		}
+		response.Rows = append(response.Rows, tableRow)
 	}
 
 	zlog.Debug("streaming response", zap.Int("row_count", len(response.readTableResponse.Rows)), zap.Reflect("common_response", response.commonStateResponse))

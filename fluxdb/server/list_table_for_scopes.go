@@ -15,8 +15,14 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
+
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dhammer"
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
@@ -37,75 +43,87 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 	request := extractListTablesRowsForScopesRequest(r)
 	zlog.Debug("extracted request", zap.Reflect("request", request))
 
-	// actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
-	// if err != nil {
-	// 	writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
-	// 	return
-	// }
+	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
+		return
+	}
 
-	// scopeCount := len(request.Scopes)
-	// tableResponses := make(chan *getTableResponse, scopeCount)
-	// keyConverter := getKeyConverterForType(request.KeyType)
-	// group := llerrgroup.New(parallelReadRequestCount)
+	var serializationInfo *rowSerializationInfo
+	if request.ToJSON {
+		serializationInfo, err = srv.newRowSerializationInfo(ctx, request.Account, request.Table, actualBlockNum, speculativeWrites)
+		if err != nil {
+			writeError(ctx, w, fmt.Errorf("unable to obtain serialziation info: %w", err))
+			return
+		}
+	}
 
-	// for _, scope := range request.Scopes {
-	// 	if group.Stop() {
-	// 		zlog.Debug("read table operations group completed")
-	// 		break
-	// 	}
+	// Sort by scope so at least, a constant order is kept across calls
+	sort.Slice(request.Scopes, func(leftIndex, rightIndex int) bool {
+		return request.Scopes[leftIndex] < request.Scopes[rightIndex]
+	})
 
-	// 	scope := scope
-	// 	group.Go(func() error {
-	// 		response, err := srv.readTable(
-	// 			ctx,
-	// 			actualBlockNum,
-	// 			request.Account,
-	// 			request.Table,
-	// 			scope,
-	// 			request.readRequestCommon,
-	// 			keyConverter,
-	// 			speculativeWrites,
-	// 		)
+	scopes := make([]interface{}, len(request.Scopes))
+	for i, s := range request.Scopes {
+		scopes[i] = string(s)
+	}
 
-	// 		if err != nil {
-	// 			return err
-	// 		}
+	keyConverter := getKeyConverterForType(request.KeyType)
 
-	// 		zlog.Debug("adding  table read rows to response channel", zap.Int("row_count", len(response.Rows)))
-	// 		tableResponses <- &getTableResponse{
-	// 			Account:           request.Account,
-	// 			Scope:             scope,
-	// 			readTableResponse: response,
-	// 		}
-	// 		return nil
-	// 	})
-	// }
+	nailer := dhammer.NewNailer(64, func(ctx context.Context, i interface{}) (interface{}, error) {
+		scope := i.(string)
 
-	// zlog.Debug("waiting for all read requests to finish")
-	// if err := group.Wait(); err != nil {
-	// 	writeError(ctx, w, fmt.Errorf("waiting for read requests: %w", err))
-	// 	return
-	// }
+		tablet := fluxdb.NewContractStateTablet(request.Account, scope, request.Table)
+		tabletRows, err := srv.db.ReadTabletAt(
+			ctx,
+			request.BlockNum,
+			tablet,
+			speculativeWrites,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read tablet %s at %d: %w", tablet, request.BlockNum, err)
+		}
 
-	// zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
-	// close(tableResponses)
+		resp := &getTableResponse{
+			Account: request.Account,
+			Scope:   scope,
+			readTableResponse: &readTableResponse{
+				ABI:  serializationInfo.abi,
+				Rows: make([]*tableRow, len(tabletRows)),
+			},
+		}
 
-	// response := &getMultiTableRowsResponse{
-	// 	commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-	// }
+		for i, tabletRow := range tabletRows {
+			response, err := toTableRow(tabletRow.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+			if err != nil {
+				return nil, fmt.Errorf("creating table row response failed: %w", err)
+			}
 
-	// zlog.Info("assembling table responses")
-	// for tableResponse := range tableResponses {
-	// 	response.Tables = append(response.Tables, tableResponse)
-	// }
+			resp.Rows[i] = response
+		}
 
-	// // Sort by scope so at least, a constant order is kept across calls
-	// sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
-	// 	return response.Tables[leftIndex].Scope < response.Tables[rightIndex].Scope
-	// })
+		return resp, nil
+	})
 
-	// zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
-	// streamResponse(ctx, w, response)
+	nailer.PushAll(ctx, scopes)
+
+	response := &getMultiTableRowsResponse{
+		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			writeError(ctx, w, fmt.Errorf("request terminated prior to completed: %w", err))
+			return
+		case next, ok := <-nailer.Out:
+			if !ok {
+				zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
+				streamResponse(ctx, w, response)
+			}
+			response.Tables = append(response.Tables, next.(*getTableResponse))
+		}
+	}
 }
 
 type listTablesRowsForScopesRequest struct {

@@ -31,7 +31,7 @@ import (
 
 func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	zlog := logging.Logger(ctx, zlog)
+	zlogger := logging.Logger(ctx, zlog)
 
 	errors := validateGetTableRowRequest(r)
 	if len(errors) > 0 {
@@ -40,22 +40,23 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	request := extractGetTableRowRequest(r)
-	zlog.Debug("extracted request", zap.Reflect("request", request))
+	zlogger.Debug("extracted request", zap.Reflect("request", request))
 
 	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, request.IrreversibleOnly)
 	if err != nil {
 		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
 		return
 	}
+	keyConverter := getKeyConverterForType(request.KeyType)
 
-	tableRowResponse, err := srv.readContractStateTableRow(
+	tablet := fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table)
+	tabletRow, serializationInfo, err := srv.readContractStateTableRow(
 		ctx,
-		fluxdb.NewContractStateTablet(request.Account, request.Scope, request.Table),
-		actualBlockNum,
-		request.KeyType,
+		tablet,
 		request.PrimaryKey,
+		actualBlockNum,
+		keyConverter,
 		request.ToJSON,
-		request.WithBlockNum,
 		speculativeWrites,
 	)
 
@@ -64,12 +65,17 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	row, err := toTableRow(tabletRow.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("creating table row failed: %w", err))
+		return
+	}
 	response := &getTableRowResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-		Row:                 tableRowResponse.Row,
+		Row:                 row,
 	}
 
-	zlog.Debug("streaming response", zap.Reflect("common_response", response.commonStateResponse))
+	zlogger.Debug("streaming response", zap.Reflect("common_response", response.commonStateResponse))
 	streamResponse(ctx, w, response)
 }
 

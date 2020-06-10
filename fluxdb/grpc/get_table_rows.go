@@ -22,9 +22,10 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
+	tablet := fluxdb.NewContractStateTablet(request.Contract, request.Scope, request.Table)
 	rows, serializationInfo, err := s.readContractStateTable(
 		ctx,
-		fluxdb.NewContractStateTablet(request.Contract, request.Scope, request.Table),
+		tablet,
 		actualBlockNum,
 		request.ToJson,
 		speculativeWrites,
