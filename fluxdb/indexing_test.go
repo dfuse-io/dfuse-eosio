@@ -16,10 +16,12 @@ package fluxdb
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"testing"
 
+	eos "github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -157,7 +159,7 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tableIndex, err := NewTableIndexFromBinary2(ctx, test.tablet, test.atBlockNum, test.buffer)
+			tableIndex, err := NewTableIndexFromBinary(ctx, test.tablet, test.atBlockNum, test.buffer)
 
 			require.Equal(t, test.expected.err, err)
 			if test.expected.err == nil {
@@ -233,7 +235,7 @@ func TestTableIndexMarshalBinary(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bytes, err := test.tableIndex.MarshalBinary2(ctx, test.tableKey)
+			bytes, err := test.tableIndex.MarshalBinary(ctx, test.tableKey)
 
 			require.Equal(t, test.expected.err, err)
 			if test.expected.err == nil {
@@ -305,20 +307,57 @@ func TestShouldTriggerIndexing(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.label, func(t *testing.T) {
+			tablet := testTablet("a")
+
 			cache := &indexCache{
-				lastCounters: make(map[string]int),
-				lastIndexes:  make(map[string]*TableIndex),
+				lastCounters: make(map[Tablet]int),
+				lastIndexes:  make(map[Tablet]*TableIndex),
 			}
-			cache.lastCounters["a"] = test.mutationsCount
+			cache.lastCounters[tablet] = test.mutationsCount
 			if test.indexRowCount != 0 {
 				t := &TableIndex{Map: make(map[string]uint32)}
 				for i := 0; i < test.indexRowCount; i++ {
 					t.Map[fmt.Sprintf("%08x", i)] = 0
 				}
-				cache.lastIndexes["a"] = t
+				cache.lastIndexes[tablet] = t
 			}
-			res := cache.shouldTriggerIndexing("a")
+			res := cache.shouldTriggerIndexing(tablet)
 			assert.Equal(t, test.expect, res)
 		})
 	}
+}
+
+type testTablet string
+
+func (t testTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
+	panic("not implemented")
+}
+
+func (t testTablet) Key() string {
+	return string(t)
+}
+
+func (t testTablet) KeyAt(blockNum uint32) string {
+	return string(t) + "/" + HexBlockNum(blockNum)
+}
+
+func (t testTablet) KeyForRowAt(blockNum uint32, primaryKey string) string {
+	return t.KeyAt(blockNum) + "/" + primaryKey
+}
+
+func (t testTablet) PrimaryKeyByteCount() int {
+	return 8
+}
+
+func (t testTablet) EncodePrimaryKey(buffer []byte, primaryKey string) error {
+	binary.BigEndian.PutUint64(buffer, NA(eos.Name(primaryKey)))
+	return nil
+}
+
+func (t testTablet) DecodePrimaryKey(buffer []byte) (primaryKey string, err error) {
+	return eos.NameToString(binary.BigEndian.Uint64(buffer)), nil
+}
+
+func (t testTablet) String() string {
+	return string(t)
 }

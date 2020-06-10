@@ -22,13 +22,11 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
-	responseRows, err := s.readContractStateTable(
+	rows, serializationInfo, err := s.readContractStateTable(
 		ctx,
 		fluxdb.NewContractStateTablet(request.Contract, request.Scope, request.Table),
 		actualBlockNum,
-		request.KeyType,
 		request.ToJson,
-		request.WithBlockNum,
 		speculativeWrites,
 	)
 
@@ -36,12 +34,17 @@ func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfl
 		return derr.Statusf(codes.Internal, "read table rows failed: %s", err)
 	}
 
-	stream.SetTrailer(getMetadata(upToBlockID, lastWrittenBlockID))
+	keyConverter := getKeyConverterForType(request.KeyType)
 
-	for _, row := range responseRows.Rows {
-		stream.Send(processTableRow(&readTableRowResponse{
-			Row: row,
-		}))
+	stream.SetHeader(newMetadata(upToBlockID, lastWrittenBlockID))
+	for _, row := range rows {
+		response, err := toTableRowResponse(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+		if err != nil {
+			return derr.Statusf(codes.Internal, "creating table row response failed: %s", err)
+		}
+
+		stream.Send(response)
 	}
+
 	return nil
 }

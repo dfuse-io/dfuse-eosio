@@ -37,17 +37,17 @@ func (s *Server) GetMultiContractsTableRows(request *pbfluxdb.GetMultiContractsT
 		contracts[i] = string(s)
 	}
 
+	keyConverter := getKeyConverterForType(request.KeyType)
+
 	nailer := dhammer.NewNailer(64, func(ctx context.Context, i interface{}) (interface{}, error) {
 		contract := i.(string)
 
 		tablet := fluxdb.NewContractStateTablet(contract, request.Scope, request.Table)
-		responseRows, err := s.readContractStateTable(
+		rows, serializationInfo, err := s.readContractStateTable(
 			ctx,
 			tablet,
 			actualBlockNum,
-			request.KeyType,
 			request.ToJson,
-			request.WithBlockNum,
 			speculativeWrites,
 		)
 		if err != nil {
@@ -56,14 +56,16 @@ func (s *Server) GetMultiContractsTableRows(request *pbfluxdb.GetMultiContractsT
 
 		resp := &pbfluxdb.TableRowsContractResponse{
 			Contract: contract,
-			Row:      make([]*pbfluxdb.TableRowResponse, len(responseRows.Rows)),
+			Row:      make([]*pbfluxdb.TableRowResponse, len(rows)),
 		}
 
-		for i, row := range responseRows.Rows {
-			resp.Row[i] = processTableRow(&readTableRowResponse{
-				ABI: responseRows.ABI,
-				Row: row,
-			})
+		for i, row := range rows {
+			response, err := toTableRowResponse(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+			if err != nil {
+				return nil, fmt.Errorf("creating table row response failed: %w", err)
+			}
+
+			resp.Row[i] = response
 		}
 
 		return resp, nil
@@ -71,7 +73,7 @@ func (s *Server) GetMultiContractsTableRows(request *pbfluxdb.GetMultiContractsT
 
 	nailer.PushAll(ctx, contracts)
 
-	stream.SetHeader(getMetadata(upToBlockID, lastWrittenBlockID))
+	stream.SetHeader(newMetadata(upToBlockID, lastWrittenBlockID))
 
 	for {
 		select {

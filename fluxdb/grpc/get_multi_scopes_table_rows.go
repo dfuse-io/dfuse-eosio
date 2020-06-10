@@ -27,6 +27,14 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
+	var serializationInfo *rowSerializationInfo
+	if request.ToJson {
+		serializationInfo, err = s.newRowSerializationInfo(ctx, request.Contract, request.Table, actualBlockNum, speculativeWrites)
+		if err != nil {
+			return fmt.Errorf("unable to obtain serialziation info: %w", err)
+		}
+	}
+
 	// Sort by scope so at least, a constant order is kept across calls
 	sort.Slice(request.Scopes, func(leftIndex, rightIndex int) bool {
 		return request.Scopes[leftIndex] < request.Scopes[rightIndex]
@@ -37,39 +45,42 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 		scopes[i] = string(s)
 	}
 
+	keyConverter := getKeyConverterForType(request.KeyType)
+
 	nailer := dhammer.NewNailer(64, func(ctx context.Context, i interface{}) (interface{}, error) {
 		scope := i.(string)
 
 		tablet := fluxdb.NewContractStateTablet(request.Contract, scope, request.Table)
-		responseRows, err := s.readContractStateTable(
+		tabletRows, err := s.db.ReadTabletAt(
 			ctx,
+			blockNum,
 			tablet,
-			actualBlockNum,
-			request.KeyType,
-			request.ToJson,
-			request.WithBlockNum,
 			speculativeWrites,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read contract state tablet %q: %w", tablet, err)
+			return nil, fmt.Errorf("unable to read tablet %s at %d: %w", tablet, blockNum, err)
 		}
 
 		resp := &pbfluxdb.TableRowsScopeResponse{
 			Scope: scope,
-			Row:   make([]*pbfluxdb.TableRowResponse, len(responseRows.Rows)),
+			Row:   make([]*pbfluxdb.TableRowResponse, len(tabletRows)),
 		}
 
-		for itr, row := range responseRows.Rows {
-			resp.Row[itr] = processTableRow(&readTableRowResponse{
-				Row: row,
-			})
+		for i, tabletRow := range tabletRows {
+			response, err := toTableRowResponse(tabletRow.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+			if err != nil {
+				return nil, fmt.Errorf("creating table row response failed: %w", err)
+			}
+
+			resp.Row[i] = response
 		}
+
 		return resp, nil
 	})
 
 	nailer.PushAll(ctx, scopes)
 
-	stream.SetHeader(getMetadata(upToBlockID, lastWrittenBlockID))
+	stream.SetHeader(newMetadata(upToBlockID, lastWrittenBlockID))
 
 	for {
 		select {

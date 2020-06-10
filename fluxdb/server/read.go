@@ -90,91 +90,6 @@ func (srv *EOSServer) fetchHeadBlock(ctx context.Context, zlog *zap.Logger) (hea
 	return
 }
 
-func (srv *EOSServer) readTable(
-	ctx context.Context,
-	blockNum uint32,
-	account string,
-	table string,
-	scope string,
-	request *readRequestCommon,
-	keyConverter KeyConverter,
-	speculativeWrites []*fluxdb.WriteRequest,
-) (*readTableResponse, error) {
-	ctx, span := dtracing.StartSpan(ctx, "read rows")
-	defer span.End()
-
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading rows", zap.String("account", account), zap.String("table", table), zap.String("scope", scope))
-
-	resp, err := srv.db.ReadTable(ctx, &fluxdb.ReadTableRequest{
-		Account:           fluxdb.N(account),
-		Scope:             fluxdb.EN(scope),
-		Table:             fluxdb.N(table),
-		BlockNum:          blockNum,
-		SpeculativeWrites: speculativeWrites,
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows from database: %w", err)
-	}
-
-	zlog.Debug("read rows results", zap.Int("row_count", len(resp.Rows)))
-
-	var abiObj *eos.ABI
-	// if err := eos.UnmarshalBinary(resp.ABI.PackedABI, &abiObj); err != nil {
-	// 	return nil, fmt.Errorf("unable to decode packed ABI %q to JSON: %w", resp.ABI.PackedABI, err)
-	// }
-
-	out := &readTableResponse{}
-	if request.WithABI {
-		out.ABI = abiObj
-	}
-
-	tableName := eos.TableName(table)
-	tableDef := abiObj.TableForName(tableName)
-	if tableDef == nil {
-		return nil, fluxdb.DataTableNotFoundError(ctx, eos.AccountName(account), tableName)
-	}
-
-	zlog.Debug("post-processing each row (maybe convert to JSON)")
-	for _, row := range resp.Rows {
-		var data interface{}
-		if request.ToJSON {
-			data = &onTheFlyABISerializer{
-				abi: abiObj,
-				// abiAtBlockNum:   resp.ABI.BlockNum,
-				tableTypeName:   tableDef.Type,
-				rowDataToDecode: row.Data,
-			}
-		} else {
-			data = row.Data
-		}
-
-		var blockNum uint32
-		if request.WithBlockNum {
-			blockNum = row.BlockNum
-		}
-
-		rowKey, err := keyConverter.ToString(row.Key)
-		if err != nil {
-			return nil, fmt.Errorf("unable to convert key: %s", err)
-		}
-
-		out.Rows = append(out.Rows, &tableRow{
-			Key:      rowKey,
-			Payer:    fluxdb.NameToString(row.Payer),
-			Data:     data,
-			BlockNum: blockNum,
-		})
-	}
-
-	span.Annotate([]trace.Attribute{
-		trace.Int64Attribute("rows", int64(len(out.Rows))),
-	}, "read operation")
-
-	return out, nil
-}
-
 func (srv *EOSServer) readContractStateTable(
 	ctx context.Context,
 	blockNum uint32,
@@ -293,9 +208,9 @@ func (srv *EOSServer) readContractStateTableRow(
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug(
 		"reading contract state table row",
-		zap.String("table_key", tablet.Key()),
+		zap.Stringer("tablet", tablet),
 		zap.String("primary_key", primaryKey),
-		zap.Uint32("block_nume", blockNum),
+		zap.Uint32("block_num", blockNum),
 	)
 
 	keyConverter := getKeyConverterForType(keyType)

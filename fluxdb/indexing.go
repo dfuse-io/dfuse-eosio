@@ -27,22 +27,6 @@ import (
 	"go.uber.org/zap"
 )
 
-/**
-PAUSING indexing effort. Here are a few benchmarks:
-
-$ curl -sS "http://localhost:8080/v1/read?block_num=6999000&account=eosio&scope=eosio&table=voters&json=true&with_named_key=1"
-* Takes 4.036s
-* Downloads 34MB of data, ~200k records
-* Navigate records in 60ms
-* Sorts in 25ms
-* Takes MOST of the time JSON-encoding the output.
-* With `json=false`, it boils down to 500ms
-* A few mils shaved off (10?) with `with_named_key=0`.. we have the `owner` in there anyway.
-* The largest optimization would be to have a high performance ABI raw-to-json decoder.
-
-
-*/
-
 func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 	ctx, span := dtracing.StartSpan(ctx, "index tables")
 	defer span.End()
@@ -52,22 +36,22 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 
 	batch := fdb.store.NewBatch(zlog)
 
-	for tableKey, blockNum := range fdb.idxCache.scheduleIndexing {
-		zlog.Debug("indexing table", zap.String("table_key", tableKey), zap.Uint32("block_num", blockNum))
+	for tablet, blockNum := range fdb.idxCache.scheduleIndexing {
+		zlog.Debug("indexing table", zap.Stringer("tablet", tablet), zap.Uint32("block_num", blockNum))
 
 		if err := batch.FlushIfFull(ctx); err != nil {
 			return fmt.Errorf("flush if full: %w", err)
 		}
 
 		zlog.Debug("checking if index already exist in cache")
-		index := fdb.idxCache.GetIndex(tableKey)
+		index := fdb.idxCache.GetIndex(tablet)
 		if index == nil {
 			zlog.Debug("index not in cache")
 
 			var err error
-			index, err = fdb.getIndex(ctx, tableKey, blockNum)
+			index, err = fdb.getIndex(ctx, blockNum, tablet)
 			if err != nil {
-				return fmt.Errorf("get index %s (%d): %w", tableKey, blockNum, err)
+				return fmt.Errorf("get index %s (%d): %w", tablet, blockNum, err)
 			}
 
 			if index == nil {
@@ -76,14 +60,14 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 			}
 		}
 
-		firstRowKey := tableKey + ":" + HexBlockNum(index.AtBlockNum+1)
-		lastRowKey := tableKey + ":" + HexBlockNum(blockNum+1)
+		startKey := tablet.KeyAt(index.AtBlockNum + 1)
+		endKey := tablet.KeyAt(blockNum + 1)
 
-		zlog.Debug("reading table rows", zap.String("first_row_key", firstRowKey), zap.String("last_row_key", lastRowKey))
+		zlog.Debug("reading table rows for indexation", zap.String("first_row_key", startKey), zap.String("last_row_key", endKey))
 
 		count := 0
-		err := fdb.store.ScanTabletRows(ctx, firstRowKey, lastRowKey, func(key string, value []byte) error {
-			_, blockNum, primKey, err := explodeWritableRowKey(key)
+		err := fdb.store.ScanTabletRows(ctx, startKey, endKey, func(key string, value []byte) error {
+			row, err := tablet.NewRowFromKV(key, value)
 			if err != nil {
 				return fmt.Errorf("couldn't parse row key %q: %w", key, err)
 			}
@@ -91,9 +75,9 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 			count++
 
 			if len(value) == 0 {
-				delete(index.Map, primKey)
+				delete(index.Map, row.PrimaryKey())
 			} else {
-				index.Map[primKey] = blockNum
+				index.Map[row.PrimaryKey()] = blockNum
 			}
 
 			return nil
@@ -107,18 +91,18 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 		index.Squelched = uint32(count)
 
 		zlog.Debug("about to marshal index to binary",
-			zap.String("table_key", tableKey),
+			zap.Stringer("tablet", tablet),
 			zap.Uint32("at_block_num", index.AtBlockNum),
 			zap.Uint32("squelched_count", index.Squelched),
 			zap.Int("row_count", len(index.Map)),
 		)
 
-		snapshot, err := index.MarshalBinary(ctx, tableKey)
+		snapshot, err := index.MarshalBinary(ctx, tablet)
 		if err != nil {
 			return fmt.Errorf("unable to marshal table index to binary: %w", err)
 		}
 
-		indexKey := tableKey + ":" + HexRevBlockNum(index.AtBlockNum)
+		indexKey := tablet.Key() + "/" + HexRevBlockNum(index.AtBlockNum)
 
 		byteCount := len(snapshot)
 		if byteCount > 25000000 {
@@ -127,10 +111,10 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 
 		batch.SetIndex(indexKey, snapshot)
 
-		zlog.Debug("caching index in index cache", zap.String("index_key", indexKey), zap.String("table_key", tableKey))
-		fdb.idxCache.CacheIndex(tableKey, index)
-		fdb.idxCache.ResetCounter(tableKey)
-		delete(fdb.idxCache.scheduleIndexing, tableKey)
+		zlog.Debug("caching index in index cache", zap.String("index_key", indexKey), zap.Stringer("tablet", tablet))
+		fdb.idxCache.CacheIndex(tablet, index)
+		fdb.idxCache.ResetCounter(tablet)
+		delete(fdb.idxCache.scheduleIndexing, tablet)
 	}
 
 	if err := batch.Flush(ctx); err != nil {
@@ -140,40 +124,7 @@ func (fdb *FluxDB) IndexTables(ctx context.Context) error {
 	return nil
 }
 
-func (fdb *FluxDB) getIndex(ctx context.Context, tableKey string, blockNum uint32) (*TableIndex, error) {
-	ctx, span := dtracing.StartSpan(ctx, "get index")
-	defer span.End()
-
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("fetching table index from database", zap.String("table_key", tableKey), zap.Uint32("block_num", blockNum))
-
-	prefixKey := tableKey + ":"
-	startIndexKey := prefixKey + HexRevBlockNum(blockNum)
-
-	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
-	rowKey, rawIndex, err := fdb.store.FetchIndex(ctx, tableKey, prefixKey, startIndexKey)
-	if err == store.ErrNotFound {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	indexBlockNum, err := chunkKeyRevBlockNum(rowKey, prefixKey)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
-	}
-
-	index, err := NewTableIndexFromBinary(ctx, tableKey, indexBlockNum, rawIndex)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't unmarshal binary index: %w", err)
-	}
-
-	return index, nil
-}
-
-func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet) (index *TableIndex, err error) {
+func (fdb *FluxDB) getIndex(ctx context.Context, blockNum uint32, tablet Tablet) (index *TableIndex, err error) {
 	ctx, span := dtracing.StartSpan(ctx, "get index")
 	defer span.End()
 
@@ -181,7 +132,7 @@ func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet
 	zlog.Debug("fetching table index from database", zap.Stringer("tablet", tablet), zap.Uint32("block_num", blockNum))
 
 	tabletKey := string(tablet.Key())
-	prefixKey := tabletKey + ":"
+	prefixKey := tabletKey + "/"
 	startIndexKey := prefixKey + HexRevBlockNum(blockNum)
 
 	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
@@ -201,7 +152,7 @@ func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet
 		return nil, fmt.Errorf("couldn't infer block num in table index's row key: %w", err)
 	}
 
-	index, err = NewTableIndexFromBinary2(ctx, tablet, indexBlockNum, rawIndex)
+	index, err = NewTableIndexFromBinary(ctx, tablet, indexBlockNum, rawIndex)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't unmarshal binary index: %w", err)
 	}
@@ -210,47 +161,47 @@ func (fdb *FluxDB) getIndex2(ctx context.Context, blockNum uint32, tablet Tablet
 }
 
 type indexCache struct {
-	lastIndexes      map[string]*TableIndex
-	lastCounters     map[string]int
-	scheduleIndexing map[string]uint32
+	lastIndexes      map[Tablet]*TableIndex
+	lastCounters     map[Tablet]int
+	scheduleIndexing map[Tablet]uint32
 }
 
 func newIndexCache() *indexCache {
 	return &indexCache{
-		lastIndexes:      make(map[string]*TableIndex),
-		lastCounters:     make(map[string]int),
-		scheduleIndexing: make(map[string]uint32),
+		lastIndexes:      make(map[Tablet]*TableIndex),
+		lastCounters:     make(map[Tablet]int),
+		scheduleIndexing: make(map[Tablet]uint32),
 	}
 }
 
-func (t *indexCache) GetIndex(table string) *TableIndex {
-	return t.lastIndexes[table]
+func (t *indexCache) GetIndex(tablet Tablet) *TableIndex {
+	return t.lastIndexes[tablet]
 }
 
-func (t *indexCache) CacheIndex(table string, tableIndex *TableIndex) {
-	t.lastIndexes[table] = tableIndex
+func (t *indexCache) CacheIndex(tablet Tablet, tableIndex *TableIndex) {
+	t.lastIndexes[tablet] = tableIndex
 }
 
-func (t *indexCache) GetCount(table string) int {
-	return t.lastCounters[table]
+func (t *indexCache) GetCount(tablet Tablet) int {
+	return t.lastCounters[tablet]
 }
 
-func (t *indexCache) IncCount(table string) {
-	t.lastCounters[table]++
+func (t *indexCache) IncCount(tablet Tablet) {
+	t.lastCounters[tablet]++
 }
 
-func (t *indexCache) ResetCounter(table string) {
-	t.lastCounters[table] = 0
+func (t *indexCache) ResetCounter(tablet Tablet) {
+	t.lastCounters[tablet] = 0
 }
 
 // This algorithm determines the space between the indexes
-func (t *indexCache) shouldTriggerIndexing(table string) bool {
-	mutatedRowsCount := t.lastCounters[table]
+func (t *indexCache) shouldTriggerIndexing(tablet Tablet) bool {
+	mutatedRowsCount := t.lastCounters[tablet]
 	if mutatedRowsCount < 1000 {
 		return false
 	}
 
-	lastIndex := t.lastIndexes[table]
+	lastIndex := t.lastIndexes[tablet]
 	if lastIndex == nil {
 		return true
 	}
@@ -268,11 +219,11 @@ func (t *indexCache) shouldTriggerIndexing(table string) bool {
 	return true
 }
 
-func (t *indexCache) ScheduleIndex(table string, blockNum uint32) {
-	t.scheduleIndexing[table] = blockNum
+func (t *indexCache) ScheduleIndex(tablet Tablet, blockNum uint32) {
+	t.scheduleIndexing[tablet] = blockNum
 }
 
-func (t *indexCache) IndexingSchedule() map[string]uint32 {
+func (t *indexCache) IndexingSchedule() map[Tablet]uint32 {
 	return t.scheduleIndexing
 }
 
@@ -294,7 +245,7 @@ func (index *TableIndex) RowCount() int {
 	return len(index.Map)
 }
 
-func NewTableIndexFromBinary2(ctx context.Context, tablet Tablet, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
+func NewTableIndexFromBinary(ctx context.Context, tablet Tablet, atBlockNum uint32, buffer []byte) (*TableIndex, error) {
 	ctx, span := dtracing.StartSpan(ctx, "new table index from binary", "tablet", tablet, "block_num", atBlockNum)
 	defer span.End()
 
@@ -326,7 +277,7 @@ func NewTableIndexFromBinary2(ctx context.Context, tablet Tablet, atBlockNum uin
 	}, nil
 }
 
-func (index *TableIndex) MarshalBinary2(ctx context.Context, tablet Tablet) ([]byte, error) {
+func (index *TableIndex) MarshalBinary(ctx context.Context, tablet Tablet) ([]byte, error) {
 	ctx, span := dtracing.StartSpan(ctx, "marshal table index to binary", "tablet", tablet)
 	defer span.End()
 

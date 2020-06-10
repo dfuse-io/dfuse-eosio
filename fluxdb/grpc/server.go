@@ -8,6 +8,7 @@ import (
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/dgrpc"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/metadata"
 )
 
 type Server struct {
@@ -39,5 +40,13 @@ func (s *Server) Serve() {
 		s.db.Shutdown(fmt.Errorf("error on gs.Serve: %w", err))
 		return
 	}
+}
 
+func newMetadata(upToBlockID, lastWrittenBlockID string) metadata.MD {
+	md := metadata.New(map[string]string{})
+	md.Set("flux-up-to-block-id", upToBlockID)
+	md.Set("flux-up-to-block-num", fmt.Sprintf("%d", fluxdb.BlockNum(upToBlockID)))
+	md.Set("flux-last-irreversible-block-id", lastWrittenBlockID)
+	md.Set("flux-last-irreversible-block-num", fmt.Sprintf("%d", fluxdb.BlockNum(lastWrittenBlockID)))
+	return md
 }

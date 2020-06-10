@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/dfuse-io/bstream"
@@ -30,80 +29,6 @@ import (
 	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
-
-func (fdb *FluxDB) ReadTable(ctx context.Context, r *ReadTableRequest) (resp *ReadTableResponse, err error) {
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading state table", zap.Reflect("request", r))
-
-	rowData := make(map[string]*TableRow)
-	rowUpdated := func(blockNum uint32, primaryKey string, value []byte) error {
-		if len(value) < 8 {
-			return errors.New("table data index mappings should contain at least the payer")
-		}
-
-		payer := big.Uint64(value)
-		tableDataPrimaryKey, err := strconv.ParseUint(primaryKey, 16, 64)
-		if err != nil {
-			return fmt.Errorf("unable to transform table data primary key to uint64: %w", err)
-		}
-
-		rowData[primaryKey] = &TableRow{tableDataPrimaryKey, payer, value[8:], blockNum}
-
-		return nil
-	}
-
-	rowDeleted := func(_ uint32, primaryKey string) error {
-		delete(rowData, primaryKey)
-		return nil
-	}
-
-	tableKey := r.tableKey()
-	err = fdb.read(ctx, tableKey, r.BlockNum, rowUpdated, rowDeleted)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read rows for table key %q: %w", tableKey, err)
-	}
-
-	// abi, err := fdb.GetABI(ctx, r.BlockNum, r.Account, r.SpeculativeWrites)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// zlog.Debug("handling speculative writes", zap.Int("write_count", len(r.SpeculativeWrites)))
-	// for _, blockWrite := range r.SpeculativeWrites {
-	// 	for _, row := range blockWrite.FluxRows {
-	// 		if r.Account != row.Account || r.Scope != row.Scope || r.Table != row.Table {
-	// 			continue
-	// 		}
-
-	// 		stringPrimaryKey := fmt.Sprintf("%016x", row.PrimKey)
-
-	// 		if row.Deletion {
-	// 			delete(rowData, stringPrimaryKey)
-	// 		} else {
-	// 			rowData[stringPrimaryKey] = &TableRow{
-	// 				Key:      row.PrimKey,
-	// 				Payer:    row.Payer,
-	// 				Data:     row.Data,
-	// 				BlockNum: blockWrite.BlockNum,
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	zlog.Debug("post-processing table rows", zap.Int("row_count", len(rowData)))
-	var rows []*TableRow
-	for _, row := range rowData {
-		rows = append(rows, row)
-	}
-
-	zlog.Debug("sorting table rows")
-	sort.Slice(rows, func(i, j int) bool { return rows[i].Key < rows[j].Key })
-
-	return &ReadTableResponse{
-		// ABI:  abi,
-		Rows: rows,
-	}, nil
-}
 
 func (fdb *FluxDB) HasSeenPublicKeyOnce(ctx context.Context, publicKey string) (exists bool, err error) {
 	return fdb.hasRowKeyPrefix(ctx, fmt.Sprintf("ka2:%s", publicKey))
@@ -127,129 +52,6 @@ func (fdb *FluxDB) hasRowKeyPrefix(ctx context.Context, keyPrefix string) (exist
 	return fdb.store.HasTabletRow(ctx, keyPrefix)
 }
 
-func (fdb *FluxDB) read(
-	ctx context.Context,
-	tableKey string,
-	blockNum uint32,
-	rowUpdated func(blockNum uint32, primaryKey string, value []byte) error,
-	rowDeleted func(blockNum uint32, primaryKey string) error,
-) error {
-	ctx, span := dtracing.StartSpan(ctx, "read table", "table_key", tableKey, "block_num", blockNum)
-	defer span.End()
-
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("reading rows from database", zap.String("table_key", tableKey), zap.Uint32("block_num", blockNum))
-
-	idx, err := fdb.getIndex(ctx, tableKey, blockNum)
-	if err != nil {
-		return err
-	}
-
-	firstRowKey := tableKey + ":00000000"
-	lastRowKey := tableKey + ":" + HexBlockNum(blockNum+1)
-
-	if idx != nil {
-		zlog.Debug("index exists, reconciling it", zap.Int("row_count", len(idx.Map)))
-		firstRowKey = tableKey + "/" + HexBlockNum(idx.AtBlockNum+1)
-
-		var keys []string
-		for primaryKey, blockNum := range idx.Map {
-			keys = append(keys, fmt.Sprintf("%s:%08x:%s", tableKey, blockNum, primaryKey))
-		}
-
-		// Fetch all rows in the index.. could be millions
-		// We need to batch so that the RowList, when serialized, doesn't blow up 1MB
-		// We should batch in 10,000 key reads, we can parallelize those...
-		chunkSize := 5000
-		chunks := int(math.Ceil(float64(len(keys)) / float64(chunkSize)))
-
-		zlog.Debug("reading index rows chunks", zap.Int("chunk_count", chunks))
-		for i := 0; i < chunks; i++ {
-			chunkStart := i * chunkSize
-			chunkEnd := (i + 1) * chunkSize
-			max := len(keys)
-			if max < chunkEnd {
-				chunkEnd = max
-			}
-
-			keysChunk := keys[chunkStart:chunkEnd]
-
-			zlog.Debug("reading index rows chunk", zap.Int("key_count", len(keysChunk)))
-			keyRead := false
-			err := fdb.store.FetchTabletRows(ctx, keysChunk, func(rowKey string, value []byte) error {
-				if len(value) == 0 {
-					return fmt.Errorf("indexes mappings should not contain empty data, empty rows don't make sense in an index, row %s", rowKey)
-				}
-
-				_, rowBlockNum, primaryKey, err := explodeWritableRowKey(rowKey)
-				if err != nil {
-					return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
-				}
-
-				err = rowUpdated(rowBlockNum, primaryKey, value)
-				if err != nil {
-					return fmt.Errorf("rowUpdated callback failed for row %q (indexed rows): %w", rowKey, err)
-				}
-
-				keyRead = true
-				return nil
-			})
-
-			if err != nil {
-				return fmt.Errorf("reading keys chunks: %w", err)
-			}
-
-			if !keyRead {
-				return fmt.Errorf("reading a indexed key yielded no row: %s", keysChunk)
-			}
-		}
-
-		zlog.Debug("finished reconciling index")
-	}
-
-	// check for latest index based on r.BlockNum
-	// go through keys from last index's `AtBlockNum`, through to `BlockNum`
-	// fetch all the keys within the index
-	// parse all rows following the index, and keep the latest, so simply override with incoming rows..
-
-	zlog.Debug("reading rows range from database", zap.String("first_row_key", firstRowKey), zap.String("last_row_key", lastRowKey))
-
-	deletedCount := 0
-	updatedCount := 0
-
-	err = fdb.store.ScanTabletRows(ctx, firstRowKey, lastRowKey, func(rowKey string, value []byte) error {
-		_, rowBlockNum, primaryKey, err := explodeWritableRowKey(rowKey)
-		if err != nil {
-			return fmt.Errorf("couldn't parse row key %q: %w", rowKey, err)
-		}
-
-		if len(value) == 0 {
-			err := rowDeleted(rowBlockNum, primaryKey)
-			if err != nil {
-				return fmt.Errorf("rowDeleted callback failed for row %q (live rows): %w", rowKey, err)
-			}
-
-			deletedCount++
-			return nil
-		}
-
-		err = rowUpdated(rowBlockNum, primaryKey, value)
-		if err != nil {
-			return fmt.Errorf("rowUpdated callback failed for row %q (live rows): %w", rowKey, err)
-		}
-
-		updatedCount++
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	zlog.Debug("finished reading rows from database", zap.Int("deleted_count", deletedCount), zap.Int("updated_count", updatedCount))
-	return nil
-}
-
 func (fdb *FluxDB) ReadTabletAt(
 	ctx context.Context,
 	blockNum uint32,
@@ -266,7 +68,7 @@ func (fdb *FluxDB) ReadTabletAt(
 	endKey := tablet.KeyAt(blockNum + 1)
 	rowByPrimaryKey := map[string]TabletRow{}
 
-	idx, err := fdb.getIndex2(ctx, blockNum, tablet)
+	idx, err := fdb.getIndex(ctx, blockNum, tablet)
 	if err != nil {
 		return nil, fmt.Errorf("fetch tablet index: %w", err)
 	}
@@ -417,7 +219,7 @@ func (fdb *FluxDB) ReadTabletRowAt(
 		zap.String("primary_key", primaryKey),
 	)
 
-	idx, err := fdb.getIndex2(ctx, blockNum, tablet)
+	idx, err := fdb.getIndex(ctx, blockNum, tablet)
 	if err != nil {
 		return nil, fmt.Errorf("fetch tablet index: %w", err)
 	}

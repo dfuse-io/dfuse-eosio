@@ -23,20 +23,26 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
-	tableRowResponse, err := s.readContractStateTableRow(
+	keyConverter := getKeyConverterForType(request.KeyType)
+
+	tablet := fluxdb.NewContractStateTablet(request.Contract, request.Scope, request.Table)
+	row, serializationInfo, err := s.readContractStateTableRow(
 		ctx,
-		fluxdb.
-			NewContractStateTablet(request.Contract, request.Scope, request.Table),
-		actualBlockNum,
-		request.KeyType,
+		tablet,
 		request.PrimaryKey,
+		actualBlockNum,
+		keyConverter,
 		request.ToJson,
-		request.WithBlockNum,
 		speculativeWrites,
 	)
 
 	if err != nil {
-		return nil, derr.Statusf(codes.Internal, "read table row failed: %s", err)
+		return nil, derr.Statusf(codes.Internal, "read tablet %q row failed: %s", tablet, err)
+	}
+
+	response, err := toTableRowResponse(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+	if err != nil {
+		return nil, derr.Statusf(codes.Internal, "creating table row response failed: %s", err)
 	}
 
 	return &pbfluxdb.GetTableRowResponse{
@@ -44,34 +50,6 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbfluxdb.GetTableRowR
 		UpToBlockNum:             uint64(fluxdb.BlockNum(upToBlockID)),
 		LastIrreversibleBlockId:  lastWrittenBlockID,
 		LastIrreversibleBlockNum: uint64(fluxdb.BlockNum(lastWrittenBlockID)),
-		Row:                      processTableRow(tableRowResponse),
+		Row:                      response,
 	}, nil
-}
-
-func processTableRow(tableRow *readTableRowResponse) *pbfluxdb.TableRowResponse {
-	payload := &pbfluxdb.TableRowResponse{
-		Key:         tableRow.Row.Key,
-		Payer:       tableRow.Row.Payer,
-		BlockNumber: uint64(tableRow.Row.BlockNum),
-	}
-
-	switch v := tableRow.Row.Data.(type) {
-	case []byte:
-		payload.Data = v
-	case *onTheFlyABISerializer:
-		s := v
-		jsonData, err := s.abi.DecodeTableRowTyped(s.tableTypeName, s.rowDataToDecode)
-		if err != nil {
-			tableRow.Row.Data = s.rowDataToDecode
-			zlog.Warn("failed to decode row from ABI",
-				zap.Uint32("block_num", s.abiAtBlockNum),
-				zap.String("struct_type", s.tableTypeName),
-				zap.Error(err),
-			)
-		} else {
-			payload.Json = string(jsonData)
-		}
-	}
-
-	return payload
 }

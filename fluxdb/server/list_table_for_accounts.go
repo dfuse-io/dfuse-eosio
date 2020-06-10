@@ -15,12 +15,9 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 
-	"github.com/abourget/llerrgroup"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
@@ -40,77 +37,77 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 	request := extractListTablesRowsForAccountsRequest(r)
 	zlog.Debug("extracted request", zap.Reflect("request", request))
 
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
-	if err != nil {
-		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
-		return
-	}
+	// actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	// if err != nil {
+	// 	writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
+	// 	return
+	// }
 
-	accountCount := len(request.Accounts)
-	tableResponses := make(chan *getTableResponse, accountCount)
-	keyConverter := getKeyConverterForType(request.KeyType)
-	group := llerrgroup.New(parallelReadRequestCount)
+	// accountCount := len(request.Accounts)
+	// tableResponses := make(chan *getTableResponse, accountCount)
+	// keyConverter := getKeyConverterForType(request.KeyType)
+	// group := llerrgroup.New(parallelReadRequestCount)
 
-	zlog.Debug("starting read table operations group", zap.Int("account_count", accountCount))
-	for _, account := range request.Accounts {
-		if group.Stop() {
-			zlog.Debug("read table operations group completed")
-			break
-		}
+	// zlog.Debug("starting read table operations group", zap.Int("account_count", accountCount))
+	// for _, account := range request.Accounts {
+	// 	if group.Stop() {
+	// 		zlog.Debug("read table operations group completed")
+	// 		break
+	// 	}
 
-		account := account
-		group.Go(func() error {
-			response, err := srv.readTable(
-				ctx,
-				actualBlockNum,
-				account,
-				request.Table,
-				request.Scope,
-				request.readRequestCommon,
-				keyConverter,
-				speculativeWrites,
-			)
+	// 	account := account
+	// 	group.Go(func() error {
+	// 		response, err := srv.readTable(
+	// 			ctx,
+	// 			actualBlockNum,
+	// 			account,
+	// 			request.Table,
+	// 			request.Scope,
+	// 			request.readRequestCommon,
+	// 			keyConverter,
+	// 			speculativeWrites,
+	// 		)
 
-			if err != nil {
-				return err
-			}
+	// 		if err != nil {
+	// 			return err
+	// 		}
 
-			zlog.Debug("adding table read rows to response channel", zap.Int("row_count", len(response.Rows)))
-			tableResponses <- &getTableResponse{
-				Account:           account,
-				Scope:             request.Scope,
-				readTableResponse: response,
-			}
+	// 		zlog.Debug("adding table read rows to response channel", zap.Int("row_count", len(response.Rows)))
+	// 		tableResponses <- &getTableResponse{
+	// 			Account:           account,
+	// 			Scope:             request.Scope,
+	// 			readTableResponse: response,
+	// 		}
 
-			return nil
-		})
-	}
+	// 		return nil
+	// 	})
+	// }
 
-	zlog.Info("waiting for all read requests to finish")
-	if err := group.Wait(); err != nil {
-		writeError(ctx, w, fmt.Errorf("waiting for all read request to complete: %w", err))
-		return
-	}
+	// zlog.Info("waiting for all read requests to finish")
+	// if err := group.Wait(); err != nil {
+	// 	writeError(ctx, w, fmt.Errorf("waiting for all read request to complete: %w", err))
+	// 	return
+	// }
 
-	zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
-	close(tableResponses)
+	// zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
+	// close(tableResponses)
 
-	response := &getMultiTableRowsResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-	}
+	// response := &getMultiTableRowsResponse{
+	// 	commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+	// }
 
-	zlog.Info("assembling table responses")
-	for tableResponse := range tableResponses {
-		response.Tables = append(response.Tables, tableResponse)
-	}
+	// zlog.Info("assembling table responses")
+	// for tableResponse := range tableResponses {
+	// 	response.Tables = append(response.Tables, tableResponse)
+	// }
 
-	// Sort by code so at least, a constant order is kept across calls
-	sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
-		return response.Tables[leftIndex].Account < response.Tables[rightIndex].Account
-	})
+	// // Sort by code so at least, a constant order is kept across calls
+	// sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
+	// 	return response.Tables[leftIndex].Account < response.Tables[rightIndex].Account
+	// })
 
-	zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
-	streamResponse(ctx, w, response)
+	// zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
+	// streamResponse(ctx, w, response)
 }
 
 type listTablesRowsForAccountsRequest struct {

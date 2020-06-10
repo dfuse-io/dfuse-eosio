@@ -131,11 +131,10 @@ func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRe
 
 		batch.SetRow(string(row.Key()), value)
 
-		tabletKey := string(row.Tablet().Key())
-
-		fdb.idxCache.IncCount(tabletKey)
-		if fdb.idxCache.shouldTriggerIndexing(tabletKey) {
-			fdb.idxCache.ScheduleIndex(tabletKey, w.BlockNum)
+		tablet := row.Tablet()
+		fdb.idxCache.IncCount(tablet)
+		if fdb.idxCache.shouldTriggerIndexing(tablet) {
+			fdb.idxCache.ScheduleIndex(tablet, w.BlockNum)
 		}
 	}
 

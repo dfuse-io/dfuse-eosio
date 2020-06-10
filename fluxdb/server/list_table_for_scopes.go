@@ -15,12 +15,9 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"sort"
 
-	"github.com/abourget/llerrgroup"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
@@ -40,75 +37,75 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 	request := extractListTablesRowsForScopesRequest(r)
 	zlog.Debug("extracted request", zap.Reflect("request", request))
 
-	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
-	if err != nil {
-		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
-		return
-	}
+	// actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	// if err != nil {
+	// 	writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
+	// 	return
+	// }
 
-	scopeCount := len(request.Scopes)
-	tableResponses := make(chan *getTableResponse, scopeCount)
-	keyConverter := getKeyConverterForType(request.KeyType)
-	group := llerrgroup.New(parallelReadRequestCount)
+	// scopeCount := len(request.Scopes)
+	// tableResponses := make(chan *getTableResponse, scopeCount)
+	// keyConverter := getKeyConverterForType(request.KeyType)
+	// group := llerrgroup.New(parallelReadRequestCount)
 
-	for _, scope := range request.Scopes {
-		if group.Stop() {
-			zlog.Debug("read table operations group completed")
-			break
-		}
+	// for _, scope := range request.Scopes {
+	// 	if group.Stop() {
+	// 		zlog.Debug("read table operations group completed")
+	// 		break
+	// 	}
 
-		scope := scope
-		group.Go(func() error {
-			response, err := srv.readTable(
-				ctx,
-				actualBlockNum,
-				request.Account,
-				request.Table,
-				scope,
-				request.readRequestCommon,
-				keyConverter,
-				speculativeWrites,
-			)
+	// 	scope := scope
+	// 	group.Go(func() error {
+	// 		response, err := srv.readTable(
+	// 			ctx,
+	// 			actualBlockNum,
+	// 			request.Account,
+	// 			request.Table,
+	// 			scope,
+	// 			request.readRequestCommon,
+	// 			keyConverter,
+	// 			speculativeWrites,
+	// 		)
 
-			if err != nil {
-				return err
-			}
+	// 		if err != nil {
+	// 			return err
+	// 		}
 
-			zlog.Debug("adding  table read rows to response channel", zap.Int("row_count", len(response.Rows)))
-			tableResponses <- &getTableResponse{
-				Account:           request.Account,
-				Scope:             scope,
-				readTableResponse: response,
-			}
-			return nil
-		})
-	}
+	// 		zlog.Debug("adding  table read rows to response channel", zap.Int("row_count", len(response.Rows)))
+	// 		tableResponses <- &getTableResponse{
+	// 			Account:           request.Account,
+	// 			Scope:             scope,
+	// 			readTableResponse: response,
+	// 		}
+	// 		return nil
+	// 	})
+	// }
 
-	zlog.Debug("waiting for all read requests to finish")
-	if err := group.Wait(); err != nil {
-		writeError(ctx, w, fmt.Errorf("waiting for read requests: %w", err))
-		return
-	}
+	// zlog.Debug("waiting for all read requests to finish")
+	// if err := group.Wait(); err != nil {
+	// 	writeError(ctx, w, fmt.Errorf("waiting for read requests: %w", err))
+	// 	return
+	// }
 
-	zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
-	close(tableResponses)
+	// zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
+	// close(tableResponses)
 
-	response := &getMultiTableRowsResponse{
-		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-	}
+	// response := &getMultiTableRowsResponse{
+	// 	commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+	// }
 
-	zlog.Info("assembling table responses")
-	for tableResponse := range tableResponses {
-		response.Tables = append(response.Tables, tableResponse)
-	}
+	// zlog.Info("assembling table responses")
+	// for tableResponse := range tableResponses {
+	// 	response.Tables = append(response.Tables, tableResponse)
+	// }
 
-	// Sort by scope so at least, a constant order is kept across calls
-	sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
-		return response.Tables[leftIndex].Scope < response.Tables[rightIndex].Scope
-	})
+	// // Sort by scope so at least, a constant order is kept across calls
+	// sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
+	// 	return response.Tables[leftIndex].Scope < response.Tables[rightIndex].Scope
+	// })
 
-	zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
-	streamResponse(ctx, w, response)
+	// zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
+	// streamResponse(ctx, w, response)
 }
 
 type listTablesRowsForScopesRequest struct {
