@@ -213,8 +213,7 @@ func (s *Server) newRowSerializationInfo(ctx context.Context, contract, table st
 }
 
 func toTableRowResponse(row *fluxdb.ContractStateRow, keyConverter KeyConverter, serializationInfo *rowSerializationInfo, withBlockNum bool) (*pbfluxdb.TableRowResponse, error) {
-	// FIXME: Improve that, if keyConverter is already converting to "name" type, we can simply return actual row.PrimaryKey() as-is unmodified!
-	primaryKey, err := keyConverter.ToString(fluxdb.N(row.PrimaryKey()))
+	primaryKey, err := convertKey(row.PrimaryKey(), keyConverter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to convert key %s: %w", row.PrimaryKey(), err)
 	}
@@ -244,4 +243,12 @@ func toTableRowResponse(row *fluxdb.ContractStateRow, keyConverter KeyConverter,
 	}
 
 	return response, nil
+}
+
+func convertKey(key string, keyConverter KeyConverter) (string, error) {
+	if _, ok := keyConverter.(*NameKeyConverter); ok {
+		return key, nil
+	}
+
+	return keyConverter.ToString(fluxdb.N(key))
 }
