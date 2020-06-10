@@ -2,6 +2,7 @@ package fluxdb
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -68,11 +69,9 @@ func (t ContractTableScopeTablet) NewRow(blockNum uint32, scope string, payer st
 }
 
 func (t ContractTableScopeTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
-	// REVIEW (matt): I don't understand why we would error out if the value is 0. Doesn't 0 mean
-	// a deletion, shouldn't the caller have access to said information?
-	//if len(value) == 0 || len(value) == 8 {
-	//	return nil, errors.New("contract table scope row value should have at 0 byte (deletion) or 8 bytes (payer)")
-	//}
+	if len(value) != 0 && len(value) != 8 {
+		return nil, errors.New("contract table scope row value should have at 0 byte (deletion) or 8 bytes (payer)")
+	}
 
 	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
