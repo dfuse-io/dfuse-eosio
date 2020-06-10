@@ -20,10 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
-* Flag: --mindreader-fail-on-non-contiguous-block (default:false) to enable the ContinuityChecker
-* Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
-* Flag: --common-ratelimiter-plugin (default: nul://) to enable a rate limiter plugin
-* Flag: --pprof-listen-addr (default: 6060)
+* Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
+* Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
+* Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)
+* Flag: `--mindreader-fail-on-non-contiguous-block` (default:false) to enable the ContinuityChecker
+* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: `--common-ratelimiter-plugin` (default: nul://) to enable a rate limiter plugin
+* Flag: `--pprof-listen-addr` (default: 6060)
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
 * Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb

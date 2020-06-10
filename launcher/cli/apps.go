@@ -128,6 +128,8 @@ func init() {
 			cmd.Flags().Bool("node-manager-disable-profiler", true, "Disables the manageos profiler")
 			cmd.Flags().StringSlice("node-manager-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
 			cmd.Flags().Bool("node-manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
+			cmd.Flags().String("node-manager-auto-backup-hostname-match", "", "If non-empty, auto-backups will only trigger if os.Hostname() return this value")
+			cmd.Flags().String("node-manager-auto-snapshot-hostname-match", "", "If non-empty, auto-snapshots will only trigger if os.Hostname() return this value")
 			cmd.Flags().Int("node-manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
 			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
@@ -154,35 +156,37 @@ func init() {
 				return nil, err
 			}
 			return nodeosManagerApp.New(&nodeosManagerApp.Config{
-				MetricID:                "producer",
-				ManagerAPIAddress:       viper.GetString("node-manager-http-listen-addr"),
-				NodeosAPIAddress:        viper.GetString("node-manager-nodeos-api-addr"),
-				ConnectionWatchdog:      viper.GetBool("node-manager-connection-watchdog"),
-				NodeosConfigDir:         viper.GetString("node-manager-config-dir"),
-				NodeosBinPath:           viper.GetString("node-manager-nodeos-path"),
-				NodeosDataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-data-dir")),
-				ProducerHostname:        viper.GetString("node-manager-producer-hostname"),
-				TrustedProducer:         viper.GetString("node-manager-trusted-producer"),
-				ReadinessMaxLatency:     viper.GetDuration("node-manager-readiness-max-latency"),
-				ForceProduction:         viper.GetBool("node-manager-force-production"),
-				NodeosExtraArgs:         viper.GetStringSlice("node-manager-nodeos-args"),
-				BackupStoreURL:          mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
-				BootstrapDataURL:        viper.GetString("node-manager-bootstrap-data-url"),
-				DebugDeepMind:           viper.GetBool("node-manager-debug-deep-mind"),
-				LogToZap:                viper.GetBool("node-manager-log-to-zap"),
-				AutoRestoreSource:       viper.GetString("node-manager-auto-restore-source"),
-				RestoreBackupName:       viper.GetString("node-manager-restore-backup-name"),
-				RestoreSnapshotName:     viper.GetString("node-manager-restore-snapshot-name"),
-				SnapshotStoreURL:        mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-snapshot-store-url")),
-				ShutdownDelay:           viper.GetDuration("node-manager-shutdown-delay"),
-				BackupTag:               viper.GetString("node-manager-backup-tag"),
-				AutoBackupModulo:        viper.GetInt("node-manager-auto-backup-modulo"),
-				AutoBackupPeriod:        viper.GetDuration("node-manager-auto-backup-period"),
-				AutoSnapshotModulo:      viper.GetInt("node-manager-auto-snapshot-modulo"),
-				AutoSnapshotPeriod:      viper.GetDuration("node-manager-auto-snapshot-period"),
-				NumberOfSnapshotsToKeep: viper.GetInt("node-manager-number-of-snapshots-to-keep"),
-				DisableProfiler:         viper.GetBool("node-manager-disable-profiler"),
-				StartFailureHandlerFunc: nil,
+				MetricID:                  "producer",
+				ManagerAPIAddress:         viper.GetString("node-manager-http-listen-addr"),
+				NodeosAPIAddress:          viper.GetString("node-manager-nodeos-api-addr"),
+				ConnectionWatchdog:        viper.GetBool("node-manager-connection-watchdog"),
+				NodeosConfigDir:           viper.GetString("node-manager-config-dir"),
+				NodeosBinPath:             viper.GetString("node-manager-nodeos-path"),
+				NodeosDataDir:             mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-data-dir")),
+				ProducerHostname:          viper.GetString("node-manager-producer-hostname"),
+				TrustedProducer:           viper.GetString("node-manager-trusted-producer"),
+				ReadinessMaxLatency:       viper.GetDuration("node-manager-readiness-max-latency"),
+				ForceProduction:           viper.GetBool("node-manager-force-production"),
+				NodeosExtraArgs:           viper.GetStringSlice("node-manager-nodeos-args"),
+				BackupStoreURL:            mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
+				BootstrapDataURL:          viper.GetString("node-manager-bootstrap-data-url"),
+				DebugDeepMind:             viper.GetBool("node-manager-debug-deep-mind"),
+				LogToZap:                  viper.GetBool("node-manager-log-to-zap"),
+				AutoRestoreSource:         viper.GetString("node-manager-auto-restore-source"),
+				RestoreBackupName:         viper.GetString("node-manager-restore-backup-name"),
+				RestoreSnapshotName:       viper.GetString("node-manager-restore-snapshot-name"),
+				SnapshotStoreURL:          mustReplaceDataDir(dfuseDataDir, viper.GetString("node-manager-snapshot-store-url")),
+				ShutdownDelay:             viper.GetDuration("node-manager-shutdown-delay"),
+				BackupTag:                 viper.GetString("node-manager-backup-tag"),
+				AutoBackupModulo:          viper.GetInt("node-manager-auto-backup-modulo"),
+				AutoBackupPeriod:          viper.GetDuration("node-manager-auto-backup-period"),
+				AutoBackupHostnameMatch:   viper.GetString("node-manager-auto-backup-hostname-match"),
+				AutoSnapshotModulo:        viper.GetInt("node-manager-auto-snapshot-modulo"),
+				AutoSnapshotPeriod:        viper.GetDuration("node-manager-auto-snapshot-period"),
+				AutoSnapshotHostnameMatch: viper.GetString("node-manager-auto-snapshot-hostname-match"),
+				NumberOfSnapshotsToKeep:   viper.GetInt("node-manager-number-of-snapshots-to-keep"),
+				DisableProfiler:           viper.GetBool("node-manager-disable-profiler"),
+				StartFailureHandlerFunc:   nil,
 			}), nil
 
 			// Can we detect a nil interface
@@ -221,7 +225,10 @@ func init() {
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
-			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "Takes state snapshots at this interval")
+			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "If non-zero, takes state snapshots at this interval")
+			cmd.Flags().Duration("mindreader-auto-backup-period", 0, "If non-zero, takes pitreos backups at this interval")
+			cmd.Flags().String("mindreader-auto-snapshot-hostname-match", "", "If non-empty, auto-snapshots will only trigger if os.Hostname() return this value")
+			cmd.Flags().String("mindreader-auto-backup-hostname-match", "", "If non-empty, auto-backups will only trigger if os.Hostname() return this value")
 			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
@@ -292,6 +299,9 @@ func init() {
 
 				AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 				AutoSnapshotPeriod:         viper.GetDuration("mindreader-auto-snapshot-period"),
+				AutoSnapshotHostnameMatch:  viper.GetString("mindreader-auto-snapshot-hostname-match"),
+				AutoBackupPeriod:           viper.GetDuration("mindreader-auto-backup-period"),
+				AutoBackupHostnameMatch:    viper.GetString("mindreader-auto-backup-hostname-match"),
 				NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
 				RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
 				RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
