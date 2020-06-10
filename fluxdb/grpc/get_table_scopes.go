@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream pbfluxdb.FluxDB_GetTableScopesServer) error {
+func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream pbfluxdb.State_GetTableScopesServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get table scopes",

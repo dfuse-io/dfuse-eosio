@@ -26,7 +26,7 @@ func (s *Server) Serve() {
 	zlog.Info("listening & serving GRPC content", zap.String("http_listen_addr", s.grpcAddr))
 
 	grpcServer := dgrpc.NewServer(dgrpc.WithLogger(zlog))
-	pbfluxdb.RegisterFluxDBServer(grpcServer, s)
+	pbfluxdb.RegisterStateServer(grpcServer, s)
 
 	lis, err := net.Listen("tcp", s.grpcAddr)
 	if err != nil {

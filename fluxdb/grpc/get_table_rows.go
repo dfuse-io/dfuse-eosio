@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfluxdb.FluxDB_GetTableRowsServer) error {
+func (s *Server) GetTableRows(request *pbfluxdb.GetTableRowsRequest, stream pbfluxdb.State_GetTableRowsServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get table rows",

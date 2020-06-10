@@ -24,78 +24,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// Data part (probably will be moved to "dfuse" repository instead of being "eosio" specific since it's not!)
-type TabletRow struct {
-	Collection           string   `protobuf:"bytes,1,opt,name=collection,proto3" json:"collection,omitempty"`
-	TabletKey            string   `protobuf:"bytes,2,opt,name=tablet_key,json=tabletKey,proto3" json:"tablet_key,omitempty"`
-	BlockNumKey          string   `protobuf:"bytes,3,opt,name=block_num_key,json=blockNumKey,proto3" json:"block_num_key,omitempty"`
-	PrimKey              string   `protobuf:"bytes,4,opt,name=prim_key,json=primKey,proto3" json:"prim_key,omitempty"`
-	Payload              []byte   `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *TabletRow) Reset()         { *m = TabletRow{} }
-func (m *TabletRow) String() string { return proto.CompactTextString(m) }
-func (*TabletRow) ProtoMessage()    {}
-func (*TabletRow) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{0}
-}
-
-func (m *TabletRow) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_TabletRow.Unmarshal(m, b)
-}
-func (m *TabletRow) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_TabletRow.Marshal(b, m, deterministic)
-}
-func (m *TabletRow) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TabletRow.Merge(m, src)
-}
-func (m *TabletRow) XXX_Size() int {
-	return xxx_messageInfo_TabletRow.Size(m)
-}
-func (m *TabletRow) XXX_DiscardUnknown() {
-	xxx_messageInfo_TabletRow.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TabletRow proto.InternalMessageInfo
-
-func (m *TabletRow) GetCollection() string {
-	if m != nil {
-		return m.Collection
-	}
-	return ""
-}
-
-func (m *TabletRow) GetTabletKey() string {
-	if m != nil {
-		return m.TabletKey
-	}
-	return ""
-}
-
-func (m *TabletRow) GetBlockNumKey() string {
-	if m != nil {
-		return m.BlockNumKey
-	}
-	return ""
-}
-
-func (m *TabletRow) GetPrimKey() string {
-	if m != nil {
-		return m.PrimKey
-	}
-	return ""
-}
-
-func (m *TabletRow) GetPayload() []byte {
-	if m != nil {
-		return m.Payload
-	}
-	return nil
-}
-
 type GetABIRequest struct {
 	Contract             string   `protobuf:"bytes,1,opt,name=contract,proto3" json:"contract,omitempty"`
 	BlockNum             uint64   `protobuf:"varint,2,opt,name=block_num,json=blockNum,proto3" json:"block_num,omitempty"`
@@ -109,7 +37,7 @@ func (m *GetABIRequest) Reset()         { *m = GetABIRequest{} }
 func (m *GetABIRequest) String() string { return proto.CompactTextString(m) }
 func (*GetABIRequest) ProtoMessage()    {}
 func (*GetABIRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{1}
+	return fileDescriptor_6353f7395e2f3f49, []int{0}
 }
 
 func (m *GetABIRequest) XXX_Unmarshal(b []byte) error {
@@ -164,7 +92,7 @@ func (m *GetABIResponse) Reset()         { *m = GetABIResponse{} }
 func (m *GetABIResponse) String() string { return proto.CompactTextString(m) }
 func (*GetABIResponse) ProtoMessage()    {}
 func (*GetABIResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{2}
+	return fileDescriptor_6353f7395e2f3f49, []int{1}
 }
 
 func (m *GetABIResponse) XXX_Unmarshal(b []byte) error {
@@ -218,7 +146,7 @@ func (m *GetKeyAccountsRequest) Reset()         { *m = GetKeyAccountsRequest{} }
 func (m *GetKeyAccountsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetKeyAccountsRequest) ProtoMessage()    {}
 func (*GetKeyAccountsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{3}
+	return fileDescriptor_6353f7395e2f3f49, []int{2}
 }
 
 func (m *GetKeyAccountsRequest) XXX_Unmarshal(b []byte) error {
@@ -265,7 +193,7 @@ func (m *GetKeyAccountsResponse) Reset()         { *m = GetKeyAccountsResponse{}
 func (m *GetKeyAccountsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetKeyAccountsResponse) ProtoMessage()    {}
 func (*GetKeyAccountsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{4}
+	return fileDescriptor_6353f7395e2f3f49, []int{3}
 }
 
 func (m *GetKeyAccountsResponse) XXX_Unmarshal(b []byte) error {
@@ -312,7 +240,7 @@ func (m *GetPermissionLinksRequest) Reset()         { *m = GetPermissionLinksReq
 func (m *GetPermissionLinksRequest) String() string { return proto.CompactTextString(m) }
 func (*GetPermissionLinksRequest) ProtoMessage()    {}
 func (*GetPermissionLinksRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{5}
+	return fileDescriptor_6353f7395e2f3f49, []int{4}
 }
 
 func (m *GetPermissionLinksRequest) XXX_Unmarshal(b []byte) error {
@@ -362,7 +290,7 @@ func (m *GetPermissionLinksResponse) Reset()         { *m = GetPermissionLinksRe
 func (m *GetPermissionLinksResponse) String() string { return proto.CompactTextString(m) }
 func (*GetPermissionLinksResponse) ProtoMessage()    {}
 func (*GetPermissionLinksResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{6}
+	return fileDescriptor_6353f7395e2f3f49, []int{5}
 }
 
 func (m *GetPermissionLinksResponse) XXX_Unmarshal(b []byte) error {
@@ -431,7 +359,7 @@ func (m *LinkedPermission) Reset()         { *m = LinkedPermission{} }
 func (m *LinkedPermission) String() string { return proto.CompactTextString(m) }
 func (*LinkedPermission) ProtoMessage()    {}
 func (*LinkedPermission) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{7}
+	return fileDescriptor_6353f7395e2f3f49, []int{6}
 }
 
 func (m *LinkedPermission) XXX_Unmarshal(b []byte) error {
@@ -491,7 +419,7 @@ func (m *GetTableRowsRequest) Reset()         { *m = GetTableRowsRequest{} }
 func (m *GetTableRowsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTableRowsRequest) ProtoMessage()    {}
 func (*GetTableRowsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{8}
+	return fileDescriptor_6353f7395e2f3f49, []int{7}
 }
 
 func (m *GetTableRowsRequest) XXX_Unmarshal(b []byte) error {
@@ -583,7 +511,7 @@ func (m *TableRowResponse) Reset()         { *m = TableRowResponse{} }
 func (m *TableRowResponse) String() string { return proto.CompactTextString(m) }
 func (*TableRowResponse) ProtoMessage()    {}
 func (*TableRowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{9}
+	return fileDescriptor_6353f7395e2f3f49, []int{8}
 }
 
 func (m *TableRowResponse) XXX_Unmarshal(b []byte) error {
@@ -658,7 +586,7 @@ func (m *GetTableRowRequest) Reset()         { *m = GetTableRowRequest{} }
 func (m *GetTableRowRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTableRowRequest) ProtoMessage()    {}
 func (*GetTableRowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{10}
+	return fileDescriptor_6353f7395e2f3f49, []int{9}
 }
 
 func (m *GetTableRowRequest) XXX_Unmarshal(b []byte) error {
@@ -757,7 +685,7 @@ func (m *GetTableRowResponse) Reset()         { *m = GetTableRowResponse{} }
 func (m *GetTableRowResponse) String() string { return proto.CompactTextString(m) }
 func (*GetTableRowResponse) ProtoMessage()    {}
 func (*GetTableRowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{11}
+	return fileDescriptor_6353f7395e2f3f49, []int{10}
 }
 
 func (m *GetTableRowResponse) XXX_Unmarshal(b []byte) error {
@@ -826,7 +754,7 @@ func (m *GetTableScopesRequest) Reset()         { *m = GetTableScopesRequest{} }
 func (m *GetTableScopesRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTableScopesRequest) ProtoMessage()    {}
 func (*GetTableScopesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{12}
+	return fileDescriptor_6353f7395e2f3f49, []int{11}
 }
 
 func (m *GetTableScopesRequest) XXX_Unmarshal(b []byte) error {
@@ -880,7 +808,7 @@ func (m *TableScopeResponse) Reset()         { *m = TableScopeResponse{} }
 func (m *TableScopeResponse) String() string { return proto.CompactTextString(m) }
 func (*TableScopeResponse) ProtoMessage()    {}
 func (*TableScopeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{13}
+	return fileDescriptor_6353f7395e2f3f49, []int{12}
 }
 
 func (m *TableScopeResponse) XXX_Unmarshal(b []byte) error {
@@ -919,8 +847,11 @@ type GetMultiScopesTableRowsRequest struct {
 	BlockNum             uint64   `protobuf:"varint,1,opt,name=block_num,json=blockNum,proto3" json:"block_num,omitempty"`
 	Contract             string   `protobuf:"bytes,2,opt,name=contract,proto3" json:"contract,omitempty"`
 	Table                string   `protobuf:"bytes,3,opt,name=table,proto3" json:"table,omitempty"`
-	Json                 bool     `protobuf:"varint,4,opt,name=json,proto3" json:"json,omitempty"`
-	Scopes               []string `protobuf:"bytes,5,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	KeyType              string   `protobuf:"bytes,4,opt,name=key_type,json=keyType,proto3" json:"key_type,omitempty"`
+	ToJson               bool     `protobuf:"varint,5,opt,name=to_json,json=toJson,proto3" json:"to_json,omitempty"`
+	WithBlockNum         bool     `protobuf:"varint,6,opt,name=with_block_num,json=withBlockNum,proto3" json:"with_block_num,omitempty"`
+	IrreversibleOnly     bool     `protobuf:"varint,7,opt,name=irreversible_only,json=irreversibleOnly,proto3" json:"irreversible_only,omitempty"`
+	Scopes               []string `protobuf:"bytes,8,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -930,7 +861,7 @@ func (m *GetMultiScopesTableRowsRequest) Reset()         { *m = GetMultiScopesTa
 func (m *GetMultiScopesTableRowsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetMultiScopesTableRowsRequest) ProtoMessage()    {}
 func (*GetMultiScopesTableRowsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6353f7395e2f3f49, []int{14}
+	return fileDescriptor_6353f7395e2f3f49, []int{13}
 }
 
 func (m *GetMultiScopesTableRowsRequest) XXX_Unmarshal(b []byte) error {
@@ -972,9 +903,30 @@ func (m *GetMultiScopesTableRowsRequest) GetTable() string {
 	return ""
 }
 
-func (m *GetMultiScopesTableRowsRequest) GetJson() bool {
+func (m *GetMultiScopesTableRowsRequest) GetKeyType() string {
 	if m != nil {
-		return m.Json
+		return m.KeyType
+	}
+	return ""
+}
+
+func (m *GetMultiScopesTableRowsRequest) GetToJson() bool {
+	if m != nil {
+		return m.ToJson
+	}
+	return false
+}
+
+func (m *GetMultiScopesTableRowsRequest) GetWithBlockNum() bool {
+	if m != nil {
+		return m.WithBlockNum
+	}
+	return false
+}
+
+func (m *GetMultiScopesTableRowsRequest) GetIrreversibleOnly() bool {
+	if m != nil {
+		return m.IrreversibleOnly
 	}
 	return false
 }
@@ -982,6 +934,101 @@ func (m *GetMultiScopesTableRowsRequest) GetJson() bool {
 func (m *GetMultiScopesTableRowsRequest) GetScopes() []string {
 	if m != nil {
 		return m.Scopes
+	}
+	return nil
+}
+
+type GetMultiContractsTableRowsRequest struct {
+	BlockNum             uint64   `protobuf:"varint,1,opt,name=block_num,json=blockNum,proto3" json:"block_num,omitempty"`
+	Scope                string   `protobuf:"bytes,2,opt,name=scope,proto3" json:"scope,omitempty"`
+	Table                string   `protobuf:"bytes,3,opt,name=table,proto3" json:"table,omitempty"`
+	KeyType              string   `protobuf:"bytes,4,opt,name=key_type,json=keyType,proto3" json:"key_type,omitempty"`
+	ToJson               bool     `protobuf:"varint,5,opt,name=to_json,json=toJson,proto3" json:"to_json,omitempty"`
+	WithBlockNum         bool     `protobuf:"varint,6,opt,name=with_block_num,json=withBlockNum,proto3" json:"with_block_num,omitempty"`
+	IrreversibleOnly     bool     `protobuf:"varint,7,opt,name=irreversible_only,json=irreversibleOnly,proto3" json:"irreversible_only,omitempty"`
+	Contracts            []string `protobuf:"bytes,8,rep,name=contracts,proto3" json:"contracts,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetMultiContractsTableRowsRequest) Reset()         { *m = GetMultiContractsTableRowsRequest{} }
+func (m *GetMultiContractsTableRowsRequest) String() string { return proto.CompactTextString(m) }
+func (*GetMultiContractsTableRowsRequest) ProtoMessage()    {}
+func (*GetMultiContractsTableRowsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6353f7395e2f3f49, []int{14}
+}
+
+func (m *GetMultiContractsTableRowsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetMultiContractsTableRowsRequest.Unmarshal(m, b)
+}
+func (m *GetMultiContractsTableRowsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetMultiContractsTableRowsRequest.Marshal(b, m, deterministic)
+}
+func (m *GetMultiContractsTableRowsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetMultiContractsTableRowsRequest.Merge(m, src)
+}
+func (m *GetMultiContractsTableRowsRequest) XXX_Size() int {
+	return xxx_messageInfo_GetMultiContractsTableRowsRequest.Size(m)
+}
+func (m *GetMultiContractsTableRowsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetMultiContractsTableRowsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetMultiContractsTableRowsRequest proto.InternalMessageInfo
+
+func (m *GetMultiContractsTableRowsRequest) GetBlockNum() uint64 {
+	if m != nil {
+		return m.BlockNum
+	}
+	return 0
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetScope() string {
+	if m != nil {
+		return m.Scope
+	}
+	return ""
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetTable() string {
+	if m != nil {
+		return m.Table
+	}
+	return ""
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetKeyType() string {
+	if m != nil {
+		return m.KeyType
+	}
+	return ""
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetToJson() bool {
+	if m != nil {
+		return m.ToJson
+	}
+	return false
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetWithBlockNum() bool {
+	if m != nil {
+		return m.WithBlockNum
+	}
+	return false
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetIrreversibleOnly() bool {
+	if m != nil {
+		return m.IrreversibleOnly
+	}
+	return false
+}
+
+func (m *GetMultiContractsTableRowsRequest) GetContracts() []string {
+	if m != nil {
+		return m.Contracts
 	}
 	return nil
 }
@@ -1033,8 +1080,125 @@ func (m *TableRowsScopeResponse) GetRow() []*TableRowResponse {
 	return nil
 }
 
+type TableRowsContractResponse struct {
+	Contract             string              `protobuf:"bytes,1,opt,name=contract,proto3" json:"contract,omitempty"`
+	Row                  []*TableRowResponse `protobuf:"bytes,4,rep,name=row,proto3" json:"row,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *TableRowsContractResponse) Reset()         { *m = TableRowsContractResponse{} }
+func (m *TableRowsContractResponse) String() string { return proto.CompactTextString(m) }
+func (*TableRowsContractResponse) ProtoMessage()    {}
+func (*TableRowsContractResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6353f7395e2f3f49, []int{16}
+}
+
+func (m *TableRowsContractResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TableRowsContractResponse.Unmarshal(m, b)
+}
+func (m *TableRowsContractResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TableRowsContractResponse.Marshal(b, m, deterministic)
+}
+func (m *TableRowsContractResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TableRowsContractResponse.Merge(m, src)
+}
+func (m *TableRowsContractResponse) XXX_Size() int {
+	return xxx_messageInfo_TableRowsContractResponse.Size(m)
+}
+func (m *TableRowsContractResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TableRowsContractResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TableRowsContractResponse proto.InternalMessageInfo
+
+func (m *TableRowsContractResponse) GetContract() string {
+	if m != nil {
+		return m.Contract
+	}
+	return ""
+}
+
+func (m *TableRowsContractResponse) GetRow() []*TableRowResponse {
+	if m != nil {
+		return m.Row
+	}
+	return nil
+}
+
+type TabletRow struct {
+	Collection           string   `protobuf:"bytes,1,opt,name=collection,proto3" json:"collection,omitempty"`
+	TabletKey            string   `protobuf:"bytes,2,opt,name=tablet_key,json=tabletKey,proto3" json:"tablet_key,omitempty"`
+	BlockNumKey          string   `protobuf:"bytes,3,opt,name=block_num_key,json=blockNumKey,proto3" json:"block_num_key,omitempty"`
+	PrimKey              string   `protobuf:"bytes,4,opt,name=prim_key,json=primKey,proto3" json:"prim_key,omitempty"`
+	Payload              []byte   `protobuf:"bytes,5,opt,name=payload,proto3" json:"payload,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TabletRow) Reset()         { *m = TabletRow{} }
+func (m *TabletRow) String() string { return proto.CompactTextString(m) }
+func (*TabletRow) ProtoMessage()    {}
+func (*TabletRow) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6353f7395e2f3f49, []int{17}
+}
+
+func (m *TabletRow) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TabletRow.Unmarshal(m, b)
+}
+func (m *TabletRow) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TabletRow.Marshal(b, m, deterministic)
+}
+func (m *TabletRow) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TabletRow.Merge(m, src)
+}
+func (m *TabletRow) XXX_Size() int {
+	return xxx_messageInfo_TabletRow.Size(m)
+}
+func (m *TabletRow) XXX_DiscardUnknown() {
+	xxx_messageInfo_TabletRow.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TabletRow proto.InternalMessageInfo
+
+func (m *TabletRow) GetCollection() string {
+	if m != nil {
+		return m.Collection
+	}
+	return ""
+}
+
+func (m *TabletRow) GetTabletKey() string {
+	if m != nil {
+		return m.TabletKey
+	}
+	return ""
+}
+
+func (m *TabletRow) GetBlockNumKey() string {
+	if m != nil {
+		return m.BlockNumKey
+	}
+	return ""
+}
+
+func (m *TabletRow) GetPrimKey() string {
+	if m != nil {
+		return m.PrimKey
+	}
+	return ""
+}
+
+func (m *TabletRow) GetPayload() []byte {
+	if m != nil {
+		return m.Payload
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterType((*TabletRow)(nil), "dfuse.eosio.fluxdb.v1.TabletRow")
 	proto.RegisterType((*GetABIRequest)(nil), "dfuse.eosio.fluxdb.v1.GetABIRequest")
 	proto.RegisterType((*GetABIResponse)(nil), "dfuse.eosio.fluxdb.v1.GetABIResponse")
 	proto.RegisterType((*GetKeyAccountsRequest)(nil), "dfuse.eosio.fluxdb.v1.GetKeyAccountsRequest")
@@ -1049,76 +1213,84 @@ func init() {
 	proto.RegisterType((*GetTableScopesRequest)(nil), "dfuse.eosio.fluxdb.v1.GetTableScopesRequest")
 	proto.RegisterType((*TableScopeResponse)(nil), "dfuse.eosio.fluxdb.v1.TableScopeResponse")
 	proto.RegisterType((*GetMultiScopesTableRowsRequest)(nil), "dfuse.eosio.fluxdb.v1.GetMultiScopesTableRowsRequest")
+	proto.RegisterType((*GetMultiContractsTableRowsRequest)(nil), "dfuse.eosio.fluxdb.v1.GetMultiContractsTableRowsRequest")
 	proto.RegisterType((*TableRowsScopeResponse)(nil), "dfuse.eosio.fluxdb.v1.TableRowsScopeResponse")
+	proto.RegisterType((*TableRowsContractResponse)(nil), "dfuse.eosio.fluxdb.v1.TableRowsContractResponse")
+	proto.RegisterType((*TabletRow)(nil), "dfuse.eosio.fluxdb.v1.TabletRow")
 }
 
 func init() { proto.RegisterFile("dfuse/eosio/fluxdb/v1/fluxdb.proto", fileDescriptor_6353f7395e2f3f49) }
 
 var fileDescriptor_6353f7395e2f3f49 = []byte{
-	// 995 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xcb, 0x73, 0xdb, 0x44,
-	0x18, 0x1f, 0xd9, 0xae, 0x2d, 0x7f, 0x76, 0xd3, 0xb0, 0xd0, 0x44, 0x51, 0xa7, 0x25, 0x88, 0x76,
-	0x9a, 0x16, 0x6a, 0x27, 0x65, 0x38, 0x30, 0x1d, 0x0e, 0x0e, 0x0c, 0x9e, 0x50, 0x28, 0xa0, 0x86,
-	0x0b, 0x17, 0xcd, 0x4a, 0xde, 0xd0, 0xc5, 0xb2, 0x56, 0x48, 0xab, 0xb8, 0x3a, 0xf6, 0xc0, 0xf0,
-	0x2f, 0x30, 0xc3, 0x89, 0xe1, 0x0f, 0xe0, 0x5f, 0x64, 0xf6, 0x21, 0x59, 0x76, 0x2c, 0xd7, 0xb9,
-	0xc2, 0x4d, 0xdf, 0x63, 0xbf, 0xc7, 0xef, 0x7b, 0xec, 0x0a, 0x9c, 0xc9, 0x45, 0x96, 0x92, 0x21,
-	0x61, 0x29, 0x65, 0xc3, 0x8b, 0x30, 0x7b, 0x3d, 0xf1, 0x87, 0x97, 0x27, 0xfa, 0x6b, 0x10, 0x27,
-	0x8c, 0x33, 0x74, 0x5b, 0xea, 0x0c, 0xa4, 0xce, 0x40, 0x4b, 0x2e, 0x4f, 0x9c, 0xbf, 0x0d, 0xe8,
-	0x9e, 0x63, 0x3f, 0x24, 0xdc, 0x65, 0x73, 0x74, 0x0f, 0x20, 0x60, 0x61, 0x48, 0x02, 0x4e, 0x59,
-	0x64, 0x19, 0x87, 0xc6, 0x51, 0xd7, 0xad, 0x70, 0xd0, 0x5d, 0x00, 0x2e, 0x95, 0xbd, 0x29, 0xc9,
-	0xad, 0x86, 0x94, 0x77, 0x15, 0xe7, 0x39, 0xc9, 0x91, 0x03, 0x37, 0xfd, 0x90, 0x05, 0x53, 0x2f,
-	0xca, 0x66, 0x52, 0xa3, 0x29, 0x35, 0x7a, 0x92, 0xf9, 0x22, 0x9b, 0x09, 0x9d, 0x03, 0x30, 0xe3,
-	0x84, 0x2a, 0x71, 0x4b, 0x8a, 0x3b, 0x82, 0x16, 0x22, 0x0b, 0x3a, 0x31, 0xce, 0x43, 0x86, 0x27,
-	0xd6, 0x8d, 0x43, 0xe3, 0xa8, 0xef, 0x16, 0xa4, 0x83, 0xe1, 0xe6, 0x98, 0xf0, 0xd1, 0xe9, 0x99,
-	0x4b, 0x7e, 0xcd, 0x48, 0xca, 0x91, 0x0d, 0x66, 0xc0, 0x22, 0x9e, 0xe0, 0x80, 0xeb, 0x30, 0x4b,
-	0x1a, 0xdd, 0x81, 0x6e, 0x19, 0x85, 0x8c, 0xb1, 0xe5, 0x9a, 0x45, 0x04, 0x68, 0x1f, 0x3a, 0x9c,
-	0x79, 0xbf, 0xa4, 0x2c, 0x92, 0xc1, 0x99, 0x6e, 0x9b, 0xb3, 0xaf, 0x53, 0x16, 0x39, 0x18, 0x76,
-	0x0a, 0x17, 0x69, 0xcc, 0xa2, 0x94, 0x2c, 0xdb, 0x31, 0xae, 0xda, 0x49, 0xf0, 0xdc, 0xc3, 0x3e,
-	0x95, 0x2e, 0xfa, 0x6e, 0x3b, 0xc1, 0xf3, 0x91, 0x4f, 0x45, 0x7e, 0xc2, 0xba, 0x94, 0xa8, 0xf4,
-	0x3b, 0x82, 0x1e, 0xf9, 0xd4, 0x79, 0x09, 0xb7, 0xc7, 0x12, 0xa8, 0x51, 0x10, 0xb0, 0x2c, 0xe2,
-	0x69, 0x91, 0xcd, 0x5d, 0x80, 0x38, 0xf3, 0x43, 0x1a, 0x48, 0x54, 0x54, 0x3e, 0x5d, 0xc5, 0x11,
-	0xb8, 0x6c, 0x4a, 0xc8, 0xf9, 0x01, 0xf6, 0x56, 0x8d, 0x6e, 0x13, 0xbf, 0x0d, 0x26, 0xd6, 0x07,
-	0xac, 0xc6, 0x61, 0x53, 0x00, 0x58, 0xd0, 0x8e, 0x0b, 0x07, 0x63, 0xc2, 0xbf, 0x27, 0xc9, 0x8c,
-	0xa6, 0x29, 0x65, 0xd1, 0x37, 0x34, 0x9a, 0x96, 0xb1, 0x6e, 0xb4, 0x6a, 0x41, 0x47, 0x5b, 0xd1,
-	0xcd, 0x51, 0x90, 0xce, 0x3f, 0x0d, 0xb0, 0xd7, 0x19, 0xd5, 0xb1, 0x7e, 0x08, 0x3b, 0x59, 0xec,
-	0x71, 0xe6, 0x29, 0xdb, 0x74, 0xa2, 0x51, 0xe8, 0x65, 0xf1, 0x39, 0x3b, 0x15, 0xbc, 0xb3, 0x09,
-	0x7a, 0x00, 0xb7, 0xaa, 0x4a, 0x0b, 0x34, 0xfa, 0xa5, 0x96, 0x08, 0xe2, 0x19, 0xd8, 0x21, 0x4e,
-	0xb9, 0x47, 0x93, 0x84, 0x5c, 0x92, 0x24, 0xa5, 0x7e, 0x48, 0x16, 0x76, 0x55, 0x4d, 0xf6, 0x85,
-	0xc6, 0x59, 0x45, 0xa1, 0xf0, 0xf1, 0x39, 0xdc, 0xa9, 0x3b, 0x2c, 0xfc, 0xb5, 0xa4, 0x3f, 0x6b,
-	0xed, 0x69, 0xe1, 0xfb, 0x0c, 0x7a, 0x71, 0x99, 0x62, 0x6a, 0xdd, 0x38, 0x6c, 0x1e, 0xf5, 0x9e,
-	0x3e, 0x1c, 0xac, 0x9d, 0xbd, 0x81, 0x80, 0x80, 0x4c, 0x16, 0x90, 0xb8, 0xd5, 0xb3, 0x0e, 0x83,
-	0xdd, 0x55, 0x85, 0x8d, 0x6d, 0xbf, 0x07, 0x6d, 0xac, 0xe6, 0x56, 0x41, 0xaf, 0x29, 0xf4, 0x10,
-	0x6e, 0x2d, 0xcc, 0x7a, 0x11, 0x9e, 0x11, 0x8d, 0xc1, 0xce, 0x82, 0xfd, 0x02, 0xcf, 0x88, 0xf3,
-	0xa6, 0x01, 0xef, 0x8e, 0x09, 0x97, 0xdb, 0xc0, 0x65, 0xf3, 0xed, 0x2a, 0x7e, 0x00, 0xe6, 0x94,
-	0xe4, 0x1e, 0xcf, 0x63, 0x52, 0x94, 0x7c, 0x4a, 0xf2, 0xf3, 0x3c, 0x26, 0xb5, 0xa3, 0x86, 0xee,
-	0xc3, 0xce, 0x9c, 0xf2, 0x57, 0x2b, 0xb0, 0x9a, 0x6e, 0x5f, 0x70, 0x4b, 0x28, 0x3f, 0x82, 0x77,
-	0x96, 0x8a, 0xc0, 0xa2, 0x30, 0x97, 0x7b, 0xc1, 0x74, 0x77, 0xab, 0x82, 0xef, 0xa2, 0x30, 0x5f,
-	0x02, 0xa6, 0xbd, 0x02, 0xcc, 0x7b, 0x70, 0x43, 0xae, 0x28, 0xab, 0x23, 0x05, 0x8a, 0x10, 0xdc,
-	0x34, 0x60, 0x31, 0xb1, 0x4c, 0xc5, 0x95, 0x84, 0xf3, 0x9b, 0x01, 0xbb, 0x05, 0x00, 0x65, 0x73,
-	0xee, 0x42, 0x73, 0x31, 0x97, 0xe2, 0x13, 0x21, 0x68, 0x4d, 0x30, 0xc7, 0x7a, 0xf4, 0xe5, 0xb7,
-	0xe0, 0x95, 0xb9, 0x76, 0x5d, 0xf9, 0x2d, 0x9c, 0xc4, 0x38, 0x27, 0x89, 0xde, 0x74, 0x8a, 0x40,
-	0x1f, 0x40, 0xbf, 0x4c, 0xdd, 0x27, 0x89, 0x4c, 0xaa, 0xb5, 0xd8, 0x92, 0x3e, 0x49, 0x9c, 0xbf,
-	0x1a, 0x80, 0x2a, 0xb5, 0xf8, 0x1f, 0x96, 0x02, 0xbd, 0x0f, 0x3d, 0x71, 0x31, 0xe0, 0x24, 0x97,
-	0x5b, 0xb1, 0xab, 0x2e, 0x23, 0xcd, 0x7a, 0x4e, 0x72, 0xe7, 0x8f, 0xe5, 0x7e, 0xfd, 0xcf, 0xed,
-	0x92, 0xcf, 0xa0, 0x99, 0xb0, 0xb9, 0xc4, 0xb9, 0x7e, 0x87, 0xac, 0x66, 0xef, 0x8a, 0x33, 0xce,
-	0x85, 0xbc, 0x69, 0xa4, 0xec, 0xa5, 0x00, 0x73, 0xbb, 0x59, 0xae, 0x56, 0xae, 0x51, 0x57, 0xb9,
-	0x66, 0xa5, 0x72, 0xce, 0x18, 0xd0, 0xc2, 0xc9, 0x76, 0x17, 0x4f, 0x59, 0xec, 0x46, 0x75, 0xee,
-	0xfe, 0x34, 0xe0, 0xde, 0x98, 0xf0, 0x6f, 0xb3, 0x90, 0x53, 0x15, 0xf1, 0xf5, 0xd6, 0xd0, 0xb5,
-	0x43, 0x2f, 0xc7, 0x55, 0xf5, 0xbb, 0x1a, 0xd7, 0x3d, 0x68, 0xcb, 0x70, 0xd4, 0xe2, 0xee, 0xba,
-	0x9a, 0x72, 0x28, 0xec, 0x95, 0xe1, 0x2c, 0xa7, 0x5a, 0x66, 0x63, 0x54, 0x5b, 0x57, 0x57, 0xae,
-	0xb5, 0x71, 0xfb, 0xaf, 0xad, 0xdc, 0xd3, 0xdf, 0xdb, 0xd0, 0xfe, 0x2a, 0xcc, 0x5e, 0x7f, 0x79,
-	0x8a, 0x7e, 0x84, 0xb6, 0x7a, 0x91, 0xa0, 0xfb, 0x35, 0x26, 0x96, 0xde, 0x44, 0xf6, 0x83, 0xb7,
-	0x68, 0xe9, 0x90, 0x67, 0xf2, 0xa1, 0x53, 0x79, 0x30, 0xa0, 0x8f, 0xeb, 0x0f, 0x5e, 0x7d, 0xac,
-	0xd8, 0x4f, 0xb6, 0xd4, 0xd6, 0xee, 0x72, 0xb9, 0xc8, 0x56, 0xee, 0x7d, 0x74, 0x5c, 0x6f, 0x64,
-	0xfd, 0xbb, 0xc3, 0x3e, 0xb9, 0xc6, 0x09, 0xed, 0x9a, 0x40, 0xbf, 0x7a, 0x9f, 0xa1, 0xc7, 0xf5,
-	0x26, 0x56, 0xbb, 0xcd, 0xde, 0xb6, 0x6a, 0xc7, 0x06, 0x9a, 0x40, 0xaf, 0x62, 0x01, 0x3d, 0x7a,
-	0xbb, 0x97, 0xc2, 0xc9, 0xe3, 0x6d, 0x54, 0x75, 0x32, 0x53, 0x59, 0xb6, 0xca, 0x48, 0x6f, 0x2a,
-	0xdb, 0xd5, 0xc9, 0xb7, 0x1f, 0x6d, 0x4a, 0x68, 0xa9, 0xa9, 0x8f, 0x0d, 0xf4, 0xc6, 0x80, 0xfd,
-	0x9a, 0x71, 0x44, 0x9f, 0xd6, 0xbb, 0xdd, 0x30, 0xbe, 0xb5, 0x6d, 0xb3, 0x7e, 0xb0, 0x8e, 0x8d,
-	0xd3, 0x2f, 0x7e, 0x1a, 0xfd, 0x4c, 0xf9, 0xab, 0xcc, 0x1f, 0x04, 0x6c, 0x36, 0x94, 0x87, 0x9f,
-	0x50, 0xa6, 0x3f, 0xd4, 0xaf, 0x4e, 0xec, 0x0f, 0xd7, 0xfe, 0xf9, 0x3c, 0x8b, 0x7d, 0xf5, 0xed,
-	0xb7, 0xe5, 0xcf, 0xcf, 0x27, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x2b, 0xb6, 0x5e, 0x22,
-	0x0d, 0x00, 0x00,
+	// 1077 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xcd, 0x8f, 0xdb, 0x44,
+	0x14, 0x97, 0xf3, 0x69, 0xbf, 0xa4, 0xdb, 0x65, 0xa0, 0xbb, 0x8e, 0x0b, 0x25, 0x35, 0xad, 0xba,
+	0x2d, 0x34, 0xc9, 0x16, 0x21, 0x81, 0x2a, 0x0e, 0xd9, 0x1e, 0xa2, 0x65, 0xa1, 0x80, 0x77, 0xb9,
+	0x70, 0x89, 0xc6, 0xce, 0x2c, 0x35, 0x71, 0x3c, 0xc6, 0x1e, 0x6f, 0xf0, 0xb1, 0x07, 0x2e, 0x1c,
+	0x90, 0x10, 0x17, 0xae, 0x88, 0x3f, 0x80, 0x7f, 0x11, 0xcd, 0x78, 0xec, 0x38, 0xd9, 0x38, 0xc9,
+	0x8a, 0x0b, 0x82, 0x9b, 0xdf, 0x9b, 0x37, 0xef, 0xe3, 0xf7, 0xe6, 0x7d, 0x18, 0xcc, 0xc9, 0x65,
+	0x1c, 0x91, 0x3e, 0xa1, 0x91, 0x4b, 0xfb, 0x97, 0x5e, 0xfc, 0xe3, 0xc4, 0xee, 0x5f, 0x1d, 0xcb,
+	0xaf, 0x5e, 0x10, 0x52, 0x46, 0xd1, 0x1d, 0x21, 0xd3, 0x13, 0x32, 0x3d, 0x79, 0x72, 0x75, 0x6c,
+	0x62, 0xb8, 0x35, 0x22, 0x6c, 0x78, 0x72, 0x6a, 0x91, 0x1f, 0x62, 0x12, 0x31, 0x64, 0x80, 0xea,
+	0x50, 0x9f, 0x85, 0xd8, 0x61, 0xba, 0xd2, 0x55, 0x8e, 0x34, 0x2b, 0xa7, 0xd1, 0x5d, 0xd0, 0x6c,
+	0x8f, 0x3a, 0xd3, 0xb1, 0x1f, 0xcf, 0xf4, 0x4a, 0x57, 0x39, 0xaa, 0x59, 0xaa, 0x60, 0xbc, 0x8c,
+	0x67, 0xe8, 0x10, 0x9a, 0x8c, 0x8e, 0xbf, 0x8f, 0xa8, 0xaf, 0x57, 0xbb, 0xca, 0x91, 0x6a, 0x35,
+	0x18, 0xfd, 0x2c, 0xa2, 0xbe, 0x89, 0x61, 0x2f, 0x33, 0x11, 0x05, 0xd4, 0x8f, 0xc8, 0xb2, 0x1e,
+	0xe5, 0xba, 0x9e, 0x10, 0xcf, 0xc7, 0xd8, 0x76, 0x85, 0x89, 0xb6, 0xd5, 0x08, 0xf1, 0x7c, 0x68,
+	0xbb, 0xa8, 0x03, 0x2a, 0xd7, 0x2e, 0x4e, 0xaa, 0xc2, 0xb3, 0x26, 0xa7, 0x87, 0xb6, 0x6b, 0x9e,
+	0xc3, 0x9d, 0x11, 0x61, 0x67, 0x24, 0x19, 0x3a, 0x0e, 0x8d, 0x7d, 0x16, 0x65, 0xd1, 0xbc, 0x03,
+	0x10, 0xc4, 0xb6, 0xe7, 0x3a, 0xe3, 0x29, 0x49, 0x64, 0x3c, 0x5a, 0xca, 0x39, 0x23, 0xc9, 0xc6,
+	0x80, 0xcc, 0xaf, 0xe1, 0x60, 0x55, 0xe9, 0x2e, 0xfe, 0x1b, 0xa0, 0x62, 0x79, 0x41, 0xaf, 0x74,
+	0xab, 0x1c, 0xc0, 0x8c, 0x36, 0x2d, 0xe8, 0x8c, 0x08, 0xfb, 0x8a, 0x84, 0x33, 0x37, 0x8a, 0x5c,
+	0xea, 0x7f, 0xee, 0xfa, 0xd3, 0xdc, 0xd7, 0x8d, 0x5a, 0x75, 0x68, 0x4a, 0x2d, 0xc2, 0x4f, 0xcd,
+	0xca, 0x48, 0xf3, 0xaf, 0x0a, 0x18, 0xeb, 0x94, 0x4a, 0x5f, 0xdf, 0x83, 0xbd, 0x38, 0x18, 0x33,
+	0x3a, 0x4e, 0x75, 0xbb, 0x13, 0x89, 0x42, 0x2b, 0x0e, 0x2e, 0xe8, 0x09, 0xe7, 0x9d, 0x4e, 0xd0,
+	0x43, 0xb8, 0x5d, 0x14, 0x5a, 0xa0, 0xd1, 0xce, 0xa5, 0xb8, 0x13, 0xcf, 0xc1, 0xf0, 0x70, 0xc4,
+	0xc6, 0x6e, 0x18, 0x92, 0x2b, 0x12, 0x46, 0xae, 0xed, 0x91, 0x85, 0xde, 0x34, 0x27, 0x87, 0x5c,
+	0xe2, 0xb4, 0x20, 0x90, 0xd9, 0xf8, 0x14, 0xee, 0x96, 0x5d, 0xe6, 0xf6, 0x6a, 0xc2, 0x9e, 0xbe,
+	0xf6, 0x36, 0xb7, 0x7d, 0x0a, 0xad, 0x20, 0x0f, 0x31, 0xd2, 0xeb, 0xdd, 0xea, 0x51, 0xeb, 0xd9,
+	0xa3, 0xde, 0xda, 0x57, 0xdd, 0xe3, 0x10, 0x90, 0xc9, 0x02, 0x12, 0xab, 0x78, 0xd7, 0xa4, 0xb0,
+	0xbf, 0x2a, 0xb0, 0xf1, 0xd9, 0x1f, 0x40, 0x03, 0x3b, 0xcc, 0xa5, 0xbe, 0x84, 0x5e, 0x52, 0xe8,
+	0x11, 0xdc, 0x5e, 0xa8, 0x1d, 0xfb, 0x78, 0x46, 0x24, 0x06, 0x7b, 0x0b, 0xf6, 0x4b, 0x3c, 0x23,
+	0xe6, 0xeb, 0x0a, 0xbc, 0x39, 0x22, 0xec, 0x02, 0xdb, 0x1e, 0xb1, 0xe8, 0x7c, 0xb7, 0x8c, 0x77,
+	0x40, 0x9d, 0x92, 0x64, 0xcc, 0x92, 0x80, 0x64, 0x29, 0x9f, 0x92, 0xe4, 0x22, 0x09, 0x48, 0x69,
+	0xa9, 0xa1, 0x07, 0xb0, 0x37, 0x77, 0xd9, 0xab, 0x15, 0x58, 0x55, 0xab, 0xcd, 0xb9, 0x39, 0x94,
+	0xef, 0xc3, 0x1b, 0x4b, 0x49, 0xa0, 0xbe, 0x97, 0xe8, 0x75, 0x21, 0xb8, 0x5f, 0x3c, 0xf8, 0xd2,
+	0xf7, 0x92, 0x25, 0x60, 0x1a, 0x2b, 0xc0, 0xbc, 0x05, 0x75, 0xc6, 0x63, 0xd2, 0x9b, 0xe2, 0x20,
+	0x25, 0x38, 0x37, 0x72, 0x68, 0x40, 0x74, 0x35, 0xe5, 0x0a, 0xc2, 0xfc, 0x49, 0x81, 0xfd, 0x0c,
+	0x80, 0xfc, 0x71, 0xee, 0x43, 0x75, 0x51, 0x97, 0xfc, 0x13, 0x21, 0xa8, 0x4d, 0x30, 0xc3, 0xb2,
+	0xf4, 0xc5, 0x37, 0xe7, 0xe5, 0xb1, 0x6a, 0x96, 0xf8, 0xe6, 0x46, 0x02, 0x9c, 0x90, 0x50, 0x04,
+	0xa8, 0x59, 0x29, 0x81, 0xee, 0x43, 0x3b, 0x0f, 0xdd, 0x26, 0xa1, 0x08, 0xaa, 0x66, 0xb5, 0x32,
+	0x4c, 0x6d, 0x12, 0x9a, 0x7f, 0x54, 0x00, 0x15, 0x72, 0xf1, 0x3f, 0x4c, 0x05, 0x7a, 0x17, 0x5a,
+	0x41, 0xe8, 0xce, 0x70, 0x98, 0x88, 0xae, 0xa8, 0x89, 0x33, 0x90, 0xac, 0x33, 0x92, 0x98, 0xbf,
+	0x2f, 0xbf, 0xd7, 0xff, 0x5c, 0x2f, 0xf9, 0x04, 0xaa, 0x21, 0x9d, 0x0b, 0x9c, 0xcb, 0x7b, 0xc8,
+	0x6a, 0xf4, 0x16, 0xbf, 0x63, 0x5e, 0x8a, 0x49, 0x23, 0xce, 0xce, 0x39, 0x98, 0xbb, 0xd5, 0x72,
+	0x31, 0x73, 0x95, 0xb2, 0xcc, 0x55, 0x0b, 0x99, 0x33, 0x47, 0x80, 0x16, 0x46, 0x76, 0x1b, 0x3c,
+	0x79, 0xb2, 0x2b, 0xc5, 0xba, 0xfb, 0xa5, 0x02, 0xf7, 0x46, 0x84, 0x7d, 0x11, 0x7b, 0xcc, 0x4d,
+	0x3d, 0xbe, 0x59, 0x1b, 0xba, 0xb1, 0xeb, 0x4b, 0xd5, 0x52, 0x2b, 0xad, 0x96, 0xfa, 0x96, 0x6a,
+	0x69, 0xec, 0x5a, 0x2d, 0xcd, 0x92, 0x6a, 0x39, 0x80, 0x86, 0x40, 0x20, 0xd2, 0x55, 0x31, 0x85,
+	0x25, 0x65, 0xfe, 0x5a, 0x81, 0xfb, 0x19, 0x20, 0x2f, 0x64, 0x24, 0x37, 0xc4, 0x64, 0x2d, 0xd2,
+	0xff, 0x6e, 0x34, 0xde, 0x06, 0x2d, 0x4b, 0x5b, 0x06, 0xc8, 0x82, 0x61, 0xba, 0x70, 0x90, 0x23,
+	0xb0, 0xfc, 0xe2, 0xf2, 0x50, 0x95, 0x62, 0xa8, 0xb2, 0x80, 0x6a, 0x1b, 0x87, 0xf0, 0xfa, 0x02,
+	0x0a, 0xa1, 0x93, 0x9b, 0xca, 0xe0, 0xcf, 0xad, 0x6d, 0x9a, 0xc2, 0xff, 0xc0, 0xe6, 0x9f, 0x0a,
+	0x68, 0xe2, 0x84, 0x59, 0x74, 0x8e, 0xee, 0x01, 0x38, 0xd4, 0xf3, 0x48, 0x3a, 0xd2, 0x53, 0x33,
+	0x05, 0x0e, 0xdf, 0x19, 0x45, 0xea, 0x98, 0xe8, 0x8e, 0x69, 0x8a, 0xb5, 0x94, 0xc3, 0x77, 0x46,
+	0x13, 0x6e, 0xe5, 0x79, 0x11, 0x12, 0x69, 0xba, 0xf3, 0x21, 0xc3, 0x65, 0x3a, 0xa0, 0xf2, 0x76,
+	0x2a, 0x8e, 0x65, 0xd2, 0x39, 0xcd, 0x8f, 0x74, 0x68, 0x06, 0x38, 0xf1, 0x28, 0x9e, 0x88, 0xa4,
+	0xb7, 0xad, 0x8c, 0x7c, 0xf6, 0x5b, 0x13, 0xea, 0xe7, 0x0c, 0x33, 0x82, 0xbe, 0x81, 0x46, 0xba,
+	0x31, 0xa3, 0x07, 0x25, 0x71, 0x2e, 0xed, 0xec, 0xc6, 0xc3, 0x2d, 0x52, 0x12, 0xdd, 0x99, 0x58,
+	0xc4, 0x0b, 0x0b, 0x2d, 0xfa, 0xa0, 0xfc, 0xe2, 0xf5, 0x65, 0xda, 0x78, 0xba, 0xa3, 0xb4, 0x34,
+	0x97, 0x88, 0x41, 0xbb, 0xb2, 0x97, 0xa2, 0x41, 0xb9, 0x92, 0xf5, 0x7b, 0xb1, 0x71, 0x7c, 0x83,
+	0x1b, 0xd2, 0x34, 0x81, 0x76, 0x71, 0xdf, 0x42, 0x4f, 0xca, 0x55, 0xac, 0x56, 0xbe, 0xb1, 0xeb,
+	0xd3, 0x1a, 0x28, 0x68, 0x02, 0xad, 0x82, 0x06, 0xf4, 0x78, 0xbb, 0x95, 0xcc, 0xc8, 0x93, 0x5d,
+	0x44, 0x65, 0x30, 0x53, 0x91, 0xb6, 0xc2, 0xc8, 0xd9, 0x94, 0xb6, 0xeb, 0x93, 0xc9, 0x78, 0xbc,
+	0x29, 0xa0, 0xa5, 0x6a, 0x1f, 0x28, 0xe8, 0xb5, 0x02, 0x87, 0x25, 0xe3, 0x02, 0x7d, 0x54, 0x6e,
+	0x76, 0xc3, 0x78, 0x29, 0x7d, 0x36, 0xeb, 0x3b, 0xce, 0x40, 0x41, 0x3f, 0x2b, 0xe2, 0x8f, 0xa6,
+	0xa4, 0x43, 0xa3, 0x8f, 0xb7, 0xb8, 0x51, 0xda, 0xd4, 0x8d, 0xc1, 0x36, 0x4f, 0x56, 0x1b, 0xd2,
+	0x40, 0x39, 0x79, 0xf1, 0xed, 0xf0, 0x3b, 0x97, 0xbd, 0x8a, 0xed, 0x9e, 0x43, 0x67, 0x7d, 0x71,
+	0xff, 0xa9, 0x4b, 0xe5, 0x47, 0xfa, 0xc7, 0x1d, 0xd8, 0xfd, 0xb5, 0x3f, 0xe0, 0xcf, 0x03, 0x3b,
+	0xfd, 0xb6, 0x1b, 0xe2, 0x1f, 0xfc, 0xc3, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xc2, 0x6b, 0x01,
+	0x3c, 0xa9, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1129,10 +1301,10 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// FluxDBClient is the client API for FluxDB service.
+// StateClient is the client API for State service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type FluxDBClient interface {
+type StateClient interface {
 	// Replaces /v0/state/abi
 	GetABI(ctx context.Context, in *GetABIRequest, opts ...grpc.CallOption) (*GetABIResponse, error)
 	// Replaces /v0/state/key_accounts
@@ -1140,56 +1312,58 @@ type FluxDBClient interface {
 	// Replaces /v0/state/permission_links
 	GetPermissionLinks(ctx context.Context, in *GetPermissionLinksRequest, opts ...grpc.CallOption) (*GetPermissionLinksResponse, error)
 	// Replaces /v0/state/table
-	GetTableRows(ctx context.Context, in *GetTableRowsRequest, opts ...grpc.CallOption) (FluxDB_GetTableRowsClient, error)
+	GetTableRows(ctx context.Context, in *GetTableRowsRequest, opts ...grpc.CallOption) (State_GetTableRowsClient, error)
 	// Replaces /v0/state/table/row
 	GetTableRow(ctx context.Context, in *GetTableRowRequest, opts ...grpc.CallOption) (*GetTableRowResponse, error)
 	// Replaces /v0/state/table_scopes
-	GetTableScopes(ctx context.Context, in *GetTableScopesRequest, opts ...grpc.CallOption) (FluxDB_GetTableScopesClient, error)
+	GetTableScopes(ctx context.Context, in *GetTableScopesRequest, opts ...grpc.CallOption) (State_GetTableScopesClient, error)
 	// Replaces /v0/state/tables/scopes
-	GetMultiScopesTableRows(ctx context.Context, in *GetMultiScopesTableRowsRequest, opts ...grpc.CallOption) (FluxDB_GetMultiScopesTableRowsClient, error)
+	GetMultiScopesTableRows(ctx context.Context, in *GetMultiScopesTableRowsRequest, opts ...grpc.CallOption) (State_GetMultiScopesTableRowsClient, error)
+	// Replaces /v0/state/tables/accounts
+	GetMultiContractsTableRows(ctx context.Context, in *GetMultiContractsTableRowsRequest, opts ...grpc.CallOption) (State_GetMultiContractsTableRowsClient, error)
 }
 
-type fluxDBClient struct {
+type stateClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewFluxDBClient(cc *grpc.ClientConn) FluxDBClient {
-	return &fluxDBClient{cc}
+func NewStateClient(cc *grpc.ClientConn) StateClient {
+	return &stateClient{cc}
 }
 
-func (c *fluxDBClient) GetABI(ctx context.Context, in *GetABIRequest, opts ...grpc.CallOption) (*GetABIResponse, error) {
+func (c *stateClient) GetABI(ctx context.Context, in *GetABIRequest, opts ...grpc.CallOption) (*GetABIResponse, error) {
 	out := new(GetABIResponse)
-	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.FluxDB/GetABI", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.State/GetABI", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fluxDBClient) GetKeyAccounts(ctx context.Context, in *GetKeyAccountsRequest, opts ...grpc.CallOption) (*GetKeyAccountsResponse, error) {
+func (c *stateClient) GetKeyAccounts(ctx context.Context, in *GetKeyAccountsRequest, opts ...grpc.CallOption) (*GetKeyAccountsResponse, error) {
 	out := new(GetKeyAccountsResponse)
-	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.FluxDB/GetKeyAccounts", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.State/GetKeyAccounts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fluxDBClient) GetPermissionLinks(ctx context.Context, in *GetPermissionLinksRequest, opts ...grpc.CallOption) (*GetPermissionLinksResponse, error) {
+func (c *stateClient) GetPermissionLinks(ctx context.Context, in *GetPermissionLinksRequest, opts ...grpc.CallOption) (*GetPermissionLinksResponse, error) {
 	out := new(GetPermissionLinksResponse)
-	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.FluxDB/GetPermissionLinks", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.State/GetPermissionLinks", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fluxDBClient) GetTableRows(ctx context.Context, in *GetTableRowsRequest, opts ...grpc.CallOption) (FluxDB_GetTableRowsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_FluxDB_serviceDesc.Streams[0], "/dfuse.eosio.fluxdb.v1.FluxDB/GetTableRows", opts...)
+func (c *stateClient) GetTableRows(ctx context.Context, in *GetTableRowsRequest, opts ...grpc.CallOption) (State_GetTableRowsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_State_serviceDesc.Streams[0], "/dfuse.eosio.fluxdb.v1.State/GetTableRows", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fluxDBGetTableRowsClient{stream}
+	x := &stateGetTableRowsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -1199,16 +1373,16 @@ func (c *fluxDBClient) GetTableRows(ctx context.Context, in *GetTableRowsRequest
 	return x, nil
 }
 
-type FluxDB_GetTableRowsClient interface {
+type State_GetTableRowsClient interface {
 	Recv() (*TableRowResponse, error)
 	grpc.ClientStream
 }
 
-type fluxDBGetTableRowsClient struct {
+type stateGetTableRowsClient struct {
 	grpc.ClientStream
 }
 
-func (x *fluxDBGetTableRowsClient) Recv() (*TableRowResponse, error) {
+func (x *stateGetTableRowsClient) Recv() (*TableRowResponse, error) {
 	m := new(TableRowResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1216,21 +1390,21 @@ func (x *fluxDBGetTableRowsClient) Recv() (*TableRowResponse, error) {
 	return m, nil
 }
 
-func (c *fluxDBClient) GetTableRow(ctx context.Context, in *GetTableRowRequest, opts ...grpc.CallOption) (*GetTableRowResponse, error) {
+func (c *stateClient) GetTableRow(ctx context.Context, in *GetTableRowRequest, opts ...grpc.CallOption) (*GetTableRowResponse, error) {
 	out := new(GetTableRowResponse)
-	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.FluxDB/GetTableRow", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/dfuse.eosio.fluxdb.v1.State/GetTableRow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *fluxDBClient) GetTableScopes(ctx context.Context, in *GetTableScopesRequest, opts ...grpc.CallOption) (FluxDB_GetTableScopesClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_FluxDB_serviceDesc.Streams[1], "/dfuse.eosio.fluxdb.v1.FluxDB/GetTableScopes", opts...)
+func (c *stateClient) GetTableScopes(ctx context.Context, in *GetTableScopesRequest, opts ...grpc.CallOption) (State_GetTableScopesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_State_serviceDesc.Streams[1], "/dfuse.eosio.fluxdb.v1.State/GetTableScopes", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fluxDBGetTableScopesClient{stream}
+	x := &stateGetTableScopesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -1240,16 +1414,16 @@ func (c *fluxDBClient) GetTableScopes(ctx context.Context, in *GetTableScopesReq
 	return x, nil
 }
 
-type FluxDB_GetTableScopesClient interface {
+type State_GetTableScopesClient interface {
 	Recv() (*TableScopeResponse, error)
 	grpc.ClientStream
 }
 
-type fluxDBGetTableScopesClient struct {
+type stateGetTableScopesClient struct {
 	grpc.ClientStream
 }
 
-func (x *fluxDBGetTableScopesClient) Recv() (*TableScopeResponse, error) {
+func (x *stateGetTableScopesClient) Recv() (*TableScopeResponse, error) {
 	m := new(TableScopeResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1257,12 +1431,12 @@ func (x *fluxDBGetTableScopesClient) Recv() (*TableScopeResponse, error) {
 	return m, nil
 }
 
-func (c *fluxDBClient) GetMultiScopesTableRows(ctx context.Context, in *GetMultiScopesTableRowsRequest, opts ...grpc.CallOption) (FluxDB_GetMultiScopesTableRowsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_FluxDB_serviceDesc.Streams[2], "/dfuse.eosio.fluxdb.v1.FluxDB/GetMultiScopesTableRows", opts...)
+func (c *stateClient) GetMultiScopesTableRows(ctx context.Context, in *GetMultiScopesTableRowsRequest, opts ...grpc.CallOption) (State_GetMultiScopesTableRowsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_State_serviceDesc.Streams[2], "/dfuse.eosio.fluxdb.v1.State/GetMultiScopesTableRows", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &fluxDBGetMultiScopesTableRowsClient{stream}
+	x := &stateGetMultiScopesTableRowsClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -1272,16 +1446,16 @@ func (c *fluxDBClient) GetMultiScopesTableRows(ctx context.Context, in *GetMulti
 	return x, nil
 }
 
-type FluxDB_GetMultiScopesTableRowsClient interface {
+type State_GetMultiScopesTableRowsClient interface {
 	Recv() (*TableRowsScopeResponse, error)
 	grpc.ClientStream
 }
 
-type fluxDBGetMultiScopesTableRowsClient struct {
+type stateGetMultiScopesTableRowsClient struct {
 	grpc.ClientStream
 }
 
-func (x *fluxDBGetMultiScopesTableRowsClient) Recv() (*TableRowsScopeResponse, error) {
+func (x *stateGetMultiScopesTableRowsClient) Recv() (*TableRowsScopeResponse, error) {
 	m := new(TableRowsScopeResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -1289,8 +1463,40 @@ func (x *fluxDBGetMultiScopesTableRowsClient) Recv() (*TableRowsScopeResponse, e
 	return m, nil
 }
 
-// FluxDBServer is the server API for FluxDB service.
-type FluxDBServer interface {
+func (c *stateClient) GetMultiContractsTableRows(ctx context.Context, in *GetMultiContractsTableRowsRequest, opts ...grpc.CallOption) (State_GetMultiContractsTableRowsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_State_serviceDesc.Streams[3], "/dfuse.eosio.fluxdb.v1.State/GetMultiContractsTableRows", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &stateGetMultiContractsTableRowsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type State_GetMultiContractsTableRowsClient interface {
+	Recv() (*TableRowsContractResponse, error)
+	grpc.ClientStream
+}
+
+type stateGetMultiContractsTableRowsClient struct {
+	grpc.ClientStream
+}
+
+func (x *stateGetMultiContractsTableRowsClient) Recv() (*TableRowsContractResponse, error) {
+	m := new(TableRowsContractResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// StateServer is the server API for State service.
+type StateServer interface {
 	// Replaces /v0/state/abi
 	GetABI(context.Context, *GetABIRequest) (*GetABIResponse, error)
 	// Replaces /v0/state/key_accounts
@@ -1298,215 +1504,246 @@ type FluxDBServer interface {
 	// Replaces /v0/state/permission_links
 	GetPermissionLinks(context.Context, *GetPermissionLinksRequest) (*GetPermissionLinksResponse, error)
 	// Replaces /v0/state/table
-	GetTableRows(*GetTableRowsRequest, FluxDB_GetTableRowsServer) error
+	GetTableRows(*GetTableRowsRequest, State_GetTableRowsServer) error
 	// Replaces /v0/state/table/row
 	GetTableRow(context.Context, *GetTableRowRequest) (*GetTableRowResponse, error)
 	// Replaces /v0/state/table_scopes
-	GetTableScopes(*GetTableScopesRequest, FluxDB_GetTableScopesServer) error
+	GetTableScopes(*GetTableScopesRequest, State_GetTableScopesServer) error
 	// Replaces /v0/state/tables/scopes
-	GetMultiScopesTableRows(*GetMultiScopesTableRowsRequest, FluxDB_GetMultiScopesTableRowsServer) error
+	GetMultiScopesTableRows(*GetMultiScopesTableRowsRequest, State_GetMultiScopesTableRowsServer) error
+	// Replaces /v0/state/tables/accounts
+	GetMultiContractsTableRows(*GetMultiContractsTableRowsRequest, State_GetMultiContractsTableRowsServer) error
 }
 
-// UnimplementedFluxDBServer can be embedded to have forward compatible implementations.
-type UnimplementedFluxDBServer struct {
+// UnimplementedStateServer can be embedded to have forward compatible implementations.
+type UnimplementedStateServer struct {
 }
 
-func (*UnimplementedFluxDBServer) GetABI(ctx context.Context, req *GetABIRequest) (*GetABIResponse, error) {
+func (*UnimplementedStateServer) GetABI(ctx context.Context, req *GetABIRequest) (*GetABIResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetABI not implemented")
 }
-func (*UnimplementedFluxDBServer) GetKeyAccounts(ctx context.Context, req *GetKeyAccountsRequest) (*GetKeyAccountsResponse, error) {
+func (*UnimplementedStateServer) GetKeyAccounts(ctx context.Context, req *GetKeyAccountsRequest) (*GetKeyAccountsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeyAccounts not implemented")
 }
-func (*UnimplementedFluxDBServer) GetPermissionLinks(ctx context.Context, req *GetPermissionLinksRequest) (*GetPermissionLinksResponse, error) {
+func (*UnimplementedStateServer) GetPermissionLinks(ctx context.Context, req *GetPermissionLinksRequest) (*GetPermissionLinksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPermissionLinks not implemented")
 }
-func (*UnimplementedFluxDBServer) GetTableRows(req *GetTableRowsRequest, srv FluxDB_GetTableRowsServer) error {
+func (*UnimplementedStateServer) GetTableRows(req *GetTableRowsRequest, srv State_GetTableRowsServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetTableRows not implemented")
 }
-func (*UnimplementedFluxDBServer) GetTableRow(ctx context.Context, req *GetTableRowRequest) (*GetTableRowResponse, error) {
+func (*UnimplementedStateServer) GetTableRow(ctx context.Context, req *GetTableRowRequest) (*GetTableRowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTableRow not implemented")
 }
-func (*UnimplementedFluxDBServer) GetTableScopes(req *GetTableScopesRequest, srv FluxDB_GetTableScopesServer) error {
+func (*UnimplementedStateServer) GetTableScopes(req *GetTableScopesRequest, srv State_GetTableScopesServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetTableScopes not implemented")
 }
-func (*UnimplementedFluxDBServer) GetMultiScopesTableRows(req *GetMultiScopesTableRowsRequest, srv FluxDB_GetMultiScopesTableRowsServer) error {
+func (*UnimplementedStateServer) GetMultiScopesTableRows(req *GetMultiScopesTableRowsRequest, srv State_GetMultiScopesTableRowsServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetMultiScopesTableRows not implemented")
 }
-
-func RegisterFluxDBServer(s *grpc.Server, srv FluxDBServer) {
-	s.RegisterService(&_FluxDB_serviceDesc, srv)
+func (*UnimplementedStateServer) GetMultiContractsTableRows(req *GetMultiContractsTableRowsRequest, srv State_GetMultiContractsTableRowsServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetMultiContractsTableRows not implemented")
 }
 
-func _FluxDB_GetABI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func RegisterStateServer(s *grpc.Server, srv StateServer) {
+	s.RegisterService(&_State_serviceDesc, srv)
+}
+
+func _State_GetABI_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetABIRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FluxDBServer).GetABI(ctx, in)
+		return srv.(StateServer).GetABI(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dfuse.eosio.fluxdb.v1.FluxDB/GetABI",
+		FullMethod: "/dfuse.eosio.fluxdb.v1.State/GetABI",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FluxDBServer).GetABI(ctx, req.(*GetABIRequest))
+		return srv.(StateServer).GetABI(ctx, req.(*GetABIRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FluxDB_GetKeyAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _State_GetKeyAccounts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetKeyAccountsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FluxDBServer).GetKeyAccounts(ctx, in)
+		return srv.(StateServer).GetKeyAccounts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dfuse.eosio.fluxdb.v1.FluxDB/GetKeyAccounts",
+		FullMethod: "/dfuse.eosio.fluxdb.v1.State/GetKeyAccounts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FluxDBServer).GetKeyAccounts(ctx, req.(*GetKeyAccountsRequest))
+		return srv.(StateServer).GetKeyAccounts(ctx, req.(*GetKeyAccountsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FluxDB_GetPermissionLinks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _State_GetPermissionLinks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetPermissionLinksRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FluxDBServer).GetPermissionLinks(ctx, in)
+		return srv.(StateServer).GetPermissionLinks(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dfuse.eosio.fluxdb.v1.FluxDB/GetPermissionLinks",
+		FullMethod: "/dfuse.eosio.fluxdb.v1.State/GetPermissionLinks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FluxDBServer).GetPermissionLinks(ctx, req.(*GetPermissionLinksRequest))
+		return srv.(StateServer).GetPermissionLinks(ctx, req.(*GetPermissionLinksRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FluxDB_GetTableRows_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _State_GetTableRows_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetTableRowsRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(FluxDBServer).GetTableRows(m, &fluxDBGetTableRowsServer{stream})
+	return srv.(StateServer).GetTableRows(m, &stateGetTableRowsServer{stream})
 }
 
-type FluxDB_GetTableRowsServer interface {
+type State_GetTableRowsServer interface {
 	Send(*TableRowResponse) error
 	grpc.ServerStream
 }
 
-type fluxDBGetTableRowsServer struct {
+type stateGetTableRowsServer struct {
 	grpc.ServerStream
 }
 
-func (x *fluxDBGetTableRowsServer) Send(m *TableRowResponse) error {
+func (x *stateGetTableRowsServer) Send(m *TableRowResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _FluxDB_GetTableRow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _State_GetTableRow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTableRowRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FluxDBServer).GetTableRow(ctx, in)
+		return srv.(StateServer).GetTableRow(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dfuse.eosio.fluxdb.v1.FluxDB/GetTableRow",
+		FullMethod: "/dfuse.eosio.fluxdb.v1.State/GetTableRow",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FluxDBServer).GetTableRow(ctx, req.(*GetTableRowRequest))
+		return srv.(StateServer).GetTableRow(ctx, req.(*GetTableRowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FluxDB_GetTableScopes_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _State_GetTableScopes_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetTableScopesRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(FluxDBServer).GetTableScopes(m, &fluxDBGetTableScopesServer{stream})
+	return srv.(StateServer).GetTableScopes(m, &stateGetTableScopesServer{stream})
 }
 
-type FluxDB_GetTableScopesServer interface {
+type State_GetTableScopesServer interface {
 	Send(*TableScopeResponse) error
 	grpc.ServerStream
 }
 
-type fluxDBGetTableScopesServer struct {
+type stateGetTableScopesServer struct {
 	grpc.ServerStream
 }
 
-func (x *fluxDBGetTableScopesServer) Send(m *TableScopeResponse) error {
+func (x *stateGetTableScopesServer) Send(m *TableScopeResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _FluxDB_GetMultiScopesTableRows_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _State_GetMultiScopesTableRows_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(GetMultiScopesTableRowsRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(FluxDBServer).GetMultiScopesTableRows(m, &fluxDBGetMultiScopesTableRowsServer{stream})
+	return srv.(StateServer).GetMultiScopesTableRows(m, &stateGetMultiScopesTableRowsServer{stream})
 }
 
-type FluxDB_GetMultiScopesTableRowsServer interface {
+type State_GetMultiScopesTableRowsServer interface {
 	Send(*TableRowsScopeResponse) error
 	grpc.ServerStream
 }
 
-type fluxDBGetMultiScopesTableRowsServer struct {
+type stateGetMultiScopesTableRowsServer struct {
 	grpc.ServerStream
 }
 
-func (x *fluxDBGetMultiScopesTableRowsServer) Send(m *TableRowsScopeResponse) error {
+func (x *stateGetMultiScopesTableRowsServer) Send(m *TableRowsScopeResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-var _FluxDB_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "dfuse.eosio.fluxdb.v1.FluxDB",
-	HandlerType: (*FluxDBServer)(nil),
+func _State_GetMultiContractsTableRows_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetMultiContractsTableRowsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(StateServer).GetMultiContractsTableRows(m, &stateGetMultiContractsTableRowsServer{stream})
+}
+
+type State_GetMultiContractsTableRowsServer interface {
+	Send(*TableRowsContractResponse) error
+	grpc.ServerStream
+}
+
+type stateGetMultiContractsTableRowsServer struct {
+	grpc.ServerStream
+}
+
+func (x *stateGetMultiContractsTableRowsServer) Send(m *TableRowsContractResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _State_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "dfuse.eosio.fluxdb.v1.State",
+	HandlerType: (*StateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "GetABI",
-			Handler:    _FluxDB_GetABI_Handler,
+			Handler:    _State_GetABI_Handler,
 		},
 		{
 			MethodName: "GetKeyAccounts",
-			Handler:    _FluxDB_GetKeyAccounts_Handler,
+			Handler:    _State_GetKeyAccounts_Handler,
 		},
 		{
 			MethodName: "GetPermissionLinks",
-			Handler:    _FluxDB_GetPermissionLinks_Handler,
+			Handler:    _State_GetPermissionLinks_Handler,
 		},
 		{
 			MethodName: "GetTableRow",
-			Handler:    _FluxDB_GetTableRow_Handler,
+			Handler:    _State_GetTableRow_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetTableRows",
-			Handler:       _FluxDB_GetTableRows_Handler,
+			Handler:       _State_GetTableRows_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "GetTableScopes",
-			Handler:       _FluxDB_GetTableScopes_Handler,
+			Handler:       _State_GetTableScopes_Handler,
 			ServerStreams: true,
 		},
 		{
 			StreamName:    "GetMultiScopesTableRows",
-			Handler:       _FluxDB_GetMultiScopesTableRows_Handler,
+			Handler:       _State_GetMultiScopesTableRows_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetMultiContractsTableRows",
+			Handler:       _State_GetMultiContractsTableRows_Handler,
 			ServerStreams: true,
 		},
 	},
