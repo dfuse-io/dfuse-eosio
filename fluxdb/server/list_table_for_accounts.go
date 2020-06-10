@@ -15,8 +15,14 @@
 package server
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
+
+	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dhammer"
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/logging"
@@ -37,77 +43,79 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 	request := extractListTablesRowsForAccountsRequest(r)
 	zlog.Debug("extracted request", zap.Reflect("request", request))
 
-	// actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
-	// if err != nil {
-	// 	writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
-	// 	return
-	// }
+	actualBlockNum, lastWrittenBlockID, upToBlockID, speculativeWrites, err := srv.prepareRead(ctx, request.BlockNum, false)
+	if err != nil {
+		writeError(ctx, w, fmt.Errorf("prepare read failed: %w", err))
+		return
+	}
 
-	// accountCount := len(request.Accounts)
-	// tableResponses := make(chan *getTableResponse, accountCount)
-	// keyConverter := getKeyConverterForType(request.KeyType)
-	// group := llerrgroup.New(parallelReadRequestCount)
+	// Sort by contract so at least, a constant order is kept across calls
+	sort.Slice(request.Accounts, func(leftIndex, rightIndex int) bool {
+		return request.Accounts[leftIndex] < request.Accounts[rightIndex]
+	})
 
-	// zlog.Debug("starting read table operations group", zap.Int("account_count", accountCount))
-	// for _, account := range request.Accounts {
-	// 	if group.Stop() {
-	// 		zlog.Debug("read table operations group completed")
-	// 		break
-	// 	}
+	accounts := make([]interface{}, len(request.Accounts))
+	for i, s := range request.Accounts {
+		accounts[i] = string(s)
+	}
 
-	// 	account := account
-	// 	group.Go(func() error {
-	// 		response, err := srv.readTable(
-	// 			ctx,
-	// 			actualBlockNum,
-	// 			account,
-	// 			request.Table,
-	// 			request.Scope,
-	// 			request.readRequestCommon,
-	// 			keyConverter,
-	// 			speculativeWrites,
-	// 		)
+	keyConverter := getKeyConverterForType(request.KeyType)
 
-	// 		if err != nil {
-	// 			return err
-	// 		}
+	nailer := dhammer.NewNailer(64, func(ctx context.Context, i interface{}) (interface{}, error) {
+		account := i.(string)
 
-	// 		zlog.Debug("adding table read rows to response channel", zap.Int("row_count", len(response.Rows)))
-	// 		tableResponses <- &getTableResponse{
-	// 			Account:           account,
-	// 			Scope:             request.Scope,
-	// 			readTableResponse: response,
-	// 		}
+		tablet := fluxdb.NewContractStateTablet(account, request.Scope, request.Table)
+		rows, serializationInfo, err := srv.readContractStateTable(
+			ctx,
+			tablet,
+			actualBlockNum,
+			request.ToJSON,
+			speculativeWrites,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read contract state tablet %q: %w", tablet, err)
+		}
 
-	// 		return nil
-	// 	})
-	// }
+		resp := &getTableResponse{
+			Account: account,
+			Scope:   request.Scope,
+			readTableResponse: &readTableResponse{
+				ABI:  serializationInfo.abi,
+				Rows: make([]*tableRow, len(rows)),
+			},
+		}
 
-	// zlog.Info("waiting for all read requests to finish")
-	// if err := group.Wait(); err != nil {
-	// 	writeError(ctx, w, fmt.Errorf("waiting for all read request to complete: %w", err))
-	// 	return
-	// }
+		for i, row := range rows {
+			response, err := toTableRow(row.(*fluxdb.ContractStateRow), keyConverter, serializationInfo, request.WithBlockNum)
+			if err != nil {
+				return nil, fmt.Errorf("creating table row response failed: %w", err)
+			}
 
-	// zlog.Debug("closing responses channel", zap.Int("response_count", len(tableResponses)))
-	// close(tableResponses)
+			resp.Rows[i] = response
+		}
 
-	// response := &getMultiTableRowsResponse{
-	// 	commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
-	// }
+		return resp, nil
+	})
 
-	// zlog.Info("assembling table responses")
-	// for tableResponse := range tableResponses {
-	// 	response.Tables = append(response.Tables, tableResponse)
-	// }
+	nailer.PushAll(ctx, accounts)
 
-	// // Sort by code so at least, a constant order is kept across calls
-	// sort.Slice(response.Tables, func(leftIndex, rightIndex int) bool {
-	// 	return response.Tables[leftIndex].Account < response.Tables[rightIndex].Account
-	// })
+	response := &getMultiTableRowsResponse{
+		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+	}
 
-	// zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
-	// streamResponse(ctx, w, response)
+	for {
+		select {
+		case <-ctx.Done():
+			writeError(ctx, w, fmt.Errorf("request terminated prior to completed: %w", err))
+			return
+		case next, ok := <-nailer.Out:
+			if !ok {
+				zlog.Debug("streaming response", zap.Int("table_count", len(response.Tables)), zap.Reflect("common_response", response.commonStateResponse))
+				streamResponse(ctx, w, response)
+			}
+			response.Tables = append(response.Tables, next.(*getTableResponse))
+		}
+	}
 }
 
 type listTablesRowsForAccountsRequest struct {

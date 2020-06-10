@@ -48,10 +48,11 @@ func (srv *EOSServer) listLinkedPermissionsHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	tablet := fluxdb.NewAuthLinkTablet(string(request.Account))
 	tabletRows, err := srv.db.ReadTabletAt(
 		ctx,
 		actualBlockNum,
-		fluxdb.NewAuthLinkTablet(string(request.Account)),
+		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
