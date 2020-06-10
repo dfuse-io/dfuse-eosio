@@ -70,8 +70,13 @@ func (srv *EOSServer) getTableRowHandler(w http.ResponseWriter, r *http.Request)
 		writeError(ctx, w, fmt.Errorf("creating table row failed: %w", err))
 		return
 	}
+	var abi *eos.ABI
+	if serializationInfo != nil {
+		abi = serializationInfo.abi
+	}
 	response := &getTableRowResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
+		ABI:                 abi,
 		Row:                 row,
 	}
 

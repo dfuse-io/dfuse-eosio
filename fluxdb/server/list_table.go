@@ -20,6 +20,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/eoscanada/eos-go"
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	"github.com/dfuse-io/logging"
@@ -60,10 +62,14 @@ func (srv *EOSServer) listTableRowsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	var abi *eos.ABI
+	if serializationInfo != nil {
+		abi = serializationInfo.abi
+	}
 	response := &getTableRowsResponse{
 		commonStateResponse: newCommonGetResponse(upToBlockID, lastWrittenBlockID),
 		readTableResponse: &readTableResponse{
-			ABI:  serializationInfo.abi,
+			ABI:  abi,
 			Rows: []*tableRow{},
 		},
 	}
