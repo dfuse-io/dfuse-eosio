@@ -23,6 +23,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
 )
 
 func (fdb *FluxDB) WriteBatch(ctx context.Context, w []*WriteRequest) error {
@@ -139,5 +141,22 @@ func (fdb *FluxDB) writeBlock(ctx context.Context, batch store.Batch, w *WriteRe
 	}
 
 	batch.SetLast(fdb.lastBlockKey(), []byte(hex.EncodeToString(w.BlockID)))
+	return nil
+}
+
+func (fdb *FluxDB) isNextBlock(ctx context.Context, writeBlockNum uint32) error {
+	zlogger := logging.Logger(ctx, zlog)
+	zlogger.Debug("checking if is next block", zap.Uint32("block_num", writeBlockNum))
+
+	lastBlock, err := fdb.FetchLastWrittenBlock(ctx)
+	if err != nil {
+		return err
+	}
+
+	lastBlockNum := uint32(lastBlock.Num())
+	if lastBlockNum != writeBlockNum-1 && lastBlockNum != 0 && lastBlockNum != 1 {
+		return fmt.Errorf("block %d does not follow last block %d in db", writeBlockNum, lastBlockNum)
+	}
+
 	return nil
 }

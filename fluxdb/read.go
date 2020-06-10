@@ -26,31 +26,8 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
-	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
-
-func (fdb *FluxDB) HasSeenPublicKeyOnce(ctx context.Context, publicKey string) (exists bool, err error) {
-	return fdb.hasRowKeyPrefix(ctx, fmt.Sprintf("ka2:%s", publicKey))
-}
-
-func (fdb *FluxDB) HasSeenTableOnce(
-	ctx context.Context,
-	account eos.AccountName,
-	table eos.TableName,
-) (exists bool, err error) {
-	return fdb.hasRowKeyPrefix(ctx, fmt.Sprintf("ts:%016x:%016x", N(string(account)), N(string(table))))
-}
-
-func (fdb *FluxDB) hasRowKeyPrefix(ctx context.Context, keyPrefix string) (exists bool, err error) {
-	ctx, span := dtracing.StartSpan(ctx, "has row key prefix", "key_prefix", keyPrefix)
-	defer span.End()
-
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("has row key prefix", zap.String("key_prefix", keyPrefix))
-
-	return fdb.store.HasTabletRow(ctx, keyPrefix)
-}
 
 func (fdb *FluxDB) ReadTabletAt(
 	ctx context.Context,
@@ -371,6 +348,13 @@ func (fdb *FluxDB) ReadSigletEntryAt(
 	return entry, nil
 }
 
+func (fdb *FluxDB) HasSeenAnyRowForTablet(ctx context.Context, tablet Tablet) (exists bool, err error) {
+	ctx, span := dtracing.StartSpan(ctx, "has seen tablet row", "tablet", tablet.String())
+	defer span.End()
+
+	return fdb.store.HasTabletRow(ctx, tablet.Key())
+}
+
 func (fdb *FluxDB) FetchLastWrittenBlock(ctx context.Context) (out bstream.BlockRef, err error) {
 	zlogger := logging.Logger(ctx, zlog)
 
@@ -408,22 +392,6 @@ func (fdb *FluxDB) lastBlockKey() string {
 	if fdb.IsSharding() {
 		return fmt.Sprintf("shard-%03d", fdb.shardIndex)
 	}
+
 	return lastBlockRowKey
-}
-
-func (fdb *FluxDB) isNextBlock(ctx context.Context, writeBlockNum uint32) error {
-	zlog := logging.Logger(ctx, zlog)
-	zlog.Debug("checking if is next block", zap.Uint32("block_num", writeBlockNum))
-
-	lastBlock, err := fdb.FetchLastWrittenBlock(ctx)
-	if err != nil {
-		return err
-	}
-
-	lastBlockNum := uint32(lastBlock.Num())
-	if lastBlockNum != writeBlockNum-1 && lastBlockNum != 0 && lastBlockNum != 1 {
-		return fmt.Errorf("block %d does not follow last block %d in db", writeBlockNum, lastBlockNum)
-	}
-
-	return nil
 }

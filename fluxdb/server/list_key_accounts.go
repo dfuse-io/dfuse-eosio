@@ -48,10 +48,11 @@ func (srv *EOSServer) listKeyAccountsHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	tablet := fluxdb.NewKeyAccountTablet(request.PublicKey)
 	tabletRows, err := srv.db.ReadTabletAt(
 		ctx,
 		actualBlockNum,
-		fluxdb.NewKeyAccountTablet(request.PublicKey),
+		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
@@ -63,7 +64,7 @@ func (srv *EOSServer) listKeyAccountsHandler(w http.ResponseWriter, r *http.Requ
 	accountNames := sortedUniqueKeyAccounts(tabletRows)
 	if len(accountNames) == 0 {
 		zlogger.Debug("no account found for request, checking if we ever seen this public key")
-		seen, err := srv.db.HasSeenPublicKeyOnce(ctx, request.PublicKey)
+		seen, err := srv.db.HasSeenAnyRowForTablet(ctx, tablet)
 		if err != nil {
 			writeError(ctx, w, fmt.Errorf("unable to know if public key was seen once in db: %w", err))
 			return

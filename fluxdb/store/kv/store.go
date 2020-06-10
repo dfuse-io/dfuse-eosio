@@ -108,14 +108,14 @@ func (s *KVStore) FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart 
 	return rowKey, rawIndex, nil
 }
 
-func (s *KVStore) HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error) {
-	err = s.scanPrefix(ctx, TblPrefixRows, keyPrefix, 1, func(_ string, _ []byte) error {
+func (s *KVStore) HasTabletRow(ctx context.Context, tabletKey string) (exists bool, err error) {
+	err = s.scanPrefix(ctx, TblPrefixRows, tabletKey, 1, func(_ string, _ []byte) error {
 		exists = true
 		return store.BreakScan
 	})
 
 	if err != nil && err != store.BreakScan {
-		return false, fmt.Errorf("unable to determine if table %q has key prefix %q: %w", TblPrefixName[TblPrefixRows], keyPrefix, err)
+		return false, fmt.Errorf("scan prefix %q for table %q: %w", tabletKey, TblPrefixName[TblPrefixRows], err)
 	}
 
 	return exists, nil

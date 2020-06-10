@@ -26,10 +26,11 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 		return nil, derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
+	tablet := fluxdb.NewKeyAccountTablet(request.PublicKey)
 	tabletRows, err := s.db.ReadTabletAt(
 		ctx,
 		actualBlockNum,
-		fluxdb.NewKeyAccountTablet(request.PublicKey),
+		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
@@ -39,7 +40,7 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbfluxdb.GetKeyAcc
 	zlogger.Debug("post-processing key accounts", zap.Int("key_account_count", len(tabletRows)))
 	accountNames := sortedUniqueKeyAccounts(tabletRows)
 	if len(accountNames) == 0 {
-		seen, err := s.db.HasSeenPublicKeyOnce(ctx, request.PublicKey)
+		seen, err := s.db.HasSeenAnyRowForTablet(ctx, tablet)
 		if err != nil {
 			return nil, derr.Statusf(codes.Internal, "unable to know if public key was seen once in db: %s", err)
 		}
