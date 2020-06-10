@@ -21,9 +21,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
@@ -94,6 +94,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 
 func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) error {
 	for _, trxTrace := range blk.TransactionTraces {
+		codec.DeduplicateTransactionTrace(trxTrace)
 
 		// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
 		for _, dtrxOp := range trxTrace.DtrxOps {
