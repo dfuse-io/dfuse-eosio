@@ -4,12 +4,6 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
-func DeduplicateBlock(blk *pbcodec.Block) {
-	for _, trx := range blk.TransactionTraces {
-		DeduplicateTransactionTrace(trx)
-	}
-}
-
 func DeduplicateTransactionTrace(trx *pbcodec.TransactionTrace) {
 	digs := make(map[string]*pbcodec.Action)
 
@@ -38,12 +32,6 @@ func DeduplicateTransactionTrace(trx *pbcodec.TransactionTrace) {
 		act.ProducerBlockId = ""
 		act.BlockTime = nil
 		act.BlockNum = 0
-	}
-}
-
-func ReduplicateBlock(blk *pbcodec.Block) {
-	for _, trx := range blk.TransactionTraces {
-		ReduplicateTransactionTrace(trx)
 	}
 }
 
