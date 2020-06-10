@@ -63,7 +63,7 @@ func TestReadGetABI(t *testing.T) {
 		abis          []uint32
 		fetchForBlock uint32
 		expectedABI   string
-		expectedError error
+		expectedNil   bool
 	}{
 		{
 			name: "fetch after last",
@@ -111,7 +111,7 @@ func TestReadGetABI(t *testing.T) {
 				3, 5,
 			},
 			fetchForBlock: 2,
-			expectedError: DataABINotFoundError(ctx, "eosio", 2),
+			expectedNil:   true,
 		},
 	}
 
@@ -126,8 +126,8 @@ func TestReadGetABI(t *testing.T) {
 
 			siglet := NewContractABISiglet(acct)
 			abiEntry, err := db.ReadSigletEntryAt(ctx, siglet, test.fetchForBlock, nil)
-			if test.expectedError != nil {
-				assertError(t, test.expectedError, err)
+			if test.expectedNil {
+				require.Nil(t, abiEntry, "abi entry is not  nil")
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, abiEntry, "abi entry is nil")

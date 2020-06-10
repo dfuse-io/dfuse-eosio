@@ -69,9 +69,9 @@ func (s *KVStore) NewBatch(logger *zap.Logger) store.Batch {
 }
 
 func (s *KVStore) FetchSigletEntry(ctx context.Context, keyStart, keyEnd string) (key string, value []byte, err error) {
-	err = s.scanRange(ctx, TblPrefixRows, keyStart, keyEnd, 1, func(rowKey string, rowValye []byte) error {
+	err = s.scanRange(ctx, TblPrefixRows, keyStart, keyEnd, 1, func(rowKey string, rowValue []byte) error {
 		key = rowKey
-		value = rowValye
+		value = rowValue
 
 		// We only ever check a single row
 		return store.BreakScan

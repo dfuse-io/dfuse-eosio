@@ -17,6 +17,8 @@ package fluxdb
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store/kv"
@@ -64,12 +66,15 @@ func Test_chunkKeyRevBlockNum(t *testing.T) {
 }
 
 func NewTestDB(t *testing.T) (*FluxDB, func()) {
-	kvStore, err := kv.NewStore("badger:///tmp/dfuse-test-badger?createTables=true")
+	tmp, err := ioutil.TempDir("", "badger")
+	require.NoError(t, err)
+	kvStore, err := kv.NewStore(fmt.Sprintf("badger://%s/test.db?createTables=true", tmp))
 	require.NoError(t, err)
 
 	db := New(kvStore)
 	closer := func() {
 		db.Close()
+		os.RemoveAll(tmp)
 	}
 
 	return db, closer

@@ -309,7 +309,7 @@ func (fdb *FluxDB) ReadSigletEntryAt(
 	defer span.End()
 
 	// We are using inverted block num, so we are scanning from highest block num (request block num) to lowest block (0)
-	startKey := siglet.KeyAt(blockNum + 1)
+	startKey := siglet.KeyAt(blockNum)
 	endKey := siglet.KeyAt(0)
 
 	zlog := logging.Logger(ctx, zlog)

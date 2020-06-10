@@ -19,7 +19,6 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	eos "github.com/eoscanada/eos-go"
-	"go.uber.org/zap"
 )
 
 //
@@ -75,10 +74,8 @@ type readTableResponse struct {
 }
 
 type onTheFlyABISerializer struct {
-	abi             *eos.ABI
-	abiAtBlockNum   uint32
-	tableTypeName   string
-	rowDataToDecode []byte
+	serializationInfo *rowSerializationInfo
+	rowDataToDecode   []byte
 }
 
 type getTableRowsResponse struct {
@@ -114,18 +111,13 @@ func toTableRow(row *fluxdb.ContractStateRow, keyConverter KeyConverter, seriali
 		response.BlockNum = row.BlockNum()
 	}
 
-	response.Data = row.Data()
 	if serializationInfo != nil {
-		jsonData, err := serializationInfo.Decode(row.Data())
-		if err != nil {
-			zlog.Warn("failed to decode row from ABI",
-				zap.Uint32("block_num", serializationInfo.abiAtBlockNum),
-				zap.String("struct_type", serializationInfo.tableTypeName),
-				zap.Error(err),
-			)
-		} else {
-			response.Data = string(jsonData)
+		response.Data = &onTheFlyABISerializer{
+			serializationInfo: serializationInfo,
+			rowDataToDecode:   row.Data(),
 		}
+	} else {
+		response.Data = row.Data()
 	}
 
 	return response, nil

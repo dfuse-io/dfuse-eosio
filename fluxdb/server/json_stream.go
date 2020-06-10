@@ -19,26 +19,27 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"go.uber.org/zap"
+
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/francoispqt/gojay"
 )
 
-func (s *onTheFlyABISerializer) MarshalJSON() ([]byte, error) {
-	jsonData, err := s.abi.DecodeTableRowTyped(s.tableTypeName, s.rowDataToDecode)
-	if err != nil {
-		// This can be both a problem from our standpoint as well as a bigger problem showing a bug in our decoder
-		return json.Marshal(map[string]interface{}{
-			"hex":   eos.HexBytes(s.rowDataToDecode),
-			"error": fmt.Sprintf("ABI from block %d, row struct %q, data: %q, err: %s", s.abiAtBlockNum, s.tableTypeName, hex.EncodeToString(s.rowDataToDecode), err),
-		})
-	}
-
-	// FIXME: something faster than that?
-	return json.Marshal(map[string]interface{}{
-		"json": json.RawMessage(jsonData),
-	})
-}
+//func (s *onTheFlyABISerializer) MarshalJSON() ([]byte, error) {
+//	jsonData, err := s.abi.DecodeTableRowTyped(s.tableTypeName, s.rowDataToDecode)
+//	if err != nil {
+//		// This can be both a problem from our standpoint as well as a bigger problem showing a bug in our decoder
+//		return json.Marshal(map[string]interface{}{
+//			"hex":   eos.HexBytes(s.rowDataToDecode),
+//			"error": fmt.Sprintf("ABI from block %d, row struct %q, data: %q, err: %s", s.abiAtBlockNum, s.tableTypeName, hex.EncodeToString(s.rowDataToDecode), err),
+//		})
+//	}
+//
+//	// FIXME: something faster than that?
+//	return json.Marshal(map[string]interface{}{
+//		"json": json.RawMessage(jsonData),
+//	})
+//}
 
 func (r *getTableRowsResponse) MarshalJSONObject(enc *gojay.Encoder) {
 	r.commonStateResponse.MarshalJSONObject(enc)
@@ -134,13 +135,15 @@ func (r *tableRow) MarshalJSONObject(enc *gojay.Encoder) {
 	case []byte:
 		enc.AddStringKey("hex", hex.EncodeToString(v))
 	case *onTheFlyABISerializer:
-		s := v
-
-		jsonData, err := s.abi.DecodeTableRowTyped(s.tableTypeName, s.rowDataToDecode)
+		jsonData, err := v.serializationInfo.Decode(v.rowDataToDecode)
 		if err != nil {
-			// TRACK THIS..
-			enc.AddStringKey("hex", hex.EncodeToString(s.rowDataToDecode))
-			enc.AddStringKey("error", fmt.Sprintf("ABI from block %d, row struct %q, err: %s", s.abiAtBlockNum, s.tableTypeName, err))
+			zlog.Warn("failed to decode row from ABI",
+				zap.Uint32("block_num", v.serializationInfo.abiAtBlockNum),
+				zap.String("struct_type", v.serializationInfo.tableTypeName),
+				zap.Error(err),
+			)
+			enc.AddStringKey("hex", hex.EncodeToString(v.rowDataToDecode))
+			enc.AddStringKey("error", fmt.Sprintf("ABI from block %d, row struct %q, err: %s", v.serializationInfo.abiAtBlockNum, v.serializationInfo.tableTypeName, err))
 		} else {
 			jsonData := gojay.EmbeddedJSON(jsonData)
 			enc.AddEmbeddedJSONKey("json", &jsonData)
