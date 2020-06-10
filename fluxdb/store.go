@@ -15,7 +15,6 @@
 package fluxdb
 
 import (
-	"context"
 	"fmt"
 	"net/url"
 
@@ -30,8 +29,6 @@ import (
 // This exists in `fluxdb` package since it's shared between `app` and `cmd`
 // packages.
 func NewKVStore(dsnString string) (store.KVStore, error) {
-	ctx := context.Background()
-
 	dsn, err := url.Parse(dsnString)
 	if err != nil {
 		return nil, fmt.Errorf("parsing fluxdb dsn: %s", err)
@@ -41,7 +38,7 @@ func NewKVStore(dsnString string) (store.KVStore, error) {
 
 	switch dsn.Scheme {
 	case "badger", "tikv", "bigkv":
-		return kv.NewStore(ctx, dsnString)
+		return kv.NewStore(dsnString)
 	default:
 		return nil, fmt.Errorf("unknown scheme %q from dsn %q", dsn.Scheme, dsnString)
 	}

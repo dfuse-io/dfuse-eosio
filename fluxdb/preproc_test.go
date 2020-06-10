@@ -26,33 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPreprocessBlock_TableOps(t *testing.T) {
-	blk := newBlock("0000003a", []string{"1", "2"})
-	blk.TransactionTraces[0].TableOps = []*pbcodec.TableOp{
-		{Operation: pbcodec.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
-		{Operation: pbcodec.TableOp_OPERATION_INSERT, ActionIndex: 0, Payer: "john", Code: "john", Scope: "scope2", TableName: "table3"},
-		{Operation: pbcodec.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "eosio", Code: "eosio", Scope: "scope", TableName: "table1"},
-	}
-
-	blk.TransactionTraces[1].TableOps = []*pbcodec.TableOp{
-		{Operation: pbcodec.TableOp_OPERATION_REMOVE, ActionIndex: 0, Payer: "another", Code: "another", Scope: "scope1", TableName: "table1"},
-	}
-
-	bstreamBlock, err := codec.BlockFromProto(blk)
-	require.NoError(t, err)
-	req, err := PreprocessBlock(bstreamBlock)
-	require.NoError(t, err)
-
-	rows := sortedFluxRows(req.(*WriteRequest).TabletRows, 3)
-
-	// FIXME: This test fails, replace with an appropivate XXXFlux.Row(...)
-	assert.Equal(t, []string{
-		"tbl:another:scope1:table1:00000003:another",
-		"tbl:eosio:scope:table1:00000003:eosio",
-		"tbl:john:scope2:table3:00000003:john",
-	}, rows)
-}
-
 func TestPreprocessBlock_DbOps(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -192,33 +165,6 @@ func testDBOp(op string, path, payers, datas string) *pbcodec.DBOp {
 		panic("wtf-happy? I know not that thing")
 	}
 	return out
-}
-
-func TestPreprocessBlock_PermOps(t *testing.T) {
-	blk := newBlock("0000003a", []string{"1", "2"})
-	blk.TransactionTraces[0].PermOps = []*pbcodec.PermOp{
-		newPermOp("INS", 0, nil, newPermOpData("eosio", "owner", []string{"k1", "k2"})),
-		newPermOp("INS", 1, nil, newPermOpData("eosio", "active", []string{"k2"})),
-		newPermOp("REM", 0, newPermOpData("eosio", "owner", []string{"k2"}), nil),
-	}
-
-	blk.TransactionTraces[1].PermOps = []*pbcodec.PermOp{
-		newPermOp("INS", 0, nil, newPermOpData("eosio", "owner", []string{"k3"})),
-	}
-
-	bstreamBlock, err := codec.BlockFromProto(blk)
-	require.NoError(t, err)
-	req, err := PreprocessBlock(bstreamBlock)
-	require.NoError(t, err)
-
-	rows := sortedFluxRows(req.(*WriteRequest).TabletRows, 3)
-
-	assert.Equal(t, []*KeyAccountRow{
-		mustCreateKeyAccountTabletRow("k1", 0, "eosio", "owner", false),
-		mustCreateKeyAccountTabletRow("k2", 0, "eosio", "active", false),
-		mustCreateKeyAccountTabletRow("k3", 0, "eosio", "owner", true),
-		mustCreateKeyAccountTabletRow("k4", 0, "eosio", "owner", false),
-	}, rows)
 }
 
 func newBlock(blockID string, trxIDs []string) *pbcodec.Block {

@@ -45,10 +45,10 @@ type KVStore struct {
 	db kv.KVStore
 }
 
-func NewStore(ctx context.Context, dsnString string) (*KVStore, error) {
+func NewStore(dsnString string) (*KVStore, error) {
 	store, err := kv.New(dsnString)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create new badger store: %w", err)
+		return nil, fmt.Errorf("cannot create new kv store: %w", err)
 	}
 
 	return &KVStore{

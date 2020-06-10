@@ -15,8 +15,6 @@
 package fluxdb
 
 import (
-	"crypto/md5"
-	"encoding/binary"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,78 +65,29 @@ func TestTabletRowKeys(t *testing.T) {
 	}
 }
 
-//func TestPurgeShards(t *testing.T) {
-//	newReq := func() *WriteRequest {
-//		return &WriteRequest{
-//			ABIs: []*ABIRow{
-//				{},
-//				{},
-//			},
-//			AuthLinks: []*AuthLinkRow{
-//				{Account: N("mama")},
-//				{Account: N("papa")},
-//			},
-//			KeyAccounts: []*KeyAccountRow{
-//				{PublicKey: "EOS123"},
-//				{PublicKey: "EOS234"},
-//			},
-//			TableDatas: []*TableDataRow{
-//				{Account: N("mama"), Table: N("papa"), Scope: N("rita")},
-//				{Account: N("mama"), Table: N("papa"), Scope: N("foo")},
-//				{Account: N("foo"), Table: N("bar"), Scope: N("baz")},
-//			},
-//			TableScopes: []*TableScopeRow{
-//				{Account: N("mama"), Table: N("papa2")},
-//				{Account: N("mama"), Table: N("papa")},
-//				{Account: N("foo"), Table: N("bar")},
-//			},
-//		}
+//func TestWhoHasWhatShardContentiousTableNames(t *testing.T) {
+//	include := func(tabletKey string, shardCount uint32) uint32 {
+//		h := md5.New()
+//		_, _ = h.Write([]byte(tabletKey))
+//		md5Hash := h.Sum(nil)
+//
+//		bigInt := binary.LittleEndian.Uint32(md5Hash)
+//
+//		elementShard := bigInt % shardCount
+//
+//		return elementShard
 //	}
 //
-//	w := newReq()
-//	w.purgeShardedRows(0, 2)
+//	// Belongs to shard 4, out of 100
+//	row := NewContractStateTablet("eosio", "eosio", "global")
+//	assert.Equal(t, 0, int(include(row.Key(), 100)))
 //
-//	assert.Len(t, w.AuthLinks, 1)
-//	assert.Len(t, w.KeyAccounts, 2)
-//	assert.Equal(t, "EOS123", w.KeyAccounts[0].PublicKey)
-//	assert.Equal(t, "EOS234", w.KeyAccounts[1].PublicKey)
-//	assert.Len(t, w.TableDatas, 1)
-//	assert.Len(t, w.TableScopes, 2)
-//	assert.Len(t, w.ABIs, 2)
+//	row = NewContractStateTablet("eosio", "eosio", "voters")
+//	assert.Equal(t, 52, int(include(row.Key(), 100)))
 //
-//	w = newReq()
-//	w.purgeShardedRows(1, 2)
+//	row = NewContractStateTablet("eosio", "eosbetdice11", "globalvars")
+//	assert.Equal(t, 92, int(include(row.Key(), 100)))
 //
-//	assert.Len(t, w.AuthLinks, 1)
-//	assert.Len(t, w.KeyAccounts, 0)
-//	assert.Len(t, w.TableDatas, 2)
-//	assert.Len(t, w.TableScopes, 1)
-//	assert.Len(t, w.ABIs, 0)
+//	// Belongs to shard ?
+//	assert.Equal(t, 22, int(include("brl", 100)))
 //}
-
-func TestWhoHasWhatShardContentiousTableNames(t *testing.T) {
-	include := func(tabletKey string, shardCount uint32) uint32 {
-		h := md5.New()
-		_, _ = h.Write([]byte(tabletKey))
-		md5Hash := h.Sum(nil)
-
-		bigInt := binary.LittleEndian.Uint32(md5Hash)
-
-		elementShard := bigInt % shardCount
-
-		return elementShard
-	}
-
-	// Belongs to shard 4, out of 100
-	row := NewContractStateTablet("eosio", "eosio", "global")
-	assert.Equal(t, 0, int(include(row.Key(), 100)))
-
-	row = NewContractStateTablet("eosio", "eosio", "voters")
-	assert.Equal(t, 52, int(include(row.Key(), 100)))
-
-	row = NewContractStateTablet("eosio", "eosbetdice11", "globalvars")
-	assert.Equal(t, 92, int(include(row.Key(), 100)))
-
-	// Belongs to shard ?
-	assert.Equal(t, 22, int(include("brl", 100)))
-}

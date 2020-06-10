@@ -101,30 +101,11 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 				AtBlockNum: 6,
 				Squelched:  2,
 				Map: map[string]uint32{
-					"0000000000000002": 4,
-					"0000000000000003": 5,
+					"............2": 4,
+					"............3": 5,
 				},
 			}, nil},
 		},
-		//{
-		//	"table_scope_valid",
-		//	"ts:0000000000000009:0000000000000008",
-		//	6,
-		//	[]byte{
-		//		0x00, 0x00, 0x00, 0x02, // Squelched count
-		//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Reserved
-		//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x04, // Table row mapping 1
-		//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x05, // Table row mapping 2
-		//	},
-		//	expected{&TableIndex{
-		//		AtBlockNum: 6,
-		//		Squelched:  2,
-		//		Map: map[string]uint32{
-		//			"0000000000000002": 4,
-		//			"0000000000000003": 5,
-		//		},
-		//	}, nil},
-		//},
 		{
 			"auth_link_misalign",
 			NewAuthLinkTablet("eoscanadcom"),
@@ -146,13 +127,6 @@ func TestNewTableIndexFromBinary(t *testing.T) {
 			[]byte{0x00},
 			expected{nil, errors.New("unable to unmarshal table index: 12 bytes alignment + 16 bytes metadata is off (has 1 bytes)")},
 		},
-		//{
-		//	"table_scope_misalign",
-		//	"ts:0000000000000009:0000000000000008",
-		//	0,
-		//	[]byte{0x00},
-		//	expected{nil, errors.New("unable to unmarshal table index: 12 bytes alignment + 16 bytes metadata is off (has 1 bytes)")},
-		//},
 	}
 
 	ctx := context.Background()
@@ -220,7 +194,7 @@ func TestTableIndexMarshalBinary(t *testing.T) {
 				AtBlockNum: 2,
 				Squelched:  4,
 				Map: map[string]uint32{
-					"0000000000000002": 4,
+					"............2": 4,
 				},
 			},
 			expected{[]byte{
