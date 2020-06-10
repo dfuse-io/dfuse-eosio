@@ -62,7 +62,7 @@ type KVStore interface {
 
 	FetchIndex(ctx context.Context, tableKey, prefixKey, keyStart string) (rowKey string, rawIndex []byte, err error)
 
-	HasTabletRow(ctx context.Context, keyPrefix string) (exists bool, err error)
+	HasTabletRow(ctx context.Context, tabletKey string) (exists bool, err error)
 
 	FetchTabletRow(ctx context.Context, key string) (value []byte, err error)
 

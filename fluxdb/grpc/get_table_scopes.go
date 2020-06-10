@@ -7,7 +7,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/logging"
-	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
@@ -20,28 +19,27 @@ func (s *Server) GetTableScopes(request *pbfluxdb.GetTableScopesRequest, stream 
 	)
 
 	blockNum := uint32(request.BlockNum)
-	contract := eos.AccountName(request.Contract)
-	table := eos.TableName(request.Table)
 	actualBlockNum, _, _, speculativeWrites, err := s.prepareRead(ctx, blockNum, false)
 	if err != nil {
 		return derr.Statusf(codes.Internal, "unable to prepare read: %s", err)
 	}
 
+	tablet := fluxdb.NewContractTableScopeTablet(request.Contract, request.Table)
 	tabletRows, err := s.db.ReadTabletAt(
 		ctx,
 		actualBlockNum,
-		fluxdb.NewContractTableScopeTablet(request.Contract, request.Table),
+		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
-		return derr.Statusf(codes.Internal, "uanble to read tablet at %d: %s", blockNum, err)
+		return derr.Statusf(codes.Internal, "unable to read tablet at %d: %s", blockNum, err)
 	}
 
 	zlogger.Debug("post-processing table scopes", zap.Int("table_scope_count", len(tabletRows)))
 	scopes := sortedScopes(tabletRows)
 	if len(scopes) == 0 {
 		zlogger.Debug("no scopes found for request, checking if we ever see this table")
-		seen, err := s.db.HasSeenTableOnce(ctx, contract, table)
+		seen, err := s.db.HasSeenAnyRowForTablet(ctx, tablet)
 		if err != nil {
 			return derr.Statusf(codes.Internal, "unable to know if table was seen once in db: %s", err)
 		}

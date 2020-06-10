@@ -48,10 +48,11 @@ func (srv *EOSServer) listTableScopesHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	tablet := fluxdb.NewContractTableScopeTablet(string(request.Account), string(request.Table))
 	tabletRows, err := srv.db.ReadTabletAt(
 		ctx,
 		actualBlockNum,
-		fluxdb.NewContractTableScopeTablet(string(request.Account), string(request.Table)),
+		tablet,
 		speculativeWrites,
 	)
 	if err != nil {
@@ -63,7 +64,7 @@ func (srv *EOSServer) listTableScopesHandler(w http.ResponseWriter, r *http.Requ
 	scopes := sortedScopes(tabletRows)
 	if len(scopes) == 0 {
 		zlogger.Debug("no scopes found for request, checking if we ever seen this table")
-		seen, err := srv.db.HasSeenTableOnce(ctx, request.Account, request.Table)
+		seen, err := srv.db.HasSeenAnyRowForTablet(ctx, tablet)
 		if err != nil {
 			writeError(ctx, w, fmt.Errorf("unable to know if table scope was seen once in db: %w", err))
 			return

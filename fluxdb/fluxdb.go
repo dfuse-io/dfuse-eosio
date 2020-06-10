@@ -29,9 +29,7 @@ type FluxDB struct {
 	store  store.KVStore
 	source bstream.Source
 
-	idxCache               *indexCache
-	newRowsPerTable        map[string]uint32
-	newRowsIndexingTrigger int
+	idxCache *indexCache
 
 	SpeculativeWritesFetcher func(ctx context.Context, headBlockID string, upToBlockNum uint32) (speculativeWrites []*WriteRequest)
 	HeadBlock                func(ctx context.Context) bstream.BlockRef
@@ -45,11 +43,9 @@ type FluxDB struct {
 
 func New(kvStore store.KVStore) *FluxDB {
 	return &FluxDB{
-		Shutter:                shutter.New(),
-		store:                  kvStore,
-		newRowsPerTable:        make(map[string]uint32),
-		idxCache:               newIndexCache(),
-		newRowsIndexingTrigger: 1000,
+		Shutter:  shutter.New(),
+		store:    kvStore,
+		idxCache: newIndexCache(),
 	}
 }
 
