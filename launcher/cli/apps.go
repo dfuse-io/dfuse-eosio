@@ -402,6 +402,7 @@ func init() {
 			}, &nodeosMindreaderApp.Modules{
 				Operator:                     chainOperator,
 				LogPlugin:                    logPlugin,
+				MetricsAndReadinessManager:   metricsAndReadinessManager,
 				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
 			}), nil
 		},
