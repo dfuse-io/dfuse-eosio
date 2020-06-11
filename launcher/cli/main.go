@@ -59,7 +59,9 @@ func Main() {
 	StartCmd.Example = startCmdExample
 
 	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		setup()
+		if cmd.CalledAs() != "help" {
+			setup()
+		}
 	}
 
 	derr.Check("dfuse", RootCmd.Execute())
