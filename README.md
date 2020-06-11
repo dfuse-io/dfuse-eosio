@@ -104,7 +104,7 @@ GraphiQL:         http://localhost:8080/graphiql
 
 ### Logging
 
-See [Logging](./Logging.md)
+See [Logging](./LOGGING.md)
 
 ## Overview
 
