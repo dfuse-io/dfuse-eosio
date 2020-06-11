@@ -102,6 +102,10 @@ GraphiQL:         http://localhost:8080/graphiql
 * See [Syncing a chain partially](./PARTIAL_SYNC.md)
 * See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 
+### Logging
+
+See [Logging](./Logging.md)
+
 ## Overview
 
 Here's a quick map of this repository:

@@ -1,7 +1,7 @@
-## Debugging
+# Logging
 
-It's possible to debug `dfuseeos` by providing multiple times the
-verbosity flags, like `-vvv` which enables debugging verbosity level
+It's possible to configure `dfuseeos` logging with the repeatable
+verbosity flag, like `-vvv` which enables debugging verbosity level
 3 (default is 0).
 
 Here the default level per package(s) for the various verbosity level
@@ -10,7 +10,22 @@ as well as formatting rules in place depending on the verbosity level.
 More higher is the verbosity level, more debugging statements and more
 each log line has contextual information to help debugging.
 
-#### Verbosity 0 (no flag)
+### Logs produced by nodeos (mindreader and node-manager dfuse apps)
+
+By default, the logs produced by nodeos (node-manager or mindreader) will be processed through the dfuse logging system, which does not show them with lower verbosity levels (it makes the console unreadable when all applications are run together).
+
+* To prevent them from being transformed and gated by the dfuse logger, you can use the two following flags:
+  `--node-manager-log-to-zap=false` and `--mindreader-log-to-zap=false`
+
+* To show all "info" log messages from mindreader and node-manager, you can use the environment variable INFO (detailed later in this document): INFO=
+
+## Global Verbosity flags
+
+These are the simplest way to manage verbosity in a holistic way.
+Different levels are already defined to make it easier to run all
+`dfuseeos` apps together.
+
+### Verbosity 0 (no flag)
 
 Level:
 
@@ -25,7 +40,7 @@ Formatting:
 - Caller displayed when log entry level >= WARN
 - Stacktrace displayed when log entry level >= ERROR (if present)
 
-#### Verbosity 1 (-v)
+### Verbosity 1 (-v)
 
 Level:
 
@@ -41,7 +56,7 @@ Formatting:
 - Caller displayed when log entry level >= WARN
 - Stacktrace displayed when log entry level >= ERROR (if present)
 
-#### Verbosity 2 (-v)
+### Verbosity 2 (-vv)
 
 Level:
 
@@ -57,7 +72,7 @@ Formatting:
 - Caller displayed when log entry level >= WARN
 - Stacktrace always displayed (if present)
 
-#### Verbosity 3 (-v)
+### Verbosity 3 (-vvv)
 
 Level:
 
@@ -83,7 +98,7 @@ Formatting:
 - Caller always displayed, full path, with package version present
 - Stacktrace always displayed (if present)
 
-#### Environment variable `DEBUG="app1,app2"`
+### Environment variable `DEBUG="app1,app2"`
 
 Overrides behavior of verbosity for specific app(s) value
 as well as changing the formatting rules. For example, you can run:
@@ -115,5 +130,5 @@ curl localhost:1065 -XPOST -d '{"level": "info","inputs":".*"}'
 curl localhost:1065 -XPOST -d '{"level": "warn","inputs":"merger,bstream,manageos,mindreader"}'
 ```
 
-The last called regexp will override previous matches.
+Values for inputs are always applied on top of previous ones.
 

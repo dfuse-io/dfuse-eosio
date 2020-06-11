@@ -69,6 +69,7 @@ type Encoder struct {
 
 func NewEncoder(verbosity int) zapcore.Encoder {
 	isDebug := os.Getenv("DEBUG") != ""
+	isInfo := os.Getenv("INFO") != ""
 
 	return &Encoder{
 		jsonEncoder: newJSONEncoder(zapcore.EncoderConfig{
@@ -76,14 +77,14 @@ func NewEncoder(verbosity int) zapcore.Encoder {
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 		}, true),
 
-		showLevel:      isDebug || verbosity >= 1,
-		showLoggerName: isDebug || verbosity >= 1,
-		showTime:       isDebug || verbosity >= 2,
-		showCallerName: isDebug || verbosity >= 3,
+		showLevel:      isInfo || isDebug || verbosity >= 1,
+		showLoggerName: isInfo || isDebug || verbosity >= 1,
+		showTime:       isInfo || isDebug || verbosity >= 1,
+		showCallerName: isInfo || isDebug || verbosity >= 1,
 		showFullCaller: verbosity >= 4,
 
 		// Also always forced displayed on "Error" level and above
-		showStacktrace: isDebug || verbosity >= 2,
+		showStacktrace: isInfo || isDebug || verbosity >= 2,
 	}
 }
 
