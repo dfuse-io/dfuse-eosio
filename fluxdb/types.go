@@ -44,6 +44,8 @@ type Tablet interface {
 	NewRowFromKV(key string, value []byte) (TabletRow, error)
 
 	Key() string
+	// TOFIX: rename to keyPrefix?
+	// TOFIX: should rename blockNum to height
 	KeyAt(blockNum uint32) string
 	KeyForRowAt(blockNum uint32, primaryKey string) string
 
