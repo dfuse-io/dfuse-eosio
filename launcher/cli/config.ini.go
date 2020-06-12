@@ -33,6 +33,7 @@ plugin = eosio::net_api_plugin
 chain-state-db-size-mb = 4096
 reversible-blocks-db-size-mb = 512
 max-transaction-time = 5000
+abi-serializer-max-time-ms = 500000
 
 # P2P
 agent-name = dfuse for EOSIO (producer)
