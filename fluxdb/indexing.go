@@ -136,8 +136,6 @@ func (fdb *FluxDB) getIndex(ctx context.Context, blockNum uint32, tablet Tablet)
 	startIndexKey := prefixKey + HexRevBlockNum(blockNum)
 
 	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
-
-	zlog.Debug("reading table index row", zap.String("start_index_key", startIndexKey))
 	rowKey, rawIndex, err := fdb.store.FetchIndex(ctx, tabletKey, prefixKey, startIndexKey)
 	if err == store.ErrNotFound {
 		return nil, nil
