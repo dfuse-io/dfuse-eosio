@@ -20,8 +20,8 @@ import (
 
 var kvCmd = &cobra.Command{Use: "kv", Short: "Read from a KVStore"}
 
-var kvPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from KVStore", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
-var kvScanCmd = &cobra.Command{Use: "scan", Short: "scan read from KVStore", RunE: kvScan, Args: cobra.ExactArgs(2)}
+var kvPrefixCmd = &cobra.Command{Use: "prefix {prefix}", Short: "prefix read from KVStore, prefix as hex", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
+var kvScanCmd = &cobra.Command{Use: "scan {start} {end}", Short: "scan read from KVStore, using hex keys", RunE: kvScan, Args: cobra.ExactArgs(2)}
 var kvGetCmd = &cobra.Command{Use: "get", Short: "get key from KVStore", RunE: kvGet, Args: cobra.ExactArgs(1)}
 
 func init() {
