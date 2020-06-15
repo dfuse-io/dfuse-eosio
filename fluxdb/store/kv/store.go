@@ -46,7 +46,7 @@ type KVStore struct {
 }
 
 func NewStore(dsnString string) (*KVStore, error) {
-	store, err := kv.New(dsnString)
+	store, err := kv.New(dsnString, kv.WithEmptyValueSupport)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create new kv store: %w", err)
 	}
@@ -194,7 +194,7 @@ func (s *KVStore) fetchKey(ctx context.Context, table byte, key string) (out []b
 		return nil, fmt.Errorf("unable to fetch table %q key %q: %w", TblPrefixName[table], key, err)
 	}
 
-	return out[1:], nil
+	return out, nil
 }
 
 func (s *KVStore) fetchKeys(batchCtx context.Context, table byte, keys []string, onTabletRow store.OnTabletRow) error {
@@ -216,7 +216,7 @@ func (s *KVStore) fetchKeys(batchCtx context.Context, table byte, keys []string,
 		}
 
 		_, key := unpackKey(itr.Item().Key)
-		err := onTabletRow(key, value[1:])
+		err := onTabletRow(key, value)
 		if err == store.BreakScan {
 			return nil
 		}
@@ -242,7 +242,7 @@ func (s *KVStore) scanPrefix(ctx context.Context, table byte, prefixKey string, 
 	for itr.Next() {
 		item := itr.Item()
 		t, key := unpackKey(item.Key)
-		err := onRow(key, item.Value[1:])
+		err := onRow(key, item.Value)
 
 		if err == store.BreakScan {
 			return nil
@@ -279,7 +279,7 @@ func (s *KVStore) scanRange(ctx context.Context, table byte, keyStart, keyEnd st
 	for itr.Next() {
 		item := itr.Item()
 		t, key := unpackKey(item.Key)
-		err := onRow(key, item.Value[1:])
+		err := onRow(key, item.Value)
 		if err == store.BreakScan {
 			return nil
 		}
@@ -372,7 +372,7 @@ func (b *batch) Flush(ctx context.Context) error {
 		ctx, span := dtracing.StartSpan(ctx, "apply bulk updates", "table", tblName, "mutation_count", len(muts))
 
 		for key, value := range muts {
-			err := b.store.db.Put(ctx, packKey(tblName, key), append([]byte{0x00}, value...))
+			err := b.store.db.Put(ctx, packKey(tblName, key), value)
 			if err != nil {
 				return fmt.Errorf("unable to add table %q key %q to tx: %w", tblName, key, err)
 			}
@@ -413,5 +413,5 @@ func packKey(table byte, key string) []byte {
 }
 
 func unpackKey(key []byte) (byte, string) {
-	return key[0], string(key[1:])
+	return key[0], string(key)
 }
