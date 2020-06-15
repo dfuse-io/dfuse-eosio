@@ -39,8 +39,7 @@ export class AccountTableSearch extends React.Component<Props> {
   constructor(props: Props) {
     super(props)
 
-    const parsed = queryString.parse(this.props.location.search)
-    contractTableStore.initFromUrlParams(this.props.abiLoader, this.props.accountName, parsed)
+    this.initContractTableStore()
   }
 
   onClick = () => {
@@ -54,8 +53,14 @@ export class AccountTableSearch extends React.Component<Props> {
     )
   }
 
+  initContractTableStore() {
+    const parsed = queryString.parse(this.props.location.search)
+    contractTableStore.initFromUrlParams(this.props.abiLoader, this.props.accountName, parsed)
+  }
+
   componentDidMount() {
     fetchContractTableRowsOnContractPage(contractTableStore.params)
+    this.initContractTableStore()
   }
 
   selectTableWithHistory = (tableName: string) => {

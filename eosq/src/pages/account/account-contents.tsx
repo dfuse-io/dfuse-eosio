@@ -33,17 +33,21 @@ export class AccountContents extends ContentLoaderComponent<Props, State> {
   constructor(props: Props) {
     super(props)
 
-    this.state = {
-      currentTab: props.currentTab || "transactions",
-      isContract: props.currentTab === "tables" || false,
-      abi: null
-    }
+    this.state = this.buildInitialState(props)
   }
+
+  buildInitialState = (props: Props) => ({
+    currentTab: props.currentTab || "transactions",
+    isContract: props.currentTab === "tables" || false,
+    abi: null
+  })
 
   componentDidMount() {
     fetchContractAbi(this.props.account.account_name).then((data: { abi: Abi } | undefined) => {
       if (data && data.abi) {
         this.setState({ isContract: true, abi: data.abi })
+      } else {
+        this.setState(this.buildInitialState(this.props))
       }
     })
   }
@@ -53,6 +57,8 @@ export class AccountContents extends ContentLoaderComponent<Props, State> {
       fetchContractAbi(this.props.account.account_name).then((data: { abi: Abi } | undefined) => {
         if (data && data.abi) {
           this.setState({ isContract: true, abi: data.abi })
+        } else {
+          this.setState(this.buildInitialState(this.props))
         }
       })
     }
