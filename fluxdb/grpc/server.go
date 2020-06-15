@@ -26,7 +26,7 @@ func New(grpcAddr string, db *fluxdb.FluxDB) *Server {
 }
 
 func (s *Server) Serve() {
-	zlog.Info("listening & serving GRPC content", zap.String("http_listen_addr", s.grpcAddr))
+	zlog.Info("listening & serving GRPC content", zap.String("grpc_listen_addr", s.grpcAddr))
 
 	grpcServer := dgrpc.NewServer(dgrpc.WithLogger(zlog))
 	pbfluxdb.RegisterStateServer(grpcServer, s)
@@ -46,8 +46,11 @@ func (s *Server) Serve() {
 
 func newMetadata(upToBlock, lastWrittenBlock bstream.BlockRef) metadata.MD {
 	md := metadata.New(map[string]string{})
-	md.Set("flux-up-to-block-id", upToBlock.ID())
-	md.Set("flux-up-to-block-num", strconv.FormatUint(upToBlock.Num(), 10))
+	if upToBlock != nil {
+		md.Set("flux-up-to-block-id", upToBlock.ID())
+		md.Set("flux-up-to-block-num", strconv.FormatUint(upToBlock.Num(), 10))
+	}
+
 	md.Set("flux-last-irreversible-block-id", lastWrittenBlock.ID())
 	md.Set("flux-last-irreversible-block-num", strconv.FormatUint(lastWrittenBlock.Num(), 10))
 	return md

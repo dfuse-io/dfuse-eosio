@@ -3,7 +3,10 @@ package launcher
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,21 +17,27 @@ type DfuseConfig struct {
 	} `json:"start"`
 }
 
-// Configuration extracted from the `dfuse.yaml` file. User-driven.
-type BoxConfig struct {
-	// Either GenesisJSON or GenesisFile
-	GenesisJSON string `yaml:"genesis_json"`
-	GenesisFile string `yaml:"genesis_file,omitempty"`
+// NewConfig creates a new initialized config structure. If `configFile` is non-empty and
+// the file exists, initialize the config from the file content. If the config file is present
+// and was read correctly, initialize Viper default values for those flags.
+func NewConfig(configFile string, readOnlyIfExists bool) (conf *DfuseConfig, err error) {
+	config := &DfuseConfig{}
+	if configFile != "" {
+		if shouldReadConfigFile(configFile, readOnlyIfExists) {
+			userLog.Debug("reading config file", zap.String("file", configFile))
+			config, err = ReadConfig(configFile)
+			if err != nil {
+				return nil, err
+			}
 
-	RunProducer         bool   `yaml:"run_producer"`
-	GeneratedPublicKey  string `yaml:"generated_public_key,omitempty"`
-	GeneratedPrivateKey string `yaml:"generated_private_key,omitempty"`
-	ProducerConfigIni   string `yaml:"producer_config_ini,omitempty"`
-	ProducerNodeVersion string `yaml:"producer_node_version,omitempty"`
+			// Set default values for flags in `start`
+			for k, v := range config.Start.Flags {
+				viper.SetDefault(k, v)
+			}
+		}
+	}
 
-	ReaderConfigIni   string `yaml:"reader_config_ini"`
-	ReaderNodeVersion string `yaml:"reader_node_version"`
-	Version           string `yaml:"version"` // to determine if you need to dfuseeos init again
+	return config, nil
 }
 
 // Load reads a YAML config, and returns the raw JSON plus a
@@ -46,4 +55,26 @@ func ReadConfig(filename string) (conf *DfuseConfig, err error) {
 	}
 
 	return conf, nil
+}
+
+func shouldReadConfigFile(configFile string, readOnlyIfExists bool) bool {
+	if !readOnlyIfExists {
+		return true
+	}
+
+	return fileExists(configFile)
+}
+
+func fileExists(file string) bool {
+	stat, err := os.Stat(file)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+
+		userLog.Debug("unable to check if file exists", zap.String("file", file))
+		return false
+	}
+
+	return !stat.IsDir()
 }

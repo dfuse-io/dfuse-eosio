@@ -45,7 +45,7 @@ var commongLoggingDef = &launcher.LoggingDef{
 
 var dfuseLoggingDef = &launcher.LoggingDef{
 	Levels: []zl{zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
-	Regex:  "github.com/dfuse-io/dfuse-eosio(/metrics|/cmd/dfuseeos)?$",
+	Regex:  "github.com/dfuse-io/dfuse-eosio(/launcher|/metrics|/cmd/dfuseeos)?$",
 }
 
 var bstreamLoggingDef = &launcher.LoggingDef{

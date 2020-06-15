@@ -60,13 +60,9 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func Start(configFile string, dataDir string, args []string) (err error) {
-
-	config := &launcher.DfuseConfig{}
-	if configFile != "" {
-		config, err = launcher.ReadConfig(configFile)
-		if err != nil {
-			return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
-		}
+	config, err := launcher.NewConfig(configFile, false)
+	if err != nil {
+		return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
 	}
 
 	dataDirAbs, err := filepath.Abs(dataDir)
@@ -100,11 +96,6 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 	apps := launcher.ParseAppsFromArgs(args)
 	if len(args) == 0 {
 		apps = launcher.ParseAppsFromArgs(config.Start.Args)
-	}
-
-	// Set default values for flags in `start`
-	for k, v := range config.Start.Flags {
-		viper.SetDefault(k, v)
 	}
 
 	if containsApp(apps, "mindreader") {

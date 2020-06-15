@@ -43,7 +43,8 @@ func (t ContractABISinglet) NewEntry(blockNum uint32, packedABI []byte) (*Contra
 			Collection:  abiPrefix,
 			TabletKey:   singletKey,
 			BlockNumKey: HexRevBlockNum(blockNum),
-			Payload:     packedABI,
+			// A deletion will automatically be recorded when the payload is empty, which represents a deletion
+			Payload: packedABI,
 		}},
 	}, nil
 }

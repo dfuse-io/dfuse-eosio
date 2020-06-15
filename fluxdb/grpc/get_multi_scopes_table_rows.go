@@ -35,6 +35,23 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 		}
 	}
 
+	if len(request.Scopes) == 1 && request.Scopes[0] == "*" {
+		zlog.Debug("fetching all scopes since single scope received is '*'")
+		scopes, err := s.fetchScopes(ctx, actualBlockNum, request.Contract, request.Table, speculativeWrites)
+		if err != nil {
+			return derr.Statusf(codes.Internal, "unable to fetch scopes: %s", err)
+		}
+
+		if len(scopes) == 0 {
+			stream.SetHeader(newMetadata(upToBlock, lastWrittenBlock))
+
+			zlog.Debug("contract's table does not contain any scope, nothing to do")
+			return nil
+		}
+
+		request.Scopes = scopes
+	}
+
 	// Sort by scope so at least, a constant order is kept across calls
 	sort.Slice(request.Scopes, func(leftIndex, rightIndex int) bool {
 		return request.Scopes[leftIndex] < request.Scopes[rightIndex]

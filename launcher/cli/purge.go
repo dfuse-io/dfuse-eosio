@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var purgeCmd = &cobra.Command{Use: "purge", Short: "Purges dfuse's local data", RunE: dfusePurgeE}
+var purgeCmd = &cobra.Command{Use: "purge", Short: "Purges dfuse's local data", RunE: dfuseMigrateE}
 
 func init() {
 	RootCmd.AddCommand(purgeCmd)

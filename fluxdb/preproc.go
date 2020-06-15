@@ -39,6 +39,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
 	lastKeyAccountForRowKey := map[string]TabletRow{}
+	lastContractForRowKey := map[string]TabletRow{}
 	lastContractTableScopeForRowKey := map[string]TabletRow{}
 
 	req := &WriteRequest{
@@ -90,6 +91,20 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 		for _, act := range trx.ActionTraces {
 			switch act.FullName() {
+			case "eosio:eosio:setcode":
+				contractRow, err := NewContractRow(req.BlockNum, act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract contract row: %w", err)
+				}
+
+				codeEntry, err := NewContractCodeEntry(req.BlockNum, act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract contract entry: %w", err)
+				}
+
+				req.AppendSingletEntry(codeEntry)
+				lastContractForRowKey[contractRow.Key()] = contractRow
+
 			case "eosio:eosio:setabi":
 				abiEntry, err := NewContractABIEntry(req.BlockNum, act)
 				if err != nil {
@@ -122,6 +137,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 	}
 
 	addTabletRowsToRequest(req, lastKeyAccountForRowKey)
+	addTabletRowsToRequest(req, lastContractForRowKey)
 	addTabletRowsToRequest(req, lastContractTableScopeForRowKey)
 
 	return req, nil
@@ -190,6 +206,10 @@ func permToKeyAccountRows(blockNum uint32, perm *pbcodec.PermissionObject, isDel
 	}
 
 	return
+}
+
+func addCodeRow() {
+
 }
 
 func tableDataRowPath(op *pbcodec.DBOp) string {

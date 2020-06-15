@@ -194,8 +194,8 @@ func maybeCheckNodeosVersion() {
 	}
 }
 
-func cliErrorAndExit(message string) {
-	fmt.Println(aurora.Red(message).String())
+func cliErrorAndExit(message string, args ...interface{}) {
+	fmt.Println(aurora.Red(fmt.Sprintf(message, args...)).String())
 	os.Exit(1)
 }
 

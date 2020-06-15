@@ -22,10 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/fluxdb/grpc"
-
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb"
+	"github.com/dfuse-io/dfuse-eosio/fluxdb/grpc"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/metrics"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/server"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb/store"
@@ -133,6 +132,7 @@ func (a *App) startStandard(blocksStore dstore.Store, kvStore store.KVStore) err
 		zlog.Info("setting up server")
 		httpServer := server.New(a.config.HTTPListenAddr, db)
 		go httpServer.Serve()
+
 		grpcServer := grpc.New(a.config.GRPCListenAddr, db)
 		go grpcServer.Serve()
 	} else {
