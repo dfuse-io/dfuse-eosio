@@ -30,6 +30,7 @@ import (
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
+	boot "github.com/dfuse-io/dfuse-eosio/booter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
@@ -1069,6 +1070,36 @@ func init() {
 				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
 				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
 				RootHTTPAddr:     viper.GetString("apiproxy-root-http-addr"),
+			}), nil
+		},
+	})
+
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "injector",
+		Title:       "Injector",
+		Description: "Inject data in your chain",
+		MetricsID:   "injector",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/injector.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("injector-bootseq", "", "File path tp the desired boot sequence")
+			cmd.Flags().String("injector-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
+			cmd.Flags().String("injector-cache-path", "{dfuse-data-dir}/injector/cache", "Directory to store downloaded contract and ABI data")
+			cmd.Flags().String("injector-vault-file", "", "Wallet file that contains encrypted key material")
+			cmd.Flags().String("injector-private-key", "", "Genesis private key")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+
+			return boot.New(&boot.Config{
+				NodeosAPIAddress: viper.GetString("injector-nodeos-api-addr"),
+				BootSeqFile:      viper.GetString("injector-bootseq"),
+				CachePath:        mustReplaceDataDir(dfuseDataDir, viper.GetString("injector-cache-path")),
+				VaultPath:        viper.GetString("injector-vault-file"),
+				PrivateKey:       viper.GetString("injector-private-key"),
 			}), nil
 		},
 	})
