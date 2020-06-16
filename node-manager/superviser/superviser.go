@@ -119,7 +119,7 @@ type SuperviserOptions struct {
 	LogToZap bool
 }
 
-func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc manageos.HeadBlockUpdater, options *SuperviserOptions) (*NodeosSuperviser, error) {
+func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc manageos.HeadBlockUpdater, options *SuperviserOptions, nodeZlog *zap.Logger) (*NodeosSuperviser, error) {
 	// Ensure process manager line buffer is large enough (50 MiB) for our Deep Mind instrumentation outputting lot's of text.
 	overseer.DEFAULT_LINE_BUFFER_SIZE = 50 * 1024 * 1024
 
@@ -140,7 +140,7 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc manageos.HeadBlockUpd
 	if options.LogToZap {
 		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(zlogNodeos, debugDeepMind))
 	} else {
-		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind))
+		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, nodeZlog))
 	}
 
 	return s, nil
