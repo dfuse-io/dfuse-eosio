@@ -35,7 +35,7 @@ require (
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200605220113-7e231334a020
-	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
+	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/manageos v0.0.0-20200611205430-5e3a009eadaa
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
@@ -45,7 +45,8 @@ require (
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200603180942-a183f4c66253
+	github.com/eoscanada/eos-go v0.9.1-0.20200616001514-08aba9844990
+	github.com/eoscanada/eosc v1.4.0
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3

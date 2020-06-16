@@ -30,6 +30,7 @@ import (
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/apiproxy"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
+	boot "github.com/dfuse-io/dfuse-eosio/booter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dashboard"
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
@@ -1069,6 +1070,36 @@ func init() {
 				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
 				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
 				RootHTTPAddr:     viper.GetString("apiproxy-root-http-addr"),
+			}), nil
+		},
+	})
+
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "booter",
+		Title:       "Booter",
+		Description: "Boots chain baed on provided bootseq",
+		MetricsID:   "booter",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/booter.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("booter-bootseq", "", "File path tp the desired boot sequence")
+			cmd.Flags().String("booter-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
+			cmd.Flags().String("booter-cache-path", "{dfuse-data-dir}/booter/cache", "Directory to store downloaded contract and ABI data")
+			cmd.Flags().String("booter-vault-file", "", "Wallet file that contains encrypted key material")
+			cmd.Flags().String("booter-private-key", "", "Genesis private key")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+
+			return boot.New(&boot.Config{
+				NodeosAPIAddress: viper.GetString("booter-nodeos-api-addr"),
+				BootSeqFile:      viper.GetString("booter-bootseq"),
+				CachePath:        mustReplaceDataDir(dfuseDataDir, viper.GetString("booter-cache-path")),
+				VaultPath:        viper.GetString("booter-vault-file"),
+				PrivateKey:       viper.GetString("booter-private-key"),
 			}), nil
 		},
 	})
