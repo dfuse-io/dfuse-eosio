@@ -37,21 +37,28 @@ func (b *booter) Launch() (err error) {
 	zlog.Info("nodeos is ready, starting injection")
 
 	var keybag *eos.KeyBag
-
 	if b.config.VaultPath != "" {
 		keybag, err = b.newKeyBagFromVault(b.config.VaultPath)
 		if err != nil {
 			b.Shutdown(fmt.Errorf("unable to load vault file: %w", err))
 			return err
 		}
-	} else if b.config.PrivateKey != "" {
-		// setup keybag from a private and password
+	} else {
+		keybag = eos.NewKeyBag()
+	}
+
+	if b.config.PrivateKey != "" {
 		keybag = eos.NewKeyBag()
 		keybag.Add(b.config.PrivateKey)
 	}
 
 	// implementing boot sequence
-	booter := eosboot.New(b.config.BootSeqFile, b.nodeos, eosboot.WithKeyBag(keybag))
+	booter := eosboot.New(
+		b.config.BootSeqFile,
+		b.nodeos,
+		eosboot.WithKeyBag(keybag),
+		eosboot.WithCachePath(b.config.CachePath),
+	)
 
 	err = booter.Run()
 	if err != nil {
