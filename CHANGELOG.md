@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
+* Added `booter` application with its flags.
 * Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)

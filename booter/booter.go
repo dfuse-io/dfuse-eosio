@@ -2,7 +2,12 @@ package boot
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dfuse-io/shutter"
@@ -11,10 +16,19 @@ import (
 	"go.uber.org/zap"
 )
 
+var (
+	ErrNotFound = errors.New("not found")
+)
+
 type booter struct {
 	*shutter.Shutter
 	config *Config
 	nodeos *eos.API
+}
+
+type state struct {
+	Revision string    `json:"revision"`
+	BootedAt time.Time `json:"booted_at"`
 }
 
 func newBooter(config *Config) *booter {
@@ -25,47 +39,71 @@ func newBooter(config *Config) *booter {
 	}
 }
 
-func (b *booter) Launch() (err error) {
-	zlog.Info("starting booter",
-		zap.Reflect("boot_seq", b.config.BootSeqFile),
-		zap.Reflect("nodeos_api_address", b.config.NodeosAPIAddress),
-	)
+func (b *booter) Launch() {
+	zlog.Info("starting booter", zap.Reflect("config", b.config))
 	b.OnTerminating(b.cleanUp)
-
-	b.waitOnNodeosReady()
-
-	zlog.Info("nodeos is ready, starting injection")
-
-	var keybag *eos.KeyBag
-	if b.config.VaultPath != "" {
-		keybag, err = b.newKeyBagFromVault(b.config.VaultPath)
+	var err error
+	var booterState *state
+	if b.stateExists() {
+		zlog.Info("retrieving booter state")
+		booterState, err = b.getState()
 		if err != nil {
-			b.Shutdown(fmt.Errorf("unable to load vault file: %w", err))
-			return err
+			zlog.Error("unable to retrieve booter state", zap.Error(err))
+			b.Shutdown(err)
+			return
 		}
-	} else {
-		keybag = eos.NewKeyBag()
 	}
 
-	if b.config.PrivateKey != "" {
-		keybag = eos.NewKeyBag()
-		keybag.Add(b.config.PrivateKey)
+	keybag, err := b.setupKeybag()
+	if err != nil {
+		zlog.Error("failed to setup keybag", zap.Error(err))
+		b.Shutdown(err)
+		return
 	}
 
 	// implementing boot sequence
-	booter := eosboot.New(
+	booter, err := eosboot.New(
 		b.config.BootSeqFile,
 		b.nodeos,
 		eosboot.WithKeyBag(keybag),
-		eosboot.WithCachePath(b.config.CachePath),
+		eosboot.WithCachePath(filepath.Join(b.config.Datadir, "cache")),
 	)
-
-	err = booter.Run()
 	if err != nil {
-		zlog.Error("failed to boot chain", zap.Error(err))
+		zlog.Error("failed to initialize booter", zap.Error(err))
+		b.Shutdown(err)
+		return
 	}
 
-	return nil
+	if booterState != nil && booter.BootseqChecksum() == booterState.Revision {
+		zlog.Info("chain has already been booted",
+			zap.String("boot_sequence_revision", booterState.Revision),
+			zap.Time("booted_at", booterState.BootedAt),
+		)
+		return
+	}
+
+	b.waitOnNodeosReady()
+	zlog.Info("nodeos is ready, starting injection")
+
+	bootSeqChecksum, err := booter.Run()
+	if err != nil {
+		zlog.Error("failed to boot chain", zap.Error(err))
+		b.Shutdown(err)
+		return
+	}
+
+	zlog.Info("booter successfully ran",
+		zap.String("bootseq_checksum", bootSeqChecksum),
+	)
+
+	err = b.storeState(bootSeqChecksum)
+	if err != nil {
+		zlog.Error("failed to store booter state", zap.Error(err))
+		b.Shutdown(err)
+		return
+	}
+
+	return
 }
 
 func (b *booter) cleanUp(err error) {
@@ -85,4 +123,77 @@ func (b *booter) waitOnNodeosReady() {
 		)
 		return
 	}
+}
+
+func (b *booter) storeState(bootSeqChecksum string) error {
+	zlog.Debug("storing booter state")
+
+	s := &state{
+		Revision: bootSeqChecksum,
+		BootedAt: time.Now(),
+	}
+
+	cnt, err := json.Marshal(s)
+	if err != nil {
+		return fmt.Errorf("unable to store booter state: %w", err)
+	}
+
+	filename := b.getStateFilePath()
+	fl, err := os.OpenFile(b.getStateFilePath(), os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return fmt.Errorf("unable to open booter state for writting %q: %w", filename, err)
+	}
+	defer fl.Close()
+
+	_, err = fl.Write(cnt)
+	if err != nil {
+		return fmt.Errorf("unable to write booter state %q: %w", filename, err)
+	}
+
+	return nil
+}
+
+func (b *booter) getState() (*state, error) {
+	zlog.Debug("getting booter state")
+
+	rawState, err := ioutil.ReadFile(b.getStateFilePath())
+	if err != nil {
+		return nil, fmt.Errorf("reading boot seq: %s", err)
+	}
+
+	s := &state{}
+
+	if err := json.Unmarshal(rawState, &s); err != nil {
+		return nil, fmt.Errorf("parsing booter state: %w", err)
+	}
+	return s, nil
+}
+
+func (b *booter) getStateFilePath() string {
+	return filepath.Join(b.config.Datadir, "state.json")
+}
+
+func (b *booter) setupKeybag() (keybag *eos.KeyBag, err error) {
+	if b.config.VaultPath != "" {
+		keybag, err = b.newKeyBagFromVault(b.config.VaultPath)
+		if err != nil {
+			return nil, fmt.Errorf("unable to load vault file: %w", err)
+		}
+	} else {
+		keybag = eos.NewKeyBag()
+	}
+
+	if b.config.PrivateKey != "" {
+		keybag = eos.NewKeyBag()
+		keybag.Add(b.config.PrivateKey)
+	}
+	return keybag, nil
+}
+
+func (b *booter) stateExists() bool {
+	info, err := os.Stat(b.getStateFilePath())
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }

@@ -11,7 +11,7 @@ import (
 type Config struct {
 	NodeosAPIAddress string
 	BootSeqFile      string
-	CachePath        string
+	Datadir          string
 	VaultPath        string
 	PrivateKey       string
 }
