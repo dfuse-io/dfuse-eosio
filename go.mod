@@ -32,6 +32,7 @@ require (
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
+	github.com/dfuse-io/eosio-boot v0.0.0-20200616210133-91bd63fe1a24
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200605220113-7e231334a020
@@ -71,7 +72,7 @@ require (
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.2
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.5.0
