@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -93,8 +94,9 @@ type migrater struct {
 	exportDir   string
 	irrBlockNum uint64
 
-	notFoundABIs []string
-	invalidABIs  []string
+	notFoundCodes []string
+	notFoundABIs  []string
+	invalidABIs   []string
 }
 
 func (m *migrater) migrate() error {
@@ -103,17 +105,46 @@ func (m *migrater) migrate() error {
 		return fmt.Errorf("fetch contracts: %w", err)
 	}
 
+	if err = os.MkdirAll(m.exportDir, os.ModePerm); err != nil {
+		return fmt.Errorf("unable to create export directory: %w", err)
+	}
+
+	if err = m.writeContractsList(contracts); err != nil {
+		return fmt.Errorf("unable to write contracts list: %w", err)
+	}
+
 	userLog.Printf("Retrieved %d contracts, fetching all tables now", len(contracts))
 	for _, contract := range contracts {
+		code, err := m.fetchCode(contract)
+		if err == errCodeNotFound {
+			userLog.Printf("no code found for contract %d, will NOT migrate data of this contract", contract)
+			m.notFoundCodes = append(m.notFoundCodes, contract)
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("unable to fetch code for %q: %w", contract, err)
+		}
+
 		abi, err := m.fetchABI(contract)
 		if err == errABINotFound {
-			userLog.Warn("no ABI found for contract, this is unlikely to be possible, to investigate", zap.String("account", contract))
+			userLog.Printf("no ABI found for contract %d, will NOT migrate data of this contract", contract)
 			m.notFoundABIs = append(m.notFoundABIs, contract)
 			continue
 		}
 
 		if err == errABIInvalid {
-			userLog.Debug("abi was found but was invalid, continuing", zap.String("account", contract))
+			userLog.Debug("abi was found but was invalid, continuing", zap.String("contract", contract))
+			m.invalidABIs = append(m.invalidABIs, contract)
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("unable to fetch ABI for %q: %w", contract, err)
+		}
+
+		if err == errABIInvalid {
+			userLog.Debug("abi was found but was invalid, continuing", zap.String("contract", contract))
 			m.invalidABIs = append(m.invalidABIs, contract)
 			continue
 		}
@@ -125,6 +156,10 @@ func (m *migrater) migrate() error {
 		accountPath := m.accountStorage(contract)
 		if err = os.MkdirAll(accountPath, os.ModePerm); err != nil {
 			return fmt.Errorf("unable to create account storage path: %w", err)
+		}
+
+		if err := m.writeCode(accountPath, code); err != nil {
+			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
 		if err := m.writeABI(accountPath, abi); err != nil {
@@ -164,6 +199,10 @@ func (m *migrater) fetchAllContracts() ([]string, error) {
 
 		contracts = append(contracts, resp.Contract)
 	}
+}
+
+func (m *migrater) writeContractsList(contracts []string) error {
+	return writeJSONFile(filepath.Join(m.exportDir, "contracts.json"), contracts)
 }
 
 func (m *migrater) writeAllTables(contract string, abi *eos.ABI) error {
@@ -278,17 +317,29 @@ func (m *migrater) fetchABI(contract string) (*eos.ABI, error) {
 }
 
 func (m *migrater) writeABI(storagePath string, abi *eos.ABI) error {
-	file, err := os.Create(filepath.Join(storagePath, "abi.json"))
+	return writeJSONFile(filepath.Join(storagePath, "abi.json"), abi)
+}
+
+var errCodeNotFound = errors.New("code not found")
+
+func (m *migrater) fetchCode(contract string) ([]byte, error) {
+	resp, err := m.fluxdb.GetCode(m.ctx, &pbfluxdb.GetCodeRequest{
+		BlockNum: m.irrBlockNum,
+		Contract: contract,
+	})
 	if err != nil {
-		return fmt.Errorf("open file: %w", err)
+		return nil, fmt.Errorf("fetch code: %w", err)
 	}
-	defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	encoder.SetEscapeHTML(false)
+	if len(resp.RawCode) <= 0 {
+		return nil, errCodeNotFound
+	}
 
-	return encoder.Encode(abi)
+	return resp.RawCode, nil
+}
+
+func (m *migrater) writeCode(storagePath string, code []byte) error {
+	return ioutil.WriteFile(filepath.Join(storagePath, "code.wasm"), code, os.ModePerm)
 }
 
 type TableRow struct {
@@ -328,6 +379,20 @@ func (m *migrater) writeTableRows(tablePath string, rows []*pbfluxdb.TableRowRes
 	file.WriteString("]")
 
 	return nil
+}
+
+func writeJSONFile(filename string, v interface{}) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+
+	return encoder.Encode(v)
 }
 
 func (m *migrater) accountStorage(account string) string {
