@@ -291,6 +291,12 @@ func (m *migrater) writeABI(storagePath string, abi *eos.ABI) error {
 	return encoder.Encode(abi)
 }
 
+type TableRow struct {
+	Key   string          `json:"key"`
+	Payer string          `json:"payer"`
+	Data  json.RawMessage `json:"data"`
+}
+
 func (m *migrater) writeTableRows(tablePath string, rows []*pbfluxdb.TableRowResponse) error {
 	userLog.Debug("writing table", zap.String("table_path", tablePath), zap.Int("row_count", len(rows)))
 	file, err := os.Create(filepath.Join(tablePath, "rows.json"))
@@ -299,12 +305,29 @@ func (m *migrater) writeTableRows(tablePath string, rows []*pbfluxdb.TableRowRes
 	}
 	defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
-	encoder.SetEscapeHTML(false)
+	lastIndex := len(rows) - 1
+	file.WriteString("[")
+	for i, tabletRow := range rows {
+		encoder := json.NewEncoder(file)
+		encoder.SetEscapeHTML(false)
 
-	// FIXME: Proper encoding of values, probably in a streaming fashion!
-	return encoder.Encode(rows)
+		file.WriteString("\n  ")
+		err := encoder.Encode(TableRow{
+			Key:   tabletRow.Key,
+			Payer: tabletRow.Payer,
+			Data:  json.RawMessage(tabletRow.Json),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to encode row %d: %w", i, err)
+		}
+
+		if i != lastIndex {
+			file.WriteString(",")
+		}
+	}
+	file.WriteString("]")
+
+	return nil
 }
 
 func (m *migrater) accountStorage(account string) string {
@@ -333,7 +356,7 @@ func (m *migrater) tableStorage(account string, table string, scope string) stri
 		cliErrorAndExit("Received a fully empty scope, refusing to procede")
 	}
 
-	path := filepath.Join(m.accountStorage(account), table)
+	path := filepath.Join(m.accountStorage(account), "tables", table)
 
 	if len(scope) <= 2 {
 		path = filepath.Join(path, scope)
