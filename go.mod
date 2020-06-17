@@ -96,7 +96,6 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
 
 replace github.com/dfuse-io/dfuse-box => /Users/cbillett/devel/dfuse/go/dfuse-box
-
 replace github.com/dfuse-io/manageos => /Users/cbillett/devel/dfuse/go/manageos
-
+replace github.com/dfuse-io/blockmeta => /Users/cbillett/devel/dfuse/go/blockmeta
 replace github.com/dfuse-io/bstream => /Users/cbillett/devel/dfuse/go/bstream

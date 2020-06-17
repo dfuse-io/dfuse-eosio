@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eoscanada/eos-go"
+
 	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // register authenticator plugin
@@ -311,6 +313,19 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			for _, addr := range viper.GetStringSlice("blockmeta-eos-api-upstream-addr") {
+				if !strings.HasPrefix(addr, "http") {
+					addr = "http://" + addr
+				}
+				dblockmeta.APIs = append(dblockmeta.APIs, eos.New(addr))
+			}
+			for _, addr := range viper.GetStringSlice("blockmeta-eos-api-extra-addr") {
+				if !strings.HasPrefix(addr, "http") {
+					addr = "http://" + addr
+				}
+				dblockmeta.ExtraAPIs = append(dblockmeta.ExtraAPIs, eos.New(addr))
+			}
+
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
 				return nil, err
@@ -327,13 +342,11 @@ func init() {
 			}
 
 			return blockmetaApp.New(&blockmetaApp.Config{
-				Protocol:                Protocol,
-				BlockStreamAddr:         viper.GetString("common-blockstream-addr"),
-				GRPCListenAddr:          viper.GetString("blockmeta-grpc-listen-addr"),
-				BlocksStoreURL:          mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				LiveSource:              viper.GetBool("blockmeta-live-source"),
-				EOSAPIUpstreamAddresses: viper.GetStringSlice("blockmeta-eos-api-upstream-addr"),
-				EOSAPIExtraAddresses:    viper.GetStringSlice("blockmeta-eos-api-extra-addr"),
+				Protocol:        Protocol,
+				BlockStreamAddr: viper.GetString("common-blockstream-addr"),
+				GRPCListenAddr:  viper.GetString("blockmeta-grpc-listen-addr"),
+				BlocksStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				LiveSource:      viper.GetBool("blockmeta-live-source"),
 			}, db), nil
 		},
 	})
