@@ -8,9 +8,11 @@
 
 ```
 mkdir workspace && cd workspace
-curl -L -o kylin-snapshot.bin.bz2 https://snapshots.eosnation.io/kylin/latest
-bunzip2 kylin-snapshot.bin.bz2
+curl -L -o kylin-snapshot.bin.zst https://snapshots.eosnation.io/kylin/latest
+zstd -d kylin-snapshot.bin.zst
 ```
+
+**Note** On Ubuntu, `zstd` CLI decompression tool can be obtain with `sudo apt-get install -y zstd`, otherwise, can be downloaded from https://github.com/facebook/zstd/releases.
 
 ## Prepare {workspace}/kylin-phase1-blocks.yaml
 

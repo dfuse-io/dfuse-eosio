@@ -15,18 +15,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * [Breaking] `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
 * [Breaking] `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 * `mindreader` ContinuityChecker is not enabled by default anymore
+* `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
-* Flag: --mindreader-fail-on-non-contiguous-block (default:false) to enable the ContinuityChecker
-* Flag: --log-level-switcher-listen-addr (default:1065) to change log level on a running instance (see DEBUG.md)
-* Flag: --common-ratelimiter-plugin (default: nul://) to enable a rate limiter plugin
-* Flag: --pprof-listen-addr (default: 6060)
+* Added `booter` application with its flags.
+* Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
+* Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
+* Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)
+* Flag: `--mindreader-fail-on-non-contiguous-block` (default:false) to enable the ContinuityChecker
+* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: `--common-ratelimiter-plugin` (default: null://) to enable a rate limiter plugin
+* Flag: `--pprof-listen-addr` (default: 6060)
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
 * Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
+* Command `check trxdb-blocks` to `tools`, to ensure linearity of irreversible blocks in storage.  This is useful to know if you've missed some block ranges when doing parallel insertions into your `trxdb` storage.
+* `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
 
 ## [v0.1.0-beta3] 2020-05-13
 
@@ -42,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
      },
    ]
 ```
-* Added `--eosq-default-network` string to configure the default network eosq	
+* Added `--eosq-default-network` string to configure the default network eosq
 * Added `--eosq-disable-analytics` bool to configure eosq analytics
 * Added `--eosq-display-price` bool to configure if eosq displays prices
 * Added `--eosq-price-ticker` string to configure if eosq price ticker

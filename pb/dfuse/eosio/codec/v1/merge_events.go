@@ -93,14 +93,16 @@ func MergeTransactionEvents(events []*TransactionEvent, inCanonicalChain func(bl
 				if out.ExecutionTrace.Receipt != nil &&
 					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
 					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
-					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) {
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) ||
+					(out.ExecutionTrace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXPIRED) {
 					// the first one we processed is the Execution trace
 					out.ExecutionTrace = mergeTransactionTrace(out.ExecutionTrace, ev.Execution.Trace)
 
 				} else if ev.Execution.Trace.Receipt != nil &&
 					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXECUTED) ||
 					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_HARDFAIL) ||
-					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) {
+					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL) ||
+					(ev.Execution.Trace.Receipt.Status == TransactionStatus_TRANSACTIONSTATUS_EXPIRED) {
 					// the second one (current one) is the Execution Trace
 					out.ExecutionTrace = mergeTransactionTrace(ev.Execution.Trace, out.ExecutionTrace)
 					// since the second one is the execution trace, we must take

@@ -44,8 +44,12 @@ development chain by also managing the block producing node for you.
 Build requirements:
 * `Go` 1.13 or higher
 * `Node.js` 12 or higher, `yarn`
+* [rice](https://github.com/GeertJohan/go.rice) Go static assets embedder (see installation instructions below)
 
 ```
+# Install `rice` CLI tool if you don't have it already
+go get github.com/GeertJohan/go.rice/rice
+
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 
@@ -97,6 +101,10 @@ GraphiQL:         http://localhost:8080/graphiql
 
 * See [Syncing a chain partially](./PARTIAL_SYNC.md)
 * See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
+
+### Logging
+
+See [Logging](./LOGGING.md)
 
 ## Overview
 

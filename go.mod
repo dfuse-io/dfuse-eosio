@@ -30,22 +30,24 @@ require (
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
-	github.com/dfuse-io/dstore v0.1.0
+	github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
+	github.com/dfuse-io/eosio-boot v0.0.0-20200616210133-91bd63fe1a24
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200615144400-d12a1d37270f
-	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
-	github.com/dfuse-io/manageos v0.0.0-20200603173055-cd3a3e04a205
+	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
+	github.com/dfuse-io/manageos v0.0.0-20200611205430-5e3a009eadaa
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
 	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
-	github.com/dfuse-io/search v0.0.0-20200604141048-4ced372c8330
+	github.com/dfuse-io/search v0.0.0-20200615145420-7f4b7dc4c850
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200603180942-a183f4c66253
+	github.com/eoscanada/eos-go v0.9.1-0.20200616134903-ff2413bdaa99
+	github.com/eoscanada/eosc v1.4.0
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
@@ -66,13 +68,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
-	github.com/rs/cors v0.0.0-20160617231935-a62a804a8a00 // indirect
-	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521 // indirect
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
 	github.com/spf13/viper v1.6.2
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.5.0

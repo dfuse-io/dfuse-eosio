@@ -5,6 +5,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/kvdb/store"
@@ -189,6 +190,7 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 				BlockNum: eos.BlockNum(blockID),
 			}
 
+			codec.ReduplicateTransactionTrace(row.TrxTrace)
 			ev.Event = &pbcodec.TransactionEvent_Execution{
 				Execution: &pbcodec.TransactionEvent_Executed{
 					Trace:       row.TrxTrace,

@@ -30,6 +30,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -65,10 +66,15 @@ type Encoder struct {
 	showFullCaller bool
 	showStacktrace bool
 	showTime       bool
+
+	enableAnsiColor bool
 }
 
 func NewEncoder(verbosity int) zapcore.Encoder {
 	isDebug := os.Getenv("DEBUG") != ""
+	isInfo := os.Getenv("INFO") != ""
+
+	isTTY := terminal.IsTerminal(int(os.Stdout.Fd()))
 
 	return &Encoder{
 		jsonEncoder: newJSONEncoder(zapcore.EncoderConfig{
@@ -76,14 +82,15 @@ func NewEncoder(verbosity int) zapcore.Encoder {
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 		}, true),
 
-		showLevel:      isDebug || verbosity >= 1,
-		showLoggerName: isDebug || verbosity >= 1,
-		showTime:       isDebug || verbosity >= 2,
-		showCallerName: isDebug || verbosity >= 3,
+		showLevel:      isInfo || isDebug || verbosity >= 1,
+		showLoggerName: isInfo || isDebug || verbosity >= 1,
+		showTime:       isInfo || isDebug || verbosity >= 1,
+		showCallerName: isInfo || isDebug || verbosity >= 1,
 		showFullCaller: verbosity >= 4,
 
 		// Also always forced displayed on "Error" level and above
-		showStacktrace: isDebug || verbosity >= 2,
+		showStacktrace:  isInfo || isDebug || verbosity >= 2,
+		enableAnsiColor: isTTY,
 	}
 }
 
@@ -91,13 +98,26 @@ func (c Encoder) Clone() zapcore.Encoder {
 	return &Encoder{
 		jsonEncoder: c.jsonEncoder.Clone().(*jsonEncoder),
 
-		showLevel:      c.showLevel,
-		showLoggerName: c.showLoggerName,
-		showStacktrace: c.showStacktrace,
-		showCallerName: c.showCallerName,
-		showFullCaller: c.showFullCaller,
-		showTime:       c.showTime,
+		showLevel:       c.showLevel,
+		showLoggerName:  c.showLoggerName,
+		showStacktrace:  c.showStacktrace,
+		showCallerName:  c.showCallerName,
+		showFullCaller:  c.showFullCaller,
+		showTime:        c.showTime,
+		enableAnsiColor: c.enableAnsiColor,
 	}
+}
+
+func (c Encoder) colorString(color, s string) (out string) {
+
+	if c.enableAnsiColor {
+		out += ansiColorEscape + color + "m"
+	}
+	out += s
+	if c.enableAnsiColor {
+		out += clearANSIModifier
+	}
+	return
 }
 
 func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
@@ -105,9 +125,7 @@ func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer
 	lineColor := levelColor(ent.Level)
 
 	if c.showTime {
-		line.AppendString(ansiColorEscape + grayFg.Nos(true) + "m")
-		line.AppendString(ent.Time.Format("2006-01-02T15:04:05.000Z0700") + " ")
-		line.AppendString(clearANSIModifier)
+		line.AppendString(c.colorString(grayFg.Nos(true), ent.Time.Format("2006-01-02T15:04:05.000Z0700")+" "))
 	}
 
 	showLoggerName := c.showLoggerName && ent.LoggerName != ""
@@ -121,9 +139,7 @@ func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer
 			}
 		}
 
-		line.AppendString(ansiColorEscape + BlueFg.Nos(true) + "m")
-		line.AppendString("(" + loggerName + ") ")
-		line.AppendString(clearANSIModifier)
+		line.AppendString(c.colorString(BlueFg.Nos(true), "("+loggerName+") "))
 	}
 
 	message := ent.Message
@@ -131,9 +147,7 @@ func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer
 		message = strings.TrimSuffix(message, ".")
 	}
 
-	line.AppendString(ansiColorEscape + lineColor.Nos(true) + "m")
-	line.AppendString(message)
-	line.AppendString(clearANSIModifier)
+	line.AppendString(c.colorString(lineColor.Nos(true), message))
 
 	showCaller := (c.showCallerName || zap.WarnLevel.Enabled(ent.Level)) && ent.Caller.Defined
 	if showCaller && ent.LoggerName != "box" {
@@ -142,24 +156,22 @@ func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer
 			callerPath = maybeRemovePackageVersion(callerPath)
 		}
 
-		line.AppendString(ansiColorEscape + BlueFg.Nos(true) + "m")
-		line.AppendString(" (" + callerPath + ")")
-		line.AppendString(clearANSIModifier)
+		line.AppendString(c.colorString(BlueFg.Nos(true), " ("+callerPath+")"))
 	}
 
 	// Add any structured context.
 	if len(fields) > 0 {
-		line.AppendString(ansiColorEscape + grayFg.Nos(true) + "m")
-		line.AppendString(" ")
+		if c.enableAnsiColor {
+			line.AppendString(ansiColorEscape + grayFg.Nos(true) + "m ")
+		}
 		c.writeJSONFields(line, fields)
-		line.AppendString(clearANSIModifier)
+		if c.enableAnsiColor {
+			line.AppendString(clearANSIModifier)
+		}
 	}
 
 	if ent.Stack != "" && (c.showStacktrace || zap.ErrorLevel.Enabled(ent.Level)) {
-		line.AppendString("\n")
-		line.AppendString(ansiColorEscape + lineColor.Nos(true) + "m")
-		line.AppendString(ent.Stack)
-		line.AppendString(clearANSIModifier)
+		line.AppendString("\n" + c.colorString(lineColor.Nos(true), ent.Stack))
 	}
 
 	line.AppendString("\n")

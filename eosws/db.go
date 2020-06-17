@@ -26,9 +26,9 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
@@ -74,11 +74,11 @@ func NewTRXDB(dbReader trxdb.DBReader) *TRXDB {
 
 func (db *TRXDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
 	evs, err := db.GetTransactionEvents(ctx, id)
-	if err == kvdb.ErrNotFound {
-		return nil, DBTrxNotFoundError(ctx, id)
-	}
-	if err != nil {
+	if err != nil && err != kvdb.ErrNotFound {
 		return nil, err
+	}
+	if len(evs) == 0 {
+		return nil, DBTrxNotFoundError(ctx, id)
 	}
 
 	out = pbcodec.MergeTransactionEvents(evs, db.chainDiscriminator)
@@ -154,6 +154,9 @@ func (db *TRXDB) ListTransactionsForBlockID(ctx context.Context, blockID string,
 
 	var lifecycles []*v1.TransactionLifecycle
 	for _, evs := range trxList {
+		if len(evs) == 0 {
+			return nil, fmt.Errorf("transactions list for block ID: a transaction was not found")
+		}
 		lc, err := mdl.ToV1TransactionLifecycle(pbcodec.MergeTransactionEvents(evs, db.chainDiscriminator))
 		if err != nil {
 			return nil, fmt.Errorf("transactions list for block ID: %w", err)
