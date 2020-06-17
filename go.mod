@@ -68,6 +68,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_model v0.1.0
 	github.com/prometheus/prom2json v1.3.0
+	github.com/rs/cors v1.7.0 // indirect
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
@@ -97,3 +98,6 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/eoscanada/eos-go => /Users/julien/codebase/eoscanada/eos-go
+replace github.com/dfuse-io/eosio-boot => /Users/julien/codebase/dfuse-io/eosio-boot

@@ -1,0 +1,39 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [],
+    "structs": [
+        {
+            "name": "inject",
+            "base": "",
+            "fields": [
+                {
+                    "name": "scope",
+                    "type": "uint64"
+                },
+                {
+                    "name": "table",
+                    "type": "uint64"
+                },
+                {
+                    "name": "payer",
+                    "type": "uint64"
+                },
+                {
+                    "name": "id",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "inject",
+            "type": "inject",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [],
+    "ricardian_clauses": [],
+    "variants": []
+}

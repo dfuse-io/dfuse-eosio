@@ -1,4 +1,4 @@
-package booter
+package migrator
 
 import (
 	"github.com/dfuse-io/logging"
@@ -8,5 +8,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/booter", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/booter/migrator", &zlog)
 }
