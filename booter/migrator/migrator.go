@@ -3,6 +3,10 @@ package migrator
 import (
 	"fmt"
 
+	bootops "github.com/dfuse-io/eosio-boot/ops"
+
+	"go.uber.org/zap"
+
 	"github.com/eoscanada/eos-go/ecc"
 
 	"github.com/eoscanada/eos-go"
@@ -14,14 +18,20 @@ import (
 //go:generate rice embed-go
 
 type Migrator struct {
-	box      *rice.Box
-	contract eos.AccountName
+	box         *rice.Box
+	contract    eos.AccountName
+	opPublicKey ecc.PublicKey
+	actionChan  chan interface{}
+	dataDir     string
 }
 
-func newMigrator() *Migrator {
+func newMigrator(opPublicKey ecc.PublicKey, dataDir string, actionChan chan interface{}) *Migrator {
 	return &Migrator{
-		box:      rice.MustFindBox("./code/build"),
-		contract: eos.AN("dfuse.mgrt"),
+		dataDir:     dataDir,
+		opPublicKey: opPublicKey,
+		box:         rice.MustFindBox("./code/build"),
+		actionChan:  actionChan,
+		contract:    eos.AN("dfuse.mgrt"),
 	}
 }
 
@@ -54,24 +64,20 @@ func (m *Migrator) setContractActions(contract eos.AccountName, in chan interfac
 	return nil
 }
 
-func (m *Migrator) processContractTable(contract eos.AccountName, tableName eos.TableName, table contractTable, in chan interface{}) error {
-	for scope, rows := range table {
-		for _, row := range rows {
-			in <- &eos.Action{
-				Account: AN("eosio.token"),
-				Name:    ActN("inject"),
-				Authorization: []eos.PermissionLevel{
-					{Actor: m.contract, Permission: PN("active")},
-				},
-				ActionData: eos.NewActionData(&Inject{
-					Table: tableName,
-					Scope: scope,
-					Payer: row.Payer,
-					Key:   row.Key,
-				}),
-			}
-		}
+func (m *Migrator) migrateAccount(accountData *AccountData) error {
+	zlog.Debug("processing account", zap.String("account", accountData.name))
 
+	zlog.Debug("setting migrator code", zap.String("contract", accountData.name))
+	err := m.setContractActions(AN(accountData.name), m.actionChan)
+	if err != nil {
+		return fmt.Errorf("unable to set migrator code for account: %w", err)
 	}
+	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
+
+	err = accountData.Migrate()
+	if err != nil {
+		return fmt.Errorf("unable to migrate account: %w", err)
+	}
+
 	return nil
 }

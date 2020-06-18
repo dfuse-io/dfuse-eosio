@@ -3,8 +3,6 @@ package migrator
 import (
 	"fmt"
 
-	"github.com/eoscanada/eos-go"
-
 	"github.com/dfuse-io/eosio-boot/config"
 	bootops "github.com/dfuse-io/eosio-boot/ops"
 	"github.com/eoscanada/eos-go/ecc"
@@ -20,79 +18,52 @@ type OpMigration struct {
 }
 
 func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in chan interface{}) error {
-	migrator := newMigrator()
+	migrator := newMigrator(opPubkey, op.DataDir, in)
 
-	zlog.Debug("getting migrator account actions")
-	err := migrator.newAccountActions(opPubkey, in)
+	err := migrator.init()
 	if err != nil {
-		zlog.Error("unable to get migrator contract actions", zap.Error(err))
-		return err
+		return fmt.Errorf("faile to initialize migrator: %w", err)
 	}
-	in <- bootops.EndTransaction(opPubkey) // end transaction
 
-	zlog.Debug("getting migrator contract actions")
-	err = migrator.setContractActions(migrator.contract, in)
+	migrator.startMigration()
 	if err != nil {
-		zlog.Error("unable to get migrator contract actions", zap.Error(err))
-		return err
-	}
-	in <- bootops.EndTransaction(opPubkey) // end transaction
-
-	table := newContractTable(3)
-	table["eoscanadacom"] = []*TableRow{
-		{
-			Key:   "........ehbo5",
-			Payer: "eoscanadacom",
-			Data:  `{"balance":"3 EOS"}`,
-		},
-	}
-	table["eoscanadacoa"] = []*TableRow{
-		{
-			Key:   "........ehbo5",
-			Payer: "eoscanadacoa",
-			Data:  `{"balance":"3 EOS"}`,
-		},
-	}
-	table["eoscanadacob"] = []*TableRow{
-		{
-			Key:   "EOS",
-			Payer: "eoscanadacob",
-			Data:  `{"balance":"3 EOS"}`,
-		},
-	}
-
-	contracts := []eos.AccountName{
-		AN("eosio.token"),
-	}
-
-	for _, contract := range contracts {
-		err = migrator.setContractActions(contract, in)
-		if err != nil {
-			zlog.Error("unable set mirgator for contract account", zap.String("contract", string(contract)), zap.Error(err))
-			return err
-		}
-		in <- bootops.EndTransaction(opPubkey) // end transaction
-
-		err = migrator.processContractTable(contract, TN("accounts"), table, in)
-		if err != nil {
-			zlog.Error("unable get accounts for eosio.token accounts", zap.Error(err))
-			return err
-		}
-		in <- bootops.EndTransaction(opPubkey) // end transaction
+		return fmt.Errorf("unable to read contract list: %w", err)
 	}
 
 	return nil
 }
 
-func decodeOpPublicKey(c *config.OpConfig, opPubKey string) (ecc.PublicKey, error) {
-	privateKey, err := c.GetPrivateKey(opPubKey)
-	if err == nil {
-		return privateKey.PublicKey(), nil
+func (m *Migrator) init() error {
+	zlog.Info("setting injector account", zap.String("account", string(m.contract)))
+	err := m.newAccountActions(m.opPublicKey, m.actionChan)
+	if err != nil {
+		return fmt.Errorf("unable to get migrator contract actions: %w", err)
+	}
+	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
+	return nil
+}
+
+func (m *Migrator) startMigration() {
+	contracts, err := ReadContractList(m.dataDir)
+	if err != nil {
+		zlog.Error("unable to read contract list", zap.Error(err))
+		return
 	}
 
-	pubKey, err := ecc.NewPublicKey(opPubKey)
-	if err != nil {
-		return ecc.PublicKey{}, fmt.Errorf("reading pubkey: %s", err)
+	zlog.Info("retrieved contract list", zap.Int("contract_count", len(contracts)))
+
+	for _, contract := range contracts {
+
+		account, err := NewAccountData(m.dataDir, contract)
+		if err != nil {
+			zlog.Error("unable to initiate account migration", zap.String("contract", contract))
+			continue
+		}
+
+		err = m.migrateAccount(account)
+		if err != nil {
+			zlog.Error("unable to process account", zap.String("contract", contract))
+			continue
+		}
 	}
-	return pubKey, nil
 }

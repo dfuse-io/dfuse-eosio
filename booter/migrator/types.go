@@ -18,15 +18,9 @@ import (
 
 //account dfuse.boot setCode wasm.contract
 type TableRow struct {
-	Key   string `json:"key"`
-	Payer string `json:"payer"`
-	Data  string `json:"data"`
-}
-
-type contractTable map[eos.ScopeName][]*TableRow
-
-func newContractTable(length int) contractTable {
-	return make(map[eos.ScopeName][]*TableRow, length)
+	Key   string      `json:"key"`
+	Payer string      `json:"payer"`
+	Data  interface{} `json:"data"`
 }
 
 // Transfer represents the `inject` struct on `migration` contract.

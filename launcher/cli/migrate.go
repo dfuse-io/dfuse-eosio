@@ -22,8 +22,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
+	"github.com/dfuse-io/dfuse-eosio/booter/migrator"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/dgrpc"
@@ -109,7 +109,7 @@ func (m *migrater) migrate() error {
 		return fmt.Errorf("unable to create export directory: %w", err)
 	}
 
-	if err = m.writeContractsList(contracts); err != nil {
+	if err = m.writeContractsList(m.exportDir, contracts); err != nil {
 		return fmt.Errorf("unable to write contracts list: %w", err)
 	}
 
@@ -117,7 +117,7 @@ func (m *migrater) migrate() error {
 	for _, contract := range contracts {
 		code, err := m.fetchCode(contract)
 		if err == errCodeNotFound {
-			userLog.Printf("no code found for contract %d, will NOT migrate data of this contract", contract)
+			userLog.Printf("no code found for contract %s, will NOT migrate data of this contract", contract)
 			m.notFoundCodes = append(m.notFoundCodes, contract)
 			continue
 		}
@@ -128,7 +128,7 @@ func (m *migrater) migrate() error {
 
 		abi, err := m.fetchABI(contract)
 		if err == errABINotFound {
-			userLog.Printf("no ABI found for contract %d, will NOT migrate data of this contract", contract)
+			userLog.Printf("no ABI found for contract %s, will NOT migrate data of this contract", contract)
 			m.notFoundABIs = append(m.notFoundABIs, contract)
 			continue
 		}
@@ -153,20 +153,24 @@ func (m *migrater) migrate() error {
 			return fmt.Errorf("unable to fetch ABI for %q: %w", contract, err)
 		}
 
-		accountPath := m.accountStorage(contract)
-		if err = os.MkdirAll(accountPath, os.ModePerm); err != nil {
+		accountData, err := migrator.NewAccountData(m.exportDir, contract)
+		if err != nil {
+			return fmt.Errorf("unable to initialize account storage: %w", err)
+		}
+
+		if err = os.MkdirAll(accountData.Path, os.ModePerm); err != nil {
 			return fmt.Errorf("unable to create account storage path: %w", err)
 		}
 
-		if err := m.writeCode(accountPath, code); err != nil {
+		if err := m.writeCode(accountData.CodePath(), code); err != nil {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
-		if err := m.writeABI(accountPath, abi); err != nil {
+		if err := m.writeABI(accountData.ABIPath(), abi); err != nil {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
-		if err := m.writeAllTables(contract, abi); err != nil {
+		if err := m.writeAllTables(contract, accountData, abi); err != nil {
 			return fmt.Errorf("unable to write all tables for %q: %w", contract, err)
 		}
 	}
@@ -201,14 +205,14 @@ func (m *migrater) fetchAllContracts() ([]string, error) {
 	}
 }
 
-func (m *migrater) writeContractsList(contracts []string) error {
-	return writeJSONFile(filepath.Join(m.exportDir, "contracts.json"), contracts)
+func (m *migrater) writeContractsList(dataDir string, contracts []string) error {
+	return writeJSONFile(migrator.ContractListPath(dataDir), contracts)
 }
 
-func (m *migrater) writeAllTables(contract string, abi *eos.ABI) error {
+func (m *migrater) writeAllTables(contract string, accountData *migrator.AccountData, abi *eos.ABI) error {
 	userLog.Debug("writing all tables", zap.String("contract", contract))
 	for _, table := range abi.Tables {
-		if err := m.writeTable(contract, string(table.Name)); err != nil {
+		if err := m.writeTable(contract, accountData, string(table.Name)); err != nil {
 			return fmt.Errorf("write table %q: %w", table, err)
 		}
 	}
@@ -218,7 +222,7 @@ func (m *migrater) writeAllTables(contract string, abi *eos.ABI) error {
 
 var allScopes = []string{"*"}
 
-func (m *migrater) writeTable(contract string, table string) error {
+func (m *migrater) writeTable(contract string, accountData *migrator.AccountData, table string) error {
 	stream, err := m.fluxdb.GetMultiScopesTableRows(m.ctx, &pbfluxdb.GetMultiScopesTableRowsRequest{
 		BlockNum:         uint64(m.irrBlockNum),
 		IrreversibleOnly: true,
@@ -232,9 +236,22 @@ func (m *migrater) writeTable(contract string, table string) error {
 		return fmt.Errorf("multi table scopes stream: %w", err)
 	}
 
+	tablePath, err := accountData.TablePath(table)
+	if err != nil {
+		return fmt.Errorf("unable to determine table path: %w", err)
+	}
+
+	seenScopes := []string{}
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
+			if err = os.MkdirAll(string(tablePath), os.ModePerm); err != nil {
+				return fmt.Errorf("unable to create table scope storage path: %w", err)
+			}
+
+			if err = writeJSONFile(accountData.ScopeListPath(tablePath), seenScopes); err != nil {
+				return fmt.Errorf("unable to write scope list: %w", err)
+			}
 			return nil
 		}
 
@@ -242,13 +259,18 @@ func (m *migrater) writeTable(contract string, table string) error {
 			return fmt.Errorf("stream multi table scopes: %w", err)
 		}
 
-		tablePath := m.tableStorage(contract, table, resp.Scope)
-		if err = os.MkdirAll(tablePath, os.ModePerm); err != nil {
-			return fmt.Errorf("unable to create table storage path: %w", err)
+		scopePath, err := accountData.ScopePath(tablePath, resp.Scope)
+		if err != nil {
+			return fmt.Errorf("unable to determine accout %q table %q scope %q path: %w", contract, table, resp.Scope, err)
+		}
+		seenScopes = append(seenScopes, resp.Scope)
+
+		if err = os.MkdirAll(string(scopePath), os.ModePerm); err != nil {
+			return fmt.Errorf("unable to create table scope storage path: %w", err)
 		}
 
-		if err = m.writeTableRows(tablePath, resp.Row); err != nil {
-			return fmt.Errorf("write table rows: %w", err)
+		if err = m.writeTableRows(accountData.RowsPath(scopePath), resp.Row); err != nil {
+			return fmt.Errorf("write table scope rows: %w", err)
 		}
 	}
 }
@@ -316,8 +338,8 @@ func (m *migrater) fetchABI(contract string) (*eos.ABI, error) {
 	return abi, nil
 }
 
-func (m *migrater) writeABI(storagePath string, abi *eos.ABI) error {
-	return writeJSONFile(filepath.Join(storagePath, "abi.json"), abi)
+func (m *migrater) writeABI(abiPath string, abi *eos.ABI) error {
+	return writeJSONFile(abiPath, abi)
 }
 
 var errCodeNotFound = errors.New("code not found")
@@ -338,8 +360,8 @@ func (m *migrater) fetchCode(contract string) ([]byte, error) {
 	return resp.RawCode, nil
 }
 
-func (m *migrater) writeCode(storagePath string, code []byte) error {
-	return ioutil.WriteFile(filepath.Join(storagePath, "code.wasm"), code, os.ModePerm)
+func (m *migrater) writeCode(codePath string, code []byte) error {
+	return ioutil.WriteFile(codePath, code, os.ModePerm)
 }
 
 type TableRow struct {
@@ -348,9 +370,9 @@ type TableRow struct {
 	Data  json.RawMessage `json:"data"`
 }
 
-func (m *migrater) writeTableRows(tablePath string, rows []*pbfluxdb.TableRowResponse) error {
-	userLog.Debug("writing table", zap.String("table_path", tablePath), zap.Int("row_count", len(rows)))
-	file, err := os.Create(filepath.Join(tablePath, "rows.json"))
+func (m *migrater) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResponse) error {
+	userLog.Debug("writing table", zap.String("table_scope_path", string(rowsPath)), zap.Int("row_count", len(rows)))
+	file, err := os.Create(rowsPath)
 	if err != nil {
 		return fmt.Errorf("open file: %w", err)
 	}
@@ -393,43 +415,4 @@ func writeJSONFile(filename string, v interface{}) error {
 	encoder.SetEscapeHTML(false)
 
 	return encoder.Encode(v)
-}
-
-func (m *migrater) accountStorage(account string) string {
-	if len(account) == 0 {
-		cliErrorAndExit("Received a fully empty account, refusing to procede")
-	}
-
-	path := m.exportDir
-	if len(account) <= 2 {
-		path = filepath.Join(path, account)
-	} else if len(account) <= 4 {
-		path = filepath.Join(path, account[0:2], account)
-	} else {
-		path = filepath.Join(path, account[0:2], account[2:4], account)
-	}
-
-	return path
-}
-
-func (m *migrater) tableStorage(account string, table string, scope string) string {
-	if len(table) == 0 {
-		cliErrorAndExit("Received a fully empty table, refusing to procede")
-	}
-
-	if len(scope) == 0 {
-		cliErrorAndExit("Received a fully empty scope, refusing to procede")
-	}
-
-	path := filepath.Join(m.accountStorage(account), "tables", table)
-
-	if len(scope) <= 2 {
-		path = filepath.Join(path, scope)
-	} else if len(table) <= 4 {
-		path = filepath.Join(path, scope[0:2], scope)
-	} else {
-		path = filepath.Join(path, scope[0:2], scope[2:4], scope)
-	}
-
-	return path
 }
