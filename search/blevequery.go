@@ -5,25 +5,28 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/search"
 	"google.golang.org/grpc/codes"
 )
 
-type EOSBleveQueryValidator struct{}
+type BleveQueryValidator struct {
+	indexedTerms *filtering.IndexedTerms
+}
 
-func (v *EOSBleveQueryValidator) Validate(q *search.BleveQuery) error {
-	indexedFieldsMap := GetEOSIndexedFieldsMap()
+func (v *BleveQueryValidator) Validate(q *search.BleveQuery) error {
+	indexed := v.indexedTerms
 
 	var unknownFields []string
 	for _, fieldName := range q.FieldNames {
 		if strings.HasPrefix(fieldName, "data.") {
+			// transform `data.some.nested` into `data.some`
 			fieldName = strings.Join(strings.Split(fieldName, ".")[:2], ".")
 		}
 
-		if indexedFieldsMap[fieldName] != nil || strings.HasPrefix(fieldName, "event.") || strings.HasPrefix(fieldName, "parent.") /* we could list the optional fields for `parent.*` */ {
-			continue
+		if !indexed.BaseFields[fieldName] && !strings.HasPrefix(fieldName, "event.") {
+			unknownFields = append(unknownFields, fieldName)
 		}
-		unknownFields = append(unknownFields, fieldName)
 	}
 
 	if len(unknownFields) <= 0 {
@@ -32,6 +35,6 @@ func (v *EOSBleveQueryValidator) Validate(q *search.BleveQuery) error {
 
 	sort.Strings(unknownFields)
 
-	invalidArgString := "The following fields you are trying to search are not currently indexed: '%s'. Contact our support team for more."
+	invalidArgString := "The following fields you are trying to search are not currently indexed: '%s'."
 	return derr.Statusf(codes.InvalidArgument, invalidArgString, strings.Join(unknownFields, "', '"))
 }

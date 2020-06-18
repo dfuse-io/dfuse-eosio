@@ -1,4 +1,18 @@
-package search
+// Copyright 2020 dfuse Platform Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package filtering
 
 import (
 	"encoding/hex"
@@ -120,7 +134,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", false, "", "")
+			blockMapper, _ := NewBlockMapper("dfuseiohooks:event", false, "", "", "*")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -231,18 +245,6 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	}
 
 	return pbblock
-}
-
-func TestParseRestrictionsJSON(t *testing.T) {
-	// very shallow test, but we dont want to test actual golang JSON unmarshalling,
-	// just the general format of our restrictions
-	emptyRests, err := parseRestrictionsJSON("")
-	assert.NoError(t, err)
-	require.Len(t, emptyRests, 0)
-
-	rests, err := parseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
-	require.NoError(t, err)
-	assert.Len(t, rests, 4)
 }
 
 func TestFilterOut(t *testing.T) {
@@ -393,7 +395,7 @@ func TestFilterOut(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mapper, err := NewEOSBlockMapper("", false, test.filterOn, test.filterOut)
+			mapper, err := NewBlockMapper("", false, test.filterOn, test.filterOut, "*")
 			assert.NoError(t, err)
 
 			assert.Equal(t, test.expectedPass, mapper.shouldIndexAction(test.message))
@@ -402,9 +404,9 @@ func TestFilterOut(t *testing.T) {
 }
 
 func TestCompileCELPrograms(t *testing.T) {
-	_, err := NewEOSBlockMapper("", false, "bro = '", "")
+	_, err := NewBlockMapper("", false, "bro = '", "", "*")
 	require.Error(t, err)
 
-	_, err = NewEOSBlockMapper("", false, "", "ken")
+	_, err = NewBlockMapper("", false, "", "ken", "*")
 	require.Error(t, err)
 }

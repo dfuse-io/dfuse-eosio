@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb/store"
 )
@@ -27,6 +28,9 @@ type DB struct {
 
 	// Required only when writing
 	writerChainID []byte
+
+	// TODO: implement the filters here
+	mapper *filtering.BlockMapper
 
 	enc *trxdb.ProtoEncoder
 	dec *trxdb.ProtoDecoder
@@ -39,7 +43,6 @@ func init() {
 	trxdb.Register("badger", New)
 	trxdb.Register("tikv", New)
 	trxdb.Register("bigkv", New)
-	trxdb.Register("cznickv", New)
 }
 
 func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
@@ -51,14 +54,22 @@ func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
 
 		kvStore, err := store.New(dsnString)
 		if err != nil {
-			return nil, fmt.Errorf("badger new: open badger db: %w", err)
+			return nil, fmt.Errorf("open kv: %w", err)
 		}
 
-		db = trxdb.Driver(&DB{
+		localDB := &DB{
 			store: kvStore,
 			enc:   trxdb.NewProtoEncoder(),
 			dec:   trxdb.NewProtoDecoder(),
-		})
+		}
+
+		for _, opt := range opts {
+			if mapper, ok := opt.(*trxdb.FilteringOption); ok {
+				localDB.mapper = mapper.Mapper
+			}
+		}
+
+		db = trxdb.Driver(localDB)
 		dbCachePool[dsnString] = db
 	}
 

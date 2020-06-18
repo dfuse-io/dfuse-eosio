@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	bsearch "github.com/blevesearch/bleve/search"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	search "github.com/dfuse-io/search"
 )
 
@@ -13,7 +14,7 @@ type trxResult struct {
 	blockNum uint64
 }
 
-func Collect(ctx context.Context, lowBlockNum, highBlockNum uint64, results bsearch.DocumentMatchCollection) (out []search.SearchMatch, err error) {
+func collector(ctx context.Context, lowBlockNum, highBlockNum uint64, results bsearch.DocumentMatchCollection) (out []search.SearchMatch, err error) {
 	trxs := make(map[string][]uint16)
 	var trxList []*trxResult
 
@@ -22,7 +23,7 @@ func Collect(ctx context.Context, lowBlockNum, highBlockNum uint64, results bsea
 			return nil, err
 		}
 
-		blockNum, trxID, actionIdx, skip := ExplodeEOSDocumentID(el.ID)
+		blockNum, trxID, actionIdx, skip := filtering.ExplodeEOSDocumentID(el.ID)
 		if skip {
 			continue
 		}

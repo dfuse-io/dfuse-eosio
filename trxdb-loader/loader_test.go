@@ -41,12 +41,12 @@ import (
 
 type chainIDOption = string
 
-func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, trxdb.Driver, func()) {
+func newLoader(t *testing.T, options ...interface{}) (*Loader, trxdb.Driver, func()) {
 
 	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true")
 	require.NoError(t, err)
 
-	l := NewBigtableLoader("", nil, 1, db, 1)
+	l := NewLoader("", nil, 1, db, 1)
 
 	var chainID string
 	for _, option := range options {
@@ -72,7 +72,7 @@ func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, trxdb.Dri
 	return l, db, cleanup
 }
 
-func TestBigtableLoader(t *testing.T) {
+func TestLoader(t *testing.T) {
 	loader, trxdbDriver, cleanup := newLoader(t)
 	defer cleanup()
 
@@ -97,7 +97,7 @@ func TestBigtableLoader(t *testing.T) {
 	assert.True(t, resp.Irreversible)
 }
 
-func TestBigtableLoader_Timeline(t *testing.T) {
+func TestLoader_Timeline(t *testing.T) {
 	t.Skip() // not yet ready without sqlite
 	loader, trxdbDriver, cleanup := newLoader(t)
 	defer cleanup()

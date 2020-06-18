@@ -17,6 +17,9 @@ import (
 	"google.golang.org/grpc"
 )
 
+
+// EOSIO implementation of the Search client.
+
 type EOSClient struct {
 	*searchclient.CommonClient
 

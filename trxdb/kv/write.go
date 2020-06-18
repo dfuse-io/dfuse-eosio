@@ -40,27 +40,52 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 	return db.GetClosestIrreversibleIDAtBlockNum(ctx, math.MaxUint32)
 }
 
-func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if err := db.putTransactions(ctx, blk); err != nil {
+func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) (err error) {
+	// TODO: Reach out for the transaction IDs that we're after, pass them down
+	// to `putTransactions`, `putTransactionTraces` and `putImplicitTransaction`
+	// so they are ACTUALLY filtered out.
+	var onlyTrxIDs map[string]bool
+	if db.mapper != nil && !db.mapper.IsUnfiltered() {
+		onlyTrxIDs, _, err = db.mapper.MapForDB(blk)
+		if err != nil {
+			return err
+		}
+		fmt.Println("MAPPPING TO DB", blk.Num(), len(blk.TransactionTraces), len(onlyTrxIDs))
+	} else {
+		fmt.Println("NOT MAPPING TO DB")
+	}
+
+	if err := db.putTransactions(ctx, blk, onlyTrxIDs); err != nil {
 		return fmt.Errorf("put block: unable to putTransactions: %w", err)
 	}
 
-	if err := db.putTransactionTraces(ctx, blk); err != nil {
+	if err := db.putTransactionTraces(ctx, blk, onlyTrxIDs); err != nil {
 		return fmt.Errorf("put block: unable to putTransactions: %w", err)
 	}
 
-	if err := db.putImplicitTransactions(ctx, blk); err != nil {
+	if err := db.putImplicitTransactions(ctx, blk, onlyTrxIDs); err != nil {
 		return fmt.Errorf("put block: unable to putTransactions: %w", err)
 	}
 
-	return db.putBlock(ctx, blk)
+	if db.mapper == nil || db.mapper.IsUnfiltered() {
+		// Don't store blocks when doing filters.
+		if err := db.putBlock(ctx, blk); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
+func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block, onlyTrxIDs map[string]bool) error {
 	for _, trxReceipt := range blk.Transactions {
 		if trxReceipt.PackedTransaction == nil {
 			// This means we deal with a deferred transaction receipt, and that it
 			// has been handled through DtrxOps already
+			continue
+		}
+
+		if onlyTrxIDs != nil && !onlyTrxIDs[trxReceipt.Id] {
 			continue
 		}
 
@@ -92,8 +117,16 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 	return nil
 }
 
-func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) error {
+func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block, onlyTrxIDs map[string]bool) error {
 	for _, trxTrace := range blk.TransactionTraces {
+		if onlyTrxIDs != nil && !onlyTrxIDs[trxTrace.Id] {
+			// OPTIMIZE: consider later that we might want to add the dtrxops that matched
+			// and we won't catch them if we ignore the embedding `trxTrace`, like we do here.
+			// At least it will be additive, so a potentially wanted thing. Let's not optimize
+			// right now for deferred though.
+			continue
+		}
+
 		codec.DeduplicateTransactionTrace(trxTrace)
 
 		// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
@@ -159,9 +192,13 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 	return nil
 }
 
-func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
+func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block, onlyTrxIDs map[string]bool) error {
 
 	for _, trxOp := range blk.ImplicitTransactionOps {
+		if onlyTrxIDs != nil && !onlyTrxIDs[trxOp.TransactionId] {
+			continue
+		}
+
 		implTrxRow := &pbtrxdb.ImplicitTrxRow{
 			Name:      trxOp.Name,
 			SignedTrx: trxOp.Transaction,

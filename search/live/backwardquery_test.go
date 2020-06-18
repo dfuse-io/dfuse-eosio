@@ -35,7 +35,7 @@ import (
 func Test_processSingleBlocks(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	mapper, _ := eosSearch.NewEOSBlockMapper("dfuseiohooks:event", false, "", "")
+	mapper, _ := filtering.NewBlockMapper("dfuseiohooks:event", false, "", "")
 	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	cases := []struct {

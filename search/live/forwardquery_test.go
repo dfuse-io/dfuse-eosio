@@ -24,6 +24,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
@@ -41,7 +42,7 @@ import (
 func Test_forwardProcessBlock(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	mapper, _ := eosSearch.NewEOSBlockMapper("dfuseiohooks:event", false, "", "")
+	mapper, _ := filtering.NewBlockMapper("dfuseiohooks:event", false, "", "", "account")
 	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	cases := []struct {

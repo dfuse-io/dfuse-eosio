@@ -42,8 +42,6 @@ const (
 	TblPrefixLast  = 0x03
 )
 
-var TableMapper = map[byte]string{}
-
 type KVStore struct {
 	db kv.KVStore
 }

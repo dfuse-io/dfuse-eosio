@@ -1,4 +1,4 @@
-// Copyright 2019 dfuse Platform Inc.
+// Copyright 2020 dfuse Platform Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
@@ -31,11 +32,11 @@ import (
 )
 
 type Config struct {
-	ChainId                   string // Chain ID
+	ChainID                   string // Chain ID
 	ProcessingType            string // The actual processing type to perform, either `live`, `batch` or `patch`
 	BlockStoreURL             string // GS path to read batch files from
 	BlockStreamAddr           string // [LIVE] Address of grpc endpoint
-	KvdbDsn                   string // Storage connection string
+	KvdbDSN                   string // Storage connection string
 	BatchSize                 uint64 // DB batch size
 	StartBlockNum             uint64 // [BATCH] Block number where we start processing
 	StopBlockNum              uint64 // [BATCH] Block number where we stop processing
@@ -45,15 +46,21 @@ type Config struct {
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
 }
 
-type App struct {
-	*shutter.Shutter
-	Config *Config
+type Modules struct {
+	BlockMapper *filtering.BlockMapper
 }
 
-func New(config *Config) *App {
+type App struct {
+	*shutter.Shutter
+	Config  *Config
+	Modules *Modules
+}
+
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		Config:  config,
+		Modules: modules,
 	}
 }
 
@@ -72,14 +79,13 @@ func (a *App) Run() error {
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
-	var loader trxdbloader.Loader
 
-	chainID, err := hex.DecodeString(a.Config.ChainId)
+	chainID, err := hex.DecodeString(a.Config.ChainID)
 	if err != nil {
 		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
 
-	db, err := trxdb.New(a.Config.KvdbDsn)
+	db, err := trxdb.New(a.Config.KvdbDSN, trxdb.WithFiltering(a.Modules.BlockMapper))
 	if err != nil {
 		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
@@ -88,9 +94,7 @@ func (a *App) Run() error {
 
 	db.SetWriterChainID(chainID)
 
-	l := trxdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
-
-	loader = l
+	loader := trxdbloader.NewLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {

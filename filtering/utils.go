@@ -1,4 +1,4 @@
-// Copyright 2019 dfuse Platform Inc.
+// Copyright 2020 dfuse Platform Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package trxdb_loader
+package filtering
 
-type Loader interface {
-	StopBeforeBlock(uint64)
+import (
+	"sort"
+	"strconv"
+)
 
-	BuildPipelineLive(bool) error
-	BuildPipelineBatch(startBlock uint64, beforeStart uint64)
-	BuildPipelinePatch(startBlock uint64, beforeStart uint64)
+func toList(in map[string]bool) (out []string) {
+	for k := range in {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return
+}
 
-	Launch()
-	Healthy() bool
+func fromHexUint16(input string) (uint16, error) {
+	val, err := strconv.ParseUint(input, 16, 16)
+	if err != nil {
+		return 0, err
+	}
+	return uint16(val), nil
+}
 
-	// Shutter related
-	Shutdown(err error)
-	OnTerminated(f func(error))
-	Terminated() <-chan struct{}
-	Err() error
+func fromHexUint32(input string) (uint32, error) {
+	val, err := strconv.ParseUint(input, 16, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(val), nil
 }

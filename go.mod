@@ -42,16 +42,17 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
 	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
-	github.com/dfuse-io/search v0.0.0-20200615145420-7f4b7dc4c850
+	github.com/dfuse-io/search v0.0.0-20200618174905-b91b216c5983
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1-0.20200407040739-f908f9ab727f
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
+	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20200616134903-ff2413bdaa99
 	github.com/eoscanada/eosc v1.4.0
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
-	github.com/golang/protobuf v1.3.5
+	github.com/golang/protobuf v1.4.1
 	github.com/google/cel-go v0.4.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
@@ -84,6 +85,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
+	google.golang.org/protobuf v1.22.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible

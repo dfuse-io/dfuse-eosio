@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func mustReplaceDataDir(dataDir, in string) string {
+func MustReplaceDataDir(dataDir, in string) string {
 	d, err := filepath.Abs(dataDir)
 	if err != nil {
 		panic(fmt.Errorf("file path abs: %w", err))

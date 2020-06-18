@@ -14,14 +14,31 @@
 
 package trxdb
 
-import "google.golang.org/grpc"
+import (
+	"github.com/dfuse-io/dfuse-eosio/filtering"
+	"google.golang.org/grpc"
+)
 
 type Option interface {
 	option()
 }
 
+// grpc connection
+
 func WithGRPCConn(conn *grpc.ClientConn) Option { return &GRPCConn{conn} }
 
-type GRPCConn struct{ ClientConn *grpc.ClientConn }
+type GRPCConn struct {
+	ClientConn *grpc.ClientConn
+}
 
 func (GRPCConn) option() {}
+
+// optional block mapper for trxdb filtering
+
+type FilteringOption struct {
+	Mapper *filtering.BlockMapper
+}
+
+func WithFiltering(mapper *filtering.BlockMapper) Option { return &FilteringOption{mapper} }
+
+func (FilteringOption) option() {}

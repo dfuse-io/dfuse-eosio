@@ -7,7 +7,9 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/search"
+	"github.com/dfuse-io/search/querylang"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"
@@ -15,6 +17,8 @@ import (
 )
 
 func Test_validateQueryFields(t *testing.T) {
+	RegisterDefaultHandlers()
+
 	tests := []struct {
 		in            string
 		expectedError error
@@ -25,23 +29,23 @@ func Test_validateQueryFields(t *testing.T) {
 		},
 		{
 			"unknow:eoscanadacom",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'unknow'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'unknow'."),
 		},
 		{
 			"unknow:eoscanadacom second:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'second', 'unknow'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'second', 'unknow'."),
 		},
 		{
 			"unknow:eoscanadacom account:value second:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'second', 'unknow'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'second', 'unknow'."),
 		},
 		{
 			"data.from:eoscanadacom data.nested:value account:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested'."),
 		},
 		{
 			"data.from:eoscanadacom data.nested.deep:value account:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested'."),
 		},
 		{
 			"data.from.something:value data.auth.keys.key:value",
@@ -53,13 +57,34 @@ func Test_validateQueryFields(t *testing.T) {
 		},
 		{
 			"data.from:eoscanadacom data.:value account:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.'."),
 		},
 	}
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("index %d", idx+1), func(t *testing.T) {
-			_, err := search.NewParsedQuery(test.in)
+
+			terms, err := filtering.NewIndexedTerms("*")
+			require.NoError(t, err)
+
+			q := &search.BleveQuery{
+				Raw:              test.in,
+				FieldTransformer: querylang.NoOpFieldTransformer,
+				Validator: &BleveQueryValidator{
+					indexedTerms: terms,
+				},
+			}
+
+			err = func() error {
+				if err := q.Parse(); err != nil {
+					return err
+				}
+				if err := q.Validate(); err != nil {
+					return err
+				}
+				return nil
+			}()
+
 			if test.expectedError == nil {
 				assert.NoError(t, err)
 			} else {

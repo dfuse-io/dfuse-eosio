@@ -1,4 +1,4 @@
-package search
+package filtering
 
 import (
 	"github.com/dfuse-io/logging"
@@ -8,5 +8,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/dfuse-eosio/search", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/filtering", &zlog)
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package search
+package filtering
 
 import (
 	"crypto/sha256"
@@ -26,7 +26,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var fixedEOSIndexedFields = []search.IndexedField{
+// receiver account, account account, auth permission,
+// --search-common-index-terms="receiver,account,auth,status,notif,input,data.from,data.to,data.bob,db.key,db.table,bob"
+
+var fixedIndexedFields = []search.IndexedField{
 	{"receiver", search.AccountType},
 	{"account", search.AccountType},
 	{"action", search.ActionType},
@@ -40,7 +43,7 @@ var fixedEOSIndexedFields = []search.IndexedField{
 	{"event", search.FreeFormType},
 }
 
-var EOSIndexedFields = []search.IndexedField{
+var IndexedFields = []search.IndexedField{
 	{"account", search.AccountType},
 	{"active", search.FreeFormType},
 	{"active_key", search.FreeFormType},
@@ -124,7 +127,7 @@ func tokenizeEOSDataObject(data string) map[string]interface{} {
 	}
 
 	out := make(map[string]interface{})
-	for _, indexedField := range EOSIndexedFields {
+	for _, indexedField := range IndexedFields {
 		if value, exists := jsonData[indexedField.Name]; exists {
 			out[indexedField.Name] = value
 		}
@@ -170,67 +173,6 @@ func tokenizeEvent(config eventsConfig, authKey string, data string) url.Values 
 	}
 
 	return out
-}
-
-var cachedEOSIndexedFields []*search.IndexedField
-var cachedEOSIndexedFieldsMap map[string]*search.IndexedField
-
-// InitIndexedFields initialize the list of indexed fields of the service
-func InitEOSIndexedFields() {
-	fields := make([]*search.IndexedField, 0, len(fixedEOSIndexedFields)+len(EOSIndexedFields)+len(hashedEOSDataIndexedFields))
-
-	for _, field := range fixedEOSIndexedFields {
-		fields = append(fields, &search.IndexedField{field.Name, field.ValueType})
-	}
-
-	for _, field := range EOSIndexedFields {
-		fields = append(fields, &search.IndexedField{"data." + field.Name, field.ValueType})
-	}
-
-	for _, field := range hashedEOSDataIndexedFields {
-		fields = append(fields, &search.IndexedField{"data." + field.Name, field.ValueType})
-	}
-
-	fields = append(fields,
-		&search.IndexedField{"ram.consumed", search.FreeFormType},
-		&search.IndexedField{"ram.released", search.FreeFormType},
-	)
-
-	fields = append(fields,
-		&search.IndexedField{"db.table", search.FreeFormType},
-
-		// Disabled so that if user complains, we can easily add it back. This should be
-		// removed if we do not index `db.key` anymore.
-		// &IndexedField{"db.key", search.FreeFormType},
-	)
-
-	// Let's cache the fields so we do not re-compute them everytime.
-	cachedEOSIndexedFields = fields
-
-	// Let's compute the fields map from the actual fields slice
-	cachedEOSIndexedFieldsMap = map[string]*search.IndexedField{}
-	for _, field := range cachedEOSIndexedFields {
-		cachedEOSIndexedFieldsMap[field.Name] = field
-	}
-}
-
-// GetIndexedFields returns the list of indexed fields of the service, from the
-// cached list of indexed fields. Function `InitIndexedFields` must be called prior
-// using this function.
-func GetEOSIndexedFields() []*search.IndexedField {
-	if cachedEOSIndexedFields == nil {
-		zlog.Panic("the indexed fields cache is nil, you must initialize it prior calling this method")
-	}
-
-	return cachedEOSIndexedFields
-}
-
-func GetEOSIndexedFieldsMap() map[string]*search.IndexedField {
-	if cachedEOSIndexedFieldsMap == nil {
-		zlog.Panic("the indexed fields map cache is nil, you must initialize it prior calling this method")
-	}
-
-	return cachedEOSIndexedFieldsMap
 }
 
 func hashKeys(in, out map[string]interface{}, fields []search.IndexedField) {

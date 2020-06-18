@@ -1,4 +1,18 @@
-package search
+// Copyright 2020 dfuse Platform Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package filtering
 
 import (
 	"encoding/json"
@@ -13,12 +27,10 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/search"
 	"github.com/google/cel-go/cel"
-	"github.com/google/cel-go/checker/decls"
-	"github.com/google/cel-go/common/types"
 	"go.uber.org/zap"
 )
 
-type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
+type batchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
 // eventsConfig contains specific configuration for the correct indexation of
 // dfuse Events, our special methodology to index the action from your smart contract
@@ -28,14 +40,17 @@ type eventsConfig struct {
 	unrestricted bool
 }
 
-type EOSBlockMapper struct {
+type BlockMapper struct {
+	*mapping.IndexMappingImpl
+
 	eventsConfig     eventsConfig
-	restrictions     []*restriction
 	filterOnProgram  cel.Program
 	filterOutProgram cel.Program
+	indexed          *IndexedTerms
+	isUnfiltered     bool
 }
 
-func NewEOSBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, filterOut string) (*EOSBlockMapper, error) {
+func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, filterOut, indexedTermsSpecs string) (*BlockMapper, error) {
 	fonProgram, err := buildCELProgram("true", filterOn)
 	if err != nil {
 		return nil, err
@@ -46,17 +61,25 @@ func NewEOSBlockMapper(eventsActionName string, eventsUnrestricted bool, filterO
 		return nil, err
 	}
 
-	return &EOSBlockMapper{
+	indexed, err := NewIndexedTerms(indexedTermsSpecs)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BlockMapper{
+		IndexMappingImpl: buildBleveIndexMapper(),
 		eventsConfig: eventsConfig{
 			actionName:   eventsActionName,
 			unrestricted: eventsUnrestricted,
 		},
 		filterOnProgram:  fonProgram,
 		filterOutProgram: foutProgram,
+		indexed:          indexed,
+		isUnfiltered:     fonProgram == nil && foutProgram == nil,
 	}, nil
 }
 
-func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
+func buildBleveIndexMapper() *mapping.IndexMappingImpl {
 	// db ops
 	dbDocMapping := bleve.NewDocumentMapping()
 	dbDocMapping.AddFieldMappingsAt("key", search.TxtFieldMapping)
@@ -102,7 +125,31 @@ func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
 	return mapper
 }
 
-func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Block) ([]*document.Document, error) {
+func (m *BlockMapper) IsUnfiltered() bool          { return m.isUnfiltered }
+func (m *BlockMapper) IndexedTerms() *IndexedTerms { return m.indexed }
+
+func (m *BlockMapper) MapForDB(blk *pbcodec.Block) (matchingTrxIDs map[string]bool, actions []map[string]interface{}, err error) {
+	matchingTrxIDs = map[string]bool{}
+	batchActionUpdater := func(trxID string, idx int, data map[string]interface{}) error {
+		if !m.shouldIndexAction(data) {
+			return nil
+		}
+
+		matchingTrxIDs[trxID] = true
+
+		actions = append(actions, data)
+
+		return nil
+	}
+
+	if err := m.prepareBatchDocuments(blk, batchActionUpdater); err != nil {
+		return nil, nil, err
+	}
+
+	return
+}
+
+func (m *BlockMapper) MapToBleve(block *bstream.Block) ([]*document.Document, error) {
 	blk := block.ToNative().(*pbcodec.Block)
 
 	actionsCount := 0
@@ -112,8 +159,13 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 			return nil
 		}
 
+		if blk.Num() == uint64(125000550) {
+			cnt, err := json.MarshalIndent(data, "", "  ")
+			fmt.Println("DATAAAAAAAAAAAAAA:", string(cnt), err)
+		}
+
 		doc := document.NewDocument(EOSDocumentID(blk.Num(), trxID, idx))
-		err := mapper.MapDocument(doc, data)
+		err := m.MapDocument(doc, data)
 		if err != nil {
 			return err
 		}
@@ -130,7 +182,7 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	}
 
 	metaDoc := document.NewDocument(fmt.Sprintf("meta:blknum:%d", blk.Num()))
-	err = mapper.MapDocument(metaDoc, map[string]interface{}{
+	err = m.MapDocument(metaDoc, map[string]interface{}{
 		"act_count": actionsCount,
 	})
 
@@ -140,107 +192,12 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 
 	docsList = append(docsList, metaDoc)
 
+	fmt.Println("SEARCH RESULTS", blk.Num(), len(docsList))
+
 	return docsList, nil
 }
 
-func parseRestrictionsJSON(JSONStr string) ([]*restriction, error) {
-	var restrictions []*restriction
-	if JSONStr == "" {
-		return nil, nil
-	}
-	err := json.Unmarshal([]byte(JSONStr), &restrictions)
-	return restrictions, err
-
-}
-
-// example: `{"account":"eosio.token","data.to":"someaccount"}` will not Pass()
-// true for an action that matches EXACTLY those two conditions
-type restriction map[string]string
-
-func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
-	actionData, _ := actionWrapper["data"].(map[string]interface{})
-
-	for k, v := range r {
-		if strings.HasPrefix(k, "data.") {
-			if val, ok := actionData[k[5:]]; !ok || val != v {
-				return true
-			}
-			continue
-		}
-		if val, ok := actionWrapper[k]; !ok || val != v {
-			return true
-		}
-	}
-	return false
-}
-
-func buildCELProgram(noopProgram string, programString string) (cel.Program, error) {
-	stripped := strings.TrimSpace(programString)
-	if stripped == "" || stripped == noopProgram {
-		return nil, nil
-	}
-
-	env, err := cel.NewEnv(
-		cel.Declarations(
-			decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil), // "table", "key" => string
-			decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
-			decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
-			decls.NewIdent("receiver", decls.String, nil),
-			decls.NewIdent("account", decls.String, nil),
-			decls.NewIdent("action", decls.String, nil),
-			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
-			decls.NewIdent("input", decls.Bool, nil),
-			decls.NewIdent("notif", decls.Bool, nil),
-			decls.NewIdent("scheduled", decls.Bool, nil),
-		),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	exprAst, issues := env.Compile(programString)
-	if issues != nil && issues.Err() != nil {
-		return nil, fmt.Errorf("filter expression parse/check error: %w", issues.Err())
-	}
-
-	if exprAst.ResultType() != decls.Bool {
-		return nil, fmt.Errorf("filter expression should return a boolean, returned %s", exprAst.ResultType())
-	}
-
-	prg, err := env.Program(exprAst)
-	if err != nil {
-		return nil, fmt.Errorf("cel program construction error: %w", err)
-	}
-
-	return prg, nil
-}
-
-func (m *EOSBlockMapper) shouldIndexAction(doc map[string]interface{}) bool {
-	filterOnResult := m.filterMatches(m.filterOnProgram, true, doc)
-	filterOutResult := m.filterMatches(m.filterOutProgram, false, doc)
-	return filterOnResult && !filterOutResult
-}
-
-func (m *EOSBlockMapper) filterMatches(program cel.Program, defaultVal bool, doc map[string]interface{}) bool {
-	if program == nil {
-		return defaultVal
-	}
-
-	res, _, err := program.Eval(doc)
-	if err != nil {
-		//fmt.Printf("filter program: %s\n", err.Error())
-		return false
-	}
-	retval, valid := res.(types.Bool)
-	if !valid {
-		// TODO: use logger, we've checked the return value should be a Bool previously, so
-		// it's even safe to panic here
-		panic("return value of our cel program isn't of type bool")
-	}
-	return bool(retval)
-}
-
-func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater eosBatchActionUpdater) error {
+func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater batchActionUpdater) error {
 	trxIndex := -1
 	for _, trxTrace := range blk.TransactionTraces {
 		trxIndex++
@@ -268,9 +225,16 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 
 			receiver := string(actTrace.Receipt.Receiver)
 			account := string(actTrace.Action.Account)
-			data["notif"] = receiver != account
-			data["input"] = actTrace.CreatorActionOrdinal == 0
-			data["scheduled"] = scheduled
+			if m.indexed.Notif {
+				data["notif"] = receiver != account
+			}
+			if m.indexed.Input {
+				data["input"] = actTrace.CreatorActionOrdinal == 0
+			}
+			if m.indexed.Scheduled {
+				data["scheduled"] = scheduled
+			}
+
 			if actTrace.SimpleName() == m.eventsConfig.actionName && actTrace.CreatorActionOrdinal != 0 {
 				eventFields := tokenizeEvent(m.eventsConfig, actTrace.GetData("key").String(), actTrace.GetData("data").String())
 				if len(eventFields) > 0 {
@@ -326,7 +290,7 @@ func isTrxTraceIndexable(trxTrace *pbcodec.TransactionTrace) bool {
 	return status == pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED
 }
 
-func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
+func (m *BlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
 	consumedRAM := make(map[string]bool)
 	releasedRAM := make(map[string]bool)
 	for _, ramop := range ramOps {
@@ -351,7 +315,7 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]str
 	return ramData
 }
 
-func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string {
+func (m *BlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string {
 	// db.key = []string{"accounts/eoscanadacom/.........eioh1"}
 	// db.table = []string{"accounts/eoscanadacom", "accounts"}
 	keys := make(map[string]bool)

@@ -31,7 +31,8 @@ import (
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/index"
 	"github.com/blevesearch/bleve/index/scorch"
-	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
+	localSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dmesh"
 	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/search"
@@ -45,6 +46,8 @@ func TestRunQuery(t *testing.T) {
 	tmp, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
 	defer os.RemoveAll(tmp)
+
+	localSearch.RegisterDefaultHandlers()
 
 	type query struct {
 		name string
@@ -316,8 +319,7 @@ func appendTestIndex(t *testing.T, tmpDir string, typ string, pool *searchArchiv
 	}
 	require.NoError(t, err)
 
-	m, _ := eosSearch.NewEOSBlockMapper("", false, "", "")
-	mapper := m.IndexMapping()
+	m, _ := filtering.NewBlockMapper("", false, "", "", "account, receiver, auth")
 
 	// Analyze `content`, split in blocks, and FEED into the index in the SIMPLEST way possible.
 	// Make a batch with those documents, with an `id`.
@@ -344,7 +346,7 @@ func appendTestIndex(t *testing.T, tmpDir string, typ string, pool *searchArchiv
 			data["act_idx"] = 0
 		}
 
-		require.NoError(t, mapper.MapDocument(metaDoc, data))
+		require.NoError(t, m.MapDocument(metaDoc, data))
 		batch.Update(metaDoc)
 	}
 

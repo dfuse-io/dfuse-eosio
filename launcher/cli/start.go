@@ -60,7 +60,6 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func Start(configFile string, dataDir string, args []string) (err error) {
-
 	config := &launcher.DfuseConfig{}
 	if configFile != "" {
 		config, err = launcher.ReadConfig(configFile)
@@ -77,7 +76,7 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 	// TODO: directories are created in the app init funcs... but this does not belong to a specific application
 	err = makeDirs([]string{dataDirAbs})
 	if err != nil {
-		return err
+		return fmt.Errorf("making directories: %w", err)
 	}
 
 	meshClient, err := dmeshClient.New(viper.GetString("search-common-mesh-dsn"))
@@ -113,7 +112,7 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 
 	userLog.Printf("Launching applications: %s", strings.Join(apps, ","))
 	if err = launch.Launch(apps); err != nil {
-		return err
+		return fmt.Errorf("launch: %w", err)
 	}
 
 	printWelcomeMessage(apps)
@@ -128,7 +127,7 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 			userLog.Printf("Application %s triggered a clean shutdown, quitting", appID)
 		} else {
 			userLog.Printf("Application %s shutdown unexpectedly, quitting", appID)
-			return launch.Err()
+			return fmt.Errorf("%q: %w", appID, launch.Err())
 		}
 	}
 
