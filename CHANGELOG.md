@@ -7,16 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Networked APIs Changed
 
-* **BREAKING** `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
-* **BREAKING** `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
+* **BREAKING**: `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
+* **BREAKING**: `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
 
 ### Changed
 * In general: `eosdb` was renamed to `trxdb`, which shouldn't change much externally.
   * Specifically: the `healthz` endpoint's `eosdb` field is now
     `trxdb`, so you might need to adjust your monitoring.
-* **BREAKING** `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
-* **BREAKING** `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
-* **BREAKING** `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
+* **BREAKING**: `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
+* **BREAKING**: `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
+* **BREAKING**: `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 * `mindreader` ContinuityChecker is not enabled by default anymore
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
 
@@ -59,8 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `--eosq-on-demand` bool to configure if eosq serves an on-demand network
 * Added `--eosq-disable-tokenmeta` bool to configure if eosq disables tokenmenta
 
-* **BREAKING** To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
-* **BREAKING** `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
+* **BREAKING**: To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
+* **BREAKING**: `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
 * Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
 * Added `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` to allow keeping a few (default:5) snapshots only in the store
@@ -70,8 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **BREAKING** flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
-* **BREAKING** flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
+* **BREAKING**: flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
+* **BREAKING**: flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
 * Mindreader now has "producer" plugin enabled to allow taking snapshots
 * Mindreader now runs with "NoBlocksLog" option (deleting blocks.log on restart)
 * Node-manager and Mindreader now make dfuseeos shutdown when nodeos crashes.
