@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
+* Added app called mindreader-stdin, which simply produces one-block-files (or merged-blocks-files) based on stdin, without trying to manage nodeos.
 * Command `dmesh` to `tools` with flags `dsn` & `service-version` to inspect dmesh search peers. It currently only supports etcd.
 * Added `booter` application with its flags.
 * Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
