@@ -35,7 +35,7 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20200616210133-91bd63fe1a24
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
-	github.com/dfuse-io/kvdb v0.0.0-20200605220113-7e231334a020
+	github.com/dfuse-io/kvdb v0.0.0-20200619171121-937464bfbae5
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/manageos v0.0.0-20200611205430-5e3a009eadaa
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
