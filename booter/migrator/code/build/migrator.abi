@@ -8,20 +8,24 @@
             "base": "",
             "fields": [
                 {
-                    "name": "scope",
-                    "type": "uint64"
+                    "name": "table",
+                    "type": "name"
                 },
                 {
-                    "name": "table",
-                    "type": "uint64"
+                    "name": "scope",
+                    "type": "name"
                 },
                 {
                     "name": "payer",
-                    "type": "uint64"
+                    "type": "name"
                 },
                 {
                     "name": "id",
-                    "type": "uint64"
+                    "type": "name"
+                },
+                {
+                    "name": "data",
+                    "type": "bytes"
                 }
             ]
         }

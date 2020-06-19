@@ -15,10 +15,17 @@ type AccountPath string
 type TablePath string
 type ScopePath string
 
+type sendFunc func(action *eos.Action)
 type AccountData struct {
 	name string
 	Path string
 	abi  *eos.ABI
+}
+
+var traceEnable = false
+
+func init() {
+	traceEnable = os.Getenv("TRACE") == "true"
 }
 
 func NewAccountData(dataDir string, account string) (*AccountData, error) {
@@ -32,29 +39,23 @@ func NewAccountData(dataDir string, account string) (*AccountData, error) {
 	}, nil
 }
 
-func (m *AccountData) Migrate() error {
+func (m *AccountData) Migrate(send sendFunc) error {
 	abi, err := m.readABI()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", m.name, err)
 	}
-	zlog.Debug("ABI gotten", zap.Reflect("abi", abi))
 	m.abi = abi // store for late use to encode rows
 
-	code, err := m.readCode()
-	if err != nil {
-		return fmt.Errorf("unable to get account %q Code: %w", m.name, err)
-	}
-	zlog.Debug("Code gotten", zap.Reflect("code_size", len(code)))
-
+	//code, err := m.readCode()
+	//if err != nil {
+	//	return fmt.Errorf("unable to get account %q Code: %w", m.name, err)
+	//}
 	tables, err := m.readTableList()
 	if err != nil {
 		return fmt.Errorf("unable to get table list for account %q: %w", m.name, err)
 	}
 
-	zlog.Debug("processing tables",
-		zap.String("account", m.name),
-		zap.Int("table_count", len(tables)),
-	)
+	//zlog.Debug("processing tables", zap.String("account", m.name), zap.Int("table_count", len(tables)))
 
 	for _, table := range tables {
 		tablePath, err := m.TablePath(table)
@@ -67,11 +68,7 @@ func (m *AccountData) Migrate() error {
 			return fmt.Errorf("unable to read scopes: %w", err)
 		}
 
-		zlog.Debug("processing table scopes",
-			zap.String("account", m.name),
-			zap.String("table", table),
-			zap.Int("scope_count", len(scopes)),
-		)
+		zlog.Debug("processing table scopes", zap.String("account", m.name), zap.String("table", table), zap.Int("scope_count", len(scopes)))
 
 		for _, scope := range scopes {
 			scopePath, err := m.ScopePath(tablePath, scope)
@@ -84,12 +81,18 @@ func (m *AccountData) Migrate() error {
 				return fmt.Errorf("unable to read rows contract %q, table %q scope %q: %w", m.name, table, scope, err)
 			}
 
-			zlog.Info("process table rows",
-				zap.String("account", m.name),
-				zap.String("table", table),
-				zap.String("scope", scope),
-				zap.Int("rows_count", len(rows)),
-			)
+			for _, row := range rows {
+				action, err := m.detailedTableRowToAction(&DetailedTableRow{
+					TableRow: row,
+					account:  AN(m.name),
+					table:    TN(table),
+					scope:    SN(scope),
+				})
+				if err != nil {
+					return fmt.Errorf("unable to creation action for table row: %w", err)
+				}
+				send(action)
+			}
 		}
 	}
 	return nil
@@ -172,44 +175,53 @@ func (m *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable decode rows %q: %w", path, err)
 	}
+
 	return rows, nil
 }
 
-func (m *AccountData) decodeRow(table string, data interface{}) ([]byte, error) {
-	zlog.Debug("decoding table row", zap.String("table", table))
-
-	//&eos.Action{
-	//	Account: AN("eosio.token"),
-	//	Name:    ActN("inject"),
-	//	Authorization: []eos.PermissionLevel{
-	//		{Actor: m.contract, Permission: PN("active")},
-	//	},
-	//	ActionData: eos.NewActionData(&Inject{
-	//		Table: tableName,
-	//		Scope: scope,
-	//		Payer: row.Payer,
-	//		Key:   row.Key,
-	//	}),
-	//}
-	//{"key":"........ehbo5","payer":"battlefield1","data":{"balance":"12345677.8808 EOS"}}
-	return nil, nil
+func (m *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
+	data, err := m.decodeDetailedTableRow(row)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode row %q/%q/%q: %w", row.account, row.table, row.scope, err)
+	}
+	action := &eos.Action{
+		Account: AN(m.name),
+		Name:    ActN("inject"),
+		Authorization: []eos.PermissionLevel{
+			{Actor: AN(row.Payer), Permission: PN("active")},
+		},
+		ActionData: eos.NewActionData(Inject{Table: row.table, Scope: row.scope, Payer: eos.Name(row.Payer), Key: eos.Name(row.Key), Data: data}),
+	}
+	if traceEnable {
+		zlog.Debug("action data",
+			zap.String("scope", string(row.scope)),
+			zap.String("payer", row.Payer),
+			zap.String("key", row.Key),
+			zap.String("table", string(row.table)),
+			zap.Stringer("bytes", eos.HexBytes(data)),
+		)
+	}
+	return action, nil
 }
 
-//func (m *AccountData) tableRowToAction(t *TableRow) (*eos.Action, error) {
-//	return &eos.Action{
-//		Account: AN(m.name),
-//		Name:    ActN("inject"),
-//		Authorization: []eos.PermissionLevel{
-//			{Actor: "d", Permission: PN("active")},
-//		},
-//		ActionData: eos.NewActionData(&Inject{
-//			Table: tableName,
-//			Scope: scope,
-//			Payer: row.Payer,
-//			Key:   row.Key,
-//		}),
-//	}, nil
-//}
+func (m *AccountData) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
+	tableDef := m.findTableDef(row.table)
+	if tableDef == nil {
+		return nil, fmt.Errorf("unable to find table definition %q in ABI for account: %q", row.table, row.account)
+	}
+	// TODO: need to check for a if type is alias...
+	return m.abi.EncodeStruct(tableDef.Type, row.TableRow.Data)
+}
+
+// ABI helpers
+func (m *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
+	for _, t := range m.abi.Tables {
+		if t.Name == table {
+			return &t
+		}
+	}
+	return nil
+}
 
 // path helpers
 func (m *AccountData) ABIPath() string {

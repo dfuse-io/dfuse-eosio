@@ -3,6 +3,8 @@ package migrator
 import (
 	"fmt"
 
+	"github.com/eoscanada/eos-go/system"
+
 	"github.com/dfuse-io/eosio-boot/config"
 	bootops "github.com/dfuse-io/eosio-boot/ops"
 	"github.com/eoscanada/eos-go/ecc"
@@ -35,10 +37,19 @@ func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in ch
 
 func (m *Migrator) init() error {
 	zlog.Info("setting injector account", zap.String("account", string(m.contract)))
-	err := m.newAccountActions(m.opPublicKey, m.actionChan)
+	err := m.newAccountActions()
 	if err != nil {
 		return fmt.Errorf("unable to get migrator contract actions: %w", err)
 	}
+	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
+
+	m.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", "battlefield1", m.opPublicKey))
+	m.actionChan <- (*bootops.TransactionAction)(system.NewBuyRAMBytes("eosio", "battlefield1", 100000))
+	//m.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", "battlefield3", m.opPublicKey))
+	//m.actionChan <- (*bootops.TransactionAction)(system.NewBuyRAMBytes("eosio", "battlefield3", 100000))
+	//m.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", "battlefield4", m.opPublicKey))
+	//m.actionChan <- (*bootops.TransactionAction)(system.NewBuyRAMBytes("eosio", "battlefield4", 100000))
+
 	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
 	return nil
 }
@@ -62,7 +73,7 @@ func (m *Migrator) startMigration() {
 
 		err = m.migrateAccount(account)
 		if err != nil {
-			zlog.Error("unable to process account", zap.String("contract", contract))
+			zlog.Error("unable to process account", zap.String("contract", contract), zap.Error(err))
 			continue
 		}
 	}

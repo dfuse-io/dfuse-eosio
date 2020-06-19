@@ -364,12 +364,6 @@ func (m *migrater) writeCode(codePath string, code []byte) error {
 	return ioutil.WriteFile(codePath, code, os.ModePerm)
 }
 
-type TableRow struct {
-	Key   string          `json:"key"`
-	Payer string          `json:"payer"`
-	Data  json.RawMessage `json:"data"`
-}
-
 func (m *migrater) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResponse) error {
 	userLog.Debug("writing table", zap.String("table_scope_path", string(rowsPath)), zap.Int("row_count", len(rows)))
 	file, err := os.Create(rowsPath)
@@ -385,7 +379,7 @@ func (m *migrater) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResp
 		encoder.SetEscapeHTML(false)
 
 		file.WriteString("\n  ")
-		err := encoder.Encode(TableRow{
+		err := encoder.Encode(migrator.TableRow{
 			Key:   tabletRow.Key,
 			Payer: tabletRow.Payer,
 			Data:  json.RawMessage(tabletRow.Json),

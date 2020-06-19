@@ -13,7 +13,6 @@ class [[eosio::contract]]  migrator : public contract {
   
     // Actions      
     [[eosio::action]]
-    void inject(const uint64_t scope,const uint64_t table,const uint64_t payer,const uint64_t id, void* data, const uint32_t len);
-  
+    void inject(name table,name scope,name payer,name id, std::vector<char>  data);
   private:
 };

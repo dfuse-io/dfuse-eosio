@@ -15,6 +15,7 @@ var PN = eos.PN
 var ActN = eos.ActN
 
 func TN(in string) eos.TableName { return eos.TableName(in) }
+func SN(in string) eos.ScopeName { return eos.ScopeName(in) }
 
 func UINT64(in string) uint64 {
 	v, err := strconv.ParseUint(in, 10, 64)

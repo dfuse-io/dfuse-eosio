@@ -35,13 +35,13 @@ func newMigrator(opPublicKey ecc.PublicKey, dataDir string, actionChan chan inte
 	}
 }
 
-func (m *Migrator) newAccountActions(publicKey ecc.PublicKey, in chan interface{}) (err error) {
-	in <- system.NewNewAccount("eosio", m.contract, publicKey)
-	in <- system.NewBuyRAMBytes("eosio", m.contract, 100000)
+func (m *Migrator) newAccountActions() (err error) {
+	m.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", m.contract, m.opPublicKey))
+	m.actionChan <- (*bootops.TransactionAction)(system.NewBuyRAMBytes("eosio", m.contract, 100000))
 	return
 }
 
-func (m *Migrator) setContractActions(contract eos.AccountName, in chan interface{}) error {
+func (m *Migrator) setContractActions(contract eos.AccountName) error {
 	abiCnt, err := readBoxFile(m.box, "migrator.abi")
 	if err != nil {
 		return fmt.Errorf("unable to open migration abi cnt: %w", err)
@@ -58,7 +58,7 @@ func (m *Migrator) setContractActions(contract eos.AccountName, in chan interfac
 	}
 
 	for _, action := range actions {
-		in <- action
+		m.actionChan <- (*bootops.TransactionAction)(action)
 	}
 
 	return nil
@@ -68,13 +68,17 @@ func (m *Migrator) migrateAccount(accountData *AccountData) error {
 	zlog.Debug("processing account", zap.String("account", accountData.name))
 
 	zlog.Debug("setting migrator code", zap.String("contract", accountData.name))
-	err := m.setContractActions(AN(accountData.name), m.actionChan)
+	err := m.setContractActions(AN(accountData.name))
 	if err != nil {
 		return fmt.Errorf("unable to set migrator code for account: %w", err)
 	}
 	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
 
-	err = accountData.Migrate()
+	err = accountData.Migrate(func(action *eos.Action) {
+		m.actionChan <- (*bootops.TransactionAction)(action)
+	})
+	m.actionChan <- bootops.EndTransaction(m.opPublicKey) // end transaction
+
 	if err != nil {
 		return fmt.Errorf("unable to migrate account: %w", err)
 	}
