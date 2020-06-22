@@ -7,7 +7,10 @@ import { Links } from "../../routes"
 import { ContentLoaderComponent } from "../../components/content-loader/content-loader.component"
 import { PageContainer } from "../../components/page-container/page-container"
 import { ErrorData, Stream } from "@dfuse/client"
-import { DataLoading } from "../../atoms/data-loading/data-loading.component"
+
+// temp ignore for dev
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DataLoading } from "@dfuse/explore"
 import { CustomTitleBanner } from "../../atoms/panel/custom-title-banner"
 import { AccountSummary } from "./summary/account-summary"
 import { AccountTitle } from "./summary/account-title"

@@ -1,14 +1,14 @@
 import * as React from "react"
-import { DataLoading } from "../../atoms/data-loading/data-loading.component"
+// temp ignore for dev
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DataLoading, DataError, DataEmpty } from "@dfuse/explore"
 import { log } from "../../services/logger"
-import { DataError } from "../../atoms/data-error/data-error.component"
 import { TaskStatusAware } from "mobx-task"
 import { observer } from "mobx-react"
 import { RouteComponentProps } from "react-router"
 import { CursorCache } from "../../services/cursor-store"
 import { NavigationButtons } from "../../atoms/navigation-buttons/navigation-buttons"
 import queryString from "query-string"
-import { DataEmpty } from "../../atoms/data-empty/data-empty.component"
 import { t } from "i18next"
 
 @observer

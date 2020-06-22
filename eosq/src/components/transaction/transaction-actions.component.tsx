@@ -2,7 +2,10 @@ import { t } from "i18next"
 import * as React from "react"
 import { styled } from "../../theme"
 import { DeferredOperation } from "../../models/transaction"
-import { DataEmpty } from "../../atoms/data-empty/data-empty.component"
+
+// temp ignore for dev
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DataEmpty } from "@dfuse/explore"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { ListActions } from "./list-actions.component"
 import { RAMOp, ActionTrace, DbOp, CreationNode, TableOp, Action } from "@dfuse/client"

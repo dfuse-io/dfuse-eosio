@@ -17,7 +17,10 @@ import {
   StakeDetail
 } from "../../../helpers/account.helpers"
 import { NBSP } from "../../../helpers/formatters"
-import { DataLoading } from "../../../atoms/data-loading/data-loading.component"
+
+// temp ignore for dev
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DataLoading } from "@dfuse/explore"
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
 import { UiToolTip } from "../../../atoms/ui-tooltip/ui-tooltip"

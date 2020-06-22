@@ -1,7 +1,8 @@
 import * as React from "react"
-import { DataLoading } from "../../atoms/data-loading/data-loading.component"
+// temp ignore for dev
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DataLoading, DataError } from "@dfuse/explore"
 import { log } from "../../services/logger"
-import { DataError } from "../../atoms/data-error/data-error.component"
 import { TaskStatusAware } from "mobx-task"
 import { observer } from "mobx-react"
 
