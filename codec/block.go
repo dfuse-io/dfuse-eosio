@@ -67,6 +67,7 @@ func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockRe
 		go fs.Run()
 		select {
 		case <-ctx.Done():
+			fs.Shutdown(context.Canceled)
 			return 0, "", ctx.Err()
 		case <-fs.Terminated():
 		}
