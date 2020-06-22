@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **BREAKING**: `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 * `mindreader` ContinuityChecker is not enabled by default anymore
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
+* `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.)
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
@@ -39,6 +40,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
 * Command `check trxdb-blocks` to `tools`, to ensure linearity of irreversible blocks in storage.  This is useful to know if you've missed some block ranges when doing parallel insertions into your `trxdb` storage.
 * `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
+
+### Fixed
+* `search-indexer` no longer overflows on negative startblocks on new chains, it fails fast instead.
+* `search-archive` relative-start-block truncation now works
+* `search-forkresolver` no longer throws a nil pointer (app was previously broken)
+
 
 ## [v0.1.0-beta3] 2020-05-13
 
