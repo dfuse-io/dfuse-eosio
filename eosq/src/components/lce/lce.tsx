@@ -1,7 +1,8 @@
 import * as React from "react"
 import { DataLoading } from "../../atoms/data-loading/data-loading.component"
 import { DataError } from "../../atoms/data-error/data-error.component"
-import { PromiseState } from "../../hooks/use-promise"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { PromiseState } from "@dfuse/explore"
 
 type Props = { promise: PromiseState<any>; loadingMessage?: string; children?: React.ReactNode }
 

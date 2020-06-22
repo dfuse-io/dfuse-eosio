@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react"
 import { GraphqlResponseError } from "@dfuse/client"
-import { DocumentNode } from "graphql"
 import { print as printGraphqlDocument } from "graphql/language/printer"
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { getDfuseClient } from "@dfuse/explore"
 import {
+  getDfuseClient,
   PromiseState,
   promiseStatePending,
   promiseStateRejected,
   promiseStateResolved
-} from "./use-promise"
+} from "@dfuse/explore"
+
+// temporary import to fix type info for symlinked development
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DocumentNode } from "@dfuse/explore/node_modules/graphql/index"
 
 export function useGraphqlQuery<T = any>(
   document: string | DocumentNode,

@@ -1,8 +1,17 @@
 import gql from "graphql-tag"
-import { useGraphqlQuery } from "./use-graphql-query"
 import { getTokenInfosByKeyMap } from "../helpers/airdrops-list"
-import { PromiseState, promiseStateRetype, promiseStateResolved } from "./use-promise"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {
+  useGraphqlQuery,
+  PromiseState,
+  promiseStateRetype,
+  promiseStateResolved
+} from "@dfuse/explore"
 import { GraphqlResponseError } from "@dfuse/client"
+
+// temporary import to fix type info for symlinked development
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { DocumentNode } from "@dfuse/explore/node_modules/graphql/index"
 
 export type UserBalance = {
   contract: string
@@ -46,7 +55,8 @@ const tokenInfos = getTokenInfosByKeyMap()
 export function useAccountBalances(
   account: string
 ): PromiseState<UserBalance[], GraphqlResponseError[]> {
-  const response = useGraphqlQuery<Document>(document, { account })
+  // temporary type casting to fix symlink dev
+  const response = useGraphqlQuery<Document>(document as DocumentNode, { account })
   if (response.state === "pending" || response.state === "rejected") {
     return promiseStateRetype(response)
   }
