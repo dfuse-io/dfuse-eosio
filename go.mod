@@ -18,13 +18,13 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200602201207-f1981d03ef4c
-	github.com/dfuse-io/bstream v0.0.0-20200616115755-41eaed857d3b
+	github.com/dfuse-io/blockmeta v0.0.0-20200618125458-ea6edd6c3dd9
+	github.com/dfuse-io/bstream v0.0.0-20200616134354-62d63f98d5c1
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dfuse-box v0.0.0-20200608182358-fea76dca7384
-	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
+	github.com/dfuse-io/dfuse-box v0.0.0-20200619130815-abc5cbd8ce49
+	github.com/dfuse-io/dgraphql v0.0.0-20200622124934-46b5822c78ee
 	github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -37,7 +37,7 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200604062641-c40bd97e9fdf
 	github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39
-	github.com/dfuse-io/manageos v0.0.0-20200603173055-cd3a3e04a205
+	github.com/dfuse-io/manageos v0.0.0-20200612111236-e2ca6e0eff8f
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
@@ -94,8 +94,3 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/dfuse-io/dfuse-box => /Users/cbillett/devel/dfuse/go/dfuse-box
-replace github.com/dfuse-io/manageos => /Users/cbillett/devel/dfuse/go/manageos
-replace github.com/dfuse-io/blockmeta => /Users/cbillett/devel/dfuse/go/blockmeta
-replace github.com/dfuse-io/bstream => /Users/cbillett/devel/dfuse/go/bstream

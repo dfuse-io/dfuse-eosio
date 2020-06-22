@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dfuse-io/blockmeta"
 	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
+	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
-
-	"github.com/dfuse-io/blockmeta"
-
-	"github.com/eoscanada/eos-go"
 )
 
 var APIs []*eos.API
@@ -20,7 +18,11 @@ var ExtraAPIs []*eos.API
 func init() {
 	blockmeta.BlockNumToIDFromAPI = blockNumToIDFromAPI
 	blockmeta.GetHeadInfoFromAPI = headInfoFromAPI
+	blockmeta.GetIrrIDFromAPI = IrrIDFromAPI
+}
 
+func IrrIDFromAPI(ctx context.Context, _ uint64, libNum uint64) (string, error) {
+	return blockNumToIDFromAPI(ctx, libNum)
 }
 
 func blockNumToIDFromAPI(ctx context.Context, blockNum uint64) (string, error) {
