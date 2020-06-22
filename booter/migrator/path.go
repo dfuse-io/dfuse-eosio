@@ -25,6 +25,10 @@ func ReadContractList(dataDir string) ([]string, error) {
 	return contracts, nil
 }
 
+func AccountListPath(dataDir string) string {
+	return filepath.Join(dataDir, "accounts.json")
+}
+
 func ContractListPath(dataDir string) string {
 	return filepath.Join(dataDir, "contracts.json")
 }

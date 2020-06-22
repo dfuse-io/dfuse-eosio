@@ -100,16 +100,25 @@ type migrater struct {
 }
 
 func (m *migrater) migrate() error {
-	contracts, err := m.fetchAllContracts()
+	accounts, err := m.fetchAllAccounts()
 	if err != nil {
-		return fmt.Errorf("fetch contracts: %w", err)
+		return fmt.Errorf("fetch accounts: %w", err)
 	}
 
 	if err = os.MkdirAll(m.exportDir, os.ModePerm); err != nil {
 		return fmt.Errorf("unable to create export directory: %w", err)
 	}
 
-	if err = m.writeContractsList(m.exportDir, contracts); err != nil {
+	if err = writeJSONFile(migrator.AccountListPath(m.exportDir), accounts); err != nil {
+		return fmt.Errorf("unable to write contracts list: %w", err)
+	}
+
+	contracts, err := m.fetchAllContracts()
+	if err != nil {
+		return fmt.Errorf("fetch contracts: %w", err)
+	}
+
+	if err = writeJSONFile(migrator.ContractListPath(m.exportDir), accounts); err != nil {
 		return fmt.Errorf("unable to write contracts list: %w", err)
 	}
 
@@ -166,7 +175,7 @@ func (m *migrater) migrate() error {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
-		if err := m.writeABI(accountData.ABIPath(), abi); err != nil {
+		if err := writeJSONFile(accountData.ABIPath(), accounts); err != nil {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
@@ -176,6 +185,31 @@ func (m *migrater) migrate() error {
 	}
 
 	return nil
+}
+
+func (m *migrater) fetchAllAccounts() ([]string, error) {
+	userLog.Debug("fetching all accounts")
+
+	stream, err := m.fluxdb.StreamAccounts(m.ctx, &pbfluxdb.StreamAccountsRequest{
+		BlockNum: uint64(m.irrBlockNum),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("accounts stream: %w", err)
+	}
+
+	var accounts []string
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			return accounts, nil
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("stream account: %w", err)
+		}
+
+		accounts = append(accounts, resp.Account)
+	}
 }
 
 func (m *migrater) fetchAllContracts() ([]string, error) {
@@ -203,10 +237,6 @@ func (m *migrater) fetchAllContracts() ([]string, error) {
 
 		contracts = append(contracts, resp.Contract)
 	}
-}
-
-func (m *migrater) writeContractsList(dataDir string, contracts []string) error {
-	return writeJSONFile(migrator.ContractListPath(dataDir), contracts)
 }
 
 func (m *migrater) writeAllTables(contract string, accountData *migrator.AccountData, abi *eos.ABI) error {
@@ -275,42 +305,6 @@ func (m *migrater) writeTable(contract string, accountData *migrator.AccountData
 	}
 }
 
-func (m *migrater) fetchAllAccounts() ([]string, error) {
-	// FIXME: We need a maximum timeout value for the initial call so that if the client is misconfigured,
-	//        the user does not wait like 15m before seeing the error.
-	userLog.Debug("fetching all account")
-	// FIXME: What if the user does not have any more delband things, are we screwed ...?
-	//        That might be good enough or we might need to have a definitive tablet of all
-	//        existing accounts within EOSIO realm.
-	//
-	//        The trxdb interface has a `ListAccountNames` that could be useful. Would be
-	//        probably a best bet. We should compare both outputs but I think the db version
-	//        will be more complete.
-	stream, err := m.fluxdb.GetTableScopes(m.ctx, &pbfluxdb.GetTableScopesRequest{
-		BlockNum: uint64(m.irrBlockNum),
-		// IrreversibleOnly: true,
-		Contract: "eosio",
-		Table:    "delband",
-	})
-	if err != nil {
-		return nil, fmt.Errorf("new accounts stream: %w", err)
-	}
-
-	var scopes []string
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			return scopes, nil
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("stream account: %w", err)
-		}
-
-		scopes = append(scopes, resp.Scope)
-	}
-}
-
 var errABINotFound = errors.New("abi not found")
 var errABIInvalid = errors.New("abi invalid")
 
@@ -336,10 +330,6 @@ func (m *migrater) fetchABI(contract string) (*eos.ABI, error) {
 	}
 
 	return abi, nil
-}
-
-func (m *migrater) writeABI(abiPath string, abi *eos.ABI) error {
-	return writeJSONFile(abiPath, abi)
 }
 
 var errCodeNotFound = errors.New("code not found")

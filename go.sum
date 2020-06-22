@@ -277,6 +277,8 @@ github.com/dfuse-io/eosio-boot v0.0.0-20200616210133-91bd63fe1a24 h1:z0aHWQUSnXf
 github.com/dfuse-io/eosio-boot v0.0.0-20200616210133-91bd63fe1a24/go.mod h1:iXlMJbU4H/DyXj4pa2J2RE4rC8tk21+IT140cWdeNew=
 github.com/dfuse-io/eosio-boot v0.0.0-20200617175922-7a27ac983945 h1:+ZE2fnqs1RkB8SMZEnfkJQTMG5kIhBeNch8XRpV9lGs=
 github.com/dfuse-io/eosio-boot v0.0.0-20200617175922-7a27ac983945/go.mod h1:iXlMJbU4H/DyXj4pa2J2RE4rC8tk21+IT140cWdeNew=
+github.com/dfuse-io/eosio-boot v0.0.0-20200622210800-75a2d27d22c9 h1:ufY0/Z4mAhcuKZlM99sR2m2NdeRCqtN7Vmcx7MzKcnc=
+github.com/dfuse-io/eosio-boot v0.0.0-20200622210800-75a2d27d22c9/go.mod h1:iXlMJbU4H/DyXj4pa2J2RE4rC8tk21+IT140cWdeNew=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=

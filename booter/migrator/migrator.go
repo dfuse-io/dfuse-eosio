@@ -4,16 +4,11 @@ import (
 	"fmt"
 
 	rice "github.com/GeertJohan/go.rice"
-
 	bootops "github.com/dfuse-io/eosio-boot/ops"
-
-	"go.uber.org/zap"
-
-	"github.com/eoscanada/eos-go/ecc"
-
 	"github.com/eoscanada/eos-go"
-
+	"github.com/eoscanada/eos-go/ecc"
 	system "github.com/eoscanada/eos-go/system"
+	"go.uber.org/zap"
 )
 
 //go:generate rice embed-go
