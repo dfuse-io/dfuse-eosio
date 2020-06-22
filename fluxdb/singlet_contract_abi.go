@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	pbfluxdb "github.com/dfuse-io/pbgo/dfuse/fluxdb/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 )
@@ -13,7 +13,7 @@ import (
 const abiPrefix = "abi"
 
 func init() {
-	RegisterSingletFactory(abiPrefix, func(row *pbfluxdb.TabletRow) Singlet {
+	RegisterSingletFactory(abiPrefix, func(row *pbfluxdb.Row) Singlet {
 		return ContractABISinglet(abiPrefix + "/" + row.TabletKey)
 	})
 }
@@ -39,7 +39,7 @@ func (t ContractABISinglet) NewEntry(blockNum uint32, packedABI []byte) (*Contra
 	}
 
 	return &ContractABIEntry{
-		BaseSingletEntry: BaseSingletEntry{pbfluxdb.TabletRow{
+		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
 			Collection:  abiPrefix,
 			TabletKey:   singletKey,
 			BlockNumKey: HexRevBlockNum(blockNum),
@@ -60,7 +60,7 @@ func (t ContractABISinglet) NewEntryFromKV(key string, value []byte) (SingletEnt
 	}
 
 	return &ContractABIEntry{
-		BaseSingletEntry: BaseSingletEntry{pbfluxdb.TabletRow{
+		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
 			Collection:  abiPrefix,
 			TabletKey:   singletKey,
 			BlockNumKey: blockNumKey,

@@ -77,15 +77,7 @@ func TestParseFromFile(t *testing.T) {
 	tests := []struct {
 		deepMindFile string
 	}{
-		// FIXME: Once we are satisfied with changes to deep mind format, the `offchain` version should be put
-		//        in file `testdata/deep-mind.dmlog` directly and be removed. For the other tests, it's a pain
-		//        to convert them ... not sure what to do for those sadly.
-		// {"testdata/deep-mind.dmlog"},
 		{"testdata/deep-mind-offchain-abi-decoding.dmlog"},
-		// {"testdata/dtrx-hard-fail.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-not-present.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-failed.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-succeed.dmlog"},
 	}
 
 	for _, test := range tests {

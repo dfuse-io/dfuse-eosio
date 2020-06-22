@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	pbfluxdb "github.com/dfuse-io/pbgo/dfuse/fluxdb/v1"
 )
 
 // Key Account (keeps a mapping from EOS Public Key to []Account)
@@ -13,7 +13,7 @@ import (
 const kaPrefix = "ka"
 
 func init() {
-	RegisterTabletFactory(kaPrefix, func(row *pbfluxdb.TabletRow) Tablet {
+	RegisterTabletFactory(kaPrefix, func(row *pbfluxdb.Row) Tablet {
 		return KeyAccountTablet(fmt.Sprintf("%s/%s", kaPrefix, row.TabletKey))
 	})
 }
@@ -51,7 +51,7 @@ func (t KeyAccountTablet) NewRow(blockNum uint32, account, permission string, is
 	}
 
 	row := &KeyAccountRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  kaPrefix,
 			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
@@ -77,7 +77,7 @@ func (t KeyAccountTablet) NewRowFromKV(key string, value []byte) (TabletRow, err
 	}
 
 	return &KeyAccountRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  kaPrefix,
 			TabletKey:   tabletKey,
 			BlockNumKey: blockNumKey,

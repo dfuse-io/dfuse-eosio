@@ -38,9 +38,8 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 
 	lastDbOpForRowPath := map[string]*pbcodec.DBOp{}
 	firstDbOpWasInsert := map[string]bool{}
-	lastKeyAccountForRowKey := map[string]TabletRow{}
-	lastContractForRowKey := map[string]TabletRow{}
-	lastContractTableScopeForRowKey := map[string]TabletRow{}
+
+	lastTabletRowMap := map[string]TabletRow{}
 
 	req := &WriteRequest{
 		BlockNum: uint32(rawBlk.Num()),
@@ -76,7 +75,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 			}
 
 			for _, row := range rows {
-				lastKeyAccountForRowKey[row.Key()] = row
+				lastTabletRowMap[row.Key()] = row
 			}
 		}
 
@@ -86,11 +85,19 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 				return nil, fmt.Errorf("unable to create contract table scope row for table op: %w", err)
 			}
 
-			lastContractTableScopeForRowKey[row.Key()] = row
+			lastTabletRowMap[row.Key()] = row
 		}
 
 		for _, act := range trx.ActionTraces {
 			switch act.FullName() {
+			case "eosio:eosio:newaccount":
+				accountsRow, err := NewAccountsRow(req.BlockNum, act)
+				if err != nil {
+					return nil, fmt.Errorf("unable to extract accounts row: %w", err)
+				}
+
+				lastTabletRowMap[accountsRow.Key()] = accountsRow
+
 			case "eosio:eosio:setcode":
 				contractRow, err := NewContractRow(req.BlockNum, act)
 				if err != nil {
@@ -103,7 +110,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 				}
 
 				req.AppendSingletEntry(codeEntry)
-				lastContractForRowKey[contractRow.Key()] = contractRow
+				lastTabletRowMap[contractRow.Key()] = contractRow
 
 			case "eosio:eosio:setabi":
 				abiEntry, err := NewContractABIEntry(req.BlockNum, act)
@@ -136,9 +143,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		return nil, fmt.Errorf("unable to add db ops to request: %w", err)
 	}
 
-	addTabletRowsToRequest(req, lastKeyAccountForRowKey)
-	addTabletRowsToRequest(req, lastContractForRowKey)
-	addTabletRowsToRequest(req, lastContractTableScopeForRowKey)
+	addTabletRowsToRequest(req, lastTabletRowMap)
 
 	return req, nil
 }
@@ -206,10 +211,6 @@ func permToKeyAccountRows(blockNum uint32, perm *pbcodec.PermissionObject, isDel
 	}
 
 	return
-}
-
-func addCodeRow() {
-
 }
 
 func tableDataRowPath(op *pbcodec.DBOp) string {

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	pbfluxdb "github.com/dfuse-io/pbgo/dfuse/fluxdb/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 )
@@ -16,7 +16,7 @@ import (
 const alPrefix = "al"
 
 func init() {
-	RegisterTabletFactory(alPrefix, func(row *pbfluxdb.TabletRow) Tablet {
+	RegisterTabletFactory(alPrefix, func(row *pbfluxdb.Row) Tablet {
 		return AuthLinkTablet(fmt.Sprintf("%s/%s", alPrefix, row.TabletKey))
 	})
 }
@@ -51,7 +51,7 @@ func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission str
 	}
 
 	row := &AuthLinkRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  alPrefix,
 			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
@@ -79,7 +79,7 @@ func (t AuthLinkTablet) NewRowFromKV(key string, value []byte) (TabletRow, error
 	}
 
 	return &AuthLinkRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  collection,
 			TabletKey:   tabletKey,
 			BlockNumKey: blockNumKey,

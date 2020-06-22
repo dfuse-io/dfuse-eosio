@@ -40,7 +40,7 @@ require (
 	github.com/dfuse-io/manageos v0.0.0-20200611205430-5e3a009eadaa
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
+	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
 	github.com/dfuse-io/relayer v0.0.0-20200602204614-8cdcc29ef339
 	github.com/dfuse-io/search v0.0.0-20200615145420-7f4b7dc4c850
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2

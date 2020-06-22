@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	pbfluxdb "github.com/dfuse-io/pbgo/dfuse/fluxdb/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 )
@@ -14,7 +14,7 @@ import (
 const ctaPrefix = "cta"
 
 func init() {
-	RegisterTabletFactory(ctaPrefix, func(row *pbfluxdb.TabletRow) Tablet {
+	RegisterTabletFactory(ctaPrefix, func(row *pbfluxdb.Row) Tablet {
 		return ContractTablet(fmt.Sprintf("%s/%s", ctaPrefix, row.TabletKey))
 	})
 }
@@ -47,7 +47,7 @@ func (t ContractTablet) NewRow(blockNum uint32, contract string, isDeletion bool
 	}
 
 	row := &ContractRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  ctaPrefix,
 			TabletKey:   tabletKey,
 			BlockNumKey: HexBlockNum(blockNum),
@@ -73,7 +73,7 @@ func (t ContractTablet) NewRowFromKV(key string, value []byte) (TabletRow, error
 	}
 
 	return &ContractRow{
-		BaseTabletRow: BaseTabletRow{pbfluxdb.TabletRow{
+		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
 			Collection:  collection,
 			TabletKey:   tabletKey,
 			BlockNumKey: blockNumKey,

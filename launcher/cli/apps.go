@@ -143,14 +143,6 @@ func init() {
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
-			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
-			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
-			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
-				return err
-			}
-			return nil
-		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			dfuseDataDir, err := dfuseAbsoluteDataDir()
 			if err != nil {
@@ -237,12 +229,6 @@ func init() {
 			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the nodeos if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
-			return nil
-		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
-			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
-				return err
-			}
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {

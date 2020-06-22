@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
+	pbfluxdb "github.com/dfuse-io/pbgo/dfuse/fluxdb/v1"
 )
 
 var collections = map[string]bool{}
@@ -70,7 +70,7 @@ func ExplodeTabletKey(key string) (collection, tablet string, err error) {
 	return
 }
 
-type TabletFactory = func(row *pbfluxdb.TabletRow) Tablet
+type TabletFactory = func(row *pbfluxdb.Row) Tablet
 
 var tabletFactories = map[string]TabletFactory{}
 
@@ -102,7 +102,7 @@ func ExplodeTabletRowKey(key string) (collection, tablet, blockNum, primaryKey s
 }
 
 type BaseTabletRow struct {
-	pbfluxdb.TabletRow
+	pbfluxdb.Row
 }
 
 func (r *BaseTabletRow) BlockNum() uint32 {
@@ -128,7 +128,7 @@ func (r *BaseTabletRow) Tablet() Tablet {
 		panic(fmt.Errorf(`no known tablet factory for collection %s, register factories through a 'RegisterTabletFactory("prefix", func (...) { ... })' call`, r.Collection))
 	}
 
-	return factory(&r.TabletRow)
+	return factory(&r.Row)
 }
 
 func (r *BaseTabletRow) Value() []byte {
@@ -180,7 +180,7 @@ func ExplodeSingletEntryKey(key string) (collection, tablet, blockNum string, er
 	return
 }
 
-type SingletFactory = func(row *pbfluxdb.TabletRow) Singlet
+type SingletFactory = func(row *pbfluxdb.Row) Singlet
 
 var singletFactories = map[string]SingletFactory{}
 
@@ -193,7 +193,7 @@ func RegisterSingletFactory(collection string, factory SingletFactory) {
 }
 
 type BaseSingletEntry struct {
-	pbfluxdb.TabletRow
+	pbfluxdb.Row
 }
 
 func (r *BaseSingletEntry) BlockNum() uint32 {
@@ -215,7 +215,7 @@ func (r *BaseSingletEntry) Singlet() Singlet {
 		panic(fmt.Errorf(`no known singlet factory for collection %s, register factories through a 'RegisterSingletFactory("prefix", func (...) { ... })' call`, r.Collection))
 	}
 
-	return factory(&r.TabletRow)
+	return factory(&r.Row)
 }
 
 func (r *BaseSingletEntry) Value() []byte {
