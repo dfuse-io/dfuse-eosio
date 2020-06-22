@@ -37,7 +37,7 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200619171121-937464bfbae5
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
-	github.com/dfuse-io/manageos v0.0.0-20200619153524-f734957ab97a
+	github.com/dfuse-io/manageos v0.0.0-20200622121527-4564c49c02e1
 	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
