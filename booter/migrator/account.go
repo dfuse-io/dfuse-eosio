@@ -15,7 +15,8 @@ type AccountPath string
 type TablePath string
 type ScopePath string
 
-type sendFunc func(action *eos.Action)
+type setupAccount func(name eos.AccountName)
+type sendActionFunc func(action *eos.Action)
 type AccountData struct {
 	name string
 	Path string
@@ -39,100 +40,96 @@ func NewAccountData(dataDir string, account string) (*AccountData, error) {
 	}, nil
 }
 
-func (m *AccountData) Migrate(send sendFunc) error {
-	abi, err := m.readABI()
+func (a *AccountData) setupAbi() error {
+	abi, err := a.readABI()
 	if err != nil {
-		return fmt.Errorf("unable to get account %q ABI: %w", m.name, err)
+		return fmt.Errorf("unable to get account %q ABI: %w", a.name, err)
 	}
-	m.abi = abi // store for late use to encode rows
+	a.abi = abi // store for late use to encode rows
 
 	//code, err := m.readCode()
 	//if err != nil {
 	//	return fmt.Errorf("unable to get account %q Code: %w", m.name, err)
 	//}
-	tables, err := m.readTableList()
+	return nil
+}
+
+func (a *AccountData) migrateTable(table string, setupAccount setupAccount, sendAction sendActionFunc) error {
+	tablePath, err := a.TablePath(table)
 	if err != nil {
-		return fmt.Errorf("unable to get table list for account %q: %w", m.name, err)
+		return fmt.Errorf("unable to create table path: %w", err)
 	}
 
-	//zlog.Debug("processing tables", zap.String("account", m.name), zap.Int("table_count", len(tables)))
+	scopes, err := a.readScopeList(tablePath)
+	if err != nil {
+		return fmt.Errorf("unable to read scopes: %w", err)
+	}
 
-	for _, table := range tables {
-		tablePath, err := m.TablePath(table)
+	zlog.Debug("processing table scopes", zap.String("account", a.name), zap.String("table", table), zap.Int("scope_count", len(scopes)))
+
+	for _, scope := range scopes {
+		scopePath, err := a.ScopePath(tablePath, scope)
 		if err != nil {
-			return fmt.Errorf("unable to create table path: %w", err)
+			return fmt.Errorf("unable to create scope path: %w", err)
 		}
 
-		scopes, err := m.readScopeList(tablePath)
+		rows, err := a.readRows(scopePath)
 		if err != nil {
-			return fmt.Errorf("unable to read scopes: %w", err)
+			return fmt.Errorf("unable to read rows contract %q, table %q scope %q: %w", a.name, table, scope, err)
 		}
 
-		zlog.Debug("processing table scopes", zap.String("account", m.name), zap.String("table", table), zap.Int("scope_count", len(scopes)))
-
-		for _, scope := range scopes {
-			scopePath, err := m.ScopePath(tablePath, scope)
+		for _, row := range rows {
+			action, err := a.detailedTableRowToAction(&DetailedTableRow{
+				TableRow: row,
+				account:  AN(a.name),
+				table:    TN(table),
+				scope:    SN(scope),
+			})
 			if err != nil {
-				return fmt.Errorf("unable to create scope path: %w", err)
+				return fmt.Errorf("unable to creation action for table row: %w", err)
 			}
-
-			rows, err := m.readRows(scopePath)
-			if err != nil {
-				return fmt.Errorf("unable to read rows contract %q, table %q scope %q: %w", m.name, table, scope, err)
-			}
-
-			for _, row := range rows {
-				action, err := m.detailedTableRowToAction(&DetailedTableRow{
-					TableRow: row,
-					account:  AN(m.name),
-					table:    TN(table),
-					scope:    SN(scope),
-				})
-				if err != nil {
-					return fmt.Errorf("unable to creation action for table row: %w", err)
-				}
-				send(action)
-			}
+			setupAccount(AN(row.Payer))
+			sendAction(action)
 		}
 	}
 	return nil
 }
 
-func (m *AccountData) readABI() (abi *eos.ABI, err error) {
-	file, err := os.Open(m.ABIPath())
+func (a *AccountData) readABI() (abi *eos.ABI, err error) {
+	file, err := os.Open(a.ABIPath())
 	if err != nil {
-		return nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", m.name, m.Path, err)
+		return nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", a.name, a.Path, err)
 	}
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&abi)
 	if err != nil {
-		return nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", m.name, m.Path, err)
+		return nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", a.name, a.Path, err)
 	}
 
 	return abi, nil
 }
 
-func (m *AccountData) readCode() (code []byte, err error) {
-	cnt, err := ioutil.ReadFile(m.CodePath())
+func (a *AccountData) readCode() (code []byte, err error) {
+	cnt, err := ioutil.ReadFile(a.CodePath())
 	if err != nil {
-		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", m.name, m.Path, err)
+		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", a.name, a.Path, err)
 	}
 
 	return cnt, nil
 }
 
-func (m *AccountData) readTableList() (out []string, err error) {
-	files, err := ioutil.ReadDir(filepath.Join(m.Path, "tables"))
+func (a *AccountData) readTableList() (out []string, err error) {
+	files, err := ioutil.ReadDir(filepath.Join(a.Path, "tables"))
 	if err != nil {
 		return nil, fmt.Errorf("read dir: %w", err)
 	}
 	for _, file := range files {
 		if !file.IsDir() {
 			zlog.Warn("unexpected file in tables folder",
-				zap.String("account", m.name),
-				zap.String("account_path", m.Path),
+				zap.String("account", a.name),
+				zap.String("account_path", a.Path),
 				zap.String("filename", file.Name()),
 			)
 			continue
@@ -142,8 +139,8 @@ func (m *AccountData) readTableList() (out []string, err error) {
 	return
 }
 
-func (m *AccountData) readScopeList(table TablePath) ([]string, error) {
-	path := m.ScopeListPath(table)
+func (a *AccountData) readScopeList(table TablePath) ([]string, error) {
+	path := a.ScopeListPath(table)
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read scope list %q: %w", string(table), err)
@@ -160,8 +157,8 @@ func (m *AccountData) readScopeList(table TablePath) ([]string, error) {
 	return scopes, nil
 }
 
-func (m *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
-	path := m.RowsPath(scpPath)
+func (a *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
+	path := a.RowsPath(scpPath)
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read scope rows %q: %w", string(scpPath), err)
@@ -179,13 +176,14 @@ func (m *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
 	return rows, nil
 }
 
-func (m *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
-	data, err := m.decodeDetailedTableRow(row)
+func (a *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
+	data, err := a.decodeDetailedTableRow(row)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode row %q/%q/%q: %w", row.account, row.table, row.scope, err)
 	}
+
 	action := &eos.Action{
-		Account: AN(m.name),
+		Account: AN(a.name),
 		Name:    ActN("inject"),
 		Authorization: []eos.PermissionLevel{
 			{Actor: AN(row.Payer), Permission: PN("active")},
@@ -204,18 +202,18 @@ func (m *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Acti
 	return action, nil
 }
 
-func (m *AccountData) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
-	tableDef := m.findTableDef(row.table)
+func (a *AccountData) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
+	tableDef := a.findTableDef(row.table)
 	if tableDef == nil {
 		return nil, fmt.Errorf("unable to find table definition %q in ABI for account: %q", row.table, row.account)
 	}
 	// TODO: need to check for a if type is alias...
-	return m.abi.EncodeStruct(tableDef.Type, row.TableRow.Data)
+	return a.abi.EncodeStruct(tableDef.Type, row.TableRow.Data)
 }
 
 // ABI helpers
-func (m *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
-	for _, t := range m.abi.Tables {
+func (a *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
+	for _, t := range a.abi.Tables {
 		if t.Name == table {
 			return &t
 		}
@@ -224,27 +222,27 @@ func (m *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
 }
 
 // path helpers
-func (m *AccountData) ABIPath() string {
-	return filepath.Join(m.Path, "abi.json")
+func (a *AccountData) ABIPath() string {
+	return filepath.Join(a.Path, "abi.json")
 }
 
-func (m *AccountData) CodePath() string {
-	return filepath.Join(m.Path, "code.wasm")
+func (a *AccountData) CodePath() string {
+	return filepath.Join(a.Path, "code.wasm")
 }
 
-func (m *AccountData) TablePath(table string) (TablePath, error) {
+func (a *AccountData) TablePath(table string) (TablePath, error) {
 	if len(table) == 0 {
 		return "", fmt.Errorf("received an empty table")
 	}
 
-	return TablePath(filepath.Join(m.Path, "tables", table)), nil
+	return TablePath(filepath.Join(a.Path, "tables", table)), nil
 }
 
-func (m *AccountData) ScopeListPath(tblPath TablePath) string {
+func (a *AccountData) ScopeListPath(tblPath TablePath) string {
 	return filepath.Join(string(tblPath), "scopes.json")
 }
 
-func (m *AccountData) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
+func (a *AccountData) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
 	if len(scope) == 0 {
 		return "", fmt.Errorf("received an empty scope")
 	}
@@ -253,6 +251,6 @@ func (m *AccountData) ScopePath(tblPath TablePath, scope string) (ScopePath, err
 	return ScopePath(path), nil
 }
 
-func (m *AccountData) RowsPath(scpPath ScopePath) string {
+func (a *AccountData) RowsPath(scpPath ScopePath) string {
 	return filepath.Join(string(scpPath), "rows.json")
 }

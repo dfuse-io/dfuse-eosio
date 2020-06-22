@@ -99,4 +99,3 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
 
-replace github.com/dfuse-io/eosio-boot => /Users/julien/codebase/dfuse-io/eosio-boot

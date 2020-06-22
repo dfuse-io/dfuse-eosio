@@ -7,15 +7,13 @@ using namespace eosio;
 
 IMPORT int32_t db_store_i64(uint64_t scope, uint64_t table, uint64_t payer, uint64_t id,  const void* data, uint32_t len);
 
-void migrator::inject(name table,name scope,name payer,name id, std::vector<char>  data) {
-    printf("table: %d, scope: %d, payer: %d,id: %d, size of data %d", table, scope, payer, id);
-
+void migrator::inject(name table,name scope,name payer,name id, std::vector<char>  data) {            
     db_store_i64(
-      scope.value,  // The scope where the record will be stored
-      table.value,  // The ID/name of the table within the current scope/code context
-      payer.value,  // The account that is paying for this storage
-      id.value,     // Id of the entry
-      (void*)&data[0],   // Record to store
-      sizeof(data)     // Size of data
+      scope.value,      // The scope where the record will be stored
+      table.value,      // The ID/name of the table within the current scope/code context
+      payer.value,      // The account that is paying for this storage
+      id.value,         // Id of the entry
+      (void*)&data[0],  // Record to store
+      data.size()       // Size of data
     );  
 };

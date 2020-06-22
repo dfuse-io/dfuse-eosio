@@ -56,7 +56,7 @@ func testMigrationData(t *testing.T, dataDir string) {
 
 	go func() {
 		defer close(actions)
-		migrator.startMigration()
+		migrator.migrate()
 	}()
 
 	for {
