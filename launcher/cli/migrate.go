@@ -118,7 +118,7 @@ func (m *migrater) migrate() error {
 		return fmt.Errorf("fetch contracts: %w", err)
 	}
 
-	if err = writeJSONFile(migrator.ContractListPath(m.exportDir), accounts); err != nil {
+	if err = writeJSONFile(migrator.ContractListPath(m.exportDir), contracts); err != nil {
 		return fmt.Errorf("unable to write contracts list: %w", err)
 	}
 
