@@ -12,7 +12,8 @@ import { legacyHandleDfuseApiError } from "../rest/api"
 import { BlockSummary } from "../../models/block"
 import { SuggestionSection } from "../../models/typeahead"
 import { log } from "../../services/logger"
-import { getDfuseClient } from "../../data/dfuse"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { getDfuseClient } from "@dfuse/explore"
 
 // Account
 

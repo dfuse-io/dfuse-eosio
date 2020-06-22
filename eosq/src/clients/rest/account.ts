@@ -1,7 +1,8 @@
 import { getTableRows, GetTableRowParams, getProducerSchedule } from "../websocket/eosws"
 import { legacyHandleDfuseApiError } from "./api"
 import { Abi } from "@dfuse/client"
-import { getDfuseClient } from "../../data/dfuse"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { getDfuseClient } from "@dfuse/explore"
 
 export async function requestProducerSchedule() {
   return getProducerSchedule()

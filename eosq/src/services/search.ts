@@ -1,6 +1,7 @@
 import { searchStore } from "../stores"
 import { SearchTransactionsResponse } from "@dfuse/client"
-import { getDfuseClient } from "../data/dfuse"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { getDfuseClient } from "@dfuse/explore"
 
 export function performStructuredSearch(cursor: string) {
   if (!searchStore.loadingTransactions) {

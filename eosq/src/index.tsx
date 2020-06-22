@@ -8,7 +8,9 @@ import "sanitize.css/sanitize.css"
 import App from "./App"
 import "./i18n"
 import "./index.css"
-import { initializeDfuseClientFromConfig } from "./data/dfuse"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { initializeDfuseClientFromConfig } from "@dfuse/explore"
+import { Config } from "./models/config"
 
 const browserHistory = createBrowserHistory()
 const routingStore = new RouterStore()
@@ -41,6 +43,11 @@ if (hotModule) {
   })
 }
 
-initializeDfuseClientFromConfig()
+initializeDfuseClientFromConfig({
+  apiKey: Config.dfuse_io_api_key,
+  network: Config.dfuse_io_endpoint,
+  authUrl: Config.dfuse_auth_endpoint,
+  secure: Config.secure !== undefined && Config.secure
+})
 
 renderApp(App)

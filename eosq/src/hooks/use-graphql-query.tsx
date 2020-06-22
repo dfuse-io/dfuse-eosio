@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import { GraphqlResponseError } from "@dfuse/client"
 import { DocumentNode } from "graphql"
 import { print as printGraphqlDocument } from "graphql/language/printer"
-import { getDfuseClient } from "../data/dfuse"
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { getDfuseClient } from "@dfuse/explore"
 import {
   PromiseState,
   promiseStatePending,
