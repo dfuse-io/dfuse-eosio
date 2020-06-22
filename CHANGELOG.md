@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `mindreader` ContinuityChecker is not enabled by default anymore
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
 * `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.)
+* Various startup speed improvements for `blockmeta`, `bstream`, `search-indexer`
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
