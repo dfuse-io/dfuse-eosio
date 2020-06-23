@@ -40,18 +40,21 @@ func setup(subCommand string) error {
 			}
 		}
 
-		for k, v := range launcher.DfuseConfig[subCommand].Flags {
-			validFlag := false
-			if _, ok := allFlags["global-"+k]; ok {
-				viper.SetDefault("global-"+k, v)
-				validFlag = true
-			}
-			if _, ok := allFlags[k]; ok {
-				viper.SetDefault(k, v)
-				validFlag = true
-			}
-			if !validFlag {
-				return fmt.Errorf("invalid flag %s in config file under command %s", k, subCommand)
+		subconf := launcher.DfuseConfig[subCommand]
+		if subconf != nil {
+			for k, v := range subconf.Flags {
+				validFlag := false
+				if _, ok := allFlags["global-"+k]; ok {
+					viper.SetDefault("global-"+k, v)
+					validFlag = true
+				}
+				if _, ok := allFlags[k]; ok {
+					viper.SetDefault(k, v)
+					validFlag = true
+				}
+				if !validFlag {
+					return fmt.Errorf("invalid flag %s in config file under command %s", k, subCommand)
+				}
 			}
 		}
 
