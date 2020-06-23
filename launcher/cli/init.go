@@ -17,11 +17,11 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"io/ioutil"
 	"os"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -78,9 +78,11 @@ func Init(runProducer bool, configFile string) error {
 	}
 
 	apps := launcher.ParseAppsFromArgs(toRun)
-	conf := &launcher.DfuseConfig{}
-	conf.Start.Args = apps
-	conf.Start.Flags = map[string]string{}
+	conf := make(map[string]*launcher.DfuseCommandConfig)
+	conf["start"] = &launcher.DfuseCommandConfig{
+		Args:  apps,
+		Flags: map[string]string{},
+	}
 
 	var err error
 	if runProducer {
