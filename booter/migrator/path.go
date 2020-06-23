@@ -25,12 +25,30 @@ func ReadContractList(dataDir string) ([]string, error) {
 	return contracts, nil
 }
 
-func AccountListPath(dataDir string) string {
-	return filepath.Join(dataDir, "accounts.json")
+func ReadAccountList(dataDir string) ([]string, error) {
+	path := AccountListPath(dataDir)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read contract list: %w", err)
+	}
+	defer file.Close()
+
+	var accounts []string
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&accounts)
+	if err != nil {
+		return nil, fmt.Errorf("unable decode contract %q list: %w", path, err)
+	}
+	return accounts, nil
 }
 
 func ContractListPath(dataDir string) string {
 	return filepath.Join(dataDir, "contracts.json")
+}
+
+func AccountListPath(dataDir string) string {
+	return filepath.Join(dataDir, "accounts.json")
 }
 
 func nestedPath(parentPath string, entityName string) string {

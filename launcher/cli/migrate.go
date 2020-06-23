@@ -175,7 +175,7 @@ func (m *migrater) migrate() error {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 
-		if err := writeJSONFile(accountData.ABIPath(), accounts); err != nil {
+		if err := writeJSONFile(accountData.ABIPath(), abi); err != nil {
 			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
 		}
 

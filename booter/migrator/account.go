@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/eoscanada/eos-go"
+	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +22,7 @@ type AccountData struct {
 	name string
 	Path string
 	abi  *eos.ABI
+	ctr  *contract
 }
 
 var traceEnable = false
@@ -41,20 +43,24 @@ func NewAccountData(dataDir string, account string) (*AccountData, error) {
 }
 
 func (a *AccountData) setupAbi() error {
-	abi, err := a.readABI()
+	abi, abiCnt, err := a.readABI()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", a.name, err)
 	}
-	a.abi = abi // store for late use to encode rows
 
-	//code, err := m.readCode()
-	//if err != nil {
-	//	return fmt.Errorf("unable to get account %q Code: %w", m.name, err)
-	//}
+	code, err := a.readCode()
+	if err != nil {
+		return fmt.Errorf("unable to get account %q Code: %w", a.name, err)
+	}
+	a.abi = abi // store for late use to encode rows
+	a.ctr = &contract{
+		abi:  abiCnt,
+		code: code,
+	}
 	return nil
 }
 
-func (a *AccountData) migrateTable(table string, setupAccount setupAccount, sendAction sendActionFunc) error {
+func (a *AccountData) migrateTable(table string, sendAction sendActionFunc) error {
 	tablePath, err := a.TablePath(table)
 	if err != nil {
 		return fmt.Errorf("unable to create table path: %w", err)
@@ -67,7 +73,7 @@ func (a *AccountData) migrateTable(table string, setupAccount setupAccount, send
 
 	zlog.Debug("processing table scopes", zap.String("account", a.name), zap.String("table", table), zap.Int("scope_count", len(scopes)))
 
-	for _, scope := range scopes {
+	walkScopes(string(tablePath), func(scope string) error {
 		scopePath, err := a.ScopePath(tablePath, scope)
 		if err != nil {
 			return fmt.Errorf("unable to create scope path: %w", err)
@@ -88,27 +94,31 @@ func (a *AccountData) migrateTable(table string, setupAccount setupAccount, send
 			if err != nil {
 				return fmt.Errorf("unable to creation action for table row: %w", err)
 			}
-			setupAccount(AN(row.Payer))
 			sendAction(action)
 		}
-	}
+		return nil
+	})
+
 	return nil
 }
 
-func (a *AccountData) readABI() (abi *eos.ABI, err error) {
-	file, err := os.Open(a.ABIPath())
-	if err != nil {
-		return nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", a.name, a.Path, err)
-	}
-	defer file.Close()
+func (a *AccountData) setContractActions() ([]*eos.Action, error) {
+	return system.NewSetContractContent(AN(a.name), a.ctr.code, a.ctr.abi)
 
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&abi)
+}
+
+func (a *AccountData) readABI() (abi *eos.ABI, abiCnt []byte, err error) {
+	cnt, err := ioutil.ReadFile(a.ABIPath())
 	if err != nil {
-		return nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", a.name, a.Path, err)
+		return nil, nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", a.name, a.Path, err)
 	}
 
-	return abi, nil
+	err = json.Unmarshal(cnt, &abi)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", a.name, a.Path, err)
+	}
+
+	return abi, cnt, nil
 }
 
 func (a *AccountData) readCode() (code []byte, err error) {
