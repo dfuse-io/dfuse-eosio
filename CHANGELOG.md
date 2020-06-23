@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.1.0-beta4] 2020-06-23
 
 ### Networked APIs Changed
 
@@ -23,9 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.). This will make previously-cached entries useless.
 * Various startup speed improvements for `blockmeta`, `bstream`, `search-indexer`
 * `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` now default to 0 to prevent accidental data deletion.
-
-### Improved
-* trxdb now correctly implements "BatchGet" on most operations, giving a good performance increase over previous version
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
@@ -56,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `search-forkresolver` no longer throws a nil pointer (app was previously broken)
 * `mindreader` More resilient shutdown handling (expects EOF on nodeos' stdout)
 * `mindreader` and `node-manager` logs from nodeos that go through zap now have their level parsed correctly instead of all being seen as DEBUG.
+* trxdb now correctly implements "BatchGet" on most operations, giving a good performance increase over previous version
 
 ## [v0.1.0-beta3] 2020-05-13
 
