@@ -1126,8 +1126,8 @@ func init() {
 		MetricsID:   "booter",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/booter.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("booter-bootseq", "", "File path tp the desired boot sequence")
-			cmd.Flags().String("booter-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying nodeos")
+			cmd.Flags().String("booter-bootseq", "./bootseq.yaml", "File path tp the desired boot sequence")
+			cmd.Flags().String("booter-nodeos-api-addr", fmt.Sprintf("http://localhost%s/", NodeosAPIAddr), "Target API address to communicate with underlying nodeos")
 			cmd.Flags().String("booter-data-dir", "{dfuse-data-dir}/booter", "Booter's working directory")
 			cmd.Flags().String("booter-vault-file", "", "Wallet file that contains encrypted key material")
 			cmd.Flags().String("booter-private-key", "", "Genesis private key")

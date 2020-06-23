@@ -24,7 +24,7 @@ type LoggingDef struct {
 
 func NewLoggingDef(regex string, levels []zapcore.Level) *LoggingDef {
 	if len(levels) == 0 {
-		levels = []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}
+		levels = []zapcore.Level{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel}
 	}
 
 	return &LoggingDef{

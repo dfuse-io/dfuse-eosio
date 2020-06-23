@@ -39,8 +39,8 @@ var userLog = zapbox.NewCLILogger(zap.NewNop())
 type zl = zapcore.Level
 
 // Core & Libraries
-var commongLoggingDef = &launcher.LoggingDef{
-	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
+var commonLoggingDef = &launcher.LoggingDef{
+	Levels: []zl{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel},
 }
 
 var dfuseLoggingDef = &launcher.LoggingDef{
@@ -49,7 +49,7 @@ var dfuseLoggingDef = &launcher.LoggingDef{
 }
 
 var bstreamLoggingDef = &launcher.LoggingDef{
-	Levels: []zl{zap.WarnLevel, zap.InfoLevel, zap.InfoLevel, zap.DebugLevel},
+	Levels: []zl{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel},
 	Regex:  "github.com/dfuse-io/bstream.*",
 }
 
@@ -72,7 +72,7 @@ func setupLogger() {
 	}
 	logStdoutWriter := zapcore.Lock(os.Stdout)
 
-	commonLogger := createLogger("common", commongLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat)
+	commonLogger := createLogger("common", commonLoggingDef, verbosity, logFileWriter, logStdoutWriter, logformat)
 	logging.Set(commonLogger)
 
 	for _, appDef := range launcher.AppRegistry {
