@@ -133,6 +133,7 @@ func tokenizeEOSDataObject(data string) map[string]interface{} {
 		}
 	}
 
+	// FIXME: make sure this is HASHED
 	hashKeys(jsonData, out, hashedEOSDataIndexedFields)
 
 	// TODO: make sure we don't send strings that are more than 100 chars in the index..

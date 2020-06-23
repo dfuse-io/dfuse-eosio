@@ -221,7 +221,7 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater bat
 			data := tokenizeEOSExecutedAction(actTrace)
 			// `block_num`, `trx_idx`: used for sorting
 			data["block_num"] = blk.Num()
-			data["trx_idx"] = trxIndex
+			data["trx_idx"] = trxIndex /// FIXME: trxTrace.Index
 
 			receiver := string(actTrace.Receipt.Receiver)
 			account := string(actTrace.Action.Account)
