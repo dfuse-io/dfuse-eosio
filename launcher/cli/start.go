@@ -49,7 +49,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	configFile := viper.GetString("global-config-file")
 	userLog.Printf("Starting dfuse for EOSIO with config file '%s'", configFile)
 
-	err = Start(configFile, dataDir, args)
+	err = Start(dataDir, args)
 	if err != nil {
 		return fmt.Errorf("unable to launch: %w", err)
 	}
@@ -59,16 +59,7 @@ func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
 	return
 }
 
-func Start(configFile string, dataDir string, args []string) (err error) {
-
-	config := &launcher.DfuseConfig{}
-	if configFile != "" {
-		config, err = launcher.ReadConfig(configFile)
-		if err != nil {
-			return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
-		}
-	}
-
+func Start(dataDir string, args []string) (err error) {
 	dataDirAbs, err := filepath.Abs(dataDir)
 	if err != nil {
 		return fmt.Errorf("unable to setup directory structure: %w", err)
@@ -94,17 +85,12 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 		return fmt.Errorf("protocol specific hooks not configured correctly: %w", err)
 	}
 
-	launch := launcher.NewLauncher(config, modules)
+	launch := launcher.NewLauncher(modules)
 	userLog.Debug("launcher created")
 
 	apps := launcher.ParseAppsFromArgs(args)
 	if len(args) == 0 {
-		apps = launcher.ParseAppsFromArgs(config.Start.Args)
-	}
-
-	// Set default values for flags in `start`
-	for k, v := range config.Start.Flags {
-		viper.SetDefault(k, v)
+		apps = launcher.ParseAppsFromArgs(launcher.DfuseConfig["start"].Args)
 	}
 
 	if containsApp(apps, "mindreader") {
