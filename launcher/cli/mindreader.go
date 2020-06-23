@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -140,6 +141,20 @@ func init() {
 				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
 			}
 
+			workingDir := mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir"))
+			var continuityChecker mindreader.ContinuityChecker
+			continuityChecker, err = mindreader.NewContinuityChecker(filepath.Join(workingDir, "continuity_check"), appLogger)
+			if err != nil {
+				return nil, fmt.Errorf("error setting up continuity checker: %s", err)
+			}
+
+			if viper.GetBool("mindreader-fail-on-non-contiguous-block") {
+				chainSuperviser.RegisterPostRestoreHandler(continuityChecker.Reset)
+			} else {
+				continuityChecker.Reset()
+				continuityChecker = nil
+			}
+
 			chainOperator, err := operator.New(
 				appLogger,
 				chainSuperviser,
@@ -182,7 +197,7 @@ func init() {
 				func() {
 					chainOperator.Shutdown(nil)
 				},
-				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
+				continuityChecker,
 				appLogger,
 			)
 			if err != nil {
@@ -206,6 +221,7 @@ func init() {
 				LogPlugin:                    logPlugin,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,
 				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
+				ContinuityChecker:            continuityChecker,
 			}, appLogger), nil
 		},
 	})
