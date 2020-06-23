@@ -1,8 +1,10 @@
 package migrator
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/eoscanada/eos-go"
 
@@ -27,4 +29,18 @@ func readBoxFile(box *rice.Box, filename string) ([]byte, error) {
 		return nil, fmt.Errorf("unable to read box file %q content: %w", filename, err)
 	}
 	return cnt, nil
+}
+
+func writeJSONFile(filename string, v interface{}) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+
+	return encoder.Encode(v)
 }

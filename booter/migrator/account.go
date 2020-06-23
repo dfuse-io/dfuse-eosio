@@ -18,9 +18,9 @@ type ScopePath string
 
 type setupAccount func(name eos.AccountName)
 type sendActionFunc func(action *eos.Action)
-type AccountData struct {
+type Account struct {
 	name string
-	Path string
+	path string
 	abi  *eos.ABI
 	ctr  *contract
 }
@@ -31,18 +31,18 @@ func init() {
 	traceEnable = os.Getenv("TRACE") == "true"
 }
 
-func NewAccountData(dataDir string, account string) (*AccountData, error) {
+func newAccount(dataDir string, account string) (*Account, error) {
 	path, err := newAccountPath(dataDir, account)
 	if err != nil {
 		return nil, fmt.Errorf("unable to generate account data: %w", err)
 	}
-	return &AccountData{
+	return &Account{
 		name: account,
-		Path: path,
+		path: path,
 	}, nil
 }
 
-func (a *AccountData) setupAbi() error {
+func (a *Account) setupAbi() error {
 	abi, abiCnt, err := a.readABI()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", a.name, err)
@@ -60,18 +60,11 @@ func (a *AccountData) setupAbi() error {
 	return nil
 }
 
-func (a *AccountData) migrateTable(table string, sendAction sendActionFunc) error {
+func (a *Account) migrateTable(table string, sendAction sendActionFunc) error {
 	tablePath, err := a.TablePath(table)
 	if err != nil {
 		return fmt.Errorf("unable to create table path: %w", err)
 	}
-
-	scopes, err := a.readScopeList(tablePath)
-	if err != nil {
-		return fmt.Errorf("unable to read scopes: %w", err)
-	}
-
-	zlog.Debug("processing table scopes", zap.String("account", a.name), zap.String("table", table), zap.Int("scope_count", len(scopes)))
 
 	walkScopes(string(tablePath), func(scope string) error {
 		scopePath, err := a.ScopePath(tablePath, scope)
@@ -86,7 +79,7 @@ func (a *AccountData) migrateTable(table string, sendAction sendActionFunc) erro
 
 		for _, row := range rows {
 			action, err := a.detailedTableRowToAction(&DetailedTableRow{
-				TableRow: row,
+				tableRow: row,
 				account:  AN(a.name),
 				table:    TN(table),
 				scope:    SN(scope),
@@ -102,36 +95,13 @@ func (a *AccountData) migrateTable(table string, sendAction sendActionFunc) erro
 	return nil
 }
 
-func (a *AccountData) setContractActions() ([]*eos.Action, error) {
+func (a *Account) setContractActions() ([]*eos.Action, error) {
 	return system.NewSetContractContent(AN(a.name), a.ctr.code, a.ctr.abi)
 
 }
 
-func (a *AccountData) readABI() (abi *eos.ABI, abiCnt []byte, err error) {
-	cnt, err := ioutil.ReadFile(a.ABIPath())
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", a.name, a.Path, err)
-	}
-
-	err = json.Unmarshal(cnt, &abi)
-	if err != nil {
-		return nil, nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", a.name, a.Path, err)
-	}
-
-	return abi, cnt, nil
-}
-
-func (a *AccountData) readCode() (code []byte, err error) {
-	cnt, err := ioutil.ReadFile(a.CodePath())
-	if err != nil {
-		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", a.name, a.Path, err)
-	}
-
-	return cnt, nil
-}
-
-func (a *AccountData) readTableList() (out []string, err error) {
-	files, err := ioutil.ReadDir(filepath.Join(a.Path, "tables"))
+func (a *Account) readTableList() (out []string, err error) {
+	files, err := ioutil.ReadDir(filepath.Join(a.path, "tables"))
 	if err != nil {
 		return nil, fmt.Errorf("read dir: %w", err)
 	}
@@ -139,7 +109,7 @@ func (a *AccountData) readTableList() (out []string, err error) {
 		if !file.IsDir() {
 			zlog.Warn("unexpected file in tables folder",
 				zap.String("account", a.name),
-				zap.String("account_path", a.Path),
+				zap.String("account_path", a.path),
 				zap.String("filename", file.Name()),
 			)
 			continue
@@ -149,25 +119,7 @@ func (a *AccountData) readTableList() (out []string, err error) {
 	return
 }
 
-func (a *AccountData) readScopeList(table TablePath) ([]string, error) {
-	path := a.ScopeListPath(table)
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("unable to read scope list %q: %w", string(table), err)
-	}
-	defer file.Close()
-
-	var scopes []string
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&scopes)
-	if err != nil {
-		return nil, fmt.Errorf("unable decode scopes %q list: %w", path, err)
-	}
-	return scopes, nil
-}
-
-func (a *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
+func (a *Account) readRows(scpPath ScopePath) ([]tableRow, error) {
 	path := a.RowsPath(scpPath)
 	file, err := os.Open(path)
 	if err != nil {
@@ -175,7 +127,7 @@ func (a *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
 	}
 	defer file.Close()
 
-	var rows []TableRow
+	var rows []tableRow
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(&rows)
@@ -186,7 +138,7 @@ func (a *AccountData) readRows(scpPath ScopePath) ([]TableRow, error) {
 	return rows, nil
 }
 
-func (a *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
+func (a *Account) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
 	data, err := a.decodeDetailedTableRow(row)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode row %q/%q/%q: %w", row.account, row.table, row.scope, err)
@@ -212,17 +164,64 @@ func (a *AccountData) detailedTableRowToAction(row *DetailedTableRow) (*eos.Acti
 	return action, nil
 }
 
-func (a *AccountData) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
+func (a *Account) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
 	tableDef := a.findTableDef(row.table)
 	if tableDef == nil {
 		return nil, fmt.Errorf("unable to find table definition %q in ABI for account: %q", row.table, row.account)
 	}
 	// TODO: need to check for a if type is alias...
-	return a.abi.EncodeStruct(tableDef.Type, row.TableRow.Data)
+	return a.abi.EncodeStruct(tableDef.Type, row.tableRow.Data)
+}
+
+func (a *Account) createDir() error {
+	return os.MkdirAll(a.path, os.ModePerm)
+}
+
+func (a *Account) readABI() (abi *eos.ABI, abiCnt []byte, err error) {
+	cnt, err := ioutil.ReadFile(a.abiPath())
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to read ABI for contract %q at path %q: %w", a.name, a.path, err)
+	}
+
+	err = json.Unmarshal(cnt, &abi)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable decode ABI for contract %q at path %q: %w", a.name, a.path, err)
+	}
+
+	return abi, cnt, nil
+}
+
+func (a *Account) writeABI(abi *eos.ABI) error {
+	return writeJSONFile(a.abiPath(), abi)
+}
+
+func (a *Account) abiPath() string {
+	return filepath.Join(a.path, "abi.json")
+}
+
+func (a *Account) readCode() (code []byte, err error) {
+	cnt, err := ioutil.ReadFile(a.codePath())
+	if err != nil {
+		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", a.name, a.path, err)
+	}
+
+	return cnt, nil
+}
+
+func (a *Account) writeCode(code []byte) error {
+	return writeJSONFile(a.codePath(), code)
+}
+
+func (a *Account) writeAccount(account []byte) error {
+	return writeJSONFile(a.accountPath(), account)
+}
+
+func (a *Account) accountPath() string {
+	return filepath.Join(a.path, "account.json")
 }
 
 // ABI helpers
-func (a *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
+func (a *Account) findTableDef(table eos.TableName) *eos.TableDef {
 	for _, t := range a.abi.Tables {
 		if t.Name == table {
 			return &t
@@ -231,28 +230,23 @@ func (a *AccountData) findTableDef(table eos.TableName) *eos.TableDef {
 	return nil
 }
 
-// path helpers
-func (a *AccountData) ABIPath() string {
-	return filepath.Join(a.Path, "abi.json")
+func (a *Account) codePath() string {
+	return filepath.Join(a.path, "code.wasm")
 }
 
-func (a *AccountData) CodePath() string {
-	return filepath.Join(a.Path, "code.wasm")
-}
-
-func (a *AccountData) TablePath(table string) (TablePath, error) {
+func (a *Account) TablePath(table string) (TablePath, error) {
 	if len(table) == 0 {
 		return "", fmt.Errorf("received an empty table")
 	}
 
-	return TablePath(filepath.Join(a.Path, "tables", table)), nil
+	return TablePath(filepath.Join(a.path, "tables", table)), nil
 }
 
-func (a *AccountData) ScopeListPath(tblPath TablePath) string {
+func (a *Account) ScopeListPath(tblPath TablePath) string {
 	return filepath.Join(string(tblPath), "scopes.json")
 }
 
-func (a *AccountData) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
+func (a *Account) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
 	if len(scope) == 0 {
 		return "", fmt.Errorf("received an empty scope")
 	}
@@ -261,6 +255,6 @@ func (a *AccountData) ScopePath(tblPath TablePath, scope string) (ScopePath, err
 	return ScopePath(path), nil
 }
 
-func (a *AccountData) RowsPath(scpPath ScopePath) string {
+func (a *Account) RowsPath(scpPath ScopePath) string {
 	return filepath.Join(string(scpPath), "rows.json")
 }
