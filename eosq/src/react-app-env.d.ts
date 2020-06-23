@@ -1,1 +1,2 @@
-// / <reference types="react-scripts" />
+/* eslint-disable spaced-comment */
+/// <reference types="react-scripts" />

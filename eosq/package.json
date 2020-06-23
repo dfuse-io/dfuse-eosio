@@ -54,12 +54,18 @@
     "ts-debounce": "^1.0.0"
   },
   "scripts": {
-    "start": "yarn lint && react-app-rewired start",
+    "start": "react-app-rewired start",
     "prebuild": "rimraf ./eosq-build",
-    "build": "yarn lint && BUILD_DIR=build-lite react-scripts build && mv build ./eosq-build",
-    "test": "yarn lint && react-scripts test",
+    "build": "BUILD_DIR=build-lite react-scripts build && mv build ./eosq-build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./src"
+    "lint": "eslint --config .eslintrc.js --ext .js,.jsx,.ts,.tsx src"
+  },
+  "husky": {
+    "hooks": {
+      "_comment": "Use --no-verify to bypass",
+      "pre-push": "CI=true yarn lint"
+    }
   },
   "devDependencies": {
     "@hot-loader/react-dom": "^16.11.0",
@@ -102,6 +108,7 @@
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.15.1",
     "eslint-plugin-react-hooks": "^1.7.0",
+    "husky": "^4.2.5",
     "identity-obj-proxy": "^3.0.0",
     "jest-emotion": "^10.0.5",
     "jest-enzyme": "^7.0.1",
