@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
 * `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.). This will make previously-cached entries useless.
 * Various startup speed improvements for `blockmeta`, `bstream`, `search-indexer`
+* `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` now default to 0 to prevent accidental data deletion.
+
+### Improved
+* trxdb now correctly implements "BatchGet" on most operations, giving a good performance increase over previous version
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
@@ -46,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `mindreader` now writes remaining one-block files after stop-block if `--mindreader-merge-and-store-directly` is set, unless new flag --mindreader-discard-after-stop-num is set to true. This improves the experience of a user following PARTIAL_SYNC.md steps, producing merged files up to a certain block, then switching to one-block files with a separate merge instance.
 
 ### Fixed
+* Global flags and search-common-dmesh-dsn are now correctly parsed from config file
 * `search-indexer` no longer overflows on negative startblocks on new chains, it fails fast instead.
 * `search-archive` relative-start-block truncation now works
 * `search-forkresolver` no longer throws a nil pointer (app was previously broken)

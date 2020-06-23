@@ -23,7 +23,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
-	github.com/dfuse-io/dgraphql v0.0.0-20200602201547-61cf55466aa4
+	github.com/dfuse-io/dgraphql v0.0.1
 	github.com/dfuse-io/dgrpc v0.0.0-20200602203441-eded01d2c0e7
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -38,9 +38,9 @@ require (
 	github.com/dfuse-io/kvdb v0.0.1
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/manageos v0.0.1
-	github.com/dfuse-io/merger v0.0.0-20200428163055-be2bcd7d6cc7
+	github.com/dfuse-io/merger v0.0.2
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d
+	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
 	github.com/dfuse-io/relayer v0.0.1
 	github.com/dfuse-io/search v0.0.1
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
