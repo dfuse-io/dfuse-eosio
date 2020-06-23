@@ -1,7 +1,7 @@
 import { decodedResponseToDBOps, groupDBOpHex } from "../helpers/dbop.helpers"
 import { DbOp } from "@dfuse/client"
 import { legacyHandleDfuseApiError } from "../clients/rest/api"
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { getDfuseClient } from "@dfuse/explore"
 
 export function decodeDBOps(dbops: DbOp[], blockNum: number, callback: (dbops: DbOp[]) => any) {

@@ -26,7 +26,7 @@ import { theme, styled } from "../../theme"
 import { ServiceWorkerStates } from "../../stores/service-worker-store"
 import { handleVisibilityChange, VISIBILITYCHANGE } from "../../helpers/focus.helpers"
 import { Config, EosqNetwork } from "../../models/config"
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { getDfuseClient } from "@dfuse/explore"
 
 const SkewedCell = styled(Cell)`

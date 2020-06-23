@@ -3,7 +3,7 @@ import { observer } from "mobx-react"
 import * as React from "react"
 
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataEmpty } from "@dfuse/explore"
 import {
   ListTransactions,

@@ -1,7 +1,7 @@
 import { streamVoteTally, isInboundMessageType, VoteTallyData } from "../clients/websocket/eosws"
 import { InboundMessage, InboundMessageType, ErrorData } from "@dfuse/client"
 import { voteStore } from "../stores"
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { getDfuseClient } from "@dfuse/explore"
 
 export async function registerVoteTallyStream(errorCallback: (error: ErrorData) => void) {

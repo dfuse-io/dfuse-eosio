@@ -1,6 +1,6 @@
 import * as React from "react"
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataLoading, DataError } from "@dfuse/explore"
 import { log } from "../../services/logger"
 import { TaskStatusAware } from "mobx-task"

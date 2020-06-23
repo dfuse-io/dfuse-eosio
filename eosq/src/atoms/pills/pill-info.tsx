@@ -12,14 +12,12 @@ interface Props {
   info: string
 }
 
-export class PillInfo extends React.Component<Props> {
-  render() {
-    return (
-      <Cell alignSelf={["center"]} borderLeft="1px dotted #aaa">
-        <InfoText alignSelf="center" pl={[2]} pr={[3]} color="traceMemoText" fontSize={[2]}>
-          {truncateString(this.props.info, 50)}
-        </InfoText>
-      </Cell>
-    )
-  }
+export const PillInfo: React.FC<Props> = ({ info }) => {
+  return (
+    <Cell alignSelf={["center"]} borderLeft="1px dotted #aaa">
+      <InfoText alignSelf="center" pl={[2]} pr={[3]} color="traceMemoText" fontSize={[2]}>
+        {truncateString(info, 50)}
+      </InfoText>
+    </Cell>
+  )
 }

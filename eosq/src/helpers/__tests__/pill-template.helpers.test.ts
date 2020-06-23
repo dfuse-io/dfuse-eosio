@@ -25,10 +25,10 @@ import {
   getUpdateAuthLevel1Fields,
   getUpdateAuthLevel2Fields
 } from "../../components/action-pills/templates/pill-template.helpers"
-import { TraceInfo } from "../action.helpers"
+import { TraceInfo } from "../../models/pill-templates"
 
 function getClaimTraceInfo(): TraceInfo {
-  let traceInfo = getTraceInfoMock({
+  const traceInfo = getTraceInfoMock({
     data: { from: "eosio.vpay", quantity: "30.0000 EOS" }
   })
   traceInfo.inline_traces.push(
@@ -45,7 +45,7 @@ describe("getClaimAmounts", () => {
 
 describe("getResolveBetAmounts", () => {
   it("should...", () => {
-    let traceInfo = getTraceInfoMock({
+    const traceInfo = getTraceInfoMock({
       data: { from: "eosbets", quantity: "30.0000 EOS", to: "winner" }
     })
     traceInfo.inline_traces[0].act.name = "transfer"
@@ -72,7 +72,7 @@ describe("getBlobUrlFromPayload", () => {
 
 describe("getRefundTransfer", () => {
   it("should return the transfer actionTrace", () => {
-    let traceInfo = getTraceInfoMock({
+    const traceInfo = getTraceInfoMock({
       data: { from: "eosbets", quantity: "30.0000 EOS", to: "winner" }
     })
     traceInfo.inline_traces[0].act.name = "transfer"
@@ -83,7 +83,7 @@ describe("getRefundTransfer", () => {
   })
 })
 
-//******************************************************************************************* //
+//* ****************************************************************************************** //
 
 describe("getBetReceiptLevel1Fields", () => {
   it("should return the level 1 fields", () => {
@@ -279,7 +279,7 @@ describe("getNewAccountLevel2Fields", () => {
 
 describe("getRefundLevel1Fields", () => {
   it("should return the level 1 fields", () => {
-    let traceInfo = getTraceInfoMock({
+    const traceInfo = getTraceInfoMock({
       data: { from: "eosio", quantity: "15.0000 EOS", to: "winner" }
     })
     traceInfo.inline_traces[0].act.name = "transfer"
@@ -294,7 +294,7 @@ describe("getRefundLevel1Fields", () => {
 
 describe("getResolveBetLevel1Fields", () => {
   it("should return the level 1 fields", () => {
-    let traceInfo = getTraceInfoMock({
+    const traceInfo = getTraceInfoMock({
       data: { from: "eosbets", quantity: "30.0000 EOS", to: "winner" }
     })
 

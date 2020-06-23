@@ -98,12 +98,12 @@ const BaseFooter = () => (
         href={`https://dfuse.io/${getCurrentLanguageValue()}`}
         title="The dfuse Blockchain Data Platform"
         target="_blank"
+        rel="noopener noreferrer"
       >
         <img
-          src={`/images/built-with-dfuse${
-              getCurrentLanguageValue() === "zh" ? "-CN" : ""
-          }-01.png`}
+          src={`/images/built-with-dfuse${getCurrentLanguageValue() === "zh" ? "-CN" : ""}-01.png`}
           title="The dfuse Blockchain Data Platform"
+          alt="built-with-dfuse"
           width="210"
           height="auto"
         />
@@ -122,7 +122,9 @@ const BaseFooter = () => (
             {t("footer.privacyPolicy")}
           </StyledText>
         </ExternalTextLink>
-        {NBSP}{BULLET}{NBSP}
+        {NBSP}
+        {BULLET}
+        {NBSP}
         <ExternalTextLink fontSize={[1]} to={t("footer.termsOfServicesLink")}>
           <StyledText display="inline-block" fontSize={[1]} color={theme.colors.bleu6}>
             {t("footer.termsOfServices")}

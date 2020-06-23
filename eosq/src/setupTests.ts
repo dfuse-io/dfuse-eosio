@@ -12,15 +12,14 @@ expect.addSnapshotSerializer(createEmotionSerializer(emotion as any))
 
 // Initialize correct i18n resources
 withConsoleDisabled(() => {
+  // eslint-disable-next-line global-require
   require("./i18n")
 })
 
 function withConsoleDisabled(worker: () => void) {
   const consoleLog = console.log
 
-  console.log = () => {
-    return
-  }
+  console.log = () => {}
 
   worker()
 

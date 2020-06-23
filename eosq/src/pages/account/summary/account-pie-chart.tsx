@@ -19,7 +19,7 @@ import {
 import { NBSP } from "../../../helpers/formatters"
 
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataLoading } from "@dfuse/explore"
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"

@@ -13,7 +13,7 @@ import {
   requestProducerAccountTableRows
 } from "../clients/rest/account"
 import { extractValueWithUnits } from "../helpers/formatters"
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { getDfuseClient } from "@dfuse/explore"
 
 export async function registerAccountDetailsListeners(

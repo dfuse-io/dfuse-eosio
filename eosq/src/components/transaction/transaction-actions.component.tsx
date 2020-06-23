@@ -4,7 +4,7 @@ import { styled } from "../../theme"
 import { DeferredOperation } from "../../models/transaction"
 
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataEmpty } from "@dfuse/explore"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { ListActions } from "./list-actions.component"

@@ -54,11 +54,12 @@
     "ts-debounce": "^1.0.0"
   },
   "scripts": {
-    "start": "EXTEND_ESLINT=true react-app-rewired start",
+    "start": "yarn lint && react-app-rewired start",
     "prebuild": "rimraf ./eosq-build",
-    "build": "BUILD_DIR=build-lite EXTEND_ESLINT=true react-scripts build && mv build ./eosq-build",
-    "test": "EXTEND_ESLINT=true react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "yarn lint && BUILD_DIR=build-lite react-scripts build && mv build ./eosq-build",
+    "test": "yarn lint && react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx ./src"
   },
   "devDependencies": {
     "@hot-loader/react-dom": "^16.11.0",

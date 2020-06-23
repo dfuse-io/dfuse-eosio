@@ -9,7 +9,7 @@ import { PageContainer } from "../../components/page-container/page-container"
 import { registerVoteTallyStream } from "../../streams/vote-listener"
 
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataError } from "@dfuse/explore"
 import { Stream, ErrorData } from "@dfuse/client"
 import Box from "../../atoms/ui-box"

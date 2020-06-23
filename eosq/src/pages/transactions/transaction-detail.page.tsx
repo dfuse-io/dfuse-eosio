@@ -14,7 +14,7 @@ import { Text } from "../../atoms/text/text.component"
 import { WrappingText } from "../../atoms/text-elements/misc"
 
 // temp ignore for dev
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import { DataLoading, DataError } from "@dfuse/explore"
 
 import { PageContainer } from "../../components/page-container/page-container"

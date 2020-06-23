@@ -1,6 +1,6 @@
 import gql from "graphql-tag"
 import { getTokenInfosByKeyMap } from "../helpers/airdrops-list"
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 import {
   useGraphqlQuery,
   PromiseState,
@@ -8,10 +8,7 @@ import {
   promiseStateResolved
 } from "@dfuse/explore"
 import { GraphqlResponseError } from "@dfuse/client"
-
-// temporary import to fix type info for symlinked development
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { DocumentNode } from "@dfuse/explore/node_modules/graphql/index"
+import { DocumentNode } from "graphql"
 
 export type UserBalance = {
   contract: string

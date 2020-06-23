@@ -120,7 +120,7 @@ export class BlockProgressPie extends React.Component<Props> {
   }
 
   renderIrreversibleImage() {
-    return <img width="60%" src="/images/picto-irreversible-03.svg" />
+    return <img width="60%" src="/images/picto-irreversible-03.svg" alt="irreversible" />
   }
 
   isDataProvided() {

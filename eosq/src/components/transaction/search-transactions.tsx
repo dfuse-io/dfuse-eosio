@@ -1,11 +1,11 @@
 import * as React from "react"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
-import { styled } from "../../theme"
+import { styled, theme } from "../../theme"
 import Button from "@material-ui/core/Button/Button"
 import { DropDownOption, UiDropDown } from "../../atoms/ui-dropdown/ui-dropdown.component"
 import { getSearchSystemOptions, getSearchTransfersOptions } from "../../helpers/search.helpers"
 import { Text } from "../../atoms/text/text.component"
-import { theme } from "../../theme"
+
 import { t } from "i18next"
 
 const SelectorButton: React.ComponentType<any> = styled(Button)`
@@ -48,12 +48,16 @@ export class SearchTransactions extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Readonly<Props>): void {
     if (this.props.defaultQuery !== prevProps.defaultQuery) {
-      this.setState({ query: this.props.defaultQuery || "" })
+      this.onUpdate(this.props.defaultQuery || "")
     }
   }
 
+  onUpdate(defaultQuery: string) {
+    this.setState({ query: defaultQuery })
+  }
+
   onSelect = (query: string) => {
-    this.setState({ query: query }, () => this.props.onSubmit(this.state.query))
+    this.setState({ query }, () => this.props.onSubmit(this.state.query))
   }
 
   renderSelectors() {
