@@ -4,20 +4,23 @@ It's possible to configure `dfuseeos` logging with the repeatable
 verbosity flag, like `-vvv` which enables debugging verbosity level
 3 (default is 0).
 
-Here the default level per package(s) for the various verbosity level
-as well as formatting rules in place depending on the verbosity level.
+Below you will find the default logging level per package(s) for various verbosity
+levels as well as formatting rules in place depending on the verbosity level.
 
-More higher is the verbosity level, more debugging statements and more
-each log line has contextual information to help debugging.
+As the verbosity level increases, the more debugging statements are displayed 
+and log line will contain more contextual information to help you debug.
 
 ### Logs produced by nodeos (mindreader and node-manager dfuse apps)
 
-By default, the logs produced by nodeos (node-manager or mindreader) will be processed through the dfuse logging system, which does not show them with lower verbosity levels (it makes the console unreadable when all applications are run together).
+By default, the logs produced by nodeos (node-manager or mindreader) will be 
+processed through the dfuse logging system, which does not show them with lower 
+verbosity levels (it makes the console unreadable when all applications are run together).
 
 * To prevent them from being transformed and gated by the dfuse logger, you can use the two following flags:
   `--node-manager-log-to-zap=false` and `--mindreader-log-to-zap=false`
 
-* To show all "info" log messages from mindreader and node-manager, you can use the environment variable INFO (detailed later in this document): INFO=
+* To show all "info" log messages from mindreader and node-manager, you can 
+use the environment variable INFO (detailed later in this document): INFO=
 
 ## Global Verbosity flags
 
@@ -31,7 +34,7 @@ Level:
 
 - INFO `github.com/dfuse-io/dfuse-eosio`
 - INFO `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
-- <Hidden> All others
+- WARN All others
 
 Formatting:
 
@@ -47,7 +50,8 @@ Level:
 - INFO `github.com/dfuse-io/dfuse-eosio`
 - INFO `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
 - WARN `github.com/dfuse-io/manageos.*`
-- INFO All others
+- INFO All apps
+- WARN All others
 
 Formatting:
 
@@ -63,6 +67,7 @@ Level:
 - DEBUG `github.com/dfuse-io/dfuse-eosio`
 - DEBUG `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
 - INFO `github.com/dfuse-io/manageos.*`
+- INFO All apps
 - INFO All others
 
 Formatting:
