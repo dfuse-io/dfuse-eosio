@@ -28,7 +28,6 @@ import (
 type Launcher struct {
 	shutter *shutter.Shutter
 
-	config  *DfuseConfig
 	modules *RuntimeModules
 	apps    map[string]App
 
@@ -40,12 +39,11 @@ type Launcher struct {
 	firstShutdownAppID string
 }
 
-func NewLauncher(config *DfuseConfig, modules *RuntimeModules) *Launcher {
+func NewLauncher(modules *RuntimeModules) *Launcher {
 	l := &Launcher{
 		shutter:   shutter.New(),
 		apps:      make(map[string]App),
 		appStatus: make(map[string]pbdashboard.AppStatus),
-		config:    config,
 		modules:   modules,
 	}
 	// TODO: this is weird should re-think this? Should the launcher be passed in every Factory App func instead?

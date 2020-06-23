@@ -94,7 +94,7 @@ func Start(configFile string, dataDir string, args []string) (err error) {
 		return fmt.Errorf("protocol specific hooks not configured correctly: %w", err)
 	}
 
-	launch := launcher.NewLauncher(config, modules)
+	launch := launcher.NewLauncher(modules)
 	userLog.Debug("launcher created")
 
 	apps := launcher.ParseAppsFromArgs(args)
