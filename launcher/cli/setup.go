@@ -32,25 +32,29 @@ func init() {
 }
 
 func setup(subCommand string) error {
-	if configFile := viper.GetString("global-config-file"); configFile != "" {
-		if err := launcher.LoadConfigFile(configFile); err != nil {
-			return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
-		}
-	}
 
-	for k, v := range launcher.DfuseConfig[subCommand].Flags {
-		validFlag := false
-		if _, ok := allFlags["global-"+k]; ok {
-			viper.SetDefault("global-"+k, v)
-			validFlag = true
+	if subCommand != "init" {
+		if configFile := viper.GetString("global-config-file"); configFile != "" {
+			if err := launcher.LoadConfigFile(configFile); err != nil {
+				return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
+			}
 		}
-		if _, ok := allFlags[k]; ok {
-			viper.SetDefault(k, v)
-			validFlag = true
+
+		for k, v := range launcher.DfuseConfig[subCommand].Flags {
+			validFlag := false
+			if _, ok := allFlags["global-"+k]; ok {
+				viper.SetDefault("global-"+k, v)
+				validFlag = true
+			}
+			if _, ok := allFlags[k]; ok {
+				viper.SetDefault(k, v)
+				validFlag = true
+			}
+			if !validFlag {
+				return fmt.Errorf("invalid flag %s in config file under command %s", k, subCommand)
+			}
 		}
-		if !validFlag {
-			return fmt.Errorf("invalid flag %s in config file under command %s", k, subCommand)
-		}
+
 	}
 
 	setupLogger()

@@ -27,7 +27,7 @@ import (
 var RootCmd = &cobra.Command{Use: "dfuseeos", Short: "dfuse for EOSIO"}
 var version = "dev"
 var commit = ""
-var allFlags map[string]bool // used as global because of async access to cobra init functions
+var allFlags = make(map[string]bool) // used as global because of async access to cobra init functions
 
 func init() {
 	RootCmd.Version = version + "-" + commit
@@ -36,7 +36,6 @@ func init() {
 
 func Main() {
 	cobra.OnInitialize(func() {
-		allFlags = make(map[string]bool)
 		AutoBind(RootCmd, "DFUSEEOS")
 	})
 
