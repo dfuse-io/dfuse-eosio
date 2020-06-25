@@ -7,6 +7,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
+
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
+
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 
 	"github.com/eoscanada/eos-go"
 
@@ -54,72 +60,190 @@ func (e *Exporter) Export() error {
 		return fmt.Errorf("unable to create export directory: %w", err)
 	}
 
-	if err = writeJSONFile(e.common.accountListPath(), accounts); err != nil {
-		return fmt.Errorf("unable to write account list: %w", err)
-	}
-
 	contracts, err := e.fetchAllContracts()
 	if err != nil {
 		return fmt.Errorf("fetch contracts: %w", err)
 	}
 
 	e.logger.Printf("Retrieved %d contracts, fetching all tables now", len(contracts))
-	for _, contract := range contracts {
-		code, err := e.fetchCode(contract)
-		if err == errCodeNotFound {
-			e.logger.Printf("no code found for contract %s, will NOT migrate data of this contract", contract)
-			e.notFoundCodes = append(e.notFoundCodes, contract)
-			continue
-		}
+	for _, act := range accounts {
 
+		acct, err := newAccount(e.common.dataDir, act)
 		if err != nil {
-			return fmt.Errorf("unable to fetch code for %q: %w", contract, err)
-		}
-
-		abi, err := e.fetchABI(contract)
-		if err == errABINotFound {
-			e.logger.Printf("no ABI found for contract %s, will NOT migrate data of this contract", contract)
-			e.notFoundABIs = append(e.notFoundABIs, contract)
-			continue
-		}
-
-		if err == errABIInvalid {
-			e.logger.Debug("abi was found but was invalid, continuing", zap.String("contract", contract))
-			e.invalidABIs = append(e.invalidABIs, contract)
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("unable to fetch ABI for %q: %w", contract, err)
-		}
-
-		acct, err := newAccount(e.common.dataDir, contract)
-		if err != nil {
-			return fmt.Errorf("unable to initialize account storage: %w", err)
+			return fmt.Errorf("unable to initialize account %q storage: %w", act, err)
 		}
 
 		if err = acct.createDir(); err != nil {
 			return fmt.Errorf("unable to create account storage path: %w", err)
 		}
 
-		if err := acct.writeAccount(); err != nil {
-			return fmt.Errorf("unable to write account for %q: %w", contract, err)
+		acctInfo, err := e.fetchAccountInfo(act)
+		if err != nil {
+			return fmt.Errorf("unable to fetch permissions for %q: %w", act, err)
 		}
 
-		if err := acct.writeCode(code); err != nil {
-			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
+		if err := acct.writeAccount(acctInfo); err != nil {
+			return fmt.Errorf("unable to write account for %q: %w", act, err)
 		}
 
-		if err := acct.writeABI(abi); err != nil {
-			return fmt.Errorf("unable to write ABI for %q: %w", contract, err)
-		}
+		if _, ok := contracts[act]; ok {
+			code, err := e.fetchCode(act)
+			if err == errCodeNotFound {
+				e.logger.Printf("no code found for contract %s, will NOT migrate data of this contract", act)
+				e.notFoundCodes = append(e.notFoundCodes, act)
+				continue
+			}
 
-		if err := e.writeAllTables(contract, acct, abi); err != nil {
-			return fmt.Errorf("unable to write all tables for %q: %w", contract, err)
+			if err != nil {
+				return fmt.Errorf("unable to fetch code for %q: %w", act, err)
+			}
+
+			abi, err := e.fetchABI(act)
+			if err == errABINotFound {
+				e.logger.Printf("no ABI found for contract %s, will NOT migrate data of this contract", act)
+				e.notFoundABIs = append(e.notFoundABIs, act)
+				continue
+			}
+
+			if err == errABIInvalid {
+				e.logger.Debug("abi was found but was invalid, continuing", zap.String("contract", act))
+				e.invalidABIs = append(e.invalidABIs, act)
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("unable to fetch ABI for %q: %w", act, err)
+			}
+
+			if err := acct.writeCode(code); err != nil {
+				return fmt.Errorf("unable to write ABI for %q: %w", act, err)
+			}
+
+			if err := acct.writeABI(abi); err != nil {
+				return fmt.Errorf("unable to write ABI for %q: %w", act, err)
+			}
+
+			if err := e.writeAllTables(act, acct, abi); err != nil {
+				return fmt.Errorf("unable to write all tables for %q: %w", act, err)
+			}
 		}
 	}
-
 	return nil
+}
+
+func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
+	if account != "battlefield4" {
+		return &accountInfo{}, nil
+	}
+	return &accountInfo{
+		Permissions: []pbcodec.PermissionObject{
+			{
+				Owner:       "",
+				Name:        "owner",
+				LastUpdated: mustProtoTimestamp(time.Now()),
+				Authority: &pbcodec.Authority{
+					Threshold: 1,
+					Keys: []*pbcodec.KeyWeight{
+						{
+							PublicKey: "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+							Weight:    1,
+						},
+					},
+				},
+			},
+			{
+				Owner:       "owner",
+				Name:        "active",
+				LastUpdated: mustProtoTimestamp(time.Now()),
+				Authority: &pbcodec.Authority{
+					Threshold: 5,
+					Accounts: []*pbcodec.PermissionLevelWeight{
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "battlefield1",
+								Permission: "active",
+							},
+							Weight: 2,
+						},
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "battlefield3",
+								Permission: "active",
+							},
+							Weight: 2,
+						},
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "battlefield4",
+								Permission: "active",
+							},
+							Weight: 2,
+						},
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "zzzzzzzzzzzz",
+								Permission: "active",
+							},
+							Weight: 1,
+						},
+					},
+					Waits: []*pbcodec.WaitWeight{
+						{
+							WaitSec: 10800,
+							Weight:  1,
+						},
+					},
+				},
+			},
+			{
+				Owner:       "active",
+				Name:        "day2day",
+				LastUpdated: mustProtoTimestamp(time.Now()),
+				Authority: &pbcodec.Authority{
+					Threshold: 1,
+					Keys: []*pbcodec.KeyWeight{
+						{
+							PublicKey: "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+							Weight:    1,
+						},
+					},
+					Accounts: []*pbcodec.PermissionLevelWeight{
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "battlefield1",
+								Permission: "active",
+							},
+							Weight: 1,
+						},
+						{
+							Permission: &pbcodec.PermissionLevel{
+								Actor:      "battlefield3",
+								Permission: "active",
+							},
+							Weight: 1,
+						},
+					},
+				},
+			},
+		},
+		LinkAuths: []*linkAuth{
+			{
+				Permission: "day2day",
+				Contract:   "eosio",
+				Action:     "regproducer",
+			},
+			{
+				Permission: "day2day",
+				Contract:   "eosio",
+				Action:     "regproducer",
+			},
+			{
+				Permission: "day2day",
+				Contract:   "eosio",
+				Action:     "claimrewards",
+			},
+		},
+	}, nil
 }
 
 func (e *Exporter) fetchAllAccounts() ([]string, error) {
@@ -147,10 +271,12 @@ func (e *Exporter) fetchAllAccounts() ([]string, error) {
 	}
 }
 
-func (e *Exporter) fetchAllContracts() ([]string, error) {
+func (e *Exporter) fetchAllContracts() (map[string]bool, error) {
 	// FIXME: We need a maximum timeout value for the initial call so that if the client is misconfigured,
 	//        the user does not wait like 15m before seeing the error.
 	e.logger.Debug("fetching all contracts")
+
+	contracts := map[string]bool{}
 
 	stream, err := e.fluxdb.StreamContracts(e.ctx, &pbfluxdb.StreamContractsRequest{
 		BlockNum: uint64(e.irrBlockNum),
@@ -159,7 +285,6 @@ func (e *Exporter) fetchAllContracts() ([]string, error) {
 		return nil, fmt.Errorf("contracts stream: %w", err)
 	}
 
-	var contracts []string
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -170,7 +295,7 @@ func (e *Exporter) fetchAllContracts() ([]string, error) {
 			return nil, fmt.Errorf("stream account: %w", err)
 		}
 
-		contracts = append(contracts, resp.Contract)
+		contracts[resp.Contract] = true
 	}
 }
 
@@ -250,13 +375,11 @@ func (e *Exporter) writeTable(contract string, acct *Account, table string) erro
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
+			// TODO: is it possible to have a table folder without any scopes? do we want this?
 			if err = os.MkdirAll(string(tablePath), os.ModePerm); err != nil {
 				return fmt.Errorf("unable to create table scope storage path: %w", err)
 			}
 
-			if err = writeJSONFile(acct.ScopeListPath(tablePath), seenScopes); err != nil {
-				return fmt.Errorf("unable to write scope list: %w", err)
-			}
 			return nil
 		}
 
@@ -311,4 +434,12 @@ func (e *Exporter) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResp
 	file.WriteString("]")
 
 	return nil
+}
+
+func mustProtoTimestamp(in time.Time) *timestamp.Timestamp {
+	out, err := ptypes.TimestampProto(in)
+	if err != nil {
+		panic(fmt.Sprintf("invalid timestamp conversion %q: %s", in, err))
+	}
+	return out
 }

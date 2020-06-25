@@ -3,6 +3,7 @@ package migrator
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 func nestedPath(parentPath string, entityName string) string {
@@ -19,5 +20,14 @@ func newAccountPath(dataDir string, account string) (string, error) {
 	if len(account) == 0 {
 		return "", fmt.Errorf("an empty account name")
 	}
+
+	account = encodeName(account)
+
 	return nestedPath(dataDir, account), nil
+}
+
+func accountFromAccountPath(path string) string {
+	chunks := strings.Split(path, "/")
+	encodedAccountName := chunks[len(chunks)-2]
+	return decodeName(encodedAccountName)
 }

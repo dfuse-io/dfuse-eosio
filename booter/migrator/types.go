@@ -33,14 +33,14 @@ type tableRow struct {
 */
 
 type linkAuth struct {
-	permission string `json:"permission"`
-	contract   string `json:"contract"`
-	action     string `json:"action"`
+	Permission string `json:"permission"`
+	Contract   string `json:"contract"`
+	Action     string `json:"action"`
 }
 
 type accountInfo struct {
-	permissions     []pbcodec.PermissionObject
-	linkPermissions []linkAuth
+	Permissions []pbcodec.PermissionObject `json:"permissions"`
+	LinkAuths   []*linkAuth                `json:"link_auths"`
 }
 
 // Transfer represents the `inject` struct on `migration` contract.

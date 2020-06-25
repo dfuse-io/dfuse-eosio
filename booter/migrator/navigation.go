@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (i *importer) retrieveContractAccounts(newAccountFunc func(account string) error) ([]*Account, error) {
+func (i *importer) retrieveContractAccounts(newAccountFunc func(account *Account) error) ([]*Account, error) {
 	seenContractAccounts := map[string]*Account{}
 	contracts := []*Account{}
 	err := filepath.Walk(i.dataDir, func(path string, info os.FileInfo, err error) error {
@@ -17,11 +17,15 @@ func (i *importer) retrieveContractAccounts(newAccountFunc func(account string) 
 		if shouldSkip(info) {
 			return filepath.SkipDir
 		} else if isAccount(info) {
-			acctName := getAccountName(path)
-			return newAccountFunc(acctName)
+			acctName := accountFromAccountPath(path)
+			acc, err := newAccount(i.dataDir, acctName)
+			if err != nil {
+				return fmt.Errorf("unable to create account %q: %w", acctName, err)
 
+			}
+			return newAccountFunc(acc)
 		} else if isContract(info) {
-			acctName := getAccountName(path)
+			acctName := accountFromAccountPath(path)
 			if _, found := seenContractAccounts[acctName]; !found {
 				acc, err := newAccount(i.dataDir, acctName)
 				if err != nil {
@@ -43,9 +47,7 @@ func (i *importer) retrieveContractAccounts(newAccountFunc func(account string) 
 func walkScopes(dataDir string, f func(scope string) error) {
 	filepath.Walk(dataDir, func(path string, info os.FileInfo, err error) error {
 		if isScope(info) {
-			chunks := strings.Split(path, "/")
-			scope := chunks[len(chunks)-2]
-			return f(scope)
+			return f(getScopeName(path))
 		}
 		return nil
 	})
@@ -68,7 +70,8 @@ func shouldSkip(file os.FileInfo) bool {
 	return (file.IsDir()) && (file.Name() == "tables")
 }
 
-func getAccountName(path string) string {
+func getScopeName(path string) string {
 	chunks := strings.Split(path, "/")
-	return chunks[len(chunks)-2]
+	encodedScope := chunks[len(chunks)-2]
+	return decodeName(encodedScope)
 }

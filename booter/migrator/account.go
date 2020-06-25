@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
@@ -42,6 +43,7 @@ func newAccount(dataDir string, account string) (*Account, error) {
 	}, nil
 }
 
+func (a *Account) getAccountName() eos.AccountName { return AN(a.name) }
 func (a *Account) setupAbi() error {
 	abi, abiCnt, err := a.readABI()
 	if err != nil {
@@ -202,7 +204,7 @@ func (a *Account) abiPath() string {
 func (a *Account) readCode() (code []byte, err error) {
 	cnt, err := ioutil.ReadFile(a.codePath())
 	if err != nil {
-		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", a.name, a.path, err)
+		return nil, fmt.Errorf("unable to read code for contract %q at path %q: %w", a.name, a.codePath(), err)
 	}
 
 	return cnt, nil
@@ -212,8 +214,22 @@ func (a *Account) writeCode(code []byte) error {
 	return writeJSONFile(a.codePath(), code)
 }
 
-func (a *Account) writeAccount(account []byte) error {
-	return writeJSONFile(a.accountPath(), account)
+func (a *Account) readAccount() (accInfo *accountInfo, err error) {
+	cnt, err := ioutil.ReadFile(a.accountPath())
+	if err != nil {
+		return nil, fmt.Errorf("unable to read account information %q at path %q: %w", a.name, a.accountPath(), err)
+	}
+
+	err = json.Unmarshal(cnt, &accInfo)
+	if err != nil {
+		return nil, fmt.Errorf("unable decode account information %q at path %q: %w", a.name, a.accountPath(), err)
+	}
+
+	return accInfo, err
+}
+
+func (a *Account) writeAccount(accInfo *accountInfo) error {
+	return writeJSONFile(a.accountPath(), accInfo)
 }
 
 func (a *Account) accountPath() string {
@@ -239,11 +255,8 @@ func (a *Account) TablePath(table string) (TablePath, error) {
 		return "", fmt.Errorf("received an empty table")
 	}
 
+	table = encodeName(table)
 	return TablePath(filepath.Join(a.path, "tables", table)), nil
-}
-
-func (a *Account) ScopeListPath(tblPath TablePath) string {
-	return filepath.Join(string(tblPath), "scopes.json")
 }
 
 func (a *Account) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
@@ -251,10 +264,19 @@ func (a *Account) ScopePath(tblPath TablePath, scope string) (ScopePath, error) 
 		return "", fmt.Errorf("received an empty scope")
 	}
 
+	scope = encodeName(scope)
 	path := nestedPath(string(tblPath), scope)
 	return ScopePath(path), nil
 }
 
 func (a *Account) RowsPath(scpPath ScopePath) string {
 	return filepath.Join(string(scpPath), "rows.json")
+}
+
+func encodeName(name string) string {
+	return strings.Replace(name, ".", "_", -1)
+}
+
+func decodeName(name string) string {
+	return strings.Replace(name, "_", ".", -1)
 }

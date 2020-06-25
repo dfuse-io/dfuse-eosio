@@ -60,9 +60,8 @@ func (i *importer) init() error {
 
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
-	contracts, err := i.retrieveContractAccounts(func(account string) error {
-		i.createAccount(AN(account))
-		return nil
+	contracts, err := i.retrieveContractAccounts(func(account *Account) error {
+		return i.createAccount(account)
 	})
 	if err != nil {
 		return fmt.Errorf("unable to create chain accounts: %w", err)
@@ -154,10 +153,27 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 	return nil
 }
 
-func (i *importer) createAccount(account eos.AccountName) {
-	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account, i.opPublicKey))
-	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account, -1, -1, -1))
+func (i *importer) createAccount(account *Account) error {
+	accountInfo, err := account.readAccount()
+	if err != nil {
+		return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
+	}
+
+	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
+	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+
+	//for _, permission := range accountInfo.Permissions {
+	//	i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), codec.AuthoritiesToEOS(permission.Authority), PN("owner")))
+	//}
+	//
+	//for _, linkAuth := range accountInfo.LinkAuths {
+	//	i.actionChan <- (*bootops.TransactionAction)(system.NewLinkAuth(account.getAccountName(), AN(linkAuth.Contract), eos.ActionName(linkAuth.Action), PN(linkAuth.Permission)))
+	//}
+	//
+	//i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+
+	return nil
 }
 
 func newNonceAction() *eos.Action {

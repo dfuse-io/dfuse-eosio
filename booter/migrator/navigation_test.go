@@ -15,8 +15,8 @@ func Test_retrieveContractAccounts(t *testing.T) {
 		common: common{dataDir: testMigrationDataDirPath(dataDir)},
 	}
 
-	contracts, err := i.retrieveContractAccounts(func(account string) error {
-		accounts = append(accounts, account)
+	contracts, err := i.retrieveContractAccounts(func(account *Account) error {
+		accounts = append(accounts, account.name)
 		return nil
 	})
 
