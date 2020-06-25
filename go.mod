@@ -30,7 +30,7 @@ require (
 	github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
-	github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986
+	github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200623143848-93c44971fda7
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
