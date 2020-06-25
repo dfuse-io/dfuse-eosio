@@ -18,9 +18,10 @@ type DetailedTableRow struct {
 
 //account dfuse.boot setCode wasm.contract
 type tableRow struct {
-	Key   string          `json:"key"`
-	Payer string          `json:"payer"`
-	Data  json.RawMessage `json:"data"`
+	Key      string          `json:"key"`
+	Payer    string          `json:"payer"`
+	DataJSON json.RawMessage `json:"json_data,omitempty"`
+	DataHex  eos.HexBytes    `json:"hex_data,omitempty"`
 }
 
 // account.json

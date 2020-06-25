@@ -154,10 +154,10 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 }
 
 func (i *importer) createAccount(account *Account) error {
-	accountInfo, err := account.readAccount()
-	if err != nil {
-		return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
-	}
+	// accountInfo, err := account.readAccount()
+	// if err != nil {
+	// 	return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
+	// }
 
 	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
 	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))

@@ -343,7 +343,7 @@ func (e *Exporter) writeAllTables(contract string, acct *Account, abi *eos.ABI) 
 	e.logger.Debug("writing all tables", zap.String("contract", contract))
 	for _, table := range abi.Tables {
 		if err := e.writeTable(contract, acct, string(table.Name)); err != nil {
-			return fmt.Errorf("write table %q: %w", table, err)
+			return fmt.Errorf("write table %q: %w", table.Name, err)
 		}
 	}
 
@@ -417,12 +417,19 @@ func (e *Exporter) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResp
 		encoder := json.NewEncoder(file)
 		encoder.SetEscapeHTML(false)
 
-		file.WriteString("\n  ")
-		err := encoder.Encode(tableRow{
+		outRow := tableRow{
 			Key:   tabletRow.Key,
 			Payer: tabletRow.Payer,
-			Data:  json.RawMessage(tabletRow.Json),
-		})
+		}
+
+		if tabletRow.Json != "" {
+			outRow.DataJSON = json.RawMessage(tabletRow.Json)
+		} else {
+			outRow.DataHex = eos.HexBytes(tabletRow.Data)
+		}
+
+		file.WriteString("\n  ")
+		err := encoder.Encode(outRow)
 		if err != nil {
 			return fmt.Errorf("unable to encode row %d: %w", i, err)
 		}

@@ -171,8 +171,13 @@ func (a *Account) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) 
 	if tableDef == nil {
 		return nil, fmt.Errorf("unable to find table definition %q in ABI for account: %q", row.table, row.account)
 	}
+
+	if len(row.tableRow.DataHex) > 0 {
+		return row.tableRow.DataHex, nil
+	}
+
 	// TODO: need to check for a if type is alias...
-	return a.abi.EncodeStruct(tableDef.Type, row.tableRow.Data)
+	return a.abi.EncodeStruct(tableDef.Type, row.tableRow.DataJSON)
 }
 
 func (a *Account) createDir() error {
