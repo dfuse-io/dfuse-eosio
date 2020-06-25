@@ -35,7 +35,7 @@ main() {
     dfuseeos -c migrator.yaml migrate -i 1000 "$@"
   elif [[ $mode == "import" ]]; then
     rm -rf dfuse-data
-    dfuseeos start
+    WARN="(.*)" DEBUG="(.*booter.*|.*eosio-boot.*)" dfuseeos -c booter.yaml start "$@"
   else
     usage_error "You must specify either '-m export' or '-m import'"
   fi

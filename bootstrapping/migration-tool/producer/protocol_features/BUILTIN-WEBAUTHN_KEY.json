@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "dependencies": [],
+  "description_digest": "927fdf78c51e77a899f2db938249fb1f8bb38f4e43d9c1f75b190492080cbc34",
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "WEBAUTHN_KEY"
+}

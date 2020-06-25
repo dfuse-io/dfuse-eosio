@@ -60,18 +60,16 @@ func (i *importer) init() error {
 
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
-	contracts, err := i.retrieveContractAccounts(func(account *Account) error {
-		return i.createAccount(account)
-	})
+	accounts, err := i.retrieveAccounts()
 	if err != nil {
 		return fmt.Errorf("unable to create chain accounts: %w", err)
 	}
 
-	for _, contract := range contracts {
-		err = i.migrateAccount(contract)
+	for _, account := range accounts {
+		err = i.migrateAccount(account)
 		if err != nil {
 			zlog.Error("unable to process account",
-				zap.String("account", contract.name),
+				zap.String("account", account.name),
 				zap.Error(err),
 			)
 		}
@@ -81,10 +79,18 @@ func (i *importer) inject() error {
 }
 
 func (i *importer) migrateAccount(accountData *Account) error {
-
 	zlog.Debug("processing account", zap.String("account", accountData.name))
 
-	err := accountData.setupAbi()
+	err := i.createAccount(accountData)
+	if err != nil {
+		return fmt.Errorf("unable to create account %q: %w", accountData.name, err)
+	}
+
+	if !accountData.hasContract {
+		return nil
+	}
+
+	err = accountData.setupAbi()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", accountData.name, err)
 	}
@@ -154,10 +160,10 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 }
 
 func (i *importer) createAccount(account *Account) error {
-	// accountInfo, err := account.readAccount()
-	// if err != nil {
-	// 	return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
-	// }
+	//accountInfo, err := account.readAccount()
+	//if err != nil {
+	//	return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
+	//}
 
 	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
 	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))

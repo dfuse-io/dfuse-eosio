@@ -10,49 +10,45 @@ import (
 
 func Test_retrieveContractAccounts(t *testing.T) {
 	dataDir := "migration-data"
-	accounts := []string{}
 	i := &importer{
 		common: common{dataDir: testMigrationDataDirPath(dataDir)},
 	}
 
-	contracts, err := i.retrieveContractAccounts(func(account *Account) error {
-		accounts = append(accounts, account.name)
-		return nil
-	})
-
+	accounts, err := i.retrieveAccounts()
 	require.NoError(t, err)
 
-	assert.ElementsMatch(t, []string{
-		"battlefield1",
-		"battlefield2",
-		"battlefield3",
-		"battlefield4",
-		"eosio",
-		"eosio.bpay",
-		"eosio.msig",
-		"eosio.ram",
-		"eosio.token",
-		"eosio2",
-		"eosio3",
-		"notified1",
-		"notified2",
-		"notified3",
-		"notified4",
-	}, accounts)
-
-	ctrs := []string{}
-	for _, contract := range contracts {
-		ctrs = append(ctrs, contract.name)
+	expectedAccounts := map[string]bool{
+		"battlefield1": true,
+		"battlefield2": false,
+		"battlefield3": true,
+		"battlefield4": false,
+		"eosio":        true,
+		"eosio.bpay":   false,
+		"eosio.msig":   true,
+		"eosio.ram":    false,
+		"eosio.token":  true,
+		"eosio2":       false,
+		"eosio3":       false,
+		"eosio.names":  false,
+		"eosio.ramfee": false,
+		"eosio.saving": false,
+		"eosio.stake":  false,
+		"eosio.vpay":   false,
+		"notified1":    false,
+		"notified2":    true,
+		"notified3":    false,
+		"notified4":    false,
+		"notified5":    false,
+		"zzzzzzzzzzzz": false,
 	}
-	assert.ElementsMatch(t, []string{
-		"battlefield1",
-		"battlefield3",
-		"eosio",
-		"eosio.msig",
-		"eosio.token",
-		"notified2",
-	}, ctrs)
 
+	for _, account := range accounts {
+		if _, found := expectedAccounts[account.name]; !found {
+			assert.Fail(t, "Unable to find account in expected account list", "Account %q is not in expected account list", account.name)
+		}
+
+		assert.Equal(t, expectedAccounts[account.name], account.hasContract)
+	}
 }
 
 func Test_walkScopes(t *testing.T) {

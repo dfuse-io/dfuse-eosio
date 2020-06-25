@@ -20,10 +20,11 @@ type ScopePath string
 type setupAccount func(name eos.AccountName)
 type sendActionFunc func(action *eos.Action)
 type Account struct {
-	name string
-	path string
-	abi  *eos.ABI
-	ctr  *contract
+	name        string
+	path        string
+	hasContract bool
+	abi         *eos.ABI
+	ctr         *contract
 }
 
 var traceEnable = false

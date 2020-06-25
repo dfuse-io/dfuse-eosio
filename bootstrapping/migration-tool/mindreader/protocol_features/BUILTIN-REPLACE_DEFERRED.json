@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "dependencies": [],
+  "description_digest": "9908b3f8413c8474ab2a6be149d3f4f6d0421d37886033f27d4759c47a26d944",
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "REPLACE_DEFERRED"
+}

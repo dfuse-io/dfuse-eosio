@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "dependencies": [],
+  "description_digest": "2853617cec3eabd41881eb48882e6fc5e81a0db917d375057864b3befbe29acd",
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "DISALLOW_EMPTY_PRODUCER_SCHEDULE"
+}

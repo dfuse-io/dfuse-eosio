@@ -7,10 +7,9 @@ import (
 	"strings"
 )
 
-func (i *importer) retrieveContractAccounts(newAccountFunc func(account *Account) error) ([]*Account, error) {
-	seenContractAccounts := map[string]*Account{}
-	contracts := []*Account{}
-	err := filepath.Walk(i.dataDir, func(path string, info os.FileInfo, err error) error {
+func (i *importer) retrieveAccounts() (out []*Account, err error) {
+	seenAccounts := map[string]int{}
+	err = filepath.Walk(i.dataDir, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
 			return fmt.Errorf("no files found")
 		}
@@ -18,22 +17,28 @@ func (i *importer) retrieveContractAccounts(newAccountFunc func(account *Account
 			return filepath.SkipDir
 		} else if isAccount(info) {
 			acctName := accountFromAccountPath(path)
-			acc, err := newAccount(i.dataDir, acctName)
-			if err != nil {
-				return fmt.Errorf("unable to create account %q: %w", acctName, err)
-
-			}
-			return newAccountFunc(acc)
-		} else if isContract(info) {
-			acctName := accountFromAccountPath(path)
-			if _, found := seenContractAccounts[acctName]; !found {
+			if _, found := seenAccounts[acctName]; !found {
 				acc, err := newAccount(i.dataDir, acctName)
 				if err != nil {
 					return fmt.Errorf("unable to create account %q: %w", acctName, err)
 
 				}
-				contracts = append(contracts, acc)
-				seenContractAccounts[acctName] = acc
+				out = append(out, acc)
+				seenAccounts[acctName] = len(out) - 1
+			}
+		} else if isContract(info) {
+			acctName := accountFromAccountPath(path)
+			if index, found := seenAccounts[acctName]; found {
+				out[index].hasContract = true
+			} else {
+				acc, err := newAccount(i.dataDir, acctName)
+				if err != nil {
+					return fmt.Errorf("unable to create account %q: %w", acctName, err)
+
+				}
+				acc.hasContract = true
+				out = append(out, acc)
+				seenAccounts[acctName] = len(out) - 1
 			}
 		}
 		return nil
@@ -41,7 +46,7 @@ func (i *importer) retrieveContractAccounts(newAccountFunc func(account *Account
 	if err != nil {
 		return nil, fmt.Errorf("unable to walk through all accounts: %w", err)
 	}
-	return contracts, nil
+	return out, nil
 }
 
 func walkScopes(dataDir string, f func(scope string) error) {

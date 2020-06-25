@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "dependencies": [],
+  "description_digest": "ab76031cad7a457f4fd5f5fca97a3f03b8a635278e0416f77dcc91eb99a48e10",
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "WTMSIG_BLOCK_SIGNATURES"
+}

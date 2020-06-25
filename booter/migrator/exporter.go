@@ -132,118 +132,156 @@ func (e *Exporter) Export() error {
 }
 
 func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
-	if account != "battlefield4" {
-		return &accountInfo{}, nil
+	if account == "battlefield3" {
+		return &accountInfo{
+			Permissions: []pbcodec.PermissionObject{
+				{
+					Owner:       "",
+					Name:        "owner",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+								Weight:    1,
+							},
+						},
+					},
+				},
+				{
+					Owner:       "owner",
+					Name:        "active",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Accounts: []*pbcodec.PermissionLevelWeight{
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield4",
+									Permission: "day2day",
+								},
+								Weight: 1,
+							},
+						},
+					},
+				},
+			},
+		}, nil
 	}
-	return &accountInfo{
-		Permissions: []pbcodec.PermissionObject{
-			{
-				Owner:       "",
-				Name:        "owner",
-				LastUpdated: mustProtoTimestamp(time.Now()),
-				Authority: &pbcodec.Authority{
-					Threshold: 1,
-					Keys: []*pbcodec.KeyWeight{
-						{
-							PublicKey: "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
-							Weight:    1,
+
+	if account == "battlefield4" {
+		return &accountInfo{
+			Permissions: []pbcodec.PermissionObject{
+				{
+					Owner:       "",
+					Name:        "owner",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6fnFx4hFqp7QrssuzgFQcYTTigXNcy5aGyaZhUFfY6Peenm2Lx",
+								Weight:    1,
+							},
+						},
+					},
+				},
+				{
+					Owner:       "owner",
+					Name:        "active",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 5,
+						Accounts: []*pbcodec.PermissionLevelWeight{
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield1",
+									Permission: "active",
+								},
+								Weight: 2,
+							},
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield3",
+									Permission: "active",
+								},
+								Weight: 2,
+							},
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield4",
+									Permission: "active",
+								},
+								Weight: 2,
+							},
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "zzzzzzzzzzzz",
+									Permission: "active",
+								},
+								Weight: 1,
+							},
+						},
+						Waits: []*pbcodec.WaitWeight{
+							{
+								WaitSec: 10800,
+								Weight:  1,
+							},
+						},
+					},
+				},
+				{
+					Owner:       "active",
+					Name:        "day2day",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+								Weight:    1,
+							},
+						},
+						Accounts: []*pbcodec.PermissionLevelWeight{
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield1",
+									Permission: "active",
+								},
+								Weight: 1,
+							},
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield3",
+									Permission: "active",
+								},
+								Weight: 1,
+							},
 						},
 					},
 				},
 			},
-			{
-				Owner:       "owner",
-				Name:        "active",
-				LastUpdated: mustProtoTimestamp(time.Now()),
-				Authority: &pbcodec.Authority{
-					Threshold: 5,
-					Accounts: []*pbcodec.PermissionLevelWeight{
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "battlefield1",
-								Permission: "active",
-							},
-							Weight: 2,
-						},
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "battlefield3",
-								Permission: "active",
-							},
-							Weight: 2,
-						},
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "battlefield4",
-								Permission: "active",
-							},
-							Weight: 2,
-						},
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "zzzzzzzzzzzz",
-								Permission: "active",
-							},
-							Weight: 1,
-						},
-					},
-					Waits: []*pbcodec.WaitWeight{
-						{
-							WaitSec: 10800,
-							Weight:  1,
-						},
-					},
+			LinkAuths: []*linkAuth{
+				{
+					Permission: "day2day",
+					Contract:   "eosio",
+					Action:     "regproducer",
+				},
+				{
+					Permission: "day2day",
+					Contract:   "eosio",
+					Action:     "regproducer",
+				},
+				{
+					Permission: "day2day",
+					Contract:   "eosio",
+					Action:     "claimrewards",
 				},
 			},
-			{
-				Owner:       "active",
-				Name:        "day2day",
-				LastUpdated: mustProtoTimestamp(time.Now()),
-				Authority: &pbcodec.Authority{
-					Threshold: 1,
-					Keys: []*pbcodec.KeyWeight{
-						{
-							PublicKey: "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
-							Weight:    1,
-						},
-					},
-					Accounts: []*pbcodec.PermissionLevelWeight{
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "battlefield1",
-								Permission: "active",
-							},
-							Weight: 1,
-						},
-						{
-							Permission: &pbcodec.PermissionLevel{
-								Actor:      "battlefield3",
-								Permission: "active",
-							},
-							Weight: 1,
-						},
-					},
-				},
-			},
-		},
-		LinkAuths: []*linkAuth{
-			{
-				Permission: "day2day",
-				Contract:   "eosio",
-				Action:     "regproducer",
-			},
-			{
-				Permission: "day2day",
-				Contract:   "eosio",
-				Action:     "regproducer",
-			},
-			{
-				Permission: "day2day",
-				Contract:   "eosio",
-				Action:     "claimrewards",
-			},
-		},
-	}, nil
+		}, nil
+	}
+	return &accountInfo{}, nil
 }
 
 func (e *Exporter) fetchAllAccounts() ([]string, error) {

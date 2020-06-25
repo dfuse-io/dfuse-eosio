@@ -1,0 +1,11 @@
+{
+  "protocol_feature_type": "builtin",
+  "dependencies": [],
+  "description_digest": "f3c3d91c4603cde2397268bfed4e662465293aab10cd9416db0d442b8cec2949",
+  "subjective_restrictions": {
+    "earliest_allowed_activation_time": "1970-01-01T00:00:00.000",
+    "preactivation_required": true,
+    "enabled": true
+  },
+  "builtin_feature_codename": "ONLY_LINK_TO_EXISTING_PERMISSION"
+}
