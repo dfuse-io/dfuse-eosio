@@ -159,15 +159,13 @@ func (c Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer
 		line.AppendString(c.colorString(BlueFg.Nos(true), " ("+callerPath+")"))
 	}
 
-	// Add any structured context.
-	if len(fields) > 0 {
-		if c.enableAnsiColor {
-			line.AppendString(ansiColorEscape + grayFg.Nos(true) + "m ")
-		}
-		c.writeJSONFields(line, fields)
-		if c.enableAnsiColor {
-			line.AppendString(clearANSIModifier)
-		}
+	// Add any structured context even if len(fields) == 0 because there could be implicit (With()) fields
+	if c.enableAnsiColor {
+		line.AppendString(ansiColorEscape + grayFg.Nos(true) + "m ")
+	}
+	c.writeJSONFields(line, fields)
+	if c.enableAnsiColor {
+		line.AppendString(clearANSIModifier)
 	}
 
 	if ent.Stack != "" && (c.showStacktrace || zap.ErrorLevel.Enabled(ent.Level)) {

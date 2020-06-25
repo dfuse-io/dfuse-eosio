@@ -3,6 +3,7 @@ release:
   github:
     owner: dfuse-io
     name: dfuse-eosio
+  draft: true
   name_template: '{{.Tag}}'
 before:
   hooks:

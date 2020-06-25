@@ -27,6 +27,7 @@ import (
 var RootCmd = &cobra.Command{Use: "dfuseeos", Short: "dfuse for EOSIO"}
 var version = "dev"
 var commit = ""
+var allFlags = make(map[string]bool) // used as global because of async access to cobra init functions
 
 func init() {
 	RootCmd.Version = version + "-" + commit
@@ -58,10 +59,11 @@ func Main() {
 	StartCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
 	StartCmd.Example = startCmdExample
 
-	RootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		if cmd.CalledAs() != "help" {
-			setup()
+	RootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if cmd.CalledAs() == "help" {
+			return nil
 		}
+		return setup(cmd.CalledAs())
 	}
 
 	derr.Check("dfuse", RootCmd.Execute())

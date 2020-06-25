@@ -3,7 +3,7 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [v0.1.0-beta4] 2020-06-23
 
 ### Networked APIs Changed
 
@@ -18,20 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * **BREAKING**: `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
 * **BREAKING**: `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 * `mindreader` ContinuityChecker is not enabled by default anymore
+* `node-manager` and `mindreader`: value for their respective `shutdown-delay` flags is now also applied to commands like "snapshot" or "backup", so they become "not-ready" on /healthz endpoint, allowing a load-balancer to take it out of the pool before they actually stop working.
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
+* `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.). This will make previously-cached entries useless.
+* Various startup speed improvements for `blockmeta`, `bstream`, `search-indexer`
+* `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` now default to 0 to prevent accidental data deletion.
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
-* Added app called mindreader-stdin, which simply produces one-block-files (or merged-blocks-files) based on stdin, without trying to manage nodeos.
+* Added app called mindreader-stdin, which simply relays blocks and produces one-block-files (or merged-blocks-files) based on stdin, without trying to manage nodeos. This is an alternative way of seeding your dfuse system if you are have existing tooling for managing nodeos operations It uses a only subset of the "mindreader" flags and does not stop on TERM signal until it receives EOF signal from stdin.
 * Command `dmesh` to `tools` with flags `dsn` & `service-version` to inspect dmesh search peers. It currently only supports etcd.
 * Added `booter` application with its flags.
 * Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)
 * Flag: `--mindreader-fail-on-non-contiguous-block` (default:false) to enable the ContinuityChecker
-* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see LOGGING.md)
 * Flag: `--common-ratelimiter-plugin` (default: null://) to enable a rate limiter plugin
 * Flag: `--pprof-listen-addr` (default: 6060)
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
@@ -39,6 +43,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
 * Command `check trxdb-blocks` to `tools`, to ensure linearity of irreversible blocks in storage.  This is useful to know if you've missed some block ranges when doing parallel insertions into your `trxdb` storage.
 * `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
+* Flag: `--mindreader-discard-after-stop-num` If true, all blocks are discarded after stop-num.
+* `mindreader` now writes remaining one-block files after stop-block if `--mindreader-merge-and-store-directly` is set, unless new flag --mindreader-discard-after-stop-num is set to true. This improves the experience of a user following PARTIAL_SYNC.md steps, producing merged files up to a certain block, then switching to one-block files with a separate merge instance.
+
+### Fixed
+* Global flags and search-common-dmesh-dsn are now correctly parsed from config file
+* `search-indexer` no longer overflows on negative startblocks on new chains, it fails fast instead.
+* `search-archive` relative-start-block truncation now works
+* `search-forkresolver` no longer throws a nil pointer (app was previously broken)
+* `mindreader` More resilient shutdown handling (expects EOF on nodeos' stdout)
+* `mindreader` and `node-manager` logs from nodeos that go through zap now have their level parsed correctly instead of all being seen as DEBUG.
+* trxdb now correctly implements "BatchGet" on most operations, giving a good performance increase over previous version
 
 ## [v0.1.0-beta3] 2020-05-13
 
