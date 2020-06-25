@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (i *importer) retrieveAccounts() (out []*Account, err error) {
+func (i *importer) retrieveAccounts(newAccountFunc func(account *Account) error) (out []*Account, err error) {
 	seenAccounts := map[string]int{}
 	err = filepath.Walk(i.dataDir, func(path string, info os.FileInfo, err error) error {
 		if info == nil {
@@ -17,15 +17,17 @@ func (i *importer) retrieveAccounts() (out []*Account, err error) {
 			return filepath.SkipDir
 		} else if isAccount(info) {
 			acctName := accountFromAccountPath(path)
-			if _, found := seenAccounts[acctName]; !found {
-				acc, err := newAccount(i.dataDir, acctName)
-				if err != nil {
-					return fmt.Errorf("unable to create account %q: %w", acctName, err)
-
-				}
-				out = append(out, acc)
-				seenAccounts[acctName] = len(out) - 1
+			if _, found := seenAccounts[acctName]; found {
+				return nil
 			}
+			acc, err := newAccount(i.dataDir, acctName)
+			if err != nil {
+				return fmt.Errorf("unable to create account %q: %w", acctName, err)
+
+			}
+			out = append(out, acc)
+			seenAccounts[acctName] = len(out) - 1
+			return newAccountFunc(acc)
 		} else if isContract(info) {
 			acctName := accountFromAccountPath(path)
 			if index, found := seenAccounts[acctName]; found {
@@ -39,6 +41,7 @@ func (i *importer) retrieveAccounts() (out []*Account, err error) {
 				acc.hasContract = true
 				out = append(out, acc)
 				seenAccounts[acctName] = len(out) - 1
+				return newAccountFunc(acc)
 			}
 		}
 		return nil

@@ -14,7 +14,9 @@ func Test_retrieveContractAccounts(t *testing.T) {
 		common: common{dataDir: testMigrationDataDirPath(dataDir)},
 	}
 
-	accounts, err := i.retrieveAccounts()
+	accounts, err := i.retrieveAccounts(func(account *Account) error {
+		return nil
+	})
 	require.NoError(t, err)
 
 	expectedAccounts := map[string]bool{

@@ -17,7 +17,6 @@ type AccountPath string
 type TablePath string
 type ScopePath string
 
-type setupAccount func(name eos.AccountName)
 type sendActionFunc func(action *eos.Action)
 type Account struct {
 	name        string

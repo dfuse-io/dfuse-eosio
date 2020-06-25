@@ -413,11 +413,6 @@ func (e *Exporter) writeTable(contract string, acct *Account, table string) erro
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
-			// TODO: is it possible to have a table folder without any scopes? do we want this?
-			if err = os.MkdirAll(string(tablePath), os.ModePerm); err != nil {
-				return fmt.Errorf("unable to create table scope storage path: %w", err)
-			}
-
 			return nil
 		}
 

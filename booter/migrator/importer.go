@@ -53,20 +53,26 @@ func (i *importer) init() error {
 		return fmt.Errorf("unable to open migration wasm cnt: %w", err)
 	}
 
-	zlog.Debug("setup migrator contract")
+	zlog.Debug("read migrator contract")
 	i.ctr = &contract{abi: abiCnt, code: wasmCnt}
 	return nil
 }
 
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
-	accounts, err := i.retrieveAccounts()
+	accounts, err := i.retrieveAccounts(func(account *Account) error {
+		return i.createAccount(account)
+	})
 	if err != nil {
 		return fmt.Errorf("unable to create chain accounts: %w", err)
 	}
 
 	for _, account := range accounts {
-		err = i.migrateAccount(account)
+		if !account.hasContract {
+			continue
+		}
+
+		err = i.migrateContract(account)
 		if err != nil {
 			zlog.Error("unable to process account",
 				zap.String("account", account.name),
@@ -78,19 +84,10 @@ func (i *importer) inject() error {
 	return nil
 }
 
-func (i *importer) migrateAccount(accountData *Account) error {
+func (i *importer) migrateContract(accountData *Account) error {
 	zlog.Debug("processing account", zap.String("account", accountData.name))
 
-	err := i.createAccount(accountData)
-	if err != nil {
-		return fmt.Errorf("unable to create account %q: %w", accountData.name, err)
-	}
-
-	if !accountData.hasContract {
-		return nil
-	}
-
-	err = accountData.setupAbi()
+	err := accountData.setupAbi()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", accountData.name, err)
 	}

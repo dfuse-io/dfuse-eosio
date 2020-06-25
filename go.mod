@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
-	github.com/dfuse-io/eosio-boot v0.0.0-20200622210800-75a2d27d22c9
+	github.com/dfuse-io/eosio-boot v0.0.0-20200625230430-0cf0b07da7a0
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200602202333-ba4710ca7b4a
 	github.com/dfuse-io/kvdb v0.0.0-20200615144400-d12a1d37270f
@@ -98,4 +98,3 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
