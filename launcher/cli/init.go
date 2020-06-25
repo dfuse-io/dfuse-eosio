@@ -17,11 +17,11 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"io/ioutil"
 	"os"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

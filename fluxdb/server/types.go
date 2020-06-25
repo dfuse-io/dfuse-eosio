@@ -49,12 +49,17 @@ type commonStateResponse struct {
 }
 
 func newCommonGetResponse(upToBlock, lastIrreversibleBlock bstream.BlockRef) *commonStateResponse {
-	return &commonStateResponse{
-		UpToBlockID:              upToBlock.ID(),
-		UpToBlockNum:             uint32(upToBlock.Num()),
+	out := &commonStateResponse{
 		LastIrreversibleBlockID:  lastIrreversibleBlock.ID(),
 		LastIrreversibleBlockNum: uint32(lastIrreversibleBlock.Num()),
 	}
+
+	if upToBlock != nil {
+		out.UpToBlockID = upToBlock.ID()
+		out.UpToBlockNum = uint32(upToBlock.Num())
+	}
+
+	return out
 }
 
 type tableRow struct {

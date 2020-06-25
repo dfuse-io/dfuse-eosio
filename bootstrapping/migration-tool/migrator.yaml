@@ -1,0 +1,8 @@
+start:
+  args:
+  - fluxdb
+  flags:
+    fluxdb-enable-inject-mode: false
+    fluxdb-enable-server-mode: true
+    fluxdb-enable-pipeline: false
+    fluxdb-http-listen-addr: :9090
