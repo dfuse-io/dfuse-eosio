@@ -17,8 +17,7 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.0-20200618125458-ea6edd6c3dd9
+	github.com/dfuse-io/blockmeta v0.0.0-20200626173725-4bff61be537f
 	github.com/dfuse-io/bstream v0.0.0-20200616134354-62d63f98d5c1
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
@@ -65,7 +64,6 @@ require (
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rs/xhandler v0.0.0-20160618193221-ed27b6fd6521 // indirect
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.2
