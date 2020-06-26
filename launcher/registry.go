@@ -61,7 +61,10 @@ func ParseAppsFromArgs(args []string) (apps []string) {
 			if app == "all" {
 				for app := range AppRegistry {
 					if app == "search-forkresolver" {
-						continue // keep this until we fix search-forkresolver here
+						continue
+					}
+					if app == "mindreader-stdin" {
+						continue
 					}
 					apps = append(apps, app)
 				}

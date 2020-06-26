@@ -78,9 +78,11 @@ func Init(runProducer bool, configFile string) error {
 	}
 
 	apps := launcher.ParseAppsFromArgs(toRun)
-	conf := &launcher.DfuseConfig{}
-	conf.Start.Args = apps
-	conf.Start.Flags = map[string]string{}
+	conf := make(map[string]*launcher.DfuseCommandConfig)
+	conf["start"] = &launcher.DfuseCommandConfig{
+		Args:  apps,
+		Flags: map[string]string{},
+	}
 
 	var err error
 	if runProducer {

@@ -16,7 +16,6 @@ package cli
 
 import (
 	"github.com/dfuse-io/dfuse-eosio/booter/migrator"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/spf13/cobra"
@@ -47,13 +46,6 @@ func dfuseMigrateE(cmd *cobra.Command, args []string) error {
 	}
 
 	userLog.Printf("Starting migration at irreversible block num #%d into directory %q", irrBlockNum, exportDir)
-
-	// We really initialize the config so that flags are injected in and we can properly
-	// resolve them. We don't really need the actual config object for now.
-	_, err := launcher.NewConfig(viper.GetString("global-config-file"), true)
-	if err != nil {
-		cliErrorAndExit("Unable to read provided config file: %s", err)
-	}
 
 	fluxdbGRPCListenAddr := viper.GetString("fluxdb-grpc-listen-addr")
 

@@ -2,6 +2,7 @@ package booter
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	"github.com/dfuse-io/shutter"
@@ -41,6 +42,11 @@ func (a *App) Run() error {
 		return nil
 	}
 
+	if !fileExists(a.config.BootSeqFile) {
+		zlog.Info("boot sequence file does not exist, continue without booting", zap.String("bootseq_file", a.config.BootSeqFile))
+		return nil
+	}
+
 	b := newBooter(a.config)
 
 	a.OnTerminating(b.Shutdown)
@@ -49,4 +55,13 @@ func (a *App) Run() error {
 	go b.Launch()
 
 	return nil
+}
+
+func fileExists(filePath string) bool {
+	info, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
 }

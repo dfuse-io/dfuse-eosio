@@ -47,6 +47,7 @@ import (
 	"github.com/dfuse-io/dstore"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
+	nodeosMindreaderStdinApp "github.com/dfuse-io/manageos/app/nodeos_mindreader_stdin"
 	"github.com/dfuse-io/manageos/mindreader"
 	mergerApp "github.com/dfuse-io/merger/app/merger"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
@@ -135,7 +136,7 @@ func init() {
 			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
 			cmd.Flags().Duration("node-manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
-			cmd.Flags().Int("node-manager-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
+			cmd.Flags().Int("node-manager-number-of-snapshots-to-keep", 0, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("node-manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
 			cmd.Flags().Duration("node-manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
@@ -186,6 +187,50 @@ func init() {
 			return nil, nil
 		},
 	})
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "mindreader-stdin",
+		Title:       "deep-mind reader from stdin",
+		Description: "deep-mind reader from stdin, does not start nodeos itself",
+		MetricsID:   "mindreader-stdin",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader_stdin|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			dfuseDataDir, err := dfuseAbsoluteDataDir()
+			if err != nil {
+				return nil, err
+			}
+			archiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))
+			mergeArchiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
+
+			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
+				return codec.NewConsoleReader(reader)
+			}
+			//
+			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
+				blk, ok := obj.(*pbcodec.Block)
+				if !ok {
+					return nil, fmt.Errorf("expected *pbcodec.Block, got %T", obj)
+				}
+
+				return codec.BlockFromProto(blk)
+			}
+
+			return nodeosMindreaderStdinApp.New(&nodeosMindreaderStdinApp.Config{
+				ArchiveStoreURL:            archiveStoreURL,
+				MergeArchiveStoreURL:       mergeArchiveStoreURL,
+				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
+				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
+				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
+				WorkingDir:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
+				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
+			}, &nodeosMindreaderStdinApp.Modules{
+				ConsoleReaderFactory:     consoleReaderFactory,
+				ConsoleReaderTransformer: consoleReaderBlockTransformer,
+			}), nil
+		},
+	})
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
@@ -222,7 +267,7 @@ func init() {
 			cmd.Flags().Duration("mindreader-auto-backup-period", 0, "If non-zero, takes pitreos backups at this interval")
 			cmd.Flags().String("mindreader-auto-snapshot-hostname-match", "", "If non-empty, auto-snapshots will only trigger if os.Hostname() return this value")
 			cmd.Flags().String("mindreader-auto-backup-hostname-match", "", "If non-empty, auto-backups will only trigger if os.Hostname() return this value")
-			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
+			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 0, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")

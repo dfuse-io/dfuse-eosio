@@ -19,7 +19,6 @@ func init() {
 		}
 	}
 	InitEOSIndexedFields()
-	search.GetIndexedFieldsMap = GetEOSIndexedFieldsMap
 	livenessQuery, _ := search.NewParsedQuery("receiver:999")
 	searchArchive.LivenessQuery = livenessQuery
 
