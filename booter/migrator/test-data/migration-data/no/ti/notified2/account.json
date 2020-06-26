@@ -1,4 +1,50 @@
 {
-  "permissions": null,
-  "link_auths": null
+  "permissions": [
+    {
+      "id": 44,
+      "parent_id": 43,
+      "owner": "notified2",
+      "name": "active",
+      "last_updated": {
+        "seconds": 1593175849,
+        "nanos": 500000000
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ],
+        "accounts": [
+          {
+            "permission": {
+              "actor": "notified2",
+              "permission": "eosio.code"
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 43,
+      "owner": "notified2",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175846
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": []
 }

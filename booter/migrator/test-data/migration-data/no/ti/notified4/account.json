@@ -1,4 +1,40 @@
 {
-  "permissions": null,
-  "link_auths": null
+  "permissions": [
+    {
+      "id": 48,
+      "parent_id": 47,
+      "owner": "notified4",
+      "name": "active",
+      "last_updated": {
+        "seconds": 1593175846
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 47,
+      "owner": "notified4",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175846
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": []
 }

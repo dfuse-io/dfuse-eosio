@@ -1,4 +1,42 @@
 {
-  "permissions": null,
-  "link_auths": null
+  "permissions": [
+    {
+      "id": 56,
+      "parent_id": 55,
+      "owner": "battlefield2",
+      "name": "active",
+      "last_updated": {
+        "seconds": 1593175852,
+        "nanos": 500000000
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 55,
+      "owner": "battlefield2",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175852,
+        "nanos": 500000000
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": []
 }

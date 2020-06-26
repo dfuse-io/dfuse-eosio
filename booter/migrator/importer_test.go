@@ -25,7 +25,6 @@ func init() {
 }
 
 func Test_Importer(t *testing.T) {
-	t.Skip("flaky test, fails too often, order is not consistent across runs")
 
 	tests := []struct {
 		fixture string
@@ -41,6 +40,10 @@ func Test_Importer(t *testing.T) {
 func testImporterData(t *testing.T, dataDir string) {
 	actions := make(chan interface{})
 	receivedActions := []interface{}{}
+
+	nonceActionEntropy = func() string {
+		return "aaaaaaaaaaaa"
+	}
 
 	impt := &importer{
 		common:      common{dataDir: testMigrationDataDirPath(dataDir)},
@@ -85,7 +88,7 @@ func testImporterData(t *testing.T, dataDir string) {
 	}
 	expected := fromFixture(t, goldenfile)
 
-	assert.JSONEqf(t, expected, string(actual), "Expected:\n%s\n\nActual:\n%s\n", expected, actual)
+	assert.JSONEq(t, expected, string(actual))
 }
 
 type TestActionWrapper struct {

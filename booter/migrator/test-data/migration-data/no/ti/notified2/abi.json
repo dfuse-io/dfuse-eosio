@@ -1,5 +1,11 @@
 {
   "version": "eosio::abi/1.1",
+  "types": [
+    {
+      "new_type_name": "varying_action",
+      "type": "variant_uint16_string"
+    }
+  ],
   "structs": [
     {
       "name": "creaorder",
@@ -248,6 +254,88 @@
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "producerows",
+      "base": "",
+      "fields": [
+        {
+          "name": "row_count",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "sk_row",
+      "base": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "name": "i64",
+          "type": "uint64"
+        },
+        {
+          "name": "i128",
+          "type": "uint128"
+        },
+        {
+          "name": "d64",
+          "type": "float64"
+        },
+        {
+          "name": "d128",
+          "type": "float128"
+        },
+        {
+          "name": "c256",
+          "type": "checksum256"
+        },
+        {
+          "name": "unrelated",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "sktest",
+      "base": "",
+      "fields": [
+        {
+          "name": "action",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "variant_row",
+      "base": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "name": "variant_field",
+          "type": "variant_int8_uint16_uint32_int32"
+        },
+        {
+          "name": "creation_number",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "varianttest",
+      "base": "",
+      "fields": [
+        {
+          "name": "value",
+          "type": "varying_action"
+        }
+      ]
     }
   ],
   "actions": [
@@ -315,6 +403,21 @@
       "name": "nestonerror",
       "type": "nestonerror",
       "ricardian_contract": ""
+    },
+    {
+      "name": "producerows",
+      "type": "producerows",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "sktest",
+      "type": "sktest",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "varianttest",
+      "type": "varianttest",
+      "ricardian_contract": ""
     }
   ],
   "tables": [
@@ -322,6 +425,59 @@
       "name": "member",
       "index_type": "i64",
       "type": "member_row"
+    },
+    {
+      "name": "sk.c",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "sk.d",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "sk.dd",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "sk.i",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "sk.ii",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "sk.multi",
+      "index_type": "i64",
+      "type": "sk_row"
+    },
+    {
+      "name": "variant",
+      "index_type": "i64",
+      "type": "variant_row"
+    }
+  ],
+  "variants": [
+    {
+      "name": "variant_int8_uint16_uint32_int32",
+      "types": [
+        "int8",
+        "uint16",
+        "uint32",
+        "int32"
+      ]
+    },
+    {
+      "name": "variant_uint16_string",
+      "types": [
+        "uint16",
+        "string"
+      ]
     }
   ]
 }

@@ -24,6 +24,10 @@ import (
 
 //go:generate rice embed-go
 
+var nonceActionEntropy = func() string {
+	return hex.EncodeToString(generateRandomNonce())
+}
+
 const boxPath = "./code/build"
 
 type contract struct {
@@ -282,7 +286,7 @@ func newNonceAction() *eos.Action {
 		Account: eos.AN("eosio.null"),
 		Name:    eos.ActN("nonce"),
 		ActionData: eos.NewActionData(system.Nonce{
-			Value: hex.EncodeToString(generateRandomNonce()),
+			Value: nonceActionEntropy(),
 		}),
 	}
 }

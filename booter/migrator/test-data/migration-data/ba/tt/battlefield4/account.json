@@ -1,75 +1,13 @@
 {
   "permissions": [
     {
-      "owner": "battlefield4",
-      "name": "owner",
-      "last_updated": {
-        "seconds": 1593101648,
-        "nanos": 935899000
-      },
-      "authority": {
-        "threshold": 1,
-        "keys": [
-          {
-            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
+      "id": 36,
+      "parent_id": 35,
       "owner": "battlefield4",
       "name": "active",
       "last_updated": {
-        "seconds": 1593101648,
-        "nanos": 935900000
-      },
-      "authority": {
-        "threshold": 5,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "battlefield1",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "battlefield3",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "battlefield4",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "zzzzzzzzzzzz",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ],
-        "waits": [
-          {
-            "wait_sec": 10800,
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "owner": "battlefield4",
-      "name": "day2day",
-      "last_updated": {
-        "seconds": 1593101648,
-        "nanos": 935901000
+        "seconds": 1593175849,
+        "nanos": 500000000
       },
       "authority": {
         "threshold": 1,
@@ -82,37 +20,31 @@
         "accounts": [
           {
             "permission": {
-              "actor": "battlefield1",
-              "permission": "active"
+              "actor": "battlefield4",
+              "permission": "eosio.code"
             },
             "weight": 1
-          },
+          }
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "owner": "battlefield4",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175846
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
           {
-            "permission": {
-              "actor": "battlefield3",
-              "permission": "active"
-            },
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
             "weight": 1
           }
         ]
       }
     }
   ],
-  "link_auths": [
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "regproducer"
-    },
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "regproducer"
-    },
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "claimrewards"
-    }
-  ]
+  "link_auths": []
 }

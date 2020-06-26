@@ -1,4 +1,49 @@
 {
-  "permissions": null,
-  "link_auths": null
+  "permissions": [
+    {
+      "id": 32,
+      "parent_id": 31,
+      "owner": "battlefield1",
+      "name": "active",
+      "last_updated": {
+        "seconds": 1593175849
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ],
+        "accounts": [
+          {
+            "permission": {
+              "actor": "battlefield1",
+              "permission": "eosio.code"
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "owner": "battlefield1",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175846
+      },
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "public_key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": []
 }

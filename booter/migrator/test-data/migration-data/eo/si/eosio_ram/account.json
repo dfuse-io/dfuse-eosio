@@ -1,4 +1,48 @@
 {
-  "permissions": null,
-  "link_auths": null
+  "permissions": [
+    {
+      "id": 18,
+      "parent_id": 17,
+      "owner": "eosio.ram",
+      "name": "active",
+      "last_updated": {
+        "seconds": 1593175846,
+        "nanos": 500000000
+      },
+      "authority": {
+        "threshold": 1,
+        "accounts": [
+          {
+            "permission": {
+              "actor": "eosio",
+              "permission": "active"
+            },
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "owner": "eosio.ram",
+      "name": "owner",
+      "last_updated": {
+        "seconds": 1593175846,
+        "nanos": 500000000
+      },
+      "authority": {
+        "threshold": 1,
+        "accounts": [
+          {
+            "permission": {
+              "actor": "eosio",
+              "permission": "active"
+            },
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": []
 }
