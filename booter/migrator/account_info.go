@@ -16,15 +16,18 @@ type accountInfo struct {
 }
 
 func newAccountInfo(permissions []*pbcodec.PermissionObject, linkAuths []*linkAuth) *accountInfo {
-	idToPerm := make(map[uint64]*pbcodec.PermissionObject, len(permissions))
-	for _, perm := range permissions {
-		idToPerm[perm.Id] = perm
-	}
-
-	return &accountInfo{
+	info := &accountInfo{
 		Permissions: permissions,
 		LinkAuths:   linkAuths,
-		idToPerm:    idToPerm,
+	}
+	info.setupIDtoPerm()
+	return info
+}
+
+func (a *accountInfo) setupIDtoPerm() {
+	a.idToPerm = make(map[uint64]*pbcodec.PermissionObject, len(a.Permissions))
+	for _, perm := range a.Permissions {
+		a.idToPerm[perm.Id] = perm
 	}
 }
 
@@ -48,21 +51,22 @@ func (a *accountInfo) sortPermissions() (out []*pbcodec.PermissionObject) {
 		parentToChildren[perm.ParentId] = append(parentToChildren[perm.ParentId], perm)
 	}
 
-	var walk func(root *pbcodec.PermissionObject)
-	walk = func(root *pbcodec.PermissionObject) {
-		if root == nil {
+	var walk func(roots []*pbcodec.PermissionObject, index int)
+	walk = func(roots []*pbcodec.PermissionObject, index int) {
+		if index >= len(roots) {
 			return
 		}
+		ele := roots[index]
+		out = append(out, ele)
 
-		out = append(out, root)
-		for _, child := range parentToChildren[root.Id] {
-			walk(child)
+		for _, child := range parentToChildren[ele.Id] {
+			roots = append(roots, child)
 		}
+		index = index + 1
+		walk(roots, index)
 	}
 
-	for _, root := range roots {
-		walk(root)
-	}
+	walk(roots, 0)
 
 	return out
 }

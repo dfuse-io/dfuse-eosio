@@ -50,6 +50,8 @@ func (a *Account) setupAccountInfo() error {
 	if err != nil {
 		return fmt.Errorf("cannot get information to create account %q: %w", a.name, err)
 	}
+
+	accountInfo.setupIDtoPerm()
 	a.info = accountInfo
 	return nil
 }

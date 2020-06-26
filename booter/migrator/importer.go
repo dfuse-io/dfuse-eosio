@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 
@@ -189,17 +190,22 @@ func (i *importer) createAccount(account *Account) {
 }
 
 func (i *importer) createPermissions(account *Account) error {
-	currentOwner := ""
+	currentParent := ""
 	for _, permission := range account.info.sortPermissions() {
+		parent := ""
+		if p, found := account.info.idToPerm[permission.ParentId]; found {
+			parent = p.Name
+		}
+
 		// Small optimization here to push all permission that are on the same level (a.k.a have the same parent) in the same transaction
-		if (currentOwner != "") && (currentOwner != permission.Owner) {
+		if (currentParent != "") && (currentParent != permission.Owner) {
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}
-		currentOwner = permission.Owner
+		currentParent = parent
 
 		// NOTE: even though the permission are correctly ordered in creation we neeed to ensure that the parent
 		// so we cannot push them all in a transaction
-		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), i.importerAuthority(), PN("owner")))
+		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(parent), i.importerAuthority(), PN("owner")))
 	}
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 	return nil
@@ -225,18 +231,23 @@ func (i *importer) setPermissions(account *Account, importerAuthority *eos.Autho
 				continue
 			}
 
-			parent := account.info.idToPerm[permission.ParentId]
-
-			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(parent.Name), eosAuthority, PN("owner")))
+			parentName := PN("")
+			if parent, found := account.info.idToPerm[permission.ParentId]; found {
+				parentName = PN(parent.Name)
+			}
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), parentName, eosAuthority, PN("owner")))
 			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}
 	}
 
 	if ownerPermission != nil {
-		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), "", codec.AuthoritiesToEOS(ownerPermission.Authority), PN("owner")))
-		i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
-		i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+		eosAuthority := codec.AuthoritiesToEOS(ownerPermission.Authority)
+		if i.shouldSetPermission(importerAuthority, &eosAuthority) {
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), "", eosAuthority, PN("owner")))
+			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
+			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+		}
 	}
 
 	return nil
@@ -244,6 +255,13 @@ func (i *importer) setPermissions(account *Account, importerAuthority *eos.Autho
 }
 
 func (i *importer) shouldSetPermission(importerAuthority, authority *eos.Authority) bool {
+	// TODO: this is temporary since the protocol features are not activated
+	for _, key := range authority.Keys {
+		if strings.HasPrefix(key.PublicKey.String(), "PUB_WA") {
+			return false
+		}
+	}
+
 	return !reflect.DeepEqual(importerAuthority, authority)
 }
 
