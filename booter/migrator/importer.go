@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+
+	"github.com/dfuse-io/dfuse-eosio/codec"
+
 	"github.com/eoscanada/eos-go/system"
 
 	bootops "github.com/dfuse-io/eosio-boot/ops"
@@ -61,13 +65,25 @@ func (i *importer) init() error {
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
-		return i.createAccount(account)
+		i.createAccount(account)
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("unable to create chain accounts: %w", err)
 	}
 
 	for _, account := range accounts {
+		zlog.Debug("processing account", zap.String("account", account.name))
+
+		err := account.setupAccountInfo()
+		if err != nil {
+			return fmt.Errorf("unable to setup account %q: %w", account.name, err)
+		}
+
+		err = i.createPermissions(account)
+		if err != nil {
+			return fmt.Errorf("unable to create permissions for accounts %q: %w", account.name, err)
+		}
 		if !account.hasContract {
 			continue
 		}
@@ -81,11 +97,19 @@ func (i *importer) inject() error {
 		}
 	}
 
+	// cleanup
+	for _, account := range accounts {
+		zlog.Debug("cleaning up account", zap.String("account", account.name))
+		err = i.setPermissions(account)
+		if err != nil {
+			return fmt.Errorf("unable to create permissions for accounts %q: %w", account.name, err)
+		}
+	}
+
 	return nil
 }
 
 func (i *importer) migrateContract(accountData *Account) error {
-	zlog.Debug("processing account", zap.String("account", accountData.name))
 
 	err := accountData.setupAbi()
 	if err != nil {
@@ -156,27 +180,88 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 	return nil
 }
 
-func (i *importer) createAccount(account *Account) error {
-	//accountInfo, err := account.readAccount()
-	//if err != nil {
-	//	return fmt.Errorf("cannot get information to create account %q: %w", account.name, err)
-	//}
-
+func (i *importer) createAccount(account *Account) {
 	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
 	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+}
 
-	//for _, permission := range accountInfo.Permissions {
-	//	i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), codec.AuthoritiesToEOS(permission.Authority), PN("owner")))
-	//}
-	//
-	//for _, linkAuth := range accountInfo.LinkAuths {
-	//	i.actionChan <- (*bootops.TransactionAction)(system.NewLinkAuth(account.getAccountName(), AN(linkAuth.Contract), eos.ActionName(linkAuth.Action), PN(linkAuth.Permission)))
-	//}
-	//
-	//i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+func (i *importer) createPermissions(account *Account) error {
+	currentOwner := ""
+	for _, permission := range account.info.sortPermissions() {
+		// Small optimization here to push all permission that are on the same level (a.k.a have the same parent) in the same transaction
+		if (currentOwner != "") && (currentOwner != permission.Owner) {
+			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+		}
+		currentOwner = permission.Owner
+
+		// NOTE: even though the permission are correctly ordered in creation we neeed to ensure that the parent
+		// so we cannot push them all in a transaction
+		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), i.importerAuthority(), PN("owner")))
+	}
+	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+	return nil
+
+}
+
+func (i *importer) setPermissions(account *Account) error {
+
+	// the link auth is signed with active account so lets perform this first before potentially updating the active account
+	for _, linkAuth := range account.info.LinkAuths {
+		i.actionChan <- (*bootops.TransactionAction)(system.NewLinkAuth(account.getAccountName(), AN(linkAuth.Contract), eos.ActionName(linkAuth.Action), PN(linkAuth.Permission)))
+	}
+	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+
+	var ownerPermission *pbcodec.PermissionObject
+	for _, permission := range account.info.sortPermissions() {
+		eosAuthority := codec.AuthoritiesToEOS(permission.Authority)
+		if i.shouldSetPermission(eosAuthority) {
+			if permission.Name == "owner" {
+				// we will only update the owner permission once all the permission for said account has been update
+				// since we are "signing" the actions with the current owner permission
+				ownerPermission = &permission
+				continue
+			}
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), eosAuthority, PN("owner")))
+			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
+			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+		}
+	}
+
+	if ownerPermission != nil {
+		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), PN(ownerPermission.Owner), codec.AuthoritiesToEOS(ownerPermission.Authority), PN("owner")))
+		i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
+		i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
+	}
 
 	return nil
+
+}
+
+func (i *importer) shouldSetPermission(authority eos.Authority) bool {
+	// TODO: this is ugly. consider adding equality to eos.Authority
+	if len(authority.Waits) > 0 || len(authority.Accounts) > 0 {
+		return true
+	}
+	if (authority.Threshold == 1) &&
+		len(authority.Keys) == 1 &&
+		authority.Keys[0].PublicKey.String() == i.opPublicKey.String() {
+		return false
+	}
+
+	return true
+}
+
+func (i *importer) importerAuthority() eos.Authority {
+	return eos.Authority{
+		Threshold: 1,
+		Keys: []eos.KeyWeight{
+			{
+				PublicKey: i.opPublicKey,
+				Weight:    1,
+			},
+		},
+	}
 }
 
 func newNonceAction() *eos.Action {

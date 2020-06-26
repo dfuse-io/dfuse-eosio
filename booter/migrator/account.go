@@ -13,6 +13,12 @@ import (
 	"go.uber.org/zap"
 )
 
+var traceEnable = false
+
+func init() {
+	traceEnable = os.Getenv("TRACE") == "true"
+}
+
 type AccountPath string
 type TablePath string
 type ScopePath string
@@ -24,12 +30,7 @@ type Account struct {
 	hasContract bool
 	abi         *eos.ABI
 	ctr         *contract
-}
-
-var traceEnable = false
-
-func init() {
-	traceEnable = os.Getenv("TRACE") == "true"
+	info        *accountInfo
 }
 
 func newAccount(dataDir string, account string) (*Account, error) {
@@ -44,6 +45,14 @@ func newAccount(dataDir string, account string) (*Account, error) {
 }
 
 func (a *Account) getAccountName() eos.AccountName { return AN(a.name) }
+func (a *Account) setupAccountInfo() error {
+	accountInfo, err := a.readAccount()
+	if err != nil {
+		return fmt.Errorf("cannot get information to create account %q: %w", a.name, err)
+	}
+	a.info = accountInfo
+	return nil
+}
 func (a *Account) setupAbi() error {
 	abi, abiCnt, err := a.readABI()
 	if err != nil {
@@ -103,7 +112,13 @@ func (a *Account) setContractActions() ([]*eos.Action, error) {
 }
 
 func (a *Account) readTableList() (out []string, err error) {
-	files, err := ioutil.ReadDir(filepath.Join(a.path, "tables"))
+	path := filepath.Join(a.path, "tables")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// the tables folder doesn't exist no tables to read
+		return out, nil
+	}
+
+	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("read dir: %w", err)
 	}

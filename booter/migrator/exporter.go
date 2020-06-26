@@ -174,6 +174,50 @@ func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
 		return &accountInfo{
 			Permissions: []pbcodec.PermissionObject{
 				{
+					Owner:       "active",
+					Name:        "day2day",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+								Weight:    1,
+							},
+						},
+						Accounts: []*pbcodec.PermissionLevelWeight{
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield1",
+									Permission: "active",
+								},
+								Weight: 1,
+							},
+							{
+								Permission: &pbcodec.PermissionLevel{
+									Actor:      "battlefield3",
+									Permission: "active",
+								},
+								Weight: 1,
+							},
+						},
+					},
+				},
+				{
+					Owner:       "claimer",
+					Name:        "buyer",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+								Weight:    1,
+							},
+						},
+					},
+				},
+				{
 					Owner:       "",
 					Name:        "owner",
 					LastUpdated: mustProtoTimestamp(time.Now()),
@@ -182,6 +226,20 @@ func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
 						Keys: []*pbcodec.KeyWeight{
 							{
 								PublicKey: "EOS6fnFx4hFqp7QrssuzgFQcYTTigXNcy5aGyaZhUFfY6Peenm2Lx",
+								Weight:    1,
+							},
+						},
+					},
+				},
+				{
+					Owner:       "active",
+					Name:        "claimer",
+					LastUpdated: mustProtoTimestamp(time.Now()),
+					Authority: &pbcodec.Authority{
+						Threshold: 1,
+						Keys: []*pbcodec.KeyWeight{
+							{
+								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
 								Weight:    1,
 							},
 						},
@@ -231,36 +289,6 @@ func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
 						},
 					},
 				},
-				{
-					Owner:       "active",
-					Name:        "day2day",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-								Weight:    1,
-							},
-						},
-						Accounts: []*pbcodec.PermissionLevelWeight{
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield1",
-									Permission: "active",
-								},
-								Weight: 1,
-							},
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield3",
-									Permission: "active",
-								},
-								Weight: 1,
-							},
-						},
-					},
-				},
 			},
 			LinkAuths: []*linkAuth{
 				{
@@ -271,7 +299,7 @@ func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
 				{
 					Permission: "day2day",
 					Contract:   "eosio",
-					Action:     "regproducer",
+					Action:     "unregprod",
 				},
 				{
 					Permission: "day2day",

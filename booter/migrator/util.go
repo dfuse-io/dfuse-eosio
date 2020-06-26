@@ -44,3 +44,16 @@ func writeJSONFile(filename string, v interface{}) error {
 
 	return encoder.Encode(v)
 }
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return !info.IsDir()
+}
