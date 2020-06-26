@@ -70,26 +70,29 @@ func TestNodeosVersion_NewFromString(t *testing.T) {
 
 func TestNodeosVersion_SupportsDeepMind(t *testing.T) {
 	tests := []struct {
-		name         string
-		version      nodeosVersion
-		majorVersion int
-		expected     bool
+		name          string
+		version       nodeosVersion
+		majorVersions []int
+		expected      bool
 	}{
-		{"with suffix, major fit", nodeosVersion{"", 2, 0, 5, "dm.12.0"}, 12, true},
-		{"with suffix, major fit, minor higher", nodeosVersion{"", 2, 0, 5, "dm.12.1"}, 12, true},
+		{"with suffix, major fit", nodeosVersion{"", 2, 0, 5, "dm.12.0"}, []int{12}, true},
+		{"with suffix, major fit, minor higher", nodeosVersion{"", 2, 0, 5, "dm.12.1"}, []int{12}, true},
+		{"with suffix, major fit first, minor lower, multiple supported", nodeosVersion{"", 2, 0, 5, "dm.12.1"}, []int{12, 13}, true},
+		{"with suffix, major fit second, minor higher, multiple supported", nodeosVersion{"", 2, 0, 5, "dm.13.14"}, []int{12, 13}, true},
 
-		{"no suffix", nodeosVersion{"", 2, 0, 5, ""}, 12, false},
-		{"invalid suffix", nodeosVersion{"", 2, 0, 5, "rc-1"}, 12, false},
-		{"invalid suffix includes major", nodeosVersion{"", 2, 0, 5, ".12.0"}, 12, false},
-		{"with suffix, major lower, minor 0", nodeosVersion{"", 2, 0, 5, "dm.11.1"}, 12, false},
-		{"with suffix, major lower, minor higher than major", nodeosVersion{"", 2, 0, 5, "dm.11.12"}, 12, false},
-		{"with suffix, major higher, minor 0", nodeosVersion{"", 2, 0, 5, "dm.13.0"}, 12, false},
-		{"with suffix, major higher, minor higher than major", nodeosVersion{"", 2, 0, 5, "dm.13.12"}, 12, false},
+		{"no suffix", nodeosVersion{"", 2, 0, 5, ""}, []int{12}, false},
+		{"invalid suffix", nodeosVersion{"", 2, 0, 5, "rc-1"}, []int{12}, false},
+		{"invalid suffix includes major", nodeosVersion{"", 2, 0, 5, ".12.0"}, []int{12}, false},
+		{"with suffix, major lower, minor 0", nodeosVersion{"", 2, 0, 5, "dm.11.1"}, []int{12}, false},
+		{"with suffix, major lower, minor higher than major", nodeosVersion{"", 2, 0, 5, "dm.11.12"}, []int{12}, false},
+		{"with suffix, major higher, minor 0", nodeosVersion{"", 2, 0, 5, "dm.13.0"}, []int{12}, false},
+		{"with suffix, major higher, minor higher than major", nodeosVersion{"", 2, 0, 5, "dm.13.12"}, []int{12}, false},
+		{"with suffix, major higher, minor higher than major, multiple", nodeosVersion{"", 2, 0, 5, "dm.13.12"}, []int{11, 12}, false},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expected, test.version.supportsDeepMind(test.majorVersion), "Version suffix %s does not support deep mind major version %d", test.version.suffix, test.majorVersion)
+			assert.Equal(t, test.expected, test.version.supportsDeepMindOneOf(test.majorVersions...), "Version suffix %s does not support deep mind major versions listed", test.version.suffix)
 		})
 	}
 }
