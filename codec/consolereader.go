@@ -979,21 +979,25 @@ func inSupportedVersion(majorVersion string) bool {
 //    ABIDUMP START
 //
 //  Version 13
-//    ABIDUMP START ${block_num}
+//    ABIDUMP START ${block_num} ${global_sequence_num}
 func (ctx *parseCtx) readABIStart(line string) error {
-	chunks, err := splitNToM(line, 2, 3)
-	if err != nil {
-		return err
-	}
+	chunks := strings.SplitN(line, " ", -1)
 
 	switch len(chunks) {
 	case 2: // Version 12
 		break
-	case 3: // Version 13
+	case 4: // Version 13
 		_, err := strconv.Atoi(chunks[2])
 		if err != nil {
 			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
 		}
+
+		_, err = strconv.Atoi(chunks[3])
+		if err != nil {
+			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
+		}
+	default:
+		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
 	}
 
 	ctx.abiDecoder.resetCache()
