@@ -2,15 +2,6 @@ package migrator
 
 import pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 
-// account.json
-/*
-{
-	permissions: [
-		{ name: "owner", owner: "", authoriy: obcode.Authority }
-	],
-}
-*/
-
 type linkAuth struct {
 	Permission string `json:"permission"`
 	Contract   string `json:"contract"`
@@ -18,36 +9,60 @@ type linkAuth struct {
 }
 
 type accountInfo struct {
-	Permissions []pbcodec.PermissionObject `json:"permissions"`
-	LinkAuths   []*linkAuth                `json:"link_auths"`
+	Permissions []*pbcodec.PermissionObject `json:"permissions"`
+	LinkAuths   []*linkAuth                 `json:"link_auths"`
+
+	idToPerm map[uint64]*pbcodec.PermissionObject
 }
 
-func (a *accountInfo) sortPermissions() (out []pbcodec.PermissionObject) {
-	perms := map[string][]pbcodec.PermissionObject{}
-	for _, perm := range a.Permissions {
-		// TODO: can we have 2 permissions without an Owner?
-		if perm.Owner == "" {
-			// the permission which doesn't have an
-			//owner (a.k.a parent) is the EOS owner permissions
-			out = append(out, perm)
-			continue
-		}
-		if _, found := perms[perm.Owner]; found {
-			perms[perm.Owner] = append(perms[perm.Owner], perm)
-			continue
-		}
-		perms[perm.Owner] = []pbcodec.PermissionObject{perm}
+func newAccountInfo(permissions []*pbcodec.PermissionObject, linkAuths []*linkAuth) *accountInfo {
+	idToPerm := make(map[uint64]*pbcodec.PermissionObject, len(permissions))
+	for _, perm := range permissions {
+		idToPerm[perm.Id] = perm
 	}
 
-	keys := []string{"owner"}
-	for len(keys) > 0 {
-		for _, key := range keys {
-			for _, permission := range perms[key] {
-				out = append(out, permission)
-				keys = append(keys, permission.Name)
-			}
-			keys = keys[1:]
+	return &accountInfo{
+		Permissions: permissions,
+		LinkAuths:   linkAuths,
+		idToPerm:    idToPerm,
+	}
+}
+
+func (a *accountInfo) getParent(child *pbcodec.PermissionObject) (parent *pbcodec.PermissionObject) {
+	if child.ParentId == 0 {
+		return nil
+	}
+
+	return a.idToPerm[child.ParentId]
+}
+
+func (a *accountInfo) sortPermissions() (out []*pbcodec.PermissionObject) {
+	var roots []*pbcodec.PermissionObject
+	parentToChildren := map[uint64][]*pbcodec.PermissionObject{}
+	for _, perm := range a.Permissions {
+		if perm.ParentId == 0 {
+			roots = append(roots, perm)
+			continue
+		}
+
+		parentToChildren[perm.ParentId] = append(parentToChildren[perm.ParentId], perm)
+	}
+
+	var walk func(root *pbcodec.PermissionObject)
+	walk = func(root *pbcodec.PermissionObject) {
+		if root == nil {
+			return
+		}
+
+		out = append(out, root)
+		for _, child := range parentToChildren[root.Id] {
+			walk(child)
 		}
 	}
+
+	for _, root := range roots {
+		walk(root)
+	}
+
 	return out
 }

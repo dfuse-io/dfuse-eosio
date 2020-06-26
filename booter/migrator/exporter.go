@@ -9,15 +9,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
-
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-
-	"github.com/eoscanada/eos-go"
-
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
 	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
+	"github.com/eoscanada/eos-go"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
 )
 
@@ -66,8 +62,7 @@ func (e *Exporter) Export() error {
 	}
 
 	e.logger.Printf("Retrieved %d contracts, fetching all tables now", len(contracts))
-	for _, act := range accounts {
-
+	for act, acctInfo := range accounts {
 		acct, err := newAccount(e.common.dataDir, act)
 		if err != nil {
 			return fmt.Errorf("unable to initialize account %q storage: %w", act, err)
@@ -75,11 +70,6 @@ func (e *Exporter) Export() error {
 
 		if err = acct.createDir(); err != nil {
 			return fmt.Errorf("unable to create account storage path: %w", err)
-		}
-
-		acctInfo, err := e.fetchAccountInfo(act)
-		if err != nil {
-			return fmt.Errorf("unable to fetch permissions for %q: %w", act, err)
 		}
 
 		if err := acct.writeAccount(acctInfo); err != nil {
@@ -131,188 +121,7 @@ func (e *Exporter) Export() error {
 	return nil
 }
 
-func (e *Exporter) fetchAccountInfo(account string) (*accountInfo, error) {
-	if account == "battlefield3" {
-		return &accountInfo{
-			Permissions: []pbcodec.PermissionObject{
-				{
-					Owner:       "",
-					Name:        "owner",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-								Weight:    1,
-							},
-						},
-					},
-				},
-				{
-					Owner:       "owner",
-					Name:        "active",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Accounts: []*pbcodec.PermissionLevelWeight{
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield4",
-									Permission: "day2day",
-								},
-								Weight: 1,
-							},
-						},
-					},
-				},
-			},
-		}, nil
-	}
-
-	if account == "battlefield4" {
-		return &accountInfo{
-			Permissions: []pbcodec.PermissionObject{
-				{
-					Owner:       "active",
-					Name:        "day2day",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-								Weight:    1,
-							},
-						},
-						Accounts: []*pbcodec.PermissionLevelWeight{
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield1",
-									Permission: "active",
-								},
-								Weight: 1,
-							},
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield3",
-									Permission: "active",
-								},
-								Weight: 1,
-							},
-						},
-					},
-				},
-				{
-					Owner:       "claimer",
-					Name:        "buyer",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-								Weight:    1,
-							},
-						},
-					},
-				},
-				{
-					Owner:       "",
-					Name:        "owner",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6fnFx4hFqp7QrssuzgFQcYTTigXNcy5aGyaZhUFfY6Peenm2Lx",
-								Weight:    1,
-							},
-						},
-					},
-				},
-				{
-					Owner:       "active",
-					Name:        "claimer",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 1,
-						Keys: []*pbcodec.KeyWeight{
-							{
-								PublicKey: "EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
-								Weight:    1,
-							},
-						},
-					},
-				},
-				{
-					Owner:       "owner",
-					Name:        "active",
-					LastUpdated: mustProtoTimestamp(time.Now()),
-					Authority: &pbcodec.Authority{
-						Threshold: 5,
-						Accounts: []*pbcodec.PermissionLevelWeight{
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield1",
-									Permission: "active",
-								},
-								Weight: 2,
-							},
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield3",
-									Permission: "active",
-								},
-								Weight: 2,
-							},
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "battlefield4",
-									Permission: "active",
-								},
-								Weight: 2,
-							},
-							{
-								Permission: &pbcodec.PermissionLevel{
-									Actor:      "zzzzzzzzzzzz",
-									Permission: "active",
-								},
-								Weight: 1,
-							},
-						},
-						Waits: []*pbcodec.WaitWeight{
-							{
-								WaitSec: 10800,
-								Weight:  1,
-							},
-						},
-					},
-				},
-			},
-			LinkAuths: []*linkAuth{
-				{
-					Permission: "day2day",
-					Contract:   "eosio",
-					Action:     "regproducer",
-				},
-				{
-					Permission: "day2day",
-					Contract:   "eosio",
-					Action:     "unregprod",
-				},
-				{
-					Permission: "day2day",
-					Contract:   "eosio",
-					Action:     "claimrewards",
-				},
-			},
-		}, nil
-	}
-	return &accountInfo{}, nil
-}
-
-func (e *Exporter) fetchAllAccounts() ([]string, error) {
+func (e *Exporter) fetchAllAccounts() (map[string]*accountInfo, error) {
 	e.logger.Debug("fetching all accounts")
 
 	stream, err := e.fluxdb.StreamAccounts(e.ctx, &pbfluxdb.StreamAccountsRequest{
@@ -322,7 +131,7 @@ func (e *Exporter) fetchAllAccounts() ([]string, error) {
 		return nil, fmt.Errorf("accounts stream: %w", err)
 	}
 
-	var accounts []string
+	accounts := map[string]*accountInfo{}
 	for {
 		resp, err := stream.Recv()
 		if err == io.EOF {
@@ -333,7 +142,16 @@ func (e *Exporter) fetchAllAccounts() ([]string, error) {
 			return nil, fmt.Errorf("stream account: %w", err)
 		}
 
-		accounts = append(accounts, resp.Account)
+		linkAuths := make([]*linkAuth, len(resp.LinkedPermissions))
+		for i, linkedPermission := range resp.LinkedPermissions {
+			linkAuths[i] = &linkAuth{
+				Permission: linkedPermission.PermissionName,
+				Contract:   linkedPermission.Contract,
+				Action:     linkedPermission.Action,
+			}
+		}
+
+		accounts[resp.Account] = newAccountInfo(resp.Permissions, linkAuths)
 	}
 }
 

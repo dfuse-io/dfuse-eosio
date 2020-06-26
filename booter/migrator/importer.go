@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"reflect"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 
@@ -98,9 +99,10 @@ func (i *importer) inject() error {
 	}
 
 	// cleanup
+	importerAuthority := i.importerAuthority()
 	for _, account := range accounts {
 		zlog.Debug("cleaning up account", zap.String("account", account.name))
-		err = i.setPermissions(account)
+		err = i.setPermissions(account, &importerAuthority)
 		if err != nil {
 			return fmt.Errorf("unable to create permissions for accounts %q: %w", account.name, err)
 		}
@@ -204,7 +206,7 @@ func (i *importer) createPermissions(account *Account) error {
 
 }
 
-func (i *importer) setPermissions(account *Account) error {
+func (i *importer) setPermissions(account *Account, importerAuthority *eos.Authority) error {
 
 	// the link auth is signed with active account so lets perform this first before potentially updating the active account
 	for _, linkAuth := range account.info.LinkAuths {
@@ -215,21 +217,24 @@ func (i *importer) setPermissions(account *Account) error {
 	var ownerPermission *pbcodec.PermissionObject
 	for _, permission := range account.info.sortPermissions() {
 		eosAuthority := codec.AuthoritiesToEOS(permission.Authority)
-		if i.shouldSetPermission(eosAuthority) {
+		if i.shouldSetPermission(importerAuthority, &eosAuthority) {
 			if permission.Name == "owner" {
 				// we will only update the owner permission once all the permission for said account has been update
 				// since we are "signing" the actions with the current owner permission
-				ownerPermission = &permission
+				ownerPermission = permission
 				continue
 			}
-			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(permission.Owner), eosAuthority, PN("owner")))
+
+			parent := account.info.idToPerm[permission.ParentId]
+
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(parent.Name), eosAuthority, PN("owner")))
 			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}
 	}
 
 	if ownerPermission != nil {
-		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), PN(ownerPermission.Owner), codec.AuthoritiesToEOS(ownerPermission.Authority), PN("owner")))
+		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), "", codec.AuthoritiesToEOS(ownerPermission.Authority), PN("owner")))
 		i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
 		i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 	}
@@ -238,18 +243,8 @@ func (i *importer) setPermissions(account *Account) error {
 
 }
 
-func (i *importer) shouldSetPermission(authority eos.Authority) bool {
-	// TODO: this is ugly. consider adding equality to eos.Authority
-	if len(authority.Waits) > 0 || len(authority.Accounts) > 0 {
-		return true
-	}
-	if (authority.Threshold == 1) &&
-		len(authority.Keys) == 1 &&
-		authority.Keys[0].PublicKey.String() == i.opPublicKey.String() {
-		return false
-	}
-
-	return true
+func (i *importer) shouldSetPermission(importerAuthority, authority *eos.Authority) bool {
+	return !reflect.DeepEqual(importerAuthority, authority)
 }
 
 func (i *importer) importerAuthority() eos.Authority {

@@ -23,55 +23,53 @@ func TestAccountInfo_sortPermissions(t *testing.T) {
 		{
 			name: "sorted owner and active",
 			in: []pbcodec.PermissionObject{
-				{Owner: "", Name: "owner"},
-				{Owner: "owner", Name: "active"},
+				{Id: 1, ParentId: 0, Name: "owner"},
+				{Id: 2, ParentId: 1, Name: "active"},
 			},
 			expect: []pbcodec.PermissionObject{
-				{Owner: "", Name: "owner"},
-				{Owner: "owner", Name: "active"},
+				{Id: 1, ParentId: 0, Name: "owner"},
+				{Id: 2, ParentId: 1, Name: "active"},
 			},
 		},
 		{
 			name: "un-sorted owner and active",
 			in: []pbcodec.PermissionObject{
-				{Owner: "owner", Name: "active"},
-				{Owner: "", Name: "owner"},
+				{Id: 2, ParentId: 1, Name: "active"},
+				{Id: 1, ParentId: 0, Name: "owner"},
 			},
 			expect: []pbcodec.PermissionObject{
-				{Owner: "", Name: "owner"},
-				{Owner: "owner", Name: "active"},
+				{Id: 1, ParentId: 0, Name: "owner"},
+				{Id: 2, ParentId: 1, Name: "active"},
 			},
 		},
 		{
 			name: " complex tree",
 			in: []pbcodec.PermissionObject{
-				{Owner: "day2day", Name: "transfers"},
-				{Owner: "", Name: "owner"},
-				{Owner: "blacklistops", Name: "purger"},
-				{Owner: "purger", Name: "purgees"},
-				{Owner: "active", Name: "claimer"},
-				{Owner: "owner", Name: "active"},
-				{Owner: "active", Name: "blacklistops"},
-				{Owner: "active", Name: "day2day"},
+				{Id: 21, ParentId: 12, Name: "transfers"},
+				{Id: 1,  ParentId: 0, Name: "owner"},
+				{Id: 20,  ParentId: 11, Name: "purger"},
+				{Id: 30,  ParentId: 30, Name: "purgees"},
+				{Id: 10,  ParentId: 2, Name: "claimer"},
+				{Id: 2,  ParentId: 1, Name: "active"},
+				{Id: 11,  ParentId: 2, Name: "blacklistops"},
+				{Id: 12,  ParentId: 2, Name: "day2day"},
 			},
 			expect: []pbcodec.PermissionObject{
-				{Owner: "", Name: "owner"},
-				{Owner: "owner", Name: "active"},
-				{Owner: "active", Name: "claimer"},
-				{Owner: "active", Name: "blacklistops"},
-				{Owner: "active", Name: "day2day"},
-				{Owner: "blacklistops", Name: "purger"},
-				{Owner: "day2day", Name: "transfers"},
-				{Owner: "purger", Name: "purgees"},
+				{Id: 1,  ParentId: 0, Name: "owner"},
+				{Id: 2,  ParentId: 1, Name: "active"},
+				{Id: 10,  ParentId: 2, Name: "claimer"},
+				{Id: 11,  ParentId: 2, Name: "blacklistops"},
+				{Id: 12,  ParentId: 2, Name: "day2day"},
+				{Id: 20,  ParentId: 11, Name: "purger"},
+				{Id: 21, ParentId: 12, Name: "transfers"},
+				{Id: 30,  ParentId: 30, Name: "purgees"},
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			acc := &accountInfo{
-				Permissions: test.in,
-			}
+			acc := newAccountInfo(permissions: test.in, nil)
 			assert.ElementsMatch(t, test.expect, acc.sortPermissions())
 		})
 	}

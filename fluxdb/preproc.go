@@ -69,6 +69,13 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		}
 
 		for _, permOp := range trx.PermOps {
+			permRow, err := NewAccountPermissionsRow(req.BlockNum, permOp)
+			if err != nil {
+				return nil, fmt.Errorf("unable to create contract table scope row for table op: %w", err)
+			}
+
+			lastTabletRowMap[permRow.Key()] = permRow
+
 			rows, err := permOpToKeyAccountRows(req.BlockNum, permOp)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create key account rows for perm op: %w", err)
