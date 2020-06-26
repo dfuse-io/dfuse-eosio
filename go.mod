@@ -17,7 +17,7 @@ require (
 	github.com/coreos/bbolt v1.3.2
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/blockmeta v0.0.0-20200626173725-4bff61be537f
+	github.com/dfuse-io/blockmeta v0.0.0-20200626185258-6769c37111c2
 	github.com/dfuse-io/bstream v0.0.0-20200616134354-62d63f98d5c1
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
