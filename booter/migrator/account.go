@@ -231,7 +231,7 @@ func (a *Account) readCode() (code []byte, err error) {
 }
 
 func (a *Account) writeCode(code []byte) error {
-	return writeJSONFile(a.codePath(), code)
+	return ioutil.WriteFile(a.codePath(), code, os.ModePerm)
 }
 
 func (a *Account) readAccount() (accInfo *accountInfo, err error) {
