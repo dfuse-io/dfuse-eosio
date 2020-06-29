@@ -15,6 +15,7 @@ func AutoBind(root *cobra.Command, prefix string) {
 	viper.SetEnvKeyReplacer(replacer)
 
 	recurseCommands(root, nil)
+	return
 }
 
 func recurseCommands(root *cobra.Command, segments []string) {
@@ -25,10 +26,12 @@ func recurseCommands(root *cobra.Command, segments []string) {
 
 	root.PersistentFlags().VisitAll(func(f *pflag.Flag) {
 		newVar := segmentPrefix + "global-" + f.Name
+		allFlags[newVar] = true
 		viper.BindPFlag(newVar, f)
 	})
 	root.Flags().VisitAll(func(f *pflag.Flag) {
 		newVar := f.Name
+		allFlags[newVar] = true
 		viper.BindPFlag(newVar, f)
 	})
 

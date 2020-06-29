@@ -5,31 +5,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [v0.1.0-beta4] 2020-06-23
+
 ### Networked APIs Changed
 
-* **BREAKING** `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
-* **BREAKING** `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
+* **BREAKING**: `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
+* **BREAKING**: `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
 
 ### Changed
 * In general: `eosdb` was renamed to `trxdb`, which shouldn't change much externally.
   * Specifically: the `healthz` endpoint's `eosdb` field is now
     `trxdb`, so you might need to adjust your monitoring.
-* **BREAKING** `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
-* **BREAKING** `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
-* **BREAKING** `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
+* **BREAKING**: `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
+* **BREAKING**: `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
+* **BREAKING**: `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
 * `mindreader` ContinuityChecker is not enabled by default anymore
+* `node-manager` and `mindreader`: value for their respective `shutdown-delay` flags is now also applied to commands like "snapshot" or "backup", so they become "not-ready" on /healthz endpoint, allowing a load-balancer to take it out of the pool before they actually stop working.
 * `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
+* `search` roarCache now based on a normalized version of the query string (ex: `a:foo b:bar` is now equivalent to `b:bar a:foo`, etc.). This will make previously-cached entries useless.
+* Various startup speed improvements for `blockmeta`, `bstream`, `search-indexer`
+* `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` now default to 0 to prevent accidental data deletion.
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
 
 ### Added
+* Added app called mindreader-stdin, which simply relays blocks and produces one-block-files (or merged-blocks-files) based on stdin, without trying to manage nodeos. This is an alternative way of seeding your dfuse system if you are have existing tooling for managing nodeos operations It uses a only subset of the "mindreader" flags and does not stop on TERM signal until it receives EOF signal from stdin.
+* Command `dmesh` to `tools` with flags `dsn` & `service-version` to inspect dmesh search peers. It currently only supports etcd.
 * Added `booter` application with its flags.
 * Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
 * Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)
 * Flag: `--mindreader-fail-on-non-contiguous-block` (default:false) to enable the ContinuityChecker
-* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
+* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see LOGGING.md)
 * Flag: `--common-ratelimiter-plugin` (default: null://) to enable a rate limiter plugin
 * Flag: `--pprof-listen-addr` (default: 6060)
 * Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
@@ -37,6 +45,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
 * Command `check trxdb-blocks` to `tools`, to ensure linearity of irreversible blocks in storage.  This is useful to know if you've missed some block ranges when doing parallel insertions into your `trxdb` storage.
 * `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
+* Flag: `--mindreader-discard-after-stop-num` If true, all blocks are discarded after stop-num.
+* `mindreader` now writes remaining one-block files after stop-block if `--mindreader-merge-and-store-directly` is set, unless new flag --mindreader-discard-after-stop-num is set to true. This improves the experience of a user following PARTIAL_SYNC.md steps, producing merged files up to a certain block, then switching to one-block files with a separate merge instance.
+
+### Fixed
+* Global flags and search-common-dmesh-dsn are now correctly parsed from config file
+* `search-indexer` no longer overflows on negative startblocks on new chains, it fails fast instead.
+* `search-archive` relative-start-block truncation now works
+* `search-forkresolver` no longer throws a nil pointer (app was previously broken)
+* `mindreader` More resilient shutdown handling (expects EOF on nodeos' stdout)
+* `mindreader` and `node-manager` logs from nodeos that go through zap now have their level parsed correctly instead of all being seen as DEBUG.
+* trxdb now correctly implements "BatchGet" on most operations, giving a good performance increase over previous version
 
 ## [v0.1.0-beta3] 2020-05-13
 
@@ -59,8 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Added `--eosq-on-demand` bool to configure if eosq serves an on-demand network
 * Added `--eosq-disable-tokenmeta` bool to configure if eosq disables tokenmenta
 
-* **BREAKING** To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
-* **BREAKING** `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
+* **BREAKING**: To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
+* **BREAKING**: `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
 * Added `--eosq-environment` environment where eosq will run (local, dev, production)
 * Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
 * Added `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` to allow keeping a few (default:5) snapshots only in the store
@@ -70,8 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-* **BREAKING** flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
-* **BREAKING** flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
+* **BREAKING**: flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
+* **BREAKING**: flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
 * Mindreader now has "producer" plugin enabled to allow taking snapshots
 * Mindreader now runs with "NoBlocksLog" option (deleting blocks.log on restart)
 * Node-manager and Mindreader now make dfuseeos shutdown when nodeos crashes.

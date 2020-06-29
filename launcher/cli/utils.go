@@ -109,7 +109,7 @@ func (v nodeosVersion) String() string {
 	return v.full
 }
 
-func (v nodeosVersion) supportsDeepMind(deepMindMajor int) bool {
+func (v nodeosVersion) supportsDeepMindOneOf(deepMindVerions ...int) bool {
 	// FIXME: This check is good only for releases prepared by dfuse Team directly.
 	//        When we are going to use the upstream version of EOSIO, this is not going
 	//        to work as expected! At the same time, there is nothing else that can be
@@ -129,7 +129,13 @@ func (v nodeosVersion) supportsDeepMind(deepMindMajor int) bool {
 	// We skip the errors since the regex match only digits on those groups
 	major, _ := strconv.Atoi(match[1])
 
-	return major == deepMindMajor
+	for _, supportedVersion := range deepMindVerions {
+		if major == supportedVersion {
+			return true
+		}
+	}
+
+	return false
 }
 
 func maybeCheckNodeosVersion() {
@@ -159,7 +165,7 @@ func maybeCheckNodeosVersion() {
 		`))
 	}
 
-	if !version.supportsDeepMind(12) {
+	if !version.supportsDeepMindOneOf(12, 13) {
 		// Upgrade message for those already using a deep mind aware `nodeos` but not
 		// of the correct major version.
 		if strings.Contains(version.String(), "dm") {

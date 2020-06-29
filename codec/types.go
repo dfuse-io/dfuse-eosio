@@ -91,12 +91,14 @@ type PermOp struct {
 type permissionObject struct {
 	Owner       eos.AccountName `json:"owner"`
 	Name        string          `json:"name"`
+	ParentID    uint64          `json:"parent"`
 	LastUpdated eos.JSONTime    `json:"last_updated"`
 	Auth        *eos.Authority  `json:"auth"`
 }
 
 func (p *permissionObject) ToProto() *pbcodec.PermissionObject {
 	return &pbcodec.PermissionObject{
+		ParentId:    p.ParentID,
 		Owner:       string(p.Owner),
 		Name:        p.Name,
 		LastUpdated: mustProtoTimestamp(p.LastUpdated.Time),
