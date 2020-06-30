@@ -85,10 +85,10 @@ require (
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
-	google.golang.org/protobuf v1.23.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
+	github.com/mitchellh/go-testing-interface v1.14.1
 )
 
 // to solve "github.com/ugorji/go/codec: ambiguous import: found package github.com/ugorji/go/codec in multiple modules:"

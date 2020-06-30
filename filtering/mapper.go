@@ -26,7 +26,6 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/search"
-	"github.com/google/cel-go/cel"
 	"go.uber.org/zap"
 )
 
@@ -43,15 +42,14 @@ type eventsConfig struct {
 type BlockMapper struct {
 	*mapping.IndexMappingImpl
 
-	eventsConfig     eventsConfig
-	filterOnProgram  cel.Program
-	filterOutProgram cel.Program
-	indexed          *IndexedTerms
-	isUnfiltered     bool
+	eventsConfig eventsConfig
+	blockFilter  *BlockFilter
+	indexed      *IndexedTerms
+	isUnfiltered bool
 }
 
-func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, filterOut, indexedTermsSpecs string) (*BlockMapper, error) {
-	fonProgram, err := buildCELProgram("true", filterOn)
+func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, filterIn, filterOut, indexedTermsSpecs string) (*BlockMapper, error) {
+	fonProgram, err := buildCELProgram("true", filterIn)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +57,11 @@ func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, 
 	foutProgram, err := buildCELProgram("false", filterOut)
 	if err != nil {
 		return nil, err
+	}
+
+	blockFilter, err := NewBlockFilter(filterIn, filterOut)
+	if err != nil {
+		return nil, fmt.Errorf("block filter: %w", err)
 	}
 
 	indexed, err := NewIndexedTerms(indexedTermsSpecs)
@@ -72,10 +75,9 @@ func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, filterOn, 
 			actionName:   eventsActionName,
 			unrestricted: eventsUnrestricted,
 		},
-		filterOnProgram:  fonProgram,
-		filterOutProgram: foutProgram,
-		indexed:          indexed,
-		isUnfiltered:     fonProgram == nil && foutProgram == nil,
+		blockFilter:  blockFilter,
+		indexed:      indexed,
+		isUnfiltered: fonProgram == nil && foutProgram == nil,
 	}, nil
 }
 

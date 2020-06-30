@@ -73,9 +73,9 @@ func buildCELProgram(noopProgram string, programString string) (cel.Program, err
 	return prg, nil
 }
 
-func (m *BlockMapper) shouldIndexAction(doc interface{}) bool {
-	filterOnResult := m.filterMatches(m.filterOnProgram, true, doc)
-	filterOutResult := m.filterMatches(m.filterOutProgram, false, doc)
+func (m *BlockMapper) shouldIndexAction(doc map[string]interface{}) bool {
+	filterOnResult := m.filterMatches(m.blockFilter.InProgram.Program, true, doc)
+	filterOutResult := m.filterMatches(m.blockFilter.OutProgram.Program, false, doc)
 	return filterOnResult && !filterOutResult
 }
 

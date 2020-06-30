@@ -37,6 +37,7 @@ import (
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
+	filteringRelayerApp "github.com/dfuse-io/dfuse-eosio/filtering/app/filtering"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -406,6 +407,30 @@ func init() {
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   MustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+			}), nil
+		},
+	})
+
+	// Filtering Relayer
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "filtering-relayer",
+		Title:       "filtering-relayer",
+		Description: "Serves blocks as a filtered stream, from a global deloyed relayer",
+		MetricsID:   "filtering-relayer",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/filtering.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("filtering-relayer-grpc-listen-addr", FilteringRelayerServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("filtering-relayer-global-relayer-addr", RelayerServingAddr, "Address for global relayer service to connect to")
+			cmd.Flags().String("filtering-relayer-filter-in", "", "The CEL filter in expression to use when filtering blocks from the global relayer")
+			cmd.Flags().String("filtering-relayer-filter-out", "", "The CEL filter out expression to use when filtering blocks from the global relayer")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			return filteringRelayerApp.New(&filteringRelayerApp.Config{
+				GRPCListenAddr: viper.GetString("filtering-relayer-grpc-listen-addr"),
+				RelayerAddr:    viper.GetString("filtering-relayer-global-relayer-addr"),
+				FilterIn:       viper.GetString("filtering-relayer-filter-in"),
+				FilterOut:      viper.GetString("filtering-relayer-filter-out"),
 			}), nil
 		},
 	})
