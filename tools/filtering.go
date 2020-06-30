@@ -107,7 +107,7 @@ func filteringEstimateE(cmd *cobra.Command, args []string) (err error) {
 			fmt.Println("Processing block", blk.Num())
 
 			/// TrxDB
-			matchingTrxIDs, actions, err := mapper.MapForDB(blk)
+			matchingTrxs, actions, err := mapper.MapForDB(blk)
 			if err != nil {
 				return fmt.Errorf("map for db: %w", err)
 			}
@@ -121,12 +121,13 @@ func filteringEstimateE(cmd *cobra.Command, args []string) (err error) {
 				if err != nil {
 					return fmt.Errorf("proto marshal: %w", err)
 				}
+				codec.ReduplicateTransactionTrace(trx)
 
 				// FIXME: make length compressed using Snappy or zstd.. or just estimate
 				// with a fixed ratio.
 				trxSize := len(cnt)
 				totalTransactions++
-				if matchingTrxIDs[trx.Id] {
+				if matchingTrxs[trx.Id] {
 					totalMatchingTransactions++
 					totalMatchingSizeTrxdb += trxSize
 				}
@@ -135,9 +136,9 @@ func filteringEstimateE(cmd *cobra.Command, args []string) (err error) {
 			// More related to how Search consumes that data.
 
 			totalMatchingActions += len(actions)
-			// doc is the `map[string]interface{}`  with the indexed terms, which will be
-			// processed by Bleve indexes..
 			for _, doc := range actions {
+				// FIXME: Transform into indexed documents, Bleve style
+				// before computing its size.
 				cnt, err := json.Marshal(doc)
 				if err != nil {
 					return fmt.Errorf("json marshal: %w", err)
@@ -166,8 +167,8 @@ func filteringEstimateE(cmd *cobra.Command, args []string) (err error) {
 	fmt.Println("Sample:")
 	fmt.Println("  Blocks:", totalBlocks)
 	fmt.Println("General matching stats:")
-	fmt.Printf("* Matching transactions: %d / %d (%.2f%%)\n", totalMatchingTransactions, totalTransactions, float64(totalMatchingTransactions)/float64(totalTransactions))
-	fmt.Printf("* Matching actions: %d / %d (%.2f%%)\n", totalMatchingActions, totalActions, float64(totalMatchingActions)/float64(totalActions))
+	fmt.Printf("* Matching transactions: %d / %d (%.2f%%)\n", totalMatchingTransactions, totalTransactions, float64(totalMatchingTransactions)/float64(totalTransactions)*100.0)
+	fmt.Printf("* Matching actions: %d / %d (%.2f%%)\n", totalMatchingActions, totalActions, float64(totalMatchingActions)/float64(totalActions)*100.0)
 	fmt.Println("Size estimates")
 	fmt.Println("* Estimated size of filtered trxdb:", humanize.Bytes(uint64(totalMatchingSizeTrxdb)))
 	fmt.Println("* Estimated size of filtered search indexes:", humanize.Bytes(uint64(totalMatchingSizeSearch)))

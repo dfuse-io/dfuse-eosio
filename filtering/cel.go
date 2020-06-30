@@ -73,20 +73,20 @@ func buildCELProgram(noopProgram string, programString string) (cel.Program, err
 	return prg, nil
 }
 
-func (m *BlockMapper) shouldIndexAction(doc map[string]interface{}) bool {
+func (m *BlockMapper) shouldIndexAction(doc interface{}) bool {
 	filterOnResult := m.filterMatches(m.filterOnProgram, true, doc)
 	filterOutResult := m.filterMatches(m.filterOutProgram, false, doc)
 	return filterOnResult && !filterOutResult
 }
 
-func (m *BlockMapper) filterMatches(program cel.Program, defaultVal bool, doc map[string]interface{}) bool {
+func (m *BlockMapper) filterMatches(program cel.Program, defaultVal bool, doc interface{}) bool {
 	if program == nil {
 		return defaultVal
 	}
 
 	res, _, err := program.Eval(doc)
 	if err != nil {
-		//fmt.Printf("filter program: %s\n", err.Error())
+		fmt.Printf("filter program: %s\n", err.Error())
 		return false
 	}
 	retval, valid := res.(types.Bool)
@@ -95,5 +95,6 @@ func (m *BlockMapper) filterMatches(program cel.Program, defaultVal bool, doc ma
 		// it's even safe to panic here
 		panic("return value of our cel program isn't of type bool")
 	}
+
 	return bool(retval)
 }

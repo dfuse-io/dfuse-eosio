@@ -128,24 +128,29 @@ func buildBleveIndexMapper() *mapping.IndexMappingImpl {
 func (m *BlockMapper) IsUnfiltered() bool          { return m.isUnfiltered }
 func (m *BlockMapper) IndexedTerms() *IndexedTerms { return m.indexed }
 
-func (m *BlockMapper) MapForDB(blk *pbcodec.Block) (matchingTrxIDs map[string]bool, actions []map[string]interface{}, err error) {
-	matchingTrxIDs = map[string]bool{}
-	batchActionUpdater := func(trxID string, idx int, data map[string]interface{}) error {
-		if !m.shouldIndexAction(data) {
-			return nil
+func (m *BlockMapper) MapForDB(blk *pbcodec.Block) (matchingTrxs map[string]bool, actions []*pbcodec.ActionTrace, err error) {
+	matchingTrxs = map[string]bool{}
+	for _, trxTrace := range blk.TransactionTraces {
+		trxID := trxTrace.Id
+		if !isTrxTraceIndexable(trxTrace) {
+			continue
 		}
 
-		matchingTrxIDs[trxID] = true
+		scheduled := trxTrace.Scheduled
 
-		actions = append(actions, data)
+		for _, actTrace := range trxTrace.ActionTraces {
+			if !m.shouldIndexAction(ActionTraceActivation{
+				trxScheduled: scheduled,
+				trace:        actTrace,
+			}) {
+				continue
+			}
 
-		return nil
+			matchingTrxs[trxID] = true
+
+			actions = append(actions, actTrace)
+		}
 	}
-
-	if err := m.prepareBatchDocuments(blk, batchActionUpdater); err != nil {
-		return nil, nil, err
-	}
-
 	return
 }
 
@@ -229,6 +234,8 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater bat
 				data["notif"] = receiver != account
 			}
 			if m.indexed.Input {
+				// TODO: check the Ultra chain: what will that mean
+				// with the additional predicate actions?
 				data["input"] = actTrace.CreatorActionOrdinal == 0
 			}
 			if m.indexed.Scheduled {
