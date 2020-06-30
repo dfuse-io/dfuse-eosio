@@ -261,8 +261,6 @@ github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb h1:iIpzN6pjZlZFp
 github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb/go.mod h1:pbb9dPC3ir8G/h3YNhr/5bq35DwjyevEf5tUQvkax0s=
 github.com/dfuse-io/dstore v0.0.0-20200407173215-10b5ced43022/go.mod h1:tzxeAG2YaoE8++J2Veg6oG1KlnssWYggQbJqrEIthQY=
 github.com/dfuse-io/dstore v0.1.0/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
-github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986 h1:jZd4IM6PgKnQxOpZa2yBG8GFXQbsrp3EnyfwgwwN14Y=
-github.com/dfuse-io/dstore v0.1.1-0.20200612171130-4bdf691ac986/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc h1:CA91m/OhJH/jzoCT4GgBKGkM9mzlOZ4NbY2ay4IWths=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
@@ -299,8 +297,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8 h1:WBLkqR8u5Zbcz99
 github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
 github.com/dfuse-io/relayer v0.0.1 h1:Ww1sfZmZ44SWRcJ4toQC2A7Dq3gl+x1Slw2lrjwlbYs=
 github.com/dfuse-io/relayer v0.0.1/go.mod h1:oxbMy70RynUx8l4jkqdf0zP1I1I4YSwJ1chISfLOHuc=
-github.com/dfuse-io/search v0.0.1 h1:uaJv60RkggxkRfXwtp+ad86g2kt9YDcQqerLR3AJxAo=
-github.com/dfuse-io/search v0.0.1/go.mod h1:CcBjHis04SXW0gNazk7alCZv+iW/kwvzHcuipFYzszQ=
+github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0 h1:nGYWy0SNYLVhll/nAMEIVaN8WiUuQnId1CXMen2q0v0=
+github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0/go.mod h1:CcBjHis04SXW0gNazk7alCZv+iW/kwvzHcuipFYzszQ=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2/go.mod h1:TY7lgsDrNonQ7nUtwGK4En08cuG7eRrV743DZozvehk=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=

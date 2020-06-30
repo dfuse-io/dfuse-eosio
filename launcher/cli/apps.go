@@ -799,6 +799,7 @@ func init() {
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
 				ServiceVersion:          viper.GetString("search-common-mesh-service-version"),
 				TierLevel:               viper.GetUint32("search-archive-tier-level"),
+				BlockmetaAddr:           viper.GetString("common-blockmeta-addr"),
 				GRPCListenAddr:          viper.GetString("search-archive-grpc-listen-addr"),
 				HTTPListenAddr:          viper.GetString("search-archive-http-listen-addr"),
 				PublishInterval:         viper.GetDuration("search-common-mesh-publish-interval"),
