@@ -146,7 +146,7 @@ func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 func putAccount(t *testing.T, creator, account string, db trxdb.Driver) {
 	actions := []string{`{"id":"a1","action_traces": [{"receiver":"eosio","action": {"account":"eosio","name":"newaccount"}}]}`}
 	blk := TestBlock(t, "00000002aa", "00000001aa", actions...)
-	blk.TransactionTraces[0].ActionTraces[0].Action.JsonData = fmt.Sprintf(`
+	blk.TransactionTraces()[0].ActionTraces[0].Action.JsonData = fmt.Sprintf(`
 		{
 		   "active": {
 			  "accounts": [],
@@ -175,10 +175,10 @@ func putAccount(t *testing.T, creator, account string, db trxdb.Driver) {
 		}
 	`, creator, account)
 	var newAccount *system.NewAccount
-	require.NoError(t, json.Unmarshal([]byte(blk.TransactionTraces[0].ActionTraces[0].Action.JsonData), &newAccount))
+	require.NoError(t, json.Unmarshal([]byte(blk.TransactionTraces()[0].ActionTraces[0].Action.JsonData), &newAccount))
 	data, err := eos.MarshalBinary(newAccount)
 	require.NoError(t, err)
-	blk.TransactionTraces[0].ActionTraces[0].Action.RawData = data
+	blk.TransactionTraces()[0].ActionTraces[0].Action.RawData = data
 	ctx := context.Background()
 	require.NoError(t, db.PutBlock(ctx, blk))
 	require.NoError(t, db.UpdateNowIrreversibleBlock(ctx, blk))

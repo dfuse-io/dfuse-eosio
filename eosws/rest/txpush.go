@@ -400,7 +400,7 @@ func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan 
 }
 
 func traceExecutedInBlock(trxID string, blk *pbcodec.Block) *pbcodec.TransactionTrace {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		if trxTrace.Id == trxID {
 			return trxTrace
 		}

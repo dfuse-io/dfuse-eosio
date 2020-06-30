@@ -27,15 +27,15 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 		block *pbcodec.Block
 	}{
 		{"standard-block", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{"receipt":{"receiver":"battlefield1"},"action":{"name":"transfer","account":"eosio","json_data":"{\"to\":\"eosio\"}"}}
 			]}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{"receipt":{"receiver":"other"},"action":{"name":"random","account":"account","json_data":"{\"proposer\":\"eosio\"}"}}
 			]}`,
 		)},
 		{"auth-keys", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{
 					"receipt": {"receiver":"battlefield1"},
 					"action": {
@@ -47,7 +47,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			]}`,
 		)},
 		{"on-blocks", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[{"receipt": {"receiver":"eosio"}, "action": {"name":"transfer","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"},
@@ -59,13 +59,13 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-onerror-soft-fail", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
 				]
 			}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"dtrexec","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"ram_ops":[
 					{"namespace": "NAMESPACE_DEFERRED_TRX", "action": "ACTION_REMOVE"}
@@ -73,13 +73,13 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-onerror-hard-fail", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_HARDFAIL"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_HARDFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
 				]
 			}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"dtrexec","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"ram_ops":[
 					{"namespace": "NAMESPACE_DEFERRED_TRX", "action": "ACTION_REMOVE"}
@@ -87,7 +87,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-soft-fail-wrong-onerror", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
@@ -95,12 +95,12 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dfuse-events-at-input-not-indexed", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[{"receipt": {"receiver":"dfuseiohooks"}, "action": {"name":"event","account":"dfuseiohooks","json_data":"{\"data\":\"key=value\"}"}}]
 			}`,
 		)},
 		{"dfuse-events-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"event","account":"eosio","json_data":"{}"}, "action_ordinal":1},
 					{"receipt": {"receiver":"dfuseiohooks"}, "action": {"name":"event","account":"dfuseiohooks","json_data":"{\"data\":\"key=value\"}"},"action_ordinal":2,"creator_action_ordinal":1}
@@ -108,7 +108,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dfuse-events-deep-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"topevent","account":"eosio","json_data":"{}"}, "action_ordinal":1},
 					{"receipt": {"receiver":"any"}, "action": {"name":"childevent","account":"eosio","json_data":"{}"}, "action_ordinal":2,"creator_action_ordinal":1},
@@ -196,9 +196,9 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	}
 
 	pbblock := &pbcodec.Block{
-		Id:                id,
-		Number:            eos.BlockNum(id),
-		TransactionTraces: trxTraces,
+		Id:                          id,
+		Number:                      eos.BlockNum(id),
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")

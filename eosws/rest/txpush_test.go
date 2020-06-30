@@ -191,7 +191,7 @@ func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstr
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			&pbcodec.TransactionTrace{
 				Id: trxID,
 			},

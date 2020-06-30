@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -301,7 +301,7 @@ func putTransaction(t *testing.T, db trxdb.Driver, trxID string) {
 	// code fetch some transactions of different type: deferred (like
 	// this one), but also implicit, normal transactions and
 	// transaction traces.
-	blk.TransactionTraces = append(blk.TransactionTraces, &pbcodec.TransactionTrace{
+	blk.UnfilteredTransactionTraces = append(blk.UnfilteredTransactionTraces, &pbcodec.TransactionTrace{
 		Id:       trxID,
 		BlockNum: 2,
 		DtrxOps: []*pbcodec.DTrxOp{

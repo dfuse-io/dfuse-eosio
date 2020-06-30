@@ -394,7 +394,7 @@ func TestABIDecoder(t *testing.T) {
 
 	extractTrace := func(testData *testData, regexMatch []string) (block *pbcodec.Block, trace *pbcodec.TransactionTrace) {
 		block = testData.blocks[toInt(regexMatch[1])]
-		trace = block.TransactionTraces[toInt(regexMatch[2])]
+		trace = block.UnfilteredTransactionTraces[toInt(regexMatch[2])]
 		return
 	}
 
@@ -426,7 +426,7 @@ func TestABIDecoder(t *testing.T) {
 				err := decoder.startBlock(context.Background(), block.Num())
 				require.NoError(t, err)
 
-				for _, trxTrace := range block.TransactionTraces {
+				for _, trxTrace := range block.UnfilteredTransactionTraces {
 					err := decoder.processTransaction(trxTrace)
 					require.NoError(t, err)
 				}
@@ -506,8 +506,8 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, elements ...int
 	for _, element := range elements {
 		switch v := element.(type) {
 		case *pbcodec.TransactionTrace:
-			pbblock.TransactionTraceCount++
-			pbblock.TransactionTraces = append(pbblock.TransactionTraces, v)
+			pbblock.UnfilteredTransactionTraceCount++
+			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
 			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
 		}

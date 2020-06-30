@@ -59,7 +59,7 @@ func Test_onGetTableRows(t *testing.T) {
     },
     "id": "00000002a",
     "number": 2,
-    "transaction_traces": [
+    "unfiltered_transaction_traces": [
         {
             "db_ops": [
                 {

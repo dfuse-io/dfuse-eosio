@@ -73,7 +73,7 @@ func testBlock1() *pbcodec.Block {
 				},
 			},
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "00112233aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 				DtrxOps: []*pbcodec.DTrxOp{

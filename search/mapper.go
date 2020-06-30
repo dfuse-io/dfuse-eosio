@@ -241,10 +241,7 @@ func (m *EOSBlockMapper) filterMatches(program cel.Program, defaultVal bool, doc
 }
 
 func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater eosBatchActionUpdater) error {
-	trxIndex := -1
-	for _, trxTrace := range blk.TransactionTraces {
-		trxIndex++
-
+	for _, trxTrace := range blk.TransactionTraces() {
 		trxID := trxTrace.Id
 		if !isTrxTraceIndexable(trxTrace) {
 			continue
@@ -264,7 +261,7 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 			data := tokenizeEOSExecutedAction(actTrace)
 			// `block_num`, `trx_idx`: used for sorting
 			data["block_num"] = blk.Num()
-			data["trx_idx"] = trxIndex
+			data["trx_idx"] = trxTrace.Index
 
 			receiver := string(actTrace.Receipt.Receiver)
 			account := string(actTrace.Action.Account)

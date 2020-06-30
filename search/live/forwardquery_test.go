@@ -240,7 +240,7 @@ func newBlock(id, previous, trxID string, account string) *pbcodec.Block {
 			Previous:  previous,
 			Timestamp: &timestamp.Timestamp{Nanos: 0, Seconds: 0},
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: trxID,
 				Receipt: &pbcodec.TransactionReceiptHeader{

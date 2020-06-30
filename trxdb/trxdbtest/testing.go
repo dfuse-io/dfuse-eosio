@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -52,9 +52,9 @@ func TestBlock(t *testing.T, blkId string, previousBlkId string, trxTraceJSONs .
 	}
 
 	pbblock := &pbcodec.Block{
-		Id:                blkId,
-		Number:            eos.BlockNum(blkId),
-		TransactionTraces: trxTraces,
+		Id:                          blkId,
+		Number:                      eos.BlockNum(blkId),
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")

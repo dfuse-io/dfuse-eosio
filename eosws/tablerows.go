@@ -176,7 +176,7 @@ func tableDeltasFromBlock(block *bstream.Block, msg *wsmsg.GetTableRows, abi *eo
 	var deltas []*wsmsg.TableDelta
 
 	blk := block.ToNative().(*pbcodec.Block)
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		for _, dbOp := range trxTrace.DbOps {
 			if dbOp.Code != string(msg.Data.Code) || dbOp.TableName != string(msg.Data.TableName) || dbOp.Scope != string(*msg.Data.Scope) {
 				continue

@@ -302,7 +302,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		// We add the failed deferred trace first, before the "real" trace (the `onerror` handler)
 		// since it was ultimetaly ran first. There is no ops possible on the trace expect the
 		// transferred RAM op, so it's all good to attach it directly.
-		ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, failedTrace)
+		ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, failedTrace)
 
 		if err := ctx.abiDecoder.processTransaction(failedTrace); err != nil {
 			return fmt.Errorf("abi decoding failed trace: %w", err)
@@ -334,7 +334,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.RlimitOps = ctx.trx.RlimitOps
 	trace.TableOps = ctx.trx.TableOps
 
-	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
+	ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, trace)
 
 	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
 		return fmt.Errorf("abi decoding trace: %w", err)
@@ -486,17 +486,17 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		ctx.block.Transactions = append(ctx.block.Transactions, deosTransaction)
 	}
 
-	ctx.block.TransactionTraceCount = uint32(len(ctx.block.TransactionTraces))
-	for idx, t := range ctx.block.TransactionTraces {
+	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
+	for idx, t := range ctx.block.UnfilteredTransactionTraces {
 		t.Index = uint64(idx)
 		t.BlockTime = ctx.block.Header.Timestamp
 		t.ProducerBlockId = ctx.block.Id
 		t.BlockNum = uint64(ctx.block.Number)
 
 		for _, actionTrace := range t.ActionTraces {
-			ctx.block.ExecutedTotalActionCount++
+			ctx.block.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				ctx.block.ExecuteInputActionCount++
+				ctx.block.UnfilteredExecutedInputActionCount++
 			}
 		}
 	}

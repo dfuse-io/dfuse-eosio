@@ -146,9 +146,9 @@ func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbcodec.Block 
 	}
 
 	pbblock := &pbcodec.Block{
-		Id:                id,
-		Number:            eos.BlockNum(id),
-		TransactionTraces: trxTraces,
+		Id:                          id,
+		Number:                      eos.BlockNum(id),
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")

@@ -57,7 +57,7 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 		blk := block.ToNative().(*pbcodec.Block)
 
-		for _, trx := range blk.TransactionTraces {
+		for _, trx := range blk.TransactionTraces() {
 			if trx.Receipt == nil || trx.Receipt.Status != pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
 				// We do **not** stream transaction for that are not properly executed
 				continue

@@ -93,7 +93,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 }
 
 func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) error {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		codec.DeduplicateTransactionTrace(trxTrace)
 
 		// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
@@ -190,7 +190,7 @@ func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs 
 	}
 
 	tracesRefs = &pbcodec.TransactionRefs{}
-	for _, trx := range blk.TransactionTraces {
+	for _, trx := range blk.TransactionTraces() {
 		tracesRefs.Hashes = append(tracesRefs.Hashes, trxdb.MustHexDecode(trx.Id))
 	}
 
@@ -201,12 +201,14 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 	implicitTrxRefs, trxRefs, tracesRefs := db.getRefs(blk)
 
 	holdTransactions := blk.Transactions
-	holdTransactionTraces := blk.TransactionTraces
+	holdUnfilteredTransactionTraces := blk.UnfilteredTransactionTraces
+	holdFilteredTransactionTraces := blk.FilteredTransactionTraces
 	holdImplicitTransactionOps := blk.ImplicitTransactionOps
 
 	blk.ImplicitTransactionOps = nil
 	blk.Transactions = nil
-	blk.TransactionTraces = nil
+	blk.UnfilteredTransactionTraces = nil
+	blk.FilteredTransactionTraces = nil
 
 	blockRow := &pbtrxdb.BlockRow{
 		Block:           blk,
@@ -223,7 +225,8 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 
 	blk.ImplicitTransactionOps = holdImplicitTransactionOps
 	blk.Transactions = holdTransactions
-	blk.TransactionTraces = holdTransactionTraces
+	blk.UnfilteredTransactionTraces = holdUnfilteredTransactionTraces
+	blk.FilteredTransactionTraces = holdFilteredTransactionTraces
 
 	return nil
 }
@@ -240,8 +243,9 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		return err
 	}
 
-	// Specialized indexing for `newaccount` on the chain.
-	for _, trxTrace := range blk.TransactionTraces {
+	// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
+	// the filtering rules might exclude the `newaccount`.
+	for _, trxTrace := range blk.TransactionTraces() {
 		for _, act := range trxTrace.ActionTraces {
 			if act.Account() == "eosio" && act.Receiver == "eosio" && act.Name() == "newaccount" {
 				if err := db.putNewAccount(ctx, blk, trxTrace, act); err != nil {

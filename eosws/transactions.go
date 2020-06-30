@@ -80,8 +80,8 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 
 			blk := block.ToNative().(*pbcodec.Block)
 
-			transactionIds := make([]string, len(blk.TransactionTraces))
-			for i, transaction := range blk.TransactionTraces {
+			transactionIds := make([]string, len(blk.TransactionTraces()))
+			for i, transaction := range blk.TransactionTraces() {
 				transactionIds[i] = transaction.Id
 			}
 

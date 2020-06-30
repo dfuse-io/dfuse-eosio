@@ -406,7 +406,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 			Previous:  fmt.Sprintf("%08d", ref.Num()-1) + ref.ID()[8:],
 			Timestamp: stamp,
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "trx.1",
 				Receipt: &pbcodec.TransactionReceiptHeader{

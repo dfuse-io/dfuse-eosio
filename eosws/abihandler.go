@@ -103,7 +103,7 @@ func (s ABIStack) Peek() *eos.ABI {
 }
 
 func abiFromBlock(blk *pbcodec.Block, code eos.AccountName) (*eos.ABI, error) {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		for _, actionTrace := range trxTrace.ActionTraces {
 			if actionTrace.FullName() == "eosio:eosio:setabi" {
 				candidateCode := eos.AccountName(actionTrace.GetData("account").String())

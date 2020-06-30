@@ -60,7 +60,7 @@ func (m *EOSSearchMatch) buildBlockTrxPayload(block *bstream.Block) *pbsearcheos
 		}
 	}
 
-	for _, trx := range blk.TransactionTraces {
+	for _, trx := range blk.TransactionTraces() {
 		fullTrxID := trx.Id
 		if !strings.HasPrefix(fullTrxID, m.TrxIDPrefix) {
 			continue

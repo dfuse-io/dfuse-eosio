@@ -66,9 +66,17 @@ func (b *Block) AsRef() bstream.BlockRef {
 	return bstream.BlockRefFromID(b.Id)
 }
 
+func (b *Block) TransactionTraces() []*TransactionTrace {
+	if b.FilteringApplied {
+		return b.FilteredTransactionTraces
+	}
+
+	return b.UnfilteredTransactionTraces
+}
+
 func (b *Block) CanceledDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCancelOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -84,7 +92,7 @@ func (b *Block) CanceledDTrxIDs() (out []string) {
 
 func (b *Block) CreatedDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCreateOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -113,14 +121,27 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
 func (b *Block) PopulateActionAndTransactionCount() {
+	// This field is currently always unfiltered
 	b.TransactionCount = uint32(len(b.Transactions))
-	b.TransactionTraceCount = uint32(len(b.TransactionTraces))
 
-	for _, t := range b.TransactionTraces {
+	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
+	for _, t := range b.UnfilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
-			b.ExecutedTotalActionCount++
+			b.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				b.ExecuteInputActionCount++
+				b.UnfilteredExecutedInputActionCount++
+			}
+		}
+	}
+
+	b.FilteredTransactionTraceCount = uint32(len(b.FilteredTransactionTraces))
+	for _, t := range b.FilteredTransactionTraces {
+		for _, actionTrace := range t.ActionTraces {
+			if actionTrace.FilteringMatched {
+				b.FilteredExecutedTotalActionCount++
+				if actionTrace.IsInput() {
+					b.FilteredExecutedInputActionCount++
+				}
 			}
 		}
 	}
