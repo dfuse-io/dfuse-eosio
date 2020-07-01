@@ -1024,8 +1024,8 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosq.*", nil),
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
-			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "API key used in eosq")
+			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "EOSQ HTTP serving address")
+			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "API Endpoint used to configure dfuse js client")
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
@@ -1042,7 +1042,7 @@ func init() {
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
-				Environement:      viper.GetString("eosq-environment"),
+				Environment:       viper.GetString("eosq-environment"),
 				APIEndpointURL:    viper.GetString("eosq-api-endpoint-url"),
 				ApiKey:            viper.GetString("eosq-api-key"),
 				AuthEndpointURL:   viper.GetString("eosq-auth-url"),

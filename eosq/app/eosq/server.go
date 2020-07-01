@@ -84,7 +84,7 @@ func (s *Server) Launch() error {
 }
 
 func (s *Server) ServerHttp(w http.ResponseWriter, r *http.Request) {
-	switch s.config.Environement {
+	switch s.config.Environment {
 	case "staging", "production":
 		s.staticAssetsHandlerForProd(w, r)
 	default:
@@ -233,7 +233,7 @@ func bustCache(w http.ResponseWriter) {
 
 func (s *Server) serveRobotsTxt(w http.ResponseWriter, r *http.Request) error {
 	content := "User-agent: *\nDisallow: /\n"
-	if s.config.Environement == "production" {
+	if s.config.Environment == "production" {
 		content = "User-agent: *\nnDisallow:\n"
 	}
 
