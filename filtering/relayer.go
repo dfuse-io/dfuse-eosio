@@ -43,15 +43,14 @@ func (r *Relayer) Launch() {
 		return
 	}
 
-	zlog.Info("tcp listener created")
-	zlog.Info("listening & serving grpc content", zap.String("grpc_listen_addr", r.grpcListenAddr))
-
 	gs := dgrpc.NewServer()
 	pbhealth.RegisterHealthServer(gs, r)
 	pbbstream.RegisterBlockStreamServer(gs, r)
 	pbheadinfo.RegisterHeadInfoServer(gs, r)
 
 	r.ready = true
+
+	zlog.Info("listening & serving grpc content", zap.String("grpc_listen_addr", r.grpcListenAddr))
 	if err := gs.Serve(lis); err != nil {
 		r.Shutdown(fmt.Errorf("error on grpc serve: %w", err))
 		return

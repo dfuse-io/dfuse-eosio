@@ -191,8 +191,16 @@ type GlobalSequence uint64
 func ActionTrace(t testing.T, tripletName string, components ...interface{}) *pbcodec.ActionTrace {
 	parts := strings.Split(tripletName, ":")
 	receiver := parts[0]
-	account := parts[1]
-	actionName := parts[2]
+
+	var account, actionName string
+	if len(parts) == 2 {
+		account = receiver
+		actionName = parts[1]
+	} else {
+		// We assume 3 for now
+		account = parts[1]
+		actionName = parts[2]
+	}
 
 	actTrace := &pbcodec.ActionTrace{
 		Receiver: receiver,
@@ -271,9 +279,10 @@ func Action(t testing.T, pairName string, components ...interface{}) *pbcodec.Ac
 	}
 
 	return &pbcodec.Action{
-		Account: account,
-		Name:    actionName,
-		RawData: rawData,
+		Account:  account,
+		Name:     actionName,
+		RawData:  rawData,
+		JsonData: data,
 	}
 }
 
