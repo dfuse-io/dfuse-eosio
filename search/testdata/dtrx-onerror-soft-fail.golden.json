@@ -17,8 +17,8 @@
         ]
       },
       "input": true,
-      "notif": true,
-      "receiver": "any",
+      "notif": false,
+      "receiver": "eosio",
       "scheduled": false,
       "trx_idx": 0
     }

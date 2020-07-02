@@ -40,17 +40,10 @@ func (f *BlockFilter) TransformInPlace(block *pbcodec.Block) {
 	for _, trxTrace := range block.UnfilteredTransactionTraces {
 		trxTraceAddedToFiltered := false
 		for _, actTrace := range trxTrace.ActionTraces {
-			// If the include program does not match, there is nothing more to do here
-			if !f.IncludeProgram.match(trxTrace, actTrace) {
+			if !f.shouldProcess(trxTrace, actTrace) {
 				continue
 			}
 
-			// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
-			if f.ExcludeProgram.match(trxTrace, actTrace) {
-				continue
-			}
-
-			// Otherwise, the action trace matched, mark it as such and add trx trace to array if it's in there yet
 			actTrace.FilteringMatched = true
 			filteredExecutedTotalActionCount++
 			if actTrace.IsInput() {
@@ -65,17 +58,10 @@ func (f *BlockFilter) TransformInPlace(block *pbcodec.Block) {
 
 		if trxTrace.FailedDtrxTrace != nil {
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				// If the include program does not match, there is nothing more to do here
-				if !f.IncludeProgram.match(trxTrace.FailedDtrxTrace, actTrace) {
+				if !f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace) {
 					continue
 				}
 
-				// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
-				if f.ExcludeProgram.match(trxTrace.FailedDtrxTrace, actTrace) {
-					continue
-				}
-
-				// Otherwise, the action trace matched, mark it as such and add trx trace to array if it's in there yet
 				actTrace.FilteringMatched = true
 				if !trxTraceAddedToFiltered {
 					filteredTrxTrace = append(filteredTrxTrace, trxTrace)
@@ -90,4 +76,20 @@ func (f *BlockFilter) TransformInPlace(block *pbcodec.Block) {
 	block.FilteredTransactionTraceCount = uint32(len(filteredTrxTrace))
 	block.FilteredExecutedInputActionCount = filteredExecutedInputActionCount
 	block.FilteredExecutedTotalActionCount = filteredExecutedTotalActionCount
+}
+
+func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) bool {
+	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled}
+	// If the include program does not match, there is nothing more to do here
+	if !f.IncludeProgram.match(&activation) {
+		return false
+	}
+
+	// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
+	if f.ExcludeProgram.match(&activation) {
+		return false
+	}
+
+	// We are included and NOT excluded, this transaction trace/action trace match the block filter
+	return true
 }

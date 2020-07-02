@@ -97,14 +97,12 @@ func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop
 	}, nil
 }
 
-func (f *CELFilter) match(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) (matched bool) {
+func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
 	if f.program == nil {
 		return f.valueWhenNoop
 	}
 
-	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled}
-
-	res, _, err := f.program.Eval(&activation)
+	res, _, err := f.program.Eval(activation)
 	if err != nil {
 		if traceEnabled {
 			zlog.Debug("filter program failed", zap.String("name", f.name), zap.Error(err))
@@ -131,11 +129,11 @@ type actionTraceActivation struct {
 	trxScheduled bool
 }
 
-func (a actionTraceActivation) Parent() interpreter.Activation {
+func (a *actionTraceActivation) Parent() interpreter.Activation {
 	return nil
 }
 
-func (a actionTraceActivation) ResolveName(name string) (interface{}, bool) {
+func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	if traceEnabled {
 		zlog.Debug("trying to resolve activation name", zap.String("name", name))
 	}
@@ -206,11 +204,11 @@ type dataActivation struct {
 	gjson.Result
 }
 
-func (a dataActivation) Parent() interpreter.Activation {
-	return a.parent
+func (a *dataActivation) Parent() interpreter.Activation {
+	return &a.parent
 }
 
-func (a dataActivation) ResolveName(name string) (interface{}, bool) {
+func (a *dataActivation) ResolveName(name string) (interface{}, bool) {
 	if traceEnabled {
 		zlog.Debug("trying to resolve activation name", zap.String("name", name))
 	}

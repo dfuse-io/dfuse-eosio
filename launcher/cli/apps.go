@@ -705,8 +705,6 @@ func init() {
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
-				viper.GetString("search-common-action-filter-on-expr"),
-				viper.GetString("search-common-action-filter-out-expr"),
 			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
@@ -872,8 +870,6 @@ func init() {
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
-				viper.GetString("search-common-action-filter-on-expr"),
-				viper.GetString("search-common-action-filter-out-expr"),
 			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
@@ -916,8 +912,6 @@ func init() {
 			mapper, err := eosSearch.NewEOSBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
-				viper.GetString("search-common-action-filter-on-expr"),
-				viper.GetString("search-common-action-filter-out-expr"),
 			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)

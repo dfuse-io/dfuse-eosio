@@ -11,6 +11,7 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgrpc"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
@@ -48,6 +49,7 @@ func (r *Relayer) Launch() {
 	gs := dgrpc.NewServer()
 	pbhealth.RegisterHealthServer(gs, r)
 	pbbstream.RegisterBlockStreamServer(gs, r)
+	pbheadinfo.RegisterHeadInfoServer(gs, r)
 
 	r.ready = true
 	if err := gs.Serve(lis); err != nil {
@@ -116,6 +118,17 @@ func (r *Relayer) packBlock(block *pbcodec.Block) (*pbbstream.Block, error) {
 	}
 
 	return blk.ToProto()
+}
+
+func (r *Relayer) GetHeadInfo(ctx context.Context, req *pbheadinfo.HeadInfoRequest) (*pbheadinfo.HeadInfoResponse, error) {
+	relayerConn, err := dgrpc.NewInternalClient(r.relayerAddr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create relayer grpc client: %w", err)
+	}
+
+	headInfo := pbheadinfo.NewHeadInfoClient(relayerConn)
+
+	return headInfo.GetHeadInfo(ctx, req)
 }
 
 func (r *Relayer) Check(ctx context.Context, in *pbhealth.HealthCheckRequest) (*pbhealth.HealthCheckResponse, error) {
