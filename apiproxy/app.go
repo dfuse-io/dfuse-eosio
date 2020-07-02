@@ -16,24 +16,10 @@ package apiproxy
 
 import (
 	"fmt"
-	"github.com/dfuse-io/dfuse-box/launcher"
+
+	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/shutter"
 )
-
-// dfuseeos start apiproxy,eosws,eosq
-// --apiproxy-http-listen-addr :8080
-// --apiproxy-dgraphql-http-addr
-// --apiproxy-eosws-http-addr
-// --apiproxy-nodeos-http-addr
-// --apiproxy-root-http-addr  [defaults to: eosq? dashboard?]
-
-// Welcome:
-//
-//    dashboard:           http://localhost:8081
-//
-//    Explorer and APIs:   http://localhost:8080
-//    GraphiQL:            http://localhost:8080/graphiql/
-//
 
 type Config struct {
 	HTTPListenAddr   string

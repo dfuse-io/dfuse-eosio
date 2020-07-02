@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	launcher "github.com/dfuse-io/dfuse-box/launcher"
+	launcher "github.com/dfuse-io/dlauncher/launcher"
 
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
@@ -78,7 +78,9 @@ func Init(runProducer bool, configFile string) error {
 		toRun = append(toRun, "-node-manager")
 	}
 
-	apps := launcher.ParseAppsFromArgs(toRun)
+	apps := launcher.ParseAppsFromArgs(toRun, func(s string) bool {
+		return true
+	})
 	conf := &launcher.DfuseConfig{}
 	conf.Start.Args = apps
 	conf.Start.Flags = map[string]string{}

@@ -16,11 +16,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-box/flags"
-	launcher "github.com/dfuse-io/dfuse-box/launcher"
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/dlauncher/flags"
+	launcher "github.com/dfuse-io/dlauncher/launcher"
+	"github.com/spf13/cobra"
 )
 
 // Root of the `dfuseeos` command

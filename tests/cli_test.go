@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/acarl005/stripansi"
-	dashboard "github.com/dfuse-io/dfuse-box/dashboard/pb"
 	"github.com/dfuse-io/dfuse-eosio/launcher/cli"
 	"github.com/dfuse-io/dgrpc"
+	dashboard "github.com/dfuse-io/dlauncher/dashboard/pb"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfuse-io/dfuse-box/launcher"
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
+	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/manageos"
 	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
@@ -21,17 +21,17 @@ import (
 
 func init() {
 	appLogger := zap.NewNop()
-	gethLogger := zap.NewNop()
+	nodeosLogger := zap.NewNop()
 
-	logging.Register("github.com/dfuse-io/dfuse-eth/miner", &appLogger)
-	logging.Register("github.com/dfuse-io/dfuse-eth/miner/geth", &gethLogger)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/node-manager", &appLogger)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/node-manager/nodeos", &nodeosLogger)
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "node-manager",
 		Title:       "Node manager",
 		Description: "Block producing node",
 		MetricsID:   "producer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/app/nodeos_manager", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/node-manager.*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "superviser manager API address")
 			cmd.Flags().String("node-manager-superviser-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying superviser")
@@ -104,7 +104,7 @@ func init() {
 					AdditionalArgs:    viper.GetStringSlice("node-manager-superviser-args"),
 					ForceProduction:   viper.GetBool("node-manager-force-production"),
 					LogToZap:          viper.GetBool("node-manager-log-to-zap"),
-				}, gethLogger)
+				}, nodeosLogger)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
 			}

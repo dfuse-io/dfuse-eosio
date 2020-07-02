@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-box/launcher"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/manageos"
 	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
@@ -27,17 +27,17 @@ import (
 
 func init() {
 	appLogger := zap.NewNop()
-	gethLogger := zap.NewNop()
+	nodeosLogger := zap.NewNop()
 
-	logging.Register("github.com/dfuse-io/dfuse-eth/miner", &appLogger)
-	logging.Register("github.com/dfuse-io/dfuse-eth/miner/geth", &gethLogger)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/mindreader", &appLogger)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/mindreader/nodeos", &nodeosLogger)
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "mindreader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/manageos/(app/nodeos_mindreader|mindreader).*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader.*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-superviser-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying superviser")
@@ -57,7 +57,7 @@ func init() {
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
 			cmd.Flags().Bool("mindreader-discard-after-stop-num", false, "ignore remaining blocks being processed after stop num (only useful if we discard the mindreader data after reprocessing a chunk of blocks)")
-			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/geth if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
+			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/nodeos if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().StringSlice("mindreader-superviser-args", []string{}, "Extra arguments to be passed when executing superviser binary")
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
@@ -136,7 +136,7 @@ func init() {
 					TrustedProducer:   viper.GetString("mindreader-trusted-producer"),
 					AdditionalArgs:    viper.GetStringSlice("mindreader-superviser-args"),
 					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
-				}, gethLogger)
+				}, nodeosLogger)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
 			}

@@ -15,9 +15,9 @@
 package cli
 
 import (
-	"github.com/dfuse-io/dfuse-box/launcher"
-	zapbox "github.com/dfuse-io/dfuse-box/zap-box"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
+	"github.com/dfuse-io/dlauncher/launcher"
+	zapbox "github.com/dfuse-io/dlauncher/zap-box"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
