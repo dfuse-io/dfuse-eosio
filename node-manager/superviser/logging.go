@@ -23,6 +23,6 @@ var zlog *zap.Logger
 var zlogNodeos *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/manageos/superviser/nodeos", &zlog)
+	logging.Register("github.com/dfuse-io/node-manager/superviser/nodeos", &zlog)
 	logging.Register("github.com/dfuse-io/dfuse-eosio/superviser/nodeos", &zlogNodeos)
 }

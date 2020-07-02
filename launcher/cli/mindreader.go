@@ -13,12 +13,12 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
-	"github.com/dfuse-io/manageos"
-	nodeosMindreaderApp "github.com/dfuse-io/manageos/app/nodeos_mindreader"
-	"github.com/dfuse-io/manageos/metrics"
-	"github.com/dfuse-io/manageos/mindreader"
-	"github.com/dfuse-io/manageos/operator"
-	"github.com/dfuse-io/manageos/profiler"
+	nodeManager "github.com/dfuse-io/node-manager"
+	nodeMindreaderApp "github.com/dfuse-io/node-manager/app/node_mindreader"
+	"github.com/dfuse-io/node-manager/metrics"
+	"github.com/dfuse-io/node-manager/mindreader"
+	"github.com/dfuse-io/node-manager/operator"
+	"github.com/dfuse-io/node-manager/profiler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -48,7 +48,7 @@ func init() {
 			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until superviser head block time is within that duration to now")
-			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the manageos profiler")
+			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the node-manager profiler")
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader/work", "Path where mindreader will stores its files")
 			cmd.Flags().String("mindreader-backup-tag", "default", "tag to identify the backup")
@@ -122,7 +122,7 @@ func init() {
 			headBlockTimeDrift := metrics.NewHeadBlockTimeDrift(metricID)
 			headBlockNumber := metrics.NewHeadBlockNumber(metricID)
 
-			metricsAndReadinessManager := manageos.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
+			metricsAndReadinessManager := nodeManager.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
 			chainSuperviser, err := superviser.NewSuperviser(
 				viper.GetBool("node-manager-debug-deep-mind"),
 				metricsAndReadinessManager.UpdateHeadBlock,
@@ -206,7 +206,7 @@ func init() {
 
 			chainSuperviser.RegisterLogPlugin(logPlugin)
 
-			return nodeosMindreaderApp.New(&nodeosMindreaderApp.Config{
+			return nodeMindreaderApp.New(&nodeMindreaderApp.Config{
 				ManagerAPIAddress:       viper.GetString("mindreader-manager-api-addr"),
 				NodeosAPIAddress:        viper.GetString("mindreader-superviser-api-addr"),
 				ConnectionWatchdog:      viper.GetBool("mindreader-connection-watchdog"),
@@ -216,7 +216,7 @@ func init() {
 				NumberOfSnapshotsToKeep: viper.GetInt("mindreader-number-of-snapshots-to-keep"),
 				GRPCAddr:                viper.GetString("mindreader-grpc-listen-addr"),
 				StartFailureHandlerFunc: startUpFunc,
-			}, &nodeosMindreaderApp.Modules{
+			}, &nodeMindreaderApp.Modules{
 				Operator:                     chainOperator,
 				LogPlugin:                    logPlugin,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,

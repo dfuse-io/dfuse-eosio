@@ -31,7 +31,7 @@ Level:
 
 - INFO `github.com/dfuse-io/dfuse-eosio`
 - INFO `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
-- WARN `github.com/dfuse-io/manageos.*`
+- WARN `github.com/dfuse-io/node-manager.*`
 - INFO All others
 
 Formatting:
@@ -47,7 +47,7 @@ Level:
 
 - DEBUG `github.com/dfuse-io/dfuse-eosio`
 - DEBUG `github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos`
-- INFO `github.com/dfuse-io/manageos.*`
+- INFO `github.com/dfuse-io/node-manager.*`
 - INFO All others
 
 Formatting:
@@ -112,7 +112,7 @@ You can switch the log levels of a given component by sending an HTTP request on
 ```
 curl localhost:1065 -XPOST -d '{"level": "debug","inputs":"bstream"}'
 curl localhost:1065 -XPOST -d '{"level": "info","inputs":".*"}'
-curl localhost:1065 -XPOST -d '{"level": "warn","inputs":"merger,bstream,manageos,mindreader"}'
+curl localhost:1065 -XPOST -d '{"level": "warn","inputs":"merger,bstream,mindreader"}'
 ```
 
 The last called regexp will override previous matches.

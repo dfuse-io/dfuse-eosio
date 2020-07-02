@@ -18,8 +18,8 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/dfuse-io/manageos/metrics"
-	"github.com/dfuse-io/manageos/superviser"
+	"github.com/dfuse-io/node-manager/metrics"
+	"github.com/dfuse-io/node-manager/superviser"
 
 	pitreos "github.com/eoscanada/pitreos/lib"
 

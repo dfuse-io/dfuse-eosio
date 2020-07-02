@@ -24,10 +24,10 @@ import (
 	"time"
 
 	"github.com/ShinyTrinkets/overseer"
-	"github.com/dfuse-io/manageos"
-	logplugin "github.com/dfuse-io/manageos/log_plugin"
-	"github.com/dfuse-io/manageos/metrics"
-	"github.com/dfuse-io/manageos/superviser"
+	nodeManager "github.com/dfuse-io/node-manager"
+	logplugin "github.com/dfuse-io/node-manager/log_plugin"
+	"github.com/dfuse-io/node-manager/metrics"
+	"github.com/dfuse-io/node-manager/superviser"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -50,14 +50,14 @@ type NodeosSuperviser struct {
 	serverVersionString string
 	forceProduction     bool
 
-	productionState             manageos.ProductionState
+	productionState             nodeManager.ProductionState
 	productionStateLock         sync.Mutex
 	productionStateLastProduced time.Time
 
 	snapshotRestoreOnNextStart bool
 	snapshotRestoreFilename    string
 
-	headBlockUpdateFunc manageos.HeadBlockUpdater
+	headBlockUpdateFunc nodeManager.HeadBlockUpdater
 }
 
 func (s *NodeosSuperviser) GetName() string {
@@ -98,7 +98,7 @@ type SuperviserOptions struct {
 	ForceProduction bool
 
 	// AdditionalArgs are parameters you want to pass down to `nodeos`
-	// in addition to the ones `manageos` would add itself.  You're
+	// in addition to the ones `node manager` would add itself.  You're
 	// better off putting long-running parameters in the `config.ini`
 	// though.
 	AdditionalArgs []string
@@ -119,7 +119,7 @@ type SuperviserOptions struct {
 	LogToZap bool
 }
 
-func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc manageos.HeadBlockUpdater, options *SuperviserOptions, nodeZlog *zap.Logger) (*NodeosSuperviser, error) {
+func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlockUpdater, options *SuperviserOptions, nodeZlog *zap.Logger) (*NodeosSuperviser, error) {
 	// Ensure process manager line buffer is large enough (50 MiB) for our Deep Mind instrumentation outputting lot's of text.
 	overseer.DEFAULT_LINE_BUFFER_SIZE = 50 * 1024 * 1024
 
@@ -182,7 +182,7 @@ func (s *NodeosSuperviser) removeReversibleBlocks() error {
 	return nil
 }
 
-func (s *NodeosSuperviser) Start(options ...manageos.StartOption) error {
+func (s *NodeosSuperviser) Start(options ...nodeManager.StartOption) error {
 	s.Logger.Info("updating nodeos arguments before starting binary")
 	s.Superviser.Arguments = s.getArguments()
 

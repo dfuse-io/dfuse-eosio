@@ -8,11 +8,11 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
-	"github.com/dfuse-io/manageos"
-	nodeosManagerApp "github.com/dfuse-io/manageos/app/nodeos_manager"
-	"github.com/dfuse-io/manageos/metrics"
-	"github.com/dfuse-io/manageos/operator"
-	"github.com/dfuse-io/manageos/profiler"
+	nodeManager "github.com/dfuse-io/node-manager"
+	nodeManagerApp "github.com/dfuse-io/node-manager/app/node_manager"
+	"github.com/dfuse-io/node-manager/metrics"
+	"github.com/dfuse-io/node-manager/operator"
+	"github.com/dfuse-io/node-manager/profiler"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -50,7 +50,7 @@ func init() {
 			cmd.Flags().String("node-manager-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("node-manager-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().String("node-manager-backup-tag", "default", "tag to identify the backup")
-			cmd.Flags().Bool("node-manager-disable-profiler", true, "Disables the manageos profiler")
+			cmd.Flags().Bool("node-manager-disable-profiler", true, "Disables the node-manager profiler")
 			cmd.Flags().StringSlice("node-manager-superviser-args", []string{}, "Extra arguments to be passed when executing superviser binary")
 			cmd.Flags().Bool("node-manager-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().Int("node-manager-auto-backup-modulo", 0, "If non-zero, a backup will be taken every {auto-backup-modulo} block.")
@@ -89,7 +89,7 @@ func init() {
 				p = profiler.GetInstance(appLogger)
 			}
 
-			metricsAndReadinessManager := manageos.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
+			metricsAndReadinessManager := nodeManager.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
 			chainSuperviser, err := superviser.NewSuperviser(
 				viper.GetBool("node-manager-debug-deep-mind"),
 				metricsAndReadinessManager.UpdateHeadBlock,
@@ -132,7 +132,7 @@ func init() {
 				return nil, fmt.Errorf("unable to create chain operator: %w", err)
 			}
 
-			return nodeosManagerApp.New(&nodeosManagerApp.Config{
+			return nodeManagerApp.New(&nodeManagerApp.Config{
 				ManagerAPIAddress:  viper.GetString("node-manager-http-listen-addr"),
 				ConnectionWatchdog: viper.GetBool("node-manager-connection-watchdog"),
 				AutoBackupModulo:   viper.GetInt("node-manager-auto-backup-modulo"),
@@ -140,7 +140,7 @@ func init() {
 				AutoSnapshotModulo: viper.GetInt("node-manager-auto-snapshot-modulo"),
 				AutoSnapshotPeriod: viper.GetDuration("node-manager-auto-snapshot-period"),
 				DisableProfiler:    viper.GetBool("node-manager-disable-profiler"),
-			}, &nodeosManagerApp.Modules{
+			}, &nodeManagerApp.Modules{
 				Operator:                     chainOperator,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,
 				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,

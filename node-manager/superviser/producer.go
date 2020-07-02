@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dfuse-io/manageos"
+	nodeManager "github.com/dfuse-io/node-manager"
 	"go.uber.org/zap"
 )
 
@@ -90,9 +90,9 @@ func (s *NodeosSuperviser) isPostProdOrStaleState() bool {
 	defer s.productionStateLock.Unlock()
 
 	switch s.productionState {
-	case manageos.StatePost, manageos.StateStale:
+	case nodeManager.StatePost, nodeManager.StateStale:
 		return true
-	case manageos.StateProducing, manageos.StatePre:
+	case nodeManager.StateProducing, nodeManager.StatePre:
 		return false
 	default:
 		s.Logger.Info("invalid production state", zap.Any("production_state", s.productionState))
@@ -108,32 +108,32 @@ func (s *NodeosSuperviser) analyzeLogLineForStateChange(in string) {
 
 	if match := reReceivedBlock.FindStringSubmatch(in); match != nil {
 		blockNumber, _ := strconv.ParseInt(match[2], 10, 64)
-		s.updateProductionState(blockNumber, manageos.EventReceived)
+		s.updateProductionState(blockNumber, nodeManager.EventReceived)
 	} else if match := reProducedBlock.FindStringSubmatch(in); match != nil {
 		blockNumber, _ := strconv.ParseInt(match[2], 10, 64)
-		s.updateProductionState(blockNumber, manageos.EventProduced)
+		s.updateProductionState(blockNumber, nodeManager.EventProduced)
 	}
 }
 
-func (s *NodeosSuperviser) updateProductionState(blockNum int64, event manageos.ProductionEvent) {
+func (s *NodeosSuperviser) updateProductionState(blockNum int64, event nodeManager.ProductionEvent) {
 	s.productionStateLock.Lock()
 	defer s.productionStateLock.Unlock()
 
 	switch event {
-	case manageos.EventProduced:
-		s.changeProductionState(manageos.StateProducing)
+	case nodeManager.EventProduced:
+		s.changeProductionState(nodeManager.StateProducing)
 		s.productionStateLastProduced = time.Now()
 
-	case manageos.EventReceived:
+	case nodeManager.EventReceived:
 		lastProd := s.productionStateLastProduced
 		if lastProd.After(time.Now().Add(-2 * time.Second)) {
-			s.changeProductionState(manageos.StateProducing) // still mark as producing...
+			s.changeProductionState(nodeManager.StateProducing) // still mark as producing...
 		} else if lastProd.After(time.Now().Add(-60 * time.Second)) {
-			s.changeProductionState(manageos.StatePost)
+			s.changeProductionState(nodeManager.StatePost)
 		} else if lastProd.After(time.Now().Add(-12 * time.Minute)) {
-			s.changeProductionState(manageos.StatePre)
+			s.changeProductionState(nodeManager.StatePre)
 		} else {
-			s.changeProductionState(manageos.StateStale)
+			s.changeProductionState(nodeManager.StateStale)
 		}
 
 	default:
@@ -141,7 +141,7 @@ func (s *NodeosSuperviser) updateProductionState(blockNum int64, event manageos.
 	}
 }
 
-func (s *NodeosSuperviser) changeProductionState(newState manageos.ProductionState) {
+func (s *NodeosSuperviser) changeProductionState(newState nodeManager.ProductionState) {
 	// Call with the `productionStateLock` already acquired.
 	if s.productionState != newState {
 		s.Logger.Info("changing production state", zap.Any("new_state", newState))
