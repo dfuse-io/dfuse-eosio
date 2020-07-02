@@ -36,6 +36,7 @@ import (
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
+	filteringRelayerApp "github.com/dfuse-io/dfuse-eosio/filtering/app/relayer"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -88,14 +89,16 @@ func init() {
 		cmd.Flags().String("common-search-addr", RouterServingAddr, "gRPC endpoint to reach the Search Router. Used by: abicodec, eosws, dgraphql")
 		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
 
+		// Filtering
+		cmd.Flags().String("common-include-filter-expr", "", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md")
+		cmd.Flags().String("common-exclude-filter-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
+
 		// Search flags
 		// Register common search flags once for all the services
 		cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")
 		cmd.Flags().String("search-common-mesh-dsn", DmeshDSN, "[COMMON] Dmesh DSN, supports local & etcd")
 		cmd.Flags().String("search-common-mesh-service-version", DmeshServiceVersion, "[COMMON] Dmesh service version (v1)")
 		cmd.Flags().Duration("search-common-mesh-publish-interval", 0*time.Second, "[COMMON] How often does search archive poll dmesh")
-		cmd.Flags().String("search-common-action-filter-on-expr", "", "[COMMON] CEL program to whitelist actions to index. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/search/README.md")
-		cmd.Flags().String("search-common-action-filter-out-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to blacklist actions to index. These 2 options are used by search indexer, live and forkresolver.")
 		cmd.Flags().String("search-common-dfuse-events-action-name", "", "[COMMON] The dfuse Events action name to intercept")
 		cmd.Flags().Bool("search-common-dfuse-events-unrestricted", false, "[COMMON] Flag to disable all restrictions of dfuse Events specialize indexing, for example for a private deployment")
 		cmd.Flags().String("search-common-indices-store-url", IndicesStoreURL, "[COMMON] Indices path to read or write index shards Used by: search-indexer, search-archiver.")
@@ -404,6 +407,28 @@ func init() {
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+			}), nil
+		},
+	})
+
+	// Filtering Relayer
+	launcher.RegisterApp(&launcher.AppDef{
+		ID:          "filtering-relayer",
+		Title:       "filtering-relayer",
+		Description: "Serves blocks as a filtered stream, from a globally deloyed relayer",
+		MetricsID:   "filtering-relayer",
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/filtering.*", nil),
+		RegisterFlags: func(cmd *cobra.Command) error {
+			cmd.Flags().String("filtering-relayer-grpc-listen-addr", FilteringRelayerServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("filtering-relayer-global-relayer-addr", RelayerServingAddr, "Address for global relayer service to connect to")
+			return nil
+		},
+		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+			return filteringRelayerApp.New(&filteringRelayerApp.Config{
+				GRPCListenAddr:    viper.GetString("filtering-relayer-grpc-listen-addr"),
+				RelayerAddr:       viper.GetString("filtering-relayer-global-relayer-addr"),
+				IncludeFilterExpr: viper.GetString("common-include-filter-expr"),
+				ExcludeFilterExpr: viper.GetString("common-exclude-filter-expr"),
 			}), nil
 		},
 	})

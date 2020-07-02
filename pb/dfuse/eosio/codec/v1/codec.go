@@ -125,6 +125,9 @@ func (b *Block) PopulateActionAndTransactionCount() {
 	b.TransactionCount = uint32(len(b.Transactions))
 
 	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
+	b.UnfilteredExecutedTotalActionCount = 0
+	b.UnfilteredExecutedInputActionCount = 0
+
 	for _, t := range b.UnfilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
 			b.UnfilteredExecutedTotalActionCount++
@@ -135,6 +138,9 @@ func (b *Block) PopulateActionAndTransactionCount() {
 	}
 
 	b.FilteredTransactionTraceCount = uint32(len(b.FilteredTransactionTraces))
+	b.FilteredExecutedTotalActionCount = 0
+	b.FilteredExecutedInputActionCount = 0
+
 	for _, t := range b.FilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
 			if actionTrace.FilteringMatched {

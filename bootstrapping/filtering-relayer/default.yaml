@@ -1,0 +1,10 @@
+start:
+  args:
+  - filtering-relayer
+  flags:
+    filtering-relayer-grpc-listen-addr: :9000
+    filtering-relayer-global-relayer-addr: :9001
+    common-include-filter-expr: receiver == "eosio"
+    common-exclude-filter-expr: ""
+
+

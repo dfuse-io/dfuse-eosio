@@ -38,6 +38,18 @@ func (h Hash) Bytes(t testing.T) []byte {
 	return bytes
 }
 
+type FilteredBlock struct {
+	Include string
+	Exclude string
+	Stats   UnfilteredStats
+}
+
+type UnfilteredStats struct {
+	TrxTraceCount      int
+	ActTraceInputCount int
+	ActTraceTotalCount int
+}
+
 func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block {
 	ref := bstream.BlockRefFromID(blkID)
 
@@ -62,13 +74,32 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 	for _, element := range components {
 		switch v := element.(type) {
 		case *pbcodec.TransactionTrace:
-			pbblock.UnfilteredTransactionTraceCount++
 			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
 			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
+		case FilteredBlock:
+			// Performed at the very end
 		default:
 			require.FailNowf(t, "invalid component", "Invalid block component of type %T", element)
 		}
+	}
+
+	pbblock.PopulateActionAndTransactionCount()
+
+	// Need to go at the end to ensure we catch all transaction traces
+	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(FilteredBlock); return ok }); component != nil {
+		filtered := component.(FilteredBlock)
+
+		pbblock.FilteringApplied = true
+		pbblock.FilteringIncludeFilterExpr = filtered.Include
+		pbblock.FilteringExcludeFilterExpr = filtered.Exclude
+		pbblock.FilteredTransactionTraces = pbblock.UnfilteredTransactionTraces
+		pbblock.UnfilteredTransactionTraces = nil
+		pbblock.PopulateActionAndTransactionCount()
+
+		pbblock.UnfilteredTransactionTraceCount = uint32(filtered.Stats.TrxTraceCount)
+		pbblock.UnfilteredExecutedInputActionCount = uint32(filtered.Stats.ActTraceInputCount)
+		pbblock.UnfilteredExecutedTotalActionCount = uint32(filtered.Stats.ActTraceTotalCount)
 	}
 
 	if os.Getenv("DEBUG") != "" {
@@ -150,6 +181,10 @@ func Trx(t testing.T, elements ...interface{}) *pbcodec.Transaction {
 }
 
 type ActionData string
+type actionMatched bool
+
+var ActionMatched = actionMatched(true)
+
 type ExecutionIndex uint32
 type GlobalSequence uint64
 
@@ -208,6 +243,8 @@ func transformActionTrace(actTrace *pbcodec.ActionTrace, components []interface{
 			actTrace.ExecutionIndex = uint32(v)
 		case GlobalSequence:
 			actTrace.Receipt.GlobalSequence = uint64(v)
+		case actionMatched:
+			actTrace.FilteringMatched = bool(v)
 		}
 	}
 
@@ -241,23 +278,33 @@ func Action(t testing.T, pairName string, components ...interface{}) *pbcodec.Ac
 }
 
 func findABIComponent(components []interface{}) *eos.ABI {
-	for _, component := range components {
-		if abi, ok := component.(*eos.ABI); ok {
-			return abi
-		}
+	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(*eos.ABI); return ok }); component != nil {
+		return component.(*eos.ABI)
 	}
 
 	return nil
 }
 
 func findActionData(components []interface{}) string {
-	for _, component := range components {
-		if data, ok := component.(ActionData); ok {
-			return string(data)
-		}
+	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(ActionData); return ok }); component != nil {
+		return string(component.(ActionData))
 	}
 
 	return ""
+}
+
+func findComponent(components []interface{}, doesMatch func(component interface{}) bool) interface{} {
+	for _, component := range components {
+		if doesMatch(component) {
+			return component
+		}
+	}
+
+	return nil
+}
+
+func hasComponent(components []interface{}, doesMatch func(component interface{}) bool) bool {
+	return findComponent(components, doesMatch) != nil
 }
 
 func TrxOp(t testing.T, signedTrx *pbcodec.SignedTransaction) *pbcodec.TrxOp {

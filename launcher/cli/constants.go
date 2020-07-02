@@ -41,6 +41,7 @@ const (
 	FluxDBServingAddr           string = ":13029"
 	EosqHTTPServingAddr         string = ":13030"
 	DashboardGrpcServingAddr    string = ":13031"
+	FilteringRelayerServingAddr string = ":13032"
 	DashboardHTTPListenAddr     string = ":8081"
 	APIProxyHTTPListenAddr      string = ":8080"
 	MindreaderNodeosAPIAddr     string = ":9888"
