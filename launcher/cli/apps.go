@@ -829,6 +829,14 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+
+			indexedTerms, err := eosSearch.NewIndexedTerms(viper.GetString("search-common-indexed-terms"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to indexed terms: %w", err)
+			}
+
+			eosSearch.RegisterHandlers(indexedTerms)
+
 			return archiveApp.New(&archiveApp.Config{
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
