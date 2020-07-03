@@ -277,7 +277,7 @@ func (ctx *parseCtx) recordTableOp(operation *pbcodec.TableOp) {
 }
 
 func (ctx *parseCtx) recordTrxOp(operation *pbcodec.TrxOp) {
-	ctx.block.ImplicitTransactionOps = append(ctx.block.ImplicitTransactionOps, operation)
+	ctx.block.UnfilteredImplicitTransactionOps = append(ctx.block.UnfilteredImplicitTransactionOps, operation)
 }
 
 func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
@@ -478,12 +478,12 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	// End (versions)
 
-	ctx.block.TransactionCount = uint32(len(signedBlock.Transactions))
+	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
 	for idx, transaction := range signedBlock.Transactions {
 		deosTransaction := TransactionReceiptToDEOS(&transaction)
 		deosTransaction.Index = uint64(idx)
 
-		ctx.block.Transactions = append(ctx.block.Transactions, deosTransaction)
+		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
 	}
 
 	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))

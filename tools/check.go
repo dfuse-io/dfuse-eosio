@@ -177,7 +177,7 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 				fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
 					block,
 					payloadSize,
-					eosBlock.GetTransactionCount(),
+					eosBlock.GetUnfilteredTransactionCount(),
 					eosBlock.GetUnfilteredTransactionTraceCount(),
 					eosBlock.GetUnfilteredExecutedTotalActionCount(),
 					eosBlock.GetUnfilteredExecutedInputActionCount(),

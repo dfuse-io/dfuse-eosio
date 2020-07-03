@@ -5,6 +5,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"go.uber.org/zap"
 )
 
 type BlockFilter struct {
@@ -54,8 +55,10 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	filteredExecutedInputActionCount := uint32(0)
 	filteredExecutedTotalActionCount := uint32(0)
 
+	excludedTransactionIds := map[string]bool{}
 	for _, trxTrace := range block.UnfilteredTransactionTraces {
 		trxTraceAddedToFiltered := false
+		trxTraceExcluded := true
 		for _, actTrace := range trxTrace.ActionTraces {
 			if !f.shouldProcess(trxTrace, actTrace) {
 				continue
@@ -70,6 +73,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 			if !trxTraceAddedToFiltered {
 				filteredTrxTrace = append(filteredTrxTrace, trxTrace)
 				trxTraceAddedToFiltered = true
+				trxTraceExcluded = false
 			}
 		}
 
@@ -83,16 +87,63 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 				if !trxTraceAddedToFiltered {
 					filteredTrxTrace = append(filteredTrxTrace, trxTrace)
 					trxTraceAddedToFiltered = true
+					trxTraceExcluded = false
 				}
 			}
 		}
+
+		if trxTraceExcluded {
+			excludedTransactionIds[trxTrace.Id] = true
+		}
 	}
 
+	var filteredTrx []*pbcodec.TransactionReceipt
+	var filteredImplicitTrxOp []*pbcodec.TrxOp
+
+	// If there is no exclusion, there is nothing to do, so just run when we have at least one exclusion
+	if len(excludedTransactionIds) > 0 {
+		if traceEnabled {
+			zlog.Debug("filtering excluded transaction traces, let's filter out excluded one from transaction arrays", zap.Int("excluded_count", len(excludedTransactionIds)))
+		}
+
+		for _, trx := range block.UnfilteredTransactions {
+			if _, isExcluded := excludedTransactionIds[trx.Id]; !isExcluded {
+				filteredTrx = append(filteredTrx, trx)
+			}
+		}
+
+		for _, trxOp := range block.UnfilteredImplicitTransactionOps {
+			if _, isExcluded := excludedTransactionIds[trxOp.TransactionId]; !isExcluded {
+				filteredImplicitTrxOp = append(filteredImplicitTrxOp, trxOp)
+			}
+		}
+
+		if traceEnabled {
+			zlog.Debug("filtered transactions",
+				zap.Int("original_trx", len(block.UnfilteredTransactions)),
+				zap.Int("original_implicit_trx", len(block.UnfilteredImplicitTransactionOps)),
+				zap.Int("filtered_trx", len(filteredTrx)),
+				zap.Int("filtered_implicit_trx", len(filteredImplicitTrxOp)),
+			)
+		}
+	} else {
+		filteredTrx = block.UnfilteredTransactions
+		filteredImplicitTrxOp = block.UnfilteredImplicitTransactionOps
+	}
+
+	block.UnfilteredTransactions = nil
 	block.UnfilteredTransactionTraces = nil
+	block.UnfilteredImplicitTransactionOps = nil
+
+	block.FilteredTransactions = filteredTrx
+	block.FilteredTransactionCount = uint32(len(filteredTrx))
+
 	block.FilteredTransactionTraces = filteredTrxTrace
 	block.FilteredTransactionTraceCount = uint32(len(filteredTrxTrace))
 	block.FilteredExecutedInputActionCount = filteredExecutedInputActionCount
 	block.FilteredExecutedTotalActionCount = filteredExecutedTotalActionCount
+
+	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
 func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) bool {

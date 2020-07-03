@@ -459,7 +459,7 @@ func TestABIDecoder(t *testing.T) {
 
 				if match = fullMatchRegex(trxOpRegex, expect.path); match != nil {
 					block := test.blocks[toInt(match[1])]
-					trxOp := block.ImplicitTransactionOps[toInt(match[2])]
+					trxOp := block.UnfilteredImplicitTransactionOps[toInt(match[2])]
 
 					if match[3] == "cfaAction" {
 						assertMatchAction(expect.value, trxOp.Transaction.Transaction.ContextFreeActions[toInt(match[4])])
@@ -509,7 +509,7 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, elements ...int
 			pbblock.UnfilteredTransactionTraceCount++
 			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
-			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
+			pbblock.UnfilteredImplicitTransactionOps = append(pbblock.UnfilteredImplicitTransactionOps, v)
 		}
 	}
 

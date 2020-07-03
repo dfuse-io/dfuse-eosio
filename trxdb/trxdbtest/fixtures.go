@@ -60,10 +60,10 @@ func testBlock1() *pbcodec.Block {
 			Producer:  "tester",
 			Timestamp: blockTimestamp,
 		},
-		Transactions: []*pbcodec.TransactionReceipt{
+		UnfilteredTransactions: []*pbcodec.TransactionReceipt{
 			codec.TransactionReceiptToDEOS(receipt),
 		},
-		ImplicitTransactionOps: []*pbcodec.TrxOp{
+		UnfilteredImplicitTransactionOps: []*pbcodec.TrxOp{
 			{
 				Operation:     pbcodec.TrxOp_OPERATION_CREATE,
 				Name:          "onblock",

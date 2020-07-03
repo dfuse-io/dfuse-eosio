@@ -57,7 +57,7 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 }
 
 func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
-	for _, trxReceipt := range blk.Transactions {
+	for _, trxReceipt := range blk.Transactions() {
 		if trxReceipt.PackedTransaction == nil {
 			// This means we deal with a deferred transaction receipt, and that it
 			// has been handled through DtrxOps already
@@ -160,13 +160,11 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 }
 
 func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
-	for _, trxOp := range blk.ImplicitTransactionOps {
+	for _, trxOp := range blk.ImplicitTransactionOps() {
 		implTrxRow := &pbtrxdb.ImplicitTrxRow{
 			Name:      trxOp.Name,
 			SignedTrx: trxOp.Transaction,
 		}
-
-		//zlog.Debug("put implTrx", zap.String("trx_id", trxOp.TransactionId))
 
 		key := Keys.PackImplicitTrxsKey(trxOp.TransactionId, blk.Id)
 		if err := db.store.Put(ctx, key, db.enc.MustProto(implTrxRow)); err != nil {
@@ -179,12 +177,12 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) e
 
 func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs *pbcodec.TransactionRefs) {
 	implicitTrxRefs = &pbcodec.TransactionRefs{}
-	for _, trxOp := range blk.ImplicitTransactionOps {
+	for _, trxOp := range blk.ImplicitTransactionOps() {
 		implicitTrxRefs.Hashes = append(implicitTrxRefs.Hashes, trxdb.MustHexDecode(trxOp.TransactionId))
 	}
 
 	trxRefs = &pbcodec.TransactionRefs{}
-	for _, trx := range blk.Transactions {
+	for _, trx := range blk.Transactions() {
 		trxRefs.Hashes = append(trxRefs.Hashes, trxdb.MustHexDecode(trx.Id))
 	}
 
@@ -199,15 +197,21 @@ func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs 
 func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 	implicitTrxRefs, trxRefs, tracesRefs := db.getRefs(blk)
 
-	holdTransactions := blk.Transactions
+	holdUnfilteredTransactions := blk.UnfilteredTransactions
 	holdUnfilteredTransactionTraces := blk.UnfilteredTransactionTraces
-	holdFilteredTransactionTraces := blk.FilteredTransactionTraces
-	holdImplicitTransactionOps := blk.ImplicitTransactionOps
+	holdUnfilteredImplicitTransactionOps := blk.UnfilteredImplicitTransactionOps
 
-	blk.ImplicitTransactionOps = nil
-	blk.Transactions = nil
+	holdFilteredTransactions := blk.FilteredTransactions
+	holdFilteredTransactionTraces := blk.FilteredTransactionTraces
+	holdFilteredImplicitTransactionOps := blk.FilteredImplicitTransactionOps
+
+	blk.UnfilteredTransactions = nil
 	blk.UnfilteredTransactionTraces = nil
+	blk.UnfilteredImplicitTransactionOps = nil
+
+	blk.FilteredTransactions = nil
 	blk.FilteredTransactionTraces = nil
+	blk.FilteredImplicitTransactionOps = nil
 
 	blockRow := &pbtrxdb.BlockRow{
 		Block:           blk,
@@ -222,10 +226,13 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 		return fmt.Errorf("put block: write to db: %w", err)
 	}
 
-	blk.ImplicitTransactionOps = holdImplicitTransactionOps
-	blk.Transactions = holdTransactions
+	blk.UnfilteredTransactions = holdUnfilteredTransactions
 	blk.UnfilteredTransactionTraces = holdUnfilteredTransactionTraces
+	blk.UnfilteredImplicitTransactionOps = holdUnfilteredImplicitTransactionOps
+
+	blk.FilteredTransactions = holdFilteredTransactions
 	blk.FilteredTransactionTraces = holdFilteredTransactionTraces
+	blk.FilteredImplicitTransactionOps = holdFilteredImplicitTransactionOps
 
 	return nil
 }

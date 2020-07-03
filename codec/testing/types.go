@@ -76,7 +76,7 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 		case *pbcodec.TransactionTrace:
 			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
-			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
+			pbblock.UnfilteredImplicitTransactionOps = append(pbblock.UnfilteredImplicitTransactionOps, v)
 		case FilteredBlock:
 			// Performed at the very end
 		default:

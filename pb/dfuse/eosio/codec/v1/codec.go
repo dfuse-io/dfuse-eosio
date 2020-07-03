@@ -66,12 +66,28 @@ func (b *Block) AsRef() bstream.BlockRef {
 	return bstream.BlockRefFromID(b.Id)
 }
 
+func (b *Block) Transactions() []*TransactionReceipt {
+	if b.FilteringApplied {
+		return b.FilteredTransactions
+	}
+
+	return b.UnfilteredTransactions
+}
+
 func (b *Block) TransactionTraces() []*TransactionTrace {
 	if b.FilteringApplied {
 		return b.FilteredTransactionTraces
 	}
 
 	return b.UnfilteredTransactionTraces
+}
+
+func (b *Block) ImplicitTransactionOps() []*TrxOp {
+	if b.FilteringApplied {
+		return b.FilteredImplicitTransactionOps
+	}
+
+	return b.UnfilteredImplicitTransactionOps
 }
 
 func (b *Block) CanceledDTrxIDs() (out []string) {
@@ -121,9 +137,7 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
 func (b *Block) PopulateActionAndTransactionCount() {
-	// This field is currently always unfiltered
-	b.TransactionCount = uint32(len(b.Transactions))
-
+	b.UnfilteredTransactionCount = uint32(len(b.UnfilteredTransactions))
 	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
 	b.UnfilteredExecutedTotalActionCount = 0
 	b.UnfilteredExecutedInputActionCount = 0
@@ -137,6 +151,7 @@ func (b *Block) PopulateActionAndTransactionCount() {
 		}
 	}
 
+	b.FilteredTransactionCount = uint32(len(b.FilteredTransactions))
 	b.FilteredTransactionTraceCount = uint32(len(b.FilteredTransactionTraces))
 	b.FilteredExecutedTotalActionCount = 0
 	b.FilteredExecutedInputActionCount = 0
