@@ -15,6 +15,21 @@ import (
 	"go.uber.org/zap"
 )
 
+func makeDirs(directories []string) error {
+	for _, directory := range directories {
+		err := os.MkdirAll(directory, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create directory %q: %w", directory, err)
+		}
+	}
+
+	return nil
+}
+
+func dfuseAbsoluteDataDir() (string, error) {
+	return filepath.Abs(viper.GetString("global-data-dir"))
+}
+
 func mustReplaceDataDir(dataDir, in string) string {
 	d, err := filepath.Abs(dataDir)
 	if err != nil {

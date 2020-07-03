@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
+	launcher "github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 )
 
@@ -36,6 +36,7 @@ func init() {
 
 func Main() {
 	cobra.OnInitialize(func() {
+		allFlags = make(map[string]bool)
 		AutoBind(RootCmd, "DFUSEEOS")
 	})
 

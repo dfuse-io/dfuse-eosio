@@ -23,8 +23,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/launcher"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
+	"github.com/dfuse-io/dlauncher/launcher"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
@@ -88,9 +88,13 @@ func Start(dataDir string, args []string) (err error) {
 	launch := launcher.NewLauncher(modules)
 	userLog.Debug("launcher created")
 
-	apps := launcher.ParseAppsFromArgs(args)
+	runByDefault := func(file string) bool {
+		return true
+	}
+
+	apps := launcher.ParseAppsFromArgs(args, runByDefault)
 	if len(args) == 0 {
-		apps = launcher.ParseAppsFromArgs(launcher.DfuseConfig["start"].Args)
+		apps = launcher.ParseAppsFromArgs(launcher.DfuseConfig["start"].Args, runByDefault)
 	}
 
 	if containsApp(apps, "mindreader") {

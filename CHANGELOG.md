@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+
+
+### Added
+
+* Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
+
 ## [v0.1.0-beta4] 2020-06-23
 
 ### Networked APIs Changed
@@ -28,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 * Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
+* Removed `blockmeta-eos-api-upstream-addr` flag from `blockmeta`
+* Removed `blockmeta-eos-api-extra-addr` flag from `blockmeta`
 
 ### Added
 * Added app called mindreader-stdin, which simply relays blocks and produces one-block-files (or merged-blocks-files) based on stdin, without trying to manage nodeos. This is an alternative way of seeding your dfuse system if you are have existing tooling for managing nodeos operations It uses a only subset of the "mindreader" flags and does not stop on TERM signal until it receives EOF signal from stdin.

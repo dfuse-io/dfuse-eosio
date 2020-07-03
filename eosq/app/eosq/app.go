@@ -20,7 +20,7 @@ import (
 
 type Config struct {
 	HTTPListenAddr string
-	Environement   string // i.e: production
+	Environment    string // i.e: production
 	// EOSQ configruation payload
 	APIEndpointURL    string // i.e: https://dev1.api.dfuse.dev
 	ApiKey            string // i.e: web_XXXXXXXXXXXXXXXXXXXXXX
