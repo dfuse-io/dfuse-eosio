@@ -1,0 +1,9 @@
+start:
+  args:
+  - booter
+  - merger
+  - mindreader
+  - node-manager
+  - relayer
+  flags:
+    relayer-grpc-listen-addr: :10000

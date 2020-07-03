@@ -19,7 +19,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dfuse-io/blockmeta v0.0.1
-	github.com/dfuse-io/bstream v0.0.2-0.20200626140610-dac0c1a361ee
+	github.com/dfuse-io/bstream v0.0.2-0.20200703175051-2c07c37eb944
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
@@ -41,7 +41,7 @@ require (
 	github.com/dfuse-io/merger v0.0.2
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
-	github.com/dfuse-io/relayer v0.0.1
+	github.com/dfuse-io/relayer v0.0.2-0.20200703181421-53413aa75025
 	github.com/dfuse-io/search v0.0.2-0.20200703124129-f4f00dd0df59
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
@@ -101,3 +101,7 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/dfuse-io/relayer => /Users/maoueh/work/dfuse/relayer
+
+replace github.com/dfuse-io/bstream => /Users/maoueh/work/dfuse/bstream

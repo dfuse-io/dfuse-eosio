@@ -37,7 +37,6 @@ import (
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
-	filteringRelayerApp "github.com/dfuse-io/dfuse-eosio/filtering/app/relayer"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -91,9 +90,8 @@ func init() {
 		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
 
 		// Filtering
-		cmd.Flags().String("common-include-filter-expr", "", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md")
-		cmd.Flags().String("common-exclude-filter-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
-		cmd.Flags().Bool("common-filtering-disable-safeguards", false, "[COMMON] Some transaction's actions are always included since they are required by the system to work properly, `eosio:setabi` is the best example, needed by some components to properly decode raw data to JSON. You can use this flag to disable this behavior, use only if you know what you are doing!")
+		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
+		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
 
 		// Search flags
 		// Register common search flags once for all the services
@@ -196,9 +194,6 @@ func init() {
 				DisableProfiler:           viper.GetBool("node-manager-disable-profiler"),
 				StartFailureHandlerFunc:   nil,
 			}), nil
-
-			// Can we detect a nil interface
-			return nil, nil
 		},
 	})
 	launcher.RegisterApp(&launcher.AppDef{
@@ -400,6 +395,12 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
+
+			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create block filter: %w", err)
+			}
+
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:      viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:   viper.GetString("relayer-grpc-listen-addr"),
@@ -410,28 +411,8 @@ func init() {
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-			}), nil
-		},
-	})
-
-	// Filtering Relayer
-	launcher.RegisterApp(&launcher.AppDef{
-		ID:          "filtering-relayer",
-		Title:       "filtering-relayer",
-		Description: "Serves blocks as a filtered stream, from a globally deloyed relayer",
-		MetricsID:   "filtering-relayer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/filtering.*", nil),
-		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("filtering-relayer-grpc-listen-addr", FilteringRelayerServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("filtering-relayer-global-relayer-addr", RelayerServingAddr, "Address for global relayer service to connect to")
-			return nil
-		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			return filteringRelayerApp.New(&filteringRelayerApp.Config{
-				GRPCListenAddr:    viper.GetString("filtering-relayer-grpc-listen-addr"),
-				RelayerAddr:       viper.GetString("filtering-relayer-global-relayer-addr"),
-				IncludeFilterExpr: viper.GetString("common-include-filter-expr"),
-				ExcludeFilterExpr: viper.GetString("common-exclude-filter-expr"),
+			}, &relayerApp.Modules{
+				BlockFilter: filter.TransformInPlace,
 			}), nil
 		},
 	})
@@ -760,7 +741,7 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockFilter:        filter.Transform,
+				BlockFilter:        filter.TransformInPlace,
 				BlockMapper:        mapper,
 				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
 			}), nil
@@ -918,7 +899,7 @@ func init() {
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
-				BlockFilter: filter.Transform,
+				BlockFilter: filter.TransformInPlace,
 				BlockMapper: mapper,
 				Dmesh:       modules.SearchDmeshClient,
 			}), nil
@@ -963,7 +944,7 @@ func init() {
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:  viper.GetString("common-blocks-store-url"),
 			}, &forkresolverApp.Modules{
-				BlockFilter: filter.Transform,
+				BlockFilter: filter.TransformInPlace,
 				Dmesh:       modules.SearchDmeshClient,
 				BlockMapper: mapper,
 			}), nil

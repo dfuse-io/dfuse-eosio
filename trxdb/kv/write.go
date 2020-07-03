@@ -160,7 +160,6 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 }
 
 func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
-
 	for _, trxOp := range blk.ImplicitTransactionOps {
 		implTrxRow := &pbtrxdb.ImplicitTrxRow{
 			Name:      trxOp.Name,

@@ -5,7 +5,9 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 clean=
 
 finish() {
-    kill -s TERM $active_pid &> /dev/null || true
+  for job in `jobs -p`; do
+    kill -s TERM $job &> /dev/null || true
+  done
 }
 
 main() {
@@ -28,7 +30,16 @@ main() {
     rm -rf dfuse-data &> /dev/null || true
   fi
 
-  DEBUG=filtering-relayer dfuseeos -c default.yaml start
+  echo "About to launch 2 apps, press Ctrl+C to terminal all jobs"
+  echo "(This message is going to disappear in 2s)"
+  sleep 2
+
+  DEBUG=filtering-relayer dfuseeos -c global.yaml start &
+  DEBUG=filtering-relayer dfuseeos -c filtering.yaml start &
+
+  for job in `jobs -p`; do
+    wait $job || true
+  done
 }
 
 usage_error() {

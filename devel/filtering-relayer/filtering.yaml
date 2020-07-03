@@ -1,0 +1,19 @@
+start:
+  args:
+  - abicodec
+  - apiproxy
+  - blockmeta
+  - dashboard
+  - dgraphql
+  - eosq
+  - eosws
+  - fluxdb
+  - relayer
+  - search-archive
+  - search-indexer
+  - search-live
+  - search-router
+  - trxdb-loader
+  flags:
+    relayer-source: ":10000"
+    common-include-filter-expr: receiver == "eosio.token"

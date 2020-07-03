@@ -230,6 +230,7 @@ github.com/dfuse-io/blockmeta v0.0.1/go.mod h1:KnqJuvsJyGK+yMq7L/Q5mOm6vrS+5wZGq
 github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3jWU18nI6wq0hCl0uatjUtrN652zRnJD6dMGGc=
 github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
+github.com/dfuse-io/bstream v0.0.0-20200616134354-62d63f98d5c1/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200626140610-dac0c1a361ee h1:sJhuy5eyV5AADx+jcW6HC3E+CuzPFA2yoqVojdLwgFc=
 github.com/dfuse-io/bstream v0.0.2-0.20200626140610-dac0c1a361ee/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=

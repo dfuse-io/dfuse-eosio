@@ -29,12 +29,23 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode string) (*BlockFilter
 	}, nil
 }
 
-func (f *BlockFilter) Transform(blk *bstream.Block) error {
-	f.TransformInPlace(blk.ToNative().(*pbcodec.Block))
+// TransformInPlace received a `bstream.Block` pointer, unpack it's native counterpart, a `pbcodec.Block` pointer
+// in our case and transforms it in place, modifiying the pointed object. This means that future `ToNative()` calls
+// on the bstream block will return a filtered version of this block.
+//
+// *Important* This method expect that the caller will peform the transformation in lock step, there is no lock
+//             performed by this method. It's the caller responsibility to deal with concurrency issues.
+func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
+	// Don't decode the bstream block at all so we save a costly unpacking when both filters are no-op filters
+	if f.IncludeProgram.IsNoop() && f.ExcludeProgram.IsNoop() {
+		return nil
+	}
+
+	f.transfromInPlace(blk.ToNative().(*pbcodec.Block))
 	return nil
 }
 
-func (f *BlockFilter) TransformInPlace(block *pbcodec.Block) {
+func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteringApplied = true
 	block.FilteringIncludeFilterExpr = f.IncludeProgram.code
 	block.FilteringExcludeFilterExpr = f.ExcludeProgram.code

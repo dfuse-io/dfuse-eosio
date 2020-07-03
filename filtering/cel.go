@@ -24,7 +24,6 @@ import (
 	"github.com/google/cel-go/checker/decls"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/interpreter"
-	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )
 
@@ -33,6 +32,10 @@ type CELFilter struct {
 	code          string
 	program       cel.Program
 	valueWhenNoop bool
+}
+
+func (f *CELFilter) IsNoop() bool {
+	return f.program == nil
 }
 
 func newCELFilterInclude(code string) (*CELFilter, error) {
@@ -98,7 +101,7 @@ func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop
 }
 
 func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
-	if f.program == nil {
+	if f.IsNoop() {
 		return f.valueWhenNoop
 	}
 
@@ -107,13 +110,13 @@ func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
 		if traceEnabled {
 			zlog.Debug("filter program failed", zap.String("name", f.name), zap.Error(err))
 		}
-		return
+		return f.valueWhenNoop
 	}
 
 	retval, valid := res.(types.Bool)
 	if !valid {
-		// We've checked the return value should be a Bool previously, so it's safe to panic here
-		panic("return value of our cel program isn't of type bool")
+		zlog.Error("return value of our cel program isn't of type bool, this should never happen since we've checked the return value type already")
+		return f.valueWhenNoop
 	}
 
 	if traceEnabled {
@@ -124,7 +127,8 @@ func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
 }
 
 type actionTraceActivation struct {
-	trace *pbcodec.ActionTrace
+	trace      *pbcodec.ActionTrace
+	cachedData map[string]interface{}
 
 	trxScheduled bool
 }
@@ -151,9 +155,15 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	case "auth":
 		return tokenizeEOSAuthority(a.trace.Action.Authorization), true
 	case "data":
-		if len(a.trace.Action.JsonData) == 0 {
+		if a.cachedData != nil {
+			return a.cachedData, true
+		}
+
+		jsonData := a.trace.Action.JsonData
+		if len(jsonData) == 0 || strings.IndexByte(jsonData, '{') == -1 {
 			return nil, false
 		}
+
 		var out map[string]interface{}
 		err := json.Unmarshal([]byte(a.trace.Action.JsonData), &out)
 		if err != nil {
@@ -162,6 +172,10 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 			}
 
 			return nil, false
+		}
+
+		if a.cachedData == nil {
+			a.cachedData = out
 		}
 
 		return out, true
@@ -190,33 +204,12 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 // This must follow rules taken in `search/tokenization.go`, ideally we would share this, maybe would be a good idea to
 // put the logic in an helper method on type `pbcodec.PermissionLevel` directly.
 func tokenizeEOSAuthority(authorizations []*pbcodec.PermissionLevel) (out []string) {
-	for _, auth := range authorizations {
-		actor := auth.Actor
-		perm := auth.Permission
-		out = append(out, actor, fmt.Sprintf("%s@%s", actor, perm))
+	out = make([]string, len(authorizations))
+	for i, auth := range authorizations {
+
+		out[i*2] = auth.Actor
+		out[i*2+1] = auth.Authorization()
 	}
 
 	return
-}
-
-type dataActivation struct {
-	parent actionTraceActivation
-	gjson.Result
-}
-
-func (a *dataActivation) Parent() interpreter.Activation {
-	return &a.parent
-}
-
-func (a *dataActivation) ResolveName(name string) (interface{}, bool) {
-	if traceEnabled {
-		zlog.Debug("trying to resolve activation name", zap.String("name", name))
-	}
-
-	res := a.Get(name)
-	if len(res.Raw) == 0 {
-		return nil, false
-	}
-
-	return res.Value(), true
 }

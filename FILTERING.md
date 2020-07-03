@@ -41,3 +41,20 @@ receiver == 'eosio.token' && data.from == 'bob'
 ```
 
 See https://docs.dfuse.io/reference/eosio/search-terms/ for all EOSIO terms that can be filtered.
+
+### Examples
+
+Showcase examples here are given as examples, mainly for syntax purposes, so you can see the full
+power of the CEL filtering language
+
+There might be new stuff to add to certain examples, like spam coins or new system contracts, this
+is **not** a fully accurate document for those stuff, you are invited to make your own research
+to ensure completeness based on your use case.
+
+#### EOS Mainnet Spam
+
+Here an example to filter out spam transactions on the EOS Mainnet:
+
+```
+account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))
+```
