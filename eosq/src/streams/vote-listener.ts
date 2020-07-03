@@ -2,7 +2,7 @@ import { streamVoteTally, isInboundMessageType, VoteTallyData } from "../clients
 import { InboundMessage, InboundMessageType, ErrorData } from "@dfuse/client"
 import { voteStore } from "../stores"
 
-import { getDfuseClient } from "@dfuse/explore"
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function registerVoteTallyStream(errorCallback: (error: ErrorData) => void) {
   return streamVoteTally(getDfuseClient(), (message: InboundMessage) => {

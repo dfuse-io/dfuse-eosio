@@ -2,7 +2,7 @@ import { getTableRows, GetTableRowParams, getProducerSchedule } from "../websock
 import { legacyHandleDfuseApiError } from "./api"
 import { Abi } from "@dfuse/client"
 
-import { getDfuseClient } from "@dfuse/explore"
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function requestProducerSchedule() {
   return getProducerSchedule()

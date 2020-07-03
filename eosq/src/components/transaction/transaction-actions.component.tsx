@@ -5,7 +5,7 @@ import { DeferredOperation } from "../../models/transaction"
 
 // temp ignore for dev
 
-import { DataEmpty } from "@dfuse/explore"
+import { DataEmpty } from "@dfuse/explorer"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { ListActions } from "./list-actions.component"
 import { RAMOp, ActionTrace, DbOp, CreationNode, TableOp, Action } from "@dfuse/client"

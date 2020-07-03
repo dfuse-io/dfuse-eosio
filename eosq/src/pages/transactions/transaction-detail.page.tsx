@@ -15,7 +15,7 @@ import { WrappingText } from "../../atoms/text-elements/misc"
 
 // temp ignore for dev
 
-import { DataLoading, DataError } from "@dfuse/explore"
+import { DataLoading, DataError } from "@dfuse/explorer"
 
 import { PageContainer } from "../../components/page-container/page-container"
 import { TransactionLifecycle, Stream } from "@dfuse/client"

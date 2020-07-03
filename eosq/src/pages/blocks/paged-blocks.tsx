@@ -4,7 +4,7 @@ import * as React from "react"
 
 // temp ignore for dev
 
-import { DataEmpty } from "@dfuse/explore"
+import { DataEmpty } from "@dfuse/explorer"
 import { Panel } from "../../atoms/panel/panel.component"
 import { fetchBlockList } from "../../services/block"
 import { ListBlocks } from "../../components/list-blocks/list-blocks.component"

@@ -3,12 +3,12 @@ import { getTokenInfosByKeyMap } from "../helpers/airdrops-list"
 
 import {
   useGraphqlQuery,
+  GraphqlQuery,
   PromiseState,
   promiseStateRetype,
   promiseStateResolved
-} from "@dfuse/explore"
+} from "@dfuse/explorer"
 import { GraphqlResponseError } from "@dfuse/client"
-import { DocumentNode } from "graphql"
 
 export type UserBalance = {
   contract: string
@@ -20,7 +20,7 @@ export type UserBalance = {
   }
 }
 
-const document = gql`
+const document: GraphqlQuery = gql`
   query($account: String!) {
     accountBalances(
       account: $account
@@ -52,8 +52,7 @@ const tokenInfos = getTokenInfosByKeyMap()
 export function useAccountBalances(
   account: string
 ): PromiseState<UserBalance[], GraphqlResponseError[]> {
-  // temporary type casting to fix symlink dev
-  const response = useGraphqlQuery<Document>(document as DocumentNode, { account })
+  const response = useGraphqlQuery<Document>(document, { account })
   if (response.state === "pending" || response.state === "rejected") {
     return promiseStateRetype(response)
   }

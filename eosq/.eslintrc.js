@@ -51,8 +51,6 @@ module.exports = {
     "jsx-a11y/anchor-is-valid": "off",
     "jsx-a11y/click-events-have-key-events": "off",
     "jsx-a11y/alt-text": "off",
-    "max-classes-per-file": "off",
-    //disable warning for importing local symlinked packages
-    "import/no-extraneous-dependencies": "off"
+    "max-classes-per-file": "off"
   }
 }

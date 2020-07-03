@@ -6,7 +6,7 @@ import {
   TransactionLifecycleData
 } from "@dfuse/client"
 
-import { getDfuseClient } from "@dfuse/explore"
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function registerTransactionLifecycleListener(
   transactionID: string,

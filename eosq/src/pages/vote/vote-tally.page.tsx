@@ -10,7 +10,7 @@ import { registerVoteTallyStream } from "../../streams/vote-listener"
 
 // temp ignore for dev
 
-import { DataError } from "@dfuse/explore"
+import { DataError } from "@dfuse/explorer"
 import { Stream, ErrorData } from "@dfuse/client"
 import Box from "../../atoms/ui-box"
 

@@ -4,7 +4,7 @@ import * as React from "react"
 
 // temp ignore for dev
 
-import { DataEmpty } from "@dfuse/explore"
+import { DataEmpty } from "@dfuse/explorer"
 import {
   ListTransactions,
   TransactionListInfo

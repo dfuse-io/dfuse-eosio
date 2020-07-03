@@ -14,7 +14,7 @@ import { UiHrDense } from "../../../atoms/ui-hr/ui-hr"
 import { useAccountBalances } from "../../../hooks/use-account-balances"
 // temp ignore for dev
 
-import { LCE } from "@dfuse/explore"
+import { LCE } from "@dfuse/explorer"
 import { Config } from "../../../models/config"
 
 interface Props {

@@ -1,7 +1,7 @@
 import * as React from "react"
 // temp ignore for dev
 
-import { DataLoading, DataError, DataEmpty } from "@dfuse/explore"
+import { DataLoading, DataError, DataEmpty } from "@dfuse/explorer"
 import { log } from "../../services/logger"
 import { TaskStatusAware } from "mobx-task"
 import { observer } from "mobx-react"

@@ -10,7 +10,7 @@ import { ErrorData, Stream } from "@dfuse/client"
 
 // temp ignore for dev
 
-import { DataLoading } from "@dfuse/explore"
+import { DataLoading } from "@dfuse/explorer"
 import { CustomTitleBanner } from "../../atoms/panel/custom-title-banner"
 import { AccountSummary } from "./summary/account-summary"
 import { AccountTitle } from "./summary/account-title"
