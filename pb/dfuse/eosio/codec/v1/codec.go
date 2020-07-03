@@ -383,3 +383,13 @@ func (r *RlimitOp) IsLocalKind() bool {
 	_, isAccountLimits := r.Kind.(*RlimitOp_AccountLimits)
 	return isAccountUsage || isAccountLimits
 }
+
+//
+/// PermissionLevel
+//
+
+// Authorization returns the concatenation of `Actor`@`Permission` which is
+// the standard way to print permission level in string format in EOSIO world.
+func (l *PermissionLevel) Authorization() string {
+	return l.Actor + "@" + l.Permission
+}

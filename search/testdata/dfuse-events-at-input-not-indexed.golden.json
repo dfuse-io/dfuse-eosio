@@ -4,9 +4,7 @@
     "data": {
       "account": "dfuseiohooks",
       "action": "event",
-      "auth": null,
       "block_num": 1,
-      "data": {},
       "input": true,
       "notif": false,
       "receiver": "dfuseiohooks",

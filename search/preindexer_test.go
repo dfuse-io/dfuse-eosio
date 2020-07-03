@@ -36,12 +36,12 @@ import (
 func TestPreIndexerRunSingleIndexQuery(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	mapper, _ := NewEOSBlockMapper("dfuseiohooks:event", false)
+	mapper, _ := NewBlockMapper("dfuseiohooks:event", false, "*")
 	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	block, err := ToBStreamBlock(newBlock("00000001a", "00000000a", trxID(1), "eosio.token"))
 	require.NoError(t, err)
-	matchCollector := Collect
+	matchCollector := collector
 
 	preprocessObj, err := preIndexer.Preprocess(block)
 	index := preprocessObj.(*search.SingleIndex)

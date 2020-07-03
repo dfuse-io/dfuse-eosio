@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFilterOut(t *testing.T) {
+func TestBlockFilter(t *testing.T) {
 	tests := []struct {
 		name         string
 		include      string

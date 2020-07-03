@@ -41,7 +41,7 @@ import (
 func Test_forwardProcessBlock(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "")
 	require.NoError(t, err)
-	mapper, _ := eosSearch.NewEOSBlockMapper("dfuseiohooks:event", false)
+	mapper, _ := eosSearch.NewBlockMapper("dfuseiohooks:event", false, "*")
 	preIndexer := search.NewPreIndexer(mapper, tmpDir)
 
 	cases := []struct {
@@ -156,7 +156,7 @@ func Test_processMatches(t *testing.T) {
 			block:              newBlock("00000006a", "00000005a", trxID(2), "eosio.token"),
 			expectedMatchCount: 1,
 			matches: []search.SearchMatch{
-				&eosSearch.EOSSearchMatch{},
+				&eosSearch.SearchMatch{},
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func Test_processMatches(t *testing.T) {
 				},
 			},
 			matches: []search.SearchMatch{
-				&eosSearch.EOSSearchMatch{},
+				&eosSearch.SearchMatch{},
 			},
 			block:              newBlock("00000006a", "00000005a", trxID(2), "eosio.token"),
 			expectedMatchCount: 2,

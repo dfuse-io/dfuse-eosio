@@ -1,7 +1,6 @@
 package search
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -15,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type eosBatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
+type BatchActionUpdater = func(trxID string, idx int, data map[string]interface{}) error
 
 // eventsConfig contains specific configuration for the correct indexation of
 // dfuse Events, our special methodology to index the action from your smart contract
@@ -25,21 +24,33 @@ type eventsConfig struct {
 	unrestricted bool
 }
 
-type EOSBlockMapper struct {
+type BlockMapper struct {
+	*mapping.IndexMappingImpl
+
 	eventsConfig eventsConfig
-	restrictions []*restriction
+	indexed      *IndexedTerms
+	tokenizer    tokenizer
 }
 
-func NewEOSBlockMapper(eventsActionName string, eventsUnrestricted bool) (*EOSBlockMapper, error) {
-	return &EOSBlockMapper{
+func NewBlockMapper(eventsActionName string, eventsUnrestricted bool, indexedTermsSpecs string) (*BlockMapper, error) {
+	indexed, err := NewIndexedTerms(indexedTermsSpecs)
+	if err != nil {
+		return nil, fmt.Errorf("indexed terms: %w", err)
+	}
+
+	return &BlockMapper{
+		IndexMappingImpl: buildBleveIndexMapper(),
+
 		eventsConfig: eventsConfig{
 			actionName:   eventsActionName,
 			unrestricted: eventsUnrestricted,
 		},
+		indexed:   indexed,
+		tokenizer: tokenizer{indexedTerms: indexed},
 	}, nil
 }
 
-func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
+func buildBleveIndexMapper() *mapping.IndexMappingImpl {
 	// db ops
 	dbDocMapping := bleve.NewDocumentMapping()
 	dbDocMapping.AddFieldMappingsAt("key", search.TxtFieldMapping)
@@ -85,14 +96,16 @@ func (m *EOSBlockMapper) IndexMapping() *mapping.IndexMappingImpl {
 	return mapper
 }
 
-func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Block) ([]*document.Document, error) {
+func (m *BlockMapper) IndexedTerms() *IndexedTerms { return m.indexed }
+
+func (m *BlockMapper) Map(block *bstream.Block) ([]*document.Document, error) {
 	blk := block.ToNative().(*pbcodec.Block)
 
 	actionsCount := 0
 	var docsList []*document.Document
 	batchActionUpdater := func(trxID string, idx int, data map[string]interface{}) error {
-		doc := document.NewDocument(EOSDocumentID(blk.Num(), trxID, idx))
-		err := mapper.MapDocument(doc, data)
+		doc := document.NewDocument(newDocumentID(blk.Num(), trxID, idx))
+		err := m.MapDocument(doc, data)
 		if err != nil {
 			return err
 		}
@@ -109,7 +122,7 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	}
 
 	metaDoc := document.NewDocument(fmt.Sprintf("meta:blknum:%d", blk.Num()))
-	err = mapper.MapDocument(metaDoc, map[string]interface{}{
+	err = m.MapDocument(metaDoc, map[string]interface{}{
 		"act_count": actionsCount,
 	})
 
@@ -122,39 +135,9 @@ func (m *EOSBlockMapper) Map(mapper *mapping.IndexMappingImpl, block *bstream.Bl
 	return docsList, nil
 }
 
-func parseRestrictionsJSON(JSONStr string) ([]*restriction, error) {
-	var restrictions []*restriction
-	if JSONStr == "" {
-		return nil, nil
-	}
-	err := json.Unmarshal([]byte(JSONStr), &restrictions)
-	return restrictions, err
-
-}
-
-// example: `{"account":"eosio.token","data.to":"someaccount"}` will not Pass()
-// true for an action that matches EXACTLY those two conditions
-type restriction map[string]string
-
-func (r restriction) Pass(actionWrapper map[string]interface{}) bool {
-	actionData, _ := actionWrapper["data"].(map[string]interface{})
-
-	for k, v := range r {
-		if strings.HasPrefix(k, "data.") {
-			if val, ok := actionData[k[5:]]; !ok || val != v {
-				return true
-			}
-			continue
-		}
-		if val, ok := actionWrapper[k]; !ok || val != v {
-			return true
-		}
-	}
-	return false
-}
-
-func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater eosBatchActionUpdater) error {
+func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater BatchActionUpdater) error {
 	for _, trxTrace := range blk.TransactionTraces() {
+		// We only index transaction trace that were correctly recorded in the blockchain
 		if trxTrace.HasBeenReverted() {
 			continue
 		}
@@ -171,20 +154,27 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 		tokenizedActions := map[uint32]prepedDoc{}
 
 		for idx, actTrace := range trxTrace.ActionTraces {
-			data := tokenizeEOSExecutedAction(actTrace)
+			data := m.tokenizer.tokenize(actTrace)
 			// `block_num`, `trx_idx`: used for sorting
 			data["block_num"] = blk.Num()
 			data["trx_idx"] = trxTrace.Index
 
-			receiver := string(actTrace.Receipt.Receiver)
-			account := string(actTrace.Action.Account)
-			data["notif"] = receiver != account
-			data["input"] = actTrace.CreatorActionOrdinal == 0
-			data["scheduled"] = scheduled
-			if actTrace.SimpleName() == m.eventsConfig.actionName && actTrace.CreatorActionOrdinal != 0 {
-				eventFields := tokenizeEvent(m.eventsConfig, actTrace.GetData("key").String(), actTrace.GetData("data").String())
-				if len(eventFields) > 0 {
-					tokenizedActions[actTrace.CreatorActionOrdinal].data["event"] = eventFields
+			if m.indexed.Notif {
+				data["notif"] = actTrace.Receipt.Receiver != actTrace.Action.Account
+			}
+			if m.indexed.Input {
+				data["input"] = actTrace.IsInput()
+			}
+			if m.indexed.Scheduled {
+				data["scheduled"] = scheduled
+			}
+
+			if m.indexed.Event {
+				if actTrace.SimpleName() == m.eventsConfig.actionName && !actTrace.IsInput() {
+					eventFields := m.tokenizer.tokenizeEvent(m.eventsConfig, actTrace.GetData("key").String(), actTrace.GetData("data").String())
+					if len(eventFields) > 0 {
+						tokenizedActions[actTrace.CreatorActionOrdinal].data["event"] = eventFields
+					}
 				}
 			}
 
@@ -192,16 +182,18 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 			// `expired` transactions.  `expired` transactions do not have actions, so
 			// we can't even have something to index here.
 
-			ramOps := trxTrace.RAMOpsForAction(uint32(idx))
-
-			ramData := m.processRAMOps(ramOps)
-			if len(ramData) > 0 {
-				data["ram"] = ramData
+			if m.indexed.RAMConsumed || m.indexed.RAMReleased {
+				ramData := m.processRAMOps(trxTrace.RAMOpsForAction(uint32(idx)))
+				if len(ramData) > 0 {
+					data["ram"] = ramData
+				}
 			}
 
-			dbData := m.processDBOps(trxTrace.DBOpsForAction(uint32(idx)))
-			if len(dbData) > 0 {
-				data["db"] = dbData
+			if m.indexed.DBKey || m.indexed.DBTable {
+				dbData := m.processDBOps(trxTrace.DBOpsForAction(uint32(idx)))
+				if len(dbData) > 0 {
+					data["db"] = dbData
+				}
 			}
 
 			tokenizedActions[actTrace.ActionOrdinal] = prepedDoc{
@@ -222,9 +214,21 @@ func (m *EOSBlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater 
 	return nil
 }
 
-func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
-	consumedRAM := make(map[string]bool)
-	releasedRAM := make(map[string]bool)
+func (m *BlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {
+	if len(ramOps) <= 0 {
+		return nil
+	}
+
+	var consumedRAM map[string]bool
+	if m.indexed.RAMConsumed {
+		consumedRAM = make(map[string]bool)
+	}
+
+	var releasedRAM map[string]bool
+	if m.indexed.RAMReleased {
+		releasedRAM = make(map[string]bool)
+	}
+
 	for _, ramop := range ramOps {
 		if ramop.Delta == 0 {
 			continue
@@ -236,7 +240,7 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]str
 			releasedRAM[ramop.Payer] = true
 		}
 	}
-	// ram.changed:eoscanadacom
+
 	ramData := make(map[string][]string)
 	if len(consumedRAM) != 0 {
 		ramData["consumed"] = toList(consumedRAM)
@@ -244,18 +248,35 @@ func (m *EOSBlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]str
 	if len(releasedRAM) != 0 {
 		ramData["released"] = toList(releasedRAM)
 	}
+
 	return ramData
 }
 
-func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string {
-	// db.key = []string{"accounts/eoscanadacom/.........eioh1"}
-	// db.table = []string{"accounts/eoscanadacom", "accounts"}
-	keys := make(map[string]bool)
-	tables := make(map[string]bool)
+func (m *BlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string {
+	dbOpCount := len(dbOps)
+	if dbOpCount <= 0 {
+		return nil
+	}
+
+	var keys map[string]bool
+	if m.indexed.DBKey {
+		keys = make(map[string]bool, dbOpCount)
+	}
+
+	var tables map[string]bool
+	if m.indexed.DBTable {
+		tables = make(map[string]bool, dbOpCount)
+	}
+
 	for _, op := range dbOps {
-		keys[fmt.Sprintf("%s/%s/%s", op.TableName, op.Scope, op.PrimaryKey)] = true
-		tables[fmt.Sprintf("%s/%s", op.TableName, op.Scope)] = true
-		tables[string(op.TableName)] = true
+		if m.indexed.DBKey {
+			keys[fmt.Sprintf("%s/%s/%s", op.TableName, op.Scope, op.PrimaryKey)] = true
+		}
+
+		if m.indexed.DBTable {
+			tables[fmt.Sprintf("%s/%s", op.TableName, op.Scope)] = true
+			tables[string(op.TableName)] = true
+		}
 	}
 
 	opData := make(map[string][]string)
@@ -270,12 +291,12 @@ func (m *EOSBlockMapper) processDBOps(dbOps []*pbcodec.DBOp) map[string][]string
 	return opData
 }
 
-func EOSDocumentID(blockNum uint64, transactionID string, actionIndex int) string {
+func newDocumentID(blockNum uint64, transactionID string, actionIndex int) string {
 	// 128 bits collision protection
 	return fmt.Sprintf("%016x", blockNum) + ":" + transactionID[:32] + ":" + fmt.Sprintf("%04x", actionIndex)
 }
 
-func ExplodeEOSDocumentID(ref string) (blockNum uint64, trxID string, actionIdx uint16, skip bool) {
+func explodeDocumentID(ref string) (blockNum uint64, trxID string, actionIdx uint16, skip bool) {
 	var err error
 	chunks := strings.Split(ref, ":")
 	chunksCount := len(chunks)
@@ -286,7 +307,7 @@ func ExplodeEOSDocumentID(ref string) (blockNum uint64, trxID string, actionIdx 
 
 	blockNum32, err := fromHexUint32(chunks[0])
 	if err != nil {
-		zlog.Panic("woah, block num invalid?", zap.Error(err))
+		zlog.Panic("block num invalid", zap.Error(err))
 	}
 
 	blockNum = uint64(blockNum32)
@@ -294,7 +315,7 @@ func ExplodeEOSDocumentID(ref string) (blockNum uint64, trxID string, actionIdx 
 	trxID = chunks[1]
 	actionIdx, err = fromHexUint16(chunks[2])
 	if err != nil {
-		zlog.Panic("woah, action index invalid?", zap.Error(err))
+		zlog.Panic("action index invalid", zap.Error(err))
 	}
 
 	return

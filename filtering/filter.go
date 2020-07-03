@@ -3,6 +3,7 @@ package filtering
 import (
 	"fmt"
 
+	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
@@ -26,6 +27,11 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode string) (*BlockFilter
 		IncludeProgram: includeFilter,
 		ExcludeProgram: excludeFilter,
 	}, nil
+}
+
+func (f *BlockFilter) Transform(blk *bstream.Block) error {
+	f.TransformInPlace(blk.ToNative().(*pbcodec.Block))
+	return nil
 }
 
 func (f *BlockFilter) TransformInPlace(block *pbcodec.Block) {

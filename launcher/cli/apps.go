@@ -36,6 +36,7 @@ import (
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
 	eoswsApp "github.com/dfuse-io/dfuse-eosio/eosws/app/eosws"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
 	filteringRelayerApp "github.com/dfuse-io/dfuse-eosio/filtering/app/relayer"
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/launcher"
@@ -92,6 +93,7 @@ func init() {
 		// Filtering
 		cmd.Flags().String("common-include-filter-expr", "", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md")
 		cmd.Flags().String("common-exclude-filter-expr", "account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
+		cmd.Flags().Bool("common-filtering-disable-safeguards", false, "[COMMON] Some transaction's actions are always included since they are required by the system to work properly, `eosio:setabi` is the best example, needed by some components to properly decode raw data to JSON. You can use this flag to disable this behavior, use only if you know what you are doing!")
 
 		// Search flags
 		// Register common search flags once for all the services
@@ -102,6 +104,7 @@ func init() {
 		cmd.Flags().String("search-common-dfuse-events-action-name", "", "[COMMON] The dfuse Events action name to intercept")
 		cmd.Flags().Bool("search-common-dfuse-events-unrestricted", false, "[COMMON] Flag to disable all restrictions of dfuse Events specialize indexing, for example for a private deployment")
 		cmd.Flags().String("search-common-indices-store-url", IndicesStoreURL, "[COMMON] Indices path to read or write index shards Used by: search-indexer, search-archiver.")
+		cmd.Flags().String("search-common-indexed-terms", eosSearch.DefaultIndexedTerms, "[COMMON] Comma separated list of terms available for indexing. These include: receiver, account, action, auth, scheduled, status, notif, input, event, ram.consumed, ram.released, db.table, db.key, data.[freeform]. Ex: 'data.from', 'data.to', they are those fields dynamically specified by smart contracts as part of their action invocations.")
 
 		return nil
 	}
@@ -702,13 +705,21 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			mapper, err := eosSearch.NewEOSBlockMapper(
+			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
+				viper.GetString("search-common-indexed-terms"),
 			)
 			if err != nil {
-				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
+
+			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create block filter: %w", err)
+			}
+
+			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
 			var startBlockResolvers []bstream.StartBlockResolver
 			blockmetaAddr := viper.GetString("common-blockmeta-addr")
@@ -749,6 +760,7 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
+				BlockFilter:        filter.Transform,
 				BlockMapper:        mapper,
 				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
 			}), nil
@@ -867,13 +879,22 @@ func init() {
 			if err != nil {
 				return nil, err
 			}
-			mapper, err := eosSearch.NewEOSBlockMapper(
+			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
+				viper.GetString("search-common-indexed-terms"),
 			)
 			if err != nil {
-				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
+
+			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create block filter: %w", err)
+			}
+
+			eosSearch.RegisterHandlers(mapper.IndexedTerms())
+
 			return liveApp.New(&liveApp.Config{
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
@@ -889,6 +910,7 @@ func init() {
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
+				BlockFilter: filter.Transform,
 				BlockMapper: mapper,
 				Dmesh:       modules.SearchDmeshClient,
 			}), nil
@@ -909,13 +931,21 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			mapper, err := eosSearch.NewEOSBlockMapper(
+			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
+				viper.GetString("search-common-indexed-terms"),
 			)
 			if err != nil {
-				return nil, fmt.Errorf("unable to create EOS block mapper: %w", err)
+				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
+
+			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to create block filter: %w", err)
+			}
+
+			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
 			return forkresolverApp.New(&forkresolverApp.Config{
 				ServiceVersion:  viper.GetString("search-common-mesh-service-version"),
@@ -925,6 +955,7 @@ func init() {
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:  viper.GetString("common-blocks-store-url"),
 			}, &forkresolverApp.Modules{
+				BlockFilter: filter.Transform,
 				Dmesh:       modules.SearchDmeshClient,
 				BlockMapper: mapper,
 			}), nil

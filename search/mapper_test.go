@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestPreprocessTokenization_EOS(t *testing.T) {
+func TestPreprocessTokenization(t *testing.T) {
 	tests := []struct {
 		name  string
 		block *pbcodec.Block
@@ -120,7 +120,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", false)
+			blockMapper, _ := NewBlockMapper("dfuseiohooks:event", false, "*")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -231,16 +231,4 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	}
 
 	return pbblock
-}
-
-func TestParseRestrictionsJSON(t *testing.T) {
-	// very shallow test, but we dont want to test actual golang JSON unmarshalling,
-	// just the general format of our restrictions
-	emptyRests, err := parseRestrictionsJSON("")
-	assert.NoError(t, err)
-	require.Len(t, emptyRests, 0)
-
-	rests, err := parseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
-	require.NoError(t, err)
-	assert.Len(t, rests, 4)
 }
