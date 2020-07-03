@@ -22,8 +22,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
@@ -138,7 +138,7 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			liveSourceFactory,
 			handler,
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
-			bstream.JoiningSourceTargetBlockNum(2),
+			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
 			bstream.JoiningSourceName("trxdb-loader"),
 		)
 		js.SetName("trxdb-loader")

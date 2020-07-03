@@ -22,8 +22,8 @@ import (
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
@@ -43,52 +43,48 @@ type Config struct {
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	zlog.Info("new dgraphql eosio app", zap.Reflect("config", config))
 
-	schemas, err := SetupSchemas(config)
-	if err != nil {
-		return nil, err
-	}
-
 	dgraphqlBaseConfig := config.Config
-	dgraphqlBaseConfig.Schemas = schemas
 
-	return dgraphqlApp.New(&dgraphqlBaseConfig), nil
+	return dgraphqlApp.New(&dgraphqlBaseConfig, &SchemaFactory{config: config}), nil
 }
 
-var RootResolverFactory = eosResolver.NewRoot
+type SchemaFactory struct {
+	config *Config
+}
 
-func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
+func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := trxdb.New(config.KVDBDSN)
+	dbReader, err := trxdb.New(f.config.KVDBDSN)
 	if err != nil {
 		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}
 
 	zlog.Info("creating abicodec grpc client")
-	abiConn, err := dgrpc.NewInternalClient(config.ABICodecAddr)
+	abiConn, err := dgrpc.NewInternalClient(f.config.ABICodecAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting abi grpc client: %w", err)
 	}
 	abiClient := pbabicodec.NewDecoderClient(abiConn)
 
 	zlog.Info("creating blockmeta grpc client")
-	blockMetaClient, err := pbblockmeta.NewClient(config.BlockMetaAddr)
+	blockMetaClient, err := pbblockmeta.NewClient(f.config.BlockMetaAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating blockmeta client: %w", err)
 	}
 
 	zlog.Info("creating search grpc client")
 
-	searchConn, err := dgrpc.NewInternalClient(config.SearchAddr)
+	searchConn, err := dgrpc.NewInternalClient(f.config.SearchAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting search grpc client: %w", err)
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
-	rateLimiter, err := drateLimiter.New(config.RatelimiterPlugin)
+	rateLimiter, err := drateLimiter.New(f.config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter)
+	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

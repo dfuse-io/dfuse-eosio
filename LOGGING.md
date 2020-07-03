@@ -123,7 +123,7 @@ DEBUG="mindreader,dgraphql,relayer" INFO="mindreader/nodeos" dfuseeos start
 
 which will:
 1. set verbosity of apps `mindreader`, `dgraphql` and relayer to`DEBUG` level.
-2. set verbosity of nodeos module to INFO (the string matches the logger registered as `github.com/dfuse-io/manageos/app/nodeos_mindreader/nodeos` in the code)
+2. set verbosity of nodeos module to INFO (the string matches the logger registered as `github.com/dfuse-io/dfuse-eosio/mindreader/nodeos` in the code)
 
 Note that logger matching will be applied in this order: WARN, INFO, DEBUG
 

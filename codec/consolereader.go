@@ -27,7 +27,10 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
+	"go.uber.org/zap"
 )
+
+var supportedVersions = []string{"12", "13"}
 
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
@@ -178,7 +181,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			ctx.resetBlock()
 
 		case strings.HasPrefix(line, "ABIDUMP START"):
-			err = ctx.readABIStart()
+			err = ctx.readABIStart(line)
 		case strings.HasPrefix(line, "ABIDUMP ABI"):
 			err = ctx.readABIDump(line)
 		case strings.HasPrefix(line, "ABIDUMP END"):
@@ -188,7 +191,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readDeepmindVersion(line)
 
 		default:
-			return nil, fmt.Errorf("unsupported log line: %q", line)
+			zlog.Info("Unknown log line", zap.String("line", line))
 		}
 
 		if err != nil {
@@ -793,14 +796,14 @@ func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 	return nil
 }
 
-// Line formats:
-//   PERM_OP INS ${action_id} ${data}
-//   PERM_OP UPD ${action_id} ${data}
-//   PERM_OP REM ${action_id} ${data} <-- {"old": <old>, "new": <new>}
+// Line formats: (the `[...]` represents optional fields)
+//   PERM_OP INS ${action_id} [${permission_id}] ${data}
+//   PERM_OP UPD ${action_id} [${permission_id}] ${data}
+//   PERM_OP REM ${action_id} [${permission_id}] ${data} <-- {"old": <old>, "new": <new>}
 func (ctx *parseCtx) readPermOp(line string) error {
-	chunks := strings.SplitN(line, " ", 4)
-	if len(chunks) != 4 {
-		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
+	chunks, err := splitNToM(line, 4, 5)
+	if err != nil {
+		return err
 	}
 
 	actionIndex, err := strconv.Atoi(chunks[2])
@@ -809,6 +812,17 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	}
 
 	opString := chunks[1]
+	dataChunk := chunks[3]
+	var permissionID uint64
+
+	// A `PERM_OP` with 5 fields have ["permission_id"] field in index #3 set and data chunk is actually index #4
+	if len(chunks) == 5 {
+		permissionID, err = strconv.ParseUint(chunks[3], 10, 64)
+		if err != nil {
+			return fmt.Errorf("permission_id is not a valid number, got: %q", chunks[3])
+		}
+		dataChunk = chunks[4]
+	}
 
 	op := pbcodec.PermOp_OPERATION_UNKNOWN
 	var oldData, newData []byte
@@ -816,19 +830,19 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	switch opString {
 	case "INS":
 		op = pbcodec.PermOp_OPERATION_INSERT
-		newData = []byte(chunks[3])
+		newData = []byte(dataChunk)
 
 	case "UPD":
 		op = pbcodec.PermOp_OPERATION_UPDATE
 
-		oldJSONResult := gjson.Get(chunks[3], "old")
+		oldJSONResult := gjson.Get(dataChunk, "old")
 		if !oldJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", dataChunk)
 		}
 
-		newJSONResult := gjson.Get(chunks[3], "new")
+		newJSONResult := gjson.Get(dataChunk, "new")
 		if !newJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", dataChunk)
 		}
 
 		oldData = []byte(oldJSONResult.Raw)
@@ -837,7 +851,7 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	case "REM":
 		op = pbcodec.PermOp_OPERATION_REMOVE
 
-		oldData = []byte(chunks[3])
+		oldData = []byte(dataChunk)
 
 	default:
 		return fmt.Errorf("unknown PERM_OP op: %q", opString)
@@ -852,21 +866,25 @@ func (ctx *parseCtx) readPermOp(line string) error {
 		newPerm := &permissionObject{}
 		err = json.Unmarshal(newData, &newPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall new perm data: %s", err)
+			return fmt.Errorf("unmashal new perm data: %s", err)
 		}
+
 		permOp.NewPerm = newPerm.ToProto()
+		permOp.NewPerm.Id = permissionID
 	}
 
 	if len(oldData) > 0 {
 		oldPerm := &permissionObject{}
 		err = json.Unmarshal(oldData, &oldPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall old perm data: %s", err)
+			return fmt.Errorf("unmashal old perm data: %s", err)
 		}
+
 		permOp.OldPerm = oldPerm.ToProto()
+		permOp.OldPerm.Id = permissionID
+
 	}
 
-	// TODO: fix this, make sure permissionObject is in DEOS mode already..
 	ctx.recordPermOp(permOp)
 
 	return nil
@@ -927,47 +945,87 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 }
 
 // Line format:
-//   DEEP_MIND_VERSION ${version}
+//  Version 12
+//    DEEP_MIND_VERSION ${major_version}
+//
+//  Version 13
+//    DEEP_MIND_VERSION ${major_version} ${minor_version}
 func (ctx *parseCtx) readDeepmindVersion(line string) error {
-	chunks := strings.SplitN(line, " ", 2)
-	if len(chunks) != 2 {
-		return fmt.Errorf("expected 2 fields, got %d", len(chunks))
-	}
-
-	version, err := strconv.Atoi(chunks[1])
+	chunks, err := splitNToM(line, 2, 3)
 	if err != nil {
-		return fmt.Errorf("version is not a valid number, got: %q", chunks[1])
+		return err
 	}
 
-	// FIXME: The version 1 was used before official release, this has been used by developers internal to dfuse
-	//        only. We should remove the special case once everyone moved to release that outputs 12 by default.
-	if version != 1 && version != 12 {
-		return fmt.Errorf("deep-mind reports version %d, but this reader supports only version %d", version, 12)
+	majorVersion := chunks[1]
+	if !inSupportedVersion(majorVersion) {
+		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
 	}
 
 	return nil
 }
 
-func (ctx *parseCtx) readABIStart() error {
+func inSupportedVersion(majorVersion string) bool {
+	for _, supportedVersion := range supportedVersions {
+		if majorVersion == supportedVersion {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Line format:
+//  Version 12
+//    ABIDUMP START
+//
+//  Version 13
+//    ABIDUMP START ${block_num} ${global_sequence_num}
+func (ctx *parseCtx) readABIStart(line string) error {
+	chunks := strings.SplitN(line, " ", -1)
+
+	switch len(chunks) {
+	case 2: // Version 12
+		break
+	case 4: // Version 13
+		_, err := strconv.Atoi(chunks[2])
+		if err != nil {
+			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
+		}
+
+		_, err = strconv.Atoi(chunks[3])
+		if err != nil {
+			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
+		}
+	default:
+		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
+	}
+
 	ctx.abiDecoder.resetCache()
 	return nil
 }
 
 // Line format:
-//   ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//  Version 12
+//    ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//
+//  Version 13
+//    ABIDUMP ABI ${contract} ${base64_abi}
 func (ctx *parseCtx) readABIDump(line string) error {
-	chunks := strings.SplitN(line, " ", 5)
-	if len(chunks) != 5 {
-		return fmt.Errorf("expected 5 fields, got %d", len(chunks))
-	}
-
-	_, err := strconv.Atoi(chunks[2])
+	chunks, err := splitNToM(line, 4, 5)
 	if err != nil {
-		return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
+		return err
 	}
 
-	contract := chunks[3]
-	rawABI := chunks[4]
+	var contract, rawABI string
+	switch len(chunks) {
+	case 5: // Version 12
+		contract = chunks[3]
+		rawABI = chunks[4]
+
+	case 4: // Version 13
+		contract = chunks[2]
+		rawABI = chunks[3]
+	}
 
 	return ctx.abiDecoder.addInitialABI(contract, rawABI)
 }
@@ -1157,4 +1215,13 @@ func unmarshalBinary(data []byte, v interface{}) error {
 	decoder.DecodeP2PMessage(false)
 
 	return decoder.Decode(v)
+}
+
+func splitNToM(line string, min, max int) ([]string, error) {
+	chunks := strings.SplitN(line, " ", -1)
+	if len(chunks) < min || len(chunks) > max {
+		return nil, fmt.Errorf("expected between %d to %d fields (inclusively), got %d", min, max, len(chunks))
+	}
+
+	return chunks, nil
 }
