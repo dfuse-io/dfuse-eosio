@@ -61,12 +61,6 @@
     "eject": "react-scripts eject",
     "lint": "eslint --config .eslintrc.js --ext .js,.jsx,.ts,.tsx src"
   },
-  "husky": {
-    "hooks": {
-      "_comment": "Use --no-verify to bypass",
-      "pre-push": "CI=true yarn lint"
-    }
-  },
   "devDependencies": {
     "@hot-loader/react-dom": "^16.11.0",
     "@types/dotenv": "^4.0.3",
