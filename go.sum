@@ -301,6 +301,8 @@ github.com/dfuse-io/relayer v0.0.1 h1:Ww1sfZmZ44SWRcJ4toQC2A7Dq3gl+x1Slw2lrjwlbY
 github.com/dfuse-io/relayer v0.0.1/go.mod h1:oxbMy70RynUx8l4jkqdf0zP1I1I4YSwJ1chISfLOHuc=
 github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e h1:JuCMiKxOfv1uShszQ2T1TUb6xRKvzSFJIgVO87IxGII=
 github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e/go.mod h1:15ZWlMwM+71WIsKqHVEHnSZ6MQQnRkv+vE0+FlJPMCU=
+github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e h1:spwJIUHsfn3wmFj6YX6P8EHzU+m5SoyinCZDOlF9890=
+github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e/go.mod h1:m+cFTqQsHWPdcn9GMxgz8AWqcvk1bBIGyrcsVi69Y/w=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0 h1:nGYWy0SNYLVhll/nAMEIVaN8WiUuQnId1CXMen2q0v0=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0/go.mod h1:CcBjHis04SXW0gNazk7alCZv+iW/kwvzHcuipFYzszQ=
 github.com/dfuse-io/search v0.0.2-0.20200702204742-c9876e6b7358 h1:uwu8vnQi2zc1f657QsS0+OWbk8jmquwtvimMJhi7K10=

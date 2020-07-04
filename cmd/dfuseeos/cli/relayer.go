@@ -43,7 +43,7 @@ func init() {
 				InitTime:         viper.GetDuration("relayer-init-time"),
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-			}), nil
+			}, &relayerApp.Modules{}), nil
 		},
 	})
 }

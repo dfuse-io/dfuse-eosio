@@ -42,7 +42,7 @@ require (
 	github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
-	github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e
+	github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e
 	github.com/dfuse-io/search v0.0.2-0.20200703211452-2ca0bb2ece4f
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
