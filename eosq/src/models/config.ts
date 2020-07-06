@@ -13,7 +13,7 @@ if (!windowTS.TopLevelConfig) {
   windowTS.TopLevelConfig = {
     current_network: "eos-mainnet",
     dfuse_auth_endpoint: "https://auth.dfuse.io",
-    dfuse_io_api_key: "web_6d99c117406c10f6fd9ee25c7d6f7323",
+    dfuse_io_api_key: "web_1234567890abc",
     dfuse_io_endpoint: "mainnet.eos.dfuse.io",
     // secure: true,
     display_price: true,
