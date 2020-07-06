@@ -1,9 +1,8 @@
 import * as React from "react"
-import { Box } from "@dfuse/explorer"
+import { Box, DetailLine } from "@dfuse/explorer"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
 import { Trans } from "react-i18next"
 import { EllipsisText, Text } from "../../../../atoms/text/text.component"
-import { DetailLine } from "@dfuse/explorer"
 import { t } from "i18next"
 
 export class DecenTwitterTweetPillComponent extends GenericPillComponent {

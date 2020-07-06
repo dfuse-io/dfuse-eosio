@@ -1,7 +1,8 @@
+import * as React from "react"
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import numeral from "numeral"
-import * as React from "react"
+import { NBSP, DataLoading } from "@dfuse/explorer"
 import { DonutChart } from "../../../atoms/pie-chart/donut-chart"
 import { DonutChartLegend } from "../../../atoms/pie-chart/donut-legend"
 import { Text } from "../../../atoms/text/text.component"
@@ -16,11 +17,9 @@ import {
   PieChartParams,
   StakeDetail
 } from "../../../helpers/account.helpers"
-import { NBSP } from "@dfuse/explorer"
 
 // temp ignore for dev
 
-import { DataLoading } from "@dfuse/explorer"
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
 import { UiToolTip } from "../../../atoms/ui-tooltip/ui-tooltip"

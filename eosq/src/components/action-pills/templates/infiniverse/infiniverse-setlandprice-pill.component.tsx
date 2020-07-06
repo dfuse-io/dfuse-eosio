@@ -1,12 +1,11 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import { Box } from "@dfuse/explorer"
+import { Box, PillLogoProps, CellValue } from "@dfuse/explorer"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 import { ExternalTextLink, Text } from "../../../../atoms/text/text.component"
-import { PillLogoProps } from "../../../../atoms/pills/pill"
+
 import { getInfiniverseSetLandPriceLevel1Fields } from "../pill-template.helpers"
 import { Grid } from "../../../../atoms/ui-grid/ui-grid.component"
-import { CellValue } from "@dfuse/explorer"
 
 export class InfiniverseSetlandpricePillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {
