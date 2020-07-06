@@ -65,9 +65,6 @@ func setup(subCommand string) error {
 	launcher.SetupTracing()
 	launcher.SetupAnalyticsMetrics()
 
-	// The zlog are wrapped, they need to be re-configured with newly set base instance to work correctly
-	userLog.ReconfigureReference()
-
 	return nil
 
 }

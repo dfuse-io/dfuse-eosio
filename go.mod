@@ -27,7 +27,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20200703205335-7f8e456cfc3e
+	github.com/dfuse-io/dlauncher v0.0.0-20200706131159-79813e9ab955
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
