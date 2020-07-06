@@ -11,7 +11,7 @@ import {
   UiTableRow
 } from "../../atoms/ui-table/ui-table.component"
 import { Text } from "../../atoms/text/text.component"
-import { Box } from "@dfuse/explorer"
+import { Box, Spinner } from "@dfuse/explorer"
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
@@ -21,7 +21,6 @@ import { ReactNode } from "react"
 import { ContentLoaderComponent } from "../content-loader/content-loader.component"
 import { fetchProducerSchedule } from "../../services/producer-schedule"
 
-import { Spinner } from "../../atoms/spinner/spinner"
 import { ProducerScheduleItem } from "../../clients/websocket/eosws"
 
 const UiTableCellRankHeader: React.ComponentType<any> = styled(UiTableCell)`
