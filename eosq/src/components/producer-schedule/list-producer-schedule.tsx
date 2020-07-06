@@ -1,7 +1,9 @@
 import { t } from "i18next"
 import * as React from "react"
-import { styled , theme } from "../../theme"
-import { TableCaptionColor, TableCaptionItem ,
+import { styled, theme } from "../../theme"
+import {
+  TableCaptionColor,
+  TableCaptionItem,
   UiTable,
   UiTableBody,
   UiTableCell,
@@ -9,7 +11,7 @@ import { TableCaptionColor, TableCaptionItem ,
   UiTableRow
 } from "../../atoms/ui-table/ui-table.component"
 import { Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box"
+import { Box, Spinner } from "@dfuse/explorer"
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
@@ -19,7 +21,6 @@ import { ReactNode } from "react"
 import { ContentLoaderComponent } from "../content-loader/content-loader.component"
 import { fetchProducerSchedule } from "../../services/producer-schedule"
 
-import { Spinner } from "../../atoms/spinner/spinner"
 import { ProducerScheduleItem } from "../../clients/websocket/eosws"
 
 const UiTableCellRankHeader: React.ComponentType<any> = styled(UiTableCell)`

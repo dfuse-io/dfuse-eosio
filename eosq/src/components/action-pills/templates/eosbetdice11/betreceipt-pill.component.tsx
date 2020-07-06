@@ -1,7 +1,7 @@
 import * as React from "react"
+import { Box } from "@dfuse/explorer"
 import { GenericPillComponent } from "../generic-pill.component"
 import { Trans } from "react-i18next"
-import Box from "../../../../atoms/ui-box/ui-box.component"
 import { Text } from "../../../../atoms/text/text.component"
 import { extractValueWithUnits } from "../../../../helpers/formatters"
 import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"

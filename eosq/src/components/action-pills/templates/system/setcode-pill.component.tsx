@@ -1,6 +1,6 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import Box from "../../../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { EllipsisText, ExternalTextLink } from "../../../../atoms/text/text.component"
 import { MonospaceTextLink } from "../../../../atoms/text-elements/misc"
 import { Links } from "../../../../routes"

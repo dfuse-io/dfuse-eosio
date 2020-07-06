@@ -2,7 +2,7 @@ import * as React from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { formatVariation } from "../../helpers/formatters"
 import { Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 import { faSortDown, faSortUp } from "@fortawesome/free-solid-svg-icons"
 
 import { t } from "i18next"

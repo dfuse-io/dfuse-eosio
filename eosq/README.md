@@ -67,6 +67,7 @@ This guide assumes you have `yarn` and `go` installed on your system.
 #### Main dependencies:
 
 * Material-ui
+* antd
 * Emotion
 * Fortawesome Free
 * @dfuse/client

@@ -2,7 +2,7 @@ import * as React from "react"
 import { Trans, translate } from "react-i18next"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { ExternalTextLink, Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { Links } from "../../routes"
 import { SearchShortcut } from "../search-shortcut/search-shortcut"
 

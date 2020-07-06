@@ -2,7 +2,7 @@ import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
 import { MonospaceTextLink } from "../../../../atoms/text-elements/misc"
 import { Links } from "../../../../routes"
-import Box from "../../../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 

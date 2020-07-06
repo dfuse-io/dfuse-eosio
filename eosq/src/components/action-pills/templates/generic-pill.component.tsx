@@ -1,10 +1,10 @@
 import * as React from "react"
+import { Box } from "@dfuse/explorer"
 import { Pill, PillLogoProps } from "../../../atoms/pills/pill"
 import { explodeJson } from "../../../helpers/formatters"
 import { Cell } from "../../../atoms/ui-grid/ui-grid.component"
 import { DetailLineAuto } from "../../../atoms/pills/detail-line"
 import { KeyValueFormatEllipsis, Text } from "../../../atoms/text/text.component"
-import Box from "../../../atoms/ui-box/ui-box.component"
 import { theme } from "../../../theme"
 import { t } from "i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -59,7 +59,7 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
     if (logoParams) {
       return {
         path: logoParams.path,
-        website: logoParams.website,
+        website: logoParams.website
       }
     }
 

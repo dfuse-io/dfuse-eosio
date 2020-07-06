@@ -6,7 +6,7 @@ import { styled } from "../../theme"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { Text } from "../../atoms/text/text.component"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
-import { Spinner } from "../../atoms/spinner/spinner"
+import { Spinner } from "@dfuse/explorer"
 
 const MiddleChild: React.ComponentType<any> = styled(Cell)`
   position: absolute;

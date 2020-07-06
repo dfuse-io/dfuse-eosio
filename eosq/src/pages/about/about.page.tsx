@@ -1,7 +1,7 @@
 import * as React from "react"
+import { Box, HomeWrapper } from "@dfuse/explorer"
 import { Header } from "../../components/header"
 import { Text } from "../../atoms/text/text.component"
-import Box, { HomeWrapper } from "../../atoms/ui-box"
 
 const About = () => {
   return (
