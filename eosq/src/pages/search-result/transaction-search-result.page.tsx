@@ -18,7 +18,7 @@ import { SearchQueryParams, LegacySearchQueryParams } from "../../models/search"
 import { FormattedError } from "../../components/formatted-error/formatted-error"
 import { FilterModal } from "./filter-modal"
 import { FilterTypes, RangeOptions } from "../../models/search-filters"
-import { Button } from "@material-ui/core"
+import { Button } from "antd"
 import { theme, styled } from "../../theme"
 import Box from "../../atoms/ui-box"
 import { BLOCK_NUM_5M } from "../../models/block"
@@ -33,13 +33,15 @@ const BoldText: React.ComponentType<any> = styled.span`
 `
 
 const StyledButton: React.ComponentType<any> = styled(Button)`
-  padding: 12px 30px !important;
-  background-color: ${(props) => props.theme.colors.ternary} !important;
-  border: none !important;
-  font-weight: bold !important;
-  border-radius: 0px !important;
-  min-height: 35px !important;
-  color: ${(props) => props.theme.colors.primary} !important;
+  padding: 12px 30px;
+  background-color: ${(props) => props.theme.colors.ternary};
+  border: none;
+  font-weight: bold;
+  border-radius: 0px;
+  min-height: 35px;
+  height: auto;
+  color: ${(props) => props.theme.colors.primary};
+  text-transform: uppercase;
 `
 
 const PanelContentWrapper: React.ComponentType<any> = styled(Cell)`

@@ -14,6 +14,7 @@
     "@fortawesome/react-fontawesome": "^0.1.0-11",
     "@material-ui/core": "=3.8.3",
     "@sentry/browser": "^4.4.1",
+    "antd": "^4.4.1",
     "apisauce": "^1.0.2",
     "d3": "^3.5.0",
     "debug": "^4.1.1",
