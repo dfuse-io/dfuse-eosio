@@ -13,7 +13,8 @@ import {
   requestProducerAccountTableRows
 } from "../clients/rest/account"
 import { extractValueWithUnits } from "../helpers/formatters"
-import { getDfuseClient } from "../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function registerAccountDetailsListeners(
   accountName: string,

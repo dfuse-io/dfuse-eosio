@@ -18,7 +18,7 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/dfuse-io/blockmeta v0.0.2-0.20200702205033-48278755bcbf
+	github.com/dfuse-io/blockmeta v0.0.2-0.20200704022224-5d6078ea02cc
 	github.com/dfuse-io/bstream v0.0.2-0.20200703210323-f92a36d42ed3
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
@@ -27,7 +27,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20200703205335-7f8e456cfc3e
+	github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
@@ -42,7 +42,7 @@ require (
 	github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
-	github.com/dfuse-io/relayer v0.0.2-0.20200703181421-53413aa75025
+	github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e
 	github.com/dfuse-io/search v0.0.2-0.20200703212523-a428a57d02b2
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1

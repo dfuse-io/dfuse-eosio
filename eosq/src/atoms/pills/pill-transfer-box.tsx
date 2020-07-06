@@ -1,5 +1,5 @@
 import * as React from "react"
-import Box from "../ui-box/index"
+import { Box } from "@dfuse/explorer"
 import { ArrowTo, MonospaceTextLink } from "../text-elements/misc"
 import { NBSP } from "../../helpers/formatters"
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons"
@@ -21,7 +21,7 @@ export const TransferBox: React.SFC<TransferProps> = ({
   to,
   amount,
   amounts,
-  memo,
+  memo
 }): JSX.Element => {
   function renderAmount(amountName: { type: string; value: string }, index: number) {
     return (

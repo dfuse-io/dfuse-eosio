@@ -1,7 +1,7 @@
 import * as React from "react"
+import { Box } from "@dfuse/explorer"
 import { getMemoText } from "../../../../helpers/action.helpers"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import Box from "../../../../atoms/ui-box/ui-box.component"
 import { getCarbonIssueLevel1Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 import { Pill, PillLogoProps } from "../../../../atoms/pills/pill"

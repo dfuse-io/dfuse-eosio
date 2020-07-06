@@ -1,5 +1,5 @@
 import * as React from "react"
-import Box from "../ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { Cell } from "../ui-grid/ui-grid.component"
 import { MonospaceText } from "../text-elements/misc"
 import {
@@ -14,7 +14,7 @@ import {
   HoverablePillContainer,
   AnimatedPillContainer,
   PillLogoContainer,
-  PillLogo,
+  PillLogo
 } from "./pill-elements"
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -45,7 +45,7 @@ interface State {
 
 export class Pill extends React.Component<Props, State> {
   state: State = {
-    isOpen: false,
+    isOpen: false
   }
 
   toggleIsOpen = () => {
@@ -151,7 +151,7 @@ export class Pill extends React.Component<Props, State> {
       return (
         <PillLogoContainer>
           <PillLogo onClick={() => this.openWebsiteLink()}>
-            <img width="100%" src={this.props.logo.path} />
+            <img width="100%" src={this.props.logo.path} alt="" />
           </PillLogo>
         </PillLogoContainer>
       )

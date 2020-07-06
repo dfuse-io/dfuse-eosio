@@ -205,6 +205,8 @@ github.com/dfuse-io/blockmeta v0.0.1 h1:0xrOkObeJSLrlv4R0UkXhNRQ7s2fS+HsOhmLh38P
 github.com/dfuse-io/blockmeta v0.0.1/go.mod h1:KnqJuvsJyGK+yMq7L/Q5mOm6vrS+5wZGq4n3VgQYHFE=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200702205033-48278755bcbf h1:CNyuKMPn3gQ0PcVWAFbpvHpchF9t9t4aLffOJi0hu6k=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200702205033-48278755bcbf/go.mod h1:xiEazFk8wZz7IKticxMN+TAO8VO1n0OKw7TmZL1a2Rg=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200704022224-5d6078ea02cc h1:Z9y37BwjuEBTqLyZ5SwpoU9ImCUm5hNMxiQoOoWbMuo=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200704022224-5d6078ea02cc/go.mod h1:93+jqFsDLWUgXRWMGDWQnBtf8xV9fhRU+Lp5rdaRH0A=
 github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3jWU18nI6wq0hCl0uatjUtrN652zRnJD6dMGGc=
 github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
@@ -249,6 +251,14 @@ github.com/dfuse-io/dlauncher v0.0.0-20200703150953-fdbd1fceb792 h1:FQQ/MXGn77hP
 github.com/dfuse-io/dlauncher v0.0.0-20200703150953-fdbd1fceb792/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
 github.com/dfuse-io/dlauncher v0.0.0-20200703205335-7f8e456cfc3e h1:iNPe7FJAF40Efa7O7m0n53NLSVtU2KiPAoIVhasCV+g=
 github.com/dfuse-io/dlauncher v0.0.0-20200703205335-7f8e456cfc3e/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200706131159-79813e9ab955 h1:lr02+rD2MsdRjnKM8F1r15HptejA9nwjhJyX5wLgB3Q=
+github.com/dfuse-io/dlauncher v0.0.0-20200706131159-79813e9ab955/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200706151125-daa7b8b7e4fc h1:W93LpUvJakMmsEcOC+NEy6nmW+Jh559zK2c3m74dQtA=
+github.com/dfuse-io/dlauncher v0.0.0-20200706151125-daa7b8b7e4fc/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200706151934-ab2354aae748 h1:ZE20U6ItsZiZppGUuuEnGZVEaqBz3cSvIzyqVqww3DE=
+github.com/dfuse-io/dlauncher v0.0.0-20200706151934-ab2354aae748/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925 h1:9QxHGYz6+U/tIab26/pTKZU/284Z1YrhEbFwZDbfu5c=
+github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c h1:j6tHp6tKicuytJDuYAZkP69uh+tx1OkE/GDx5idYzrk=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c/go.mod h1:e1x/Bvi0Y0Hl5pJCboN4RnNHwGuVqS6kIZFgrAs9V2E=
@@ -304,6 +314,8 @@ github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e h1:JuCMiKxOfv1u
 github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e/go.mod h1:15ZWlMwM+71WIsKqHVEHnSZ6MQQnRkv+vE0+FlJPMCU=
 github.com/dfuse-io/relayer v0.0.2-0.20200703181421-53413aa75025 h1:8RJZdi4GJ+dLzRS/6N9YLeNj9zug/l2MQBbHxX9GXWA=
 github.com/dfuse-io/relayer v0.0.2-0.20200703181421-53413aa75025/go.mod h1:S3UgYvMaGUzAk6hSE065B1os0iJzrgU9H6TDoqI5ZNI=
+github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e h1:spwJIUHsfn3wmFj6YX6P8EHzU+m5SoyinCZDOlF9890=
+github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e/go.mod h1:m+cFTqQsHWPdcn9GMxgz8AWqcvk1bBIGyrcsVi69Y/w=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0 h1:nGYWy0SNYLVhll/nAMEIVaN8WiUuQnId1CXMen2q0v0=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0/go.mod h1:CcBjHis04SXW0gNazk7alCZv+iW/kwvzHcuipFYzszQ=
 github.com/dfuse-io/search v0.0.2-0.20200702204742-c9876e6b7358 h1:uwu8vnQi2zc1f657QsS0+OWbk8jmquwtvimMJhi7K10=
@@ -1078,6 +1090,7 @@ golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20191125144606-a911d9008d1f/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191216173652-a0e659d51361/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20191227053925-7b8e75db28f4/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
+golang.org/x/tools v0.0.0-20200108203644-89082a384178 h1:f5gMxb6FbpY48csegk9UPd7IAHVrBD013CU7N4pWzoE=
 golang.org/x/tools v0.0.0-20200108203644-89082a384178/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20200702044944-0cc1aa72b347 h1:/e4fNMHdLn7SQSxTrRZTma2xjQW6ELdxcnpqMhpo9X4=
 golang.org/x/tools v0.0.0-20200702044944-0cc1aa72b347/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=

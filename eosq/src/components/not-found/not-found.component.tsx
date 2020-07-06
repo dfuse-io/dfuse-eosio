@@ -1,7 +1,7 @@
 import { t } from "i18next"
 import * as React from "react"
 import { styled } from "../../theme"
-import Box from "../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 
 const Title: React.ComponentType<any> = styled.h1`
   display: inline-block;

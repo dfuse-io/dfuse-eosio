@@ -1,7 +1,7 @@
 import { Text } from "../text/text.component"
 import { Cell, Grid } from "../ui-grid/ui-grid.component"
 import { styled } from "../../theme"
-import Box from "../ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import * as React from "react"
 
 export const PillClickable: React.ComponentType<any> = styled(Box)`

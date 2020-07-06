@@ -1,12 +1,9 @@
+import { initializeDfuseClient } from "@dfuse/explorer"
 import { DfuseClient, createDfuseClient } from "@dfuse/client"
 import { Config } from "../models/config"
 
 let dfuseClient: DfuseClient
 export const getDfuseClient = () => dfuseClient
-
-export const initializeDfuseClient = (client: DfuseClient) => {
-  dfuseClient = client
-}
 
 export const initializeDfuseClientFromConfig = () => {
   initializeDfuseClient(

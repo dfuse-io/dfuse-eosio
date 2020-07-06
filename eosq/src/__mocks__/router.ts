@@ -20,11 +20,11 @@ export function getMockRouterProps<P = {}>(data: P = {} as P) {
       path: "",
       url: ""
     },
-    location: location,
+    location,
     history: {
       length: 2,
       action: "POP",
-      location: location,
+      location,
       push: noop,
       replace: noop,
       go: noop,

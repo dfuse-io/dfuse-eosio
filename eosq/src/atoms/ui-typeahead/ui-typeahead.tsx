@@ -11,7 +11,7 @@ import { theme, styled } from "../../theme"
 import { EllipsisText, Text } from "../text/text.component"
 import { UiHrDense } from "../ui-hr/ui-hr"
 import { t } from "i18next"
-import { Spinner } from "../spinner/spinner"
+import { Spinner } from "@dfuse/explorer"
 
 type OnCloseListener = () => void
 

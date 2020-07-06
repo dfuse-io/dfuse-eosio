@@ -176,7 +176,7 @@ export const TextLink: React.SFC<TextLinkProps> = ({ to, children, ...rest }) =>
 export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, children, ...rest }) => {
   if (download) {
     return (
-      <a href={to} target="_blank" download={download}>
+      <a href={to} target="_blank" rel="noopener noreferrer" download={download}>
         <LinkStyledText color="link" {...rest}>
           {children}
         </LinkStyledText>
@@ -184,7 +184,7 @@ export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, child
     )
   }
   return (
-    <a href={to} target="_blank" {...download}>
+    <a href={to} target="_blank" rel="noopener noreferrer" {...download}>
       <LinkStyledText color="link" {...rest}>
         {children}
       </LinkStyledText>
@@ -194,7 +194,7 @@ export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, child
 
 export const ExternalTextLinkLight: React.SFC<TextLinkProps> = ({ to, children, ...rest }) => {
   return (
-    <a href={to} target="_blank">
+    <a href={to} target="_blank" rel="noopener noreferrer">
       <LinkStyledText color="link2" {...rest}>
         {children}
       </LinkStyledText>

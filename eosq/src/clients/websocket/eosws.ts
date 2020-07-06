@@ -12,7 +12,8 @@ import { legacyHandleDfuseApiError } from "../rest/api"
 import { BlockSummary } from "../../models/block"
 import { SuggestionSection } from "../../models/typeahead"
 import { log } from "../../services/logger"
-import { getDfuseClient } from "../../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 // Account
 

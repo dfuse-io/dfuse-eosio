@@ -37,8 +37,7 @@ func init() {
 
 func Main() {
 	cobra.OnInitialize(func() {
-		allFlags = make(map[string]bool)
-		flags.AutoBind(RootCmd, "DFUSEEOS")
+		allFlags = flags.AutoBind(RootCmd, "DFUSEEOS")
 	})
 
 	RootCmd.PersistentFlags().StringP("data-dir", "d", "./dfuse-data", "Path to data storage for all components of dfuse")

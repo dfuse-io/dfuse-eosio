@@ -1,7 +1,7 @@
 import * as React from "react"
 import { styled } from "../../theme"
 import { Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 
 const Container: React.ComponentType<any> = styled(Cell)`

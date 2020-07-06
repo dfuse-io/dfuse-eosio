@@ -4,11 +4,11 @@ import { RouterStore, syncHistoryWithStore } from "mobx-react-router"
 import * as React from "react"
 import { render } from "react-dom"
 import { Router } from "react-router"
+import { initializeDfuseClientFromConfig } from "./clients/dfuse"
 import "sanitize.css/sanitize.css"
 import App from "./App"
 import "./i18n"
 import "./index.css"
-import { initializeDfuseClientFromConfig } from "./data/dfuse"
 
 const browserHistory = createBrowserHistory()
 const routingStore = new RouterStore()

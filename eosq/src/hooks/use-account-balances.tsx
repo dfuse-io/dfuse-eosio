@@ -1,7 +1,13 @@
 import gql from "graphql-tag"
-import { useGraphqlQuery } from "./use-graphql-query"
 import { getTokenInfosByKeyMap } from "../helpers/airdrops-list"
-import { PromiseState, promiseStateRetype, promiseStateResolved } from "./use-promise"
+
+import {
+  useGraphqlQuery,
+  GraphqlQuery,
+  PromiseState,
+  promiseStateRetype,
+  promiseStateResolved
+} from "@dfuse/explorer"
 import { GraphqlResponseError } from "@dfuse/client"
 
 export type UserBalance = {
@@ -14,7 +20,7 @@ export type UserBalance = {
   }
 }
 
-const document = gql`
+const document: GraphqlQuery = gql`
   query($account: String!) {
     accountBalances(
       account: $account

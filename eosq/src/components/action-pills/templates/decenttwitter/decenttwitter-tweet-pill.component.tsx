@@ -1,7 +1,7 @@
 import * as React from "react"
+import { Box } from "@dfuse/explorer"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
 import { Trans } from "react-i18next"
-import Box from "../../../../atoms/ui-box/ui-box.component"
 import { EllipsisText, Text } from "../../../../atoms/text/text.component"
 import { DetailLine } from "../../../../atoms/pills/detail-line"
 import { t } from "i18next"

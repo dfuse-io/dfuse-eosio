@@ -3,7 +3,7 @@ import H from "history"
 import { observer } from "mobx-react"
 import * as React from "react"
 import queryString from "query-string"
-import { JsonWrapper } from "../../../atoms/json-wrapper/json-wrapper"
+import { JsonWrapper } from "@dfuse/explorer"
 import { BorderLessPanel } from "../../../atoms/panel/panel.component"
 import { Text } from "../../../atoms/text/text.component"
 import { Cell, Grid } from "../../../atoms/ui-grid/ui-grid.component"
@@ -25,7 +25,7 @@ import { NavigationButtons } from "../../../atoms/navigation-buttons/navigation-
 import { contractTableStore } from "../../../stores"
 import { AbiStructField } from "@dfuse/client"
 import { GetTableRowParams } from "../../../clients/websocket/eosws"
-import Box from "../../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 
 interface Props {
   location: H.Location

@@ -26,7 +26,8 @@ import { theme, styled } from "../../theme"
 import { ServiceWorkerStates } from "../../stores/service-worker-store"
 import { handleVisibilityChange, VISIBILITYCHANGE } from "../../helpers/focus.helpers"
 import { Config, EosqNetwork } from "../../models/config"
-import { getDfuseClient } from "../../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 const SkewedCell = styled(Cell)`
   position: relative;

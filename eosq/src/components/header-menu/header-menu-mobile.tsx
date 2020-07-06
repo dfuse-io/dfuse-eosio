@@ -3,7 +3,7 @@ import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { HeaderLogo } from "../header-elements/header-elements"
 import { MainMenu } from "../main-menu/main-menu.component"
 import { theme, styled } from "../../theme"
-import Box from "../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Text } from "../../atoms/text/text.component"
 import { t } from "i18next"
@@ -237,12 +237,14 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
               href={`https://dfuse.io/${getCurrentLanguageValue()}`}
               title="The dfuse Blockchain Data Platform"
               target="_blank"
+              rel="noopener noreferrer"
             >
               <img
                 src={`/images/built-with-dfuse${
-                    getCurrentLanguageValue() === "zh" ? "-CN" : ""
+                  getCurrentLanguageValue() === "zh" ? "-CN" : ""
                 }-01.png`}
                 title="The dfuse Blockchain Data Platform"
+                alt="built-with-dfuse"
                 width="210"
                 height="auto"
               />

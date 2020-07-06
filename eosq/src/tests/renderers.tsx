@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { shallow } from "enzyme"
 import * as React from "react"
 import { ThemeProvider } from "emotion-theming"

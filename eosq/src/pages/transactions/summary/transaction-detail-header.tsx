@@ -11,12 +11,12 @@ import {
   formatTransactionID,
   LONGDASH,
   NBSP,
-  secondsToTime,
+  secondsToTime
 } from "../../../helpers/formatters"
 import { ExtDTrxOp, Authorization } from "@dfuse/client"
 import {
   computeTransactionTrustPercentage,
-  TransactionReceiptStatus,
+  TransactionReceiptStatus
 } from "../../../models/transaction"
 import { Links } from "../../../routes"
 import { LinkStyledText, Text, TextLink } from "../../../atoms/text/text.component"
@@ -28,10 +28,10 @@ import { Age } from "../../../atoms/age/age.component"
 import { StatusBadge } from "../../../atoms/status-badge/status-badge"
 import {
   getStatusBadgeVariant,
-  getTransactionStatusColor,
+  getTransactionStatusColor
 } from "../../../helpers/transaction.helpers"
 import { translate, Trans } from "react-i18next"
-import { JsonWrapper } from "../../../atoms/json-wrapper/json-wrapper"
+import { JsonWrapper } from "@dfuse/explorer"
 import { UiHrDotted } from "../../../atoms/ui-hr/ui-hr"
 import { UiModal } from "../../../atoms/ui-modal/ui-modal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -313,7 +313,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
             i18nKey={i18nKeyContent}
             values={{
               transactionId: formatTransactionID(refObject.src_trx_id).join(""),
-              blockNum: formatNumber(refObject.block_num),
+              blockNum: formatNumber(refObject.block_num)
             }}
             components={[
               <TextLink key="1" to={Links.viewTransaction({ id: refObject.src_trx_id })}>
@@ -321,7 +321,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
               </TextLink>,
               <TextLink key="2" to={Links.viewBlock({ id: refObject.block_id })}>
                 {formatNumber(refObject.block_num)}
-              </TextLink>,
+              </TextLink>
             ]}
           />
         </DetailLine>
@@ -349,7 +349,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
       this.renderDelayedFor(),
       this.renderDeferredTemplate("created_by", "createdBy"),
       this.renderDeferredTemplate("canceled_by", "canceledBy"),
-      this.renderDeferredTemplate("created_by", "creationMethod"),
+      this.renderDeferredTemplate("created_by", "creationMethod")
     ]
   }
 
@@ -379,7 +379,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
           <Cell>
             <JsonWrapper>{JSON.stringify(except, null, " ")}</JsonWrapper>
           </Cell>
-        </UiModal>,
+        </UiModal>
       ]
     }
     return null
@@ -404,7 +404,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
           i18nKey={i18nKeyContent}
           values={{
             transactionId: formatTransactionID(failureTrace.id).join(""),
-            blockNum: formatNumber(failureTrace.block_num),
+            blockNum: formatNumber(failureTrace.block_num)
           }}
           components={[
             <TextLink key="1" to={Links.viewTransaction({ id: failureTrace.id })}>
@@ -412,7 +412,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
             </TextLink>,
             <TextLink key="2" to={Links.viewBlock({ id: failureTrace.producer_block_id })}>
               {formatNumber(failureTrace.block_num)}
-            </TextLink>,
+            </TextLink>
           ]}
         />
       </DetailLine>
@@ -436,7 +436,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
         {this.renderNetworkUsage(
           executionTrace.receipt && executionTrace.receipt.net_usage_words * 8
         )}
-      </DetailLine>,
+      </DetailLine>
     ]
   }
 
@@ -495,7 +495,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
               : null}
           </Grid>
         </Grid>
-      </Cell>,
+      </Cell>
     ]
   }
 
