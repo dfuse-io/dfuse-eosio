@@ -1,9 +1,10 @@
 import emotionStyled, { CreateStyled } from "@emotion/styled"
 import { colors } from "./colors"
-import { breakpoints, fontSizes, lineHeights, space } from "./scales"
+import { breakPoints, mediaQueries, fontSizes, lineHeights, space } from "./scales"
 
 export const theme = {
-  breakpoints,
+  breakPoints,
+  mediaQueries,
   fontSizes,
   lineHeights,
   space,

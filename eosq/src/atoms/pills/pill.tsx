@@ -1,5 +1,5 @@
 import * as React from "react"
-import Box from "../ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { Cell } from "../ui-grid/ui-grid.component"
 import { MonospaceText } from "../text-elements/misc"
 import {

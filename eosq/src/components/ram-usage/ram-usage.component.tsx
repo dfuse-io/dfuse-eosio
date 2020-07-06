@@ -4,7 +4,7 @@ import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { RAMOp } from "@dfuse/client"
 import { Links } from "../../routes"
 import { formatBytes } from "../../helpers/formatters"
-import Box from "../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { FormattedText } from "../formatted-text/formatted-text"
 import { t } from "i18next"
 

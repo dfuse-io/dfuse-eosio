@@ -20,7 +20,7 @@ import { FilterModal } from "./filter-modal"
 import { FilterTypes, RangeOptions } from "../../models/search-filters"
 import { Button } from "antd"
 import { theme, styled } from "../../theme"
-import Box from "../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 import { BLOCK_NUM_5M } from "../../models/block"
 import { ErrorData } from "@dfuse/client"
 

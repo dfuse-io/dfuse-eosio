@@ -25,7 +25,7 @@ import { NavigationButtons } from "../../../atoms/navigation-buttons/navigation-
 import { contractTableStore } from "../../../stores"
 import { AbiStructField } from "@dfuse/client"
 import { GetTableRowParams } from "../../../clients/websocket/eosws"
-import Box from "../../../atoms/ui-box"
+import { Box } from "@dfuse/explorer"
 
 interface Props {
   location: H.Location
