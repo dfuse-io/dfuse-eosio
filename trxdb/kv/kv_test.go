@@ -55,7 +55,7 @@ func newTestDBFactory(t *testing.T, testDbFilename string) trxdbtest.DriverFacto
 					require.NoError(t, err)
 				}
 				zlog.Debug("delete database", zap.String("", testDbFilename))
-				dbCachePool = make(map[string]trxdb.Driver)
+				storeCachePool = make(map[string]trxdb.Driver)
 				zlog.Debug("db cache cleared")
 			}
 	}

@@ -34,8 +34,8 @@ main() {
   echo "(This message is going to disappear in 2s)"
   sleep 2
 
-  DEBUG=filtering-relayer dfuseeos -c global.yaml start --relayer-grpc-listen-addr=':10000' &
-  DEBUG=filtering-relayer dfuseeos -c filtering.yaml start --relayer-source=':10000' --common-include-filter-expr='*' --common-exclude-filter-expr='receiver == "eosio" && action == "onblock"' &
+  DEBUG=filtering-relayer dfuseeos -c global.yaml start &
+  DEBUG=filtering-relayer dfuseeos -c filtering.yaml start &
 
   for job in `jobs -p`; do
     wait $job || true

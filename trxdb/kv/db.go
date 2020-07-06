@@ -21,6 +21,7 @@ import (
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb/store"
+	"go.uber.org/zap"
 )
 
 type DB struct {
@@ -34,8 +35,8 @@ type DB struct {
 	dec *trxdb.ProtoDecoder
 }
 
-var dbCachePool = make(map[string]trxdb.Driver)
-var dbCachePoolLock sync.Mutex
+var storeCachePool = make(map[string]store.KVStore)
+var storeCachePoolLock sync.Mutex
 
 func init() {
 	trxdb.Register("badger", New)
@@ -45,32 +46,35 @@ func init() {
 }
 
 func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
-	dbCachePoolLock.Lock()
-	defer dbCachePoolLock.Unlock()
+	storeCachePoolLock.Lock()
+	defer storeCachePoolLock.Unlock()
 
-	db := dbCachePool[dsnString]
-	if db == nil {
+	cachedKVStore := storeCachePool[dsnString]
+	if cachedKVStore == nil {
+		zlog.Info("kv store store is not cached for this DSN, creating a new one")
 		kvStore, err := store.New(dsnString)
 		if err != nil {
 			return nil, fmt.Errorf("new kvdb store: %w", err)
 		}
 
-		dbImpl := &DB{
-			store:         kvStore,
-			enc:           trxdb.NewProtoEncoder(),
-			dec:           trxdb.NewProtoDecoder(),
-			indexableRows: trxdb.FullIndexing,
-		}
+		storeCachePool[dsnString] = kvStore
+		cachedKVStore = kvStore
+	} else {
+		zlog.Info("re-using cached kv store")
+	}
 
-		for _, opt := range opts {
-			err := dbImpl.acceptOption(opt)
-			if err != nil {
-				return nil, err
-			}
-		}
+	db := &DB{
+		store:         cachedKVStore,
+		enc:           trxdb.NewProtoEncoder(),
+		dec:           trxdb.NewProtoDecoder(),
+		indexableRows: trxdb.FullIndexing,
+	}
 
-		dbCachePool[dsnString] = dbImpl
-		db = dbImpl
+	for _, opt := range opts {
+		err := db.acceptOption(opt)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return db, nil
@@ -79,6 +83,7 @@ func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
 func (db *DB) acceptOption(opt trxdb.Option) (err error) {
 	switch v := opt.(type) {
 	case trxdb.IndexableRows:
+		zlog.Info("setting indexable rows on trxdb kv database", zap.Strings("indexable_rows", []string(v)))
 		db.indexableRows, err = v.ToMap()
 		if err != nil {
 			return fmt.Errorf("indexable rows: %w", err)

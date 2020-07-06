@@ -15,6 +15,6 @@ start:
   - search-router
   - trxdb-loader
   flags:
-    # Does not work due to a bug, having it in the CLI flag directly for now ...
-    #relayer-source: ":10000"
-    #common-include-filter-expr: receiver == "eosio.token"
+    relayer-source: ":10000"
+    common-include-filter-expr: receiver == "eosio.token"
+    trxdb-loader-indexable-rows: trx implicit_trx trx_trace dtrx

@@ -22,5 +22,5 @@ import (
 var zlog *zap.Logger
 
 func init() {
-	logging.Register("github.com/dfuse-io/kvdb/trxdb/kv", &zlog)
+	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb/kv", &zlog)
 }

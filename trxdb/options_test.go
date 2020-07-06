@@ -18,9 +18,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,13 +72,13 @@ func TestWithIndexableRows(t *testing.T) {
 			"error when multiple with  star element",
 			[]string{"account", "*"},
 			nil,
-			errors.New(`invalid indexable row value "*", valid values are "account, block, dtrx, implicit_trx, timeline, trx, trx_trace"`),
+			errors.New(`invalid value "*", valid values are "account, block, dtrx, implicit_trx, timeline, trx, trx_trace"`),
 		},
 		{
 			"error when unknown element",
 			[]string{"value"},
 			nil,
-			errors.New(`invalid indexable row value "value", valid values are "account, block, dtrx, implicit_trx, timeline, trx, trx_trace"`),
+			errors.New(`invalid value "value", valid values are "account, block, dtrx, implicit_trx, timeline, trx, trx_trace"`),
 		},
 	}
 

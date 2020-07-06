@@ -55,7 +55,7 @@ func init() {
 				AllowLiveOnEmptyTable:     viper.GetBool("trxdb-loader-allow-live-on-empty-table"),
 				HTTPListenAddr:            viper.GetString("trxdb-loader-http-listen-addr"),
 				ParallelFileDownloadCount: viper.GetInt("trxdb-loader-parallel-file-download-count"),
-				IndexableRows:             viper.GetStringSlice(("trxdb-loader-indexable-rows")),
+				IndexableRows:             viper.GetStringSlice("trxdb-loader-indexable-rows"),
 			}), nil
 		},
 	})

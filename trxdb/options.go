@@ -71,7 +71,7 @@ func (i IndexableRows) ToMap() (out map[pbtrxdb.IndexableRow]bool, err error) {
 func (i IndexableRows) toIndexableRow(in string) (pbtrxdb.IndexableRow, error) {
 	value, found := pbtrxdb.IndexableRow_value["INDEXABLE_ROW_"+strings.ToUpper(in)]
 	if !found {
-		return 0, fmt.Errorf("invalid indexable row value %q, valid values are %q", in, strings.Join(ValidIndexingRowKeys, ", "))
+		return 0, fmt.Errorf("invalid value %q, valid values are %q", in, strings.Join(ValidIndexingRowKeys, ", "))
 	}
 
 	return pbtrxdb.IndexableRow(value), nil

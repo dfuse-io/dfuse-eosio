@@ -6,5 +6,4 @@ start:
   - node-manager
   - relayer
   flags:
-    # Does not work due to a bug, having it in the CLI flag directly for now ...
-    # relayer-grpc-listen-addr: :10000
+    relayer-grpc-listen-addr: :10000

@@ -59,7 +59,7 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
-	zlog.Info("launching kvdb loader", zap.Reflect("config", a.Config))
+	zlog.Info("launching trxdb loader", zap.Reflect("config", a.Config))
 
 	dmetrics.Register(metrics.Metricset)
 
