@@ -1,6 +1,9 @@
 import * as React from "react"
 import { observer } from "mobx-react"
 import { RouteComponentProps } from "react-router-dom"
+import { Box, JsonWrapper } from "@dfuse/explorer"
+import { ErrorData } from "@dfuse/client"
+import { Button } from "@material-ui/core"
 import { Panel } from "../../atoms/panel/panel.component"
 import { Text } from "../../atoms/text/text.component"
 import { fontSize } from "styled-system"
@@ -11,18 +14,14 @@ import { ListTransactions } from "../../components/list-transactions/list-transa
 import { t } from "i18next"
 import { ListContentLoaderComponent } from "../../components/list-content-loader/list-content-loader.component"
 import { formatNumber, NBSP } from "../../helpers/formatters"
-import { JsonWrapper } from "@dfuse/explorer"
 import { searchStore } from "../../stores"
 import { performStructuredSearch } from "../../services/search"
 import { SearchQueryParams, LegacySearchQueryParams } from "../../models/search"
 import { FormattedError } from "../../components/formatted-error/formatted-error"
 import { FilterModal } from "./filter-modal"
 import { FilterTypes, RangeOptions } from "../../models/search-filters"
-import { Button } from "antd"
 import { theme, styled } from "../../theme"
-import { Box } from "@dfuse/explorer"
 import { BLOCK_NUM_5M } from "../../models/block"
-import { ErrorData } from "@dfuse/client"
 
 interface Props extends RouteComponentProps<any> {}
 
@@ -33,15 +32,13 @@ const BoldText: React.ComponentType<any> = styled.span`
 `
 
 const StyledButton: React.ComponentType<any> = styled(Button)`
-  padding: 12px 30px;
-  background-color: ${(props) => props.theme.colors.ternary};
-  border: none;
-  font-weight: bold;
-  border-radius: 0px;
-  min-height: 35px;
-  height: auto;
-  color: ${(props) => props.theme.colors.primary};
-  text-transform: uppercase;
+  padding: 12px 30px !important;
+  background-color: ${(props) => props.theme.colors.ternary} !important;
+  border: none !important;
+  font-weight: bold !important;
+  border-radius: 0px !important;
+  min-height: 35px !important;
+  color: ${(props) => props.theme.colors.primary} !important;
 `
 
 const PanelContentWrapper: React.ComponentType<any> = styled(Cell)`

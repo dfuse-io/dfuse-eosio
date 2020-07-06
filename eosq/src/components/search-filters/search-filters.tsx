@@ -1,6 +1,6 @@
 import { observer } from "mobx-react"
 import * as React from "react"
-import { Button } from "antd"
+import { Button } from "@material-ui/core"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
 import { HoverableTextNoHighlight, Text } from "../../atoms/text/text.component"
 import { theme, styled } from "../../theme"

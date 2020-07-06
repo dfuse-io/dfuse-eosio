@@ -1,4 +1,4 @@
-import { Button } from "antd"
+import { Button } from "@material-ui/core"
 import InputLabel from "@material-ui/core/InputLabel"
 import H from "history"
 import { t } from "i18next"
