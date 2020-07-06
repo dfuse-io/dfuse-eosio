@@ -11,7 +11,7 @@ import { ListTransactions } from "../../components/list-transactions/list-transa
 import { t } from "i18next"
 import { ListContentLoaderComponent } from "../../components/list-content-loader/list-content-loader.component"
 import { formatNumber, NBSP } from "../../helpers/formatters"
-import { JsonWrapper } from "../../atoms/json-wrapper/json-wrapper"
+import { JsonWrapper } from "@dfuse/explorer"
 import { searchStore } from "../../stores"
 import { performStructuredSearch } from "../../services/search"
 import { SearchQueryParams, LegacySearchQueryParams } from "../../models/search"
