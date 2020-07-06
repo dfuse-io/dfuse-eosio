@@ -18,12 +18,14 @@ import (
 	"fmt"
 	"sync"
 
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb/store"
 )
 
 type DB struct {
-	store store.KVStore
+	store         store.KVStore
+	indexableRows map[pbtrxdb.IndexableRow]bool
 
 	// Required only when writing
 	writerChainID []byte
@@ -48,19 +50,40 @@ func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
 
 	db := dbCachePool[dsnString]
 	if db == nil {
-
 		kvStore, err := store.New(dsnString)
 		if err != nil {
-			return nil, fmt.Errorf("badger new: open badger db: %w", err)
+			return nil, fmt.Errorf("new kvdb store: %w", err)
 		}
 
-		db = trxdb.Driver(&DB{
-			store: kvStore,
-			enc:   trxdb.NewProtoEncoder(),
-			dec:   trxdb.NewProtoDecoder(),
-		})
-		dbCachePool[dsnString] = db
+		dbImpl := &DB{
+			store:         kvStore,
+			enc:           trxdb.NewProtoEncoder(),
+			dec:           trxdb.NewProtoDecoder(),
+			indexableRows: trxdb.FullIndexing,
+		}
+
+		for _, opt := range opts {
+			err := dbImpl.acceptOption(opt)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		dbCachePool[dsnString] = dbImpl
+		db = dbImpl
 	}
 
 	return db, nil
+}
+
+func (db *DB) acceptOption(opt trxdb.Option) (err error) {
+	switch v := opt.(type) {
+	case trxdb.IndexableRows:
+		db.indexableRows, err = v.ToMap()
+		if err != nil {
+			return fmt.Errorf("indexable rows: %w", err)
+		}
+	}
+
+	return nil
 }

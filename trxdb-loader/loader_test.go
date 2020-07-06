@@ -41,12 +41,12 @@ import (
 
 type chainIDOption = string
 
-func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, trxdb.Driver, func()) {
+func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.Driver, func()) {
 
 	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true")
 	require.NoError(t, err)
 
-	l := NewBigtableLoader("", nil, 1, db, 1)
+	l := NewTrxDBLoader("", nil, 1, db, 1)
 
 	var chainID string
 	for _, option := range options {

@@ -23,6 +23,7 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
@@ -34,10 +35,11 @@ import (
 
 type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error)
 
-type BigtableLoader struct {
+type TrxDBLoader struct {
 	*shutter.Shutter
 	processingJob             Job
 	db                        trxdb.DBWriter
+	indexableRows             map[pbtrxdb.IndexableRow]bool
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
@@ -51,14 +53,15 @@ type BigtableLoader struct {
 	forkDB *forkable.ForkDB
 }
 
-func NewBigtableLoader(
+func NewTrxDBLoader(
 	blockStreamAddr string,
 	blocksStore dstore.Store,
 	batchSize uint64,
 	db trxdb.DBWriter,
 	parallelFileDownloadCount int,
-) *BigtableLoader {
-	loader := &BigtableLoader{
+) *TrxDBLoader {
+
+	loader := &TrxDBLoader{
 		blockStreamAddr:           blockStreamAddr,
 		blocksStore:               blocksStore,
 		Shutter:                   shutter.New(),
@@ -74,7 +77,7 @@ func NewBigtableLoader(
 	return loader
 }
 
-func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
+func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 	l.processingJob = l.FullJob
 
 	startAtBlockOne := false
@@ -156,15 +159,15 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 	return nil
 }
 
-func (l *BigtableLoader) BuildPipelineBatch(startBlockNum uint64, numBlocksBeforeStart uint64) {
+func (l *TrxDBLoader) BuildPipelineBatch(startBlockNum uint64, numBlocksBeforeStart uint64) {
 	l.BuildPipelineJob(startBlockNum, numBlocksBeforeStart, l.FullJob)
 }
 
-func (l *BigtableLoader) BuildPipelinePatch(startBlockNum uint64, numBlocksBeforeStart uint64) {
+func (l *TrxDBLoader) BuildPipelinePatch(startBlockNum uint64, numBlocksBeforeStart uint64) {
 	l.BuildPipelineJob(startBlockNum, numBlocksBeforeStart, l.PatchJob)
 }
 
-func (l *BigtableLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStart uint64, job Job) {
+func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStart uint64, job Job) {
 	l.processingJob = job
 
 	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, l)
@@ -189,7 +192,7 @@ func (l *BigtableLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeS
 	l.source = fs
 }
 
-func (l *BigtableLoader) Launch() {
+func (l *TrxDBLoader) Launch() {
 	l.source.OnTerminating(func(err error) {
 		l.Shutdown(err)
 	})
@@ -202,36 +205,36 @@ func (l *BigtableLoader) Launch() {
 	l.source.Run()
 }
 
-func (l *BigtableLoader) InitLIB(libID string) {
+func (l *TrxDBLoader) InitLIB(libID string) {
 	// Only works on EOS!
 	l.forkDB.InitLIB(bstream.BlockRefFromID(libID))
 }
 
 // StopBeforeBlock indicates the stop block (exclusive), means that
 // block num will not be inserted.
-func (l *BigtableLoader) StopBeforeBlock(blockNum uint64) {
+func (l *TrxDBLoader) StopBeforeBlock(blockNum uint64) {
 	l.endBlock = blockNum
 }
 
-func (l *BigtableLoader) setUnhealthy() {
+func (l *TrxDBLoader) setUnhealthy() {
 	if l.healthy {
 		l.healthy = false
 	}
 }
 
-func (l *BigtableLoader) setHealthy() {
+func (l *TrxDBLoader) setHealthy() {
 	if !l.healthy {
 		l.healthy = true
 	}
 }
 
-func (l *BigtableLoader) Healthy() bool {
+func (l *TrxDBLoader) Healthy() bool {
 	return l.healthy
 }
 
 // fullJob does all the database insertions needed to load the blockchain
 // into our database.
-func (l *BigtableLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
+func (l *TrxDBLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
 	blkTime := block.MustTime()
 
 	switch fObj.Step {
@@ -245,6 +248,7 @@ func (l *BigtableLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *fo
 		if err := l.db.PutBlock(context.Background(), block); err != nil {
 			return fmt.Errorf("store block: %s", err)
 		}
+
 		return l.FlushIfNeeded(blockNum, blkTime)
 	case forkable.StepIrreversible:
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
@@ -279,7 +283,7 @@ func (l *BigtableLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *fo
 	}
 }
 
-func (l *BigtableLoader) ProcessBlock(blk *bstream.Block, obj interface{}) (err error) {
+func (l *TrxDBLoader) ProcessBlock(blk *bstream.Block, obj interface{}) (err error) {
 	if l.IsTerminating() {
 		return nil
 	}
@@ -287,7 +291,7 @@ func (l *BigtableLoader) ProcessBlock(blk *bstream.Block, obj interface{}) (err 
 	return l.processingJob(blk.Num(), blk.ToNative().(*pbcodec.Block), obj.(*forkable.ForkableObject))
 }
 
-func (l *BigtableLoader) DoFlush(blockNum uint64) error {
+func (l *TrxDBLoader) DoFlush(blockNum uint64) error {
 	zlog.Debug("flushing block", zap.Uint64("block_num", blockNum))
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
@@ -298,7 +302,7 @@ func (l *BigtableLoader) DoFlush(blockNum uint64) error {
 	return nil
 }
 
-func (l *BigtableLoader) FlushIfNeeded(blockNum uint64, blockTime time.Time) error {
+func (l *TrxDBLoader) FlushIfNeeded(blockNum uint64, blockTime time.Time) error {
 	if blockNum%l.batchSize == 0 || time.Since(blockTime) < 25*time.Second {
 		err := l.DoFlush(blockNum)
 		if err != nil {
@@ -309,7 +313,7 @@ func (l *BigtableLoader) FlushIfNeeded(blockNum uint64, blockTime time.Time) err
 	return nil
 }
 
-func (l *BigtableLoader) ShowProgress(blockNum uint64) {
+func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 	now := time.Now()
 	if l.lastTickTime.Before(now.Add(-5 * time.Second)) {
 		if !l.lastTickTime.IsZero() {
@@ -324,14 +328,14 @@ func (l *BigtableLoader) ShowProgress(blockNum uint64) {
 	}
 }
 
-func (l *BigtableLoader) ShouldPushLIBUpdates(dposLIBNum uint64) bool {
+func (l *TrxDBLoader) ShouldPushLIBUpdates(dposLIBNum uint64) bool {
 	if dposLIBNum > l.forkDB.LIBNum() {
 		return true
 	}
 	return false
 }
 
-func (l *BigtableLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream.PreprocessedBlock) error {
+func (l *TrxDBLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream.PreprocessedBlock) error {
 	for _, blkObj := range nowIrreversibleBlocks {
 		blk := blkObj.Block.ToNative().(*pbcodec.Block)
 
@@ -357,7 +361,7 @@ func (l *BigtableLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream
 // `patch-<tag>-<date>` where the tag is giving an overview of the patch and the date
 // is the effective date (`<year>-<month>-<day>`): `patch-add-trx-meta-written-2019-06-30`.
 // The branch is then deleted and the tag is pushed to the remote repository.
-func (l *BigtableLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
+func (l *TrxDBLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
 	switch fObj.Step {
 	case forkable.StepNew:
 		l.ShowProgress(blockNum)

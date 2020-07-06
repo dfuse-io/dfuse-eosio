@@ -3,7 +3,9 @@ package cli
 import (
 	"math"
 	"path/filepath"
+	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -19,13 +21,15 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/trxdb-loader.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
-			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "number of blocks batched together for database write")
+			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "Number of blocks batched together for database write")
+			cmd.Flags().StringSlice("trxdb-loader-indexable-rows", []string{"*"}, "Pick & choose what type of rows you want to index, indexing all by defaults, valid values: "+strings.Join(trxdb.ValidIndexingRowKeys, ", ")+".")
 			cmd.Flags().Uint64("trxdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
 			cmd.Flags().Uint64("trxdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
 			cmd.Flags().Uint64("trxdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
 			cmd.Flags().String("trxdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
 			cmd.Flags().Int("trxdb-loader-parallel-file-download-count", 2, "Maximum number of files to download in parallel")
 			cmd.Flags().Bool("trxdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
+
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -39,7 +43,7 @@ func init() {
 			}
 
 			return trxdbLoaderApp.New(&trxdbLoaderApp.Config{
-				ChainId:                   viper.GetString("common-chain-id"),
+				ChainID:                   viper.GetString("common-chain-id"),
 				ProcessingType:            viper.GetString("trxdb-loader-processing-type"),
 				BlockStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				KvdbDsn:                   mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
@@ -51,6 +55,7 @@ func init() {
 				AllowLiveOnEmptyTable:     viper.GetBool("trxdb-loader-allow-live-on-empty-table"),
 				HTTPListenAddr:            viper.GetString("trxdb-loader-http-listen-addr"),
 				ParallelFileDownloadCount: viper.GetInt("trxdb-loader-parallel-file-download-count"),
+				IndexableRows:             viper.GetStringSlice(("trxdb-loader-indexable-rows")),
 			}), nil
 		},
 	})

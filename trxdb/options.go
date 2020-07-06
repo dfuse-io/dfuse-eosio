@@ -14,14 +14,65 @@
 
 package trxdb
 
-import "google.golang.org/grpc"
+import (
+	"fmt"
+	"sort"
+	"strings"
 
-type Option interface {
-	option()
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
+)
+
+var FullIndexing = map[pbtrxdb.IndexableRow]bool{}
+var ValidIndexingRowKeys []string
+
+func init() {
+	for key := range pbtrxdb.IndexableRow_name {
+		FullIndexing[pbtrxdb.IndexableRow(key)] = true
+	}
+
+	for key := range pbtrxdb.IndexableRow_value {
+		ValidIndexingRowKeys = append(ValidIndexingRowKeys, strings.ToLower(strings.Replace(key, "INDEXABLE_ROW_", "", 1)))
+	}
+	sort.Sort(sort.StringSlice(ValidIndexingRowKeys))
+
+	return
 }
 
-func WithGRPCConn(conn *grpc.ClientConn) Option { return &GRPCConn{conn} }
+type Option interface {
+	trxDBOption()
+}
 
-type GRPCConn struct{ ClientConn *grpc.ClientConn }
+type IndexableRows []string
 
-func (GRPCConn) option() {}
+func WithIndexableRows(in []string) Option {
+	return IndexableRows(in)
+}
+
+func (i IndexableRows) trxDBOption() {}
+
+func (i IndexableRows) ToMap() (out map[pbtrxdb.IndexableRow]bool, err error) {
+	if len(i) == 0 || len(i) == 1 && i[0] == "*" {
+		return FullIndexing, nil
+	}
+
+	out = map[pbtrxdb.IndexableRow]bool{}
+	for _, in := range i {
+		value, err := i.toIndexableRow(in)
+		if err != nil {
+			return nil, err
+		}
+
+		out[value] = true
+	}
+
+	return
+}
+
+func (i IndexableRows) toIndexableRow(in string) (pbtrxdb.IndexableRow, error) {
+	value, found := pbtrxdb.IndexableRow_value["INDEXABLE_ROW_"+strings.ToUpper(in)]
+	if !found {
+		return 0, fmt.Errorf("invalid indexable row value %q, valid values are %q", in, strings.Join(ValidIndexingRowKeys, ", "))
+	}
+
+	return pbtrxdb.IndexableRow(value), nil
+}
