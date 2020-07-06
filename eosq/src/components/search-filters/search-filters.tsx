@@ -11,10 +11,10 @@ import { t } from "i18next"
 import { RouteComponentProps } from "react-router"
 import queryString from "query-string"
 import { performStructuredSearch } from "../../services/search"
-import { Box } from "@dfuse/explorer"
+import { Box, formatNumber } from "@dfuse/explorer"
 import { UiDropDown } from "../../atoms/ui-dropdown/ui-dropdown.component"
 import Checkbox from "@material-ui/core/Checkbox/Checkbox"
-import { formatNumber } from "../../helpers/formatters"
+
 import { UiSwitch } from "../../atoms/ui-switch/switch"
 
 interface Props extends RouteComponentProps<any> {

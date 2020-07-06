@@ -6,7 +6,7 @@ import { ExternalTextLink, Text } from "../../../../atoms/text/text.component"
 import { PillLogoProps } from "../../../../atoms/pills/pill"
 import { getInfiniverseDeletePersistLevel1Fields } from "../pill-template.helpers"
 import { Grid } from "../../../../atoms/ui-grid/ui-grid.component"
-import { CellValue } from "../../../../atoms/pills/detail-line"
+import { CellValue } from "@dfuse/explorer"
 
 export class InfiniverseDeletePersistPillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {

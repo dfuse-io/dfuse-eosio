@@ -20,14 +20,12 @@ import { streamPrice } from "../../clients/websocket/eosws"
 import { InboundMessage, Stream, HeadInfoData } from "@dfuse/client"
 import { AccountDetail } from "../../pages/account/account-detail.page"
 import { TransactionSearchResultPage } from "../../pages/search-result/transaction-search-result.page"
-import { NBSP } from "../../helpers/formatters"
+import { NBSP, getDfuseClient } from "@dfuse/explorer"
 import { observer } from "mobx-react"
 import { theme, styled } from "../../theme"
 import { ServiceWorkerStates } from "../../stores/service-worker-store"
 import { handleVisibilityChange, VISIBILITYCHANGE } from "../../helpers/focus.helpers"
 import { Config, EosqNetwork } from "../../models/config"
-
-import { getDfuseClient } from "@dfuse/explorer"
 
 const SkewedCell = styled(Cell)`
   position: relative;

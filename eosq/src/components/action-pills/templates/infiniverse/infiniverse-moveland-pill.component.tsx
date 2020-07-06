@@ -6,7 +6,7 @@ import { Text } from "../../../../atoms/text/text.component"
 import { PillLogoProps } from "../../../../atoms/pills/pill"
 import { getInfiniverseMoveLandLevel1Fields } from "../pill-template.helpers"
 import { Grid } from "../../../../atoms/ui-grid/ui-grid.component"
-import { CellValue } from "../../../../atoms/pills/detail-line"
+import { CellValue } from "@dfuse/explorer"
 import { t } from "../../../../i18n"
 
 export class MoveLandPillComponent extends GenericPillComponent {

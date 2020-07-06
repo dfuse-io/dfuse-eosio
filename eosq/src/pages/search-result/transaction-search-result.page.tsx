@@ -1,7 +1,7 @@
 import * as React from "react"
 import { observer } from "mobx-react"
 import { RouteComponentProps } from "react-router-dom"
-import { Box, JsonWrapper } from "@dfuse/explorer"
+import { Box, JsonWrapper, formatNumber, NBSP } from "@dfuse/explorer"
 import { ErrorData } from "@dfuse/client"
 import { Button } from "@material-ui/core"
 import { Panel } from "../../atoms/panel/panel.component"
@@ -13,7 +13,7 @@ import { transactionSearchResultsToTransactionInfo } from "../../helpers/legacy.
 import { ListTransactions } from "../../components/list-transactions/list-transactions.component"
 import { t } from "i18next"
 import { ListContentLoaderComponent } from "../../components/list-content-loader/list-content-loader.component"
-import { formatNumber, NBSP } from "../../helpers/formatters"
+
 import { searchStore } from "../../stores"
 import { performStructuredSearch } from "../../services/search"
 import { SearchQueryParams, LegacySearchQueryParams } from "../../models/search"

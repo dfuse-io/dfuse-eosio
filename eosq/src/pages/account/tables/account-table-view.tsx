@@ -18,7 +18,7 @@ import {
 } from "../../../atoms/ui-table/ui-table.component"
 import { ContentLoaderComponent } from "../../../components/content-loader/content-loader.component"
 import { FormattedContractElement } from "../../../components/formatted-contract-element/formatted-contract-element"
-import { humanizeSnakeCase, NBSP } from "../../../helpers/formatters"
+import { humanizeSnakeCase, NBSP } from "@dfuse/explorer"
 import { fetchContractTableRowsOnContractPage } from "../../../services/contract-table"
 import { Links } from "../../../routes"
 import { NavigationButtons } from "../../../atoms/navigation-buttons/navigation-buttons"

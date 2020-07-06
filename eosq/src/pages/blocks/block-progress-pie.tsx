@@ -1,12 +1,11 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-import { formatPercentage } from "../../helpers/formatters"
+import { formatPercentage, Spinner } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { Text } from "../../atoms/text/text.component"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
-import { Spinner } from "@dfuse/explorer"
 
 const MiddleChild: React.ComponentType<any> = styled(Cell)`
   position: absolute;

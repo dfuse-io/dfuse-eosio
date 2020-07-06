@@ -15,7 +15,7 @@ import { WrappingText } from "../../atoms/text-elements/misc"
 
 // temp ignore for dev
 
-import { DataLoading, DataError } from "@dfuse/explorer"
+import { DataLoading, DataError, BULLET, truncateString } from "@dfuse/explorer"
 
 import { PageContainer } from "../../components/page-container/page-container"
 import { TransactionLifecycle, Stream } from "@dfuse/client"
@@ -23,7 +23,6 @@ import { TransactionContents } from "./transaction-contents"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { registerTransactionLifecycleListener } from "../../streams/transaction-listeners"
 import { TransactionLifecycleWrap } from "../../services/transaction-lifecycle"
-import { BULLET, truncateString } from "../../helpers/formatters"
 
 export interface PathParams {
   id: string

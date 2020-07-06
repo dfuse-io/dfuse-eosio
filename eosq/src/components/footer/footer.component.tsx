@@ -9,7 +9,7 @@ import { fontSize, space } from "styled-system"
 import { theme, styled } from "../../theme"
 import { faTelegramPlane } from "@fortawesome/free-brands-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { BULLET, NBSP } from "../../helpers/formatters"
+import { BULLET, NBSP } from "@dfuse/explorer"
 import { getCurrentLanguageValue } from "../settings-selectors/settings.helpers"
 
 const LogoLink: React.ComponentType<any> = styled(Link)`

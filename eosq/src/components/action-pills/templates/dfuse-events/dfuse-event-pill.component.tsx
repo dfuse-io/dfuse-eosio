@@ -4,7 +4,7 @@ import { GenericPillComponent, PillRenderingContext } from "../generic-pill.comp
 import { getDfuseEventLevel1Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 import { Pill, PillLogoProps } from "../../../../atoms/pills/pill"
-import { CellValue } from "../../../../atoms/pills/detail-line"
+import { CellValue } from "@dfuse/explorer"
 import { Cell, Grid } from "../../../../atoms/ui-grid/ui-grid.component"
 import { Text } from "../../../../atoms/text/text.component"
 import { t } from "../../../../i18n"

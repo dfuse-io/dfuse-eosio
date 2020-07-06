@@ -6,7 +6,7 @@ import { MonospaceTextLink } from "../../../../atoms/text-elements/misc"
 import { Links } from "../../../../routes"
 import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"
 import { getBlobUrlFromPayload } from "../pill-template.helpers"
-import { hex2binary, hex2sha256 } from "../../../../helpers/formatters"
+import { hex2binary, hex2sha256 } from "@dfuse/explorer"
 import { t } from "i18next"
 
 export class SetcodePillComponent extends GenericPillComponent {

@@ -2,8 +2,8 @@ import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
 import { MonospaceText, MonospaceTextLink } from "../../atoms/text-elements/misc"
-import { DetailLine } from "../../atoms/pills/detail-line"
-import { BULLET, formatNumber, formatPercentage, truncateString } from "../../helpers/formatters"
+import { DetailLine, BULLET, formatNumber, formatPercentage, truncateString } from "@dfuse/explorer"
+
 import { Links } from "../../routes"
 import { Text } from "../../atoms/text/text.component"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
@@ -164,25 +164,25 @@ export class BlockHeader extends ContentLoaderComponent<Props, any> {
   renderDetail = (block: BlockSummary): JSX.Element => {
     return (
       <Cell wordBreak="break-all" pt={[2]}>
-        <DetailLine color="text" compact={true} label={t("transaction.blockPanel.block")}>
+        <DetailLine color="text" variant="compact" label={t("transaction.blockPanel.block")}>
           {this.renderMonospaceText(formatNumber(block.block_num))}
         </DetailLine>
-        <DetailLine compact={true} label={t("transaction.blockPanel.age")}>
+        <DetailLine variant="compact" label={t("transaction.blockPanel.age")}>
           {this.renderAge(block.header.timestamp)}
         </DetailLine>
-        <DetailLine compact={true} label={t("transaction.blockPanel.blockId")}>
+        <DetailLine variant="compact" label={t("transaction.blockPanel.blockId")}>
           {this.renderMonospaceText(block.id)}
         </DetailLine>
-        <DetailLine compact={true} label={t("transaction.blockPanel.status")}>
+        <DetailLine variant="compact" label={t("transaction.blockPanel.status")}>
           {this.renderStatus(block)}
         </DetailLine>
-        <DetailLine compact={true} label={t("transaction.blockPanel.producer")}>
+        <DetailLine variant="compact" label={t("transaction.blockPanel.producer")}>
           {this.renderProducerValue(block.header.producer)}
         </DetailLine>
-        <DetailLine compact={true} label={t("block.transactionCount")}>
+        <DetailLine variant="compact" label={t("block.transactionCount")}>
           {this.renderText(formatNumber(block.transaction_count))}
         </DetailLine>
-        <DetailLine compact={true} label={t("block.scheduleVersion")}>
+        <DetailLine variant="compact" label={t("block.scheduleVersion")}>
           <UiToolTip>
             <Text color="text" borderBottom={`2px dotted ${theme.colors.grey5}`}>
               {block.header.schedule_version}
@@ -198,7 +198,7 @@ export class BlockHeader extends ContentLoaderComponent<Props, any> {
           </UiToolTip>
         </DetailLine>
         {block.dpos_lib_num ? (
-          <DetailLine compact={true} label={t("block.dpos_lib_num")}>
+          <DetailLine variant="compact" label={t("block.dpos_lib_num")}>
             {" "}
             {this.renderMonospaceText(formatNumber(block.dpos_lib_num))}{" "}
           </DetailLine>

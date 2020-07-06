@@ -16,7 +16,7 @@ import {
   PieChartParams,
   StakeDetail
 } from "../../../helpers/account.helpers"
-import { NBSP } from "../../../helpers/formatters"
+import { NBSP } from "@dfuse/explorer"
 
 // temp ignore for dev
 

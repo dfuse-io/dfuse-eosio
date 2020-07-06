@@ -10,7 +10,7 @@ import { ErrorData, Stream } from "@dfuse/client"
 
 // temp ignore for dev
 
-import { DataLoading } from "@dfuse/explorer"
+import { DataLoading, BULLET } from "@dfuse/explorer"
 import { CustomTitleBanner } from "../../atoms/panel/custom-title-banner"
 import { AccountSummary } from "./summary/account-summary"
 import { AccountTitle } from "./summary/account-title"
@@ -21,7 +21,7 @@ import { NavigationButtons } from "../../atoms/navigation-buttons/navigation-but
 import { Vote } from "../../models/vote"
 import { getRankInfo } from "../../helpers/account.helpers"
 import { registerAccountDetailsListeners } from "../../streams/account-listeners"
-import { BULLET } from "../../helpers/formatters"
+
 import { FormattedError } from "../../components/formatted-error/formatted-error"
 
 interface Props extends RouteComponentProps<any> {}

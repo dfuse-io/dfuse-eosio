@@ -1,9 +1,9 @@
 import * as React from "react"
-import { Box } from "@dfuse/explorer"
+import { Box, explodeJson, DetailLineAuto } from "@dfuse/explorer"
 import { Pill, PillLogoProps } from "../../../atoms/pills/pill"
-import { explodeJson } from "../../../helpers/formatters"
+
 import { Cell } from "../../../atoms/ui-grid/ui-grid.component"
-import { DetailLineAuto } from "../../../atoms/pills/detail-line"
+
 import { KeyValueFormatEllipsis, Text } from "../../../atoms/text/text.component"
 import { theme } from "../../../theme"
 import { t } from "i18next"

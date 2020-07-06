@@ -2,8 +2,8 @@ import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
 import { MonospaceTextLink, WrappingText } from "../../../atoms/text-elements/misc"
-import { DetailLine } from "../../../atoms/pills/detail-line"
 import {
+  DetailLine,
   formatBytes,
   formatDateTime,
   formatMicroseconds,
@@ -11,8 +11,10 @@ import {
   formatTransactionID,
   LONGDASH,
   NBSP,
-  secondsToTime
-} from "../../../helpers/formatters"
+  secondsToTime,
+  JsonWrapper
+} from "@dfuse/explorer"
+
 import { ExtDTrxOp, Authorization } from "@dfuse/client"
 import {
   computeTransactionTrustPercentage,
@@ -31,7 +33,7 @@ import {
   getTransactionStatusColor
 } from "../../../helpers/transaction.helpers"
 import { translate, Trans } from "react-i18next"
-import { JsonWrapper } from "@dfuse/explorer"
+
 import { UiHrDotted } from "../../../atoms/ui-hr/ui-hr"
 import { UiModal } from "../../../atoms/ui-modal/ui-modal"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -235,7 +237,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
     }
 
     return (
-      <DetailLine compact={true} label={t("transaction.blockPanel.producer")}>
+      <DetailLine variant="compact" label={t("transaction.blockPanel.producer")}>
         <MonospaceTextLink to={Links.viewAccount({ id: this.blockHeader!.producer })}>
           {this.blockHeader!.producer}
         </MonospaceTextLink>
@@ -259,15 +261,15 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
     if (this.props.lifecycleWrap.blockId) {
       return (
         <Cell pt={[2]}>
-          <DetailLine compact={true} label={t("transaction.blockPanel.block")}>
+          <DetailLine variant="compact" label={t("transaction.blockPanel.block")}>
             {this.renderBlockValue()}
           </DetailLine>
           {this.props.lifecycleWrap.blockTimestamp ? (
-            <DetailLine compact={true} label={t("transaction.blockPanel.age")}>
+            <DetailLine variant="compact" label={t("transaction.blockPanel.age")}>
               <Age date={this.props.lifecycleWrap.blockTimestamp} />
             </DetailLine>
           ) : null}
-          <DetailLine compact={true} label={t("transaction.blockPanel.blockId")}>
+          <DetailLine variant="compact" label={t("transaction.blockPanel.blockId")}>
             <TextLink
               to={
                 this.props.lifecycleWrap.blockId
@@ -278,7 +280,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
               {this.props.lifecycleWrap.blockId}
             </TextLink>
           </DetailLine>
-          <DetailLine compact={true} label={t("transaction.blockPanel.status")}>
+          <DetailLine variant="compact" label={t("transaction.blockPanel.status")}>
             {this.renderBlockStatusValue()}
           </DetailLine>
           {this.renderProducerValue()}
@@ -308,7 +310,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
       }
 
       return (
-        <DetailLine key={`${ref}-${i18nKey}`} compact={true} label={t(i18nKeyLabel)}>
+        <DetailLine key={`${ref}-${i18nKey}`} variant="compact" label={t(i18nKeyLabel)}>
           <Trans
             i18nKey={i18nKeyContent}
             values={{
@@ -336,7 +338,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
       this.props.lifecycleWrap.transaction.delay_sec > 0
     ) {
       return (
-        <DetailLine key="0" compact={true} label={t("transaction.deferred.delayedFor")}>
+        <DetailLine key="0" variant="compact" label={t("transaction.deferred.delayedFor")}>
           {secondsToTime(this.props.lifecycleWrap.lifecycle.transaction!.delay_sec)}
         </DetailLine>
       )
@@ -399,7 +401,7 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
     const failureTrace = this.props.lifecycleWrap.executionTrace.failed_dtrx_trace
 
     return (
-      <DetailLine key="failure-trace" compact={true} label={t(i18nKeyLabel)}>
+      <DetailLine key="failure-trace" variant="compact" label={t(i18nKeyLabel)}>
         <Trans
           i18nKey={i18nKeyContent}
           values={{
@@ -428,11 +430,11 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
     return [
       this.renderFailureTraceDetail(),
 
-      <DetailLine key="1" compact={true} label={t("transaction.detailPanel.cpuUsage")}>
+      <DetailLine key="1" variant="compact" label={t("transaction.detailPanel.cpuUsage")}>
         {this.renderCpuUsage(executionTrace.receipt && executionTrace.receipt.cpu_usage_us)}
       </DetailLine>,
 
-      <DetailLine key="2" compact={true} label={t("transaction.detailPanel.networkUsage")}>
+      <DetailLine key="2" variant="compact" label={t("transaction.detailPanel.networkUsage")}>
         {this.renderNetworkUsage(
           executionTrace.receipt && executionTrace.receipt.net_usage_words * 8
         )}
@@ -444,16 +446,16 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
     return (
       <Grid gridTemplateColumns={["1fr", "1fr"]}>
         <Cell pt={[2]} wordBreak="break-all">
-          <DetailLine compact={true} label={t("transaction.detailPanel.status")}>
+          <DetailLine variant="compact" label={t("transaction.detailPanel.status")}>
             {this.renderTransactionStatusValue()}
           </DetailLine>
 
           {this.renderDeferredInfo()}
           {this.renderExecutionDetails()}
-          <DetailLine compact={true} label={t("transaction.detailPanel.authorizations")}>
+          <DetailLine variant="compact" label={t("transaction.detailPanel.authorizations")}>
             {this.renderAuthorizations()}
           </DetailLine>
-          <DetailLine compact={true} label={t("transaction.detailPanel.signedBy")}>
+          <DetailLine variant="compact" label={t("transaction.detailPanel.signedBy")}>
             {this.renderSignedBy()}
           </DetailLine>
         </Cell>

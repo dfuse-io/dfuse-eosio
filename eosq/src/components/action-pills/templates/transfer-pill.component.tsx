@@ -6,7 +6,7 @@ import { GenericPillComponent, PillRenderingContext } from "./generic-pill.compo
 import { getNewAccountFromNameServiceFields, getNewAccountInTraces } from "./pill-template.helpers"
 import { Grid } from "../../../atoms/ui-grid/ui-grid.component"
 import { Text } from "../../../atoms/text/text.component"
-import { CellValue } from "../../../atoms/pills/detail-line"
+import { CellValue } from "@dfuse/explorer"
 import { FormattedText } from "../../formatted-text/formatted-text"
 
 export class TransferPillComponent extends GenericPillComponent {
