@@ -84,8 +84,6 @@ func (a *App) Run() error {
 		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
 
-	defer db.Close()
-
 	db.SetWriterChainID(chainID)
 
 	l := trxdbloader.NewTrxDBLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
@@ -124,8 +122,15 @@ func (a *App) Run() error {
 		loader.BuildPipelinePatch(uint64(a.Config.StartBlockNum), uint64(a.Config.NumBlocksBeforeStart))
 	}
 
-	a.OnTerminating(loader.Shutdown)
-	loader.OnTerminated(a.Shutdown)
+	a.OnTerminating(func(err error) {
+		loader.Shutdown(err)
+		db.Close()
+	})
+
+	loader.OnTerminated(func(err error) {
+		db.Close()
+		a.Shutdown(err)
+	})
 
 	go loader.Launch()
 	return nil

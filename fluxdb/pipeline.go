@@ -86,9 +86,11 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 			return fs
 		})
 
-		js := bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate, bstream.JoiningSourceLogger(zlog.Named("js")), bstream.JoiningSourceTargetBlockID(startBlock.ID()), bstream.JoiningSourceTargetBlockNum(2))
-
-		return js
+		return bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate,
+			bstream.JoiningSourceLogger(zlog),
+			bstream.JoiningSourceTargetBlockID(startBlock.ID()),
+			bstream.JoiningSourceTargetBlockNum(2),
+		)
 	})
 
 	es := bstream.NewDelegatingEternalSource(sf, getBlockID, handler, bstream.EternalSourceWithLogger(zlog))

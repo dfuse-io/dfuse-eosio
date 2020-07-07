@@ -135,14 +135,14 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			return fs
 		})
 
-		js := bstream.NewJoiningSource(fileSourceFactory,
+		return bstream.NewJoiningSource(fileSourceFactory,
 			liveSourceFactory,
 			handler,
+			bstream.JoiningSourceLogger(zlog),
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
-			bstream.JoiningSourceLogger(zlog.Named("live-js")),
+			bstream.JoiningSourceLiveTracker(300, bstream.HeadBlockRefGetter(l.blockStreamAddr)),
 		)
-		return js
 	})
 
 	forkableHandler := forkable.New(l,
@@ -296,7 +296,7 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	defer cancel()
 	err := l.db.Flush(ctx)
 	if err != nil {
-		return fmt.Errorf("Leaving ProcessBlock on failed flushAllMutations: %s", err)
+		return fmt.Errorf("db flush: %w", err)
 	}
 	return nil
 }
