@@ -16,4 +16,5 @@ start:
   - trxdb-loader
   flags:
     common-include-filter-expr: receiver == "eosio.token"
+    common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
     relayer-source: ":10000"

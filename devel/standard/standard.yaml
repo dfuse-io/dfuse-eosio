@@ -19,6 +19,5 @@ start:
   - search-router
   - trxdb-loader
   flags:
-    # Working only once feature/filtering is merged in!
-    # common-include-filter-expr: "*"
-    # common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
+    common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")

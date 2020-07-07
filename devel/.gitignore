@@ -1,6 +1,5 @@
 dfuse-data/
-producer/
-mindreader/
+protocol_features/
 
 # You can use this folder to ignore your "personal" startup folders
 /perso
