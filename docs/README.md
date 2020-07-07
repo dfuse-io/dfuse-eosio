@@ -1,4 +1,4 @@
-# dfuse for EOSIO Documentation
+# Docs about `dfuse for EOSIO`
 
 This is a (temporary?) place to store documentation about the
 open-source `dfuse for EOSIO` software.
