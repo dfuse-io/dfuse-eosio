@@ -32,7 +32,7 @@ func newTestDBFactory(t *testing.T) trxdbtest.DriverFactory {
 		dir, err := ioutil.TempDir("", "dfuse-trxdb-kv")
 		require.NoError(t, err)
 
-		db, err := New(fmt.Sprintf("badger://%s", dir))
+		db, err := New(fmt.Sprintf("badger://%s", dir), zlog)
 		require.NoError(t, err)
 
 		return db, func() {

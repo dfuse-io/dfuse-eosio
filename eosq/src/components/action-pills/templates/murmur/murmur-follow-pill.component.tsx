@@ -1,10 +1,9 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import { Box } from "@dfuse/explorer"
+import { Box, PillLogoProps, CellValue } from "@dfuse/explorer"
 import { KeyValueFormatEllipsis, Text } from "../../../../atoms/text/text.component"
-import { PillLogoProps } from "../../../../atoms/pills/pill"
+
 import { Grid } from "../../../../atoms/ui-grid/ui-grid.component"
-import { CellValue } from "../../../../atoms/pills/detail-line"
 
 export class MurmurFollowPillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {

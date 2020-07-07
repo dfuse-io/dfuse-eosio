@@ -16,7 +16,6 @@ package eosws
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -29,11 +28,9 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
@@ -241,26 +238,6 @@ func TestOnGetActionsTraces(t *testing.T) {
 	}
 }
 
-type TestPipelineInitiator struct {
-	pipeline bstream.Pipeline
-}
-
-func (m *TestPipelineInitiator) NewPipeline(
-	ctx context.Context,
-	startBlockID string,
-	startBlockNum uint32,
-	emissionStartBlock uint32,
-	originMsg wsmsg.IncomingMessager,
-	pipeline bstream.Pipeline,
-	onClose func(),
-) {
-	m.pipeline = pipeline
-}
-
-func (m *TestPipelineInitiator) pushBlock(block *bstream.Block, obj *forkable.ForkableObject) {
-	m.pipeline.ProcessBlock(block, obj)
-}
-
 type archiveFiles struct {
 	name    string
 	content []byte
@@ -364,7 +341,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 		return bstream.NewTestSource(h)
 	})
 
-	buf := bstream.NewBuffer("pubsubbuf")
+	buf := bstream.NewBuffer("pubsubbuf", zlog)
 	tailManager := bstream.NewSimpleTailManager(buf, 10)
 	subscriptionHub, err := hub.NewSubscriptionHub(uint64(startBlock), buf, tailManager.TailLock, fileSourceFactory, liveSourceFactory)
 	require.NoError(t, err)

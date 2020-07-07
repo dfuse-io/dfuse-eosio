@@ -135,9 +135,9 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			handler = NewProgressHandler(handler, ws, msg, ctx).ProcessBlock
 		}
 
-		gateHandler := bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler)
-		forkableHandler := forkable.New(gateHandler, forkable.WithExclusiveLIB(libID))
-		firstGate := bstream.NewBlockIDGate(libID.ID(), bstream.GateInclusive, forkableHandler)
+		gateHandler := bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+		forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(libID))
+		firstGate := bstream.NewBlockIDGate(libID.ID(), bstream.GateInclusive, forkableHandler, bstream.GateOptionWithLogger(zlog))
 
 		metrics.IncListeners("get_transaction")
 		source := ws.subscriptionHub.NewSourceFromBlockRef(libID, firstGate)

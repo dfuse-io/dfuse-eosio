@@ -4,7 +4,7 @@ import {
   getAmount,
   hex2sha256,
   secondsToTime
-} from "../../../helpers/formatters"
+} from "@dfuse/explorer"
 import { ActionTrace, Action } from "@dfuse/client"
 import { sha256 } from "js-sha256"
 import { TraceInfo } from "../../../models/pill-templates"

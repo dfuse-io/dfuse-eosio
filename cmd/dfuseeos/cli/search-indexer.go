@@ -68,7 +68,7 @@ func init() {
 					userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 				} else {
 					blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
-					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolverFunc(pbblockmeta.StartBlockResolver(blockmetaCli)))
+					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
 				}
 			}
 
@@ -81,6 +81,11 @@ func init() {
 			}
 			if len(startBlockResolvers) == 0 {
 				return nil, fmt.Errorf("no StartBlockResolver could be set for search indexer")
+			}
+
+			tracker := bstream.NewTracker(250)
+			for _, resolver := range startBlockResolvers {
+				tracker.AddResolver(resolver)
 			}
 
 			return indexerApp.New(&indexerApp.Config{
@@ -99,9 +104,9 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockFilter:        filter.TransformInPlace,
-				BlockMapper:        mapper,
-				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
+				BlockFilter: filter.TransformInPlace,
+				BlockMapper: mapper,
+				Tracker:     tracker,
 			}), nil
 		},
 	})

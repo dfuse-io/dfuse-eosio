@@ -1,9 +1,9 @@
 import { t } from "i18next"
 import * as React from "react"
-import { formatNumber } from "../../helpers/formatters"
+import { formatNumber, Box, Spinner } from "@dfuse/explorer"
 import { Vote } from "../../models/vote"
 import { Text } from "../../atoms/text/text.component"
-import { Box, Spinner } from "@dfuse/explorer"
+
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"

@@ -1,7 +1,7 @@
 import * as React from "react"
-import { Box } from "@dfuse/explorer"
+import { Box, NBSP } from "@dfuse/explorer"
 import { ArrowTo, MonospaceTextLink } from "../text-elements/misc"
-import { NBSP } from "../../helpers/formatters"
+
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons"
 import { Links } from "../../routes"
 import { EllipsisText, Text } from "../text/text.component"

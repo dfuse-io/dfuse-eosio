@@ -1,8 +1,7 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import { Box } from "@dfuse/explorer"
+import { Box, PillLogoProps } from "@dfuse/explorer"
 import { ExternalTextLink, KeyValueFormatEllipsis } from "../../../../atoms/text/text.component"
-import { PillLogoProps } from "../../../../atoms/pills/pill"
 
 export class MurmurUnfollowPillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {

@@ -172,10 +172,10 @@ func (a *App) Run() error {
 	//	}
 	//
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h)
+		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
 	})
 
-	buffer := bstream.NewBuffer("sub-hub")
+	buffer := bstream.NewBuffer("sub-hub", zlog)
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
 		return src
@@ -219,6 +219,7 @@ func (a *App) Run() error {
 		tailManager.TailLock,
 		fileSourceFactory,
 		liveSourceFactory,
+		hub.Withlogger(zlog),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create subscription hub: %w", err)

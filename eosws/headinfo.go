@@ -93,8 +93,8 @@ func (h *HeadInfoHub) Launch(ctx context.Context) {
 
 	})
 
-	gateHandler := bstream.NewBlockNumGate(uint64(startBlock), bstream.GateExclusive, handler)
-	forkableHandler := forkable.New(gateHandler, forkable.WithExclusiveLIB(libRef))
+	gateHandler := bstream.NewBlockNumGate(uint64(startBlock), bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+	forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(libRef))
 
 	joiningSourceFactory := bstream.SourceFromRefFactory(func(blockRef bstream.BlockRef, handler bstream.Handler) bstream.Source {
 		if blockRef.ID() == "" {
@@ -105,7 +105,7 @@ func (h *HeadInfoHub) Launch(ctx context.Context) {
 		return h.subscriptionHub.NewSourceFromBlockRef(blockRef, gate)
 	})
 
-	eternalSource := bstream.NewEternalSource(joiningSourceFactory, forkableHandler)
+	eternalSource := bstream.NewEternalSource(joiningSourceFactory, forkableHandler, bstream.EternalSourceWithLogger(zlog))
 
 	eternalSource.Run()
 	eternalSource.OnTerminating(func(e error) {

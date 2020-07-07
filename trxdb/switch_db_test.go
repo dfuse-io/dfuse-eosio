@@ -7,10 +7,11 @@ import (
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 func init() {
-	Register("test", func(dsn string) (Driver, error) {
+	Register("test", func(dsn string, logger *zap.Logger) (Driver, error) {
 		return &testDriver{dsn: dsn}, nil
 	})
 }

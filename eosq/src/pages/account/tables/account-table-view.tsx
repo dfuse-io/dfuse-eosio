@@ -3,7 +3,7 @@ import H from "history"
 import { observer } from "mobx-react"
 import * as React from "react"
 import queryString from "query-string"
-import { JsonWrapper } from "@dfuse/explorer"
+import { JsonWrapper, humanizeSnakeCase, NBSP, Box } from "@dfuse/explorer"
 import { BorderLessPanel } from "../../../atoms/panel/panel.component"
 import { Text } from "../../../atoms/text/text.component"
 import { Cell, Grid } from "../../../atoms/ui-grid/ui-grid.component"
@@ -18,14 +18,13 @@ import {
 } from "../../../atoms/ui-table/ui-table.component"
 import { ContentLoaderComponent } from "../../../components/content-loader/content-loader.component"
 import { FormattedContractElement } from "../../../components/formatted-contract-element/formatted-contract-element"
-import { humanizeSnakeCase, NBSP } from "../../../helpers/formatters"
+
 import { fetchContractTableRowsOnContractPage } from "../../../services/contract-table"
 import { Links } from "../../../routes"
 import { NavigationButtons } from "../../../atoms/navigation-buttons/navigation-buttons"
 import { contractTableStore } from "../../../stores"
 import { AbiStructField } from "@dfuse/client"
 import { GetTableRowParams } from "../../../clients/websocket/eosws"
-import { Box } from "@dfuse/explorer"
 
 interface Props {
   location: H.Location

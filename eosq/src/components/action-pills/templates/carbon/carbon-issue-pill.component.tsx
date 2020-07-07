@@ -1,10 +1,10 @@
 import * as React from "react"
-import { Box } from "@dfuse/explorer"
+import { Box, Pill, PillLogoProps, MonospaceText, PillClickable } from "@dfuse/explorer"
+import { theme } from "../../../../theme"
 import { getMemoText } from "../../../../helpers/action.helpers"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
 import { getCarbonIssueLevel1Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
-import { Pill, PillLogoProps } from "../../../../atoms/pills/pill"
 
 export class CarbonIssuePillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {
@@ -53,25 +53,43 @@ export class CarbonIssuePillComponent extends GenericPillComponent {
     )
   }
 
+  renderLeftPill = () => {
+    if (!this.props.headerAndTitleOptions.title) {
+      return (
+        <Box px="2px" bg={this.props.leftPillColor || theme.colors.traceActionGenericBackground}>
+          &nbsp;
+        </Box>
+      )
+    }
+
+    const WrapperComponent = this.props.disabled ? Box : PillClickable
+
+    return (
+      <WrapperComponent bg={this.props.leftPillColor || theme.colors.traceActionGenericBackground}>
+        <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
+          {this.props.headerAndTitleOptions.title}
+        </MonospaceText>
+      </WrapperComponent>
+    )
+  }
+
   render() {
     const memoText = getMemoText(this.props.action)
 
     return (
       <Pill
+        leftPill={this.renderLeftPill()}
         logo={this.logo}
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
         info={memoText}
-        colorVariant="traceActionGenericBackground"
-        colorVariantHeader={this.props.headerAndTitleOptions.header.color}
         headerText={this.renderHeaderText()}
         renderExpandedContent={() => {
           return this.renderExpandedContent()
         }}
         renderInfo={this.renderLevel2Template}
         content={this.renderContent()}
-        title={this.props.headerAndTitleOptions.title}
       />
     )
   }

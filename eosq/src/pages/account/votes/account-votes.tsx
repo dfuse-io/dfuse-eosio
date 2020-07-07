@@ -8,9 +8,9 @@ import { Cell, Grid } from "../../../atoms/ui-grid/ui-grid.component"
 import { StatusBar } from "../../../atoms/status-bar/status-bar"
 import { Text, TextLink } from "../../../atoms/text/text.component"
 import { t } from "i18next"
-import { formatPercentage, NBSP } from "../../../helpers/formatters"
+import { formatPercentage, NBSP, DetailLine } from "@dfuse/explorer"
 import numeral from "numeral"
-import { DetailLine } from "../../../atoms/pills/detail-line"
+
 import { calculateVoteStrength } from "./vote.helpers"
 import { Stream } from "@dfuse/client"
 import { registerAccountDetailsListeners } from "../../../streams/account-listeners"
@@ -192,14 +192,14 @@ export class AccountVotes extends React.Component<Props, State> {
       <Cell alignSelf="left" justifySelf="left" gridColumn={["1"]} mt={[4]}>
         <DetailLine
           mb={2}
-          compact={true}
+          variant="compact"
           label={t("account.summary.voter_info.labels.vote_weight")}
         >
           {numeral(voteWeight).format("0,0.0000")} EOS
         </DetailLine>
         <DetailLine
           mb={2}
-          compact={true}
+          variant="compact"
           label={t("account.summary.voter_info.labels.decayed_vote_weight")}
         >
           {numeral(decayedVoteWeight).format("0,0.0000")} EOS

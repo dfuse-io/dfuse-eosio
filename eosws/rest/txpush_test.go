@@ -24,11 +24,11 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 )
 
 type archiveFile struct {
@@ -37,12 +37,6 @@ type archiveFile struct {
 }
 
 func Test_Handoffs(t *testing.T) {
-	libGetter := &hub.TestLIBGetter{LIB: 0}
-	subscriber := bstream.NewTestSubscriber()
-	archiveStore := dstore.NewMockStore(nil)
-
-	_, _, _ = libGetter, subscriber, archiveStore
-
 	cases := []struct {
 		name                string
 		blocks              []*bstream.Block
@@ -121,7 +115,7 @@ func Test_Handoffs(t *testing.T) {
 				return newDummySource()
 			})
 
-			buf := bstream.NewBuffer("mama")
+			buf := bstream.NewBuffer("mama", zlog)
 			tailManager := bstream.NewSimpleTailManager(buf, 10)
 			subhub, err := hub.NewSubscriptionHub(0, buf, tailManager.TailLock, blockSourceFactory, liveSourceFactory)
 			require.NoError(t, err)
@@ -182,6 +176,8 @@ type dummySource struct {
 
 func (s *dummySource) Run() {}
 
+func (s *dummySource) SetLogger(logger *zap.Logger) {}
+
 func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstream.Block {
 	pbblock := &pbcodec.Block{
 		Id:     id,
@@ -192,7 +188,7 @@ func txpushTestBlock(t *testing.T, id, previousID, producer, trxID string) *bstr
 			Timestamp: &timestamp.Timestamp{},
 		},
 		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
-			&pbcodec.TransactionTrace{
+			{
 				Id: trxID,
 			},
 		},

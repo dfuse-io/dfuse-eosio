@@ -10,7 +10,7 @@ import {
   formatMicroseconds,
   INFINITY,
   NBSP
-} from "../../../helpers/formatters"
+} from "@dfuse/explorer"
 import { Account } from "../../../models/account"
 import numeral from "numeral"
 import { StatusWidget } from "../../../atoms/status-widget/status-widget"

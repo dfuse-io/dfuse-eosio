@@ -65,7 +65,7 @@ func NewTrxDBLoader(
 		Shutter:                   shutter.New(),
 		db:                        db,
 		batchSize:                 batchSize,
-		forkDB:                    forkable.NewForkDB(),
+		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
 	}
 
@@ -110,7 +110,7 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 				startBlockID = startBlockRef.ID()
 			}
 
-			handler = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, h)
+			handler = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, h, bstream.GateOptionWithLogger(zlog))
 			blockNum = uint64(eosgo.BlockNum(startBlockID))
 		}
 
@@ -120,8 +120,8 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 				l.blockStreamAddr,
 				300,
 				subHandler,
+				blockstream.WithRequester("trxdb-loader"),
 			)
-			src.SetName("trxdb-loader")
 			return src
 		})
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
@@ -140,19 +140,18 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			handler,
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
-			bstream.JoiningSourceName("trxdb-loader"),
+			bstream.JoiningSourceLogger(zlog.Named("live-js")),
 		)
-		js.SetName("trxdb-loader")
 		return js
 	})
 
 	forkableHandler := forkable.New(l,
+		forkable.WithLogger(zlog),
 		forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible),
 		forkable.EnsureAllBlocksTriggerLongestChain(),
-		forkable.WithName("trxdb-loader"),
 	)
 
-	es := bstream.NewEternalSource(sf, forkableHandler)
+	es := bstream.NewEternalSource(sf, forkableHandler, bstream.EternalSourceWithLogger(zlog))
 	l.source = es
 	return nil
 }
@@ -168,10 +167,11 @@ func (l *TrxDBLoader) BuildPipelinePatch(startBlockNum uint64, numBlocksBeforeSt
 func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStart uint64, job Job) {
 	l.processingJob = job
 
-	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, l)
+	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, l, bstream.GateOptionWithLogger(zlog))
 	gate.MaxHoldOff = 1000
 
 	forkableHandler := forkable.New(gate,
+		forkable.WithLogger(zlog),
 		forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible),
 	)
 
@@ -186,6 +186,7 @@ func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStar
 		l.parallelFileDownloadCount,
 		nil,
 		forkableHandler,
+		bstream.FileSourceWithLogger(zlog),
 	)
 	l.source = fs
 }

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { truncateString } from "../../helpers/formatters"
+import { truncateString } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { Text } from "../text/text.component"
 import { Cell } from "../ui-grid/ui-grid.component"
