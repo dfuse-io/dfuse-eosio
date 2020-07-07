@@ -61,7 +61,7 @@ func init() {
 					userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 				} else {
 					blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
-					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolverFunc(pbblockmeta.StartBlockResolver(blockmetaCli)))
+					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
 				}
 			}
 
@@ -93,7 +93,7 @@ func init() {
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
 				BlockMapper:        mapper,
-				StartBlockResolver: bstream.ParallelStartResolver(startBlockResolvers, -1),
+				StartBlockResolver: bstream.ParallelBlockResolver(startBlockResolvers...),
 			}), nil
 		},
 	})

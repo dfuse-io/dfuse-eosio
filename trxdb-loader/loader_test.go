@@ -86,7 +86,7 @@ func TestBigtableLoader(t *testing.T) {
 	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
-	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
+	fkable := forkable.New(loader, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(previousRef))
 	require.NoError(t, fkable.ProcessBlock(blk, nil))
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
 	require.NoError(t, loader.db.Flush(ctx))
@@ -112,7 +112,7 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
-	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
+	fkable := forkable.New(loader, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(previousRef))
 	require.NoError(t, fkable.ProcessBlock(blk, nil))
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
 	require.NoError(t, trxdbDriver.Flush(ctx))

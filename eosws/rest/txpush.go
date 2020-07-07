@@ -335,8 +335,8 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 		return nil
 	})
 
-	forkHandler := forkable.New(handle, forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
-	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler)
+	forkHandler := forkable.New(handle, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
+	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
 
 	source := subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkablePostGate)
 	source.OnTerminating(func(e error) {
@@ -373,7 +373,7 @@ func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFacto
 
 	trxTraceFoundChan := make(chan *pbcodec.TransactionTrace)
 
-	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithFilters(forkable.StepIrreversible))
+	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 	source := sourceFactory(irrForkableHandler)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningIrreversible, -1)

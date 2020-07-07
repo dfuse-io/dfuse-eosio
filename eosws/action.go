@@ -131,11 +131,11 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	}
 
 	if msg.IrreversibleOnly {
-		forkableHandler := forkable.New(handler, forkable.WithFilters(forkable.StepIrreversible))
+		forkableHandler := forkable.New(handler, forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 		handler = forkableHandler.ProcessBlock
 	}
 
-	blocknumGate := bstream.NewBlockNumGate(uint64(authReq.StartBlockNum), bstream.GateInclusive, handler)
+	blocknumGate := bstream.NewBlockNumGate(uint64(authReq.StartBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 	metrics.IncListeners("get_action_traces")
 	irrRef := bstream.BlockRefFromID(irrID)
 	source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), blocknumGate, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))

@@ -217,7 +217,7 @@ func init() {
 			gs := dgrpc.NewServer(dgrpc.WithLogger(appLogger))
 			var bs logplugin.BlockStreamer
 			bs = logPlugin
-			server := blockstream.NewServer(gs)
+			server := blockstream.NewServer(gs, blockstream.ServerOptionWithLogger(appLogger))
 			bs.Run(server)
 
 			return nodeMindreaderApp.New(&nodeMindreaderApp.Config{

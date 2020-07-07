@@ -50,7 +50,7 @@ func e2eTest(t *testing.T, storeFactory StoreFactory, tester e2eTester) {
 	server := server.New(":25678", db)
 
 	runSource := func(blocks ...*pbcodec.Block) {
-		source := bstream.NewMockSource(bstreamBlocks(t, blocks...), bstream.NewPreprocessor(fluxdb.PreprocessBlock, forkable.New(handler)))
+		source := bstream.NewMockSource(bstreamBlocks(t, blocks...), bstream.NewPreprocessor(fluxdb.PreprocessBlock, forkable.New(handler, forkable.WithLogger(zlog))))
 		source.Run()
 
 		require.NoError(t, source.Err())
