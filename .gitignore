@@ -16,3 +16,5 @@ dashboard/client/.npmrc
 /dfuseeos
 *dbin*
 /proj*
+/dashboard/client/node_modules
+/dashboard/dashboard-build
