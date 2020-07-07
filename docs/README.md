@@ -9,7 +9,9 @@ https://docs.dfuse.io
 
 ## Administration Guide
 
-* Some [partial sync instructions](./PARTIAL_SYNC.md)
+* [3 phase launch of large networks instructions](https://github.com/dfuse-io/dfuse-eosio/issues/26)
+* Some sample [partial sync instructions](../PARTIAL_SYNC.md) for Kylin
+
 
 ## Architecture Diagrams
 
