@@ -123,7 +123,7 @@ func Test_Handoffs(t *testing.T) {
 
 			buf := bstream.NewBuffer("mama")
 			tailManager := bstream.NewSimpleTailManager(buf, 10)
-			subhub, err := hub.NewSubscriptionHub(0, buf, tailManager.TailLock, blockSourceFactory, liveSourceFactory)
+			subhub, err := hub.NewSubscriptionHub(0, buf, tailManager.TailLock, blockSourceFactory, liveSourceFactory, zlog)
 			require.NoError(t, err)
 
 			trxFound, _ := awaitTransactionPassedHandoffs(context.Background(), "00000001a", "expected.tx.id", c.awaitHandoffs, subhub)

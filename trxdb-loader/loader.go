@@ -137,6 +137,7 @@ func (l *BigtableLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		js := bstream.NewJoiningSource(fileSourceFactory,
 			liveSourceFactory,
 			handler,
+			zlog,
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
 			bstream.JoiningSourceName("trxdb-loader"),

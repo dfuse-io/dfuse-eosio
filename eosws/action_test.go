@@ -366,7 +366,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 
 	buf := bstream.NewBuffer("pubsubbuf")
 	tailManager := bstream.NewSimpleTailManager(buf, 10)
-	subscriptionHub, err := hub.NewSubscriptionHub(uint64(startBlock), buf, tailManager.TailLock, fileSourceFactory, liveSourceFactory)
+	subscriptionHub, err := hub.NewSubscriptionHub(uint64(startBlock), buf, tailManager.TailLock, fileSourceFactory, liveSourceFactory, zlog)
 	require.NoError(t, err)
 	return subscriptionHub
 }

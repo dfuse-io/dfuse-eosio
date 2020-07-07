@@ -84,7 +84,7 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 			return fs
 		})
 
-		js := bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate, bstream.JoiningSourceTargetBlockID(startBlock.ID()), bstream.JoiningSourceTargetBlockNum(2))
+		js := bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate, zlog, bstream.JoiningSourceTargetBlockID(startBlock.ID()), bstream.JoiningSourceTargetBlockNum(2))
 
 		return js
 	})

@@ -207,6 +207,8 @@ github.com/dfuse-io/blockmeta v0.0.2-0.20200702205033-48278755bcbf h1:CNyuKMPn3g
 github.com/dfuse-io/blockmeta v0.0.2-0.20200702205033-48278755bcbf/go.mod h1:xiEazFk8wZz7IKticxMN+TAO8VO1n0OKw7TmZL1a2Rg=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200704022224-5d6078ea02cc h1:Z9y37BwjuEBTqLyZ5SwpoU9ImCUm5hNMxiQoOoWbMuo=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200704022224-5d6078ea02cc/go.mod h1:93+jqFsDLWUgXRWMGDWQnBtf8xV9fhRU+Lp5rdaRH0A=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200707120306-aa1debe57c55 h1:BkUwHXEUNg9jNu8wXr3pV0ziD912UIG9IVG0/R0Avw8=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200707120306-aa1debe57c55/go.mod h1:QjJ9aty4TreO3IqY4zFzpvMvwZlwC3As3UTATVCLBMQ=
 github.com/dfuse-io/bstream v0.0.0-20200415145349-b867db804e41/go.mod h1:s6htc3jWU18nI6wq0hCl0uatjUtrN652zRnJD6dMGGc=
 github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.0-20200522154238-b71cafb7ad1a/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
@@ -218,6 +220,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200626140610-dac0c1a361ee h1:sJhuy5eyV5AA
 github.com/dfuse-io/bstream v0.0.2-0.20200626140610-dac0c1a361ee/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200703210323-f92a36d42ed3 h1:mzgB9DpxTMY+1A8VB1o2LAYqLLRaDGhyGKKG6aPLEYY=
 github.com/dfuse-io/bstream v0.0.2-0.20200703210323-f92a36d42ed3/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
+github.com/dfuse-io/bstream v0.0.2-0.20200707115638-3b28f825568e h1:B085zEgiD/A4KmB8YZebNJ6IKEMTWNpF/jiJw7/yMuU=
+github.com/dfuse-io/bstream v0.0.2-0.20200707115638-3b28f825568e/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
@@ -311,6 +315,8 @@ github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e h1:JuCMiKxOfv1u
 github.com/dfuse-io/relayer v0.0.2-0.20200702204828-938f4ee0b69e/go.mod h1:15ZWlMwM+71WIsKqHVEHnSZ6MQQnRkv+vE0+FlJPMCU=
 github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e h1:spwJIUHsfn3wmFj6YX6P8EHzU+m5SoyinCZDOlF9890=
 github.com/dfuse-io/relayer v0.0.2-0.20200703213410-ee3824e3dc2e/go.mod h1:m+cFTqQsHWPdcn9GMxgz8AWqcvk1bBIGyrcsVi69Y/w=
+github.com/dfuse-io/relayer v0.0.2-0.20200707120438-d1e75167157b h1:jyjYybkjHNmXSn95G0l9o+NJ/qVnV33WkykDNacqxgg=
+github.com/dfuse-io/relayer v0.0.2-0.20200707120438-d1e75167157b/go.mod h1:CKiNimPdGPbmZs+F0h9ZygyaXZXR9LxtRT7gpg9bqVo=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0 h1:nGYWy0SNYLVhll/nAMEIVaN8WiUuQnId1CXMen2q0v0=
 github.com/dfuse-io/search v0.0.2-0.20200630195316-f44613986ee0/go.mod h1:CcBjHis04SXW0gNazk7alCZv+iW/kwvzHcuipFYzszQ=
 github.com/dfuse-io/search v0.0.2-0.20200702204742-c9876e6b7358 h1:uwu8vnQi2zc1f657QsS0+OWbk8jmquwtvimMJhi7K10=
@@ -319,6 +325,8 @@ github.com/dfuse-io/search v0.0.2-0.20200702205733-1fc17cae8a30 h1:4yH/gAvY3PwAa
 github.com/dfuse-io/search v0.0.2-0.20200702205733-1fc17cae8a30/go.mod h1:g5cm5FBUxGduzdQSmBjDW9wraXWDBD/PE5hbwY2/PYU=
 github.com/dfuse-io/search v0.0.2-0.20200703211452-2ca0bb2ece4f h1:JM9kLC4fK4TDGh1Hd0PRn7TFUDC8cbjYUEmW66aFIIo=
 github.com/dfuse-io/search v0.0.2-0.20200703211452-2ca0bb2ece4f/go.mod h1:qyLPLR4TtOW2c1ZYQeRu3agg3mhoGu5kaA8NlrIHKxc=
+github.com/dfuse-io/search v0.0.2-0.20200707120043-9b95d42135e6 h1:aEzG0FN5r7b8W3gIXlaXYdkjcL8LH0ZHxEwGBSmIyJM=
+github.com/dfuse-io/search v0.0.2-0.20200707120043-9b95d42135e6/go.mod h1:rIqUWul6Za8veFpZNp+/vEd+LkLCUADlMVfpvnvU9yM=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2/go.mod h1:TY7lgsDrNonQ7nUtwGK4En08cuG7eRrV743DZozvehk=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=

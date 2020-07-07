@@ -33,13 +33,13 @@ import (
 	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
 	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
 	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
 	"github.com/dfuse-io/dmetering"
@@ -237,6 +237,7 @@ func (a *App) Run() error {
 		tailManager.TailLock,
 		fileSourceFactory,
 		liveSourceFactory,
+		zlog,
 	)
 	if err != nil {
 		return fmt.Errorf("could not create subscription hub: %w", err)
