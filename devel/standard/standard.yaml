@@ -19,5 +19,6 @@ start:
   - search-router
   - trxdb-loader
   flags:
-    common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
+    # To use Bigtable Emulator
+    # common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
     common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
