@@ -9,6 +9,9 @@ https://docs.dfuse.io
 
 ## Administration Guide
 
-
+* Some partial sync instructions: ../PARTIAL_SYNC.md
 
 ## Architecture Diagrams
+
+* [![General components overview](general_architecture.png)]
+* [![Search diagrams](search.png)]
