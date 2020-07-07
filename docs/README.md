@@ -15,11 +15,15 @@ https://docs.dfuse.io
 
 ### General components overview
 
-* [![General components overview](general_architecture.png)]
+![General components overview](general_architecture.png)
+
+---
 
 ### Search components diagram
 
-* [![Search diagrams](search.png)]
+![Search diagrams](search.png)
+
+---
 
 ## In depth, in video format
 
