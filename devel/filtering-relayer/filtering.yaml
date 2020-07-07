@@ -15,6 +15,7 @@ start:
   - search-router
   - trxdb-loader
   flags:
-    common-include-filter-expr: receiver == "eosio.token"
-    common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
+    # See global.yaml notes to make a trxdb switch db test
+    # common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
     relayer-source: ":10000"
