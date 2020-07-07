@@ -15,3 +15,7 @@ https://docs.dfuse.io
 
 * [![General components overview](general_architecture.png)]
 * [![Search diagrams](search.png)]
+
+## Explainer videos
+
+* [General Overview — dfuse for EOSIO Architecture Series](https://www.youtube.com/watch?v=q3Mi1S4nvcU&t=387s)
