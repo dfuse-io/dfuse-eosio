@@ -53,10 +53,10 @@ export class CarbonBurnPillComponent extends GenericPillComponent {
     )
   }
 
-  renderLeftPill = () => {
+  renderPill2 = () => {
     if (!this.props.headerAndTitleOptions.title) {
       return (
-        <Box px="2px" bg={this.props.leftPillColor || theme.colors.traceActionGenericBackground}>
+        <Box px="2px" bg={this.props.pill2Color || theme.colors.traceActionGenericBackground}>
           &nbsp;
         </Box>
       )
@@ -65,7 +65,7 @@ export class CarbonBurnPillComponent extends GenericPillComponent {
     const WrapperComponent = this.props.disabled ? Box : PillClickable
 
     return (
-      <WrapperComponent bg={this.props.leftPillColor || theme.colors.traceActionGenericBackground}>
+      <WrapperComponent bg={this.props.pill2Color || theme.colors.traceActionGenericBackground}>
         <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
           {this.props.headerAndTitleOptions.title}
         </MonospaceText>
@@ -78,7 +78,7 @@ export class CarbonBurnPillComponent extends GenericPillComponent {
 
     return (
       <Pill
-        leftPill={this.renderLeftPill()}
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}

@@ -98,7 +98,7 @@ export class TransferPillComponent extends GenericPillComponent {
     )
   }
 
-  renderLeftPill = () => {
+  renderPill2 = () => {
     const colorVariant = this.isReceiveTransfer()
       ? "traceActionReceiveBackground"
       : "traceActionSendBackground"
@@ -125,7 +125,7 @@ export class TransferPillComponent extends GenericPillComponent {
   render() {
     return (
       <Pill
-        leftPill={this.renderLeftPill()}
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}

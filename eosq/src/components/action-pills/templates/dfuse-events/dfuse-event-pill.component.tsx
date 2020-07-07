@@ -111,10 +111,10 @@ export class DfuseEventPillComponent extends GenericPillComponent {
     )
   }
 
-  renderLeftPill = () => {
+  renderPill2 = () => {
     if (!this.props.headerAndTitleOptions.title) {
       return (
-        <Box px="2px" bg={this.props.leftPillColor || theme.colors.bleu11}>
+        <Box px="2px" bg={this.props.pill2Color || theme.colors.bleu11}>
           &nbsp;
         </Box>
       )
@@ -123,7 +123,7 @@ export class DfuseEventPillComponent extends GenericPillComponent {
     const WrapperComponent = this.props.disabled ? Box : PillClickable
 
     return (
-      <WrapperComponent bg={this.props.leftPillColor || theme.colors.bleu11}>
+      <WrapperComponent bg={this.props.pill2Color || theme.colors.bleu11}>
         <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
           {this.props.headerAndTitleOptions.title}
         </MonospaceText>
@@ -134,7 +134,7 @@ export class DfuseEventPillComponent extends GenericPillComponent {
   render(): JSX.Element {
     return (
       <Pill
-        leftPill={this.renderLeftPill()}
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
         headerHoverTitle="dfuseiohooks"

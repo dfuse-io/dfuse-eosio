@@ -13,7 +13,7 @@ export interface GenericPillParams {
   pageContext?: PageContext
   highlighted?: boolean
   title?: string
-  leftPillColor?: string
+  pill2Color?: string
 }
 
 export interface GenericPillState {

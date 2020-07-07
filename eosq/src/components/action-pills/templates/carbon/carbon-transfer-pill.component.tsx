@@ -43,14 +43,14 @@ export class CarbonTransferPillComponent extends GenericPillComponent {
     )
   }
 
-  renderLeftPill = () => {
+  renderPill2 = () => {
     const colorVariant = this.isReceiveTransfer()
       ? "traceActionReceiveBackground"
       : "traceActionSendBackground"
 
     if (!this.props.headerAndTitleOptions.title) {
       return (
-        <Box px="2px" bg={this.props.leftPillColor || theme.colors[colorVariant]}>
+        <Box px="2px" bg={this.props.pill2Color || theme.colors[colorVariant]}>
           &nbsp;
         </Box>
       )
@@ -59,7 +59,7 @@ export class CarbonTransferPillComponent extends GenericPillComponent {
     const WrapperComponent = this.props.disabled ? Box : PillClickable
 
     return (
-      <WrapperComponent bg={this.props.leftPillColor || theme.colors[colorVariant]}>
+      <WrapperComponent bg={this.props.pill2Color || theme.colors[colorVariant]}>
         <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
           {this.props.headerAndTitleOptions.title}
         </MonospaceText>
@@ -79,7 +79,7 @@ export class CarbonTransferPillComponent extends GenericPillComponent {
 
     return (
       <Pill
-        leftPill={this.renderLeftPill()}
+        pill2={this.renderPill2()}
         logo={logo}
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
