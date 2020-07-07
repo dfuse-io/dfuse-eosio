@@ -47,6 +47,7 @@ func init() {
 				return nil, err
 			}
 
+			// FIXME: Use the new WithLogger by getting the app logger!
 			trxdbClient, err := trxdb.New(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")))
 			if err != nil {
 				return nil, err

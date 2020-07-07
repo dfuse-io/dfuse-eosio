@@ -3,9 +3,7 @@ package cli
 import (
 	"math"
 	"path/filepath"
-	"strings"
 
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -22,7 +20,6 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
 			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "Number of blocks batched together for database write")
-			cmd.Flags().StringSlice("trxdb-loader-indexable-rows", []string{"*"}, "Pick & choose what type of rows you want to index, indexing all by defaults, valid values: "+strings.Join(trxdb.ValidIndexingRowKeys, ", ")+".")
 			cmd.Flags().Uint64("trxdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
 			cmd.Flags().Uint64("trxdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
 			cmd.Flags().Uint64("trxdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")
@@ -55,7 +52,6 @@ func init() {
 				AllowLiveOnEmptyTable:     viper.GetBool("trxdb-loader-allow-live-on-empty-table"),
 				HTTPListenAddr:            viper.GetString("trxdb-loader-http-listen-addr"),
 				ParallelFileDownloadCount: viper.GetInt("trxdb-loader-parallel-file-download-count"),
-				IndexableRows:             viper.GetStringSlice("trxdb-loader-indexable-rows"),
 			}), nil
 		},
 	})

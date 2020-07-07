@@ -6,6 +6,7 @@ import (
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
+	"go.uber.org/zap"
 
 	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	_ "github.com/dfuse-io/kvdb/store/badger"
@@ -32,7 +33,7 @@ func init() {
 }
 
 func dbReadBlockE(cmd *cobra.Command, args []string) (err error) {
-	db, err := trxdb.New(viper.GetString("dsn"))
+	db, err := trxdb.New(viper.GetString("dsn"), zap.NewNop())
 	if err != nil {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
@@ -47,7 +48,7 @@ func dbReadBlockE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func dbReadTrxE(cmd *cobra.Command, args []string) (err error) {
-	db, err := trxdb.New(viper.GetString("dsn"))
+	db, err := trxdb.New(viper.GetString("dsn"), zap.NewNop())
 	if err != nil {
 		return err
 	}

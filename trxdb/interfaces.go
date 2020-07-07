@@ -25,8 +25,12 @@ import (
 type ChainDiscriminator func(blockID string) bool
 
 type Driver interface {
+	Configurable
+
 	DBReader
 	DBWriter
+
+	Close() error
 }
 
 type DBReader interface {
@@ -93,10 +97,16 @@ type BlocksReader interface {
 
 type DBWriter interface {
 	SetWriterChainID(chainID []byte)
+
 	// Where did I leave off last time I wrote?
 	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
 	PutBlock(ctx context.Context, blk *pbcodec.Block) error
 	UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error
 	// Flush MUST be called or you WILL lose data
 	Flush(context.Context) error
+}
+
+type Configurable interface {
+	AcceptLoggerOption(option LoggerOption) error
+	AcceptWriteOnlyOption(option WriteOnlyOption) error
 }

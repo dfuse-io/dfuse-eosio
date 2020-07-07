@@ -25,14 +25,16 @@ import (
 )
 
 type DB struct {
-	store         store.KVStore
-	indexableRows map[pbtrxdb.IndexableRow]bool
+	store               store.KVStore
+	indexableCategories map[pbtrxdb.IndexableCategory]bool
 
 	// Required only when writing
 	writerChainID []byte
 
 	enc *trxdb.ProtoEncoder
 	dec *trxdb.ProtoDecoder
+
+	logger *zap.Logger
 }
 
 var storeCachePool = make(map[string]store.KVStore)
@@ -45,13 +47,13 @@ func init() {
 	trxdb.Register("cznickv", New)
 }
 
-func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
+func New(dsnString string, logger *zap.Logger) (trxdb.Driver, error) {
 	storeCachePoolLock.Lock()
 	defer storeCachePoolLock.Unlock()
 
 	cachedKVStore := storeCachePool[dsnString]
 	if cachedKVStore == nil {
-		zlog.Info("kv store store is not cached for this DSN, creating a new one")
+		logger.Debug("kv store store is not cached for this DSN, creating a new one")
 		kvStore, err := store.New(dsnString)
 		if err != nil {
 			return nil, fmt.Errorf("new kvdb store: %w", err)
@@ -60,35 +62,21 @@ func New(dsnString string, opts ...trxdb.Option) (trxdb.Driver, error) {
 		storeCachePool[dsnString] = kvStore
 		cachedKVStore = kvStore
 	} else {
-		zlog.Info("re-using cached kv store")
+		logger.Debug("re-using cached kv store")
 	}
 
+	logger.Debug("creating new kv trxdb instance")
 	db := &DB{
-		store:         cachedKVStore,
-		enc:           trxdb.NewProtoEncoder(),
-		dec:           trxdb.NewProtoDecoder(),
-		indexableRows: trxdb.FullIndexing,
-	}
-
-	for _, opt := range opts {
-		err := db.acceptOption(opt)
-		if err != nil {
-			return nil, err
-		}
+		store:               cachedKVStore,
+		enc:                 trxdb.NewProtoEncoder(),
+		dec:                 trxdb.NewProtoDecoder(),
+		logger:              logger,
+		indexableCategories: trxdb.FullIndexing.ToMap(),
 	}
 
 	return db, nil
 }
 
-func (db *DB) acceptOption(opt trxdb.Option) (err error) {
-	switch v := opt.(type) {
-	case trxdb.IndexableRows:
-		zlog.Info("setting indexable rows on trxdb kv database", zap.Strings("indexable_rows", []string(v)))
-		db.indexableRows, err = v.ToMap()
-		if err != nil {
-			return fmt.Errorf("indexable rows: %w", err)
-		}
-	}
-
-	return nil
+func (db *DB) Close() error {
+	return db.store.Close()
 }

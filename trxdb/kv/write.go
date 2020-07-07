@@ -32,6 +32,10 @@ func (db *DB) Flush(ctx context.Context) error {
 	return db.store.FlushPuts(ctx)
 }
 
+func (db *DB) WriteOnly(categories trxdb.IndexableCategories) {
+	db.indexableCategories = categories.ToMap()
+}
+
 func (db *DB) SetWriterChainID(chainID []byte) {
 	db.writerChainID = chainID
 }
@@ -41,27 +45,35 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 }
 
 func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if err := db.putTransactions(ctx, blk); err != nil {
-		return fmt.Errorf("put block: unable to putTransactions: %w", err)
+	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_TRANSACTION) {
+		db.logger.Debug("transactions are not indexed, skipping")
+	} else {
+		if traceEnabled {
+			db.logger.Debug("put transactions (trx, trace, dtrx)")
+		}
+
+		if err := db.putTransactions(ctx, blk); err != nil {
+			return fmt.Errorf("put block: unable to putTransactions: %w", err)
+		}
+
+		if err := db.putTransactionTraces(ctx, blk); err != nil {
+			return fmt.Errorf("put block: unable to putTransactions: %w", err)
+		}
+
+		if err := db.putImplicitTransactions(ctx, blk); err != nil {
+			return fmt.Errorf("put block: unable to putTransactions: %w", err)
+		}
 	}
 
-	if err := db.putTransactionTraces(ctx, blk); err != nil {
-		return fmt.Errorf("put block: unable to putTransactions: %w", err)
-	}
-
-	if err := db.putImplicitTransactions(ctx, blk); err != nil {
-		return fmt.Errorf("put block: unable to putTransactions: %w", err)
+	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_BLOCK) {
+		db.logger.Debug("blocks are not indexed, skipping")
+		return nil
 	}
 
 	return db.putBlock(ctx, blk)
 }
 
 func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_TRX] {
-		zlog.Debug("transaction row are not indexed, skipping")
-		return nil
-	}
-
 	for _, trxReceipt := range blk.Transactions() {
 		if trxReceipt.PackedTransaction == nil {
 			// This means we deal with a deferred transaction receipt, and that it
@@ -85,7 +97,6 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 			PublicKeys: pubKeyProto,
 		}
 
-		//zlog.Debug("put trx", zap.String("trx_id", trxReceipt.Id))
 		key := Keys.PackTrxsKey(trxReceipt.Id, blk.Id)
 		err = db.store.Put(ctx, key, db.enc.MustProto(trxRow))
 
@@ -99,52 +110,48 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 
 func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) error {
 	for _, trxTrace := range blk.TransactionTraces() {
-		if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_DTRX] {
-			zlog.Debug("dtrx row are not indexed, skipping")
-		} else {
-			// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
-			for _, dtrxOp := range trxTrace.DtrxOps {
-				extDtrxOp := dtrxOp.ToExtDTrxOp(blk, trxTrace)
+		// CHECK: can we have multiple dtrxops for the same transactionId in the same block?
+		for _, dtrxOp := range trxTrace.DtrxOps {
+			extDtrxOp := dtrxOp.ToExtDTrxOp(blk, trxTrace)
 
-				dtrxRow := &pbtrxdb.DtrxRow{}
+			dtrxRow := &pbtrxdb.DtrxRow{}
 
-				var key []byte
-				if dtrxOp.IsCreateOperation() {
-					dtrxRow.SignedTrx = dtrxOp.Transaction
-					dtrxRow.CreatedBy = extDtrxOp
-					key = Keys.PackDtrxsKeyCreated(dtrxOp.TransactionId, blk.Id)
-				} else if dtrxOp.IsCancelOperation() {
-					dtrxRow.CanceledBy = extDtrxOp
-					key = Keys.PackDtrxsKeyCancelled(dtrxOp.TransactionId, blk.Id)
-				} else if dtrxOp.IsFailedOperation() {
-					key = Keys.PackDtrxsKeyFailed(dtrxOp.TransactionId, blk.Id)
-				} else {
-					return fmt.Errorf("put dtrxRow: handle dtrxOp Operation: unknown dtrxOp operation for trx id %s at action %d", trxTrace.Id, dtrxOp.ActionIndex)
-				}
+			var key []byte
+			if dtrxOp.IsCreateOperation() {
+				dtrxRow.SignedTrx = dtrxOp.Transaction
+				dtrxRow.CreatedBy = extDtrxOp
+				key = Keys.PackDtrxsKeyCreated(dtrxOp.TransactionId, blk.Id)
+			} else if dtrxOp.IsCancelOperation() {
+				dtrxRow.CanceledBy = extDtrxOp
+				key = Keys.PackDtrxsKeyCancelled(dtrxOp.TransactionId, blk.Id)
+			} else if dtrxOp.IsFailedOperation() {
+				key = Keys.PackDtrxsKeyFailed(dtrxOp.TransactionId, blk.Id)
+			} else {
+				return fmt.Errorf("put dtrxRow: handle dtrxOp Operation: unknown dtrxOp operation for trx id %s at action %d", trxTrace.Id, dtrxOp.ActionIndex)
+			}
 
-				if err := db.store.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
-					return fmt.Errorf("put dtrxRow: write to db: %w", err)
-				}
+			if err := db.store.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
+				return fmt.Errorf("put dtrxRow: write to db: %w", err)
 			}
 		}
 
-		if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_TRX_TRACE] {
-			zlog.Debug("transaction trace row are not indexed, skipping")
-		} else {
-			codec.DeduplicateTransactionTrace(trxTrace)
+		codec.DeduplicateTransactionTrace(trxTrace)
 
-			trxTraceRow := &pbtrxdb.TrxTraceRow{
-				BlockHeader: blk.Header,
-				TrxTrace:    trxTrace,
-			}
-			//zlog.Debug("put trxTraceRow", zap.String("trx_id", trxTrace.Id))
-			key := Keys.PackTrxTracesKey(trxTrace.Id, blk.Id)
-			if err := db.store.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
-				return fmt.Errorf("put trxTraceRow: write to db: %w", err)
-			}
-
-			codec.ReduplicateTransactionTrace(trxTrace)
+		trxTraceRow := &pbtrxdb.TrxTraceRow{
+			BlockHeader: blk.Header,
+			TrxTrace:    trxTrace,
 		}
+
+		if traceEnabled {
+			db.logger.Debug("put transaction trace row", zap.String("trx_id", trxTrace.Id))
+		}
+
+		key := Keys.PackTrxTracesKey(trxTrace.Id, blk.Id)
+		if err := db.store.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
+			return fmt.Errorf("put trxTraceRow: write to db: %w", err)
+		}
+
+		codec.ReduplicateTransactionTrace(trxTrace)
 	}
 
 	return nil
@@ -163,7 +170,11 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 		BlockId:   blk.Id,
 		TrxId:     trace.Id,
 	}
-	//zlog.Debug("put acctRow", zap.String("trx_id", trace.Id))
+
+	if traceEnabled {
+		db.logger.Debug("put account row", zap.String("name", acctRow.Name))
+	}
+
 	key := Keys.PackAccountKey(acctRow.Name)
 	if err := db.store.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
 		return fmt.Errorf("put acctRow: write to db: %w", err)
@@ -173,11 +184,6 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 }
 
 func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_IMPLICIT_TRX] {
-		zlog.Debug("implicit trx row are not indexed, skipping")
-		return nil
-	}
-
 	for _, trxOp := range blk.ImplicitTransactionOps() {
 		implTrxRow := &pbtrxdb.ImplicitTrxRow{
 			Name:      trxOp.Name,
@@ -213,11 +219,6 @@ func (db *DB) getRefs(blk *pbcodec.Block) (implicitTrxRefs, trxRefs, tracesRefs 
 }
 
 func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_BLOCK] {
-		zlog.Debug("block row are not indexed, skipping")
-		return nil
-	}
-
 	implicitTrxRefs, trxRefs, tracesRefs := db.getRefs(blk)
 
 	holdUnfilteredTransactions := blk.UnfilteredTransactions
@@ -243,7 +244,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 		TraceRefs:       tracesRefs,
 	}
 
-	zlog.Debug("put block", zap.String("block_id", blk.Id))
+	db.logger.Debug("put block", zap.Stringer("block", blk.AsRef()))
 	key := Keys.PackBlocksKey(blk.Id)
 	if err := db.store.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
 		return fmt.Errorf("put block: write to db: %w", err)
@@ -263,8 +264,8 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 var oneByte = []byte{0x01}
 
 func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_TIMELINE] {
-		zlog.Debug("timeline row are not indexed, skipping")
+	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_TIMELINE) {
+		db.logger.Debug("timeline is not indexed, skipping")
 	} else {
 		blockTime := blk.MustTime()
 		if err := db.store.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
@@ -275,8 +276,8 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		}
 	}
 
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_ACCOUNT] {
-		zlog.Debug("account row are not indexed, skipping")
+	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_ACCOUNT) {
+		db.logger.Debug("accounts are not indexed, skipping")
 	} else {
 		// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
 		// the filtering rules might exclude the `newaccount`.
@@ -291,14 +292,17 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		}
 	}
 
-	if !db.indexableRows[pbtrxdb.IndexableRow_INDEXABLE_ROW_BLOCK] {
-		zlog.Debug("block row are not indexed, skipping")
-	} else {
-		zlog.Debug("adding irreversible block", zap.String("block_id", blk.Id))
-		if err := db.store.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
-			return err
-		}
+	// We must do this operation regardless of the write only categories set since this is used
+	// as our last block marker. If this would not be writing, it would never be possible to start
+	// back where we left off.
+	db.logger.Debug("adding irreversible block", zap.Stringer("block", blk.AsRef()))
+	if err := db.store.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
+		return err
 	}
 
 	return nil
+}
+
+func (db *DB) isIndexed(category pbtrxdb.IndexableCategory) bool {
+	return db.indexableCategories[category]
 }

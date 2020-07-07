@@ -15,6 +15,5 @@ start:
   - search-router
   - trxdb-loader
   flags:
-    relayer-source: ":10000"
     common-include-filter-expr: receiver == "eosio.token"
-    trxdb-loader-indexable-rows: trx implicit_trx trx_trace dtrx
+    relayer-source: ":10000"

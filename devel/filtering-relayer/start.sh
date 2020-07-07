@@ -3,6 +3,9 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 clean=
+all=true
+only_filtering=
+only_global=
 
 finish() {
   for job in `jobs -p`; do
@@ -15,10 +18,12 @@ main() {
   trap "cd \"$current_dir\"" EXIT
   pushd "$ROOT" &> /dev/null
 
-  while getopts "hc" opt; do
+  while getopts "hcfg" opt; do
     case $opt in
       h) usage && exit 0;;
       c) clean=true;;
+      f) all=false; only_filtering=true;;
+      g) all=false; only_global=true;;
       \?) usage_error "Invalid option: -$OPTARG";;
     esac
   done
@@ -34,8 +39,13 @@ main() {
   echo "(This message is going to disappear in 2s)"
   sleep 2
 
-  DEBUG=filtering-relayer dfuseeos -c global.yaml start &
-  DEBUG=filtering-relayer dfuseeos -c filtering.yaml start &
+  if [[ $all == true || $only_global == true ]]; then
+    dfuseeos -c global.yaml start &
+  fi
+
+  if [[ $all == true || $only_filtering == true ]]; then
+    dfuseeos -c filtering.yaml start &
+  fi
 
   for job in `jobs -p`; do
     wait $job || true

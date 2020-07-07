@@ -54,7 +54,7 @@ type SchemaFactory struct {
 
 func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := trxdb.New(f.config.KVDBDSN)
+	dbReader, err := trxdb.New(f.config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
 		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}

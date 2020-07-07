@@ -23,7 +23,6 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/forkable"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
@@ -39,7 +38,6 @@ type TrxDBLoader struct {
 	*shutter.Shutter
 	processingJob             Job
 	db                        trxdb.DBWriter
-	indexableRows             map[pbtrxdb.IndexableRow]bool
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
@@ -252,7 +250,7 @@ func (l *TrxDBLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forka
 		return l.FlushIfNeeded(blockNum, blkTime)
 	case forkable.StepIrreversible:
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
-			err := l.DoFlush(blockNum)
+			err := l.DoFlush(blockNum, "reached end block")
 			if err != nil {
 				l.Shutdown(err)
 				return err
@@ -291,8 +289,8 @@ func (l *TrxDBLoader) ProcessBlock(blk *bstream.Block, obj interface{}) (err err
 	return l.processingJob(blk.Num(), blk.ToNative().(*pbcodec.Block), obj.(*forkable.ForkableObject))
 }
 
-func (l *TrxDBLoader) DoFlush(blockNum uint64) error {
-	zlog.Debug("flushing block", zap.Uint64("block_num", blockNum))
+func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
+	zlog.Debug("flushing block", zap.Uint64("block_num", blockNum), zap.String("reason", reason))
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 	err := l.db.Flush(ctx)
@@ -303,8 +301,20 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64) error {
 }
 
 func (l *TrxDBLoader) FlushIfNeeded(blockNum uint64, blockTime time.Time) error {
-	if blockNum%l.batchSize == 0 || time.Since(blockTime) < 25*time.Second {
-		err := l.DoFlush(blockNum)
+	batchSizeReached := blockNum%l.batchSize == 0
+	closeToHeadBlockTime := time.Since(blockTime) < 25*time.Second
+
+	if batchSizeReached || closeToHeadBlockTime {
+		reason := "needed"
+		if batchSizeReached {
+			reason += ", batch size reached"
+		}
+
+		if closeToHeadBlockTime {
+			reason += ", close to head block"
+		}
+
+		err := l.DoFlush(blockNum, reason)
 		if err != nil {
 			return err
 		}
@@ -369,7 +379,7 @@ func (l *TrxDBLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkab
 
 	case forkable.StepIrreversible:
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
-			err := l.DoFlush(blockNum)
+			err := l.DoFlush(blockNum, "patch end block reached")
 			if err != nil {
 				return err
 			}

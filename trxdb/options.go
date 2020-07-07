@@ -14,65 +14,36 @@
 
 package trxdb
 
-import (
-	"fmt"
-	"sort"
-	"strings"
-
-	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
-)
-
-var FullIndexing = map[pbtrxdb.IndexableRow]bool{}
-var ValidIndexingRowKeys []string
-
-func init() {
-	for key := range pbtrxdb.IndexableRow_name {
-		FullIndexing[pbtrxdb.IndexableRow(key)] = true
-	}
-
-	for key := range pbtrxdb.IndexableRow_value {
-		ValidIndexingRowKeys = append(ValidIndexingRowKeys, strings.ToLower(strings.Replace(key, "INDEXABLE_ROW_", "", 1)))
-	}
-	sort.Sort(sort.StringSlice(ValidIndexingRowKeys))
-
-	return
-}
+import "go.uber.org/zap"
 
 type Option interface {
-	trxDBOption()
+	setOption(config Configurable) error
 }
 
-type IndexableRows []string
-
-func WithIndexableRows(in []string) Option {
-	return IndexableRows(in)
+func ReadOnly() WriteOnlyOption {
+	return WriteOnlyOption{Categories: NoIndexing}
 }
 
-func (i IndexableRows) trxDBOption() {}
-
-func (i IndexableRows) ToMap() (out map[pbtrxdb.IndexableRow]bool, err error) {
-	if len(i) == 0 || len(i) == 1 && i[0] == "*" {
-		return FullIndexing, nil
-	}
-
-	out = map[pbtrxdb.IndexableRow]bool{}
-	for _, in := range i {
-		value, err := i.toIndexableRow(in)
-		if err != nil {
-			return nil, err
-		}
-
-		out[value] = true
-	}
-
-	return
+func WriteOnly(categories IndexableCategories) WriteOnlyOption {
+	return WriteOnlyOption{Categories: categories}
 }
 
-func (i IndexableRows) toIndexableRow(in string) (pbtrxdb.IndexableRow, error) {
-	value, found := pbtrxdb.IndexableRow_value["INDEXABLE_ROW_"+strings.ToUpper(in)]
-	if !found {
-		return 0, fmt.Errorf("invalid value %q, valid values are %q", in, strings.Join(ValidIndexingRowKeys, ", "))
-	}
+type WriteOnlyOption struct {
+	Categories IndexableCategories
+}
 
-	return pbtrxdb.IndexableRow(value), nil
+func (o WriteOnlyOption) setOption(config Configurable) error {
+	return config.AcceptWriteOnlyOption(o)
+}
+
+func WithLogger(logger *zap.Logger) LoggerOption {
+	return LoggerOption{Logger: logger}
+}
+
+type LoggerOption struct {
+	Logger *zap.Logger
+}
+
+func (o LoggerOption) setOption(config Configurable) error {
+	return config.AcceptLoggerOption(o)
 }

@@ -31,19 +31,18 @@ import (
 )
 
 type Config struct {
-	ChainID                   string   // Chain ID
-	ProcessingType            string   // The actual processing type to perform, either `live`, `batch` or `patch`
-	BlockStoreURL             string   // GS path to read batch files from
-	BlockStreamAddr           string   // [LIVE] Address of grpc endpoint
-	KvdbDsn                   string   // Storage connection string
-	BatchSize                 uint64   // DB batch size
-	StartBlockNum             uint64   // [BATCH] Block number where we start processing
-	StopBlockNum              uint64   // [BATCH] Block number where we stop processing
-	NumBlocksBeforeStart      uint64   // [BATCH] Number of blocks to fetch before start block
-	ParallelFileDownloadCount int      // Number of threads of parallel file download
-	AllowLiveOnEmptyTable     bool     // [LIVE] force pipeline creation if live request and table is empty
-	HTTPListenAddr            string   //  http listen address for /healthz endpoint
-	IndexableRows             []string // An array of row typess to index, the values comes from `pbtrxdb.IndexableRow` enum (lower case, only distinctive suffixes, i.e. `account`, `block`, `trx`, `trx_trace`, `implicit_trx`, `dtrx`, etc.)
+	ChainID                   string // Chain ID
+	ProcessingType            string // The actual processing type to perform, either `live`, `batch` or `patch`
+	BlockStoreURL             string // GS path to read batch files from
+	BlockStreamAddr           string // [LIVE] Address of grpc endpoint
+	KvdbDsn                   string // Storage connection string
+	BatchSize                 uint64 // DB batch size
+	StartBlockNum             uint64 // [BATCH] Block number where we start processing
+	StopBlockNum              uint64 // [BATCH] Block number where we stop processing
+	NumBlocksBeforeStart      uint64 // [BATCH] Number of blocks to fetch before start block
+	ParallelFileDownloadCount int    // Number of threads of parallel file download
+	AllowLiveOnEmptyTable     bool   // [LIVE] force pipeline creation if live request and table is empty
+	HTTPListenAddr            string //  http listen address for /healthz endpoint
 }
 
 type App struct {
@@ -80,13 +79,12 @@ func (a *App) Run() error {
 		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
 
-	db, err := trxdb.New(a.Config.KvdbDsn, trxdb.WithIndexableRows(a.Config.IndexableRows))
+	db, err := trxdb.New(a.Config.KvdbDsn, trxdb.WithLogger(zlog))
 	if err != nil {
 		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
 
-	// FIXME: make sure we call CLOSE() at the end!
-	//defer db.Close()
+	defer db.Close()
 
 	db.SetWriterChainID(chainID)
 

@@ -69,7 +69,7 @@ func (a *App) Run() error {
 	backuper.OnTerminated(a.Shutdown)
 	a.OnTerminating(backuper.Shutdown)
 
-	dbReader, err := trxdb.New(a.config.KvdbDSN)
+	dbReader, err := trxdb.New(a.config.KvdbDSN, trxdb.WithLogger(zlog))
 	if err != nil {
 		return fmt.Errorf("unable to init KVDB connection: %w", err)
 	}

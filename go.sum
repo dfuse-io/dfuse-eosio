@@ -286,6 +286,10 @@ github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083/go.mod h1:MkvDx1uQ
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.1 h1:y/momHT4/gpLALnUEDVbTTLUZDyQ6TS+f4WpLFh6CyQ=
 github.com/dfuse-io/kvdb v0.0.1/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
+github.com/dfuse-io/kvdb v0.0.2-0.20200707022209-085d61ae26ac h1:eCjjj4UToHr8qnLQJO/oMY6BO8oy6lgnaOBEQhfvKMo=
+github.com/dfuse-io/kvdb v0.0.2-0.20200707022209-085d61ae26ac/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
+github.com/dfuse-io/kvdb v0.0.2-0.20200707024205-52008d3f3e2d h1:1GLUe2P1A9tZ85RiNEIzVLHfMtH3H279BTCXNw+9R8E=
+github.com/dfuse-io/kvdb v0.0.2-0.20200707024205-52008d3f3e2d/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=

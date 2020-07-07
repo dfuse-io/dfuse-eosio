@@ -36,7 +36,7 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20200623143848-93c44971fda7
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
-	github.com/dfuse-io/kvdb v0.0.1
+	github.com/dfuse-io/kvdb v0.0.2-0.20200707024205-52008d3f3e2d
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.2
 	github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74
@@ -80,6 +80,7 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
+	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/mod v0.3.0 // indirect
