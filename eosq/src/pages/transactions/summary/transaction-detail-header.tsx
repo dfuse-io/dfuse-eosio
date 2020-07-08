@@ -311,21 +311,23 @@ class BaseTransactionDetailHeader extends React.Component<Props> {
 
       return (
         <DetailLine key={`${ref}-${i18nKey}`} variant="compact" label={t(i18nKeyLabel)}>
-          <Trans
-            i18nKey={i18nKeyContent}
-            values={{
-              transactionId: formatTransactionID(refObject.src_trx_id).join(""),
-              blockNum: formatNumber(refObject.block_num)
-            }}
-            components={[
-              <TextLink key="1" to={Links.viewTransaction({ id: refObject.src_trx_id })}>
-                {formatTransactionID(refObject.src_trx_id).join("")}
-              </TextLink>,
-              <TextLink key="2" to={Links.viewBlock({ id: refObject.block_id })}>
-                {formatNumber(refObject.block_num)}
-              </TextLink>
-            ]}
-          />
+          <Cell display="block">
+            <Trans
+              i18nKey={i18nKeyContent}
+              values={{
+                transactionId: formatTransactionID(refObject.src_trx_id).join(""),
+                blockNum: formatNumber(refObject.block_num)
+              }}
+              components={[
+                <TextLink key="1" to={Links.viewTransaction({ id: refObject.src_trx_id })}>
+                  {formatTransactionID(refObject.src_trx_id).join("")}
+                </TextLink>,
+                <TextLink key="2" to={Links.viewBlock({ id: refObject.block_id })}>
+                  {formatNumber(refObject.block_num)}
+                </TextLink>
+              ]}
+            />
+          </Cell>
         </DetailLine>
       )
     }

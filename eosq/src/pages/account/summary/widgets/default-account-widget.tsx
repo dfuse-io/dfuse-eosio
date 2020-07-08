@@ -1,8 +1,7 @@
 import { observer } from "mobx-react"
-import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"
 import * as React from "react"
 import { Account } from "../../../../models/account"
-import { DetailLine, compactString } from "@dfuse/explorer"
+import { DetailLine, Cell, compactString } from "@dfuse/explorer"
 import { t } from "i18next"
 
 import { Text, TextLink } from "../../../../atoms/text/text.component"
