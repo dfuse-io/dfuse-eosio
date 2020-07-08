@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"go.uber.org/zap"
+
 	"github.com/dfuse-io/kvdb/store"
 )
 
@@ -16,14 +18,18 @@ func newCachedKVDB(dsn string) (out store.KVStore, err error) {
 
 	out = storeCachePool[dsn]
 	if out == nil {
-		zlog.Debug("kv store store is not cached for this DSN, creating a new one")
+		zlog.Debug("kv store store is not cached for this DSN, creating a new one",
+			zap.String("dsn", dsn),
+		)
 		out, err = store.New(dsn)
 		if err != nil {
 			return nil, fmt.Errorf("new kvdb store: %w", err)
 		}
 		storeCachePool[dsn] = out
 	} else {
-		zlog.Debug("re-using cached kv store")
+		zlog.Debug("re-using cached kv store",
+			zap.String("dsn", dsn),
+		)
 	}
 	return out, nil
 }

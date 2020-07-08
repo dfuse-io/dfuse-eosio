@@ -32,12 +32,6 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 	var srcTx *pbcodec.TransactionLifecycle
 	var err error
 
-	startBlockID, err := ws.db.GetLastWrittenBlockID(ctx)
-	if err != nil {
-		ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get last written block"))
-		return
-	}
-
 	srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
 	if err != nil {
 		if !msg.Listen {
@@ -55,6 +49,12 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 	}
 
 	if msg.Listen {
+		startBlockID, err := ws.db.GetLastWrittenBlockID(ctx)
+		if err != nil {
+			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get last written block"))
+			return
+		}
+
 		libID, err := ws.db.GetIrreversibleIDAtBlockID(ctx, startBlockID)
 		if err != nil {
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get lib"))

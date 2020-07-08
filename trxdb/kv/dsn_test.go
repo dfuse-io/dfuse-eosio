@@ -64,9 +64,9 @@ func Test_parseDSN(t *testing.T) {
 		},
 		{
 			name:           "dsn with only read",
-			dsn:            "bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline",
+			dsn:            "bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline,last_written_blk",
 			expectCleanDSN: "bigkv://dev.dev/test-trxdb-blocks?createTable=true",
-			expectRead:     []string{"account", "block", "timeline"},
+			expectRead:     []string{"account", "block", "timeline", "last_written_blk"},
 			expectWrite:    []string{"all"},
 		},
 		{

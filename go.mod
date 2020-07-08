@@ -35,7 +35,7 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20200623143848-93c44971fda7
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
-	github.com/dfuse-io/kvdb v0.0.2-0.20200708204158-439a47c69f13
+	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.2
 	github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74
@@ -51,6 +51,7 @@ require (
 	github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
+	github.com/go-delve/delve v1.4.1 // indirect
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.4.2
 	github.com/google/cel-go v0.4.1
@@ -66,6 +67,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
+	github.com/pingcap/errors v0.11.0
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -99,5 +101,3 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/dfuse-io/kvdb => /Users/julien/codebase/dfuse-io/kvdb

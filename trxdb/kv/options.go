@@ -12,14 +12,12 @@ func (db *DB) SetLogger(logger *zap.Logger) error {
 }
 
 func (db *DB) SetPurgeableStore(ttl, purgeInterval uint64) error {
-	if db.blkWriteStore != nil {
-		db.blkWriteStore = kvdbstore.NewPurgeableStore([]byte{TblTTL}, db.blkWriteStore, ttl)
+	if traceEnabled {
+		zlog.Debug("applying pur")
 	}
-	if db.trxWriteStore != nil {
-		db.trxWriteStore = kvdbstore.NewPurgeableStore([]byte{TblTTL}, db.trxWriteStore, ttl)
-	}
-	if db.irrBlockStore != nil {
-		db.irrBlockStore = kvdbstore.NewPurgeableStore([]byte{TblTTL}, db.irrBlockStore, ttl)
+
+	if db.writeStore != nil {
+		db.writeStore = kvdbstore.NewPurgeableStore([]byte{TblTTL}, db.writeStore, ttl)
 	}
 
 	db.purgeInterval = purgeInterval

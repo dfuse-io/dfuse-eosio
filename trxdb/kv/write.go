@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/dfuse-io/kvdb"
+
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -30,17 +32,34 @@ import (
 )
 
 func (db *DB) Flush(ctx context.Context) error {
-	return db.itrWritableStores(func(s kvdbstore.KVStore) error {
-		return s.FlushPuts(ctx)
-	})
+	return db.writeStore.FlushPuts(ctx)
 }
 
 func (db *DB) SetWriterChainID(chainID []byte) {
 	db.writerChainID = chainID
 }
 
+// This is in the writer interface, because it is required to start the the pipeline.
 func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error) {
-	return db.GetClosestIrreversibleIDAtBlockNum(ctx, math.MaxUint32)
+	num := uint32(math.MaxUint32)
+	db.logger.Debug("get last written irr")
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// We always want to read from the "Writing Store" what is the last IRR block we wrote
+	// this function is mainly used to bootstrap the pipeline
+	it := db.writeStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
+	found := it.Next()
+	if err := it.Err(); err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, kvdb.ErrNotFound
+	}
+
+	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
+	return bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID)), nil
 }
 
 func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blkNumber uint64) error {
@@ -51,13 +70,15 @@ func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blk
 				return fmt.Errorf("unable to purge store: %w", err)
 			}
 		}
+	} else {
+		db.logger.Info("store is not purgeable, not setting height")
 	}
 	return nil
 }
 
 func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if db.trxWriteStore != nil {
-		err := db.purgeSetupAndAttempt(ctx, db.trxWriteStore, uint64(blk.Number))
+	if db.enableTrxWrite {
+		err := db.purgeSetupAndAttempt(ctx, db.writeStore, uint64(blk.Number))
 		if err != nil {
 			return err
 		}
@@ -77,14 +98,18 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		if err := db.putImplicitTransactions(ctx, blk); err != nil {
 			return fmt.Errorf("put block: unable to putTransactions: %w", err)
 		}
+	} else {
+		db.logger.Debug("skipping transaction write")
 	}
 
-	if db.blkWriteStore != nil {
-		err := db.purgeSetupAndAttempt(ctx, db.blkWriteStore, uint64(blk.Number))
+	if db.enableBlkWrite {
+		err := db.purgeSetupAndAttempt(ctx, db.writeStore, uint64(blk.Number))
 		if err != nil {
 			return err
 		}
 		return db.putBlock(ctx, blk)
+	} else {
+		db.logger.Debug("skipping block write")
 	}
 
 	return nil
@@ -115,7 +140,8 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 		}
 
 		key := Keys.PackTrxsKey(trxReceipt.Id, blk.Id)
-		err = db.trxWriteStore.Put(ctx, key, db.enc.MustProto(trxRow))
+		// NOTE: This function is guarded by the parent with db.enableTrxWrite
+		err = db.writeStore.Put(ctx, key, db.enc.MustProto(trxRow))
 
 		if err != nil {
 			return fmt.Errorf("put trx: write to db: %w", err)
@@ -147,7 +173,8 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 				return fmt.Errorf("put dtrxRow: handle dtrxOp Operation: unknown dtrxOp operation for trx id %s at action %d", trxTrace.Id, dtrxOp.ActionIndex)
 			}
 
-			if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
+			// NOTE: This function is guarded by the parent with db.enableTrxWrite
+			if err := db.writeStore.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
 				return fmt.Errorf("put dtrxRow: write to db: %w", err)
 			}
 		}
@@ -164,7 +191,8 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 		}
 
 		key := Keys.PackTrxTracesKey(trxTrace.Id, blk.Id)
-		if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
+		// NOTE: This function is guarded by the parent with db.enableTrxWrite
+		if err := db.writeStore.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
 			return fmt.Errorf("put trxTraceRow: write to db: %w", err)
 		}
 
@@ -192,8 +220,9 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 		db.logger.Debug("put account row", zap.String("name", acctRow.Name))
 	}
 
+	// NOTE: This function is guarded by the parent with db.enableBlkWrite
 	key := Keys.PackAccountKey(acctRow.Name)
-	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
+	if err := db.writeStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
 		return fmt.Errorf("put acctRow: write to db: %w", err)
 	}
 
@@ -208,7 +237,8 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) e
 		}
 
 		key := Keys.PackImplicitTrxsKey(trxOp.TransactionId, blk.Id)
-		if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(implTrxRow)); err != nil {
+		// NOTE: This function is guarded by the parent with db.enableTrxWrite
+		if err := db.writeStore.Put(ctx, key, db.enc.MustProto(implTrxRow)); err != nil {
 			return fmt.Errorf("put implTrx: write to db: %w", err)
 		}
 	}
@@ -263,7 +293,8 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 
 	db.logger.Debug("put block", zap.Stringer("block", blk.AsRef()))
 	key := Keys.PackBlocksKey(blk.Id)
-	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
+	// NOTE: This function is guarded by the parent with db.enableBlkWrite
+	if err := db.writeStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
 		return fmt.Errorf("put block: write to db: %w", err)
 	}
 
@@ -282,19 +313,19 @@ var oneByte = []byte{0x01}
 
 func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
 
-	if db.blkWriteStore != nil {
+	if db.enableBlkWrite {
 		blockTime := blk.MustTime()
-		if err := db.blkWriteStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.writeStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
-		if err := db.blkWriteStore.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.writeStore.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
 	} else {
 		db.logger.Debug("timeline is not written, skipping")
 	}
 
-	if db.blkWriteStore != nil {
+	if db.enableBlkWrite {
 		// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
 		// the filtering rules might exclude the `newaccount`.
 		for _, trxTrace := range blk.TransactionTraces() {
@@ -310,13 +341,15 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		db.logger.Debug("account is not written, skipping")
 	}
 
-	// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
-	// We must do this operation regardless of the write only categories set since this is used
-	// as our last block marker. If this would not be writing, it would never be possible to start
-	// back where we left off.
-	db.logger.Debug("adding irreversible block", zap.Stringer("block", blk.AsRef()))
-	if err := db.irrBlockStore.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
-		return err
+	if db.writeStore != nil {
+		// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
+		// We must do this operation regardless of the write only categories set since this is used
+		// as our last block marker. If this would not be writing, it would never be possible to start
+		// back where we left off.
+		db.logger.Debug("adding irreversible block", zap.Stringer("block", blk.AsRef()))
+		if err := db.writeStore.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
+			return err
+		}
 	}
 
 	// NOTE: what happens to the blockNum, for the IrrBlock rows?? Do we truncate it when it

@@ -72,6 +72,10 @@ func NewTrxDBLoader(
 	// By default, everything is assumed to be the full job, pipeline building overrides that
 	loader.processingJob = loader.FullJob
 
+	if d, ok := db.(trxdb.Debugeable); ok {
+		d.Dump()
+	}
+
 	return loader
 }
 
@@ -236,6 +240,13 @@ func (l *TrxDBLoader) Healthy() bool {
 func (l *TrxDBLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forkable.ForkableObject) (err error) {
 	blkTime := block.MustTime()
 
+	if traceEnabled {
+		zlog.Debug("full job received a block to process",
+			zap.Stringer("step", fObj.Step),
+			zap.Stringer("block", block.AsRef()),
+		)
+	}
+
 	switch fObj.Step {
 	case forkable.StepNew:
 		l.ShowProgress(blockNum)
@@ -244,12 +255,14 @@ func (l *TrxDBLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forka
 		defer metrics.HeadBlockTimeDrift.SetBlockTime(blkTime)
 		defer metrics.HeadBlockNumber.SetUint64(blockNum)
 
+		// this could have a db write
 		if err := l.db.PutBlock(context.Background(), block); err != nil {
 			return fmt.Errorf("store block: %s", err)
 		}
 
 		return l.FlushIfNeeded(blockNum, blkTime)
 	case forkable.StepIrreversible:
+
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
 			err := l.DoFlush(blockNum, "reached end block")
 			if err != nil {
@@ -265,6 +278,7 @@ func (l *TrxDBLoader) FullJob(blockNum uint64, block *pbcodec.Block, fObj *forka
 			return nil
 		}
 
+		// this could have a db write
 		if err := l.UpdateIrreversibleData(fObj.StepBlocks); err != nil {
 			return err
 		}

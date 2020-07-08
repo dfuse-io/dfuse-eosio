@@ -64,86 +64,159 @@ func Test_isWriter(t *testing.T) {
 
 func Test_New(t *testing.T) {
 	tests := []struct {
-		name                         string
-		dsns                         []string
-		expectError                  bool
-		expectBlkReadStorePresent    bool
-		expectBlkReadStoreDriverDsn  string
-		expectTrxReadStorePresent    bool
-		expectTrxReadStoreDriverDsn  string
-		expectBlkWriteStorePresent   bool
-		expectBlkWriteStoreDriverDsn string
-		expectTrxWriteStorePresent   bool
-		expectTrxWriteStoreDriverDsn string
-		expectIrrBlockStorePresent   bool
-		expectIrrBlockStoreDriverDsn string
+		name                               string
+		dsns                               []string
+		expectError                        bool
+		expectBlkReadStorePresent          bool
+		expectBlkReadStoreDriverDsn        string
+		expectTrxReadStorePresent          bool
+		expectTrxReadStoreDriverDsn        string
+		expectEnableBlkWrite               bool
+		expectEnableTrxWrite               bool
+		expectWriteStorePresent            bool
+		expectWriteStoreDriverDsn          string
+		expectLastWrittenBlockStorePresent bool
+		expectLastWrittenBlockStoreDsn     string
 	}{
 		{
-			name:                         "sunny path",
-			dsns:                         []string{"test://dev.dev/test-trxdb-trxs?createTable=true"},
-			expectBlkReadStorePresent:    true,
-			expectBlkReadStoreDriverDsn:  "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectBlkWriteStorePresent:   true,
-			expectBlkWriteStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectTrxWriteStorePresent:   true,
-			expectTrxWriteStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectTrxReadStorePresent:    true,
-			expectTrxReadStoreDriverDsn:  "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectIrrBlockStorePresent:   true,
-			expectIrrBlockStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
+			name: "sunny path",
+			dsns: []string{"test://dev.dev/aaa?createTable=true"},
+			// READS
+			expectBlkReadStorePresent:   true,
+			expectBlkReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			expectTrxReadStorePresent:   true,
+			expectTrxReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// WRITE
+			expectEnableBlkWrite:      true,
+			expectEnableTrxWrite:      true,
+			expectWriteStorePresent:   true,
+			expectWriteStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
 		},
 		{
-			name:                       "all none",
-			dsns:                       []string{"test://dev.dev/test-trxdb-trxs?createTable=true&write=none&read=none"},
-			expectBlkReadStorePresent:  false,
-			expectBlkWriteStorePresent: false,
-			expectTrxWriteStorePresent: false,
-			expectTrxReadStorePresent:  false,
-			expectIrrBlockStorePresent: false,
+			name: "all none",
+			dsns: []string{"test://dev.dev/aaa?createTable=true&write=none&read=none"},
+			// READ
+			expectBlkReadStorePresent: false,
+			expectTrxReadStorePresent: false,
+			// WRITE
+			expectEnableBlkWrite:    false,
+			expectEnableTrxWrite:    false,
+			expectWriteStorePresent: false,
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: false,
 		},
 		{
-			name:                         "single dsn with only a read permission specified",
-			dsns:                         []string{"test://dev.dev/test-trxdb-blocks?createTable=true&read=blk"},
-			expectBlkReadStorePresent:    true,
-			expectBlkReadStoreDriverDsn:  "test://dev.dev/test-trxdb-blocks?createTable=true",
-			expectTrxReadStorePresent:    false,
-			expectBlkWriteStorePresent:   true,
-			expectBlkWriteStoreDriverDsn: "test://dev.dev/test-trxdb-blocks?createTable=true",
-			expectTrxWriteStorePresent:   true,
-			expectTrxWriteStoreDriverDsn: "test://dev.dev/test-trxdb-blocks?createTable=true",
-			expectIrrBlockStorePresent:   true,
-			expectIrrBlockStoreDriverDsn: "test://dev.dev/test-trxdb-blocks?createTable=true",
+			name: "single dsn with only a read permission specified",
+			dsns: []string{"test://dev.dev/aaa?createTable=true&read=blk"},
+			// READ
+			expectBlkReadStorePresent:   true,
+			expectBlkReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			expectTrxReadStorePresent:   false,
+			// WRITE
+			expectEnableBlkWrite:      true,
+			expectEnableTrxWrite:      true,
+			expectWriteStorePresent:   true,
+			expectWriteStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
 		},
 		{
 			name: "single dsn with read and write permission specified",
 			dsns: []string{
-				"test://dev.dev/test-trxdb-trxs?createTable=true&read=trx&write=trx",
+				"test://dev.dev/aaa?createTable=true&read=trx&write=trx",
 			},
-			expectBlkReadStorePresent:    false,
-			expectTrxReadStorePresent:    true,
-			expectTrxReadStoreDriverDsn:  "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectBlkWriteStorePresent:   false,
-			expectTrxWriteStorePresent:   true,
-			expectTrxWriteStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectIrrBlockStorePresent:   true,
-			expectIrrBlockStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
+			// READ
+			expectBlkReadStorePresent:   false,
+			expectTrxReadStorePresent:   true,
+			expectTrxReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// WRITE
+			expectEnableBlkWrite:      false,
+			expectEnableTrxWrite:      true,
+			expectWriteStorePresent:   true,
+			expectWriteStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
 		},
 		{
-			name: "multiple dsn",
+			name: "multiple dsn with one write and one read",
 			dsns: []string{
-				"test://dev.dev/test-trxdb-trxs?createTable=true&read=trx&write=trx",
-				"test://dev.dev/test-trxdb-blocks?createTable=true&read=blk&write=none",
+				"test://dev.dev/aaa?createTable=true&read=trx&write=trx",
+				"test://dev.dev/bbb?createTable=true&read=blk&write=none",
 			},
+			// READ
 			expectBlkReadStorePresent:   true,
-			expectBlkReadStoreDriverDsn: "test://dev.dev/test-trxdb-blocks?createTable=true",
+			expectBlkReadStoreDriverDsn: "test://dev.dev/bbb?createTable=true",
 			expectTrxReadStorePresent:   true,
-			expectTrxReadStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectBlkWriteStorePresent:  false,
-			//expectBlkWriteStoreDriverDsn: "",
-			expectTrxWriteStorePresent:   true,
-			expectTrxWriteStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
-			expectIrrBlockStorePresent:   true,
-			expectIrrBlockStoreDriverDsn: "test://dev.dev/test-trxdb-trxs?createTable=true",
+			expectTrxReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// WRITE
+			expectEnableBlkWrite:      false,
+			expectEnableTrxWrite:      true,
+			expectWriteStorePresent:   true,
+			expectWriteStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
+		},
+		{
+			name: "multiple dsn with one write and one read and last_written_blk is on read",
+			dsns: []string{
+				"test://dev.dev/aaa?createTable=true&read=trx&write=trx",
+				"test://dev.dev/bbb?createTable=true&read=blk,last_written_blk&write=none",
+			},
+			// READ
+			expectBlkReadStorePresent:   true,
+			expectBlkReadStoreDriverDsn: "test://dev.dev/bbb?createTable=true",
+			expectTrxReadStorePresent:   true,
+			expectTrxReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// WRITE
+			expectEnableBlkWrite:      false,
+			expectEnableTrxWrite:      true,
+			expectWriteStorePresent:   true,
+			expectWriteStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/bbb?createTable=true",
+		},
+		{
+			name: "multiple dsn with two reads trx store is the defaylt last written block",
+			dsns: []string{
+				"test://dev.dev/aaa?createTable=true&read=trx&write=none",
+				"test://dev.dev/bbb?createTable=true&read=blk&write=none",
+			},
+			// READ
+			expectBlkReadStorePresent:   true,
+			expectBlkReadStoreDriverDsn: "test://dev.dev/bbb?createTable=true",
+			expectTrxReadStorePresent:   true,
+			expectTrxReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			// WRITE
+			expectEnableBlkWrite:    false,
+			expectEnableTrxWrite:    false,
+			expectWriteStorePresent: false,
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
+		},
+		{
+			name: "single dsn with one read trx store is the default last written block",
+			dsns: []string{
+				"test://dev.dev/aaa?createTable=true&read=blk&write=none",
+			},
+			// READ
+			expectBlkReadStorePresent:   true,
+			expectBlkReadStoreDriverDsn: "test://dev.dev/aaa?createTable=true",
+			expectTrxReadStorePresent:   false,
+			// WRITE
+			expectEnableBlkWrite:    false,
+			expectEnableTrxWrite:    false,
+			expectWriteStorePresent: false,
+			// Last written Block Store
+			expectLastWrittenBlockStorePresent: true,
+			expectLastWrittenBlockStoreDsn:     "test://dev.dev/aaa?createTable=true",
 		},
 		{
 			name: "two writer dsn is not allowed",
@@ -167,39 +240,29 @@ func Test_New(t *testing.T) {
 			if db, ok := trxdb.(*DB); ok {
 				// Block Read Store Test
 				if test.expectBlkReadStorePresent {
-					assert.NotNil(t, db.blksReadStore)
-					if d, ok := db.blksReadStore.(*store.TestKVDBDriver); ok {
+					assert.NotNil(t, db.blkReadStore)
+					if d, ok := db.blkReadStore.(*store.TestKVDBDriver); ok {
 						assert.Equal(t, test.expectBlkReadStoreDriverDsn, d.DSN)
 					} else {
 						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
 					}
 				} else {
-					assert.Nil(t, db.blksReadStore)
+					assert.Nil(t, db.blkReadStore)
 				}
 
-				// Block Write Store Test
-				if test.expectBlkWriteStorePresent {
-					assert.NotNil(t, db.blkWriteStore)
-					if d, ok := db.blkWriteStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectBlkWriteStoreDriverDsn, d.DSN)
+				// Write Store Test
+				if test.expectWriteStorePresent {
+					assert.NotNil(t, db.writeStore)
+					if d, ok := db.writeStore.(*store.TestKVDBDriver); ok {
+						assert.Equal(t, test.expectWriteStoreDriverDsn, d.DSN)
 					} else {
 						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
 					}
 				} else {
-					assert.Nil(t, db.blkWriteStore)
+					assert.Nil(t, db.writeStore)
 				}
-
-				// Trx Write Store Test
-				if test.expectTrxWriteStorePresent {
-					assert.NotNil(t, db.trxWriteStore)
-					if d, ok := db.trxWriteStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectTrxWriteStoreDriverDsn, d.DSN)
-					} else {
-						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
-					}
-				} else {
-					assert.Nil(t, db.trxWriteStore)
-				}
+				assert.Equal(t, test.expectEnableTrxWrite, db.enableTrxWrite)
+				assert.Equal(t, test.expectEnableBlkWrite, db.enableBlkWrite)
 
 				// Trx Read Store Test
 				if test.expectTrxReadStorePresent {
@@ -214,15 +277,18 @@ func Test_New(t *testing.T) {
 				}
 
 				// IRR Store Test
-				if test.expectIrrBlockStorePresent {
-					assert.NotNil(t, db.irrBlockStore)
-					if d, ok := db.irrBlockStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectIrrBlockStoreDriverDsn, d.DSN)
+				if test.expectLastWrittenBlockStorePresent {
+					str, err := db.getLastWrittenBlockStore()
+					require.NoError(t, err)
+					assert.NotNil(t, str)
+					if d, ok := str.(*store.TestKVDBDriver); ok {
+						assert.Equal(t, test.expectLastWrittenBlockStoreDsn, d.DSN)
 					} else {
 						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
 					}
 				} else {
-					assert.Nil(t, db.irrBlockStore)
+					_, err := db.getLastWrittenBlockStore()
+					require.Error(t, err)
 				}
 
 			} else {
