@@ -69,7 +69,8 @@ Here a full list and what they control:
 - `REACT_APP_EOSQ_ON_DEMAND` - Wether this network is an on-demand network or not.
 - `REACT_APP_EOSQ_AVAILABLE_NETWORK` - A valid JSON string representing the valid config of available networks to display in the main menu.
 
-**Note** Those are valid for development purposes only, they are not picked
+**Note** Those are valid for development purposes only, they are not picked on production usage and they are injected in the
+HTML `index.html` page directly on production.
 
 ## File structure
 
