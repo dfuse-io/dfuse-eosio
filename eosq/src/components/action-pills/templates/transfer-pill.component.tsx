@@ -1,12 +1,12 @@
 import * as React from "react"
 import { Pill, CellValue, Box, PillClickable, MonospaceText } from "@dfuse/explorer"
+import { theme } from "../../../theme"
 import { TransferBox } from "../../../atoms/pills/pill-transfer-box"
 import { getMemoText } from "../../../helpers/action.helpers"
 import { GenericPillComponent, PillRenderingContext } from "./generic-pill.component"
 import { getNewAccountFromNameServiceFields, getNewAccountInTraces } from "./pill-template.helpers"
 import { Grid } from "../../../atoms/ui-grid/ui-grid.component"
 import { Text } from "../../../atoms/text/text.component"
-
 import { FormattedText } from "../../formatted-text/formatted-text"
 
 export class TransferPillComponent extends GenericPillComponent {
@@ -128,6 +128,9 @@ export class TransferPillComponent extends GenericPillComponent {
         pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
         headerText={this.renderHeaderText()}

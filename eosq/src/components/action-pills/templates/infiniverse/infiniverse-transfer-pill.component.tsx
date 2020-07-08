@@ -74,6 +74,9 @@ export class InfiniverseTransferPillComponent extends GenericPillComponent {
         pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
         info={memoText}

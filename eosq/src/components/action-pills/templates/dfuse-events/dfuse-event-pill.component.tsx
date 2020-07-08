@@ -137,6 +137,9 @@ export class DfuseEventPillComponent extends GenericPillComponent {
         pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerHoverTitle="dfuseiohooks"
         disabled={this.props.disabled}
         headerText="event"

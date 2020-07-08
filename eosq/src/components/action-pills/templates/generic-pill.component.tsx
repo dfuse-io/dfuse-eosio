@@ -234,6 +234,9 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerText={this.renderHeaderText()}
         renderExpandedContent={this.renderExpandedContent}
         content={this.croppedData ? this.renderContent() : <span />}
