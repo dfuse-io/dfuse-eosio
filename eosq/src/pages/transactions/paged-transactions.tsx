@@ -55,7 +55,7 @@ export class PagedTransactions extends ListContentLoaderComponent<Props, any> {
         </Cell>
         <Grid gridTemplateColumns={["1fr"]}>
           <Cell justifySelf="right" alignSelf="right" p={[4]}>
-            {this.renderNavigation("light", true)}
+            {this.renderNavigation("light", transactionListStore.hasNextPage)}
           </Cell>
         </Grid>
       </Cell>
@@ -66,7 +66,7 @@ export class PagedTransactions extends ListContentLoaderComponent<Props, any> {
     return (
       <Panel
         title={t("transaction.list.title")}
-        renderSideTitle={() => this.renderNavigation("light", true)}
+        renderSideTitle={() => this.renderNavigation("light", transactionListStore.hasNextPage)}
       >
         {this.handleRender(fetchTransactionList, t("transaction.list.loading"))}
       </Panel>
