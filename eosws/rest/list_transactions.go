@@ -19,8 +19,8 @@ import (
 	"strconv"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
+	"github.com/dfuse-io/dmetering"
 )
 
 func ListTransactionsHandler(db eosws.DB) http.Handler {
@@ -53,12 +53,6 @@ func ListTransactionsHandler(db eosws.DB) http.Handler {
 			eosws.WriteError(w, r, derr.Wrap(err, "failed to get transactions"))
 			return
 		}
-
-		// transactionList, err := mdl.ToV1TransactionList(dbTransactionList)
-		// if err != nil {
-		// 	eosws.WriteError(w, r, derr.Wrap(err, "failed to get most recent transactions)"))
-		// 	return
-		// }
 
 		eosws.WriteJSON(w, r, dbTransactionList)
 
