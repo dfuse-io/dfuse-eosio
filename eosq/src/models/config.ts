@@ -9,13 +9,14 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 )
 
-if (!windowTS.TopLevelConfig) {
-  windowTS.TopLevelConfig = {
-    current_network: "eos-mainnet",
-    dfuse_auth_endpoint: "https://auth.dfuse.io",
-    dfuse_io_api_key: "web_1234567890abc",
-    dfuse_io_endpoint: "mainnet.eos.dfuse.io",
-    // secure: true,
+const isEnvSet = (value: string | undefined): boolean => value != null && value !== ""
+
+const newDefaultConfig = () => {
+  const core = {
+    current_network: process.env.REACT_APP_EOSQ_CURRENT_NETWORK || "eos-mainnet",
+    dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "https://auth.dfuse.io",
+    dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_1234567890abc",
+    dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "mainnet.eos.dfuse.io",
     display_price: true,
     on_demand: false,
     price_ticker_name: "EOS",
@@ -26,7 +27,7 @@ if (!windowTS.TopLevelConfig) {
         is_test: true,
         logo: "/images/eos-mainnet.png",
         name: "Custom Network",
-        url: process.env.REACT_APP_DFUSE_ENDPOINT || "http://localhost:8080"
+        url: "http://localhost:8080"
       },
       {
         id: "eos-mainnet",
@@ -65,6 +66,28 @@ if (!windowTS.TopLevelConfig) {
       }
     ]
   }
+
+  if (isEnvSet(process.env.REACT_APP_EOSQ_DISPLAY_PRICE)) {
+    core.display_price = process.env.REACT_APP_EOSQ_DISPLAY_PRICE === "true"
+  }
+
+  if (isEnvSet(process.env.REACT_APP_EOSQ_ON_DEMAND)) {
+    core.on_demand = process.env.REACT_APP_EOSQ_ON_DEMAND === "true"
+  }
+
+  if (isEnvSet(process.env.REACT_APP_EOSQ_AVAILABLE_NETWORKS)) {
+    try {
+      core.available_networks = JSON.parse(process.env.REACT_APP_EOSQ_AVAILABLE_NETWORKS!)
+    } catch (error) {
+      console.error("Invalid available networks environemnt variable, it's not valid JSON", error)
+    }
+  }
+
+  return core
+}
+
+if (!windowTS.TopLevelConfig) {
+  windowTS.TopLevelConfig = newDefaultConfig()
 }
 
 export interface EosqNetwork {
