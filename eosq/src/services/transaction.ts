@@ -18,10 +18,7 @@ export const getTransactions = task(
       return null
     }
     transactionListStore.results = response.transactions
-    // transactionListStore.updateCursorCache(response.cursor)
-    transactionListStore.updateCursorCache(
-      "gqwtr-URJXFlSdAa6L4G_va2d5QwU1lrVFixLRUUht718yDF3siuA2ghbxjTk6z02kHpSFv63Y7MFn0v9cIB6IPswOs3vCltTip_x9u6-r3lePPyaA=="
-    )
+    transactionListStore.updateCursorCache(response.cursor)
     return response
   },
   { swallow: true }
