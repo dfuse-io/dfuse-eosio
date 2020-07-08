@@ -100,7 +100,6 @@ func (db *SwitchDB) useReadDriver(dsnURL *url.URL, readValues string, opts []Opt
 	}
 
 	return nil
-
 }
 
 func (db *SwitchDB) useWriteDriver(dsnURL *url.URL, opts []Option) error {
@@ -166,6 +165,7 @@ func (db *SwitchDB) GetAccount(ctx context.Context, accountName string) (*pbcode
 
 	return driver.GetAccount(ctx, accountName)
 }
+
 func (db *SwitchDB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) ([]string, error) {
 	driver, err := db.routeReadTo(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_ACCOUNT)
 	if err != nil {

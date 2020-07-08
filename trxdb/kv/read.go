@@ -31,7 +31,8 @@ import (
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	it := db.store.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
+
+	it := db.irrBlockStore.Scan(ctx, Keys.StartOfIrrBlockTable(), Keys.EndOfIrrBlockTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -41,7 +42,7 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 	}
 	key := it.Item().Key
 	db.logger.Debug("retrieved key", zap.ByteString("packed_key", key))
-	blockID = Keys.UnpackBlocksKey(key)
+	blockID = Keys.UnpackIrrBlocksKey(key)
 	return
 }
 
@@ -244,7 +245,7 @@ func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uin
 }
 
 func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error) {
-	value, err := db.store.Get(ctx, Keys.PackAccountKey(accountName))
+	value, err := db.accountReadStore.Get(ctx, Keys.PackAccountKey(accountName))
 
 	if err == store.ErrNotFound {
 		return nil, kvdb.ErrNotFound

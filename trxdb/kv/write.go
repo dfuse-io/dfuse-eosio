@@ -45,9 +45,7 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 }
 
 func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_TRANSACTION) {
-		db.logger.Debug("transactions are not indexed, skipping")
-	} else {
+	if db.trxWriteStore != nil {
 		if traceEnabled {
 			db.logger.Debug("put transactions (trx, trace, dtrx)")
 		}
@@ -65,12 +63,11 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		}
 	}
 
-	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_BLOCK) {
-		db.logger.Debug("blocks are not indexed, skipping")
-		return nil
+	if db.blkWriteStore != nil {
+		return db.putBlock(ctx, blk)
 	}
 
-	return db.putBlock(ctx, blk)
+	return nil
 }
 
 func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
@@ -98,7 +95,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 		}
 
 		key := Keys.PackTrxsKey(trxReceipt.Id, blk.Id)
-		err = db.store.Put(ctx, key, db.enc.MustProto(trxRow))
+		err = db.trxWriteStore.Put(ctx, key, db.enc.MustProto(trxRow))
 
 		if err != nil {
 			return fmt.Errorf("put trx: write to db: %w", err)
@@ -130,7 +127,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 				return fmt.Errorf("put dtrxRow: handle dtrxOp Operation: unknown dtrxOp operation for trx id %s at action %d", trxTrace.Id, dtrxOp.ActionIndex)
 			}
 
-			if err := db.store.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
+			if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(dtrxRow)); err != nil {
 				return fmt.Errorf("put dtrxRow: write to db: %w", err)
 			}
 		}
@@ -147,7 +144,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 		}
 
 		key := Keys.PackTrxTracesKey(trxTrace.Id, blk.Id)
-		if err := db.store.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
+		if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(trxTraceRow)); err != nil {
 			return fmt.Errorf("put trxTraceRow: write to db: %w", err)
 		}
 
@@ -176,7 +173,7 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 	}
 
 	key := Keys.PackAccountKey(acctRow.Name)
-	if err := db.store.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
+	if err := db.accountWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
 		return fmt.Errorf("put acctRow: write to db: %w", err)
 	}
 
@@ -246,7 +243,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 
 	db.logger.Debug("put block", zap.Stringer("block", blk.AsRef()))
 	key := Keys.PackBlocksKey(blk.Id)
-	if err := db.store.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
+	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
 		return fmt.Errorf("put block: write to db: %w", err)
 	}
 
@@ -276,9 +273,7 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		}
 	}
 
-	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_ACCOUNT) {
-		db.logger.Debug("accounts are not indexed, skipping")
-	} else {
+	if db.accountWriteStore != nil {
 		// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
 		// the filtering rules might exclude the `newaccount`.
 		for _, trxTrace := range blk.TransactionTraces() {
@@ -292,13 +287,19 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 		}
 	}
 
+	// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
+
 	// We must do this operation regardless of the write only categories set since this is used
 	// as our last block marker. If this would not be writing, it would never be possible to start
 	// back where we left off.
 	db.logger.Debug("adding irreversible block", zap.Stringer("block", blk.AsRef()))
-	if err := db.store.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
+
+	if err := db.irrBlockStore.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
 		return err
 	}
+
+	// NOTE: what happens to the blockNum, for the IrrBlock rows?? Do we truncate it when it
+	// becomes irreversible?
 
 	return nil
 }
