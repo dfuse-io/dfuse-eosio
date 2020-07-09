@@ -16,34 +16,26 @@ package trxdb
 
 import "go.uber.org/zap"
 
-type Option interface {
-	setOption(config Configurable) error
+type Option func(db DB) error
+
+func WithLogger(logger *zap.Logger) Option {
+	return func(db DB) error {
+		if d, ok := db.(interface {
+			SetLogger(*zap.Logger) error
+		}); ok {
+			return d.SetLogger(logger)
+		}
+		return nil
+	}
 }
 
-func ReadOnly() WriteOnlyOption {
-	return WriteOnlyOption{Categories: NoIndexing}
-}
-
-func WriteOnly(categories IndexableCategories) WriteOnlyOption {
-	return WriteOnlyOption{Categories: categories}
-}
-
-type WriteOnlyOption struct {
-	Categories IndexableCategories
-}
-
-func (o WriteOnlyOption) setOption(config Configurable) error {
-	return config.AcceptWriteOnlyOption(o)
-}
-
-func WithLogger(logger *zap.Logger) LoggerOption {
-	return LoggerOption{Logger: logger}
-}
-
-type LoggerOption struct {
-	Logger *zap.Logger
-}
-
-func (o LoggerOption) setOption(config Configurable) error {
-	return config.AcceptLoggerOption(o)
+func WithPurgeableStoreOption(ttl, purgeInterval uint64) Option {
+	return func(db DB) error {
+		if d, ok := db.(interface {
+			SetPurgeableStore(ttl, purgeInterval uint64) error
+		}); ok {
+			return d.SetPurgeableStore(ttl, purgeInterval)
+		}
+		return nil
+	}
 }

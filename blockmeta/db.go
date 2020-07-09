@@ -25,7 +25,7 @@ import (
 )
 
 type EOSBlockmetaDB struct {
-	Driver trxdb.Driver
+	Driver trxdb.DB
 }
 
 func (db *EOSBlockmetaDB) BlockIDAt(ctx context.Context, start time.Time) (id string, err error) {

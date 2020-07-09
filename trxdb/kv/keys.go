@@ -19,6 +19,8 @@ const (
 	TblPrefixTrxTraces = 0x05
 	TblPrefixAccts     = 0x06
 
+	TblTTL = 0x10
+
 	idxPrefixTimelineFwd = 0x80
 	idxPrefixTimelineBck = 0x81
 

@@ -24,9 +24,7 @@ import (
 
 type ChainDiscriminator func(blockID string) bool
 
-type Driver interface {
-	Configurable
-
+type DB interface {
 	DBReader
 	DBWriter
 
@@ -104,9 +102,4 @@ type DBWriter interface {
 	UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error
 	// Flush MUST be called or you WILL lose data
 	Flush(context.Context) error
-}
-
-type Configurable interface {
-	AcceptLoggerOption(option LoggerOption) error
-	AcceptWriteOnlyOption(option WriteOnlyOption) error
 }

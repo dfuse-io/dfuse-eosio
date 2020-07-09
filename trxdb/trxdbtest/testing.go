@@ -32,7 +32,7 @@ import (
 )
 
 type DriverCleanupFunc func()
-type DriverFactory func() (trxdb.Driver, DriverCleanupFunc)
+type DriverFactory func() (trxdb.DB, DriverCleanupFunc)
 
 func TestAll(t *testing.T, driverName string, driverFactory DriverFactory) {
 	TestAllAccountsReader(t, driverName, driverFactory)

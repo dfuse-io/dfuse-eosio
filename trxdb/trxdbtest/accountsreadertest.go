@@ -143,7 +143,7 @@ func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 	}
 }
 
-func putAccount(t *testing.T, creator, account string, db trxdb.Driver) {
+func putAccount(t *testing.T, creator, account string, db trxdb.DB) {
 	actions := []string{`{"id":"a1","action_traces": [{"receiver":"eosio","action": {"account":"eosio","name":"newaccount"}}]}`}
 	blk := TestBlock(t, "00000002aa", "00000001aa", actions...)
 	blk.TransactionTraces()[0].ActionTraces[0].Action.JsonData = fmt.Sprintf(`

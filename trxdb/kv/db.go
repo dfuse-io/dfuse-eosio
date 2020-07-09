@@ -16,23 +16,28 @@ package kv
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
 )
 
+// "read"'s default is "*"
+// "write"'s default is "*"
+// Dsn examples
+// dgraphql in eos mainnet core: store:///        				 by default: read=*&write=*
+// dgraphql in curv: store://mainnet/?read=blk,trx&write=none store://curv/?read=trx&write=none
+// dgraphql in curv: store://mainnet/?read=blk&write=none store://curv/?read=trx&write=none
+// trxdb-loader for mainnet core: store:///?write=blk 		/* read="*" */
+// trxdb-loader for curv: store:///?write=trx          		 /* only purpose: NOT WRITE blk */
+// single laptop-style deployment:           store:///             by default: read=*&write=*
+// single laptop-style deployment, secure:   store:///?read=blk,trx&write=none
 type DB struct {
-	accountWriteStore  store.KVStore
-	timelineWriteStore store.KVStore
-	blksWriteStore     store.KVStore
-	trxWriteStore      store.KVStore
+	blksWriteStore store.KVStore
+	trxWriteStore  store.KVStore
 
-	accountReadStore  store.KVStore
-	timelineReadStore store.KVStore
-	blksReadStore     store.KVStore
-	trxReadStore      store.KVStore
+	blksReadStore store.KVStore
+	trxReadStore  store.KVStore
 
 	irrBlockStore store.KVStore
 
@@ -42,11 +47,9 @@ type DB struct {
 	enc *trxdb.ProtoEncoder
 	dec *trxdb.ProtoDecoder
 
-	logger *zap.Logger
+	purgeInterval uint64
+	logger        *zap.Logger
 }
-
-var storeCachePool = make(map[string]store.KVStore)
-var storeCachePoolLock sync.Mutex
 
 func init() {
 	trxdb.Register("badger", New)
@@ -55,132 +58,101 @@ func init() {
 	trxdb.Register("cznickv", New)
 }
 
-func newCachedKVDB(logger, dsn string) (store.KVStore, error) {
-	storeCachePoolLock.Lock()
-	defer storeCachePoolLock.Unlock()
+func New(dsns []string) (trxdb.DB, error) {
 
-	cachedKVStore := storeCachePool[dsn]
-	if cachedKVStore == nil {
-		logger.Debug("kv store store is not cached for this DSN, creating a new one")
-		kvStore, err := store.New(dsn)
+	db := &DB{
+		enc:    trxdb.NewProtoEncoder(),
+		dec:    trxdb.NewProtoDecoder(),
+		logger: zap.NewNop(),
+	}
+	for _, dsn := range dsns {
+		cleanDsn, reads, writes, err := parseAndCleanDSN(dsn)
 		if err != nil {
-			return nil, fmt.Errorf("new kvdb store: %w", err)
+			return nil, fmt.Errorf("unable to parse and clean kv driver dsn: %w", err)
 		}
 
-		storeCachePool[dsn] = kvStore
-		cachedKVStore = kvStore
-	} else {
-		logger.Debug("re-using cached kv store")
+		driver, err := newCachedKVDB(cleanDsn)
+		if err != nil {
+			return nil, fmt.Errorf("unable retrieve kvdb driver: %w", err)
+		}
+
+		db = setupReadWriteOpts(driver, reads, writes, db)
 	}
-	return cachedKVStore
+	return db, nil
+
 }
 
-func New(dsnString string, logger *zap.Logger) (trxdb.Driver, error) {
-	// SPLIT with " "
+type storeIterFunc func(s store.KVStore) error
 
-	newCachedKVDB(logger, dsn1)
+func (db *DB) itrWritableStores(f storeIterFunc) error {
+	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.irrBlockStore})
+}
 
-	// "read"'s default is "*"
-	// "write"'s default is "*"
+func (db *DB) itrAllStores(f storeIterFunc) error {
+	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.blksReadStore, db.trxReadStore, db.irrBlockStore})
+}
 
-	// dgraphql in eos mainnet core: store:///         by default: read=*&write=*
-	// dgraphql in curv: store://mainnet/?read=blk,trx&write=none store://curv/?read=trx&write=none
-	// dgraphql in curv: store://mainnet/?read=blk&write=none store://curv/?read=trx&write=none
-
-	// trxdb-loader for mainnet core: store:///?write=blk   /* read="*" */
-	// trxdb-loader for curv: store:///?write=trx           /* only purpose: NOT WRITE blk */
-
-	// single laptop-style deployment:           store:///             by default: read=*&write=*
-	// single laptop-style deployment, secure:   store:///?read=blk,trx&write=none
-
-	// rwsetting=read_blk_only
-	// rwsetting=read_trx_only
-	// rwsetting=read_all
-	// rwsetting=write_trx_only
-	// rwsetting=write_all
-	// rwsetting=write_blk_only
-	// rwsetting=read_write_all
-
-	// trx defaults to "rw"
-	// store:///?trx=write,blk=read
-	// store:///?trx=rw,blk=none
-	// store:///?blk=none
-	// store:///?trx=rw,blk=rw
-	// store:///
-
-	logger.Debug("creating new kv trxdb instance")
-	db := &DB{
-		store:               cachedKVStore,
-		enc:                 trxdb.NewProtoEncoder(),
-		dec:                 trxdb.NewProtoDecoder(),
-		logger:              logger,
-		indexableCategories: trxdb.FullIndexing.ToMap(),
+func (db *DB) itrStores(f storeIterFunc, stores []store.KVStore) error {
+	for _, s := range stores {
+		if s != nil {
+			err := f(s)
+			if err != nil {
+				return err
+			}
+		}
 	}
-
-	for _, dsn1 := range strings.Split(dsnString, " ", -1) {
-		parseDSN(dsn1, db)
-	}
-
-	return db, nil
+	return nil
 }
 
 func (db *DB) Close() error {
-	return db.store.Close()
+	return db.itrAllStores(func(s store.KVStore) error {
+		return s.Close()
+	})
 }
 
-func parseDSN(logger, dsn string, db *DB) {
-	d, err := url.Parse(dsn)
-	//panic(err)
-
-	// purge from `read` and `write`
-
-	driver, err := newCachedKVDB(logger, dsn1)
-	//panic(err)
-
-	q := d.ParseQuery()
-	read := q.Get("read")
-	write := q.Get("write")
-
-
-
-	if "blk" in read {
+func setupReadWriteOpts(driver store.KVStore, read, write []string, db *DB) *DB {
+	if inSlice("blk", read) {
 		db.blksReadStore = driver
-		db.accountReadStore = driver
-		db.timelineReadStore = driver
 		db.irrBlockStore = driver
 	}
-	if "trx" in read {
+
+	if inSlice("trx", read) {
 		db.trxReadStore = driver
 		// trx WINS and overrides
 		db.irrBlockStore = driver
 	}
-	if "all" in read || read == "" {
+
+	if inSlice("all", read) {
 		db.trxReadStore = driver
 		db.blksReadStore = driver
-		db.accountReadStore = driver
-		db.timelineReadStore = driver
 		db.irrBlockStore = driver
 	}
 	// read == "none" sets nothing
 
-	if "blk" in write {
+	if inSlice("blk", write) {
 		db.blksWriteStore = driver
-		db.accountWriteStore = driver
-		db.timelineWriteStore = driver
 		db.irrBlockStore = driver
 	}
-	if "trx" in write {
+
+	if inSlice("trx", write) {
 		db.trxWriteStore = driver
 		// trx WINS and overrides
 		db.irrBlockStore = driver
 	}
-	if "all" in write || write == "" {
+	if inSlice("all", write) {
 		db.trxWriteStore = driver
 		db.blksWriteStore = driver
-		db.accountWriteStore = driver
-		db.timelineWriteStore = driver
 		db.irrBlockStore = driver
 	}
 	// write == "none" sets nothing
+	return db
+}
 
+func inSlice(value string, slice []string) bool {
+	for _, s := range slice {
+		if s == value {
+			return true
+		}
+	}
+	return false
 }

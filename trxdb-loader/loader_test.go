@@ -41,7 +41,7 @@ import (
 
 type chainIDOption = string
 
-func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.Driver, func()) {
+func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.DB, func()) {
 
 	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true", trxdb.WithLogger(zlog))
 	require.NoError(t, err)

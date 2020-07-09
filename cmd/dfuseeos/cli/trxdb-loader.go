@@ -26,6 +26,9 @@ func init() {
 			cmd.Flags().String("trxdb-loader-http-listen-addr", KvdbHTTPServingAddr, "Listen address for /healthz endpoint")
 			cmd.Flags().Int("trxdb-loader-parallel-file-download-count", 2, "Maximum number of files to download in parallel")
 			cmd.Flags().Bool("trxdb-loader-allow-live-on-empty-table", true, "[LIVE] force pipeline creation if live request and table is empty")
+			cmd.Flags().Bool("trxdb-loader-enable-truncation-marker", false, "Enables the creation of truncation marker on writes")
+			cmd.Flags().Uint64("trxdb-loader-truncate-ttl", 0, "Truncates data that is older the defined X block number. Must be used with `trxdb-loader-enable-truncation-marker`")
+			cmd.Flags().Uint64("trxdb-loader-purger-interval", 0, "Purges at every X block interval")
 
 			return nil
 		},
@@ -52,6 +55,9 @@ func init() {
 				AllowLiveOnEmptyTable:     viper.GetBool("trxdb-loader-allow-live-on-empty-table"),
 				HTTPListenAddr:            viper.GetString("trxdb-loader-http-listen-addr"),
 				ParallelFileDownloadCount: viper.GetInt("trxdb-loader-parallel-file-download-count"),
+				EnableTruncationMarker:    viper.GetBool("trxdb-loader-enable-truncation-marker"),
+				TruncationTTL:             viper.GetUint64("trxdb-loader-truncate-ttl"),
+				PurgerInterval:            viper.GetUint64("trxdb-loader-purger-interval"),
 			}), nil
 		},
 	})

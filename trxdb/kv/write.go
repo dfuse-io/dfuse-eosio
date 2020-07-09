@@ -24,16 +24,15 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
+	kvdbstore "github.com/dfuse-io/kvdb/store"
 	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 )
 
 func (db *DB) Flush(ctx context.Context) error {
-	return db.store.FlushPuts(ctx)
-}
-
-func (db *DB) WriteOnly(categories trxdb.IndexableCategories) {
-	db.indexableCategories = categories.ToMap()
+	return db.itrWritableStores(func(s kvdbstore.KVStore) error {
+		return s.FlushPuts(ctx)
+	})
 }
 
 func (db *DB) SetWriterChainID(chainID []byte) {
@@ -44,8 +43,25 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 	return db.GetClosestIrreversibleIDAtBlockNum(ctx, math.MaxUint32)
 }
 
+func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blkNumber uint64) error {
+	if s, ok := s.(kvdbstore.Purgeable); ok {
+		s.MarkCurrentHeight(blkNumber)
+		if blkNumber > 0 && (blkNumber%db.purgeInterval) == 0 {
+			if err := s.PurgeKeys(ctx); err != nil {
+				return fmt.Errorf("unable to purge store: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
 func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 	if db.trxWriteStore != nil {
+		err := db.purgeSetupAndAttempt(ctx, db.trxWriteStore, uint64(blk.Number))
+		if err != nil {
+			return err
+		}
+
 		if traceEnabled {
 			db.logger.Debug("put transactions (trx, trace, dtrx)")
 		}
@@ -63,7 +79,11 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		}
 	}
 
-	if db.blkWriteStore != nil {
+	if db.blksWriteStore != nil {
+		err := db.purgeSetupAndAttempt(ctx, db.blksWriteStore, uint64(blk.Number))
+		if err != nil {
+			return err
+		}
 		return db.putBlock(ctx, blk)
 	}
 
@@ -173,7 +193,7 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 	}
 
 	key := Keys.PackAccountKey(acctRow.Name)
-	if err := db.accountWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
+	if err := db.blksWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
 		return fmt.Errorf("put acctRow: write to db: %w", err)
 	}
 
@@ -188,7 +208,7 @@ func (db *DB) putImplicitTransactions(ctx context.Context, blk *pbcodec.Block) e
 		}
 
 		key := Keys.PackImplicitTrxsKey(trxOp.TransactionId, blk.Id)
-		if err := db.store.Put(ctx, key, db.enc.MustProto(implTrxRow)); err != nil {
+		if err := db.trxWriteStore.Put(ctx, key, db.enc.MustProto(implTrxRow)); err != nil {
 			return fmt.Errorf("put implTrx: write to db: %w", err)
 		}
 	}
@@ -243,7 +263,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 
 	db.logger.Debug("put block", zap.Stringer("block", blk.AsRef()))
 	key := Keys.PackBlocksKey(blk.Id)
-	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
+	if err := db.blksWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
 		return fmt.Errorf("put block: write to db: %w", err)
 	}
 
@@ -261,19 +281,20 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 var oneByte = []byte{0x01}
 
 func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
-	if !db.isIndexed(pbtrxdb.IndexableCategory_INDEXABLE_CATEGORY_TIMELINE) {
-		db.logger.Debug("timeline is not indexed, skipping")
-	} else {
+
+	if db.blksWriteStore != nil {
 		blockTime := blk.MustTime()
-		if err := db.store.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.blksWriteStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
-		if err := db.store.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.blksWriteStore.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
+	} else {
+		db.logger.Debug("timeline is not written, skipping")
 	}
 
-	if db.accountWriteStore != nil {
+	if db.blksWriteStore != nil {
 		// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
 		// the filtering rules might exclude the `newaccount`.
 		for _, trxTrace := range blk.TransactionTraces() {
@@ -285,6 +306,8 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 				}
 			}
 		}
+	} else {
+		db.logger.Debug("account is not written, skipping")
 	}
 
 	// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
@@ -293,7 +316,6 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 	// as our last block marker. If this would not be writing, it would never be possible to start
 	// back where we left off.
 	db.logger.Debug("adding irreversible block", zap.Stringer("block", blk.AsRef()))
-
 	if err := db.irrBlockStore.Put(ctx, Keys.PackIrrBlocksKey(blk.Id), oneByte); err != nil {
 		return err
 	}
@@ -302,8 +324,4 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 	// becomes irreversible?
 
 	return nil
-}
-
-func (db *DB) isIndexed(category pbtrxdb.IndexableCategory) bool {
-	return db.indexableCategories[category]
 }
