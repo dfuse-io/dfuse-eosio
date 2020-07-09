@@ -32,7 +32,7 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	it := db.irrBlockStore.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
+	it := db.irrBlockStore.Scan(ctx, Keys.StartOfIrrBlockTable(), Keys.EndOfIrrBlockTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -96,7 +96,7 @@ func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbtrxdb.Bloc
 	}
 
 	//todo: add a test to check the irreversibility
-	_, err := db.blksReadStore.Get(ctx, Keys.PackIrrBlocksKey(blockRow.Block.Id))
+	_, err := db.irrBlockStore.Get(ctx, Keys.PackIrrBlocksKey(blockRow.Block.Id))
 	if err != nil && err != store.ErrNotFound {
 		return nil, fmt.Errorf("get irr block: txn get: %w", err)
 	}
@@ -137,7 +137,7 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 	dposIrrNum := blk.Block.DposIrreversibleBlocknum
 
 	db.logger.Debug("get irr block by num", zap.Uint32("block_num", dposIrrNum))
-	it := db.blksReadStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(dposIrrNum), Keys.PackIrrBlockNumPrefix(dposIrrNum-1), 1)
+	it := db.irrBlockStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(dposIrrNum), Keys.PackIrrBlockNumPrefix(dposIrrNum-1), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err

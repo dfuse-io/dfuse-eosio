@@ -103,3 +103,7 @@ type DBWriter interface {
 	// Flush MUST be called or you WILL lose data
 	Flush(context.Context) error
 }
+
+type Debugeable interface {
+	Dump()
+}

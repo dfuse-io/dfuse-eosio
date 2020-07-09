@@ -79,8 +79,8 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		}
 	}
 
-	if db.blksWriteStore != nil {
-		err := db.purgeSetupAndAttempt(ctx, db.blksWriteStore, uint64(blk.Number))
+	if db.blkWriteStore != nil {
+		err := db.purgeSetupAndAttempt(ctx, db.blkWriteStore, uint64(blk.Number))
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func (db *DB) putNewAccount(ctx context.Context, blk *pbcodec.Block, trace *pbco
 	}
 
 	key := Keys.PackAccountKey(acctRow.Name)
-	if err := db.blksWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
+	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(acctRow)); err != nil {
 		return fmt.Errorf("put acctRow: write to db: %w", err)
 	}
 
@@ -263,7 +263,7 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 
 	db.logger.Debug("put block", zap.Stringer("block", blk.AsRef()))
 	key := Keys.PackBlocksKey(blk.Id)
-	if err := db.blksWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
+	if err := db.blkWriteStore.Put(ctx, key, db.enc.MustProto(blockRow)); err != nil {
 		return fmt.Errorf("put block: write to db: %w", err)
 	}
 
@@ -282,19 +282,19 @@ var oneByte = []byte{0x01}
 
 func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
 
-	if db.blksWriteStore != nil {
+	if db.blkWriteStore != nil {
 		blockTime := blk.MustTime()
-		if err := db.blksWriteStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.blkWriteStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
-		if err := db.blksWriteStore.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
+		if err := db.blkWriteStore.Put(ctx, Keys.PackTimelineKey(false, blockTime, blk.Id), oneByte); err != nil {
 			return err
 		}
 	} else {
 		db.logger.Debug("timeline is not written, skipping")
 	}
 
-	if db.blksWriteStore != nil {
+	if db.blkWriteStore != nil {
 		// Specialized indexing for `newaccount` on the chain, this might loop on filtered transaction traces, so
 		// the filtering rules might exclude the `newaccount`.
 		for _, trxTrace := range blk.TransactionTraces() {

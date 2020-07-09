@@ -125,6 +125,13 @@ func (a *App) Run() error {
 		return fmt.Errorf("trxdb setup: %w", err)
 	}
 
+	if d, ok := kdb.(trxdb.Debugeable); ok {
+		zlog.Info("trxdb dsn", zap.String("DSN", a.Config.KVDBDSN))
+		d.Dump()
+	} else {
+		zlog.Info("trxdb driver database is not debugeable")
+	}
+
 	db := eosws.NewTRXDB(kdb)
 
 	completionInstance, err := completion.New(ctx, db)

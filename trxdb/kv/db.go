@@ -33,8 +33,8 @@ import (
 // single laptop-style deployment:           store:///             by default: read=*&write=*
 // single laptop-style deployment, secure:   store:///?read=blk,trx&write=none
 type DB struct {
-	blksWriteStore store.KVStore
-	trxWriteStore  store.KVStore
+	blkWriteStore store.KVStore
+	trxWriteStore store.KVStore
 
 	blksReadStore store.KVStore
 	trxReadStore  store.KVStore
@@ -65,18 +65,28 @@ func New(dsns []string) (trxdb.DB, error) {
 		dec:    trxdb.NewProtoDecoder(),
 		logger: zap.NewNop(),
 	}
+
+	hasSeenWriter := false
 	for _, dsn := range dsns {
 		cleanDsn, reads, writes, err := parseAndCleanDSN(dsn)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse and clean kv driver dsn: %w", err)
 		}
 
+		isWriter := isWriter(writes)
+		if isWriter && hasSeenWriter {
+			return nil, fmt.Errorf("unable to have 2 writer DSNs")
+		}
+		hasSeenWriter = isWriter
+
 		driver, err := newCachedKVDB(cleanDsn)
 		if err != nil {
 			return nil, fmt.Errorf("unable retrieve kvdb driver: %w", err)
 		}
 
-		db = setupReadWriteOpts(driver, reads, writes, db)
+		///
+
+		db.setupReadWriteOpts(driver, reads, writes)
 	}
 	return db, nil
 
@@ -85,11 +95,11 @@ func New(dsns []string) (trxdb.DB, error) {
 type storeIterFunc func(s store.KVStore) error
 
 func (db *DB) itrWritableStores(f storeIterFunc) error {
-	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.irrBlockStore})
+	return db.itrStores(f, []store.KVStore{db.blkWriteStore, db.trxWriteStore, db.irrBlockStore})
 }
 
 func (db *DB) itrAllStores(f storeIterFunc) error {
-	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.blksReadStore, db.trxReadStore, db.irrBlockStore})
+	return db.itrStores(f, []store.KVStore{db.blkWriteStore, db.trxWriteStore, db.blksReadStore, db.trxReadStore, db.irrBlockStore})
 }
 
 func (db *DB) itrStores(f storeIterFunc, stores []store.KVStore) error {
@@ -110,27 +120,24 @@ func (db *DB) Close() error {
 	})
 }
 
-func setupReadWriteOpts(driver store.KVStore, read, write []string, db *DB) *DB {
+func (db *DB) setupReadWriteOpts(driver store.KVStore, read, write []string) {
 	if inSlice("blk", read) {
 		db.blksReadStore = driver
-		db.irrBlockStore = driver
 	}
 
 	if inSlice("trx", read) {
 		db.trxReadStore = driver
 		// trx WINS and overrides
-		db.irrBlockStore = driver
 	}
 
 	if inSlice("all", read) {
 		db.trxReadStore = driver
 		db.blksReadStore = driver
-		db.irrBlockStore = driver
 	}
 	// read == "none" sets nothing
 
 	if inSlice("blk", write) {
-		db.blksWriteStore = driver
+		db.blkWriteStore = driver
 		db.irrBlockStore = driver
 	}
 
@@ -141,11 +148,10 @@ func setupReadWriteOpts(driver store.KVStore, read, write []string, db *DB) *DB 
 	}
 	if inSlice("all", write) {
 		db.trxWriteStore = driver
-		db.blksWriteStore = driver
+		db.blkWriteStore = driver
 		db.irrBlockStore = driver
 	}
 	// write == "none" sets nothing
-	return db
 }
 
 func inSlice(value string, slice []string) bool {
@@ -155,4 +161,45 @@ func inSlice(value string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func isWriter(writes []string) bool {
+	for _, s := range writes {
+		if s != "none" {
+			return true
+		}
+	}
+	return false
+}
+
+//* using for debugging *//
+
+func (db *DB) Dump() {
+	fields := []zap.Field{}
+	if db.blkWriteStore != nil {
+		fields = append(fields, zap.Bool("blk_write_store_enabled", true))
+	} else {
+		fields = append(fields, zap.Bool("blk_write_store_enabled", false))
+	}
+	if db.trxWriteStore != nil {
+		fields = append(fields, zap.Bool("trx_write_store_enabled", true))
+	} else {
+		fields = append(fields, zap.Bool("trx_write_store_enabled", false))
+	}
+	if db.blksReadStore != nil {
+		fields = append(fields, zap.Bool("blk_read_store", true))
+	} else {
+		fields = append(fields, zap.Bool("blk_read_store", false))
+	}
+	if db.trxReadStore != nil {
+		fields = append(fields, zap.Bool("trx_read_store", true))
+	} else {
+		fields = append(fields, zap.Bool("trx_read_store", false))
+	}
+	if db.irrBlockStore != nil {
+		fields = append(fields, zap.Bool("irr_block_store", true))
+	} else {
+		fields = append(fields, zap.Bool("irr_block_store", false))
+	}
+	db.logger.Info("trxdb driver dump", fields...)
 }

@@ -56,11 +56,25 @@ func Test_parseDSN(t *testing.T) {
 			expectWrite:    []string{"none"},
 		},
 		{
-			name:           "dsn with read nonde and write options",
+			name:           "dsn with read none and write options",
 			dsn:            "test://host.ca/path?read=none&write=blk",
 			expectCleanDSN: "test://host.ca/path",
 			expectRead:     []string{"none"},
 			expectWrite:    []string{"blk"},
+		},
+		{
+			name:           "dsn with only read",
+			dsn:            "bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline",
+			expectCleanDSN: "bigkv://dev.dev/test-trxdb-blocks?createTable=true",
+			expectRead:     []string{"account", "block", "timeline"},
+			expectWrite:    []string{"all"},
+		},
+		{
+			name:           "dsn with read nonde and write options",
+			dsn:            "bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction",
+			expectCleanDSN: "bigkv://dev.dev/test-trxdb-trxs?createTable=true",
+			expectRead:     []string{"transaction"},
+			expectWrite:    []string{"transaction"},
 		},
 	}
 
