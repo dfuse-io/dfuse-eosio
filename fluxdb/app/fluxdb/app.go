@@ -136,7 +136,7 @@ func (a *App) startStandard(blocksStore dstore.Store, kvStore store.KVStore) err
 		grpcServer := grpc.New(a.config.GRPCListenAddr, db)
 		go grpcServer.Serve()
 	} else {
-		zlog.Info("setting injecter mode health check")
+		zlog.Info("setting injector mode health check")
 		go startHealthCheckServer(db, a.config.HTTPListenAddr)
 	}
 

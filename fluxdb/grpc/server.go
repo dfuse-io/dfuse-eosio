@@ -27,7 +27,6 @@ func New(grpcAddr string, db *fluxdb.FluxDB) *Server {
 
 func (s *Server) Serve() {
 	zlog.Info("listening & serving GRPC content", zap.String("grpc_listen_addr", s.grpcAddr))
-
 	grpcServer := dgrpc.NewServer(dgrpc.WithLogger(zlog))
 	pbfluxdb.RegisterStateServer(grpcServer, s)
 
@@ -37,7 +36,6 @@ func (s *Server) Serve() {
 		return
 	}
 
-	zlog.Info("listening & serving gRPC content", zap.String("grpc_listen_addr", s.grpcAddr))
 	if err := grpcServer.Serve(lis); err != nil {
 		s.db.Shutdown(fmt.Errorf("error on gs.Serve: %w", err))
 		return

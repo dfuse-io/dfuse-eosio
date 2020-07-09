@@ -63,12 +63,21 @@ func BuildReprocessingPipeline(
 
 func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBlock, handler bstream.Handler, blocksStore dstore.Store, publisherAddr string, parallelDownloadCount int) {
 	sf := bstream.SourceFromRefFactory(func(startBlock bstream.BlockRef, h bstream.Handler) bstream.Source {
-		forkHandler := forkable.New(h, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(startBlock), forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible))
 
 		// Exclusive, we never want to process the same block
 		// twice. When doing reprocessing, we'll need to provide the block
 		// just before.
-		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
+		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, h, bstream.GateOptionWithLogger(zlog))
+
+		forkableOptions := []forkable.Option{forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepNew | forkable.StepIrreversible)}
+		if startBlock != EmptyBlockRef {
+			// Only when we do **not** start from the beginning (i.e. startBlock is the empty block ref), that the
+			// forkable should be initialized with an initial LIB value. Otherwise, when we start fresh, the forkable
+			// will automatically set its LIB to the first streamable block of the chain.
+			forkableOptions = append(forkableOptions, forkable.WithExclusiveLIB(startBlock))
+		}
+
+		forkHandler := forkable.New(gate, forkableOptions...)
 
 		liveSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			return blockstream.NewSource(
@@ -92,7 +101,7 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 			return fs
 		})
 
-		return bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate,
+		return bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, forkHandler,
 			bstream.JoiningSourceLogger(zlog),
 			bstream.JoiningSourceTargetBlockID(startBlock.ID()),
 			bstream.JoiningSourceTargetBlockNum(2),
@@ -242,6 +251,7 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 				p.batchWritableRows += len(req.TabletRows)
 			}
 
+			zlog.Debug("write request stats irreversible blocks", zap.Stringer("block", rawBlk), zap.Int("writable_rows", p.batchWritableRows), zap.Time("batch_close_at", p.batchClose))
 			if p.batchWritableRows > 5000 || now.After(p.batchClose) || p.writeOnEachIrreversibleStep {
 				defer func() {
 					p.batchWrites = nil

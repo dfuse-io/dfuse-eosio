@@ -21,11 +21,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/eoscanada/eos-go"
 )
 
 var bigEndian = binary.BigEndian
 
+var EmptyBlockRef = bstream.BlockRefFromID(strings.Repeat("00", 32))
 var UN = eos.NameToString
 var N = eos.MustStringToName
 
