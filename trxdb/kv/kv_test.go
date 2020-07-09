@@ -28,11 +28,11 @@ func TestAll(t *testing.T) {
 }
 
 func newTestDBFactory(t *testing.T) trxdbtest.DriverFactory {
-	return func() (trxdb.Driver, trxdbtest.DriverCleanupFunc) {
+	return func() (trxdb.DB, trxdbtest.DriverCleanupFunc) {
 		dir, err := ioutil.TempDir("", "dfuse-trxdb-kv")
 		require.NoError(t, err)
 
-		db, err := New(fmt.Sprintf("badger://%s", dir), zlog)
+		db, err := New([]string{fmt.Sprintf("badger://%s", dir)})
 		require.NoError(t, err)
 
 		return db, func() {

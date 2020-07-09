@@ -43,6 +43,9 @@ type Config struct {
 	ParallelFileDownloadCount int    // Number of threads of parallel file download
 	AllowLiveOnEmptyTable     bool   // [LIVE] force pipeline creation if live request and table is empty
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
+	EnableTruncationMarker    bool   // Enables the storage of truncation markers
+	TruncationTTL             uint64 // Truncate date within this duration
+	PurgerInterval            uint64 // Purger at every X block
 }
 
 type App struct {
@@ -72,23 +75,25 @@ func (a *App) Run() error {
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
-	var loader trxdbloader.Loader
 
 	chainID, err := hex.DecodeString(a.Config.ChainID)
 	if err != nil {
 		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
 
-	db, err := trxdb.New(a.Config.KvdbDsn, trxdb.WithLogger(zlog))
+	trxdbOption := []trxdb.Option{trxdb.WithLogger(zlog)}
+	if a.Config.EnableTruncationMarker {
+		trxdbOption = append(trxdbOption, trxdb.WithPurgeableStoreOption(a.Config.TruncationTTL, a.Config.PurgerInterval))
+	}
+
+	db, err := trxdb.New(a.Config.KvdbDsn, trxdbOption...)
 	if err != nil {
 		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
 
 	db.SetWriterChainID(chainID)
 
-	l := trxdbloader.NewTrxDBLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
-
-	loader = l
+	loader := trxdbloader.NewTrxDBLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {

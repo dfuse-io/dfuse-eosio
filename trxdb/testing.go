@@ -51,21 +51,23 @@ func (r *TestTransactionsReader) GetTransactionEventsBatch(ctx context.Context, 
 }
 
 type testDriver struct {
-	dsn       string
-	options   []Option
-	logger    *zap.Logger
-	writeOnly IndexableCategories
+	dsn           string
+	options       []Option
+	logger        *zap.Logger
+	ttl           uint64
+	purgeInterval uint64
 }
 
 func (db *testDriver) Close() error { return nil }
 
-func (db *testDriver) AcceptLoggerOption(o LoggerOption) error {
-	db.logger = o.Logger
+func (db *testDriver) SetLogger(logger *zap.Logger) error {
+	db.logger = logger
 	return nil
 }
 
-func (db *testDriver) AcceptWriteOnlyOption(o WriteOnlyOption) error {
-	db.writeOnly = o.Categories
+func (db *testDriver) SetPurgeableStore(ttl, purgeInterval uint64) error {
+	db.ttl = ttl
+	db.purgeInterval = purgeInterval
 	return nil
 }
 

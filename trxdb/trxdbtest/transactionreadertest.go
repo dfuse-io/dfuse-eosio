@@ -293,7 +293,7 @@ func TestGetTransactionEventsBatch(t *testing.T, driverFactory DriverFactory) {
 	}
 }
 
-func putTransaction(t *testing.T, db trxdb.Driver, trxID string) {
+func putTransaction(t *testing.T, db trxdb.DB, trxID string) {
 	//it is important to use full length id for transaction
 	blk := TestBlock(t, "06bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "06bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a")
 	// FIXME: when we create transaction, this code only creates *one
