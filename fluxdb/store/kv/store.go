@@ -46,7 +46,7 @@ type KVStore struct {
 }
 
 func NewStore(dsnString string) (*KVStore, error) {
-	store, err := kv.New(dsnString, kv.WithEmptyValueSupport)
+	store, err := kv.New(dsnString, kv.WithEmptyValue())
 	if err != nil {
 		return nil, fmt.Errorf("cannot create new kv store: %w", err)
 	}

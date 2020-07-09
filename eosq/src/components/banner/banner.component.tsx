@@ -1,11 +1,11 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-import { formatAmount, formatNumber } from "../../helpers/formatters"
+import { formatAmount, formatNumber, Box } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { metricsStore } from "../../stores"
 import { Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box"
+
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
 import { BannerContainer, BannerItem, BannerTitle } from "./banner-item.component"
 import { AmountVariation } from "./variation.component"

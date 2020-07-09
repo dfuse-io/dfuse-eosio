@@ -498,13 +498,23 @@ func Test_readABIDump_Start(t *testing.T) {
 		},
 		{
 			"version 13",
-			`ABIDUMP START 44`,
+			`ABIDUMP START 44 500`,
 			nil,
 		},
 		{
 			"version 13, invalid block num",
-			`ABIDUMP START s44`,
+			`ABIDUMP START s44 500`,
 			errors.New(`block_num is not a valid number, got: "s44"`),
+		},
+		{
+			"version 13, invalid global sequence num",
+			`ABIDUMP START 44 s500`,
+			errors.New(`global_sequence_num is not a valid number, got: "s500"`),
+		},
+		{
+			"invalid number of field",
+			`ABIDUMP START 44`,
+			errors.New(`expected to have either 2 or 4 fields, got 3`),
 		},
 	}
 

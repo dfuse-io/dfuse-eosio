@@ -1452,9 +1452,7 @@ func init() {
 	proto.RegisterType((*TableRowsContractResponse)(nil), "dfuse.eosio.fluxdb.v1.TableRowsContractResponse")
 }
 
-func init() {
-	proto.RegisterFile("dfuse/eosio/fluxdb/v1/fluxdb.proto", fileDescriptor_6353f7395e2f3f49)
-}
+func init() { proto.RegisterFile("dfuse/eosio/fluxdb/v1/fluxdb.proto", fileDescriptor_6353f7395e2f3f49) }
 
 var fileDescriptor_6353f7395e2f3f49 = []byte{
 	// 1193 bytes of a gzipped FileDescriptorProto

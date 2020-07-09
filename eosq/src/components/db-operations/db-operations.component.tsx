@@ -5,7 +5,7 @@ import { FormattedText } from "../formatted-text/formatted-text"
 import { t } from "i18next"
 import { theme, styled } from "../../theme"
 import { MonospaceTextWrap } from "../../atoms/text-elements/misc"
-import { JsonWrapper } from "../../atoms/json-wrapper/json-wrapper"
+import { JsonWrapper } from "@dfuse/explorer"
 
 interface Props {
   dbops: DbOp[]

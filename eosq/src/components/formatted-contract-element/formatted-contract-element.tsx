@@ -3,7 +3,7 @@ import { Text } from "../../atoms/text/text.component"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Links } from "../../routes"
 import { formatDateFromString } from "../../helpers/moment.helpers"
-import { formatDateTime } from "../../helpers/formatters"
+import { formatDateTime } from "@dfuse/explorer"
 
 interface Props {
   value: string | number

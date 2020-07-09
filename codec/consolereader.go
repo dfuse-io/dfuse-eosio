@@ -277,7 +277,7 @@ func (ctx *parseCtx) recordTableOp(operation *pbcodec.TableOp) {
 }
 
 func (ctx *parseCtx) recordTrxOp(operation *pbcodec.TrxOp) {
-	ctx.block.ImplicitTransactionOps = append(ctx.block.ImplicitTransactionOps, operation)
+	ctx.block.UnfilteredImplicitTransactionOps = append(ctx.block.UnfilteredImplicitTransactionOps, operation)
 }
 
 func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
@@ -302,7 +302,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		// We add the failed deferred trace first, before the "real" trace (the `onerror` handler)
 		// since it was ultimetaly ran first. There is no ops possible on the trace expect the
 		// transferred RAM op, so it's all good to attach it directly.
-		ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, failedTrace)
+		ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, failedTrace)
 
 		if err := ctx.abiDecoder.processTransaction(failedTrace); err != nil {
 			return fmt.Errorf("abi decoding failed trace: %w", err)
@@ -334,7 +334,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.RlimitOps = ctx.trx.RlimitOps
 	trace.TableOps = ctx.trx.TableOps
 
-	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
+	ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, trace)
 
 	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
 		return fmt.Errorf("abi decoding trace: %w", err)
@@ -478,25 +478,25 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	// End (versions)
 
-	ctx.block.TransactionCount = uint32(len(signedBlock.Transactions))
+	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
 	for idx, transaction := range signedBlock.Transactions {
 		deosTransaction := TransactionReceiptToDEOS(&transaction)
 		deosTransaction.Index = uint64(idx)
 
-		ctx.block.Transactions = append(ctx.block.Transactions, deosTransaction)
+		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
 	}
 
-	ctx.block.TransactionTraceCount = uint32(len(ctx.block.TransactionTraces))
-	for idx, t := range ctx.block.TransactionTraces {
+	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
+	for idx, t := range ctx.block.UnfilteredTransactionTraces {
 		t.Index = uint64(idx)
 		t.BlockTime = ctx.block.Header.Timestamp
 		t.ProducerBlockId = ctx.block.Id
 		t.BlockNum = uint64(ctx.block.Number)
 
 		for _, actionTrace := range t.ActionTraces {
-			ctx.block.ExecutedTotalActionCount++
+			ctx.block.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				ctx.block.ExecuteInputActionCount++
+				ctx.block.UnfilteredExecutedInputActionCount++
 			}
 		}
 	}
@@ -979,21 +979,25 @@ func inSupportedVersion(majorVersion string) bool {
 //    ABIDUMP START
 //
 //  Version 13
-//    ABIDUMP START ${block_num}
+//    ABIDUMP START ${block_num} ${global_sequence_num}
 func (ctx *parseCtx) readABIStart(line string) error {
-	chunks, err := splitNToM(line, 2, 3)
-	if err != nil {
-		return err
-	}
+	chunks := strings.SplitN(line, " ", -1)
 
 	switch len(chunks) {
 	case 2: // Version 12
 		break
-	case 3: // Version 13
+	case 4: // Version 13
 		_, err := strconv.Atoi(chunks[2])
 		if err != nil {
 			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
 		}
+
+		_, err = strconv.Atoi(chunks[3])
+		if err != nil {
+			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
+		}
+	default:
+		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
 	}
 
 	ctx.abiDecoder.resetCache()

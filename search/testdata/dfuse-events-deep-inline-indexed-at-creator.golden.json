@@ -4,9 +4,7 @@
     "data": {
       "account": "eosio",
       "action": "topevent",
-      "auth": null,
       "block_num": 1,
-      "data": {},
       "input": true,
       "notif": true,
       "receiver": "any",
@@ -19,9 +17,7 @@
     "data": {
       "account": "eosio",
       "action": "childevent",
-      "auth": null,
       "block_num": 1,
-      "data": {},
       "event": {
         "key": [
           "value"
@@ -39,9 +35,7 @@
     "data": {
       "account": "dfuseiohooks",
       "action": "event",
-      "auth": null,
       "block_num": 1,
-      "data": {},
       "input": false,
       "notif": false,
       "receiver": "dfuseiohooks",

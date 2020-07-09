@@ -31,7 +31,8 @@ import (
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	it := db.store.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
+
+	it := db.irrBlockStore.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -40,13 +41,13 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 		return "", kvdb.ErrNotFound
 	}
 	key := it.Item().Key
-	zlog.Debug("retrieved key", zap.ByteString("packed_key", key))
-	blockID = Keys.UnpackBlocksKey(key)
+	db.logger.Debug("retrieved key", zap.ByteString("packed_key", key))
+	blockID = Keys.UnpackIrrBlocksKey(key)
 	return
 }
 
 func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbcodec.BlockWithRefs, err error) {
-	value, err := db.store.Get(ctx, Keys.PackBlocksKey(id))
+	value, err := db.blksReadStore.Get(ctx, Keys.PackBlocksKey(id))
 
 	if err == store.ErrNotFound {
 		return nil, kvdb.ErrNotFound
@@ -62,8 +63,8 @@ func (db *DB) GetBlock(ctx context.Context, id string) (blk *pbcodec.BlockWithRe
 }
 
 func (db *DB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.BlockWithRefs, err error) {
-	zlog.Debug("get block by num", zap.Uint32("block_num", num))
-	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(num), Keys.PackBlockNumPrefix(num-1), 0)
+	db.logger.Debug("get block by num", zap.Uint32("block_num", num))
+	it := db.blksReadStore.Scan(ctx, Keys.PackBlockNumPrefix(num), Keys.PackBlockNumPrefix(num-1), 0)
 	for it.Next() {
 		kv := it.Item()
 
@@ -95,7 +96,7 @@ func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbtrxdb.Bloc
 	}
 
 	//todo: add a test to check the irreversibility
-	_, err := db.store.Get(ctx, Keys.PackIrrBlocksKey(blockRow.Block.Id))
+	_, err := db.blksReadStore.Get(ctx, Keys.PackIrrBlocksKey(blockRow.Block.Id))
 	if err != nil && err != store.ErrNotFound {
 		return nil, fmt.Errorf("get irr block: txn get: %w", err)
 	}
@@ -106,11 +107,12 @@ func (db *DB) blockRowToBlockWithRef(ctx context.Context, blockRow *pbtrxdb.Bloc
 }
 
 func (db *DB) GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (ref bstream.BlockRef, err error) {
-	zlog.Debug("get closest irr id at block num", zap.Uint32("block_num", num))
+	db.logger.Debug("get closest irr id at block num", zap.Uint32("block_num", num))
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	it := db.store.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
+	// TODO: I think this is right we need to check @alex
+	it := db.irrBlockStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err
@@ -134,8 +136,8 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 
 	dposIrrNum := blk.Block.DposIrreversibleBlocknum
 
-	zlog.Debug("get irr block by num", zap.Uint32("block_num", dposIrrNum))
-	it := db.store.Scan(ctx, Keys.PackIrrBlockNumPrefix(dposIrrNum), Keys.PackIrrBlockNumPrefix(dposIrrNum-1), 1)
+	db.logger.Debug("get irr block by num", zap.Uint32("block_num", dposIrrNum))
+	it := db.blksReadStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(dposIrrNum), Keys.PackIrrBlockNumPrefix(dposIrrNum-1), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err
@@ -148,7 +150,7 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 	ref = bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID))
 
 	if ref.Num() != uint64(dposIrrNum) {
-		zlog.Debug("get irr block by num: block num mismatch")
+		db.logger.Debug("get irr block by num: block num mismatch")
 		return nil, kvdb.ErrNotFound
 	}
 
@@ -158,7 +160,7 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 func (db *DB) BlockIDAt(ctx context.Context, start time.Time) (id string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	it := db.store.Scan(ctx, Keys.PackTimelinePrefix(true, start), Keys.EndOfTimelineIndex(true), 1)
+	it := db.blksReadStore.Scan(ctx, Keys.PackTimelinePrefix(true, start), Keys.EndOfTimelineIndex(true), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -186,7 +188,7 @@ func (db *DB) blockIDAround(ctx context.Context, fwd bool, start time.Time, incl
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	it := db.store.Scan(ctx, Keys.PackTimelinePrefix(fwd, start), Keys.EndOfTimelineIndex(fwd), 4) // supports 3 blocks at the *same* timestamp, should be pretty rare..
+	it := db.blksReadStore.Scan(ctx, Keys.PackTimelinePrefix(fwd, start), Keys.EndOfTimelineIndex(fwd), 4) // supports 3 blocks at the *same* timestamp, should be pretty rare..
 
 	for it.Next() {
 		foundTime, id = Keys.UnpackTimelineKey(fwd, it.Item().Key)
@@ -204,8 +206,8 @@ func (db *DB) blockIDAround(ctx context.Context, fwd bool, start time.Time, incl
 }
 
 func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (out []*pbcodec.BlockWithRefs, err error) {
-	zlog.Debug("list blocks", zap.Uint32("high_block_num", highBlockNum), zap.Int("limit", limit))
-	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.EndOfBlocksTable(), limit)
+	db.logger.Debug("list blocks", zap.Uint32("high_block_num", highBlockNum), zap.Int("limit", limit))
+	it := db.blksReadStore.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.EndOfBlocksTable(), limit)
 	for it.Next() {
 		blockRow := &pbtrxdb.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
@@ -225,8 +227,8 @@ func (db *DB) ListBlocks(ctx context.Context, highBlockNum uint32, limit int) (o
 func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) (out []*pbcodec.BlockWithRefs, err error) {
 	highBlockNum := blockNum + spread
 	lowBlockNum := blockNum - (spread + 1)
-	zlog.Debug("list sibling blocks", zap.Uint32("high_block_num", highBlockNum), zap.Uint32("low_block_num", lowBlockNum))
-	it := db.store.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.PackBlockNumPrefix(lowBlockNum), 0)
+	db.logger.Debug("list sibling blocks", zap.Uint32("high_block_num", highBlockNum), zap.Uint32("low_block_num", lowBlockNum))
+	it := db.blksReadStore.Scan(ctx, Keys.PackBlockNumPrefix(highBlockNum), Keys.PackBlockNumPrefix(lowBlockNum), 0)
 	for it.Next() {
 		blockRow := &pbtrxdb.BlockRow{}
 		db.dec.MustInto(it.Item().Value, blockRow)
@@ -244,7 +246,7 @@ func (db *DB) ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uin
 }
 
 func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error) {
-	value, err := db.store.Get(ctx, Keys.PackAccountKey(accountName))
+	value, err := db.blksReadStore.Get(ctx, Keys.PackAccountKey(accountName))
 
 	if err == store.ErrNotFound {
 		return nil, kvdb.ErrNotFound
@@ -271,7 +273,7 @@ func (db *DB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) 
 		return nil, fmt.Errorf("invalid concurrent read")
 	}
 
-	it := db.store.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), 0)
+	it := db.blksReadStore.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), 0)
 	for it.Next() {
 		acctRow := &pbtrxdb.AccountRow{}
 		db.dec.MustInto(it.Item().Value, acctRow)

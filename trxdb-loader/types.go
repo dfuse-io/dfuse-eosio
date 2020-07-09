@@ -13,12 +13,3 @@
 // limitations under the License.
 
 package trxdb_loader
-
-import (
-	eosgo "github.com/eoscanada/eos-go"
-)
-
-type systemGeneratedTransaction struct {
-	trxID             string
-	signedTransaction *eosgo.SignedTransaction
-}

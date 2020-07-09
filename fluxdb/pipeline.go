@@ -40,10 +40,10 @@ func BuildReprocessingPipeline(
 	numBlocksBeforeStart uint64,
 	parallelDownloadCount int,
 ) bstream.Source {
-	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, handler)
+	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 	gate.MaxHoldOff = 1000
 
-	forkableSource := forkable.New(gate, forkable.WithFilters(forkable.StepIrreversible))
+	forkableSource := forkable.New(gate, forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 
 	getBlocksFrom := startBlockNum
 	if getBlocksFrom > numBlocksBeforeStart {
@@ -56,18 +56,19 @@ func BuildReprocessingPipeline(
 		parallelDownloadCount,
 		PreprocessBlock,
 		forkableSource,
+		bstream.FileSourceWithLogger(zlog),
 	)
 	return source
 }
 
 func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBlock, handler bstream.Handler, blocksStore dstore.Store, publisherAddr string, parallelDownloadCount int) {
 	sf := bstream.SourceFromRefFactory(func(startBlock bstream.BlockRef, h bstream.Handler) bstream.Source {
-		forkHandler := forkable.New(h, forkable.WithExclusiveLIB(startBlock), forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible))
+		forkHandler := forkable.New(h, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(startBlock), forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible))
 
 		// Exclusive, we never want to process the same block
 		// twice. When doing reprocessing, we'll need to provide the block
 		// just before.
-		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, forkHandler)
+		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
 
 		liveSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			return blockstream.NewSource(
@@ -75,6 +76,7 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 				publisherAddr,
 				250,
 				bstream.NewPreprocessor(PreprocessBlock, subHandler),
+				blockstream.WithRequester("fluxdb"),
 			)
 		})
 
@@ -90,12 +92,14 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 			return fs
 		})
 
-		js := bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate, bstream.JoiningSourceTargetBlockID(startBlock.ID()), bstream.JoiningSourceTargetBlockNum(2))
-
-		return js
+		return bstream.NewJoiningSource(fileSourceFactory, liveSourceFactory, gate,
+			bstream.JoiningSourceLogger(zlog),
+			bstream.JoiningSourceTargetBlockID(startBlock.ID()),
+			bstream.JoiningSourceTargetBlockNum(2),
+		)
 	})
 
-	es := bstream.NewDelegatingEternalSource(sf, getBlockID, handler)
+	es := bstream.NewDelegatingEternalSource(sf, getBlockID, handler, bstream.EternalSourceWithLogger(zlog))
 
 	fdb.source = es
 }
@@ -143,7 +147,7 @@ func (p *FluxDBHandler) InitializeStartBlockID() (startBlock bstream.BlockRef, e
 	}
 
 	zlog.Info("initializing pipeline forkdb", zap.Stringer("block", startBlock))
-	p.serverForkDB = forkable.NewForkDB()
+	p.serverForkDB = forkable.NewForkDB(forkable.ForkDBWithLogger(zlog))
 	p.serverForkDB.InitLIB(startBlock)
 
 	return startBlock, nil

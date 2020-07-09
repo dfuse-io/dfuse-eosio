@@ -130,8 +130,8 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 		return fmt.Errorf("end block for block %s received while no active block present", block)
 	}
 
-	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.ImplicitTransactionOps)))
-	err := c.processImplicitTransactions(block.ImplicitTransactionOps)
+	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.UnfilteredImplicitTransactionOps)))
+	err := c.processImplicitTransactions(block.UnfilteredImplicitTransactionOps)
 	if err != nil {
 		return fmt.Errorf("unable to process implicit transactions: %w", err)
 	}

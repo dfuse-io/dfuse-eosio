@@ -56,7 +56,7 @@ func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trx
 			Producer:  producer,
 			Timestamp: &timestamp.Timestamp{},
 		},
-		TransactionTraces: trxTraces,
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	if os.Getenv("DEBUG") != "" {

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
-	zapbox "github.com/dfuse-io/dfuse-eosio/zap-box"
+	zapbox "github.com/dfuse-io/dlauncher/zap-box"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"

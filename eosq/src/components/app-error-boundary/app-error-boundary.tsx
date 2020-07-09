@@ -164,8 +164,10 @@ export class AppErrorBoundary extends React.Component<any, State> {
             — something&apos;s gone wrong.
           </p>
           <p>
-            <a onClick={this.onReportErrorClicked}>Report feedback</a>. Once reported, try going
-            back to the home page and reload the page.
+            <button type="button" onClick={this.onReportErrorClicked}>
+              Report feedback
+            </button>
+            Once reported, try going back to the home page and reload the page.
           </p>
         </div>
       )

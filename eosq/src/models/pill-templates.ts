@@ -12,6 +12,8 @@ export interface GenericPillParams {
   headerAndTitleOptions: { header: PillHeaderParams; title: string }
   pageContext?: PageContext
   highlighted?: boolean
+  title?: string
+  pill2Color?: string
 }
 
 export interface GenericPillState {

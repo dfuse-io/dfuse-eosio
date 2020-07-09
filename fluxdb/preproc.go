@@ -46,7 +46,7 @@ func PreprocessBlock(rawBlk *bstream.Block) (interface{}, error) {
 		BlockID:  blockID,
 	}
 
-	for _, trx := range blk.TransactionTraces {
+	for _, trx := range blk.TransactionTraces() {
 		for _, dbOp := range trx.DbOps {
 			// There is no change in this row, not sure how it got here, discarding it anyway
 			if dbOp.Operation == pbcodec.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {

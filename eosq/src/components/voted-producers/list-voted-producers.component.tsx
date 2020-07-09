@@ -1,9 +1,9 @@
 import { t } from "i18next"
 import * as React from "react"
-import { formatNumber } from "../../helpers/formatters"
+import { formatNumber, Box, Spinner } from "@dfuse/explorer"
 import { Vote } from "../../models/vote"
 import { Text } from "../../atoms/text/text.component"
-import Box from "../../atoms/ui-box"
+
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
@@ -22,7 +22,7 @@ import {
 } from "../../atoms/ui-table/ui-table.component"
 import { Panel } from "../../atoms/panel/panel.component"
 import { getRankBgColor } from "../../helpers/account.helpers"
-import { Spinner } from "../../atoms/spinner/spinner"
+
 import { Config } from "../../models/config"
 
 const UiTableCellRank: React.ComponentType<any> = styled(UiTableCell)`

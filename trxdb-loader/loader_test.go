@@ -41,12 +41,12 @@ import (
 
 type chainIDOption = string
 
-func newLoader(t *testing.T, options ...interface{}) (*BigtableLoader, trxdb.Driver, func()) {
+func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.DB, func()) {
 
-	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true")
+	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true", trxdb.WithLogger(zlog))
 	require.NoError(t, err)
 
-	l := NewBigtableLoader("", nil, 1, db, 1)
+	l := NewTrxDBLoader("", nil, 1, db, 1)
 
 	var chainID string
 	for _, option := range options {
@@ -86,7 +86,7 @@ func TestBigtableLoader(t *testing.T) {
 	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
-	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
+	fkable := forkable.New(loader, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(previousRef))
 	require.NoError(t, fkable.ProcessBlock(blk, nil))
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
 	require.NoError(t, loader.db.Flush(ctx))
@@ -112,7 +112,7 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	blk, err := codec.BlockFromProto(block)
 	require.NoError(t, err)
 
-	fkable := forkable.New(loader, forkable.WithExclusiveLIB(previousRef))
+	fkable := forkable.New(loader, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(previousRef))
 	require.NoError(t, fkable.ProcessBlock(blk, nil))
 	loader.UpdateIrreversibleData([]*bstream.PreprocessedBlock{{Block: blk}})
 	require.NoError(t, trxdbDriver.Flush(ctx))
@@ -146,9 +146,9 @@ func testBlock(t *testing.T, id string, trxTraceJSONs ...string) *pbcodec.Block 
 	}
 
 	pbblock := &pbcodec.Block{
-		Id:                id,
-		Number:            eos.BlockNum(id),
-		TransactionTraces: trxTraces,
+		Id:                          id,
+		Number:                      eos.BlockNum(id),
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")

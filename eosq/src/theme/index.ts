@@ -1,9 +1,11 @@
 import emotionStyled, { CreateStyled } from "@emotion/styled"
+import { injectThemedStyled } from "@dfuse/explorer"
 import { colors } from "./colors"
-import { breakpoints, fontSizes, lineHeights, space } from "./scales"
+import { breakPoints, mediaQueries, fontSizes, lineHeights, space } from "./scales"
 
 export const theme = {
-  breakpoints,
+  breakPoints,
+  mediaQueries,
   fontSizes,
   lineHeights,
   space,
@@ -19,3 +21,5 @@ export const theme = {
 export type ThemeInterface = typeof theme
 
 export const styled = emotionStyled as CreateStyled<ThemeInterface>
+
+injectThemedStyled(styled)

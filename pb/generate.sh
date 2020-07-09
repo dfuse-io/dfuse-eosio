@@ -20,6 +20,8 @@ PROTO=${1:-"$ROOT/../proto"}
 PROTO_EOSIO=${2:-"$ROOT/../proto-eosio"}
 
 function main() {
+  set -e
+
   current_dir="`pwd`"
   trap "cd \"$current_dir\"" EXIT
   pushd "$ROOT/pb" &> /dev/null

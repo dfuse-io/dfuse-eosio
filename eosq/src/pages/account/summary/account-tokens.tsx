@@ -15,7 +15,7 @@ import {
   UiTableCellNarrow,
   UiTableHead,
   UiTableRow,
-  UiTableRowAlternated,
+  UiTableRowAlternated
 } from "../../../atoms/ui-table/ui-table.component"
 import { MonospaceTextLink } from "../../../atoms/text-elements/misc"
 import { Links } from "../../../routes"
@@ -42,6 +42,7 @@ const TokenRow: React.FC<{ account: string; token: UserBalance }> = ({ account, 
           width="40px"
           height="40px"
           src={token.metadata.logo ? token.metadata.logo : LOGO_PLACEHOLDER}
+          alt="token-logo"
         />
       </Cell>
     </UiTableCell>

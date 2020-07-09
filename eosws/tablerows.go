@@ -133,17 +133,17 @@ func fetchTableRows(
 				emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to retrieve irreversibility"))
 				return
 			}
-			forkablePostGate = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler)
+			forkablePostGate = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
 		} else {
 			irrID, err = irrFinder.IrreversibleIDAtBlockNum(ctx, startBlockNum)
 			if err != nil {
 				emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to retrieve irreversibility"))
 				return
 			}
-			forkablePostGate = bstream.NewBlockNumGate(uint64(startBlockNum), bstream.GateInclusive, handler)
+			forkablePostGate = bstream.NewBlockNumGate(uint64(startBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 		}
 
-		forkableHandler := forkable.New(forkablePostGate, forkable.WithExclusiveLIB(bstream.BlockRefFromID(irrID)))
+		forkableHandler := forkable.New(forkablePostGate, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(bstream.BlockRefFromID(irrID)))
 
 		metrics.IncListeners("get_table_rows")
 
@@ -176,7 +176,7 @@ func tableDeltasFromBlock(block *bstream.Block, msg *wsmsg.GetTableRows, abi *eo
 	var deltas []*wsmsg.TableDelta
 
 	blk := block.ToNative().(*pbcodec.Block)
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		for _, dbOp := range trxTrace.DbOps {
 			if dbOp.Code != string(msg.Data.Code) || dbOp.TableName != string(msg.Data.TableName) || dbOp.Scope != string(*msg.Data.Scope) {
 				continue

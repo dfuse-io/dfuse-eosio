@@ -12,7 +12,9 @@ import { voteStore } from "../../../stores"
 import { AccountTokens } from "./account-tokens"
 import { UiHrDense } from "../../../atoms/ui-hr/ui-hr"
 import { useAccountBalances } from "../../../hooks/use-account-balances"
-import { LCE } from "../../../components/lce/lce"
+// temp ignore for dev
+
+import { LCE } from "@dfuse/explorer"
 import { Config } from "../../../models/config"
 
 interface Props {

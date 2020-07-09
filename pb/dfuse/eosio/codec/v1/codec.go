@@ -66,9 +66,33 @@ func (b *Block) AsRef() bstream.BlockRef {
 	return bstream.BlockRefFromID(b.Id)
 }
 
+func (b *Block) Transactions() []*TransactionReceipt {
+	if b.FilteringApplied {
+		return b.FilteredTransactions
+	}
+
+	return b.UnfilteredTransactions
+}
+
+func (b *Block) TransactionTraces() []*TransactionTrace {
+	if b.FilteringApplied {
+		return b.FilteredTransactionTraces
+	}
+
+	return b.UnfilteredTransactionTraces
+}
+
+func (b *Block) ImplicitTransactionOps() []*TrxOp {
+	if b.FilteringApplied {
+		return b.FilteredImplicitTransactionOps
+	}
+
+	return b.UnfilteredImplicitTransactionOps
+}
+
 func (b *Block) CanceledDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCancelOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -84,7 +108,7 @@ func (b *Block) CanceledDTrxIDs() (out []string) {
 
 func (b *Block) CreatedDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCreateOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -113,14 +137,32 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
 func (b *Block) PopulateActionAndTransactionCount() {
-	b.TransactionCount = uint32(len(b.Transactions))
-	b.TransactionTraceCount = uint32(len(b.TransactionTraces))
+	b.UnfilteredTransactionCount = uint32(len(b.UnfilteredTransactions))
+	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
+	b.UnfilteredExecutedTotalActionCount = 0
+	b.UnfilteredExecutedInputActionCount = 0
 
-	for _, t := range b.TransactionTraces {
+	for _, t := range b.UnfilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
-			b.ExecutedTotalActionCount++
+			b.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				b.ExecuteInputActionCount++
+				b.UnfilteredExecutedInputActionCount++
+			}
+		}
+	}
+
+	b.FilteredTransactionCount = uint32(len(b.FilteredTransactions))
+	b.FilteredTransactionTraceCount = uint32(len(b.FilteredTransactionTraces))
+	b.FilteredExecutedTotalActionCount = 0
+	b.FilteredExecutedInputActionCount = 0
+
+	for _, t := range b.FilteredTransactionTraces {
+		for _, actionTrace := range t.ActionTraces {
+			if actionTrace.FilteringMatched {
+				b.FilteredExecutedTotalActionCount++
+				if actionTrace.IsInput() {
+					b.FilteredExecutedInputActionCount++
+				}
 			}
 		}
 	}
@@ -355,4 +397,14 @@ func (r *RlimitOp) IsLocalKind() bool {
 	_, isAccountUsage := r.Kind.(*RlimitOp_AccountUsage)
 	_, isAccountLimits := r.Kind.(*RlimitOp_AccountLimits)
 	return isAccountUsage || isAccountLimits
+}
+
+//
+/// PermissionLevel
+//
+
+// Authorization returns the concatenation of `Actor`@`Permission` which is
+// the standard way to print permission level in string format in EOSIO world.
+func (l *PermissionLevel) Authorization() string {
+	return l.Actor + "@" + l.Permission
 }

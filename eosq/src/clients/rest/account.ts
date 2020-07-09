@@ -1,7 +1,8 @@
 import { getTableRows, GetTableRowParams, getProducerSchedule } from "../websocket/eosws"
 import { legacyHandleDfuseApiError } from "./api"
 import { Abi } from "@dfuse/client"
-import { getDfuseClient } from "../../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function requestProducerSchedule() {
   return getProducerSchedule()
@@ -30,6 +31,7 @@ export async function requestContractTableRows(params: GetTableRowParams) {
 
 export async function requestProducerAccountTableRows(accountName: string) {
   // FIXME: Replacable by `getDfuseClient().stateTableRow`
+
   return requestContractTableRows({
     scope: "producerjson",
     table: "producerjson",

@@ -13,8 +13,8 @@ dashboard/client/.npmrc
 /eosq/app/eosq/rice-box.go
 /dist
 *SOURCE_ME.sh*
-dfuseeos
-/producer
-/mindreader
+/dfuseeos
 *dbin*
 /proj*
+/dashboard/client/node_modules
+/dashboard/dashboard-build

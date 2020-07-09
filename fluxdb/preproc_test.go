@@ -126,7 +126,7 @@ func TestPreprocessBlock_DbOps(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 
 			blk := newBlock("0000003a", []string{"1", "2"})
-			blk.TransactionTraces[0].DbOps = test.input
+			blk.TransactionTraces()[0].DbOps = test.input
 
 			bstreamBlock, err := codec.BlockFromProto(blk)
 			require.NoError(t, err)
@@ -176,8 +176,8 @@ func newBlock(blockID string, trxIDs []string) *pbcodec.Block {
 	}
 
 	blk := &pbcodec.Block{
-		Id:                blockID,
-		TransactionTraces: traces,
+		Id:                          blockID,
+		UnfilteredTransactionTraces: traces,
 		Header: &pbcodec.BlockHeader{
 			Timestamp: &timestamp.Timestamp{Seconds: 1569604302},
 		},

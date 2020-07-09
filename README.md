@@ -9,7 +9,6 @@ statically linked binary: `dfuseeos`.
 See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
 for other blockchain protocols implementations.
 
-
 ## Getting started
 
 If it's the first time you boot a `nodeos` node, please review
@@ -78,13 +77,21 @@ This will install the binary in your `$GOPATH/bin` folder (normally
 dfuseeos init
 ```
 
-2. Boot your instance with:
+2. Optionally copy over a boot sequence to have dfuse bootstraps your chain with accounts, system contracts to have a chain ready for development in matter of seconds:
+
+```
+wget -O bootseq.yaml https://raw.githubusercontent.com/dfuse-io/dfuse-eosio/develop/booter/examples/bootseq.dev.yaml
+```
+
+**Note** Check [booter/examples](./booter/examples) for other boot sequence templates.
+
+3. Boot your instance with:
 
 ```
 dfuseeos start
 ```
 
-3. A terminal prompt will list the graphical interfaces with their relevant links:
+4. A terminal prompt will list the graphical interfaces with their relevant links:
 
 ```
 Dashboard: http://localhost:8081
@@ -92,12 +99,11 @@ Explorer & APIs:  http://localhost:8080
 GraphiQL:         http://localhost:8080/graphiql
 ```
 
-  * If dfuse is starting a new chain, two nodeos instances will now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
-  * If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
-
-4. If you chose to have dfuse create a new chain for you, see [bootstrapping](./bootstrapping) for info on creating the initial accounts and interacting with the chain
+In this mode, two nodeos instances will now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
 
 ### Usage (syncing existing chain)
+
+If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
 
 * See [Syncing a chain partially](./PARTIAL_SYNC.md)
 * See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)

@@ -11,7 +11,7 @@ export default {
     networkOptions: {
       eos_mainnet: "EOS MAINNET",
       eos_kylin: "KYLIN TESTNET",
-      eos_jungle: "JUNGLE TESTNET"
+      eos_eosio: "EOSIO TESTNET"
     },
     by: "By",
     newVersionAvailable: "A NEW VERSION OF EOSQ IS AVAILABLE, PLEASE ",

@@ -4,8 +4,9 @@
   "private": true,
   "dependencies": {
     "@dfuse/client": "^0.3.9",
-    "@emotion/core": "^10.0.5",
-    "@emotion/styled": "^10.0.5",
+    "@dfuse/explorer": "^0.0.1",
+    "@emotion/core": "^10.0.28",
+    "@emotion/styled": "^10.0.27",
     "@fortawesome/fontawesome-svg-core": "^1.2.0-14",
     "@fortawesome/free-brands-svg-icons": "^5.1.0-11",
     "@fortawesome/free-regular-svg-icons": "^5.1.0-11",
@@ -17,8 +18,7 @@
     "d3": "^3.5.0",
     "debug": "^4.1.1",
     "downshift": "^3.1.8",
-    "emotion-theming": "^10.0.5",
-    "graphql": "^14.6.0",
+    "emotion-theming": "^10.0.27",
     "graphql-tag": "^2.10.3",
     "history": "^4.7.2",
     "humanize-plus": "^1.8.2",
@@ -54,11 +54,12 @@
     "ts-debounce": "^1.0.0"
   },
   "scripts": {
-    "start": "EXTEND_ESLINT=true react-app-rewired start",
+    "start": "react-app-rewired start",
     "prebuild": "rimraf ./eosq-build",
-    "build": "BUILD_DIR=build-lite EXTEND_ESLINT=true react-scripts build && mv build ./eosq-build",
-    "test": "EXTEND_ESLINT=true react-scripts test",
-    "eject": "react-scripts eject"
+    "build": "BUILD_DIR=build-lite react-scripts build && mv build ./eosq-build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "eslint --config .eslintrc.js --ext .js,.jsx,.ts,.tsx src"
   },
   "devDependencies": {
     "@hot-loader/react-dom": "^16.11.0",
@@ -101,6 +102,7 @@
     "eslint-plugin-jsx-a11y": "^6.2.3",
     "eslint-plugin-react": "^7.15.1",
     "eslint-plugin-react-hooks": "^1.7.0",
+    "husky": "^4.2.5",
     "identity-obj-proxy": "^3.0.0",
     "jest-emotion": "^10.0.5",
     "jest-enzyme": "^7.0.1",

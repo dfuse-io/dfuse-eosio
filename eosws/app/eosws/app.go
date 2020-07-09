@@ -120,7 +120,7 @@ func (a *App) Run() error {
 	}
 	api := eos.New(apiURLStr)
 
-	kdb, err := trxdb.New(a.Config.KVDBDSN)
+	kdb, err := trxdb.New(a.Config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
 		return fmt.Errorf("trxdb setup: %w", err)
 	}
@@ -172,10 +172,10 @@ func (a *App) Run() error {
 	//	}
 	//
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h)
+		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
 	})
 
-	buffer := bstream.NewBuffer("sub-hub")
+	buffer := bstream.NewBuffer("sub-hub", zlog)
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
 		return src
@@ -186,24 +186,6 @@ func (a *App) Run() error {
 		return fmt.Errorf("failed getting blockmeta grpc client: %w", err)
 	}
 	headinfoCli := pbheadinfo.NewHeadInfoClient(blockmetaConn)
-
-	//	var chainInfo *eos.InfoResp
-	//	for {
-	//		chainInfo, err = api.GetInfo(context.Background())
-	//		if err != nil {
-	//			zlog.Info("unable to get chain info", zap.Error(err))
-	//			select {
-	//			case <-time.After(5 * time.Second):
-	//			case <-a.Shutter.Terminating():
-	//				return nil
-	//			}
-	//			continue
-	//		}
-	//		break
-	//	}
-	//
-	//	zlog.Info("got chain info", zap.Reflect("chain_info", chainInfo))
-	//
 
 	var head bstream.BlockRef
 	var lib bstream.BlockRef
@@ -237,6 +219,7 @@ func (a *App) Run() error {
 		tailManager.TailLock,
 		fileSourceFactory,
 		liveSourceFactory,
+		hub.Withlogger(zlog),
 	)
 	if err != nil {
 		return fmt.Errorf("could not create subscription hub: %w", err)

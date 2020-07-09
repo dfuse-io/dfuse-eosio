@@ -1,0 +1,21 @@
+start:
+  args:
+  - abicodec
+  - apiproxy
+  - blockmeta
+  - dashboard
+  - dgraphql
+  - eosq
+  - eosws
+  - fluxdb
+  - relayer
+  - search-archive
+  - search-indexer
+  - search-live
+  - search-router
+  - trxdb-loader
+  flags:
+    # See global.yaml notes to make a trxdb switch db test
+    # common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
+    relayer-source: ":10000"

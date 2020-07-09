@@ -49,7 +49,7 @@ func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {
 	}, nil
 }
 
-func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockResolverFunc {
+func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockResolver {
 	return func(ctx context.Context, targetBlockNum uint64) (uint64, string, error) {
 		var dposLibNum uint32
 		var errFound = errors.New("found")

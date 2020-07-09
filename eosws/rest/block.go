@@ -20,9 +20,9 @@ import (
 	"strconv"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/validator"
 	"github.com/gorilla/mux"
 )
@@ -197,12 +197,6 @@ func GetBlockTransactionsHandler(db eosws.DB) http.Handler {
 			eosws.WriteError(w, r, derr.Wrap(err, "failed to get block transactions"))
 			return
 		}
-
-		// transactionList, err := mdl.ToV1TransactionList(dbTransactionList)
-		// if err != nil {
-		// 	eosws.WriteError(w, r, derr.Wrap(err, "failed to get account transactions"))
-		// 	return
-		// }
 
 		eosws.WriteJSON(w, r, dbTransactionList)
 

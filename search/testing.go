@@ -47,7 +47,7 @@ var TestMatchCollector = func(ctx context.Context, lowBlockNum, highBlockNum uin
 		actions := trxs[trx.id]
 		sort.Slice(actions, func(i, j int) bool { return actions[i] < actions[j] })
 
-		out = append(out, &EOSSearchMatch{
+		out = append(out, &SearchMatch{
 			TrxIDPrefix:   trx.id,
 			ActionIndexes: actions,
 			BlockNumber:   trx.blockNum,

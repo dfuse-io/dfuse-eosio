@@ -20,10 +20,13 @@ func Test_retrieveContractAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	expectedAccounts := map[string]bool{
+		"battlefeeld4": false,
+		"battlefield":  false,
 		"battlefield1": true,
 		"battlefield2": false,
 		"battlefield3": true,
 		"battlefield4": false,
+		"battlefield5": false,
 		"eosio":        true,
 		"eosio.bpay":   false,
 		"eosio.msig":   true,
@@ -65,9 +68,9 @@ func Test_walkScopes(t *testing.T) {
 	})
 
 	assert.ElementsMatch(t, []string{
+		"battlefeeld4",
 		"battlefield1",
 		"battlefield3",
-		"battlefield4",
 		"eosio",
 		"eosio.ram",
 		"eosio.ramfee",

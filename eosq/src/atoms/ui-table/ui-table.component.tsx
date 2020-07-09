@@ -4,10 +4,9 @@ import TableRow from "@material-ui/core/TableRow"
 import Table from "@material-ui/core/Table"
 import TableBody from "@material-ui/core/TableBody"
 import { style } from "styled-system"
+import { Box, Cell } from "@dfuse/explorer"
 import { theme, styled } from "../../theme"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import Box from "../ui-box/ui-box.component"
-import { Cell } from "../ui-grid/ui-grid.component"
 import * as React from "react"
 
 type TableCaptionItemProps = {

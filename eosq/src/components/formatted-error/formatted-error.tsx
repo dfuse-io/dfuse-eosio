@@ -4,7 +4,7 @@ import * as React from "react"
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { theme, styled } from "../../theme"
-import { JsonWrapper } from "../../atoms/json-wrapper/json-wrapper"
+import { JsonWrapper } from "@dfuse/explorer"
 import { ErrorData } from "@dfuse/client"
 
 const BoldText: React.ComponentType<any> = styled(Text)`

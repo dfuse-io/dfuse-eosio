@@ -394,7 +394,7 @@ func TestABIDecoder(t *testing.T) {
 
 	extractTrace := func(testData *testData, regexMatch []string) (block *pbcodec.Block, trace *pbcodec.TransactionTrace) {
 		block = testData.blocks[toInt(regexMatch[1])]
-		trace = block.TransactionTraces[toInt(regexMatch[2])]
+		trace = block.UnfilteredTransactionTraces[toInt(regexMatch[2])]
 		return
 	}
 
@@ -426,7 +426,7 @@ func TestABIDecoder(t *testing.T) {
 				err := decoder.startBlock(context.Background(), block.Num())
 				require.NoError(t, err)
 
-				for _, trxTrace := range block.TransactionTraces {
+				for _, trxTrace := range block.UnfilteredTransactionTraces {
 					err := decoder.processTransaction(trxTrace)
 					require.NoError(t, err)
 				}
@@ -459,7 +459,7 @@ func TestABIDecoder(t *testing.T) {
 
 				if match = fullMatchRegex(trxOpRegex, expect.path); match != nil {
 					block := test.blocks[toInt(match[1])]
-					trxOp := block.ImplicitTransactionOps[toInt(match[2])]
+					trxOp := block.UnfilteredImplicitTransactionOps[toInt(match[2])]
 
 					if match[3] == "cfaAction" {
 						assertMatchAction(expect.value, trxOp.Transaction.Transaction.ContextFreeActions[toInt(match[4])])
@@ -506,10 +506,10 @@ func testBlock(t *testing.T, blkID string, previousBlkID string, elements ...int
 	for _, element := range elements {
 		switch v := element.(type) {
 		case *pbcodec.TransactionTrace:
-			pbblock.TransactionTraceCount++
-			pbblock.TransactionTraces = append(pbblock.TransactionTraces, v)
+			pbblock.UnfilteredTransactionTraceCount++
+			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
-			pbblock.ImplicitTransactionOps = append(pbblock.ImplicitTransactionOps, v)
+			pbblock.UnfilteredImplicitTransactionOps = append(pbblock.UnfilteredImplicitTransactionOps, v)
 		}
 	}
 

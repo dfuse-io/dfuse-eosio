@@ -1,6 +1,6 @@
 import * as React from "react"
+import { Action } from "@dfuse/client"
 import { shallowWithTheme } from "../../../../tests/renderers"
-import { Action } from "../../../../models/action"
 import { getActionMock } from "../../../../__mocks__/transaction.mock"
 import { BuyRamBytesPillComponent } from "../system/buy-ram-bytes-pill.component"
 import { BuyRamPillComponent } from "../system/buy-ram-pill.component"
@@ -335,6 +335,6 @@ describe("Templates", () => {
   })
 })
 
-function renderComponent(Component: any, action: Action) {
+function renderComponent(Component: any, action: Action<any>) {
   return <Component action={action} headerAndTitleOptions={headerAndTitleOptions} />
 }

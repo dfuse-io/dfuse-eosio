@@ -160,7 +160,7 @@ func (b *Block) Header() *BlockHeader {
 }
 
 func (b *Block) ExecutedTransactionCount() commonTypes.Uint32 {
-	return commonTypes.Uint32(b.blkWithRefs.Block.TransactionCount)
+	return commonTypes.Uint32(b.blkWithRefs.Block.UnfilteredTransactionCount)
 }
 
 type TransactionTracesReq struct {

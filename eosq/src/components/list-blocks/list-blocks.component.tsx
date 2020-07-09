@@ -1,7 +1,7 @@
 import { t } from "i18next"
 import { max } from "ramda"
 import * as React from "react"
-import { compactCount, compactString, formatNumber } from "../../helpers/formatters"
+import { compactCount, compactString, formatNumber } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { BlockSummary } from "../../models/block"
 import { Links } from "../../routes"
