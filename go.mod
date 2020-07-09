@@ -42,11 +42,11 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
 	github.com/dfuse-io/relayer v0.0.2-0.20200707183803-7093e4f52f8f
-	github.com/dfuse-io/search v0.0.2-0.20200707185331-aca574d2e545
+	github.com/dfuse-io/search v0.0.2-0.20200708142209-3fd455c81ab8
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200616134903-ff2413bdaa99
+	github.com/eoscanada/eos-go v0.9.1-0.20200709181800-6ca81072282c
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2
 	github.com/francoispqt/gojay v1.2.13

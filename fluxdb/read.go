@@ -21,7 +21,6 @@ import (
 	"math"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
@@ -709,7 +708,7 @@ func (fdb *FluxDB) getLastBlock(ctx context.Context) (out bstream.BlockRef, err 
 	out, err = fdb.store.FetchLastWrittenBlock(ctx, lastBlockKey)
 	if err == store.ErrNotFound {
 		zlogger.Info("last written block empty, returning block ID 0")
-		return bstream.BlockRefFromID(strings.Repeat("00", 32)), nil
+		return bstream.BlockRefEmpty, nil
 	}
 
 	if err != nil {
