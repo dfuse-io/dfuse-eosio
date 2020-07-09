@@ -94,10 +94,10 @@ type BlocksReader interface {
 }
 
 type DBWriter interface {
-	SetWriterChainID(chainID []byte)
-
-	// Where did I leave off last time I wrote?
+	// TOFIX: should this not be in the BlockReader Interface
 	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
+
+	SetWriterChainID(chainID []byte)
 	PutBlock(ctx context.Context, blk *pbcodec.Block) error
 	UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error
 	// Flush MUST be called or you WILL lose data

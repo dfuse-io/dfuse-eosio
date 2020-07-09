@@ -311,7 +311,6 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 	}
 
 	// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
-
 	// We must do this operation regardless of the write only categories set since this is used
 	// as our last block marker. If this would not be writing, it would never be possible to start
 	// back where we left off.

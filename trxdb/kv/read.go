@@ -32,7 +32,7 @@ func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err er
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	it := db.irrBlockStore.Scan(ctx, Keys.StartOfIrrBlockTable(), Keys.EndOfIrrBlockTable(), 1)
+	it := db.irrBlockStore.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err
@@ -111,7 +111,8 @@ func (db *DB) GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	it := db.blksReadStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
+	// TODO: I think this is right we need to check @alex
+	it := db.irrBlockStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return nil, err
