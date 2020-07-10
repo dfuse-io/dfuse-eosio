@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dfuse-io/logging"
-
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dlauncher/launcher"
+	"github.com/dfuse-io/logging"
 	nodeMindreaderStdinApp "github.com/dfuse-io/node-manager/app/node_mindreader_stdin"
 	"github.com/dfuse-io/node-manager/mindreader"
 	"github.com/spf13/cobra"
@@ -19,7 +18,6 @@ import (
 )
 
 func init() {
-
 	appLogger := zap.NewNop()
 
 	logging.Register("github.com/dfuse-io/dfuse-eosio/mindreader_stdin", &appLogger)
@@ -29,7 +27,7 @@ func init() {
 		Title:       "deep-mind reader from stdin",
 		Description: "deep-mind reader from stdin, does not start nodeos itself",
 		MetricsID:   "mindreader-stdin",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader_stdin.*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader_stdin$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			return nil
 		},

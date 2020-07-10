@@ -1,0 +1,4 @@
+start:
+  args:
+  - mindreader-stdin
+  flags: {}

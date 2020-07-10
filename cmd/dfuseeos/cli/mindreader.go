@@ -41,7 +41,8 @@ func init() {
 		Title:       "deep-mind reader node",
 		Description: "Blocks reading node",
 		MetricsID:   "mindreader",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader.*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		// Now that we also have a `mindreader_stdin` registered logger, we need to pay attention to the actual regexp to ensure we match only our packages!
+		Logger: launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader(/nodeos)?$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
 			cmd.Flags().String("mindreader-superviser-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying superviser")
@@ -143,7 +144,10 @@ func init() {
 					TrustedProducer:   viper.GetString("mindreader-trusted-producer"),
 					AdditionalArgs:    viper.GetStringSlice("mindreader-superviser-args"),
 					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
-				}, nodeosLogger)
+				},
+				nodeosLogger,
+			)
+
 			if err != nil {
 				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
 			}
@@ -167,7 +171,6 @@ func init() {
 				chainSuperviser,
 				metricsAndReadinessManager,
 				&operator.Options{
-
 					BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 					BackupTag:                  viper.GetString("mindreader-backup-tag"),
 					BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
@@ -180,9 +183,6 @@ func init() {
 					EnableSupervisorMonitoring: false,
 					Profiler:                   p,
 				})
-			//if a.Config.StartFailureHandlerFunc != nil {
-			//	chainOperator.RegisterStartFailureHandler(a.Config.StartFailureHandlerFunc)
-			//}
 
 			if err != nil {
 				return nil, fmt.Errorf("unable to create chain operator: %w", err)

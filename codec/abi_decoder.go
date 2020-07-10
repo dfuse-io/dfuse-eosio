@@ -127,7 +127,7 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 	blockRef := block.AsRef()
 	zlog.Debug("post-processing block", zap.Stringer("block", blockRef))
 	if c.activeBlockNum == noActiveBlockNum {
-		return fmt.Errorf("end block for block %s received while no active block present", block)
+		return fmt.Errorf("end block for block %s received while no active block present", blockRef)
 	}
 
 	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.UnfilteredImplicitTransactionOps)))
