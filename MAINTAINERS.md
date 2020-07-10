@@ -18,3 +18,6 @@
 * Remove the changelogs in `CHANGELOG.md`, and link to the GitHub
   release.  The final source of truth for the change log is the GitHUb
   `/releases` page for the release.
+
+* Make sure any contributions from the community are RECOGNIZED in the
+  Releases page.
