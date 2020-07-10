@@ -72,7 +72,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func Init(runProducer bool, configFile string) error {
-	toRun := []string{"all"}
+	toRun := []string{"all", "-mindreader-stdin"}
 	if !runProducer {
 		toRun = append(toRun, "-node-manager")
 	}

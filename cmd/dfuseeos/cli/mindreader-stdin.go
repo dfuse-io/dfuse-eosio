@@ -44,7 +44,7 @@ func init() {
 			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
 				return codec.NewConsoleReader(reader)
 			}
-			//
+
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
 				blk, ok := obj.(*pbcodec.Block)
 				if !ok {
