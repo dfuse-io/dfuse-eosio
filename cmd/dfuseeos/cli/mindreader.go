@@ -44,15 +44,15 @@ func init() {
 		// Now that we also have a `mindreader_stdin` registered logger, we need to pay attention to the actual regexp to ensure we match only our packages!
 		Logger: launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader(/nodeos)?$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "eos-manager API address")
-			cmd.Flags().String("mindreader-superviser-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying superviser")
+			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "The dfuse Node Manager API address")
+			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
-			cmd.Flags().String("mindreader-superviser-path", NodeosBinPath, "Path to the superviser binary. Defaults to the superviser found in your PATH")
-			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (superviser blocks and state)")
+			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the 'nodeos' found in your PATH")
+			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (nodeos blocks and state)")
 			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
-			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until superviser head block time is within that duration to now")
+			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
 			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the node-manager profiler")
 			cmd.Flags().String("mindreader-snapshot-store-url", SnapshotsURL, "Storage bucket with path prefix where state snapshots should be done. Ex: gs://example/snapshots")
 			cmd.Flags().String("mindreader-working-dir", "{dfuse-data-dir}/mindreader/work", "Path where mindreader will stores its files")
@@ -64,7 +64,7 @@ func init() {
 			cmd.Flags().Bool("mindreader-discard-after-stop-num", false, "ignore remaining blocks being processed after stop num (only useful if we discard the mindreader data after reprocessing a chunk of blocks)")
 			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/nodeos if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
-			cmd.Flags().StringSlice("mindreader-superviser-args", []string{}, "Extra arguments to be passed when executing superviser binary")
+			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
 			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
@@ -82,7 +82,7 @@ func init() {
 			return nil
 		},
 		InitFunc: func(modules *launcher.RuntimeModules) error {
-			if err := CheckNodeosInstallation(viper.GetString("mindreader-superviser-path")); err != nil {
+			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
 				return err
 			}
 			return nil
@@ -99,8 +99,8 @@ func init() {
 			if viper.GetBool("mindreader-start-failure-handler") {
 				startUpFunc = func() {
 					userLog.Error(`*********************************************************************************
-* Mindreader failed to start superviser process
-* To see superviser logs...
+* Mindreader failed to start nodeos process
+* To see nodeos logs...
 * DEBUG="mindreader" dfuseeos start
 *********************************************************************************`)
 					os.Exit(1)
@@ -137,19 +137,19 @@ func init() {
 				&superviser.SuperviserOptions{
 					LocalNodeEndpoint: viper.GetString("mindreader-manager-api-addr"),
 					ConfigDir:         viper.GetString("mindreader-config-dir"),
-					BinPath:           viper.GetString("mindreader-superviser-path"),
+					BinPath:           viper.GetString("mindreader-nodeos-path"),
 					DataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
 					Hostname:          hostname,
 					ProducerHostname:  viper.GetString("mindreader-producer-hostname"),
 					TrustedProducer:   viper.GetString("mindreader-trusted-producer"),
-					AdditionalArgs:    viper.GetStringSlice("mindreader-superviser-args"),
+					AdditionalArgs:    viper.GetStringSlice("mindreader-nodeos-args"),
 					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
 				},
 				nodeosLogger,
 			)
 
 			if err != nil {
-				return nil, fmt.Errorf("unable to create superviser chain superviser: %w", err)
+				return nil, fmt.Errorf("unable to create nodeos chain superviser: %w", err)
 			}
 
 			workingDir := mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir"))
@@ -222,7 +222,7 @@ func init() {
 
 			return nodeMindreaderApp.New(&nodeMindreaderApp.Config{
 				ManagerAPIAddress:         viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:          viper.GetString("mindreader-superviser-api-addr"),
+				NodeosAPIAddress:          viper.GetString("mindreader-nodeos-api-addr"),
 				ConnectionWatchdog:        viper.GetBool("mindreader-connection-watchdog"),
 				ReadinessMaxLatency:       viper.GetDuration("mindreader-readiness-max-latency"),
 				NoBlocksLog:               viper.GetBool("mindreader-no-blocks-log"),

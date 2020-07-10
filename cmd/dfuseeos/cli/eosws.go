@@ -19,7 +19,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/eosws.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
-			cmd.Flags().String("eosws-superviser-rpc-addr", NodeosAPIAddr, "RPC endpoint of the superviser instance")
+			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().String("eosws-fluxdb-addr", FluxDBServingAddr, "FluxDB server address")
@@ -29,7 +29,7 @@ func init() {
 			cmd.Flags().Duration("eosws-filesource-ratelimit", 2*time.Millisecond, "time to sleep between blocks coming from filesource to control replay speed")
 			cmd.Flags().String("eosws-healthz-secret", "", "Secret to access healthz")
 			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
-			cmd.Flags().Bool("eosws-authenticate-superviser-api", false, "Gate access to native superviser APIs with authentication")
+			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native superviser APIs with authentication")
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			return nil
 		},
@@ -40,7 +40,7 @@ func init() {
 			}
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
-				NodeosRPCEndpoint:           viper.GetString("eosws-superviser-rpc-addr"),
+				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
 				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
 				KVDBDSN:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
@@ -48,7 +48,7 @@ func init() {
 				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
 				FluxHTTPAddr:                viper.GetString("eosws-fluxdb-addr"),
-				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-superviser-api"),
+				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
 				MeteringPlugin:              viper.GetString("common-metering-plugin"),
 				AuthPlugin:                  viper.GetString("common-auth-plugin"),
 				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),

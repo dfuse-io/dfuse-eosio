@@ -24,7 +24,7 @@ func init() {
 			cmd.Flags().String("apiproxy-autocert-cache-dir", "{dfuse-data-dir}/api-proxy", "Path to directory where certificates will be saved to disk")
 			cmd.Flags().String("apiproxy-eosws-http-addr", EoswsHTTPServingAddr, "Target address of the eosws API endpoint")
 			cmd.Flags().String("apiproxy-dgraphql-http-addr", DgraphqlHTTPServingAddr, "Target address of the dgraphql API endpoint")
-			cmd.Flags().String("apiproxy-superviser-http-addr", NodeosAPIAddr, "Address of a queriable superviser instance")
+			cmd.Flags().String("apiproxy-nodeos-http-addr", NodeosAPIAddr, "Address of a queriable nodeos instance")
 			cmd.Flags().String("apiproxy-root-http-addr", EosqHTTPServingAddr, "What to serve at the root of the proxy (defaults to eosq)")
 			return nil
 		},
@@ -41,7 +41,7 @@ func init() {
 				AutocertCacheDir: mustReplaceDataDir(dfuseDataDir, viper.GetString("apiproxy-autocert-cache-dir")),
 				EoswsHTTPAddr:    viper.GetString("apiproxy-eosws-http-addr"),
 				DgraphqlHTTPAddr: viper.GetString("apiproxy-dgraphql-http-addr"),
-				NodeosHTTPAddr:   viper.GetString("apiproxy-superviser-http-addr"),
+				NodeosHTTPAddr:   viper.GetString("apiproxy-nodeos-http-addr"),
 				RootHTTPAddr:     viper.GetString("apiproxy-root-http-addr"),
 			}), nil
 		},
