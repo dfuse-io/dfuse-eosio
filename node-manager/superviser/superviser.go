@@ -16,6 +16,7 @@ package superviser
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -151,18 +152,36 @@ func (s *NodeosSuperviser) GetCommand() string {
 }
 
 func (s *NodeosSuperviser) HasData() bool {
-	_, blockErr := os.Stat(s.blocksDir)
-	_, stateErr := os.Stat(path.Join(s.options.DataDir, "state"))
-	return blockErr == nil && stateErr == nil
+	dir, err := ioutil.ReadDir(s.blocksDir)
+	if err != nil || len(dir) == 0 {
+		return false
+	}
+
+	dir, err = ioutil.ReadDir(path.Join(s.options.DataDir, "state"))
+	if err != nil || len(dir) == 0 {
+		return false
+	}
+
+	return true
 }
 
 func (s *NodeosSuperviser) removeState() error {
-	err := os.RemoveAll(path.Join(path.Join(s.options.DataDir, "state")))
+	stateDir := path.Join(s.options.DataDir, "state")
+	dir, err := ioutil.ReadDir(stateDir)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("cannot delete state directory: %w", err)
+		return fmt.Errorf("cannot read state directory: %w", err)
 	}
+
+	for _, file := range dir {
+		err = os.RemoveAll(path.Join(stateDir, file.Name()))
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("cannot delete state element: %w", err)
+		}
+	}
+
 	return nil
 }
+
 func (s *NodeosSuperviser) removeBlocksLog() error {
 	err := os.Remove(path.Join(s.blocksDir, "blocks.log"))
 	if err != nil && !os.IsNotExist(err) {
@@ -174,6 +193,7 @@ func (s *NodeosSuperviser) removeBlocksLog() error {
 	}
 	return nil
 }
+
 func (s *NodeosSuperviser) removeReversibleBlocks() error {
 	err := os.RemoveAll(path.Join(s.blocksDir, "reversible"))
 	if err != nil && !os.IsNotExist(err) {
