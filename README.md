@@ -1,6 +1,6 @@
 # dfuse for EOSIO
 [![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badxoge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 All **[dfuse.io services](https://dfuse.io/technology)** for EOSIO,
 running from your laptop or from a container, released as a single
@@ -21,12 +21,11 @@ development chain by also managing the block producing node for you.
 ### Requirements
 
 #### Operating System
+
 * This software runs on Linux or Mac OS X
 
-#### dfuse Instrumented nodeos (deep-mind)
-* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
+#### Recommended auxiliary tools
 
-#### Recommended tools
 * [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
 * `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
 * [eosc](https://github.com/eoscanada/eosc/releases).
@@ -37,6 +36,9 @@ development chain by also managing the block producing node for you.
 
 * Download a tarball from the [GitHub Releases Tab](https://github.com/dfuse-io/dfuse-eosio/releases).
 * Put the binary `dfuseeos` in your `PATH`.
+
+See https://docs.dfuse.io/eosio/admin-guide/installation for more information.
+
 
 #### From source
 
@@ -52,6 +54,7 @@ go get github.com/GeertJohan/go.rice/rice
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 
+# Build the javascript apps
 pushd dashboard/client
   yarn install && yarn build
 popd
@@ -69,44 +72,12 @@ go install -v ./cmd/dfuseeos
 This will install the binary in your `$GOPATH/bin` folder (normally
 `$HOME/go/bin`). Make sure this folder is in your `PATH` env variable.
 
-### Usage (creating a new local chain)
 
-1. Initialize a few configuration files in your working directory (`dfuse.yaml`, `mindreader/config.ini`, ...)
+### Usage
 
-```
-dfuseeos init
-```
+See the [System Admin Guide](https://docs.dfuse.io/eosio/admin-guide) of the documentation for instructions on how run `dfuseeos` on your laptop, synchronize large chains, do partial sync'ing, and the different deployment options available.
 
-2. Optionally copy over a boot sequence to have dfuse bootstraps your chain with accounts, system contracts to have a chain ready for development in matter of seconds:
 
-```
-wget -O bootseq.yaml https://raw.githubusercontent.com/dfuse-io/dfuse-eosio/develop/booter/examples/bootseq.dev.yaml
-```
-
-**Note** Check [booter/examples](./booter/examples) for other boot sequence templates.
-
-3. Boot your instance with:
-
-```
-dfuseeos start
-```
-
-4. A terminal prompt will list the graphical interfaces with their relevant links:
-
-```
-Dashboard: http://localhost:8081
-Explorer & APIs:  http://localhost:8080
-GraphiQL:         http://localhost:8080/graphiql
-```
-
-In this mode, two nodeos instances will now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
-
-### Usage (syncing existing chain)
-
-If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
-
-* See [Syncing a chain partially](./PARTIAL_SYNC.md)
-* See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 
 ### Logging
 
