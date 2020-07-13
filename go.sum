@@ -256,6 +256,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGB
 github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8 h1:C8csEjQ7WetcRL29vRMMKmLYDQyIGM+DbObr5j5+K68=
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
+github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80 h1:O/zZ7VVyNmc1GAXE6N/KXK1aiJPdADZ0+BP5f4QwAAU=
+github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063 h1:kQgi/lEAFCOC2eu3Xm+nVUQaNQbqPnDBoEmGQUHxXAo=
 github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
@@ -263,6 +265,8 @@ github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSut
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925 h1:9QxHGYz6+U/tIab26/pTKZU/284Z1YrhEbFwZDbfu5c=
 github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200710145056-7b976ebcfa9a h1:gdDHVunsMtwsrzBj2n5b0NViZhLWkrmQQxb88DO1bLQ=
+github.com/dfuse-io/dlauncher v0.0.0-20200710145056-7b976ebcfa9a/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c h1:j6tHp6tKicuytJDuYAZkP69uh+tx1OkE/GDx5idYzrk=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c/go.mod h1:e1x/Bvi0Y0Hl5pJCboN4RnNHwGuVqS6kIZFgrAs9V2E=
@@ -304,6 +308,8 @@ github.com/dfuse-io/merger v0.0.2 h1:16F7wcQ6dvygsnghlV62IkLi5OnQSBV8fi/uTs+l8yk
 github.com/dfuse-io/merger v0.0.2/go.mod h1:CsZd+ezyPdhgX3jmaBmh7lrNoBtrb0RBUefOQrCYdqs=
 github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74 h1:zhUz6aeC3hvBdnc8KADzhordbCof+abnMxuNGHEEYcY=
 github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74/go.mod h1:H98M+Ot/PZ4ZvFyW4nRGvvDoOJKVoSai6BuAhS9qqmY=
+github.com/dfuse-io/node-manager v0.0.2-0.20200710191107-14ca3ce043c5 h1:oZ+9HlRALEedNvukh4eyEWI/mHyzYe4BfJr6JMgpqgs=
+github.com/dfuse-io/node-manager v0.0.2-0.20200710191107-14ca3ce043c5/go.mod h1:H98M+Ot/PZ4ZvFyW4nRGvvDoOJKVoSai6BuAhS9qqmY=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=

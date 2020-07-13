@@ -100,9 +100,3 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
-
-replace github.com/dfuse-io/dlauncher => /Users/maoueh/work/dfuse/dlauncher
-
-replace github.com/dfuse-io/node-manager => /Users/maoueh/work/dfuse/node-manager
-
-replace github.com/dfuse-io/dgrpc => /Users/maoueh/work/dfuse/dgrpc
