@@ -187,7 +187,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFeatureOpPreActivate(line)
 
 		case strings.HasPrefix(line, "SWITCH_FORK"):
-			zlog.Info("Fork signal, restarting state accumulation from beginning")
+			zlog.Info("fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
 
 		case strings.HasPrefix(line, "ABIDUMP START"):
@@ -201,7 +201,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readDeepmindVersion(line)
 
 		default:
-			zlog.Info("Unknown log line", zap.String("line", line))
+			zlog.Info("unknown log line", zap.String("line", line))
 		}
 
 		if err != nil {

@@ -109,6 +109,6 @@ func (h *HeadInfoHub) Launch(ctx context.Context) {
 
 	eternalSource.Run()
 	eternalSource.OnTerminating(func(e error) {
-		zlog.Error("Head info failed and quit", zap.Error(e))
+		zlog.Error("head info failed and quit", zap.Error(e))
 	})
 }

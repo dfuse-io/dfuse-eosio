@@ -135,7 +135,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	normalizedGuarantee := guarantee
 	switch guarantee {
 	case "in-block":
-		zlog.Debug("Waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
+		zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
 		trxTraceFoundChan, shutdownFunc = awaitTransactionInBlock(ctx, trxID, liveSourceFactory)
 	case "handoff:1", "handoffs:1":
 		normalizedGuarantee = "handoffs:1"

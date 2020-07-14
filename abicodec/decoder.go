@@ -38,7 +38,7 @@ func NewDecoder(cache Cache) *Decoder {
 func (d *Decoder) decodeAction(account string, action string, data []byte, blockNum uint32) ([]byte, uint32, error) {
 	abiItem := d.cache.ABIAtBlockNum(account, blockNum)
 	if abiItem != nil {
-		zlog.Debug("Found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
+		zlog.Debug("found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
 		out, err := abiItem.ABI.DecodeAction(data, eos.ActionName(action))
 		if err != nil {
 			return nil, 0, derr.Status(codes.InvalidArgument, err.Error())
@@ -52,10 +52,10 @@ func (d *Decoder) decodeAction(account string, action string, data []byte, block
 func (d *Decoder) decodeTable(account string, table string, data []byte, blockNum uint32) ([]byte, uint32, error) {
 	abiItem := d.cache.ABIAtBlockNum(account, blockNum)
 	if abiItem != nil {
-		zlog.Debug("Found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
+		zlog.Debug("found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
 		out, err := abiItem.ABI.DecodeTableRow(eos.TableName(table), data)
 		if err != nil {
-			zlog.Info("Failed to decode table data", zap.Error(err), zap.ByteString("data", data))
+			zlog.Info("failed to decode table data", zap.Error(err), zap.ByteString("data", data))
 			return nil, 0, derr.Status(codes.InvalidArgument, err.Error())
 		}
 		return out, abiItem.BlockNum, nil
@@ -67,10 +67,10 @@ func (d *Decoder) decodeTable(account string, table string, data []byte, blockNu
 func (d *Decoder) getABI(account string, blockNum uint32) ([]byte, uint32, error) {
 	abiItem := d.cache.ABIAtBlockNum(account, blockNum)
 	if abiItem != nil {
-		zlog.Debug("Found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
+		zlog.Debug("found abi", zap.String("account", account), zap.Uint32("at_block_num", blockNum))
 		data, err := json.Marshal(abiItem.ABI)
 		if err != nil {
-			zlog.Info("Failed to decode abi", zap.Error(err), zap.ByteString("data", data))
+			zlog.Info("failed to decode abi", zap.Error(err), zap.ByteString("data", data))
 			return nil, 0, derr.Status(codes.InvalidArgument, err.Error())
 		}
 		return data, abiItem.BlockNum, nil

@@ -20,9 +20,9 @@ import (
 	"io"
 	"net/http"
 
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
+	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -57,31 +57,31 @@ func (m *MultiRouterClient) StreamMatches(ctx context.Context, in *pbsearch.Rout
 	if m.Toggle.Load() {
 		go func() {
 			zlogger := logging.Logger(ctx, zlog)
-			zlogger.Info("Sending request to secondary server.",
+			zlogger.Info("sending request to secondary server.",
 				zap.String("dhammer_drill_trace_id", dtracing.GetTraceID(ctx).String()))
 
 			v2Stream, err := m.v2Client.StreamMatches(ctx, in, opts...)
 			if err != nil {
-				zlog.Warn("V2 failed to stream matches:", zap.Error(ctx.Err()))
+				zlog.Warn("v2 failed to stream matches", zap.Error(ctx.Err()))
 				return
 			}
 			count := 0
 			for {
 				_, err := v2Stream.Recv()
 				if ctx.Err() != nil {
-					zlogger.Warn("V2 ctx error:",
+					zlogger.Warn("v2 ctx error",
 						zap.String("dhammer_drill_trace_id", dtracing.GetTraceID(ctx).String()),
 						zap.Error(ctx.Err()))
 					break
 				}
 				if err != nil {
 					if err == io.EOF {
-						zlogger.Info("V2 Recv done:",
+						zlogger.Info("v2 recv done",
 							zap.String("dhammer_drill_trace_id", dtracing.GetTraceID(ctx).String()),
 							zap.Int("count", count))
 						break
 					}
-					zlogger.Warn("V2 Recv failed:",
+					zlogger.Warn("v2 recv failed",
 						zap.String("dhammer_drill_trace_id", dtracing.GetTraceID(ctx).String()),
 						zap.Error(err))
 					break

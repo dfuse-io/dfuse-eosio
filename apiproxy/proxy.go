@@ -71,7 +71,7 @@ func (p *proxy) Launch() error {
 	zlog.Info("starting http server", zap.String("listen_addr", p.config.HTTPListenAddr))
 
 	if p.config.HTTPSListenAddr != "" {
-		zlog.Info("Starting SSL listener", zap.Any("domains", p.config.AutocertDomains))
+		zlog.Info("starting SSL listener", zap.Any("domains", p.config.AutocertDomains))
 		m := &autocert.Manager{
 			Cache:      autocert.DirCache(p.config.AutocertCacheDir),
 			Prompt:     autocert.AcceptTOS,

@@ -90,7 +90,7 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	cache.store = store
 	cache.cacheName = cacheName
 
-	zlog.Info("Cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
 	return cache, nil
 
 }
@@ -192,7 +192,7 @@ func (c *DefaultCache) SaveState() error {
 
 	c.dirty = false
 
-	zlog.Info("Cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
 	return nil
 }
 

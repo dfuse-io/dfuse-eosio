@@ -227,13 +227,13 @@ func (a *App) IsReady() bool {
 	url := fmt.Sprintf("http://%s/healthz", a.config.HTTPListenAddr)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		zlog.Warn("IsReady request building error", zap.Error(err))
+		zlog.Warn("is ready request building error", zap.Error(err))
 		return false
 	}
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
-		zlog.Debug("IsReady request execution error", zap.Error(err))
+		zlog.Debug("is ready request execution error", zap.Error(err))
 		return false
 	}
 

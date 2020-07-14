@@ -158,7 +158,7 @@ func (a *App) Run() error {
 	//			}
 	//			continue
 	//		}
-	//		zlog.Info("Last Written Block ID", zap.String("last_written_block_id", lastWrittenBlockID), zap.Uint32("num", eos.BlockNum(lastWrittenBlockID)))
+	//		zlog.Info("last Written Block ID", zap.String("last_written_block_id", lastWrittenBlockID), zap.Uint32("num", eos.BlockNum(lastWrittenBlockID)))
 	//		break
 	//	}
 	//
@@ -309,13 +309,13 @@ func (a *App) Run() error {
 	searchClientV1 := pbsearch.NewRouterClient(searchConn)
 
 	if a.Config.SearchAddrSecondary != "" {
-		zlog.Info("Setting up secondary search router")
+		zlog.Info("setting up secondary search router")
 		searchConnv2, err := dgrpc.NewInternalClient(a.Config.SearchAddrSecondary)
 		if err != nil {
 			zlog.Warn("failed getting abi grpc client", zap.Error(err))
 		}
 		searchClientV2 := pbsearch.NewRouterClient(searchConnv2)
-		zlog.Info("Search client will be a MultiRouterClient")
+		zlog.Info("search client will be a MultiRouterClient")
 		multiRouterClient := eosws.NewMultiRouterClient(searchClientV1, searchClientV2)
 		go func() {
 			zlog.Info("starting atomic level switcher, port :1066")
@@ -378,7 +378,7 @@ func (a *App) Run() error {
 				fields = append(fields, zap.String("token", tok))
 			}
 
-			zlogger.Debug("Performing native EOS chain API call", fields...)
+			zlogger.Debug("performing native EOS chain API call", fields...)
 
 			// Passthrough
 			h.ServeHTTP(w, r)

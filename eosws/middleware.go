@@ -134,7 +134,7 @@ func DfuseErrorHandler(w http.ResponseWriter, ctx context.Context, err error) {
 
 func EOSChainErrorHandler(w http.ResponseWriter, ctx context.Context, err error) {
 	apiError := eos.NewAPIError(401, "this feature requires a dfuse API key (https://dfuse.io)", eoserr.ErrUnhandledException)
-	zlog.Warn("EOS Chain Error", zap.Error(apiError))
+	zlog.Warn("chain Error", zap.Error(apiError))
 
 	w.WriteHeader(http.StatusUnauthorized)
 	json.NewEncoder(w).Encode(apiError)

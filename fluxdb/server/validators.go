@@ -42,7 +42,7 @@ func eosPublicKeyRule(field string, rule string, message string, value interface
 	case string:
 		_, err := ecc.NewPublicKey(v)
 		if err != nil {
-			zlog.Info("The public key was not parseable.", zap.String("public_key", v), zap.String("error", err.Error()))
+			zlog.Info("the public key was not parseable.", zap.String("public_key", v), zap.String("error", err.Error()))
 			return fmt.Errorf("The %s field must be a valid EOS public key", field)
 		}
 
