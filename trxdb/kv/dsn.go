@@ -10,8 +10,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func parseAndCleanDSN(dsn string) (cleanDsn string, read []string, write []string, err error) {
+func parseAndCleanDSN(dsn string) (cleanDsn string, opt *dsnOptions, err error) {
 	zlog.Debug("parsing DSN", zap.String("dsn", dsn))
+
+	dsnOptions := &dsnOptions{
+		reads:  []string{},
+		writes: []string{},
+	}
 	dsnURL, err := url.Parse(dsn)
 	if err != nil {
 		err = fmt.Errorf("invalid dsn: %w", err)
@@ -25,25 +30,25 @@ func parseAndCleanDSN(dsn string) (cleanDsn string, read []string, write []strin
 	}
 
 	for _, readValues := range query["read"] {
-		read = append(read, strings.Split(readValues, ",")...)
+		dsnOptions.reads = append(dsnOptions.reads, strings.Split(readValues, ",")...)
 	}
 
-	if len(read) == 0 {
-		read = append(read, "all")
+	if len(dsnOptions.reads) == 0 {
+		dsnOptions.reads = append(dsnOptions.reads, "all")
 	}
 
 	for _, writeValues := range query["write"] {
-		write = append(write, strings.Split(writeValues, ",")...)
+		dsnOptions.writes = append(dsnOptions.writes, strings.Split(writeValues, ",")...)
 	}
 
-	if len(write) == 0 {
-		write = append(write, "all")
+	if len(dsnOptions.writes) == 0 {
+		dsnOptions.writes = append(dsnOptions.writes, "all")
 	}
 
-	cleanDsn, err = store.RemoveDSNOptions(dsn, "read", "write")
+	cleanDsn, err = store.RemoveDSNOptions(dsn, "read", "write", "blk_marker")
 	if err != nil {
 		err = fmt.Errorf("Unable to clean dsn: %w", err)
 	}
 
-	return
+	return cleanDsn, dsnOptions, nil
 }

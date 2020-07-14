@@ -44,7 +44,7 @@ main() {
   fi
 
   if [[ $all == true || $only_filtering == true ]]; then
-    dfuseeos -c filtering.yaml start &
+    TRACE=true DEBUG=trxdb-loader dfuseeos -c filtering.yaml start &
   fi
 
   for job in `jobs -p`; do

@@ -51,6 +51,7 @@ type AccountsReader interface {
 }
 
 type TransactionsReader interface {
+	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
 	// It's not the job of the Storage layer to discriminate events, just get the data
 	// and the caller will discriminate the right block IDs from the wrong.
 
@@ -76,11 +77,13 @@ type TimelineExplorer interface {
 }
 
 type BlocksReader interface {
+	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
 	GetLastWrittenBlockID(ctx context.Context) (blockID string, err error)
 	GetBlock(ctx context.Context, id string) (*pbcodec.BlockWithRefs, error)
 	GetBlockByNum(ctx context.Context, num uint32) ([]*pbcodec.BlockWithRefs, error)
 	GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (ref bstream.BlockRef, err error)
 	GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bstream.BlockRef, err error)
+
 	// ListBlocks retrieves blocks where `highBlockNum` is the highest
 	// returned, and will retrieve a maximum of `limit` rows.  For
 	// example, if you pass `highBlockNum = math.MaxUint32` with
@@ -94,7 +97,7 @@ type BlocksReader interface {
 }
 
 type DBWriter interface {
-	// TOFIX: should this not be in the BlockReader Interface
+	// this is used to bootstrap the trxdb-loader pipeline
 	GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error)
 
 	SetWriterChainID(chainID []byte)

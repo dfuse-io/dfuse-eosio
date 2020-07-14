@@ -35,12 +35,12 @@ import (
 type DB struct {
 	blkReadStore store.KVStore
 	trxReadStore store.KVStore
+	irrReadStore store.KVStore
 
 	lastWrittenBlockStore store.KVStore
-
-	enableBlkWrite bool
-	enableTrxWrite bool
-	writeStore     store.KVStore
+	enableBlkWrite        bool
+	enableTrxWrite        bool
+	writeStore            store.KVStore
 
 	// Required only when writing
 	writerChainID []byte
@@ -59,6 +59,11 @@ func init() {
 	trxdb.Register("cznickv", New)
 }
 
+type dsnOptions struct {
+	reads  []string
+	writes []string
+}
+
 func New(dsns []string) (trxdb.DB, error) {
 
 	zlog.Debug("setting up in kv driver",
@@ -73,12 +78,14 @@ func New(dsns []string) (trxdb.DB, error) {
 
 	hasSeenWriter := false
 	for _, dsn := range dsns {
-		cleanDsn, reads, writes, err := parseAndCleanDSN(dsn)
+		cleanDsn, dsnOptions, err := parseAndCleanDSN(dsn)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse and clean kv driver dsn: %w", err)
 		}
 
-		isWriter := isWriter(writes)
+		// Currently we only support 1 writer DSN. This assumption is baked into the code
+		// so change this carefully.
+		isWriter := isWriter(dsnOptions.writes)
 		if isWriter && hasSeenWriter {
 			return nil, fmt.Errorf("unable to have 2 writer DSNs")
 		}
@@ -89,9 +96,7 @@ func New(dsns []string) (trxdb.DB, error) {
 			return nil, fmt.Errorf("unable retrieve kvdb driver: %w", err)
 		}
 
-		///
-
-		db.setupReadWriteOpts(driver, reads, writes)
+		db.setupReadWriteOpts(driver, dsnOptions.reads, dsnOptions.writes)
 	}
 	return db, nil
 
@@ -121,29 +126,41 @@ func (db *DB) Close() error {
 	})
 }
 
+// setupReadWriteOpts will set the driver for the database, the trx reader store
+// takes precedent over the blk reader store
 func (db *DB) setupReadWriteOpts(driver store.KVStore, read, write []string) {
 	if inSlice("blk", read) {
 		db.blkReadStore = driver
+		// the trx reader DSN has precedence
+		if db.irrReadStore == nil {
+			db.irrReadStore = driver
+		}
 	}
 
 	if inSlice("trx", read) {
 		db.trxReadStore = driver
 		// trx WINS and overrides
+		db.irrReadStore = driver
 	}
 
 	if inSlice("all", read) {
 		db.trxReadStore = driver
 		db.blkReadStore = driver
+
+		// the Trx reader DSN has precedence
+		if db.irrReadStore == nil {
+			db.irrReadStore = driver
+		}
 	}
 
 	if inSlice("last_written_blk", read) {
 		db.lastWrittenBlockStore = driver
 	}
-	// read == "none" sets nothing
 
 	if isWriter(write) {
 		db.writeStore = driver
 	}
+
 	if inSlice("blk", write) {
 		db.enableBlkWrite = true
 	}
@@ -151,6 +168,7 @@ func (db *DB) setupReadWriteOpts(driver store.KVStore, read, write []string) {
 	if inSlice("trx", write) {
 		db.enableTrxWrite = true
 	}
+
 	if inSlice("all", write) {
 		db.enableTrxWrite = true
 		db.enableBlkWrite = true
@@ -174,31 +192,6 @@ func isWriter(writes []string) bool {
 		}
 	}
 	return false
-}
-
-func (db *DB) getLastWrittenBlockStore() (store.KVStore, error) {
-	// unles you explicitly set the driver you wish to use to determine
-	// the last written block with the option read=last_written_blk
-	// we will attempt to use the other driver in this priority:
-	//		1 - WriteStore
-	//		2 - TrxReadStore
-	//		3 - BlkReadStore
-	// if we cannot determine the last written block store then we fail
-	store := db.lastWrittenBlockStore
-
-	if store == nil {
-		store = db.writeStore
-	}
-	if store == nil {
-		store = db.trxReadStore
-	}
-	if store == nil {
-		store = db.blkReadStore
-	}
-	if store == nil {
-		return nil, fmt.Errorf("unable to determine the store of where to read the last written block")
-	}
-	return store, nil
 }
 
 //* using for debugging *//

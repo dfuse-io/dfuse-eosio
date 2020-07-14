@@ -17,6 +17,7 @@ package kv
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -28,16 +29,34 @@ import (
 	"go.uber.org/zap"
 )
 
+// This is in the writer interface, because it is required to start the the pipeline.
+func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error) {
+	num := uint32(math.MaxUint32)
+	db.logger.Debug("get last written irr")
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// We always want to read from the "Writing Store" what is the last IRR block we wrote
+	// this function is mainly used to bootstrap the pipeline
+	it := db.irrReadStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
+	found := it.Next()
+	if err := it.Err(); err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, kvdb.ErrNotFound
+	}
+
+	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
+	return bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID)), nil
+}
+
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	store, err := db.getLastWrittenBlockStore()
-	if err != nil {
-		return "", fmt.Errorf("canot determine last written block store: %w", err)
-	}
-
-	it := store.Scan(ctx, Keys.StartOfIrrBlockTable(), Keys.EndOfIrrBlockTable(), 1)
+	it := db.blkReadStore.Scan(ctx, Keys.StartOfBlocksTable(), Keys.EndOfBlocksTable(), 1)
 	found := it.Next()
 	if err := it.Err(); err != nil {
 		return "", err

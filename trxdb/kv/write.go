@@ -17,11 +17,7 @@ package kv
 import (
 	"context"
 	"fmt"
-	"math"
 
-	"github.com/dfuse-io/kvdb"
-
-	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
@@ -39,33 +35,13 @@ func (db *DB) SetWriterChainID(chainID []byte) {
 	db.writerChainID = chainID
 }
 
-// This is in the writer interface, because it is required to start the the pipeline.
-func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error) {
-	num := uint32(math.MaxUint32)
-	db.logger.Debug("get last written irr")
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	// We always want to read from the "Writing Store" what is the last IRR block we wrote
-	// this function is mainly used to bootstrap the pipeline
-	it := db.writeStore.Scan(ctx, Keys.PackIrrBlockNumPrefix(num), Keys.EndOfIrrBlockTable(), 1)
-	found := it.Next()
-	if err := it.Err(); err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, kvdb.ErrNotFound
-	}
-
-	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
-	return bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID)), nil
-}
-
 func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blkNumber uint64) error {
 	if s, ok := s.(kvdbstore.Purgeable); ok {
 		s.MarkCurrentHeight(blkNumber)
 		if blkNumber > 0 && (blkNumber%db.purgeInterval) == 0 {
+			if traceEnabled {
+				db.logger.Debug("purging keys", zap.Uint64("block_num", blkNumber))
+			}
 			if err := s.PurgeKeys(ctx); err != nil {
 				return fmt.Errorf("unable to purge store: %w", err)
 			}
@@ -112,6 +88,8 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		db.logger.Debug("skipping block write")
 	}
 
+	// NOTE: what happens to the blockNum, for the IrrBlock rows?? Do we truncate it when it
+	// becomes irreversible?
 	return nil
 }
 

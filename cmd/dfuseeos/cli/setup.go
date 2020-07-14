@@ -17,6 +17,9 @@ package cli
 import (
 	"fmt"
 	_ "net/http/pprof"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -27,8 +30,41 @@ func init() {
 	dgrpc.Verbosity = 2
 }
 
-func setup(subCommand string) error {
-	if subCommand != "init" {
+func shouldRunSetup(cmds []string, runSetupOn []*cobra.Command) bool {
+	for _, c := range runSetupOn {
+		baseChunks := extractCmd(c)
+		if strings.Join(cmds, ".") == strings.Join(baseChunks, ".") {
+			return true
+		}
+	}
+	return false
+}
+
+func extractCmd(cmd *cobra.Command) []string {
+	cmds := []string{}
+	for {
+		if cmd == nil {
+			break
+		}
+		cmds = append(cmds, cmd.Use)
+		cmd = cmd.Parent()
+	}
+
+	out := make([]string, len(cmds))
+
+	for itr, v := range cmds {
+		newIndex := len(cmds) - 1 - itr
+		out[newIndex] = v
+	}
+	return out
+}
+
+func setupCmd(cmd *cobra.Command) error {
+	cmds := extractCmd(cmd)
+	if shouldRunSetup(cmds, []*cobra.Command{
+		StartCmd,
+	}) {
+		subCommand := cmds[len(cmds)-1]
 		if configFile := viper.GetString("global-config-file"); configFile != "" {
 			if err := launcher.LoadConfigFile(configFile); err != nil {
 				return fmt.Errorf("Error reading config file. Did you 'dfuseeos init' ?  Error: %w", err)
