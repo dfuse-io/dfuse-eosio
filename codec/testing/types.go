@@ -39,12 +39,13 @@ func (h Hash) Bytes(t testing.T) []byte {
 }
 
 type FilteredBlock struct {
-	Include string
-	Exclude string
-	Stats   UnfilteredStats
+	Include         string
+	Exclude         string
+	UnfilteredStats Counts
+	FilteredStats   Counts
 }
 
-type UnfilteredStats struct {
+type Counts struct {
 	TrxTraceCount      int
 	ActTraceInputCount int
 	ActTraceTotalCount int
@@ -84,7 +85,7 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 		}
 	}
 
-	pbblock.PopulateActionAndTransactionCount()
+	pbblock.MigrateV0ToV1()
 
 	// Need to go at the end to ensure we catch all transaction traces
 	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(FilteredBlock); return ok }); component != nil {
@@ -95,11 +96,15 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 		pbblock.FilteringExcludeFilterExpr = filtered.Exclude
 		pbblock.FilteredTransactionTraces = pbblock.UnfilteredTransactionTraces
 		pbblock.UnfilteredTransactionTraces = nil
-		pbblock.PopulateActionAndTransactionCount()
+		pbblock.MigrateV0ToV1()
 
-		pbblock.UnfilteredTransactionTraceCount = uint32(filtered.Stats.TrxTraceCount)
-		pbblock.UnfilteredExecutedInputActionCount = uint32(filtered.Stats.ActTraceInputCount)
-		pbblock.UnfilteredExecutedTotalActionCount = uint32(filtered.Stats.ActTraceTotalCount)
+		pbblock.UnfilteredTransactionTraceCount = uint32(filtered.UnfilteredStats.TrxTraceCount)
+		pbblock.UnfilteredExecutedInputActionCount = uint32(filtered.UnfilteredStats.ActTraceInputCount)
+		pbblock.UnfilteredExecutedTotalActionCount = uint32(filtered.UnfilteredStats.ActTraceTotalCount)
+
+		pbblock.FilteredTransactionTraceCount = uint32(filtered.FilteredStats.TrxTraceCount)
+		pbblock.FilteredExecutedInputActionCount = uint32(filtered.FilteredStats.ActTraceInputCount)
+		pbblock.FilteredExecutedTotalActionCount = uint32(filtered.FilteredStats.ActTraceTotalCount)
 	}
 
 	if os.Getenv("DEBUG") != "" {

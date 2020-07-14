@@ -122,47 +122,30 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 	return
 }
 
-// PopulateActionAndTransactionCount will compute block stats
+// MigrateV0ToV1 will compute block stats
 // for the total number of transaction, transacation trace,
 // input action and execute action.
-//
-// This is a copy of the logic in `codecs/deos/consolereader.go`
-// duplicated here. We do not re-use a shared function between
-// both because the console reader already loop through the
-// `TransactionTraces` slice, which would make it more inefficent
-// since we need a standalone loop here because call after the
-// fact.
 //
 // This is actual used on in `pbcodec.Block.ToNative` function to
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
-func (b *Block) PopulateActionAndTransactionCount() {
+func (b *Block) MigrateV0ToV1() {
+
+	if b.Version != 0 {
+		return
+	}
+	b.Version = 1
+
 	b.UnfilteredTransactionCount = uint32(len(b.UnfilteredTransactions))
 	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
-	b.UnfilteredExecutedTotalActionCount = 0
 	b.UnfilteredExecutedInputActionCount = 0
+	b.UnfilteredExecutedTotalActionCount = 0
 
 	for _, t := range b.UnfilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
 			b.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
 				b.UnfilteredExecutedInputActionCount++
-			}
-		}
-	}
-
-	b.FilteredTransactionCount = uint32(len(b.FilteredTransactions))
-	b.FilteredTransactionTraceCount = uint32(len(b.FilteredTransactionTraces))
-	b.FilteredExecutedTotalActionCount = 0
-	b.FilteredExecutedInputActionCount = 0
-
-	for _, t := range b.FilteredTransactionTraces {
-		for _, actionTrace := range t.ActionTraces {
-			if actionTrace.FilteringMatched {
-				b.FilteredExecutedTotalActionCount++
-				if actionTrace.IsInput() {
-					b.FilteredExecutedInputActionCount++
-				}
 			}
 		}
 	}

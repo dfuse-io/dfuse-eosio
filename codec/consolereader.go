@@ -442,6 +442,9 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
+	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
+	// TransactionCount, TransactionTraceCount)
+	ctx.block.Version = 1
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
 	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
