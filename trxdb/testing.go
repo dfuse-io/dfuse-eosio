@@ -148,4 +148,8 @@ func (db *testDriver) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcod
 	panic("test driver, not callable")
 }
 
+func (r *TestTransactionsReader) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstream.BlockRef, err error) {
+	panic("implement me")
+}
+
 func (db *testDriver) Flush(ctx context.Context) error { panic("test driver, not callable") }

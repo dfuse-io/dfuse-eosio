@@ -33,13 +33,14 @@ import (
 // single laptop-style deployment:           store:///             by default: read=*&write=*
 // single laptop-style deployment, secure:   store:///?read=blk,trx&write=none
 type DB struct {
-	blksWriteStore store.KVStore
-	trxWriteStore  store.KVStore
+	blkReadStore store.KVStore
+	trxReadStore store.KVStore
+	irrReadStore store.KVStore
 
-	blksReadStore store.KVStore
-	trxReadStore  store.KVStore
-
-	irrBlockStore store.KVStore
+	lastWrittenBlockStore store.KVStore
+	enableBlkWrite        bool
+	enableTrxWrite        bool
+	writeStore            store.KVStore
 
 	// Required only when writing
 	writerChainID []byte
@@ -58,25 +59,44 @@ func init() {
 	trxdb.Register("cznickv", New)
 }
 
+type dsnOptions struct {
+	reads  []string
+	writes []string
+}
+
 func New(dsns []string) (trxdb.DB, error) {
+
+	zlog.Debug("setting up in kv driver",
+		zap.Strings("dsns", dsns),
+	)
 
 	db := &DB{
 		enc:    trxdb.NewProtoEncoder(),
 		dec:    trxdb.NewProtoDecoder(),
 		logger: zap.NewNop(),
 	}
+
+	hasSeenWriter := false
 	for _, dsn := range dsns {
-		cleanDsn, reads, writes, err := parseAndCleanDSN(dsn)
+		cleanDsn, dsnOptions, err := parseAndCleanDSN(dsn)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse and clean kv driver dsn: %w", err)
 		}
+
+		// Currently we only support 1 writer DSN. This assumption is baked into the code
+		// so change this carefully.
+		isWriter := isWriter(dsnOptions.writes)
+		if isWriter && hasSeenWriter {
+			return nil, fmt.Errorf("unable to have 2 writer DSNs")
+		}
+		hasSeenWriter = isWriter
 
 		driver, err := newCachedKVDB(cleanDsn)
 		if err != nil {
 			return nil, fmt.Errorf("unable retrieve kvdb driver: %w", err)
 		}
 
-		db = setupReadWriteOpts(driver, reads, writes, db)
+		db.setupReadWriteOpts(driver, dsnOptions.reads, dsnOptions.writes)
 	}
 	return db, nil
 
@@ -84,12 +104,8 @@ func New(dsns []string) (trxdb.DB, error) {
 
 type storeIterFunc func(s store.KVStore) error
 
-func (db *DB) itrWritableStores(f storeIterFunc) error {
-	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.irrBlockStore})
-}
-
 func (db *DB) itrAllStores(f storeIterFunc) error {
-	return db.itrStores(f, []store.KVStore{db.blksWriteStore, db.trxWriteStore, db.blksReadStore, db.trxReadStore, db.irrBlockStore})
+	return db.itrStores(f, []store.KVStore{db.writeStore, db.blkReadStore, db.trxReadStore})
 }
 
 func (db *DB) itrStores(f storeIterFunc, stores []store.KVStore) error {
@@ -110,42 +126,54 @@ func (db *DB) Close() error {
 	})
 }
 
-func setupReadWriteOpts(driver store.KVStore, read, write []string, db *DB) *DB {
+// setupReadWriteOpts will set the driver for the database, the trx reader store
+// takes precedent over the blk reader store
+func (db *DB) setupReadWriteOpts(driver store.KVStore, read, write []string) {
 	if inSlice("blk", read) {
-		db.blksReadStore = driver
-		db.irrBlockStore = driver
+		db.blkReadStore = driver
+		// the trx reader DSN has precedence
+		if db.irrReadStore == nil {
+			db.irrReadStore = driver
+		}
 	}
 
 	if inSlice("trx", read) {
 		db.trxReadStore = driver
 		// trx WINS and overrides
-		db.irrBlockStore = driver
+		db.irrReadStore = driver
 	}
 
 	if inSlice("all", read) {
 		db.trxReadStore = driver
-		db.blksReadStore = driver
-		db.irrBlockStore = driver
+		db.blkReadStore = driver
+
+		// the Trx reader DSN has precedence
+		if db.irrReadStore == nil {
+			db.irrReadStore = driver
+		}
 	}
-	// read == "none" sets nothing
+
+	if inSlice("last_written_blk", read) {
+		db.lastWrittenBlockStore = driver
+	}
+
+	if isWriter(write) {
+		db.writeStore = driver
+	}
 
 	if inSlice("blk", write) {
-		db.blksWriteStore = driver
-		db.irrBlockStore = driver
+		db.enableBlkWrite = true
 	}
 
 	if inSlice("trx", write) {
-		db.trxWriteStore = driver
-		// trx WINS and overrides
-		db.irrBlockStore = driver
+		db.enableTrxWrite = true
 	}
+
 	if inSlice("all", write) {
-		db.trxWriteStore = driver
-		db.blksWriteStore = driver
-		db.irrBlockStore = driver
+		db.enableTrxWrite = true
+		db.enableBlkWrite = true
 	}
 	// write == "none" sets nothing
-	return db
 }
 
 func inSlice(value string, slice []string) bool {
@@ -155,4 +183,40 @@ func inSlice(value string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+func isWriter(writes []string) bool {
+	for _, s := range writes {
+		if s != "none" {
+			return true
+		}
+	}
+	return false
+}
+
+//* using for debugging *//
+
+func (db *DB) Dump() {
+
+	fields := []zap.Field{}
+	if s, ok := db.writeStore.(fmt.Stringer); ok {
+		fields = append(fields, zap.String("write_store", s.String()))
+	}
+
+	if s, ok := db.blkReadStore.(fmt.Stringer); ok {
+		fields = append(fields, zap.String("block_read_store", s.String()))
+	}
+
+	if s, ok := db.trxReadStore.(fmt.Stringer); ok {
+		fields = append(fields, zap.String("trx_read_store", s.String()))
+	}
+
+	fields = append(fields,
+		zap.Bool("blk_write_enabled", db.enableBlkWrite),
+		zap.Bool("trx_write_enabled", db.enableTrxWrite),
+		zap.Bool("blk_read_store_enabled", db.blkReadStore != nil),
+		zap.Bool("trx_read_store_enabled", db.trxReadStore != nil),
+	)
+
+	db.logger.Info("trxdb driver dump", fields...)
 }

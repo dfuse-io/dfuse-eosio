@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb"
@@ -36,12 +37,25 @@ func dbReadBlockE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
 
-	dbBlock, err := db.GetBlock(cmd.Context(), args[0])
-	if err != nil {
-		return fmt.Errorf("failed to get block: %w", err)
+	blocks := []*pbcodec.BlockWithRefs{}
+
+	if blockNum, err := strconv.ParseUint(args[0], 10, 32); err == nil {
+		dbBlocks, err := db.GetBlockByNum(cmd.Context(), uint32(blockNum))
+		if err != nil {
+			return fmt.Errorf("failed to get block: %w", err)
+		}
+		blocks = append(blocks, dbBlocks...)
+	} else {
+		dbBlock, err := db.GetBlock(cmd.Context(), args[0])
+		if err != nil {
+			return fmt.Errorf("failed to get block: %w", err)
+		}
+		blocks = append(blocks, dbBlock)
 	}
 
-	printEntity(dbBlock)
+	for _, blk := range blocks {
+		printEntity(blk)
+	}
 	return nil
 }
 

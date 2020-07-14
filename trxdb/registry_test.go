@@ -16,6 +16,10 @@ func init() {
 	Register("bbb", func(dsn []string) (DB, error) {
 		return nil, nil
 	})
+
+	Register("bigkv", func(dsn []string) (DB, error) {
+		return nil, nil
+	})
 }
 
 func Test_splitDSN(t *testing.T) {
@@ -34,6 +38,11 @@ func Test_splitDSN(t *testing.T) {
 			name:       "two DSN",
 			dsn:        "aaa://path?foo=bar aaa://secondPath?foo2=bar3",
 			expectDsns: []string{"aaa://path?foo=bar", "aaa://secondPath?foo2=bar3"},
+		},
+		{
+			name:       "two long DSN",
+			dsn:        "bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction",
+			expectDsns: []string{"bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline", "bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction"},
 		},
 		{
 			name:        "two different dsn",

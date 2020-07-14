@@ -5,19 +5,7 @@ start:
   - mindreader
   - node-manager
   - relayer
-  # To test trxdb switch db implementation, follow those steps:
-  #  1. In a terminal, run `gcloud beta emulators bigtable start`
-  #  2. In the terminal where you are going to run the `start.sh` command, do:
-  #     `$(gcloud beta emulators bigtable env-init)`
-  #  3. Uncomment in this file the two commented option (`trxdb-loader` app and `common-trxdb-dsn`)
-  #  4. Uncomment in `filtering.yaml` file the commented `common-trxdb-dsn` option
-  #  5. Launch `start.sh -c`
-  #
-  # You now have in this global config an element that writes `account`, `block` and `timeline`
-  # and in the filtering version, it reads from this database the `account`, `block` and `timeline`
-  # while it read/write `transaction` in a different database!
-  #
-  #- trxdb-loader
+  - trxdb-loader
   flags:
-    #common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&write=account,block,timeline
+    common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&write=blk
     relayer-grpc-listen-addr: :10000
