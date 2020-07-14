@@ -59,6 +59,8 @@ type NodeosSuperviser struct {
 	snapshotRestoreFilename    string
 
 	headBlockUpdateFunc nodeManager.HeadBlockUpdater
+
+	logger *zap.Logger
 }
 
 func (s *NodeosSuperviser) GetName() string {
@@ -120,13 +122,13 @@ type SuperviserOptions struct {
 	LogToZap bool
 }
 
-func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlockUpdater, options *SuperviserOptions, nodeZlog *zap.Logger) (*NodeosSuperviser, error) {
+func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlockUpdater, options *SuperviserOptions, logger *zap.Logger) (*NodeosSuperviser, error) {
 	// Ensure process manager line buffer is large enough (50 MiB) for our Deep Mind instrumentation outputting lot's of text.
 	overseer.DEFAULT_LINE_BUFFER_SIZE = 50 * 1024 * 1024
 
 	s := &NodeosSuperviser{
 		// The arguments field is actually `nil` because arguments are re-computed upon each start
-		Superviser:          superviser.New(zlog, options.BinPath, nil),
+		Superviser:          superviser.New(logger, options.BinPath, nil),
 		api:                 eos.New(fmt.Sprintf("http://%s", options.LocalNodeEndpoint)),
 		blocksDir:           filepath.Join(options.DataDir, "blocks"),
 		producerHostname:    options.ProducerHostname,
@@ -134,14 +136,15 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlock
 		options:             options,
 		forceProduction:     options.ForceProduction,
 		headBlockUpdateFunc: headBlockUpdateFunc,
+		logger:              logger,
 	}
 
 	s.RegisterLogPlugin(logplugin.LogPluginFunc(s.analyzeLogLineForStateChange))
 
 	if options.LogToZap {
-		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(zlogNodeos, debugDeepMind))
+		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(debugDeepMind, logger))
 	} else {
-		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, nodeZlog))
+		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, logger))
 	}
 
 	return s, nil

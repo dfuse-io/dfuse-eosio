@@ -41,12 +41,12 @@ func (s *NodeosSuperviser) Monitor() {
 
 		chainInfo, err := s.api.GetInfo(context.Background())
 		if err != nil {
-			zlog.Warn("got err on get into", zap.Error(err))
+			s.logger.Warn("got err on get into", zap.Error(err))
 			getInfoFailureCount++
 			continue
 		}
 
-		zlog.Debug("Got chain info", zap.Duration("delta", time.Since(lastHeadBlockTime)))
+		s.logger.Debug("got chain info", zap.Duration("delta", time.Since(lastHeadBlockTime)))
 		getInfoFailureCount = 0
 		s.chainID = chainInfo.ChainID
 		s.serverVersion = chainInfo.ServerVersion

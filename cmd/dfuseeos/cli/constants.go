@@ -46,6 +46,7 @@ const (
 	APIProxyHTTPListenAddr      string = ":8080"
 	MindreaderNodeosAPIAddr     string = ":9888"
 	NodeosAPIAddr               string = ":8888"
+	MetricsListenAddr           string = ":9102"
 
 	DgraphqlAPIKey string = "web_0000"
 	JWTIssuerURL   string = "null://dfuse"

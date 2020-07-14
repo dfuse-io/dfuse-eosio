@@ -19,10 +19,9 @@ import (
 	_ "net/http/pprof"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -97,9 +96,8 @@ func setupCmd(cmd *cobra.Command) error {
 			LogListenAddr: viper.GetString("global-log-level-switcher-listen-addr"),
 		})
 		launcher.SetupTracing()
-		launcher.SetupAnalyticsMetrics()
+		launcher.SetupAnalyticsMetrics(viper.GetString("global-metrics-listen-addr"), viper.GetString("global-pprof-listen-addr"))
 	}
 
 	return nil
-
 }

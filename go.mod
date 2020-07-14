@@ -18,7 +18,7 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8
-	github.com/dfuse-io/bstream v0.0.2-0.20200707183302-64e1a90497ea
+	github.com/dfuse-io/bstream v0.0.2-0.20200714123252-e9115283f55f
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
@@ -26,7 +26,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20200714160139-b6e59a7fd727
+	github.com/dfuse-io/dlauncher v0.0.0-20200714201746-a74afc7a4a2b
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
@@ -38,7 +38,7 @@ require (
 	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.2
-	github.com/dfuse-io/node-manager v0.0.2-0.20200714133124-ef523deeb4d1
+	github.com/dfuse-io/node-manager v0.0.2-0.20200714204148-cd857b5b08da
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
 	github.com/dfuse-io/relayer v0.0.2-0.20200707183803-7093e4f52f8f
@@ -51,7 +51,6 @@ require (
 	github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
-	github.com/go-delve/delve v1.4.1 // indirect
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/golang/protobuf v1.4.2
 	github.com/google/cel-go v0.4.1
@@ -59,7 +58,6 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
-	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/hidal-go/hidalgo v0.0.0-20190814174001-42e03f3b5eaa
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
@@ -68,7 +66,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
-	github.com/pingcap/errors v0.11.0
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -81,7 +78,6 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.3
 	go.uber.org/atomic v1.6.0
-	go.uber.org/multierr v1.5.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/mod v0.3.0 // indirect

@@ -21,10 +21,7 @@ import (
 
 func init() {
 	appLogger := zap.NewNop()
-	nodeosLogger := zap.NewNop()
-
 	logging.Register("github.com/dfuse-io/dfuse-eosio/node-manager", &appLogger)
-	logging.Register("github.com/dfuse-io/dfuse-eosio/node-manager/nodeos", &nodeosLogger)
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "node-manager",
@@ -59,11 +56,7 @@ func init() {
 			cmd.Flags().Duration("node-manager-auto-backup-period", 0, "If non-zero, a backup will be taken every period of {auto-backup-period}. Specify 1h, 2h...")
 			cmd.Flags().Int("node-manager-auto-snapshot-modulo", 0, "If non-zero, a snapshot will be taken every {auto-snapshot-modulo} block.")
 			cmd.Flags().Duration("node-manager-auto-snapshot-period", 0, "If non-zero, a snapshot will be taken every period of {auto-snapshot-period}. Specify 1h, 2h...")
-			cmd.Flags().Int("node-manager-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
-			cmd.Flags().String("node-manager-volume-snapshot-appver", "geth-v1", "[application]-v[version_number], used for persistentVolume snapshots")
-			cmd.Flags().Duration("node-manager-auto-volume-snapshot-period", 0, "If non-zero, a volume snapshot will be taken every period of {auto-volume-snapshot-period}. Specify 1h, 2h...")
-			cmd.Flags().Int("node-manager-auto-volume-snapshot-modulo", 0, "If non-zero, a volume snapshot will be taken every {auto-volume-snapshot-modulo} blocks. Ex: 500000")
-			cmd.Flags().String("node-manager-target-volume-snapshot-specific", "", "Comma-separated list of block numbers where volume snapshots will be done automatically")
+			cmd.Flags().Int("node-manager-number-of-snapshots-to-keep", 0, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
@@ -106,7 +99,7 @@ func init() {
 					AdditionalArgs:    viper.GetStringSlice("node-manager-nodeos-args"),
 					ForceProduction:   viper.GetBool("node-manager-force-production"),
 					LogToZap:          viper.GetBool("node-manager-log-to-zap"),
-				}, nodeosLogger)
+				}, appLogger)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create nodeos chain superviser: %w", err)
 			}
@@ -143,7 +136,6 @@ func init() {
 				AutoSnapshotModulo:        viper.GetInt("node-manager-auto-snapshot-modulo"),
 				AutoSnapshotPeriod:        viper.GetDuration("node-manager-auto-snapshot-period"),
 				AutoSnapshotHostnameMatch: viper.GetString("node-manager-auto-snapshot-hostname-match"),
-				DisableProfiler:           viper.GetBool("node-manager-disable-profiler"),
 			}, &nodeManagerApp.Modules{
 				Operator:                     chainOperator,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,

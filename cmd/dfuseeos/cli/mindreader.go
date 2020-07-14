@@ -7,16 +7,13 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
 	nodeManager "github.com/dfuse-io/node-manager"
 	nodeMindreaderApp "github.com/dfuse-io/node-manager/app/node_mindreader"
-	logplugin "github.com/dfuse-io/node-manager/log_plugin"
 	"github.com/dfuse-io/node-manager/metrics"
 	"github.com/dfuse-io/node-manager/mindreader"
 	"github.com/dfuse-io/node-manager/operator"
@@ -29,10 +26,7 @@ import (
 
 func init() {
 	appLogger := zap.NewNop()
-	nodeosLogger := zap.NewNop()
-
 	logging.Register("github.com/dfuse-io/dfuse-eosio/mindreader", &appLogger)
-	logging.Register("github.com/dfuse-io/dfuse-eosio/mindreader/nodeos", &nodeosLogger)
 
 	launcher.RegisterApp(&launcher.AppDef{
 		ID:          "mindreader",
@@ -40,7 +34,7 @@ func init() {
 		Description: "Blocks reading node",
 		MetricsID:   "mindreader",
 		// Now that we also have a `mindreader_stdin` registered logger, we need to pay attention to the actual regexp to ensure we match only our packages!
-		Logger: launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader(/nodeos)?$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
+		Logger: launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "The dfuse Node Manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
@@ -67,10 +61,12 @@ func init() {
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
 			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "If non-zero, takes state snapshots at this interval")
+			cmd.Flags().Duration("mindreader-auto-snapshot-modulo", 0, "If non-zero, takes state snapshots at each interval of <modulo> blocks")
 			cmd.Flags().Duration("mindreader-auto-backup-period", 0, "If non-zero, takes pitreos backups at this interval")
+			cmd.Flags().Duration("mindreader-auto-backup-modulo", 0, "If non-zero, takes pitreos backups at each interval of <modulo> blocks")
 			cmd.Flags().String("mindreader-auto-snapshot-hostname-match", "", "If non-empty, auto-snapshots will only trigger if os.Hostname() return this value")
 			cmd.Flags().String("mindreader-auto-backup-hostname-match", "", "If non-empty, auto-backups will only trigger if os.Hostname() return this value")
-			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 5, "if non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
+			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 0, "If non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
@@ -123,12 +119,12 @@ func init() {
 				p = profiler.GetInstance(appLogger)
 			}
 
-			hostname, _ := os.Hostname()
 			metricID := "mindreader"
 			headBlockTimeDrift := metrics.NewHeadBlockTimeDrift(metricID)
 			headBlockNumber := metrics.NewHeadBlockNumber(metricID)
+			metricsAndReadinessManager := nodeManager.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("mindreader-readiness-max-latency"))
 
-			metricsAndReadinessManager := nodeManager.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("node-manager-readiness-max-latency"))
+			hostname, _ := os.Hostname()
 			chainSuperviser, err := superviser.NewSuperviser(
 				viper.GetBool("mindreader-debug-deep-mind"),
 				metricsAndReadinessManager.UpdateHeadBlock,
@@ -143,7 +139,7 @@ func init() {
 					AdditionalArgs:    viper.GetStringSlice("mindreader-nodeos-args"),
 					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
 				},
-				nodeosLogger,
+				appLogger,
 			)
 
 			if err != nil {
@@ -198,31 +194,22 @@ func init() {
 			chainSuperviser.RegisterPostRestoreHandler(mindreaderPlugin.ResetContinuityChecker)
 			chainSuperviser.RegisterLogPlugin(mindreaderPlugin)
 
-			gs := dgrpc.NewServer(dgrpc.WithLogger(appLogger))
-			var bs logplugin.BlockStreamer
-			bs = mindreaderPlugin
-			server := blockstream.NewServer(gs, blockstream.ServerOptionWithLogger(appLogger))
-			bs.Run(server)
-
 			return nodeMindreaderApp.New(&nodeMindreaderApp.Config{
 				ManagerAPIAddress:         viper.GetString("mindreader-manager-api-addr"),
-				NodeosAPIAddress:          viper.GetString("mindreader-nodeos-api-addr"),
 				ConnectionWatchdog:        viper.GetBool("mindreader-connection-watchdog"),
-				ReadinessMaxLatency:       viper.GetDuration("mindreader-readiness-max-latency"),
-				NoBlocksLog:               viper.GetBool("mindreader-no-blocks-log"),
 				AutoBackupHostnameMatch:   viper.GetString("mindreader-auto-backup-hostname-match"),
 				AutoBackupPeriod:          viper.GetDuration("mindreader-auto-backup-period"),
+				AutoBackupModulo:          viper.GetInt("mindreader-auto-backup-modulo"),
 				AutoSnapshotHostnameMatch: viper.GetString("mindreader-auto-snapshot-hostname-match"),
 				AutoSnapshotPeriod:        viper.GetDuration("mindreader-auto-snapshot-period"),
-				NumberOfSnapshotsToKeep:   viper.GetInt("mindreader-number-of-snapshots-to-keep"),
+				AutoSnapshotModulo:        viper.GetInt("mindreader-auto-snapshot-modulo"),
 				GRPCAddr:                  viper.GetString("mindreader-grpc-listen-addr"),
-				StartFailureHandlerFunc:   startUpFunc,
 			}, &nodeMindreaderApp.Modules{
 				Operator:                     chainOperator,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,
 				MindreaderPlugin:             mindreaderPlugin,
 				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
-				GRPCServer:                   gs,
+				StartFailureHandlerFunc:      startUpFunc,
 			}, appLogger), nil
 		},
 	})

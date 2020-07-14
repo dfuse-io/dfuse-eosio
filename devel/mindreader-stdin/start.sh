@@ -5,7 +5,7 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 clean=
 all=true
 only_mindreader=
-only_global=
+only_producer=
 use_deep_mind_file=
 
 finish() {
@@ -21,12 +21,12 @@ main() {
   trap "cd \"$current_dir\"" EXIT
   pushd "$ROOT" &> /dev/null
 
-  while getopts "hcmgd:" opt; do
+  while getopts "hcmpd:" opt; do
     case $opt in
       h) usage && exit 0;;
       c) clean=true;;
       m) all=false; only_mindreader=true;;
-      g) all=false; only_global=true;;
+      p) all=false; only_producer=true;;
       d) use_deep_mind_file="$OPTARG";;
       \?) usage_error "Invalid option: -$OPTARG";;
     esac
@@ -49,14 +49,17 @@ main() {
     sleep 2
   fi
 
-  if [[ $all == true || $only_global == true ]]; then
-    dfuseeos -c global.yaml start &
+  if [[ $all == true || $only_producer == true ]]; then
+    dfuseeos -c producer.yaml start &
   fi
 
   if [[ $all == true || $only_mindreader == true ]]; then
     if [[ $use_deep_mind_file != "" ]]; then
       (cat $use_deep_mind_file | dfuseeos -c mindreader-stdin.yaml start) &
     else
+      # Sleeping a few seconds to let the procuding node enough time to start
+      sleep 3
+
       nodeos="nodeos --config-dir ./mindreader -d ./dfuse-data/mindreader/data --genesis-json=./mindreader/genesis.json --deep-mind"
       ($nodeos | dfuseeos -c mindreader-stdin.yaml start) &
     fi
@@ -82,8 +85,8 @@ usage() {
   echo ""
   echo "Options"
   echo "    -c             Clean actual data directory first"
-  echo "    -g             Only launch the global app"
-  echo "    -m             Only launch the mindreader app"
+  echo "    -p             Only launch the producer app"
+  echo "    -m             Only launch the mindreader app (and all others)"
   echo "    -d <file>      Uses this deep ming log file (in '.dmlog' format) as the stdin pipe to the process instead of launching 'nodoes' process"
 }
 
