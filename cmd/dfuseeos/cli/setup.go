@@ -89,17 +89,16 @@ func setupCmd(cmd *cobra.Command) error {
 			}
 		}
 
+		launcher.SetupLogger(&launcher.LoggingOptions{
+			WorkingDir:    viper.GetString("global-data-dir"),
+			Verbosity:     viper.GetInt("global-verbose"),
+			LogFormat:     viper.GetString("global-log-format"),
+			LogToFile:     viper.GetBool("global-log-to-file"),
+			LogListenAddr: viper.GetString("global-log-level-switcher-listen-addr"),
+		})
+		launcher.SetupTracing()
+		launcher.SetupAnalyticsMetrics()
 	}
-
-	launcher.SetupLogger(&launcher.LoggingOptions{
-		WorkingDir:    viper.GetString("global-data-dir"),
-		Verbosity:     viper.GetInt("global-verbose"),
-		LogFormat:     viper.GetString("global-log-format"),
-		LogToFile:     viper.GetBool("global-log-to-file"),
-		LogListenAddr: viper.GetString("global-log-level-switcher-listen-addr"),
-	})
-	launcher.SetupTracing()
-	launcher.SetupAnalyticsMetrics()
 
 	return nil
 
