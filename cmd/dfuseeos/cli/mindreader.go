@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
-	"github.com/dfuse-io/bstream/blockstream"
-	"github.com/dfuse-io/dgrpc"
-	logplugin "github.com/dfuse-io/node-manager/log_plugin"
-
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/logging"
 	nodeManager "github.com/dfuse-io/node-manager"
 	nodeMindreaderApp "github.com/dfuse-io/node-manager/app/node_mindreader"
+	logplugin "github.com/dfuse-io/node-manager/log_plugin"
 	"github.com/dfuse-io/node-manager/metrics"
 	"github.com/dfuse-io/node-manager/mindreader"
 	"github.com/dfuse-io/node-manager/operator"
@@ -152,20 +150,6 @@ func init() {
 				return nil, fmt.Errorf("unable to create nodeos chain superviser: %w", err)
 			}
 
-			workingDir := mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir"))
-			var continuityChecker mindreader.ContinuityChecker
-			continuityChecker, err = mindreader.NewContinuityChecker(filepath.Join(workingDir, "continuity_check"), appLogger)
-			if err != nil {
-				return nil, fmt.Errorf("error setting up continuity checker: %s", err)
-			}
-
-			if viper.GetBool("mindreader-fail-on-non-contiguous-block") {
-				chainSuperviser.RegisterPostRestoreHandler(continuityChecker.Reset)
-			} else {
-				continuityChecker.Reset()
-				continuityChecker = nil
-			}
-
 			chainOperator, err := operator.New(
 				appLogger,
 				chainSuperviser,
@@ -188,35 +172,35 @@ func init() {
 				return nil, fmt.Errorf("unable to create chain operator: %w", err)
 			}
 
-			logPlugin, err := mindreader.NewMindReaderPlugin(
+			mindreaderPlugin, err := mindreader.NewMindReaderPlugin(
 				archiveStoreURL,
 				mergeArchiveStoreURL,
 				viper.GetBool("mindreader-merge-and-store-directly"),
-				viper.GetBool("mindreader-discard-after-stop-num"),
 				mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
-				superviser.BlockFileNamer,
 				consoleReaderFactory,
 				consoleReaderBlockTransformer,
 				viper.GetUint64("mindreader-start-block-num"),
 				viper.GetUint64("mindreader-stop-block-num"),
+				viper.GetBool("mindreader-discard-after-stop-num"),
 				viper.GetInt("mindreader-blocks-chan-capacity"),
 				metricsAndReadinessManager.UpdateHeadBlock,
 				chainOperator.SetMaintenance,
 				func() {
 					chainOperator.Shutdown(nil)
 				},
-				continuityChecker,
+				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 				appLogger,
 			)
 			if err != nil {
 				return nil, err
 			}
 
-			chainSuperviser.RegisterLogPlugin(logPlugin)
+			chainSuperviser.RegisterPostRestoreHandler(mindreaderPlugin.ResetContinuityChecker)
+			chainSuperviser.RegisterLogPlugin(mindreaderPlugin)
 
 			gs := dgrpc.NewServer(dgrpc.WithLogger(appLogger))
 			var bs logplugin.BlockStreamer
-			bs = logPlugin
+			bs = mindreaderPlugin
 			server := blockstream.NewServer(gs, blockstream.ServerOptionWithLogger(appLogger))
 			bs.Run(server)
 
@@ -236,8 +220,7 @@ func init() {
 			}, &nodeMindreaderApp.Modules{
 				Operator:                     chainOperator,
 				MetricsAndReadinessManager:   metricsAndReadinessManager,
-				LogPlugin:                    logPlugin,
-				ContinuityChecker:            continuityChecker,
+				MindreaderPlugin:             mindreaderPlugin,
 				LaunchConnectionWatchdogFunc: chainSuperviser.LaunchConnectionWatchdog,
 				GRPCServer:                   gs,
 			}, appLogger), nil

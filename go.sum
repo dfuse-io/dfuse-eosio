@@ -273,6 +273,8 @@ github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74 h1:zhUz6ae
 github.com/dfuse-io/node-manager v0.0.2-0.20200703211201-c97cd41e0b74/go.mod h1:H98M+Ot/PZ4ZvFyW4nRGvvDoOJKVoSai6BuAhS9qqmY=
 github.com/dfuse-io/node-manager v0.0.2-0.20200710191107-14ca3ce043c5 h1:oZ+9HlRALEedNvukh4eyEWI/mHyzYe4BfJr6JMgpqgs=
 github.com/dfuse-io/node-manager v0.0.2-0.20200710191107-14ca3ce043c5/go.mod h1:H98M+Ot/PZ4ZvFyW4nRGvvDoOJKVoSai6BuAhS9qqmY=
+github.com/dfuse-io/node-manager v0.0.2-0.20200714133124-ef523deeb4d1 h1:3HAgObKyKRIixPlu7k9js1n43nYZAn+vxBSf03lJslY=
+github.com/dfuse-io/node-manager v0.0.2-0.20200714133124-ef523deeb4d1/go.mod h1:H98M+Ot/PZ4ZvFyW4nRGvvDoOJKVoSai6BuAhS9qqmY=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=

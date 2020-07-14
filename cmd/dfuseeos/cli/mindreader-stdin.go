@@ -59,7 +59,6 @@ func init() {
 				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
 				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
 				WorkingDir:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
-				DisableProfiler:            viper.GetBool("mindreader-disable-profiler"),
 			}, &nodeMindreaderStdinApp.Modules{
 				ConsoleReaderFactory:     consoleReaderFactory,
 				ConsoleReaderTransformer: consoleReaderBlockTransformer,
