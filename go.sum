@@ -234,6 +234,8 @@ github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925 h1:9QxHGYz6+U/t
 github.com/dfuse-io/dlauncher v0.0.0-20200706152138-1c4860326925/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
 github.com/dfuse-io/dlauncher v0.0.0-20200710145056-7b976ebcfa9a h1:gdDHVunsMtwsrzBj2n5b0NViZhLWkrmQQxb88DO1bLQ=
 github.com/dfuse-io/dlauncher v0.0.0-20200710145056-7b976ebcfa9a/go.mod h1:IjcrCAFcjd8+tVjBbNmK+ue1nV3w5IlYwDKfMM65GSo=
+github.com/dfuse-io/dlauncher v0.0.0-20200714160139-b6e59a7fd727 h1:4bpxx7WdkYMsvcwFRCdvhZAODF3QHp73/9Y7p13yH9I=
+github.com/dfuse-io/dlauncher v0.0.0-20200714160139-b6e59a7fd727/go.mod h1:k/Mta+KE1RD8K3KH7/mBGHKC9pTrBI6cICNkwMxovbY=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c h1:j6tHp6tKicuytJDuYAZkP69uh+tx1OkE/GDx5idYzrk=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c/go.mod h1:e1x/Bvi0Y0Hl5pJCboN4RnNHwGuVqS6kIZFgrAs9V2E=
