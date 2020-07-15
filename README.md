@@ -65,7 +65,7 @@ pushd ..
         pushd client
             yarn install && yarn build
         popd
-        go generate ./dashboard
+        go generate .
     popd
 popd
 
