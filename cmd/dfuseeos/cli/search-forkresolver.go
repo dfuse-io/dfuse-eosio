@@ -3,7 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
 	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
@@ -40,11 +39,6 @@ func init() {
 				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
 
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
-
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
 			return forkresolverApp.New(&forkresolverApp.Config{
@@ -55,7 +49,7 @@ func init() {
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &forkresolverApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: modules.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
 				Dmesh:       modules.SearchDmeshClient,
 			}), nil

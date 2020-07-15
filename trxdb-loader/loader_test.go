@@ -46,7 +46,7 @@ func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.DB, fu
 	db, err := trxdb.New("badger:///tmp?cache=shared&mode=memory&createTables=true", trxdb.WithLogger(zlog))
 	require.NoError(t, err)
 
-	l := NewTrxDBLoader("", nil, 1, db, 1)
+	l := NewTrxDBLoader("", nil, 1, db, 1, nil)
 
 	var chainID string
 	for _, option := range options {

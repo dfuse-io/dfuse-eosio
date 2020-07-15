@@ -5,7 +5,6 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -51,11 +50,6 @@ func init() {
 			)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create block mapper: %w", err)
-			}
-
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
 			}
 
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
@@ -104,7 +98,7 @@ func init() {
 				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: modules.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
 				Tracker:     tracker,
 			}), nil

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
 	liveApp "github.com/dfuse-io/search/app/live"
@@ -45,11 +44,6 @@ func init() {
 				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
 
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
-
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
 			return liveApp.New(&liveApp.Config{
@@ -67,7 +61,7 @@ func init() {
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: modules.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
 				Dmesh:       modules.SearchDmeshClient,
 			}), nil

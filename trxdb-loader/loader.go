@@ -42,6 +42,7 @@ type TrxDBLoader struct {
 	lastTickBlock             uint64
 	lastTickTime              time.Time
 	blocksStore               dstore.Store
+	blockFilter               func(blk *bstream.Block) error
 	blockStreamAddr           string
 	source                    bstream.Source
 	endBlock                  uint64
@@ -57,6 +58,7 @@ func NewTrxDBLoader(
 	batchSize uint64,
 	db trxdb.DBWriter,
 	parallelFileDownloadCount int,
+	blockFilter func(blk *bstream.Block) error,
 ) *TrxDBLoader {
 
 	loader := &TrxDBLoader{
@@ -67,6 +69,7 @@ func NewTrxDBLoader(
 		batchSize:                 batchSize,
 		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
+		blockFilter:               blockFilter,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -128,12 +131,20 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			)
 			return src
 		})
+
+		var filterPreprocessFunc bstream.PreprocessFunc
+		if l.blockFilter != nil {
+			filterPreprocessFunc = func(blk *bstream.Block) (interface{}, error) {
+				return nil, l.blockFilter(blk)
+			}
+		}
+
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			fs := bstream.NewFileSource(
 				l.blocksStore,
 				blockNum,
 				l.parallelFileDownloadCount,
-				nil,
+				filterPreprocessFunc,
 				subHandler,
 			)
 			return fs
@@ -184,11 +195,18 @@ func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStar
 		getBlocksFrom = startBlockNum - numBlocksBeforeStart // Make sure you cover that irreversible block
 	}
 
+	var filterPreprocessFunc bstream.PreprocessFunc
+	if l.blockFilter != nil {
+		filterPreprocessFunc = func(blk *bstream.Block) (interface{}, error) {
+			return nil, l.blockFilter(blk)
+		}
+	}
+
 	fs := bstream.NewFileSource(
 		l.blocksStore,
 		getBlocksFrom,
 		l.parallelFileDownloadCount,
-		nil,
+		filterPreprocessFunc,
 		forkableHandler,
 		bstream.FileSourceWithLogger(zlog),
 	)

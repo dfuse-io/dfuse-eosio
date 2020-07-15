@@ -57,6 +57,8 @@ func init() {
 				EnableTruncationMarker:    viper.GetBool("trxdb-loader-truncation-enabled"),
 				TruncationTTL:             viper.GetUint64("trxdb-loader-truncation-ttl"),
 				PurgerInterval:            viper.GetUint64("trxdb-loader-truncation-each"),
+			}, &trxdbLoaderApp.Modules{
+				BlockFilter: modules.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})

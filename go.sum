@@ -227,6 +227,7 @@ github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFM
 github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8 h1:WcYHcCM05fMmcPe5/CrT+7lO2/ri2QtOsDrf/yrCCZA=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8/go.mod h1:RvJvIofMa0ETdKqp4a5TEblQMdXHoTKRQDC0lI9bRcM=
 github.com/dfuse-io/bstream v0.0.0-20200427161155-5bc64e86c005/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
+github.com/dfuse-io/bstream v0.0.1/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200707183302-64e1a90497ea h1:Xye8NJA3QUR5zOAxqKe5rmZmHWF6f/cBUbXeFR6BMis=
 github.com/dfuse-io/bstream v0.0.2-0.20200707183302-64e1a90497ea/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200714123252-e9115283f55f h1:3sATpfUBNfPxSkdcsA5CT3JXMXoypJdT0zMXrM7JEdI=
@@ -254,6 +255,8 @@ github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSut
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dlauncher v0.0.0-20200714201746-a74afc7a4a2b h1:sDkCqLFeIRXQqBxOb8SNyDj05U+ls8D8Kba41fMh38M=
 github.com/dfuse-io/dlauncher v0.0.0-20200714201746-a74afc7a4a2b/go.mod h1:k/Mta+KE1RD8K3KH7/mBGHKC9pTrBI6cICNkwMxovbY=
+github.com/dfuse-io/dlauncher v0.0.0-20200715150851-ef677df0bfc4 h1:+3qrWmcNftrV/6n1fgHy+HCgr/BTLX3fpIgQA7YsMQM=
+github.com/dfuse-io/dlauncher v0.0.0-20200715150851-ef677df0bfc4/go.mod h1:6gOJBnTbIfcoiJ5Ex8rLKAYAYcGzpeXGftYkydfCmZE=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c h1:j6tHp6tKicuytJDuYAZkP69uh+tx1OkE/GDx5idYzrk=
 github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c/go.mod h1:e1x/Bvi0Y0Hl5pJCboN4RnNHwGuVqS6kIZFgrAs9V2E=

@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dlauncher/launcher"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	"github.com/spf13/cobra"
@@ -36,11 +34,6 @@ func init() {
 				return nil, err
 			}
 
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
-
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:      viper.GetStringSlice("relayer-source"),
 				GRPCListenAddr:   viper.GetString("relayer-grpc-listen-addr"),
@@ -52,7 +45,7 @@ func init() {
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &relayerApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: modules.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})
