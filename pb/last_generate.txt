@@ -1,3 +1,3 @@
-generate.sh - Tue Jul 14 11:47:54 EDT 2020 - julien
+generate.sh - Tue Jul 14 13:49:04 EDT 2020 - julien
 dfuse-io/proto revision: 122dada4c9812eb941d59929216ef79951f3eabe
-dfuse-io/proto-eosio revision: ccc19302d1ff1be0e327447ee721e2f38347b922
+dfuse-io/proto-eosio revision: fde1014f3a3136c4adbeb81c925d2eecdd65a052

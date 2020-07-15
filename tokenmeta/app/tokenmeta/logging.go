@@ -12,22 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dgraphql
+package tokenmeta
 
 import (
-	"testing"
-
-	"github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dgraphql"
-	"github.com/stretchr/testify/require"
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
 )
 
-func TestSchema(t *testing.T) {
-	resolver, err := resolvers.NewRoot(nil, nil, nil, nil, nil, nil)
-	require.NoError(t, err)
+var zlog *zap.Logger
 
-	// This makes the necessary parsing of all schemas to ensure resolver correctly
-	// resolves the full schema.
-	_, err = dgraphql.NewSchemas(resolver)
-	require.NoError(t, err, "Invalid EOS schema nor resolver")
+func init() {
+	logging.Register("github.com/dfuse-io/dfuse-eosio/tokenmeta/app/tokenmeta", &zlog)
 }

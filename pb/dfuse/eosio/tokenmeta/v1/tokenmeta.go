@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dgraphql
+package pbtokenmeta
 
-import (
-	"testing"
+import fmt "fmt"
 
-	"github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dgraphql"
-	"github.com/stretchr/testify/require"
-)
+func (e *AccountBalance) Key() string {
+	return fmt.Sprintf("%s:%s:%s", e.TokenContract, e.Symbol, e.Account)
+}
 
-func TestSchema(t *testing.T) {
-	resolver, err := resolvers.NewRoot(nil, nil, nil, nil, nil, nil)
-	require.NoError(t, err)
+func (e *Token) Key() string {
+	return fmt.Sprintf("%s:%s", e.Contract, e.Symbol)
+}
 
-	// This makes the necessary parsing of all schemas to ensure resolver correctly
-	// resolves the full schema.
-	_, err = dgraphql.NewSchemas(resolver)
-	require.NoError(t, err, "Invalid EOS schema nor resolver")
+func (c *TokenCursor) Key() string {
+	return fmt.Sprintf("%s:%s", c.Contract, c.Symbol)
+}
+
+func (c *AccountBalanceCursor) Key() string {
+	return fmt.Sprintf("%s:%s:%s", c.Contract, c.Symbol, c.Account)
+
 }

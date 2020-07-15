@@ -31,6 +31,7 @@ import (
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
+	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
@@ -50,23 +51,26 @@ import (
 
 // Root is the root resolver.
 type Root struct {
-	searchClient                  pbsearch.RouterClient
-	trxsReader                    trxdb.TransactionsReader
-	blocksReader                  trxdb.BlocksReader
-	accountsReader                trxdb.AccountsReader
-	blockmetaClient               *pbblockmeta.Client
-	chainDiscriminatorClient      *pbblockmeta.ChainDiscriminatorClient
-	abiCodecClient                pbabicodec.DecoderClient
+	searchClient             pbsearch.RouterClient
+	trxsReader               trxdb.TransactionsReader
+	blocksReader             trxdb.BlocksReader
+	accountsReader           trxdb.AccountsReader
+	blockmetaClient          *pbblockmeta.Client
+	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
+	abiCodecClient           pbabicodec.DecoderClient
+	tokenmetaClient          pbtokenmeta.TokenMetaClient
+
 	requestRateLimiter            rateLimiter.RateLimiter
 	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter) (interface{}, error) {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter, tokenmetaClient pbtokenmeta.TokenMetaClient) (interface{}, error) {
 	return &Root{
 		searchClient:       searchClient,
 		trxsReader:         dbReader,
 		blocksReader:       dbReader,
 		accountsReader:     dbReader,
+		tokenmetaClient:    tokenmetaClient,
 		blockmetaClient:    blockMetaClient,
 		abiCodecClient:     abiCodecClient,
 		requestRateLimiter: requestRateLimiter,

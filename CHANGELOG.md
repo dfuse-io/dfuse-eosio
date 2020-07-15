@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `tokenmeta` application, with its flags    
 
 * Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
 
