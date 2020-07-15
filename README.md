@@ -65,11 +65,13 @@ pushd ..
         pushd client
             yarn install && yarn build
         popd
-        go generate ./...
+        go generate ./dashboard
     popd
 popd
 
-go generate ./...
+go generate ./dashboard
+go generate ./eosq/app/eosq
+
 go install -v ./cmd/dfuseeos
 ```
 
