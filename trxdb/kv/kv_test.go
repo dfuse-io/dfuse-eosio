@@ -35,6 +35,8 @@ func newTestDBFactory(t *testing.T) trxdbtest.DriverFactory {
 		db, err := New([]string{fmt.Sprintf("badger://%s", dir)})
 		require.NoError(t, err)
 
+		db.logger = zlog
+
 		return db, func() {
 			err := os.RemoveAll(dir)
 			if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
