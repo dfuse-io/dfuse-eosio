@@ -15,7 +15,7 @@ finish() {
 
 main() {
   current_dir="`pwd`"
-  trap "cd \"$current_dir\"" EXIT
+  trap finish EXIT
   pushd "$ROOT" &> /dev/null
 
   while getopts "hcfg" opt; do
