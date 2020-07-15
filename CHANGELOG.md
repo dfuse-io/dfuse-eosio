@@ -10,14 +10,19 @@ date.
 # [Unreleased]
 
 ### Added
-
+* Added `tokenmeta` application, with its flags    
+* flag `abicodec-export-abis-filen` will contain only the URL of the where to export the ABIs in JSON
 * Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
 * Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
 * Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
 
 ### Removed
-
 The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
+
+### Changed
+* flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON
+* flag `abicodec-export-cache` change to `abicodec-export-abis-enabled`
+* Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
 
 # [v0.1.0-beta4] 2020-06-23
 

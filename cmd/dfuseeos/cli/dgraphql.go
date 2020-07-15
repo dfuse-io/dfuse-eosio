@@ -28,6 +28,8 @@ func init() {
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
+			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGrpcServingAddr, "Tokenmeta client endpoint url")
+
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -45,6 +47,7 @@ func init() {
 				SearchAddr:        viper.GetString("common-search-addr"),
 				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
+				TokenmetaAddr:     viper.GetString("dgraphql-tokenmeta-addr"),
 				KVDBDSN:           mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
 				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{

@@ -4,5 +4,170 @@ type Query {
         id: String,
         num: Uint32
     ): Block
+
+    """
+    ALPHA Get a list of contract tokens
+    """
+    tokens(
+        """
+        List of token symbols (EOS) to filter the results against
+        """
+        tokenSymbols: [String!]
+
+        """
+        List of token contracts (eosio.token) to filter the results against
+        """
+        tokenContracts: [String!]
+
+        """
+        Cursor used for pagination
+        """
+        cursor: String
+
+        """
+        Maximum number of results to include in a result
+        """
+        limit: Uint32
+
+        """
+        Token attribute used to sort the results
+        """
+        sortField: TOKENS_SORT_FIELD = HOLDERS
+
+        """
+        Direction in which to sort the results
+        """
+        sortOrder: SORT_ORDER = DESC
+    ): TokenConnection!
+
+    """
+    ALPHA Get a list of token balances for a specific account
+    """
+    accountBalances(
+        """
+        The account whose balances you are retrieveing
+        """
+        account: String!
+
+        """
+        Cursor used for pagination
+        """
+        cursor: String
+
+        """
+        List of token symbols (EOS) to filter the results against
+        """
+        tokenSymbols: [String!]
+
+        """
+        List of token contracts (eosio.token) to filter the results against
+        """
+        tokenContracts: [String!]
+
+        """
+        Maximum number of results to include in a result
+        """
+        limit: Uint32
+
+        """
+        Token attribute used to sort the results
+        """
+        sortField: ACCOUNT_BALANCES_SORT_FIELD = AMOUNT
+
+        """
+        Direction in which to sort the results
+        """
+        sortOrder: SORT_ORDER = DESC
+
+        options: [ACCOUNT_BALANCE_OPTION!]
+    ): AccountBalanceConnection!
+
+    """
+    ALPHA Get a list of token balances for a specific contract & symbol
+    """
+    tokenBalances(
+        """
+        The token's contract you are retrieving
+        """
+        contract: String!
+
+        """
+        The token's symbol you are retrieving
+        """
+        symbol: String!
+
+        """
+        List of token holders to filter the results against
+        """
+        tokenHolders: [String!]
+
+        """
+        Cursor used for pagination
+        """
+        cursor: String
+
+        """
+        Maximum number of results to include in a result
+        """
+        limit: Uint32
+
+        """
+        Token attribute used to sort the results
+        """
+        sortField: TOKEN_BALANCES_SORT_FIELD = AMOUNT
+
+        """
+        Direction in which to sort the results
+        """
+        sortOrder: SORT_ORDER = DESC
+
+        options: [ACCOUNT_BALANCE_OPTION!]
+    ): AccountBalanceConnection!
+}
+
+
+enum SORT_ORDER {
+    ASC
+    DESC
+}
+
+enum TOKENS_SORT_FIELD {
+    """
+    sort by token symbol (i.e. EOS) alphanumerically
+    """
+    ALPHA
+    """
+    sort by number of tokens holders
+    """
+    HOLDERS
+}
+
+enum ACCOUNT_BALANCES_SORT_FIELD {
+    """
+    sort by token symbol (i.e. EOS) alphanumerically
+    """
+    ALPHA
+    """
+    sort by amount of tokens held
+    """
+    AMOUNT
+}
+
+enum TOKEN_BALANCES_SORT_FIELD {
+    """
+    sort by account name alphanumerically
+    """
+    ALPHA
+    """
+    sort by amount of tokens held
+    """
+    AMOUNT
+}
+
+enum ACCOUNT_BALANCE_OPTION {
+    """
+    include eos staked amount in balance, this can affect ordering
+    """
+    EOS_INCLUDE_STAKED
 }
 
