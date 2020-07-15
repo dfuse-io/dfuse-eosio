@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"path/filepath"
-
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -32,15 +30,8 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-			absDataDir, err := filepath.Abs(dfuseDataDir)
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
@@ -48,7 +39,7 @@ func init() {
 				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
 				TokenmetaAddr:     viper.GetString("dgraphql-tokenmeta-addr"),
-				KVDBDSN:           mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				KVDBDSN:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs

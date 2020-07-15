@@ -22,7 +22,7 @@ func init() {
 			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the superviser manager api")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {
 			return dashboard.New(&dashboard.Config{
 				HTTPListenAddr:      viper.GetString("dashboard-http-listen-addr"),
 				GRPCListenAddr:      viper.GetString("dashboard-grpc-listen-addr"),

@@ -32,7 +32,7 @@ func init() {
 			return nil
 		},
 
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
 				Environment:       viper.GetString("eosq-environment"),

@@ -156,7 +156,7 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			bstream.JoiningSourceLogger(zlog),
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
-			bstream.JoiningSourceLiveTracker(300, bstream.HeadBlockRefGetter(l.blockStreamAddr)),
+			bstream.JoiningSourceLiveTracker(300, bstream.StreamHeadBlockRefGetter(l.blockStreamAddr)),
 		)
 	})
 

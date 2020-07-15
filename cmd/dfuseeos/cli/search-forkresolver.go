@@ -24,11 +24,8 @@ func init() {
 			cmd.Flags().String("search-forkresolver-indices-path", "{dfuse-data-dir}/search/forkresolver", "Location for inflight indices")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
@@ -49,9 +46,9 @@ func init() {
 				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
 				BlocksStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &forkresolverApp.Modules{
-				BlockFilter: modules.BlockFilter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
-				Dmesh:       modules.SearchDmeshClient,
+				Dmesh:       runtime.SearchDmeshClient,
 			}), nil
 		},
 	})

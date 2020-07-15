@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"path/filepath"
-
 	abicodecApp "github.com/dfuse-io/dfuse-eosio/abicodec/app/abicodec"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -26,20 +24,13 @@ func init() {
 			cmd.Flags().String("abicodec-export-abis-file-name", "abi-cache.json.zst", "abi cache json filename")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-			absDataDir, err := filepath.Abs(dfuseDataDir)
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return abicodecApp.New(&abicodecApp.Config{
 				GRPCListenAddr:     viper.GetString("abicodec-grpc-listen-addr"),
 				SearchAddr:         viper.GetString("common-search-addr"),
-				KvdbDSN:            mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				KvdbDSN:            mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				CacheBaseURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("abicodec-cache-base-url")),
 				CacheStateName:     viper.GetString("abicodec-cache-file-name"),
 				ExportABIsEnabled:  viper.GetBool("abicodec-export-abis-enabled"),

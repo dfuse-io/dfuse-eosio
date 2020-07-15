@@ -2,7 +2,6 @@ package cli
 
 import (
 	"math"
-	"path/filepath"
 
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -31,21 +30,14 @@ func init() {
 			cmd.Flags().Uint64("trxdb-loader-truncation-ttl", 0, "Truncates at every X block interval")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-			absDataDir, err := filepath.Abs(dfuseDataDir)
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return trxdbLoaderApp.New(&trxdbLoaderApp.Config{
 				ChainID:                   viper.GetString("common-chain-id"),
 				ProcessingType:            viper.GetString("trxdb-loader-processing-type"),
 				BlockStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				KvdbDsn:                   mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				KvdbDsn:                   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:           viper.GetString("common-blockstream-addr"),
 				BatchSize:                 viper.GetUint64("trxdb-loader-batch-size"),
 				StartBlockNum:             viper.GetUint64("trxdb-loader-start-block-num"),
@@ -58,7 +50,7 @@ func init() {
 				TruncationTTL:             viper.GetUint64("trxdb-loader-truncation-ttl"),
 				PurgerInterval:            viper.GetUint64("trxdb-loader-truncation-each"),
 			}, &trxdbLoaderApp.Modules{
-				BlockFilter: modules.BlockFilter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})

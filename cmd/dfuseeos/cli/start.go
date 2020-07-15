@@ -20,7 +20,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
+	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
@@ -83,9 +87,39 @@ func Start(dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create block filter: %w", err)
 	}
 
-	modules := &launcher.RuntimeModules{
+	/// SETUP CHAIN TRACKER
+	tracker := bstream.NewTracker(250)
+
+	var startBlockResolvers []bstream.StartBlockResolver
+	blockmetaAddr := viper.GetString("common-blockmeta-addr")
+	if blockmetaAddr != "" {
+		conn, err := dgrpc.NewInternalClient(blockmetaAddr)
+		if err != nil {
+			userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
+		} else {
+			blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
+			startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
+		}
+	}
+
+	blocksStoreURL := mustReplaceDataDir(dataDirAbs, viper.GetString("common-blocks-store-url"))
+	blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
+	if err != nil {
+		userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
+	} else {
+		startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
+	}
+	for _, resolver := range startBlockResolvers {
+		tracker.AddResolver(resolver)
+	}
+
+	////////
+
+	modules := &launcher.Runtime{
 		SearchDmeshClient: meshClient,
 		BlockFilter:       blockfilter,
+		AbsDataDir:        dataDirAbs,
+		Tracker:           tracker,
 	}
 
 	err = bstream.ValidateRegistry()

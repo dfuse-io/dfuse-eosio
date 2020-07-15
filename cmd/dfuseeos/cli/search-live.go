@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
+	"github.com/dfuse-io/search"
 	liveApp "github.com/dfuse-io/search/app/live"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,11 +32,9 @@ func init() {
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
+
 			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
@@ -46,14 +46,22 @@ func init() {
 
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
+			blockmetaAddr := viper.GetString("common-blockmeta-addr")
+			blockstreamAddr := viper.GetString("common-blockstream-addr")
+
+			tracker := runtime.Tracker.Clone()
+			tracker.SetNearBlocksCount(viper.GetInt64("search-live-start-block-drift-tolerance"))
+			tracker.AddGetter(search.DmeshArchiveLIBTarget, search.DmeshHighestArchiveBlockRefGetter(runtime.SearchDmeshClient.Peers, 1))
+			tracker.AddGetter(bstream.NetworkLIBTarget, bstream.HighestBlockRefGetter(bstream.StreamLIBBlockRefGetter(blockstreamAddr), bstream.NetworkLIBBlockRefGetter(blockmetaAddr)))
+
 			return liveApp.New(&liveApp.Config{
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
-				BlockmetaAddr:            viper.GetString("common-blockmeta-addr"),
+				BlockmetaAddr:            blockmetaAddr,
 				LiveIndexesPath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
 				BlocksStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				BlockstreamAddr:          viper.GetString("common-blockstream-addr"),
+				BlockstreamAddr:          blockstreamAddr,
 				StartBlockDriftTolerance: viper.GetUint64("search-live-start-block-drift-tolerance"),
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
@@ -61,9 +69,10 @@ func init() {
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 			}, &liveApp.Modules{
-				BlockFilter: modules.BlockFilter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
-				Dmesh:       modules.SearchDmeshClient,
+				Dmesh:       runtime.SearchDmeshClient,
+				Tracker:     tracker,
 			}), nil
 		},
 	})

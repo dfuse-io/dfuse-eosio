@@ -40,11 +40,8 @@ func init() {
 			cmd.Flags().String("search-archive-writable-path", "{dfuse-data-dir}/search/archiver", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			indexedTerms, err := eosSearch.NewIndexedTerms(viper.GetString("search-common-indexed-terms"))
 			if err != nil {
@@ -75,7 +72,7 @@ func init() {
 				IndexesStoreURL:         mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
 				IndexesPath:             mustReplaceDataDir(dfuseDataDir, viper.GetString("search-archive-writable-path")),
 			}, &archiveApp.Modules{
-				Dmesh: modules.SearchDmeshClient,
+				Dmesh: runtime.SearchDmeshClient,
 			}), nil
 		},
 	})

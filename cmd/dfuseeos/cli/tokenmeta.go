@@ -27,11 +27,8 @@ func init() {
 			cmd.Flags().Uint64("tokenmeta-bootstrap-block-offset", 20, "Block offset to ensure that we are not bootstrapping from flux on a reversible fork")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (app launcher.App, e error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (app launcher.App, e error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return tokenmetaApp.New(&tokenmetaApp.Config{
 				GRPCListenAddr:       viper.GetString("tokenmeta-grpc-listen-addr"),
