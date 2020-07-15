@@ -90,7 +90,6 @@ func Start(dataDir string, args []string) (err error) {
 	/// SETUP CHAIN TRACKER
 	tracker := bstream.NewTracker(250)
 
-	var startBlockResolvers []bstream.StartBlockResolver
 	blockmetaAddr := viper.GetString("common-blockmeta-addr")
 	if blockmetaAddr != "" {
 		conn, err := dgrpc.NewInternalClient(blockmetaAddr)
@@ -98,7 +97,7 @@ func Start(dataDir string, args []string) (err error) {
 			userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 		} else {
 			blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
-			startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
+			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
 		}
 	}
 
@@ -107,10 +106,7 @@ func Start(dataDir string, args []string) (err error) {
 	if err != nil {
 		userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
 	} else {
-		startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
-	}
-	for _, resolver := range startBlockResolvers {
-		tracker.AddResolver(resolver)
+		tracker.AddResolver(codec.BlockstoreStartBlockResolver(blocksStore))
 	}
 
 	////////
