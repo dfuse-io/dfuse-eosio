@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	services := []string{"search", "block", "blockmeta"}
+	services := []string{"search", "block", "blockmeta", "token"}
 	ratelimiter.RegisterServices(services)
 }
 
