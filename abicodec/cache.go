@@ -38,7 +38,7 @@ type Cache interface {
 	SaveState() error
 	SetCursor(cursor string)
 	GetCursor() string
-	Upload(url string) error
+	Export(baseURL string, filename string) error
 }
 
 type DefaultCache struct {
@@ -221,14 +221,14 @@ func (c *DefaultCache) Load(workerID string) (string, error) {
 	return c.Cursor, nil
 }
 
-func (c *DefaultCache) Upload(storeUrl string) error {
+func (c *DefaultCache) Export(baseURL, filename string) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	baseURL, filename, err := getStoreInfo(storeUrl)
-	if err != nil {
-		return fmt.Errorf("cannot pause upload url: %s", storeUrl)
-	}
+	zlog.Debug("exporting ABIs",
+		zap.String("base_url", baseURL),
+		zap.String("filename", filename),
+	)
 
 	store, err := dstore.NewStore(baseURL, "", "zstd", true)
 	if err != nil {

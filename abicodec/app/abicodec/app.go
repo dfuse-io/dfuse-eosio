@@ -29,13 +29,14 @@ import (
 )
 
 type Config struct {
-	GRPCListenAddr string
-	SearchAddr     string
-	KvdbDSN        string
-	CacheBaseURL   string
-	CacheStateName string
-	ExportCache    bool
-	ExportCacheURL string
+	GRPCListenAddr     string
+	SearchAddr         string
+	KvdbDSN            string
+	CacheBaseURL       string
+	CacheStateName     string
+	ExportABIsEnabled  bool
+	ExportABIsBaseURL  string
+	ExportABIsFilename string
 }
 
 type App struct {
@@ -52,7 +53,9 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
-	zlog.Info("initiating cache", zap.String("cache_state_path", a.config.CacheBaseURL), zap.String("cache_state_name", a.config.CacheStateName))
+	zlog.Info("running abicodec cache", zap.Reflect("config", a.config))
+
+	zlog.Info("initiating cache", zap.String("", a.config.CacheBaseURL), zap.String("cache_state_name", a.config.CacheStateName))
 	store, err := dstore.NewSimpleStore(a.config.CacheBaseURL)
 	if err != nil {
 		return fmt.Errorf("unable to init store: %w", err)
@@ -63,7 +66,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("unable to init ABI cache: %w", err)
 	}
 
-	backuper := abicodec.NewBackuper(cache, a.config.ExportCache, a.config.ExportCacheURL)
+	backuper := abicodec.NewBackuper(cache, a.config.ExportABIsEnabled, a.config.ExportABIsBaseURL, a.config.ExportABIsFilename)
 	go backuper.BackupPeriodically(30 * time.Second)
 
 	backuper.OnTerminated(a.Shutdown)
