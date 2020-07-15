@@ -15,7 +15,9 @@ date.
 * Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
 * Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
 
+### Removed
 
+The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 
 # [v0.1.0-beta4] 2020-06-23
 

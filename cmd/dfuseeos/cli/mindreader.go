@@ -42,7 +42,6 @@ func init() {
 			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
 			cmd.Flags().String("mindreader-nodeos-path", NodeosBinPath, "Path to the nodeos binary. Defaults to the 'nodeos' found in your PATH")
 			cmd.Flags().String("mindreader-data-dir", "{dfuse-data-dir}/mindreader/data", "Directory for data (nodeos blocks and state)")
-			cmd.Flags().String("mindreader-producer-hostname", "", "Hostname that will produce block (other will be paused)")
 			cmd.Flags().String("mindreader-trusted-producer", "", "The EOS account name of the Block Producer we trust all blocks from")
 			cmd.Flags().Duration("mindreader-readiness-max-latency", 5*time.Second, "/healthz will return error until nodeos head block time is within that duration to now")
 			cmd.Flags().Bool("mindreader-disable-profiler", true, "Disables the node-manager profiler")
@@ -134,7 +133,6 @@ func init() {
 					BinPath:           viper.GetString("mindreader-nodeos-path"),
 					DataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
 					Hostname:          hostname,
-					ProducerHostname:  viper.GetString("mindreader-producer-hostname"),
 					TrustedProducer:   viper.GetString("mindreader-trusted-producer"),
 					AdditionalArgs:    viper.GetStringSlice("mindreader-nodeos-args"),
 					LogToZap:          viper.GetBool("mindreader-log-to-zap"),
@@ -156,8 +154,8 @@ func init() {
 					BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),
 					AutoRestoreSource:          viper.GetString("mindreader-auto-restore-source"),
 					ShutdownDelay:              viper.GetDuration("mindreader-shutdown-delay"),
-					RestoreBackupName:          viper.GetString("mindreader-restore-snapshot-name"),
-					RestoreSnapshotName:        viper.GetString("mindreader-restore-backup-name"),
+					RestoreBackupName:          viper.GetString("mindreader-restore-backup-name"),
+					RestoreSnapshotName:        viper.GetString("mindreader-restore-snapshot-name"),
 					SnapshotStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-snapshot-store-url")),
 					NumberOfSnapshotsToKeep:    viper.GetInt("mindreader-number-of-snapshots-to-keep"),
 					EnableSupervisorMonitoring: false,
