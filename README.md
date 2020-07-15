@@ -60,6 +60,17 @@ pushd eosq
   yarn install && yarn build
 popd
 
+# To generate the dashboard box you will need to clone the dlauncher repo at the same level of dfuse-eosio
+pushd ..
+    git clone https://github.com/dfuse-io/dlauncher
+    pushd dlauncher/dashboard
+        pushd client
+            yarn install && yarn build
+        popd
+        go generate
+    popd
+popd
+
 go generate ./dashboard
 go generate ./eosq/app/eosq
 
