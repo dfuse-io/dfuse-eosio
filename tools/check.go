@@ -186,14 +186,31 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 			if printIndividualSegmentStats {
 				payloadSize := len(block.PayloadBuffer)
 				eosBlock := block.ToNative().(*pbcodec.Block)
-				fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
-					block,
-					payloadSize,
-					eosBlock.GetUnfilteredTransactionCount(),
-					eosBlock.GetUnfilteredTransactionTraceCount(),
-					eosBlock.GetUnfilteredExecutedTotalActionCount(),
-					eosBlock.GetUnfilteredExecutedInputActionCount(),
-				)
+
+				if eosBlock.FilteringApplied {
+					fmt.Printf("Filtered Block %s (%d bytes): %d/%d transactions (%d/%d traces), %d/%d actions (%d/%d input)\n",
+						block,
+						payloadSize,
+						eosBlock.GetFilteredTransactionCount(),
+						eosBlock.GetUnfilteredTransactionCount(),
+						eosBlock.GetFilteredTransactionTraceCount(),
+						eosBlock.GetUnfilteredTransactionTraceCount(),
+						eosBlock.GetFilteredExecutedTotalActionCount(),
+						eosBlock.GetUnfilteredExecutedTotalActionCount(),
+						eosBlock.GetFilteredExecutedInputActionCount(),
+						eosBlock.GetUnfilteredExecutedInputActionCount(),
+					)
+
+				} else {
+					fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
+						block,
+						payloadSize,
+						eosBlock.GetUnfilteredTransactionCount(),
+						eosBlock.GetUnfilteredTransactionTraceCount(),
+						eosBlock.GetUnfilteredExecutedTotalActionCount(),
+						eosBlock.GetUnfilteredExecutedInputActionCount(),
+					)
+				}
 			}
 
 			continue
