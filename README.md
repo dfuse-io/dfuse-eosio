@@ -42,7 +42,7 @@ development chain by also managing the block producing node for you.
 
 Build requirements:
 * `Git`
-* `Go` 1.13 or higher ([installation](https://golang.org/doc/install#install))
+* `Go` 1.14 or higher ([installation](https://golang.org/doc/install#install))
 * `yarn` 1.15 or higher ([installation](https://classic.yarnpkg.com/en/docs/install))
 * [rice](https://github.com/GeertJohan/go.rice) Go static assets embedder (see installation instructions below)
 

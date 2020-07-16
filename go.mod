@@ -99,3 +99,7 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+// The go-testing-interface version matches the Golang version to compile against, in this case, we want
+// compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
+replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
