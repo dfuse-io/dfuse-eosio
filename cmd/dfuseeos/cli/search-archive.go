@@ -51,6 +51,7 @@ func init() {
 			eosSearch.RegisterHandlers(indexedTerms)
 
 			return archiveApp.New(&archiveApp.Config{
+				BlockmetaAddr:           viper.GetString("common-blockmeta-addr"),
 				MemcacheAddr:            viper.GetString("search-archive-memcache-addr"),
 				EnableEmptyResultsCache: viper.GetBool("search-archive-enable-empty-results-cache"),
 				ServiceVersion:          viper.GetString("search-common-mesh-service-version"),
