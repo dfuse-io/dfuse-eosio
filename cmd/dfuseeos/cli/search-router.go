@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+
+	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
 	routerApp "github.com/dfuse-io/search/app/router"
 	"github.com/spf13/cobra"
@@ -24,6 +27,13 @@ func init() {
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {
+			indexedTerms, err := eosSearch.NewIndexedTerms(viper.GetString("search-common-indexed-terms"))
+			if err != nil {
+				return nil, fmt.Errorf("unable to indexed terms: %w", err)
+			}
+
+			eosSearch.RegisterHandlers(indexedTerms)
+
 			return routerApp.New(&routerApp.Config{
 				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
 				BlockmetaAddr:      viper.GetString("common-blockmeta-addr"),
