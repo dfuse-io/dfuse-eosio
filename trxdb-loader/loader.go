@@ -412,7 +412,7 @@ func (l *TrxDBLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkab
 
 	case forkable.StepIrreversible:
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
-			err := l.DoFlush(blockNum, "patch end block reached")
+			err := l.DoFlush(blockNum, "batch end block reached")
 			if err != nil {
 				return err
 			}
