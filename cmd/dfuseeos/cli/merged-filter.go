@@ -15,8 +15,8 @@ func init() {
 		MetricsID:   "merged-filter",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merged-filter.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().Bool("merged-filter-truncation-enabled", true, "")
-			cmd.Flags().Uint64("merged-filter-truncation-window", 0, "")
+			cmd.Flags().Bool("merged-filter-truncation-enabled", true, "[NOT IMPLEMENTED] Will delete filtered merged blocks files after the truncation window period.")
+			cmd.Flags().Uint64("merged-filter-truncation-window", 0, "Number of blocks to keep history of filtered merged blocks. Used as start position when no filtered files exist.")
 			cmd.Flags().String("merged-filter-destination-blocks-store-url", FilteredBlocksStoreURL, "Object Store where to write filtered blocks store.  Sources from --common-blocks-store-url.")
 			return nil
 		},
