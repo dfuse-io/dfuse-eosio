@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `merged-filter` application, that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
 * Added `tokenmeta` application, with its flags
 * Add `--search-live-preprocessor-concurrent-threads` Number of thread used to run file source preprocessor function
 * flag `abicodec-export-abis-file-name` will contain only the URL of the where to export the ABIs in JSON

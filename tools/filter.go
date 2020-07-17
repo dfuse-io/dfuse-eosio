@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
@@ -65,79 +66,105 @@ func filterMergedBlocksE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ctx := context.Background()
+
 	currentBase := startBlock
+	var lastPrinted string
 	for {
 		currentBaseFile := fmt.Sprintf("%010d", currentBase)
 
-		fmt.Printf("Processing %s\n", currentBaseFile)
+		if lastPrinted != currentBaseFile {
+			fmt.Printf("Processing %s\n", currentBaseFile)
+		}
+		lastPrinted = currentBaseFile
 
-		var count int
-		err = func() error {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			readCloser, err := srcStore.OpenObject(ctx, currentBaseFile)
-			if err != nil {
-				return err
-			}
-			defer readCloser.Close()
-
-			blkReader, err := codec.NewBlockReader(readCloser)
-			if err != nil {
-				return err
-			}
-
-			readPipe, writePipe, err := os.Pipe()
-			if err != nil {
-				return err
-			}
-
-			writeObjectDone := make(chan error, 1)
-			go func() {
-				writeObjectDone <- destStore.WriteObject(context.Background(), currentBaseFile, readPipe)
-			}()
-
-			blkWriter, err := codec.NewBlockWriter(writePipe)
-			if err != nil {
-				return err
-			}
-
-			for {
-				blk, err := blkReader.Read()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					return err
-				}
-				count++
-
-				if err = filter.TransformInPlace(blk); err != nil {
-					return err
-				}
-
-				if err = blkWriter.Write(blk); err != nil {
-					return err
-				}
-			}
-
-			err = writePipe.Close()
-			if err != nil {
-				return err
-			}
-
-			err = <-writeObjectDone
-			if err != nil {
-				return err
-			}
-
-			return nil
-		}()
+		destExists, err := destStore.FileExists(ctx, currentBaseFile)
 		if err != nil {
 			return err
 		}
+		if !destExists {
 
-		fmt.Printf("✅ Uploaded filtered %q, containing %d blocks\n", currentBaseFile, count)
+			srcExists, err := srcStore.FileExists(ctx, currentBaseFile)
+			if err != nil {
+				return err
+			}
+
+			if !srcExists {
+				fmt.Printf("⏲  Waiting for %q\n", currentBaseFile)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+
+			var count int
+			err = func() error {
+				ctx, cancel := context.WithCancel(ctx)
+				defer cancel()
+
+				readCloser, err := srcStore.OpenObject(ctx, currentBaseFile)
+				if err != nil {
+					return err
+				}
+				defer readCloser.Close()
+
+				blkReader, err := codec.NewBlockReader(readCloser)
+				if err != nil {
+					return err
+				}
+
+				readPipe, writePipe, err := os.Pipe()
+				if err != nil {
+					return err
+				}
+
+				writeObjectDone := make(chan error, 1)
+				go func() {
+					writeObjectDone <- destStore.WriteObject(context.Background(), currentBaseFile, readPipe)
+				}()
+
+				blkWriter, err := codec.NewBlockWriter(writePipe)
+				if err != nil {
+					return err
+				}
+
+				for {
+					blk, err := blkReader.Read()
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						return err
+					}
+					count++
+
+					if err = filter.TransformInPlace(blk); err != nil {
+						return err
+					}
+
+					if err = blkWriter.Write(blk); err != nil {
+						return err
+					}
+				}
+
+				err = writePipe.Close()
+				if err != nil {
+					return err
+				}
+
+				err = <-writeObjectDone
+				if err != nil {
+					return err
+				}
+
+				return nil
+			}()
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("✅ Uploaded filtered %q, containing %d blocks\n", currentBaseFile, count)
+		} else {
+			fmt.Printf("✅ File exists %q\n", currentBaseFile)
+		}
 
 		currentBase += 100
 		if currentBase >= endBlock {
