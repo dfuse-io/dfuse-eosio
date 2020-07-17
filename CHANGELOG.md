@@ -11,6 +11,7 @@ date.
 
 ### Added
 * Added `tokenmeta` application, with its flags
+* Add `--search-live-preprocessor-concurrent-threads` Number of thread used to run file source preprocessor function
 * flag `abicodec-export-abis-file-name` will contain only the URL of the where to export the ABIs in JSON
 * Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
 * Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.

@@ -28,6 +28,7 @@ func init() {
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
+			cmd.Flags().Int("search-live-preprocessor-concurrent-threads", 8, "Number of thread used to run file source preprocessor function")
 			return nil
 		},
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
@@ -61,6 +62,7 @@ func init() {
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
+				PreProcConcurrentThreads: viper.GetInt("search-live-preprocessor-concurrent-threads"),
 			}, &liveApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
