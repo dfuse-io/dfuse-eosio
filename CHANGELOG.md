@@ -16,6 +16,10 @@ date.
 * Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
 * Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
 * Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
+* Truncation handling to `trxdb-loader`, which will only keep a _moving window of data_ in `trxdb`, based on a window of blocks. Uses flags:
+  * `--trxdb-loader-truncation-enabled`
+  * `--trxdb-loader-truncation-window`
+  * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.

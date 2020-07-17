@@ -46,7 +46,7 @@ type Config struct {
 	AllowLiveOnEmptyTable     bool   // [LIVE] force pipeline creation if live request and table is empty
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
 	EnableTruncationMarker    bool   // Enables the storage of truncation markers
-	TruncationTTL             uint64 // Truncate date within this duration
+	TruncationWindow          uint64 // Truncate date within this duration
 	PurgerInterval            uint64 // Purger at every X block
 }
 
@@ -91,7 +91,7 @@ func (a *App) Run() error {
 
 	trxdbOption := []trxdb.Option{trxdb.WithLogger(zlog)}
 	if a.config.EnableTruncationMarker {
-		trxdbOption = append(trxdbOption, trxdb.WithPurgeableStoreOption(a.config.TruncationTTL, a.config.PurgerInterval))
+		trxdbOption = append(trxdbOption, trxdb.WithPurgeableStoreOption(a.config.TruncationWindow, a.config.PurgerInterval))
 	}
 
 	db, err := trxdb.New(a.config.KvdbDsn, trxdbOption...)
@@ -101,7 +101,7 @@ func (a *App) Run() error {
 
 	db.SetWriterChainID(chainID)
 
-	loader := trxdbloader.NewTrxDBLoader(a.config.BlockStreamAddr, blocksStore, a.config.BatchSize, db, a.config.ParallelFileDownloadCount, a.modules.BlockFilter)
+	loader := trxdbloader.NewTrxDBLoader(a.config.BlockStreamAddr, blocksStore, a.config.BatchSize, db, a.config.ParallelFileDownloadCount, a.modules.BlockFilter, a.config.TruncationWindow)
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {

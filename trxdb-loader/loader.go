@@ -48,6 +48,7 @@ type TrxDBLoader struct {
 	endBlock                  uint64
 	parallelFileDownloadCount int
 	healthy                   bool
+	truncationWindow          uint64
 
 	forkDB *forkable.ForkDB
 }
@@ -59,6 +60,7 @@ func NewTrxDBLoader(
 	db trxdb.DBWriter,
 	parallelFileDownloadCount int,
 	blockFilter func(blk *bstream.Block) error,
+	truncationWindow uint64,
 ) *TrxDBLoader {
 
 	loader := &TrxDBLoader{
@@ -70,6 +72,7 @@ func NewTrxDBLoader(
 		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
 		blockFilter:               blockFilter,
+		truncationWindow:          truncationWindow,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -85,12 +88,21 @@ func NewTrxDBLoader(
 func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 	l.processingJob = l.FullJob
 
-	startAtBlockOne := false
+	tracker := bstream.NewTracker(200)
+	tracker.AddGetter(bstream.BlockStreamHeadTarget, bstream.RetryableBlockRefGetter(30, 10*time.Second, bstream.StreamHeadBlockRefGetter(l.blockStreamAddr)))
+
+	startAtBlockX := false
+	var blockX uint64
+
 	startLIB, err := l.db.GetLastWrittenIrreversibleBlockRef(context.Background())
 	if err != nil {
 		if err == kvdb.ErrNotFound && allowLiveOnEmptyTable {
-			zlog.Info("forcing block start block 1")
-			startAtBlockOne = true
+			startAtBlockX = true
+			blockX, err = tracker.GetRelativeBlock(context.Background(), -(int64(l.truncationWindow)), bstream.BlockStreamHeadTarget)
+			if err != nil {
+				return fmt.Errorf("get relative block: %w", err)
+			}
+
 		} else {
 			return fmt.Errorf("failed getting latest written LIB: %w", err)
 		}
@@ -105,10 +117,12 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		var handler bstream.Handler
 		var blockNum uint64
 		var startBlockID string
-		if startAtBlockOne {
+		if startAtBlockX {
 			// We explicity want to start back from beginning, hence no gate at all
+			zlog.Info("forcing block start block 1")
+
 			handler = h
-			blockNum = uint64(1)
+			blockNum = blockX
 		} else {
 			// We start back from last written LIB, use a gate to start processing at the right place
 			if startBlockRef.ID() == "" {
