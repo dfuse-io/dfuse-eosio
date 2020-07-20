@@ -3,6 +3,7 @@ package kv
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
@@ -103,11 +104,38 @@ func (db *DB) fillIrreversibilityData(ctx context.Context, events []*pbcodec.Tra
 	return nil
 }
 
+func newTrxPrefixToFull(prefixes []string) trxPrefixToFull {
+	m := make(map[string]string)
+	for _, p := range prefixes {
+		m[p] = ""
+	}
+	return m
+}
+
+type trxPrefixToFull map[string]string
+
+func (p2f trxPrefixToFull) check(full string) error {
+	for idPrefix := range p2f {
+		if strings.HasPrefix(full, idPrefix) {
+			if p2f[idPrefix] == "" {
+				p2f[idPrefix] = full
+				return nil
+			}
+			if p2f[idPrefix] == full {
+				return nil
+			}
+			return fmt.Errorf("requested prefix %s returns multiple transactions (%s, %s...)", idPrefix, p2f[idPrefix], full)
+		}
+	}
+	return fmt.Errorf("fetched transaction %s does not match any prefix %v", full, p2f)
+}
+
 func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eventTypes ...TrxEventType) (out []*pbcodec.TransactionEvent, err error) {
 	var keys [][]byte
 	if len(eventTypes) == 0 { //default behavior is get all events
 		eventTypes = []TrxEventType{TrxAdditionEvent, TrxExecutionEvent, ImplicitTrxEvent, DtrxEvent}
 	}
+
 	for _, idPrefix := range idPrefixes {
 		for _, t := range eventTypes {
 			switch t {
@@ -125,6 +153,8 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 		}
 	}
 
+	trxPrefToFull := newTrxPrefixToFull(idPrefixes)
+
 	it := db.store.BatchPrefix(ctx, keys, store.Unlimited)
 	for it.Next() {
 		switch {
@@ -134,6 +164,9 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 			db.dec.MustInto(it.Item().Value, row)
 
 			trxID, blockID := Keys.UnpackImplicitTrxsKey(it.Item().Key)
+			if err := trxPrefToFull.check(trxID); err != nil {
+				return nil, err
+			}
 			ev := &pbcodec.TransactionEvent{
 				Id:       trxID,
 				BlockId:  blockID,
@@ -152,6 +185,9 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 			db.dec.MustInto(it.Item().Value, row)
 
 			trxID, blockID := Keys.UnpackTrxsKey(it.Item().Key)
+			if err := trxPrefToFull.check(trxID); err != nil {
+				return nil, err
+			}
 
 			ev := &pbcodec.TransactionEvent{
 				Id:       trxID,
@@ -183,6 +219,9 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 			db.dec.MustInto(it.Item().Value, row)
 
 			trxID, blockID := Keys.UnpackTrxTracesKey(it.Item().Key)
+			if err := trxPrefToFull.check(trxID); err != nil {
+				return nil, err
+			}
 
 			ev := &pbcodec.TransactionEvent{
 				Id:       trxID,
@@ -206,6 +245,9 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 			db.dec.MustInto(it.Item().Value, row)
 
 			trxID, blockID := Keys.UnpackDtrxsKey(it.Item().Key)
+			if err := trxPrefToFull.check(trxID); err != nil {
+				return nil, err
+			}
 
 			ev := &pbcodec.TransactionEvent{
 				Id:       trxID,
