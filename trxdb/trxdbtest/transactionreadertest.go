@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -103,23 +103,23 @@ func TestReadTransactions(t *testing.T, driverFactory DriverFactory) {
 
 func TestGetTransactionTraces(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
-		name         string
-		trxIDs       []string
-		trxIDPrefix  string
-		expectTrxIDs []string
-		expectErr    error
+		name        string
+		trxIDs      []string
+		trxIDPrefix string
+		expectTrxID string
+		expectErr   error
 	}{
 		{
-			name:         "sunny path",
-			trxIDs:       []string{"a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a2bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6b"},
-			trxIDPrefix:  "a1",
-			expectTrxIDs: []string{"a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6b"},
+			name:        "sunny path",
+			trxIDs:      []string{"a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a2bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a3bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6b"},
+			trxIDPrefix: "a1",
+			expectTrxID: "a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a",
 		},
 		{
-			name:         "only match prefix",
-			trxIDs:       []string{"a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a2bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6b"},
-			trxIDPrefix:  "a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a",
-			expectTrxIDs: []string{"a1bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a"},
+			name:        "multiple matches error",
+			trxIDs:      []string{"a1bc000000000000000000000000000000000000000000000000000000000000", "a1bc111111111111111111111111111111111111111111111111111111111111", "a1bc222222222222222222222222222222222222222222222222222222222222"},
+			trxIDPrefix: "a1",
+			expectErr:   fmt.Errorf("requested prefix a1 returns multiple transactions (a1bc000000000000000000000000000000000000000000000000000000000000, a1bc111111111111111111111111111111111111111111111111111111111111...)"),
 		},
 	}
 	for _, test := range tests {
@@ -138,11 +138,8 @@ func TestGetTransactionTraces(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				ids := []string{}
-				for _, event := range events {
-					ids = append(ids, event.Id)
-				}
-				assert.ElementsMatch(t, test.expectTrxIDs, ids)
+				require.Len(t, events, 1)
+				assert.Equal(t, test.expectTrxID, events[0].Id)
 			}
 		})
 	}
@@ -153,15 +150,20 @@ func TestGetTransactionTracesBatch(t *testing.T, driverFactory DriverFactory) {
 		name         string
 		trxIDs       []string
 		trxIdsPrefix []string
-		expectTrxIDs [][]string
+		expectTrxIDs []string
 		expectErr    error
 	}{
 		{
-
 			name:         "sunny path",
-			trxIDs:       []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1addffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eccffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "3ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
-			trxIdsPrefix: []string{"1a", "2e"},
-			expectTrxIDs: [][]string{{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1addffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}, {"2eaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eccffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}},
+			trxIDs:       []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "3abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+			trxIdsPrefix: []string{"1aaa", "1abb", "2aaa", "2abb"},
+			expectTrxIDs: []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		},
+		{
+			name:         "multiple matches error",
+			trxIDs:       []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "3abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+			trxIdsPrefix: []string{"1a", "2a"},
+			expectErr:    fmt.Errorf("requested prefix 1a returns multiple transactions (1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, 1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...)"),
 		},
 	}
 	for _, test := range tests {
@@ -174,19 +176,16 @@ func TestGetTransactionTracesBatch(t *testing.T, driverFactory DriverFactory) {
 				putTransaction(t, db, trxID)
 			}
 
-			events, err := db.GetTransactionTracesBatch(ctx, test.trxIdsPrefix)
+			matches, err := db.GetTransactionTracesBatch(ctx, test.trxIdsPrefix)
 
 			if test.expectErr != nil {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				eventIds := [][]string{}
-				for _, trxs := range events {
-					ids := []string{}
-					for _, event := range trxs {
-						ids = append(ids, event.Id)
-					}
-					eventIds = append(eventIds, ids)
+				eventIds := []string{}
+				for _, trxEvents := range matches {
+					require.Len(t, trxEvents, 1)
+					eventIds = append(eventIds, trxEvents[0].Id)
 				}
 				assert.ElementsMatch(t, test.expectTrxIDs, eventIds)
 			}
@@ -196,23 +195,23 @@ func TestGetTransactionTracesBatch(t *testing.T, driverFactory DriverFactory) {
 
 func TestGetTransactionEvents(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
-		name         string
-		trxIDs       []string
-		trxIDPrefix  string
-		expectTrxIDs []string
-		expectErr    error
+		name        string
+		trxIDs      []string
+		trxIDPrefix string
+		expectTrxID string
+		expectErr   error
 	}{
 		{
-			name:         "sunny path",
-			trxIDs:       []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
-			trxIDPrefix:  "1a",
-			expectTrxIDs: []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+			name:        "sunny path",
+			trxIDs:      []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+			trxIDPrefix: "1abbff",
+			expectTrxID: "1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 		},
 		{
-			name:         "only match prefix",
-			trxIDs:       []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
-			trxIDPrefix:  "1e",
-			expectTrxIDs: []string{"1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+			name:        "full match",
+			trxIDs:      []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+			trxIDPrefix: "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+			expectTrxID: "1eddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 		},
 	}
 	for _, test := range tests {
@@ -237,30 +236,34 @@ func TestGetTransactionEvents(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				ids := []string{}
-				for _, event := range events {
-					ids = append(ids, event.Id)
-				}
-				assert.ElementsMatch(t, test.expectTrxIDs, ids)
+				require.Len(t, events, 2)
+				require.Equal(t, events[0].Id, test.expectTrxID)
+				require.Equal(t, events[1].Id, test.expectTrxID)
 			}
+
 		})
 	}
 }
 
 func TestGetTransactionEventsBatch(t *testing.T, driverFactory DriverFactory) {
-	t.Skip()
 	tests := []struct {
 		name         string
 		trxIDs       []string
 		trxIdsPrefix []string
-		expectTrxIDs [][]string
+		expectTrxIDs []string
 		expectErr    error
 	}{
 		{
 			name:         "sunny path",
-			trxIDs:       []string{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1addffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eccffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "3ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
-			trxIdsPrefix: []string{"1a", "2e"},
-			expectTrxIDs: [][]string{{"1abbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1accffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "1addffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}, {"2eaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2ebbffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "2eccffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}},
+			trxIDs:       []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "3abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+			trxIdsPrefix: []string{"1aaa", "1abb", "2aaa", "2abb"},
+			expectTrxIDs: []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+		},
+		{
+			name:         "multiple matches error",
+			trxIDs:       []string{"1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "2abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "3abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+			trxIdsPrefix: []string{"1a", "2a"},
+			expectErr:    fmt.Errorf("requested prefix 1a returns multiple transactions (1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa, 1abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb...)"),
 		},
 	}
 	for _, test := range tests {
@@ -273,19 +276,17 @@ func TestGetTransactionEventsBatch(t *testing.T, driverFactory DriverFactory) {
 				putTransaction(t, db, trxID)
 			}
 
-			events, err := db.GetTransactionEventsBatch(ctx, test.trxIdsPrefix)
+			matches, err := db.GetTransactionEventsBatch(ctx, test.trxIdsPrefix)
 
 			if test.expectErr != nil {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				eventIds := [][]string{}
-				for _, trxs := range events {
-					ids := []string{}
-					for _, event := range trxs {
-						ids = append(ids, event.Id)
-					}
-					eventIds = append(eventIds, ids)
+				eventIds := []string{}
+				for _, trxEvents := range matches {
+					require.Len(t, trxEvents, 2)
+					require.Equal(t, trxEvents[0].Id, trxEvents[1].Id)
+					eventIds = append(eventIds, trxEvents[0].Id)
 				}
 				assert.ElementsMatch(t, test.expectTrxIDs, eventIds)
 			}
