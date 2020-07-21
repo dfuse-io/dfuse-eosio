@@ -31,6 +31,10 @@ date.
 * Flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
 * Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
 
+### Fixed
+* Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
+
+
 # [v0.1.0-beta4] 2020-06-23
 
 See [release notes](https://github.com/dfuse-io/dfuse-eosio/releases/tag/v0.1.0-beta4).
