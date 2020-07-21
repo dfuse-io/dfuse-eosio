@@ -2,6 +2,8 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+dfuseeos=../dfuseeos
+
 clean=
 network=
 snapshot=
@@ -28,11 +30,9 @@ main() {
     usage_error "Unknown network '$network', valid networks: `valid_networks`"
   fi
 
-    if [[ $snapshot != "" || ! -f $snapshot ]]; then
+  if [[ $snapshot != "" && ! -f $snapshot ]]; then
     usage_error "Unknown snapshot file '$snapshot', are you sure it exists?"
   fi
-
-  compile_dfuseeos
 
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data &> /dev/null || true
@@ -41,7 +41,7 @@ main() {
   DFUSEEOS_MINDREADER_STOP_BLOCK_NUM=$stop_block\
   DFUSEEOS_MINDREADER_CONFIG_DIR=mindreader/$network \
   DFUSEEOS_MINDREADER_RESTORE_SNAPSHOT_NAME=$snapshot \
-  dfuseeos -c sync.yaml start "$@"
+  $dfuseeos -c sync.yaml start "$@"
 }
 
 valid_networks() {
@@ -76,15 +76,6 @@ usage() {
   echo "    -c                Clean actual data directory first"
   echo "    -s <snapshot>     Define the snapshot file to use to start from"
   echo "    -e <stopBlock>    Define the stop block where to stop processing"
-}
-
-compile_dfuseeos() {
-  pushd "$ROOT/../.." &> /dev/null
-    go install ./cmd/dfuseeos
-    if [[ $? != 0 ]]; then
-      exit 1
-    fi
-  popd &> /dev/null
 }
 
 main "$@"

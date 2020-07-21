@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+
+main() {
+  set -e
+
+  pushd "$ROOT" &> /dev/null
+    go install ./cmd/dfuseeos
+  popd &> /dev/null
+
+  exec $GOPATH/bin/dfuseeos "$@"
+}
+
+main "$@"
