@@ -144,6 +144,7 @@ func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
 				if err != nil {
 					return err
 				}
+				defer writePipe.Close()
 
 				writeObjectDone := make(chan error, 1)
 				go func() {
