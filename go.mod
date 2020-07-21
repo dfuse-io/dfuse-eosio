@@ -18,7 +18,6 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8
-	github.com/dfuse-io/bstream v0.0.2-0.20200716210525-e93996f8dbb2
 	github.com/dfuse-io/bstream v0.0.2-0.20200717145957-26a8f7294f63
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
@@ -39,7 +38,7 @@ require (
 	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.2
-	github.com/dfuse-io/node-manager v0.0.2-0.20200715064947-268de7f0cbf7
+	github.com/dfuse-io/node-manager v0.0.2-0.20200721154543-04cfda1d7412
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
@@ -49,7 +48,7 @@ require (
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200709181800-6ca81072282c
 	github.com/eoscanada/eosc v1.4.0
-	github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2
+	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3

@@ -20,7 +20,7 @@ import (
 
 	"github.com/dfuse-io/node-manager/metrics"
 	"github.com/dfuse-io/node-manager/superviser"
-	pitreos "github.com/eoscanada/pitreos/lib"
+	"github.com/eoscanada/pitreos"
 	"go.uber.org/zap"
 )
 
