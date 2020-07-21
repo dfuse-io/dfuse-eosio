@@ -74,17 +74,14 @@ func init() {
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
+		InitFunc: func(runtime *launcher.Runtime) error {
 			if err := CheckNodeosInstallation(viper.GetString("mindreader-nodeos-path")); err != nil {
 				return err
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 			archiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))
 			mergeArchiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
 

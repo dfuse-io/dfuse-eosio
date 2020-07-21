@@ -28,7 +28,7 @@ func init() {
 			cmd.Flags().StringSlice("blockmeta-eos-api-extra-addr", []string{MindreaderNodeosAPIAddr}, "Additional EOS API address for ID lookups (valid even if it is out of sync or read-only)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			for _, addr := range viper.GetStringSlice("blockmeta-eos-api-upstream-addr") {
 				if !strings.HasPrefix(addr, "http") {
 					addr = "http://" + addr
@@ -42,10 +42,7 @@ func init() {
 				dblockmeta.ExtraAPIs = append(dblockmeta.ExtraAPIs, eos.New(addr))
 			}
 
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+			dfuseDataDir := runtime.AbsDataDir
 
 			// FIXME: Use the new WithLogger by getting the app logger!
 			trxdbClient, err := trxdb.New(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")))

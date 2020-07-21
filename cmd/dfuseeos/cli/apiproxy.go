@@ -28,12 +28,9 @@ func init() {
 			cmd.Flags().String("apiproxy-root-http-addr", EosqHTTPServingAddr, "What to serve at the root of the proxy (defaults to eosq)")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			autocertDomains := strings.Split(viper.GetString("apiproxy-autocert-domains"), ",")
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+			dfuseDataDir := runtime.AbsDataDir
 			return apiproxy.New(&apiproxy.Config{
 				HTTPListenAddr:   viper.GetString("apiproxy-http-listen-addr"),
 				HTTPSListenAddr:  viper.GetString("apiproxy-https-listen-addr"),

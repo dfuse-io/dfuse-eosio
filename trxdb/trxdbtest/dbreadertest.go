@@ -18,51 +18,41 @@ import (
 	"context"
 	"testing"
 
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var dbReaderTests = []struct {
-	name string
-	test func(t *testing.T, driverFactory DriverFactory)
-}{
-	{"TestGetBlock", TestGetBlock},
-	{"TestGetBlockByNum", TestGetBlockByNum},
-	{"TestListBlocks", TestListBlocks},
-	{"TestListSiblingBlocks", TestListSiblingBlocks},
-	{"TestGetClosestIrreversibleIDAtBlockNum", TestGetClosestIrreversibleIDAtBlockNum},
-	{"TestGetIrreversibleIDAtBlockID", TestGetIrreversibleIDAtBlockID},
-	{"TestGetLastWrittenBlockID", TestGetLastWrittenBlockID},
-}
-
-func TestAllDbReader(t *testing.T, driverName string, driverFactory DriverFactory) {
-	for _, rt := range dbReaderTests {
-		t.Run(driverName+"/"+rt.name, func(t *testing.T) {
-			rt.test(t, driverFactory)
-		})
-	}
+var dbReaderTests = []DriverTestFunc{
+	TestGetBlock,
+	TestGetBlockByNum,
+	TestListBlocks,
+	TestListSiblingBlocks,
+	TestGetClosestIrreversibleIDAtBlockNum,
+	TestGetIrreversibleIDAtBlockID,
+	TestGetLastWrittenBlockID,
 }
 
 func TestGetBlock(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
 		block         *pbcodec.Block
-		blockId       string
+		blockID       string
 		expectErr     error
-		expectBlockId string
+		expectBlockID string
 	}{
 		{
 			name:          "sunny path",
-			block:         TestBlock(t, "00000002aa", "00000001aa"),
-			blockId:       "00000002aa",
-			expectBlockId: "00000002aa",
+			block:         ct.Block(t, "00000002aa"),
+			blockID:       "00000002aa",
+			expectBlockID: "00000002aa",
 		},
 		{
 			name:      "block does not exist",
-			block:     TestBlock(t, "00000002aa", "00000001aa"),
-			blockId:   "00000003aa",
+			block:     ct.Block(t, "00000002aa"),
+			blockID:   "00000003aa",
 			expectErr: kvdb.ErrNotFound,
 		},
 	}
@@ -76,7 +66,7 @@ func TestGetBlock(t *testing.T, driverFactory DriverFactory) {
 			require.NoError(t, db.PutBlock(ctx, test.block))
 			require.NoError(t, db.Flush(ctx))
 
-			resp, err := db.GetBlock(ctx, test.blockId)
+			resp, err := db.GetBlock(ctx, test.blockID)
 
 			if test.expectErr != nil {
 				assert.Equal(t, test.expectErr, err)
@@ -94,22 +84,22 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 		blocks         []*pbcodec.Block
 		blockNum       uint32
 		expectErr      error
-		expectBlockIds []string
+		expectBlockIDs []string
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000003aa"),
-				TestBlock(t, "00000004aa", "00000004aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000004aa"),
 			},
 			blockNum:       3,
-			expectBlockIds: []string{"00000003aa"},
+			expectBlockIDs: []string{"00000003aa"},
 		},
 		{
 			name: "block does not exist",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
+				ct.Block(t, "00000002aa"),
 			},
 			blockNum:  3,
 			expectErr: kvdb.ErrNotFound,
@@ -117,11 +107,11 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 		{
 			name: "return multiple blocks with same number",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000002dd", "00000001aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000002dd"),
 			},
 			blockNum:       2,
-			expectBlockIds: []string{"00000002aa", "00000002dd"},
+			expectBlockIDs: []string{"00000002aa", "00000002dd"},
 		},
 	}
 
@@ -146,7 +136,7 @@ func TestGetBlockByNum(t *testing.T, driverFactory DriverFactory) {
 				for _, blk := range resp {
 					ids = append(ids, blk.Id)
 				}
-				assert.ElementsMatch(t, test.expectBlockIds, ids)
+				assert.ElementsMatch(t, test.expectBlockIDs, ids)
 			}
 		})
 	}
@@ -158,36 +148,36 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 		blocks        []*pbcodec.Block
 		irrBlock      []*pbcodec.Block
 		blockNum      uint32
-		expectBlockId string
+		expectBlockID string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
 			irrBlock: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
 			},
 			blockNum:      8,
-			expectBlockId: "00000005aa",
+			expectBlockID: "00000005aa",
 		},
 		{
 			name: "no irr blocks",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
 			irrBlock:  nil,
 			blockNum:  8,
@@ -196,21 +186,21 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 		{
 			name: "looking for irr block",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
 			irrBlock: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000004aa", "00000003aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000004aa"),
+				ct.Block(t, "00000005aa"),
 			},
 			blockNum:      5,
-			expectBlockId: "00000005aa",
+			expectBlockID: "00000005aa",
 		},
 	}
 
@@ -235,7 +225,7 @@ func TestGetClosestIrreversibleIDAtBlockNum(t *testing.T, driverFactory DriverFa
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectBlockId, resp.ID())
+				assert.Equal(t, test.expectBlockID, resp.ID())
 			}
 		})
 	}
@@ -244,25 +234,25 @@ func TestGetLastWrittenBlockID(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
 		name          string
 		blocks        []*pbcodec.Block
-		expectBlockId string
+		expectBlockID string
 		expectError   error
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
-			expectBlockId: "00000008aa",
+			expectBlockID: "00000008aa",
 		},
 		{
 			name:          "not found",
 			blocks:        []*pbcodec.Block{},
-			expectBlockId: "",
+			expectBlockID: "",
 			expectError:   kvdb.ErrNotFound,
 		},
 	}
@@ -286,7 +276,7 @@ func TestGetLastWrittenBlockID(t *testing.T, driverFactory DriverFactory) {
 				require.Equal(t, test.expectError, err)
 			}
 
-			assert.Equal(t, test.expectBlockId, resp)
+			assert.Equal(t, test.expectBlockID, resp)
 		})
 	}
 }
@@ -297,38 +287,38 @@ func TestGetIrreversibleIDAtBlockID(t *testing.T, driverFactory DriverFactory) {
 		blocks        []*pbcodec.Block
 		irrBlock      []*pbcodec.Block
 		blockID       string
-		expectBlockId string
+		expectBlockID string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
 			irrBlock: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
 			},
 			blockID:       "00000008aa",
-			expectBlockId: "00000007aa",
+			expectBlockID: "00000007aa",
 		},
 		{
 			name: "no irr blocks",
 			blocks: []*pbcodec.Block{
-				TestBlock(t, "00000002aa", "00000001aa"),
-				TestBlock(t, "00000003aa", "00000002aa"),
-				TestBlock(t, "00000005aa", "00000004aa"),
-				TestBlock(t, "00000006aa", "00000005aa"),
-				TestBlock(t, "00000007aa", "00000006aa"),
-				TestBlock(t, "00000008aa", "00000007aa"),
+				ct.Block(t, "00000002aa"),
+				ct.Block(t, "00000003aa"),
+				ct.Block(t, "00000005aa"),
+				ct.Block(t, "00000006aa"),
+				ct.Block(t, "00000007aa"),
+				ct.Block(t, "00000008aa"),
 			},
 			irrBlock:  nil,
 			blockID:   "00000008aa",
@@ -358,7 +348,7 @@ func TestGetIrreversibleIDAtBlockID(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectBlockId, resp.ID())
+				assert.Equal(t, test.expectBlockID, resp.ID())
 			}
 		})
 	}
@@ -370,18 +360,18 @@ func TestListBlocks(t *testing.T, driverFactory DriverFactory) {
 	driver, cleanup := driverFactory()
 	defer cleanup()
 
-	putBlock := func(id string, prev string) {
-		b := TestBlock(t, id, prev)
+	putBlock := func(id string) {
+		b := ct.Block(t, id)
 		err := driver.PutBlock(ctx, b)
 		require.NoError(t, err)
 		err = driver.UpdateNowIrreversibleBlock(ctx, b)
 		require.NoError(t, err)
 	}
 
-	putBlock("00000003deadbeef", "00000002deadbeef")
-	putBlock("00000004deadbeef", "00000003deadbeef")
-	putBlock("00000005deadbeef", "00000004deadbeef")
-	putBlock("00000006deadbeef", "00000005deadbeef")
+	putBlock("00000003deadbeef")
+	putBlock("00000004deadbeef")
+	putBlock("00000005deadbeef")
+	putBlock("00000006deadbeef")
 	err := driver.Flush(ctx)
 	require.NoError(t, err)
 
@@ -408,19 +398,19 @@ func TestListSiblingBlocks(t *testing.T, driverFactory DriverFactory) {
 	driver, cleanup := driverFactory()
 	defer cleanup()
 
-	putBlock := func(id string, prev string) {
-		b := TestBlock(t, id, prev)
+	putBlock := func(id string) {
+		b := ct.Block(t, id)
 		err := driver.UpdateNowIrreversibleBlock(ctx, b)
 		require.NoError(t, err)
 		err = driver.PutBlock(ctx, b)
 		require.NoError(t, err)
 	}
 
-	putBlock("00000003aa", "00000002aa")
-	putBlock("00000004aa", "00000003aa")
-	putBlock("00000005aa", "00000004aa")
-	putBlock("00000006aa", "00000005aa")
-	putBlock("00000007aa", "00000006aa")
+	putBlock("00000003aa")
+	putBlock("00000004aa")
+	putBlock("00000005aa")
+	putBlock("00000006aa")
+	putBlock("00000007aa")
 
 	driver.Flush(ctx)
 	//todo covert to test table ....

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -85,8 +86,7 @@ func checkFluxShardsE(cmd *cobra.Command, args []string) error {
 func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	cmd.SilenceUsage = true
 
-	// FIXME: Seems `./dfuse-data/...` something doesn't work but `dfuse-data/...` works
-	storeURL := args[0]
+	storeURL := filepath.Clean(args[0])
 	fileBlockSize := uint32(100)
 
 	fmt.Printf("Checking block holes on %s\n", storeURL)
@@ -123,8 +123,12 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 		}
 
 		if baseNum32 != expected {
-			fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, expected-fileBlockSize)
-			fmt.Printf("❌ Missing blocks range %d - %d!\n", baseNum32-fileBlockSize, expected)
+			// There is no previous valid block range if we are the ever first seen file
+			if count > 1 {
+				fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, roundToBundleEndBlock(expected-fileBlockSize, fileBlockSize))
+			}
+
+			fmt.Printf("❌ Missing blocks range %d - %d!\n", expected, roundToBundleEndBlock(baseNum32-fileBlockSize, fileBlockSize))
 			currentStartBlk = baseNum32
 
 			holeFound = true
@@ -132,14 +136,14 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 		expected = baseNum32 + fileBlockSize
 
 		if count%10000 == 0 {
-			fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, baseNum32)
+			fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, roundToBundleEndBlock(baseNum32, fileBlockSize))
 			currentStartBlk = baseNum32 + fileBlockSize
 		}
 
 		return nil
 	})
 
-	fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, baseNum32)
+	fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, roundToBundleEndBlock(baseNum32, fileBlockSize))
 
 	if holeFound {
 		fmt.Printf("🆘 Holes found!\n")
@@ -148,6 +152,14 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func roundToBundleEndBlock(block, fileBlockSize uint32) uint32 {
+	// From a non-rounded block `1085` and size of `100`, we remove from it the value of
+	// `modulo % fileblock` (`85`) making it flush (`1000`) than adding to it the last
+	// merged block num value for this size which simply `size - 1` (`99`) giving us
+	// a resolved formulae of `1085 - (1085 % 100) + (100 - 1) = 1085 - (85) + (99)`.
+	return block - (block % fileBlockSize) + (fileBlockSize - 1)
 }
 
 func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, printIndividualSegmentStats bool) {
@@ -174,14 +186,31 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 			if printIndividualSegmentStats {
 				payloadSize := len(block.PayloadBuffer)
 				eosBlock := block.ToNative().(*pbcodec.Block)
-				fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
-					block,
-					payloadSize,
-					eosBlock.GetUnfilteredTransactionCount(),
-					eosBlock.GetUnfilteredTransactionTraceCount(),
-					eosBlock.GetUnfilteredExecutedTotalActionCount(),
-					eosBlock.GetUnfilteredExecutedInputActionCount(),
-				)
+
+				if eosBlock.FilteringApplied {
+					fmt.Printf("Filtered Block %s (%d bytes): %d/%d transactions (%d/%d traces), %d/%d actions (%d/%d input)\n",
+						block,
+						payloadSize,
+						eosBlock.GetFilteredTransactionCount(),
+						eosBlock.GetUnfilteredTransactionCount(),
+						eosBlock.GetFilteredTransactionTraceCount(),
+						eosBlock.GetUnfilteredTransactionTraceCount(),
+						eosBlock.GetFilteredExecutedTotalActionCount(),
+						eosBlock.GetUnfilteredExecutedTotalActionCount(),
+						eosBlock.GetFilteredExecutedInputActionCount(),
+						eosBlock.GetUnfilteredExecutedInputActionCount(),
+					)
+
+				} else {
+					fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
+						block,
+						payloadSize,
+						eosBlock.GetUnfilteredTransactionCount(),
+						eosBlock.GetUnfilteredTransactionTraceCount(),
+						eosBlock.GetUnfilteredExecutedTotalActionCount(),
+						eosBlock.GetUnfilteredExecutedInputActionCount(),
+					)
+				}
 			}
 
 			continue

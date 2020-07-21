@@ -18,7 +18,8 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8
-	github.com/dfuse-io/bstream v0.0.2-0.20200714123252-e9115283f55f
+	github.com/dfuse-io/bstream v0.0.2-0.20200716210525-e93996f8dbb2
+	github.com/dfuse-io/bstream v0.0.2-0.20200717145957-26a8f7294f63
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
@@ -26,7 +27,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
 	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20200714201746-a74afc7a4a2b
+	github.com/dfuse-io/dlauncher v0.0.0-20200715193603-ea2a15e9e193
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
@@ -38,11 +39,11 @@ require (
 	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.2
-	github.com/dfuse-io/node-manager v0.0.2-0.20200714204148-cd857b5b08da
+	github.com/dfuse-io/node-manager v0.0.2-0.20200715064947-268de7f0cbf7
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200619193216-9bbf0c9fb1f8
-	github.com/dfuse-io/relayer v0.0.2-0.20200707183803-7093e4f52f8f
-	github.com/dfuse-io/search v0.0.2-0.20200710153116-dca022d4d7e0
+	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
+	github.com/dfuse-io/search v0.0.2-0.20200720132114-7d99c283251b
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -98,3 +99,7 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+// The go-testing-interface version matches the Golang version to compile against, in this case, we want
+// compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
+replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1

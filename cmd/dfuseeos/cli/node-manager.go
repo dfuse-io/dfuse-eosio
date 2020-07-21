@@ -60,7 +60,7 @@ func init() {
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.RuntimeModules) error {
+		InitFunc: func(modules *launcher.Runtime) error {
 			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
 			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
 			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
@@ -68,11 +68,8 @@ func init() {
 			}
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			hostname, _ := os.Hostname()
 			metricID := "producer"

@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/dfuse-io/derr"
@@ -58,6 +59,8 @@ func Main() {
 	for app := range launcher.AppRegistry {
 		availableCmds = append(availableCmds, app)
 	}
+	sort.Strings(availableCmds)
+
 	StartCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
 	StartCmd.Example = startCmdExample
 
@@ -78,7 +81,7 @@ Aliases:
 Examples:
   {{.Example}}{{end}}
 
-Available Commands:
+Available applications:
   %s{{if .HasAvailableLocalFlags}}
 
 Flags:

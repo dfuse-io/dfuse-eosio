@@ -211,68 +211,61 @@ func Test_New(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			trxdb, err := New(test.dsns)
+			db, err := New(test.dsns)
 			if test.expectError {
 				require.Error(t, err)
 				return
 			}
 
-			require.NoError(t, err)
-			if db, ok := trxdb.(*DB); ok {
-				// Block Read Store Test
-				if test.expectBlkReadStoreDriver != "" {
-					assert.NotNil(t, db.blkReadStore)
-					if d, ok := db.blkReadStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectBlkReadStoreDriver, d.DSN)
-					} else {
-						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
-					}
+			// Block Read Store Test
+			if test.expectBlkReadStoreDriver != "" {
+				assert.NotNil(t, db.blkReadStore)
+				if d, ok := db.blkReadStore.(*store.TestKVDBDriver); ok {
+					assert.Equal(t, test.expectBlkReadStoreDriver, d.DSN)
 				} else {
-					assert.Nil(t, db.blkReadStore)
-				}
-
-				// Write Store Test
-				if test.expectWriteStoreDriver != "" {
-					assert.NotNil(t, db.writeStore)
-					if d, ok := db.writeStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectWriteStoreDriver, d.DSN)
-					} else {
-						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
-					}
-				} else {
-					assert.Nil(t, db.writeStore)
-				}
-				assert.Equal(t, test.expectEnableTrxWrite, db.enableTrxWrite)
-				assert.Equal(t, test.expectEnableBlkWrite, db.enableBlkWrite)
-
-				// Trx Read Store Test
-				if test.expectTrxReadStoreDriver != "" {
-					assert.NotNil(t, db.trxReadStore)
-					if d, ok := db.trxReadStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectTrxReadStoreDriver, d.DSN)
-					} else {
-						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
-					}
-				} else {
-					assert.Nil(t, db.trxReadStore)
-				}
-
-				// IRR Store Test
-				if test.expectIrrReadStoreDriver != "" {
-					assert.NotNil(t, db.irrReadStore)
-					if d, ok := db.irrReadStore.(*store.TestKVDBDriver); ok {
-						assert.Equal(t, test.expectIrrReadStoreDriver, d.DSN)
-					} else {
-						panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
-					}
-				} else {
-					assert.Nil(t, db.irrReadStore)
+					panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
 				}
 			} else {
-				panic("unexpected obj. trxdb.kv.New should return a *trxdb.kv.DB object")
+				assert.Nil(t, db.blkReadStore)
 			}
 
+			// Write Store Test
+			if test.expectWriteStoreDriver != "" {
+				assert.NotNil(t, db.writeStore)
+				if d, ok := db.writeStore.(*store.TestKVDBDriver); ok {
+					assert.Equal(t, test.expectWriteStoreDriver, d.DSN)
+				} else {
+					panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
+				}
+			} else {
+				assert.Nil(t, db.writeStore)
+			}
+			assert.Equal(t, test.expectEnableTrxWrite, db.enableTrxWrite)
+			assert.Equal(t, test.expectEnableBlkWrite, db.enableBlkWrite)
+
+			// Trx Read Store Test
+			if test.expectTrxReadStoreDriver != "" {
+				assert.NotNil(t, db.trxReadStore)
+				if d, ok := db.trxReadStore.(*store.TestKVDBDriver); ok {
+					assert.Equal(t, test.expectTrxReadStoreDriver, d.DSN)
+				} else {
+					panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
+				}
+			} else {
+				assert.Nil(t, db.trxReadStore)
+			}
+
+			// IRR Store Test
+			if test.expectIrrReadStoreDriver != "" {
+				assert.NotNil(t, db.irrReadStore)
+				if d, ok := db.irrReadStore.(*store.TestKVDBDriver); ok {
+					assert.Equal(t, test.expectIrrReadStoreDriver, d.DSN)
+				} else {
+					panic("kvdb test driver expected to be of type *store.TestKVDBDriver")
+				}
+			} else {
+				assert.Nil(t, db.irrReadStore)
+			}
 		})
 	}
-
 }

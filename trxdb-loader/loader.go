@@ -45,12 +45,14 @@ type TrxDBLoader struct {
 	lastTickBlock             uint64
 	lastTickTime              time.Time
 	blocksStore               dstore.Store
+	blockFilter               func(blk *bstream.Block) error
 	blockStreamAddr           string
 	source                    bstream.Source
 	endBlock                  uint64
 	parallelFileDownloadCount int
 	healthy                   bool
 	retryCnt                  int
+	truncationWindow          uint64
 
 	forkDB *forkable.ForkDB
 }
@@ -61,6 +63,8 @@ func NewTrxDBLoader(
 	batchSize uint64,
 	db trxdb.DBWriter,
 	parallelFileDownloadCount int,
+	blockFilter func(blk *bstream.Block) error,
+	truncationWindow uint64,
 ) *TrxDBLoader {
 
 	loader := &TrxDBLoader{
@@ -72,6 +76,8 @@ func NewTrxDBLoader(
 		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
 		retryCnt:                  1,
+		blockFilter:               blockFilter,
+		truncationWindow:          truncationWindow,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -87,12 +93,21 @@ func NewTrxDBLoader(
 func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 	l.processingJob = l.FullJob
 
-	startAtBlockOne := false
+	tracker := bstream.NewTracker(200)
+	tracker.AddGetter(bstream.BlockStreamHeadTarget, bstream.RetryableBlockRefGetter(30, 10*time.Second, bstream.StreamHeadBlockRefGetter(l.blockStreamAddr)))
+
+	startAtBlockX := false
+	var blockX uint64
+
 	startLIB, err := l.db.GetLastWrittenIrreversibleBlockRef(context.Background())
 	if err != nil {
 		if err == kvdb.ErrNotFound && allowLiveOnEmptyTable {
-			zlog.Info("forcing block start block 1")
-			startAtBlockOne = true
+			startAtBlockX = true
+			blockX, err = tracker.GetRelativeBlock(context.Background(), -(int64(l.truncationWindow)), bstream.BlockStreamHeadTarget)
+			if err != nil {
+				return fmt.Errorf("get relative block: %w", err)
+			}
+
 		} else {
 			return fmt.Errorf("failed getting latest written LIB: %w", err)
 		}
@@ -107,10 +122,12 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		var handler bstream.Handler
 		var blockNum uint64
 		var startBlockID string
-		if startAtBlockOne {
+		if startAtBlockX {
 			// We explicity want to start back from beginning, hence no gate at all
+			zlog.Info("forcing block start block 1")
+
 			handler = h
-			blockNum = uint64(1)
+			blockNum = blockX
 		} else {
 			// We start back from last written LIB, use a gate to start processing at the right place
 			if startBlockRef.ID() == "" {
@@ -133,12 +150,20 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			)
 			return src
 		})
+
+		var filterPreprocessFunc bstream.PreprocessFunc
+		if l.blockFilter != nil {
+			filterPreprocessFunc = func(blk *bstream.Block) (interface{}, error) {
+				return nil, l.blockFilter(blk)
+			}
+		}
+
 		fileSourceFactory := bstream.SourceFactory(func(subHandler bstream.Handler) bstream.Source {
 			fs := bstream.NewFileSource(
 				l.blocksStore,
 				blockNum,
 				l.parallelFileDownloadCount,
-				nil,
+				filterPreprocessFunc,
 				subHandler,
 			)
 			return fs
@@ -150,7 +175,7 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 			bstream.JoiningSourceLogger(zlog),
 			bstream.JoiningSourceTargetBlockID(startBlockRef.ID()),
 			bstream.JoiningSourceTargetBlockNum(bstream.GetProtocolFirstStreamableBlock),
-			bstream.JoiningSourceLiveTracker(300, bstream.HeadBlockRefGetter(l.blockStreamAddr)),
+			bstream.JoiningSourceLiveTracker(300, bstream.StreamHeadBlockRefGetter(l.blockStreamAddr)),
 		)
 	})
 
@@ -189,11 +214,18 @@ func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStar
 		getBlocksFrom = startBlockNum - numBlocksBeforeStart // Make sure you cover that irreversible block
 	}
 
+	var filterPreprocessFunc bstream.PreprocessFunc
+	if l.blockFilter != nil {
+		filterPreprocessFunc = func(blk *bstream.Block) (interface{}, error) {
+			return nil, l.blockFilter(blk)
+		}
+	}
+
 	fs := bstream.NewFileSource(
 		l.blocksStore,
 		getBlocksFrom,
 		l.parallelFileDownloadCount,
-		nil,
+		filterPreprocessFunc,
 		forkableHandler,
 		bstream.FileSourceWithLogger(zlog),
 	)
@@ -415,7 +447,7 @@ func (l *TrxDBLoader) PatchJob(blockNum uint64, blk *pbcodec.Block, fObj *forkab
 
 	case forkable.StepIrreversible:
 		if l.endBlock != 0 && blockNum >= l.endBlock && fObj.StepCount == fObj.StepIndex+1 {
-			err := l.DoFlush(blockNum, "patch end block reached")
+			err := l.DoFlush(blockNum, "batch end block reached")
 			if err != nil {
 				return err
 			}

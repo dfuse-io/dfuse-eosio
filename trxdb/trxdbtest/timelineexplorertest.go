@@ -19,80 +19,45 @@ import (
 	"testing"
 	"time"
 
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var timelineExplorerTests = []struct {
-	name string
-	test func(t *testing.T, driverFactory DriverFactory)
-}{
-	{"TestBlockIDAt", TestBlockIDAt},
-	{"TestBlockIDAfter", TestBlockIDAfter},
-	{"TestBlockIDBefore", TestBlockIDBefore},
-}
+var noon = time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
+var twopm = time.Date(2020, time.February, 02, 14, 0, 0, 0, time.UTC)
+var fourpm = time.Date(2020, time.February, 02, 16, 0, 0, 0, time.UTC)
 
-func TestAllTimelineExplorer(t *testing.T, driverName string, driverFactory DriverFactory) {
-	for _, rt := range timelineExplorerTests {
-		t.Run(driverName+"/"+rt.name, func(t *testing.T) {
-			rt.test(t, driverFactory)
-		})
-	}
+var timelineExplorerTests = []DriverTestFunc{
+	TestBlockIDAt,
+	TestBlockIDAfter,
+	TestBlockIDBefore,
 }
 
 func TestBlockIDAt(t *testing.T, driverFactory DriverFactory) {
-
-	noon := time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
-	twopm := time.Date(2020, time.February, 02, 14, 0, 0, 0, time.UTC)
-	fourpm := time.Date(2020, time.February, 02, 16, 0, 0, 0, time.UTC)
-
 	tests := []struct {
 		name          string
 		blocks        []*pbcodec.Block
 		time          time.Time
-		expectBlockId string
+		expectBlockID string
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			time:          noon,
-			expectBlockId: "00000008aa",
+			expectBlockID: "00000008aa",
 		},
 		{
 			name: "no block that matches",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			time:      fourpm,
 			expectErr: kvdb.ErrNotFound,
@@ -123,65 +88,37 @@ func TestBlockIDAt(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectBlockId, id)
+				assert.Equal(t, test.expectBlockID, id)
 			}
 		})
 	}
 }
 
 func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
-	noon := time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
-	twopm := time.Date(2020, time.February, 02, 14, 0, 0, 0, time.UTC)
-	fourpm := time.Date(2020, time.February, 02, 16, 0, 0, 0, time.UTC)
-
 	tests := []struct {
 		name          string
 		blocks        []*pbcodec.Block
 		time          time.Time
 		inclusive     bool
-		expectBlockId string
+		expectBlockID string
 		expectTime    time.Time
 		expectErr     error
 	}{
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(fourpm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(fourpm)),
 			},
 			time:          twopm,
 			expectTime:    fourpm,
-			expectBlockId: "00000003aa",
+			expectBlockID: "00000003aa",
 		},
 		{
 			name: "no block that matches",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			time:      fourpm,
 			expectErr: kvdb.ErrNotFound,
@@ -189,20 +126,8 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		{
 			name: "should not match block when not inclusive",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			inclusive: false,
 			time:      twopm,
@@ -211,25 +136,13 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 		{
 			name: "should  match block when inclusive",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			inclusive:     true,
 			time:          twopm,
 			expectTime:    twopm,
-			expectBlockId: "00000003aa",
+			expectBlockID: "00000003aa",
 		},
 		{
 			name:      "no blocks",
@@ -257,7 +170,7 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectBlockId, id)
+				assert.Equal(t, test.expectBlockID, id)
 				assert.Equal(t, test.expectTime, foundTime.UTC())
 			}
 		})
@@ -265,36 +178,20 @@ func TestBlockIDAfter(t *testing.T, driverFactory DriverFactory) {
 }
 
 func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
-	noon := time.Date(2020, time.February, 02, 12, 0, 0, 0, time.UTC)
-	twopm := time.Date(2020, time.February, 02, 14, 0, 0, 0, time.UTC)
-	fourpm := time.Date(2020, time.February, 02, 16, 0, 0, 0, time.UTC)
-
 	tests := []struct {
 		name          string
 		blocks        []*pbcodec.Block
 		time          time.Time
 		inclusive     bool
-		expectBlockId string
+		expectBlockID string
 		expectTime    time.Time
 		expectErr     error
 	}{
 		{
 			name: "no block that matches",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(fourpm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(twopm)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(fourpm)),
 			},
 			time:      noon,
 			expectErr: kvdb.ErrNotFound,
@@ -302,42 +199,18 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		{
 			name: "sunny path",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(fourpm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(fourpm)),
 			},
 			time:          twopm,
 			expectTime:    noon,
-			expectBlockId: "00000008aa",
+			expectBlockID: "00000008aa",
 		},
 		{
 			name: "should not match block when not inclusive",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000009aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			inclusive: false,
 			time:      noon,
@@ -346,25 +219,13 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 		{
 			name: "should  match block when inclusive",
 			blocks: []*pbcodec.Block{
-				{
-					Id:     "00000008aa",
-					Number: 8,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(noon),
-					},
-				},
-				{
-					Id:     "00000003aa",
-					Number: 3,
-					Header: &pbcodec.BlockHeader{
-						Timestamp: toTimestamp(twopm),
-					},
-				},
+				ct.Block(t, "00000008aa", ct.BlockTimestamp(noon)),
+				ct.Block(t, "00000003aa", ct.BlockTimestamp(twopm)),
 			},
 			inclusive:     true,
 			time:          noon,
 			expectTime:    noon,
-			expectBlockId: "00000008aa",
+			expectBlockID: "00000008aa",
 		},
 		{
 			name:      "no blocks",
@@ -392,7 +253,7 @@ func TestBlockIDBefore(t *testing.T, driverFactory DriverFactory) {
 				assert.Equal(t, test.expectErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectBlockId, id)
+				assert.Equal(t, test.expectBlockID, id)
 				assert.Equal(t, test.expectTime, foundTime.UTC())
 			}
 		})

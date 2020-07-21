@@ -18,7 +18,7 @@ func init() {
 		InitFunc:    nil,
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosq-http-listen-addr", EosqHTTPServingAddr, "Auth URL used to configure the dfuse js client")
-			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "API key used in eosq")
+			cmd.Flags().String("eosq-api-endpoint-url", APIProxyHTTPListenAddr, "Endpoint to provide to the JavaScript eosq app, in order to contact the dfuse services. Pointing it to an apiproxy is the easiest.")
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
@@ -32,7 +32,7 @@ func init() {
 			return nil
 		},
 
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
+		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {
 			return eosqApp.New(&eosqApp.Config{
 				HTTPListenAddr:    viper.GetString("eosq-http-listen-addr"),
 				Environment:       viper.GetString("eosq-environment"),

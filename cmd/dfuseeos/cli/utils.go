@@ -26,10 +26,6 @@ func makeDirs(directories []string) error {
 	return nil
 }
 
-func dfuseAbsoluteDataDir() (string, error) {
-	return filepath.Abs(viper.GetString("global-data-dir"))
-}
-
 func mustReplaceDataDir(dataDir, in string) string {
 	d, err := filepath.Abs(dataDir)
 	if err != nil {

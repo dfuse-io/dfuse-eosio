@@ -166,7 +166,7 @@ func (db *DB) putTransactionTraces(ctx context.Context, blk *pbcodec.Block) erro
 		}
 
 		if traceEnabled {
-			db.logger.Debug("put transaction trace row", zap.String("trx_id", trxTrace.Id))
+			db.logger.Debug("put transaction trace row", zap.String("trx_id", trxTrace.Id), zap.String("block_id", blk.Id))
 		}
 
 		key := Keys.PackTrxTracesKey(trxTrace.Id, blk.Id)

@@ -25,11 +25,8 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return boot.New(&boot.Config{
 				NodeosAPIAddress: viper.GetString("booter-nodeos-api-addr"),

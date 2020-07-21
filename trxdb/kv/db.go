@@ -53,10 +53,14 @@ type DB struct {
 }
 
 func init() {
-	trxdb.Register("badger", New)
-	trxdb.Register("tikv", New)
-	trxdb.Register("bigkv", New)
-	trxdb.Register("cznickv", New)
+	testFactory := func(dsns []string) (trxdb.DB, error) {
+		return New(dsns)
+	}
+
+	trxdb.Register("badger", testFactory)
+	trxdb.Register("tikv", testFactory)
+	trxdb.Register("bigkv", testFactory)
+	trxdb.Register("cznickv", testFactory)
 }
 
 type dsnOptions struct {
@@ -64,12 +68,8 @@ type dsnOptions struct {
 	writes []string
 }
 
-func New(dsns []string) (trxdb.DB, error) {
-
-	zlog.Debug("setting up in kv driver",
-		zap.Strings("dsns", dsns),
-	)
-
+func New(dsns []string) (*DB, error) {
+	zlog.Debug("creating kv db", zap.Strings("dsns", dsns))
 	db := &DB{
 		enc:    trxdb.NewProtoEncoder(),
 		dec:    trxdb.NewProtoDecoder(),
