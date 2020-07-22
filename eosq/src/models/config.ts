@@ -13,20 +13,19 @@ const isEnvSet = (value: string | undefined): boolean => value != null && value 
 
 const newDefaultConfig = () => {
   const core = {
-    current_network: process.env.REACT_APP_EOSQ_CURRENT_NETWORK || "eos-mainnet",
-    dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "https://auth.dfuse.io",
+    current_network: process.env.REACT_APP_EOSQ_CURRENT_NETWORK || "local",
+    dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "null://",
     dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_1234567890abc",
-    dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "mainnet.eos.dfuse.io",
-    display_price: true,
-    on_demand: false,
+    dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "localhost:8080",
+    display_price: false,
     price_ticker_name: "EOS",
     version: 1,
     available_networks: [
       {
-        id: "custom",
+        id: "local",
         is_test: true,
         logo: "/images/eos-mainnet.png",
-        name: "Custom Network",
+        name: "Local Network",
         url: "http://localhost:8080"
       },
       {
@@ -71,10 +70,6 @@ const newDefaultConfig = () => {
     core.display_price = process.env.REACT_APP_EOSQ_DISPLAY_PRICE === "true"
   }
 
-  if (isEnvSet(process.env.REACT_APP_EOSQ_ON_DEMAND)) {
-    core.on_demand = process.env.REACT_APP_EOSQ_ON_DEMAND === "true"
-  }
-
   if (isEnvSet(process.env.REACT_APP_EOSQ_AVAILABLE_NETWORKS)) {
     try {
       core.available_networks = JSON.parse(process.env.REACT_APP_EOSQ_AVAILABLE_NETWORKS!)
@@ -100,23 +95,20 @@ export interface EosqNetwork {
 
 interface EosqConfig {
   version: number
-
   isLocalhost: boolean
-  current_network: string
-  on_demand: boolean
 
   dfuse_io_endpoint: string
   dfuse_io_api_key: string
   dfuse_auth_endpoint: string
+
+  current_network: string
+  available_networks: EosqNetwork[]
   display_price: boolean
   price_ticker_name: string
-
-  available_networks: EosqNetwork[]
 
   secure: boolean
   disable_segments: boolean
   disable_sentry: boolean
-  disable_token_meta: boolean
 }
 
 export const Config = { ...windowTS.TopLevelConfig, isLocalhost } as EosqConfig

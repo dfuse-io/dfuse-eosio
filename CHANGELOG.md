@@ -23,6 +23,8 @@ date.
   * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
+* The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
+* The `--eosq-on-demand` flag was removed, this was unused in the codebase.
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 
 ### Changed

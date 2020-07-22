@@ -30,8 +30,6 @@ type Config struct {
 	DefaultNetwork    string // The default network that is displayed, should correspond to an id in the avaiable networks
 	DisplayPrice      bool   // Should eosq display prices
 	PriceTickerName   string // the Price ticker name i.e. EOS
-	OnDemand          bool   // If this instance of eoqs is for an on-demand network
-	DisableTokenmeta  bool   // Disables tokenmeta calls from eosq
 }
 
 type App struct {

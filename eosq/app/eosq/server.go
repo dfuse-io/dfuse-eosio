@@ -175,20 +175,23 @@ func sanitizeAPIEndpoint(apiEndpointURL string) (host string, secure bool) {
 	return
 }
 
+var defaultAvailableNetworks = localAvailableNetworks()
+
 func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 	indexContent, err := box.Bytes("index.html")
 	if err != nil {
 		panic(fmt.Errorf("failed to get index from rice box: %w", err))
 	}
 
-	an := []interface{}{}
+	an := defaultAvailableNetworks
 	if config.AvailableNetworks != "" {
 		err := json.Unmarshal([]byte(config.AvailableNetworks), &an)
 		if err != nil {
 			panic(fmt.Errorf("failed to unmarshall available network json: %w", err))
 		}
 	}
-	zlog.Debug("available network", zap.String("config string", config.AvailableNetworks), zap.Reflect("available network", an))
+
+	zlog.Debug("available networks", zap.String("raw", config.AvailableNetworks), zap.Reflect("parsed", an))
 
 	host, secure := sanitizeAPIEndpoint(config.APIEndpointURL)
 	indexConfig := map[string]interface{}{
@@ -201,10 +204,8 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		"current_network":     config.DefaultNetwork,
 		"display_price":       config.DisplayPrice,
 		"price_ticker_name":   config.PriceTickerName,
-		"on_demand":           config.OnDemand,
 		"disable_segments":    config.DisableAnalytics,
 		"disable_sentry":      config.DisableAnalytics,
-		"disable_token_meta":  config.DisableTokenmeta,
 	}
 
 	tpl, err := template.New("index.html").Funcs(template.FuncMap{
@@ -223,6 +224,14 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 	}
 
 	return buf.Bytes()
+}
+
+func localAvailableNetworks() []interface{} {
+	localNetwork := map[string]interface{}{
+		"test": "value",
+	}
+
+	return []interface{}{localNetwork}
 }
 
 func bustCache(w http.ResponseWriter) {
