@@ -30,7 +30,7 @@ func init() {
 		MetricsID:   "producer",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/node-manager.*", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("node-manager-http-listen-addr", EosManagerAPIAddr, "The dfuse Node Manager API address")
+			cmd.Flags().String("node-manager-http-listen-addr", NodeManagerHTTPServingAddr, "The dfuse Node Manager API address")
 			cmd.Flags().String("node-manager-nodeos-api-addr", NodeosAPIAddr, "Target API address to communicate with underlying superviser")
 			cmd.Flags().Bool("node-manager-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("node-manager-config-dir", "./producer", "Directory for config files")

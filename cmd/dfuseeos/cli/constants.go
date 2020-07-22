@@ -19,8 +19,8 @@ const (
 	NetworkID              string             = "eos-local"
 	NodeosBinPath          string             = "nodeos"
 	// Ports
-	EosManagerAPIAddr           string = ":13008"
-	EosMindreaderHTTPAddr       string = ":13009"
+	NodeManagerHTTPServingAddr  string = ":13008"
+	MindreaderHTTPServingAddr   string = ":13009"
 	MindreaderGRPCAddr          string = ":13010"
 	RelayerServingAddr          string = ":13011"
 	MergerServingAddr           string = ":13012"

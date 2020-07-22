@@ -47,8 +47,6 @@ func init() {
 }
 
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
-	cmd.SilenceUsage = true
-
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 

@@ -37,8 +37,6 @@ func init() {
 }
 
 func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
-	cmd.SilenceUsage = true
-
 	configFile := viper.GetString("global-config-file")
 	userLog.Debug("starting init", zap.String("config-file", configFile))
 

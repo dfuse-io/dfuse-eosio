@@ -59,8 +59,6 @@ func init() {
 }
 
 func checkFluxShardsE(cmd *cobra.Command, args []string) error {
-	cmd.SilenceUsage = true
-
 	storeDSN := args[0]
 	shards := args[1]
 	shardsInt, err := strconv.ParseInt(shards, 10, 32)
@@ -84,8 +82,6 @@ func checkFluxShardsE(cmd *cobra.Command, args []string) error {
 }
 
 func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
-	cmd.SilenceUsage = true
-
 	storeURL := filepath.Clean(args[0])
 	fileBlockSize := uint32(100)
 
@@ -241,8 +237,6 @@ func expectedBlockCount(segment string, fileBlockSize uint32) int {
 }
 
 func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
-	cmd.SilenceUsage = true
-
 	// FIXME: Seems `./dfuse-data/...` something doesn't work but `dfuse-data/...` works
 	dsn := args[0]
 
