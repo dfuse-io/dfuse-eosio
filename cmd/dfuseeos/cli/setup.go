@@ -62,6 +62,7 @@ func setupCmd(cmd *cobra.Command) error {
 	cmds := extractCmd(cmd)
 	if shouldRunSetup(cmds, []*cobra.Command{
 		StartCmd,
+		initCmd,
 	}) {
 		subCommand := cmds[len(cmds)-1]
 		if configFile := viper.GetString("global-config-file"); configFile != "" {

@@ -177,6 +177,7 @@ func peersListConfigEntry(peers []string) string {
 }
 
 func askProducer() (bool, error) {
+	userLog.Printf("")
 	userLog.Printf(`dfuse for EOSIO can run a local test node configured for block production,
 similar to what you use in development, with a clean blank chain and no contracts.
 
