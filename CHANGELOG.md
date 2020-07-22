@@ -28,6 +28,7 @@ date.
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 
 ### Changed
+* EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
 * Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
 * Improved `nodeos` log interceptions (when using `(mindreader|node-manager)-log-to-zap` flag) by adjusting log level for specific lines, that should improve the overall experience and better notice what is really an important error. More tweaking on the adjustment will continue as an iterative process, don't hesitate to report log line that should adjusted.
 * Flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.

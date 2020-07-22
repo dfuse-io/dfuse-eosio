@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 
 	launcher "github.com/dfuse-io/dlauncher/launcher"
@@ -110,7 +111,8 @@ func Init(runProducer bool, configFile string) error {
 		}
 
 		userLog.Printf("Writing 'mindreader/config.ini'")
-		if err = ioutil.WriteFile("./mindreader/config.ini", []byte(mindreaderLocalConfigIni), 0644); err != nil {
+		mindreaderConfig := fmt.Sprintf(mindreaderLocalConfigIniFormat, eosVMConfig())
+		if err = ioutil.WriteFile("./mindreader/config.ini", []byte(mindreaderConfig), 0644); err != nil {
 			return fmt.Errorf("writing mindreader/config.ini file: %s", err)
 		}
 
@@ -131,7 +133,7 @@ func Init(runProducer bool, configFile string) error {
 		}
 
 		userLog.Printf("Writing 'mindreader/config.ini'")
-		mindreaderConfig := fmt.Sprintf(mindreaderRemoteConfigIniFormat, peersListConfigEntry(peers))
+		mindreaderConfig := fmt.Sprintf(mindreaderRemoteConfigIniFormat, eosVMConfig(), peersListConfigEntry(peers))
 		if err = ioutil.WriteFile("./mindreader/config.ini", []byte(mindreaderConfig), 0644); err != nil {
 			return fmt.Errorf("writing mindreader/config.ini file: %s", err)
 		}
@@ -177,11 +179,11 @@ func peersListConfigEntry(peers []string) string {
 }
 
 func askProducer() (bool, error) {
-	userLog.Printf("")
 	userLog.Printf(`dfuse for EOSIO can run a local test node configured for block production,
 similar to what you use in development, with a clean blank chain and no contracts.
 
 Alternatively, dfuse for EOSIO can connect to an already existing network.`)
+	userLog.Printf("")
 
 	prompt := promptui.Prompt{
 		Label:     "Do you want dfuse for EOSIO to run a producing node for you",
@@ -230,10 +232,14 @@ func askPeer(first bool) (string, error) {
 	return result, nil
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
+func eosVMConfig() string {
+	if runtime.GOOS == "darwin" {
+		return "# EOS VM is not supported on OS X platform"
 	}
-	return !info.IsDir()
+
+	return strings.Join([]string{
+		"wasm-runtime = eos-vm-jit",
+		"eos-vm-oc-enable = true",
+		"eos-vm-oc-compile-threads = 4",
+	}, "\n")
 }
