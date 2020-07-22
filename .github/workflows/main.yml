@@ -1,19 +1,25 @@
 name: Build and Test
 
-on: [pull_request]
-  
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - "**"
+
 jobs:
   test:
     name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04]
+        os: [ubuntu-18.04]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.14
 
       - name: Check out code
         uses: actions/checkout@v1
@@ -31,7 +37,7 @@ jobs:
       - name: Build dfuseeos
         run: go build -o dfuseeos ./cmd/dfuseeos
 
-      # This one might be a bit more complicated... Unsure how this will behave in Github's workflow environment. 
+      # This one might be a bit more complicated... Unsure how this will behave in Github's workflow environment.
       # - name: Smoke Test
       #   working-directory: tests
       #   run: DEBUG=true E2E_TESTS=true go test

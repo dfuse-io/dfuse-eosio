@@ -138,6 +138,10 @@ func unifiedDiff(t *testing.T, cnt1, cnt2 []byte) string {
 func TestGeneratePBBlocks(t *testing.T) {
 	cr := testFileConsoleReader(t, "testdata/deep-mind.dmlog")
 
+	// Create the folder, it might not exists in some contexts
+	err := os.MkdirAll("testdata/pbblocks", os.ModePerm)
+	require.NoError(t, err)
+
 	for {
 		out, err := cr.Read()
 		if out != nil && out.(*pbcodec.Block) != nil {
