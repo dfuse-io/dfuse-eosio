@@ -1,6 +1,5 @@
 import gql from "graphql-tag"
 import { getTokenInfosByKeyMap } from "../helpers/airdrops-list"
-
 import {
   useGraphqlQuery,
   GraphqlQuery,
