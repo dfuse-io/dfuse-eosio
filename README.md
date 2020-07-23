@@ -41,23 +41,32 @@ development chain by also managing the block producing node for you.
 #### From source
 
 Build requirements:
-* `Go` 1.13 or higher
-* `Node.js` 12 or higher, `yarn`
+* `Git`
+* `Go` 1.14 or higher ([installation](https://golang.org/doc/install#install))
+* `yarn` 1.15 or higher ([installation](https://classic.yarnpkg.com/en/docs/install))
 * [rice](https://github.com/GeertJohan/go.rice) Go static assets embedder (see installation instructions below)
 
 ```
 # Install `rice` CLI tool if you don't have it already
+go get github.com/GeertJohan/go.rice
 go get github.com/GeertJohan/go.rice/rice
 
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 
-pushd dashboard/client
+pushd eosq
   yarn install && yarn build
 popd
 
-pushd eosq
-  yarn install && yarn build
+# To generate the dashboard box you will need to clone the dlauncher repo at the same level of dfuse-eosio
+pushd ..
+    git clone https://github.com/dfuse-io/dlauncher
+    pushd dlauncher/dashboard
+        pushd client
+            yarn install && yarn build
+        popd
+        go generate .
+    popd
 popd
 
 go generate ./dashboard

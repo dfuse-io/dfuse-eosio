@@ -5,21 +5,22 @@ import (
 )
 
 const (
-	Protocol             pbbstream.Protocol = pbbstream.Protocol_EOS
-	TrxdbDSN             string             = "badger://{dfuse-data-dir}/storage/trxdb"   //%s will be replaced by `<data-dir>`
-	FluxDSN              string             = "badger://{dfuse-data-dir}/storage/statedb" //%s will be replaced by `<data-dir>/<flux-data-dir>
-	MergedBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/merged-blocks"
-	IndicesStoreURL      string             = "file://{dfuse-data-dir}/storage/indexes"
-	OneBlockStoreURL     string             = "file://{dfuse-data-dir}/storage/one-blocks"
-	PitreosURL           string             = "file://{dfuse-data-dir}/storage/pitreos"
-	SnapshotsURL         string             = "file://{dfuse-data-dir}/storage/snapshots"
-	DmeshDSN             string             = "local://"
-	DmeshServiceVersion  string             = "v1"
-	NetworkID            string             = "eos-local"
-	NodeosBinPath        string             = "nodeos"
+	Protocol               pbbstream.Protocol = pbbstream.Protocol_EOS
+	TrxdbDSN               string             = "badger://{dfuse-data-dir}/storage/trxdb"   //%s will be replaced by `<data-dir>`
+	FluxDSN                string             = "badger://{dfuse-data-dir}/storage/statedb" //%s will be replaced by `<data-dir>/<flux-data-dir>
+	MergedBlocksStoreURL   string             = "file://{dfuse-data-dir}/storage/merged-blocks"
+	FilteredBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/filtered-merged-blocks"
+	IndicesStoreURL        string             = "file://{dfuse-data-dir}/storage/indexes"
+	OneBlockStoreURL       string             = "file://{dfuse-data-dir}/storage/one-blocks"
+	PitreosURL             string             = "file://{dfuse-data-dir}/storage/pitreos"
+	SnapshotsURL           string             = "file://{dfuse-data-dir}/storage/snapshots"
+	DmeshDSN               string             = "local://"
+	DmeshServiceVersion    string             = "v1"
+	NetworkID              string             = "eos-local"
+	NodeosBinPath          string             = "nodeos"
 	// Ports
-	EosManagerAPIAddr           string = ":13008"
-	EosMindreaderHTTPAddr       string = ":13009"
+	NodeManagerHTTPServingAddr  string = ":13008"
+	MindreaderHTTPServingAddr   string = ":13009"
 	MindreaderGRPCAddr          string = ":13010"
 	RelayerServingAddr          string = ":13011"
 	MergerServingAddr           string = ":13012"
@@ -43,10 +44,12 @@ const (
 	EosqHTTPServingAddr         string = ":13030"
 	DashboardGrpcServingAddr    string = ":13031"
 	FilteringRelayerServingAddr string = ":13032"
+	TokenmetaGrpcServingAddr    string = ":14001"
 	DashboardHTTPListenAddr     string = ":8081"
 	APIProxyHTTPListenAddr      string = ":8080"
 	MindreaderNodeosAPIAddr     string = ":9888"
 	NodeosAPIAddr               string = ":8888"
+	MetricsListenAddr           string = ":9102"
 
 	DgraphqlAPIKey string = "web_0000"
 	JWTIssuerURL   string = "null://dfuse"

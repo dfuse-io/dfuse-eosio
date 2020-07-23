@@ -25,18 +25,20 @@ import (
 type Backuper struct {
 	*shutter.Shutter
 
-	cache       Cache
-	IsLive      bool
-	exportURL   string
-	exportCache bool
+	cache              Cache
+	IsLive             bool
+	exportABIsEnabled  bool
+	exportABIsBaseURL  string
+	exportABIsFilename string
 }
 
-func NewBackuper(cache Cache, exportCache bool, exportURL string) *Backuper {
+func NewBackuper(cache Cache, exportABIsEnabled bool, exportABIsBaseURL, exportABIsFilename string) *Backuper {
 	handler := &Backuper{
-		Shutter:     shutter.New(),
-		cache:       cache,
-		exportURL:   exportURL,
-		exportCache: exportCache,
+		Shutter:            shutter.New(),
+		cache:              cache,
+		exportABIsEnabled:  exportABIsEnabled,
+		exportABIsBaseURL:  exportABIsBaseURL,
+		exportABIsFilename: exportABIsFilename,
 	}
 
 	return handler
@@ -57,10 +59,10 @@ func (b *Backuper) BackupPeriodically(every time.Duration) {
 				zlog.Error("unable to backup abicodec", zap.Error(err))
 			}
 
-			if b.exportCache && b.IsLive {
-				err := b.cache.Upload(b.exportURL)
+			if b.exportABIsEnabled && b.IsLive {
+				err := b.cache.Export(b.exportABIsBaseURL, b.exportABIsFilename)
 				if err != nil {
-					zlog.Error("unable to backup abicodec", zap.Error(err))
+					zlog.Error("unable to export abis", zap.Error(err))
 				}
 			}
 		}

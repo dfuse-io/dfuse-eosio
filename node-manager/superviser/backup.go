@@ -20,9 +20,7 @@ import (
 
 	"github.com/dfuse-io/node-manager/metrics"
 	"github.com/dfuse-io/node-manager/superviser"
-
-	pitreos "github.com/eoscanada/pitreos/lib"
-
+	"github.com/eoscanada/pitreos"
 	"go.uber.org/zap"
 )
 
@@ -90,7 +88,7 @@ func (s *NodeosSuperviser) RestoreBackup(backupName, backupTag string, backupSto
 		}
 	}
 
-	zlog.Info("restoring from pitreos", zap.String("backup_name", backupName), zap.Any("appendonly_files", appendonlyFiles), zap.String("exclusion_filter", exclusionFilter))
+	s.logger.Info("restoring from pitreos", zap.String("backup_name", backupName), zap.Any("appendonly_files", appendonlyFiles), zap.String("exclusion_filter", exclusionFilter))
 	err = p.RestoreFromBackup(s.options.DataDir, backupName, pitreos.MustNewIncludeThanExcludeFilter(".*", exclusionFilter))
 	if s.HandlePostRestore != nil {
 		s.HandlePostRestore()

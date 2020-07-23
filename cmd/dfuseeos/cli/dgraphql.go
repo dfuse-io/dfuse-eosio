@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"path/filepath"
-
 	dgraphqlEosio "github.com/dfuse-io/dfuse-eosio/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -28,24 +26,20 @@ func init() {
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
+			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGrpcServingAddr, "Tokenmeta client endpoint url")
+
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-			absDataDir, err := filepath.Abs(dfuseDataDir)
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
 				SearchAddr:        viper.GetString("common-search-addr"),
 				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
-				KVDBDSN:           mustReplaceDataDir(absDataDir, viper.GetString("common-trxdb-dsn")),
+				TokenmetaAddr:     viper.GetString("dgraphql-tokenmeta-addr"),
+				KVDBDSN:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs

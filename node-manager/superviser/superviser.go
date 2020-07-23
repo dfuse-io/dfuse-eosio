@@ -16,6 +16,7 @@ package superviser
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -31,6 +32,7 @@ import (
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type NodeosSuperviser struct {
@@ -58,6 +60,8 @@ type NodeosSuperviser struct {
 	snapshotRestoreFilename    string
 
 	headBlockUpdateFunc nodeManager.HeadBlockUpdater
+
+	logger *zap.Logger
 }
 
 func (s *NodeosSuperviser) GetName() string {
@@ -119,13 +123,13 @@ type SuperviserOptions struct {
 	LogToZap bool
 }
 
-func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlockUpdater, options *SuperviserOptions, nodeZlog *zap.Logger) (*NodeosSuperviser, error) {
+func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlockUpdater, options *SuperviserOptions, logger *zap.Logger) (*NodeosSuperviser, error) {
 	// Ensure process manager line buffer is large enough (50 MiB) for our Deep Mind instrumentation outputting lot's of text.
 	overseer.DEFAULT_LINE_BUFFER_SIZE = 50 * 1024 * 1024
 
 	s := &NodeosSuperviser{
 		// The arguments field is actually `nil` because arguments are re-computed upon each start
-		Superviser:          superviser.New(zlog, options.BinPath, nil),
+		Superviser:          superviser.New(logger, options.BinPath, nil),
 		api:                 eos.New(fmt.Sprintf("http://%s", options.LocalNodeEndpoint)),
 		blocksDir:           filepath.Join(options.DataDir, "blocks"),
 		producerHostname:    options.ProducerHostname,
@@ -133,14 +137,20 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlock
 		options:             options,
 		forceProduction:     options.ForceProduction,
 		headBlockUpdateFunc: headBlockUpdateFunc,
+		logger:              logger,
 	}
 
 	s.RegisterLogPlugin(logplugin.LogPluginFunc(s.analyzeLogLineForStateChange))
 
 	if options.LogToZap {
-		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(zlogNodeos, debugDeepMind))
+		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(debugDeepMind, logger, logplugin.ToZapLogPluginAdjustLevels(map[string]zapcore.Level{
+			"net_plugin.cpp:.*Closing connection to:":                         zap.InfoLevel,
+			"wabt.hpp:.*misaligned reference":                                 logplugin.NoDisplay,
+			"controller.cpp:.*No existing chain state or fork database.":      zap.InfoLevel,
+			"controller.cpp:.*Initializing new blockchain with genesis state": zap.InfoLevel,
+		})))
 	} else {
-		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, nodeZlog))
+		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, logger))
 	}
 
 	return s, nil
@@ -151,18 +161,36 @@ func (s *NodeosSuperviser) GetCommand() string {
 }
 
 func (s *NodeosSuperviser) HasData() bool {
-	_, blockErr := os.Stat(s.blocksDir)
-	_, stateErr := os.Stat(path.Join(s.options.DataDir, "state"))
-	return blockErr == nil && stateErr == nil
+	dir, err := ioutil.ReadDir(s.blocksDir)
+	if err != nil || len(dir) == 0 {
+		return false
+	}
+
+	dir, err = ioutil.ReadDir(path.Join(s.options.DataDir, "state"))
+	if err != nil || len(dir) == 0 {
+		return false
+	}
+
+	return true
 }
 
 func (s *NodeosSuperviser) removeState() error {
-	err := os.RemoveAll(path.Join(path.Join(s.options.DataDir, "state")))
+	stateDir := path.Join(s.options.DataDir, "state")
+	dir, err := ioutil.ReadDir(stateDir)
 	if err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("cannot delete state directory: %w", err)
+		return fmt.Errorf("cannot read state directory: %w", err)
 	}
+
+	for _, file := range dir {
+		err = os.RemoveAll(path.Join(stateDir, file.Name()))
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("cannot delete state element: %w", err)
+		}
+	}
+
 	return nil
 }
+
 func (s *NodeosSuperviser) removeBlocksLog() error {
 	err := os.Remove(path.Join(s.blocksDir, "blocks.log"))
 	if err != nil && !os.IsNotExist(err) {
@@ -174,6 +202,7 @@ func (s *NodeosSuperviser) removeBlocksLog() error {
 	}
 	return nil
 }
+
 func (s *NodeosSuperviser) removeReversibleBlocks() error {
 	err := os.RemoveAll(path.Join(s.blocksDir, "reversible"))
 	if err != nil && !os.IsNotExist(err) {

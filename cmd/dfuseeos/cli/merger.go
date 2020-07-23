@@ -33,33 +33,25 @@ func init() {
 		// FIXME: Lots of config value construction is duplicated across InitFunc and FactoryFunc, how to streamline that
 		//        and avoid the duplication? Note that this duplicate happens in many other apps, we might need to re-think our
 		//        init flow and call init after the factory and giving it the instantiated app...
-		InitFunc: func(modules *launcher.RuntimeModules) error {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return err
-			}
-			err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")))
-			if err != nil {
-				return err
+		InitFunc: func(runtime *launcher.Runtime) (err error) {
+			dfuseDataDir := runtime.AbsDataDir
+
+			if err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))); err != nil {
+				return
 			}
 
-			err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url")))
-			if err != nil {
-				return err
+			if err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))); err != nil {
+				return
 			}
 
-			err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("merger-seen-blocks-file")))
-			if err != nil {
-				return err
+			if err = mkdirStorePathIfLocal(mustReplaceDataDir(dfuseDataDir, viper.GetString("merger-seen-blocks-file"))); err != nil {
+				return
 			}
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 			return mergerApp.New(&mergerApp.Config{
 				StorageMergedBlocksFilesPath: mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				StorageOneBlockFilesPath:     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url")),

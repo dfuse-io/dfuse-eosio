@@ -10,9 +10,32 @@ date.
 # [Unreleased]
 
 ### Added
-
+* Added `merged-filter` application, that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
+* Added `tokenmeta` application, with its flags
+* Add `--search-live-preprocessor-concurrent-threads` Number of thread used to run file source preprocessor function
+* flag `abicodec-export-abis-file-name` will contain only the URL of the where to export the ABIs in JSON
+* Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
+* Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
 * Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
+* Truncation handling to `trxdb-loader`, which will only keep a _moving window of data_ in `trxdb`, based on a window of blocks. Uses flags:
+  * `--trxdb-loader-truncation-enabled`
+  * `--trxdb-loader-truncation-window`
+  * `--trxdb-loader-truncation-purge-interval`
 
+### Removed
+* The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
+* The `--eosq-on-demand` flag was removed, this was unused in the codebase.
+* The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
+
+### Changed
+* EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
+* Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
+* Improved `nodeos` log interceptions (when using `(mindreader|node-manager)-log-to-zap` flag) by adjusting log level for specific lines, that should improve the overall experience and better notice what is really an important error. More tweaking on the adjustment will continue as an iterative process, don't hesitate to report log line that should adjusted.
+* Flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
+* Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
+
+### Fixed
+* Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
 
 
 # [v0.1.0-beta4] 2020-06-23

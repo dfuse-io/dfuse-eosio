@@ -156,8 +156,13 @@ func (p *FluxDBHandler) InitializeStartBlockID() (startBlock bstream.BlockRef, e
 	}
 
 	zlog.Info("initializing pipeline forkdb", zap.Stringer("block", startBlock))
-	p.serverForkDB = forkable.NewForkDB(forkable.ForkDBWithLogger(zlog))
-	p.serverForkDB.InitLIB(startBlock)
+
+	p.serverForkDB = forkable.NewForkDB(forkable.ForkDBWithLogger(zlog.Named("forkdb")))
+	if startBlock != bstream.BlockRefEmpty {
+		// If we are the empty block ref, we are going to initialize ourselves later on in the pipeline when we
+		// receive the first streamable block of the chain.
+		p.serverForkDB.InitLIB(startBlock)
+	}
 
 	return startBlock, nil
 }
@@ -216,6 +221,7 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 	case forkable.StepNew:
 		metrics.HeadTimeDrift.SetBlockTime(blk.MustTime())
 		metrics.HeadBlockNumber.SetUint64(blk.Num())
+
 		if !p.db.IsReady() {
 			if isNearRealtime(blk, time.Now()) && p.HeadBlock(context.Background()) != nil {
 				zlog.Info("realtime blocks flowing, marking process as ready")
@@ -228,6 +234,12 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 			bstream.BlockRefFromID(rawBlk.PreviousID()),
 			fObj.Obj.(*WriteRequest),
 		)
+
+		// When we starting, if fluxdb internal forkdb has no LIB and we are seeing the first block, let's use it as the LIB
+		if !p.serverForkDB.HasLIB() && blk.Num() == bstream.GetProtocolFirstStreamableBlock {
+			zlog.Info("setting internal forkdb LIB to first streamable block")
+			p.serverForkDB.TrySetLIB(blk, bstream.BlockRefFromID(blk.PreviousID()), blk.Num())
+		}
 
 		p.updateSpeculativeWrites(rawBlk)
 

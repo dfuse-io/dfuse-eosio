@@ -24,6 +24,8 @@ import (
 )
 
 type Hash string
+type BlockTime string
+type BlockTimestamp time.Time
 
 var zlog *zap.Logger
 
@@ -39,12 +41,13 @@ func (h Hash) Bytes(t testing.T) []byte {
 }
 
 type FilteredBlock struct {
-	Include string
-	Exclude string
-	Stats   UnfilteredStats
+	Include         string
+	Exclude         string
+	UnfilteredStats Counts
+	FilteredStats   Counts
 }
 
-type UnfilteredStats struct {
+type Counts struct {
 	TrxTraceCount      int
 	ActTraceInputCount int
 	ActTraceTotalCount int
@@ -71,20 +74,34 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 		Timestamp: blockTimestamp,
 	}
 
-	for _, element := range components {
-		switch v := element.(type) {
+	for _, component := range components {
+		switch v := component.(type) {
+		case BlockTime:
+			blockTime, err := time.Parse(time.RFC3339, string(v))
+			require.NoError(t, err)
+
+			pbblock.Header.Timestamp, err = ptypes.TimestampProto(blockTime)
+			require.NoError(t, err)
+		case BlockTimestamp:
+			pbblock.Header.Timestamp, err = ptypes.TimestampProto(time.Time(v))
+			require.NoError(t, err)
+
 		case *pbcodec.TransactionTrace:
+			v.BlockNum = pbblock.Num()
+			v.BlockTime, err = ptypes.TimestampProto(pbblock.MustTime())
+			require.NoError(t, err)
+
 			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
 			pbblock.UnfilteredImplicitTransactionOps = append(pbblock.UnfilteredImplicitTransactionOps, v)
 		case FilteredBlock:
 			// Performed at the very end
 		default:
-			require.FailNowf(t, "invalid component", "Invalid block component of type %T", element)
+			failInvalidComponent(t, "block", component)
 		}
 	}
 
-	pbblock.PopulateActionAndTransactionCount()
+	pbblock.MigrateV0ToV1()
 
 	// Need to go at the end to ensure we catch all transaction traces
 	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(FilteredBlock); return ok }); component != nil {
@@ -95,11 +112,15 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 		pbblock.FilteringExcludeFilterExpr = filtered.Exclude
 		pbblock.FilteredTransactionTraces = pbblock.UnfilteredTransactionTraces
 		pbblock.UnfilteredTransactionTraces = nil
-		pbblock.PopulateActionAndTransactionCount()
+		pbblock.MigrateV0ToV1()
 
-		pbblock.UnfilteredTransactionTraceCount = uint32(filtered.Stats.TrxTraceCount)
-		pbblock.UnfilteredExecutedInputActionCount = uint32(filtered.Stats.ActTraceInputCount)
-		pbblock.UnfilteredExecutedTotalActionCount = uint32(filtered.Stats.ActTraceTotalCount)
+		pbblock.UnfilteredTransactionTraceCount = uint32(filtered.UnfilteredStats.TrxTraceCount)
+		pbblock.UnfilteredExecutedInputActionCount = uint32(filtered.UnfilteredStats.ActTraceInputCount)
+		pbblock.UnfilteredExecutedTotalActionCount = uint32(filtered.UnfilteredStats.ActTraceTotalCount)
+
+		pbblock.FilteredTransactionTraceCount = uint32(filtered.FilteredStats.TrxTraceCount)
+		pbblock.FilteredExecutedInputActionCount = uint32(filtered.FilteredStats.ActTraceInputCount)
+		pbblock.FilteredExecutedTotalActionCount = uint32(filtered.FilteredStats.ActTraceTotalCount)
 	}
 
 	if os.Getenv("DEBUG") != "" {
@@ -131,15 +152,19 @@ func ToPbbstreamBlock(t testing.T, block *pbcodec.Block) *pbbstream.Block {
 	return blk
 }
 
-func TrxTrace(t testing.T, elements ...interface{}) *pbcodec.TransactionTrace {
+type TrxID string
+
+func TrxTrace(t testing.T, components ...interface{}) *pbcodec.TransactionTrace {
 	trace := &pbcodec.TransactionTrace{
 		Receipt: &pbcodec.TransactionReceiptHeader{
 			Status: pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED,
 		},
 	}
 
-	for _, element := range elements {
+	for _, element := range components {
 		switch v := element.(type) {
+		case TrxID:
+			trace.Id = string(v)
 		case *pbcodec.ActionTrace:
 			trace.ActionTraces = append(trace.ActionTraces, v)
 		case *pbcodec.DBOp:
@@ -150,6 +175,8 @@ func TrxTrace(t testing.T, elements ...interface{}) *pbcodec.TransactionTrace {
 			trace.TableOps = append(trace.TableOps, v)
 		case pbcodec.TransactionStatus:
 			trace.Receipt.Status = v
+		default:
+			failInvalidComponent(t, "transaction trace", element)
 		}
 	}
 
@@ -174,6 +201,8 @@ func Trx(t testing.T, elements ...interface{}) *pbcodec.Transaction {
 			trx.Actions = append(trx.Actions, v)
 		case ContextFreeAction:
 			trx.ContextFreeActions = append(trx.ContextFreeActions, (*pbcodec.Action)(v))
+		default:
+			failInvalidComponent(t, "transaction", element)
 		}
 	}
 
@@ -210,7 +239,7 @@ func ActionTrace(t testing.T, tripletName string, components ...interface{}) *pb
 		Action: Action(t, account+":"+actionName, components...),
 	}
 
-	return transformActionTrace(actTrace, components)
+	return transformActionTrace(t, actTrace, components)
 }
 
 func ActionTraceFail(t testing.T, tripletName string, components ...interface{}) *pbcodec.ActionTrace {
@@ -241,10 +270,21 @@ func ActionTraceSetABI(t testing.T, account string, abi *eos.ABI, components ...
 		},
 	}
 
-	return transformActionTrace(actTrace, components)
+	return transformActionTrace(t, actTrace, components)
 }
 
-func transformActionTrace(actTrace *pbcodec.ActionTrace, components []interface{}) *pbcodec.ActionTrace {
+func transformActionTrace(t testing.T, actTrace *pbcodec.ActionTrace, components []interface{}) *pbcodec.ActionTrace {
+	ignoreIfActionComponent := ignoreComponent(func(component interface{}) bool {
+		switch component.(type) {
+		case ActionData:
+		default:
+			return false
+		}
+
+		// Ignore all
+		return true
+	})
+
 	for _, component := range components {
 		switch v := component.(type) {
 		case ExecutionIndex:
@@ -253,6 +293,8 @@ func transformActionTrace(actTrace *pbcodec.ActionTrace, components []interface{
 			actTrace.Receipt.GlobalSequence = uint64(v)
 		case actionMatched:
 			actTrace.FilteringMatched = bool(v)
+		default:
+			failInvalidComponent(t, "action trace", component, ignoreIfActionComponent)
 		}
 	}
 
@@ -324,13 +366,28 @@ func TrxOp(t testing.T, signedTrx *pbcodec.SignedTransaction) *pbcodec.TrxOp {
 	return op
 }
 
-func DtrxOp(t testing.T, actionIndex uint32, operation string, signedTrx *pbcodec.SignedTransaction) *pbcodec.DTrxOp {
+type DtrxOpActionIndex uint32
+type DtrxOpPayer string
+
+func DtrxOp(t testing.T, operation string, trxID string, components ...interface{}) *pbcodec.DTrxOp {
 	opName := pbcodec.DTrxOp_Operation_value["OPERATION_"+strings.ToUpper(operation)]
 
 	op := &pbcodec.DTrxOp{
-		Operation:   pbcodec.DTrxOp_Operation(opName),
-		ActionIndex: actionIndex,
-		Transaction: signedTrx,
+		Operation:     pbcodec.DTrxOp_Operation(opName),
+		TransactionId: trxID,
+	}
+
+	for _, component := range components {
+		switch v := component.(type) {
+		case DtrxOpActionIndex:
+			op.ActionIndex = uint32(v)
+		case DtrxOpPayer:
+			op.Payer = string(v)
+		case *pbcodec.SignedTransaction:
+			op.Transaction = v
+		default:
+			failInvalidComponent(t, "dtrx op", component)
+		}
 	}
 
 	return op
@@ -343,4 +400,26 @@ func ToTimestamp(t time.Time) *pbts.Timestamp {
 	}
 
 	return el
+}
+
+type ignoreComponent func(v interface{}) bool
+
+func failInvalidComponent(t testing.T, tag string, component interface{}, options ...interface{}) {
+	shouldIgnore := ignoreComponent(func(v interface{}) bool { return false })
+	for _, option := range options {
+		switch v := option.(type) {
+		case ignoreComponent:
+			shouldIgnore = v
+		}
+	}
+
+	if shouldIgnore(component) {
+		return
+	}
+
+	require.FailNowf(t, "invalid component", "Invalid %s component of type %T", tag, component)
+}
+
+func logInvalidComponent(tag string, component interface{}) {
+	zlog.Info(fmt.Sprintf("invalid %s component of type %T", tag, component))
 }

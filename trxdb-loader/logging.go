@@ -15,12 +15,19 @@
 package trxdb_loader
 
 import (
+	"os"
+
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
 
 var zlog *zap.Logger
+var traceEnabled = false
 
 func init() {
 	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb-loader", &zlog)
+
+	if os.Getenv("TRACE") == "true" {
+		traceEnabled = true
+	}
 }

@@ -16,6 +16,9 @@ start:
   - trxdb-loader
   flags:
     # See global.yaml notes to make a trxdb switch db test
-    # common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=account,block,timeline bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=transaction&write=transaction
+    common-trxdb-dsn: bigkv://dev.dev/test-trxdb-blocks?createTable=true&read=blk&write=none bigkv://dev.dev/test-trxdb-trxs?createTable=true&read=trx&write=trx
     common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
     relayer-source: ":10000"
+    trxdb-loader-truncation-enabled: true
+    trxdb-loader-truncation-each: 100
+    trxdb-loader-truncation-ttl: 200

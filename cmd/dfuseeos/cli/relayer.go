@@ -1,10 +1,8 @@
 package cli
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dlauncher/launcher"
 	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	"github.com/spf13/cobra"
@@ -30,16 +28,8 @@ func init() {
 			cmd.Flags().Duration("relayer-init-time", 1*time.Minute, "time before we start looking for max drift")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return relayerApp.New(&relayerApp.Config{
 				SourcesAddr:      viper.GetStringSlice("relayer-source"),
@@ -52,7 +42,7 @@ func init() {
 				MinStartOffset:   viper.GetUint64("relayer-min-start-offset"),
 				SourceStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &relayerApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})

@@ -32,8 +32,6 @@ func init() {
 }
 
 func dfusePurgeE(cmd *cobra.Command, args []string) error {
-	cmd.SilenceUsage = true
-
 	dataDir := viper.GetString("global-data-dir")
 
 	if err := Purge(dataDir); err != nil {

@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"path/filepath"
-
 	fluxdbApp "github.com/dfuse-io/dfuse-eosio/fluxdb/app/fluxdb"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -33,22 +31,15 @@ func init() {
 			cmd.Flags().Uint64("fluxdb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
-			absDataDir, err := filepath.Abs(dfuseDataDir)
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 			return fluxdbApp.New(&fluxdbApp.Config{
 				EnableServerMode:           viper.GetBool("fluxdb-enable-server-mode"),
 				EnableInjectMode:           viper.GetBool("fluxdb-enable-inject-mode"),
 				EnableReprocSharderMode:    viper.GetBool("fluxdb-enable-reproc-sharder-mode"),
 				EnableReprocInjectorMode:   viper.GetBool("fluxdb-enable-reproc-injector-mode"),
 				EnablePipeline:             viper.GetBool("fluxdb-enable-pipeline"),
-				StoreDSN:                   mustReplaceDataDir(absDataDir, viper.GetString("fluxdb-statedb-dsn")),
+				StoreDSN:                   mustReplaceDataDir(dfuseDataDir, viper.GetString("fluxdb-statedb-dsn")),
 				BlockStreamAddr:            viper.GetString("common-blockstream-addr"),
 				BlockStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				ThreadsNum:                 viper.GetInt("fluxdb-max-threads"),

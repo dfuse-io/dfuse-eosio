@@ -15,9 +15,9 @@ func init() {
 		Title:       "Booter",
 		Description: "Boots chain baed on provided bootseq",
 		MetricsID:   "booter",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/booter.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/(dfuse-eosio/booter.*|eosio-boot.*)", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("booter-bootseq", "./bootseq.yaml", "File path tp the desired boot sequence")
+			cmd.Flags().String("booter-bootseq", "./bootseq.yaml", "File path to the desired boot sequence")
 			cmd.Flags().String("booter-nodeos-api-addr", fmt.Sprintf("http://localhost%s/", NodeosAPIAddr), "Target API address to communicate with underlying nodeos")
 			cmd.Flags().String("booter-data-dir", "{dfuse-data-dir}/booter", "Booter's working directory")
 			cmd.Flags().String("booter-vault-file", "", "Wallet file that contains encrypted key material")
@@ -25,11 +25,8 @@ func init() {
 
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
 
 			return boot.New(&boot.Config{
 				NodeosAPIAddress: viper.GetString("booter-nodeos-api-addr"),

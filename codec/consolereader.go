@@ -75,6 +75,12 @@ func (l *ConsoleReader) setupScanner() {
 			}
 			l.readBuffer <- line
 		}
+
+		err := l.scanner.Err()
+		if err != nil && err != io.EOF {
+			zlog.Error("console read line scanner encountered an error", zap.Error(err))
+		}
+
 		close(l.readBuffer)
 		close(l.done)
 	}()
@@ -111,6 +117,10 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 	for line := range l.readBuffer {
 		line = line[6:]
+
+		if traceEnabled {
+			zlog.Debug("extracing deep mind data from line", zap.String("line", line))
+		}
 
 		// Order of conditions is based (approximately) on those that will appear more often
 		switch {
@@ -177,7 +187,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFeatureOpPreActivate(line)
 
 		case strings.HasPrefix(line, "SWITCH_FORK"):
-			zlog.Info("Fork signal, restarting state accumulation from beginning")
+			zlog.Info("fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
 
 		case strings.HasPrefix(line, "ABIDUMP START"):
@@ -191,7 +201,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readDeepmindVersion(line)
 
 		default:
-			zlog.Info("Unknown log line", zap.String("line", line))
+			zlog.Info("unknown log line", zap.String("line", line))
 		}
 
 		if err != nil {
@@ -432,6 +442,9 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
+	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
+	// TransactionCount, TransactionTraceCount)
+	ctx.block.Version = 1
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
 	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
@@ -503,12 +516,13 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	block := ctx.block
 
-	// This calls block until all transaction has been decoded inside the block
+	zlog.Debug("blocking until abi decoder has decoded every transaction pushed to it")
 	err = ctx.abiDecoder.endBlock(ctx.block)
 	if err != nil {
 		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
 	}
 
+	zlog.Debug("abi decoder terminated all decoding operations, resetting block")
 	ctx.resetBlock()
 	return block, nil
 }
@@ -961,6 +975,8 @@ func (ctx *parseCtx) readDeepmindVersion(line string) error {
 		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
 	}
 
+	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
+
 	return nil
 }
 
@@ -983,23 +999,27 @@ func inSupportedVersion(majorVersion string) bool {
 func (ctx *parseCtx) readABIStart(line string) error {
 	chunks := strings.SplitN(line, " ", -1)
 
+	var logFields []zap.Field
 	switch len(chunks) {
 	case 2: // Version 12
 		break
 	case 4: // Version 13
-		_, err := strconv.Atoi(chunks[2])
+		blockNum, err := strconv.Atoi(chunks[2])
 		if err != nil {
 			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
 		}
 
-		_, err = strconv.Atoi(chunks[3])
+		globalSequence, err := strconv.Atoi(chunks[3])
 		if err != nil {
 			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
 		}
+
+		logFields = append(logFields, zap.Int("block_num", blockNum), zap.Int("global_sequence", globalSequence))
 	default:
 		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
 	}
 
+	zlog.Info("read ABI start marker", logFields...)
 	ctx.abiDecoder.resetCache()
 	return nil
 }
@@ -1025,6 +1045,10 @@ func (ctx *parseCtx) readABIDump(line string) error {
 	case 4: // Version 13
 		contract = chunks[2]
 		rawABI = chunks[3]
+	}
+
+	if traceEnabled {
+		zlog.Debug("read initial ABI for contract", zap.String("contract", contract))
 	}
 
 	return ctx.abiDecoder.addInitialABI(contract, rawABI)

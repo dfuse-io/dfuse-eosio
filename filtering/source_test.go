@@ -22,7 +22,10 @@ func TestFilteringPreprocessor(t *testing.T) {
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
 			),
-			ct.Block(t, "00000001aa", ct.FilteredBlock{Stats: ct.UnfilteredStats{2, 2, 2}},
+			ct.Block(t, "00000001aa", ct.FilteredBlock{
+				UnfilteredStats: ct.Counts{2, 2, 2},
+				FilteredStats:   ct.Counts{1, 1, 1},
+			},
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount", ct.ActionMatched)),
 			),
 		},

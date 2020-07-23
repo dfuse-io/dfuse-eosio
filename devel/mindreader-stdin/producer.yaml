@@ -1,0 +1,6 @@
+start:
+  args:
+  - node-manager
+  flags:
+    # Disable metrics listening
+    metrics-listen-addr: ""

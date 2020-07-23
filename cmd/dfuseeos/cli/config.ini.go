@@ -54,14 +54,16 @@ enable-stale-production = true
 signature-provider = EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV=KEY:5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3
 `
 
-var mindreaderLocalConfigIni = `# Plugins
-plugin = eosio::producer_plugin      # for state snapshots
-plugin = eosio::producer_api_plugin  # for state snapshots
+var mindreaderLocalConfigIniFormat = `# Plugins
 plugin = eosio::chain_plugin
 plugin = eosio::chain_api_plugin
 plugin = eosio::http_plugin
 plugin = eosio::db_size_api_plugin
 plugin = eosio::net_api_plugin
+
+## Required for state snapshots API call to work
+plugin = eosio::producer_plugin
+plugin = eosio::producer_api_plugin
 
 # Chain
 chain-state-db-size-mb = 4096
@@ -86,6 +88,9 @@ http-max-response-time-ms = 1000
 http-validate-host = false
 verbose-http-errors = true
 
+# EOS VM
+%s
+
 # Enable deep mind
 deep-mind = true
 contracts-console = true
@@ -95,13 +100,15 @@ p2p-peer-address = 127.0.0.1:9876
 `
 
 var mindreaderRemoteConfigIniFormat = `# Plugins
-plugin = eosio::producer_plugin      # for state snapshots
-plugin = eosio::producer_api_plugin  # for state snapshots
 plugin = eosio::chain_plugin
 plugin = eosio::chain_api_plugin
 plugin = eosio::http_plugin
 plugin = eosio::db_size_api_plugin
 plugin = eosio::net_api_plugin
+
+## Required for state snapshots API call to work
+plugin = eosio::producer_plugin
+plugin = eosio::producer_api_plugin
 
 # Chain
 chain-state-db-size-mb = 64000
@@ -125,6 +132,9 @@ http-server-address = 127.0.0.1:9888
 http-max-response-time-ms = 1000
 http-validate-host = false
 verbose-http-errors = true
+
+# EOS VM
+%s
 
 # Enable deep mind
 deep-mind = true

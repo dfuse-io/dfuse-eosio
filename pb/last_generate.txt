@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 generate.sh - Thu Jul  9 08:57:39 EDT 2020 - maoueh
 dfuse-io/proto revision: af829687992022d14fadc3624ae68b8553030ea3
 dfuse-io/proto-eosio revision: f2bb67f9040804025cd2cf4acb9ffda8d7356b9e
+=======
+generate.sh - Tue Jul 14 13:49:04 EDT 2020 - julien
+dfuse-io/proto revision: 122dada4c9812eb941d59929216ef79951f3eabe
+dfuse-io/proto-eosio revision: fde1014f3a3136c4adbeb81c925d2eecdd65a052
+>>>>>>> develop

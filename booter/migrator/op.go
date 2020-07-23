@@ -16,6 +16,10 @@ type OpMigration struct {
 	DataDir string `json:"data_dir"`
 }
 
+func (op *OpMigration) RequireValidation() bool {
+	return false
+}
+
 func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in chan interface{}) error {
 	impt := newImporter(opPubkey, op.DataDir, in)
 

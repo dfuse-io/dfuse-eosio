@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
 	liveApp "github.com/dfuse-io/search/app/live"
@@ -29,13 +28,12 @@ func init() {
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
+			cmd.Flags().Int("search-live-preprocessor-concurrent-threads", 8, "Number of thread used to run file source preprocessor function")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+			dfuseDataDir := runtime.AbsDataDir
+
 			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
@@ -45,31 +43,31 @@ func init() {
 				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
 
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
-
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
+
+			blockmetaAddr := viper.GetString("common-blockmeta-addr")
+			blockstreamAddr := viper.GetString("common-blockstream-addr")
 
 			return liveApp.New(&liveApp.Config{
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
-				BlockmetaAddr:            viper.GetString("common-blockmeta-addr"),
+				BlockmetaAddr:            blockmetaAddr,
 				LiveIndexesPath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
 				BlocksStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				BlockstreamAddr:          viper.GetString("common-blockstream-addr"),
+				BlockstreamAddr:          blockstreamAddr,
 				StartBlockDriftTolerance: viper.GetUint64("search-live-start-block-drift-tolerance"),
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
+				PreProcConcurrentThreads: viper.GetInt("search-live-preprocessor-concurrent-threads"),
 			}, &liveApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
-				Dmesh:       modules.SearchDmeshClient,
+				Dmesh:       runtime.SearchDmeshClient,
+				Tracker:     runtime.Tracker,
 			}), nil
 		},
 	})

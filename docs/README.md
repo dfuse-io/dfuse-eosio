@@ -12,6 +12,35 @@ https://docs.dfuse.io
 * [3 phase launch of large networks instructions](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 * Some sample [partial sync instructions](../PARTIAL_SYNC.md) for Kylin
 
+### Merger
+
+#### From Reprocessing to Live
+
+After a re-processing phase where `mindreader` created the merged bundles on its own, the `merger` needs to
+get back correctly on this feet.
+
+When starting, the `merger` first determines what was the last bundle merged. From that value, it will then
+start to drop one-block files until it reached the first file it should merge in a bundle.
+
+So to go from re-processing to a live process, one need to perform those steps:
+
+- Starts back `mindreader` in live mode earlier from the last merged bundle
+- Starts back `merger`.
+
+Here example cases and explanation, assuming the last merged bundle is `900` (covers block `0-999`):
+
+- `mindreader` restarts at 0890 | Produces block 0890, 0891, 0892 ... 1010 | OK, `merger` checks last merged bundle and drops `890-999`
+- `mindreader` restarts at 0910 | Produces block 0910, 0911, 0912 ... 1010 | OK, `merger` checks last merged bundle and drops `910-999`
+- `mindreader` restarts at 1000 | Produces block 1000, 1001, 1002 ... 1010 | OK, `merger` checks last merged bundle and drops nothing
+- `mindreader` restarts at 1010 | Produces block 1010, 1011, 1012 ...      | KO, `merger` will complain about missing one blocks
+
+#### Recovering from missing one-block files
+
+If the merger complains about missing one-block files and there are indeed missing, to recover from
+this situation, you will need to start back mindreader **before** the missing one-block file.
+
+For example, let's say you are missing block 925, then you should start back `mindreader` at block
+`924`.
 
 ## Architecture Diagrams
 

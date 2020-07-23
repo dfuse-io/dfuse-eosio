@@ -16,6 +16,7 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/dfuse-io/derr"
@@ -49,6 +50,7 @@ func Main() {
 	RootCmd.PersistentFlags().CountP("verbose", "v", "Enables verbose output (-vvvv for max verbosity)")
 
 	RootCmd.PersistentFlags().String("log-level-switcher-listen-addr", "localhost:1065", "If non-empty, the process will listen on this address for json-formatted requests to change different logger levels (see DEBUG.md for more info)")
+	RootCmd.PersistentFlags().String("metrics-listen-addr", MetricsListenAddr, "If non-empty, the process will listen on this address to server Prometheus metrics")
 	RootCmd.PersistentFlags().String("pprof-listen-addr", "localhost:6060", "If non-empty, the process will listen on this address for pprof analysis (see https://golang.org/pkg/net/http/pprof/)")
 
 	derr.Check("registering application flags", launcher.RegisterFlags(StartCmd))
@@ -57,14 +59,13 @@ func Main() {
 	for app := range launcher.AppRegistry {
 		availableCmds = append(availableCmds, app)
 	}
+	sort.Strings(availableCmds)
+
 	StartCmd.SetHelpTemplate(fmt.Sprintf(startCmdHelpTemplate, strings.Join(availableCmds, "\n  ")))
 	StartCmd.Example = startCmdExample
 
 	RootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-		if cmd.CalledAs() == "help" {
-			return nil
-		}
-		return setup(cmd.CalledAs())
+		return setupCmd(cmd)
 	}
 
 	derr.Check("dfuse", RootCmd.Execute())
@@ -80,7 +81,7 @@ Aliases:
 Examples:
   {{.Example}}{{end}}
 
-Available Commands:
+Available applications:
   %s{{if .HasAvailableLocalFlags}}
 
 Flags:

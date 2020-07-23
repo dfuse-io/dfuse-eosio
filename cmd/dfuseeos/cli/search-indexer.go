@@ -4,17 +4,11 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/filtering"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dlauncher/launcher"
-	"github.com/dfuse-io/dstore"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	indexerApp "github.com/dfuse-io/search/app/indexer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 func init() {
@@ -39,11 +33,8 @@ func init() {
 			cmd.Flags().String("search-indexer-writable-path", "{dfuse-data-dir}/search/indexer", "Writable base path for storing index files")
 			return nil
 		},
-		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
-			dfuseDataDir, err := dfuseAbsoluteDataDir()
-			if err != nil {
-				return nil, err
-			}
+		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
+
 			mapper, err := eosSearch.NewBlockMapper(
 				viper.GetString("search-common-dfuse-events-action-name"),
 				viper.GetBool("search-common-dfuse-events-unrestricted"),
@@ -53,45 +44,19 @@ func init() {
 				return nil, fmt.Errorf("unable to create block mapper: %w", err)
 			}
 
-			filter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
-			if err != nil {
-				return nil, fmt.Errorf("unable to create block filter: %w", err)
-			}
-
 			eosSearch.RegisterHandlers(mapper.IndexedTerms())
 
-			var startBlockResolvers []bstream.StartBlockResolver
-			blockmetaAddr := viper.GetString("common-blockmeta-addr")
-			if blockmetaAddr != "" {
-				conn, err := dgrpc.NewInternalClient(blockmetaAddr)
-				if err != nil {
-					userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
-				} else {
-					blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
-					startBlockResolvers = append(startBlockResolvers, bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
-				}
-			}
-
+			dfuseDataDir := runtime.AbsDataDir
 			blocksStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
-			blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
-			if err != nil {
-				userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
-			} else {
-				startBlockResolvers = append(startBlockResolvers, codec.BlockstoreStartBlockResolver(blocksStore))
-			}
-			if len(startBlockResolvers) == 0 {
-				return nil, fmt.Errorf("no StartBlockResolver could be set for search indexer")
-			}
+			blockstreamAddr := viper.GetString("common-blockstream-addr")
+			tracker := runtime.Tracker.Clone()
+			tracker.AddGetter(bstream.NetworkLIBTarget, bstream.NetworkLIBBlockRefGetter(blockstreamAddr))
 
-			tracker := bstream.NewTracker(250)
-			for _, resolver := range startBlockResolvers {
-				tracker.AddResolver(resolver)
-			}
-
+			dataDir := runtime.AbsDataDir
 			return indexerApp.New(&indexerApp.Config{
 				HTTPListenAddr:        viper.GetString("search-indexer-http-listen-addr"),
 				GRPCListenAddr:        viper.GetString("search-indexer-grpc-listen-addr"),
-				BlockstreamAddr:       viper.GetString("common-blockstream-addr"),
+				BlockstreamAddr:       blockstreamAddr,
 				ShardSize:             viper.GetUint64("search-indexer-shard-size"),
 				StartBlock:            int64(viper.GetInt("search-indexer-start-block")),
 				StopBlock:             viper.GetUint64("search-indexer-stop-block"),
@@ -100,11 +65,11 @@ func init() {
 				EnableUpload:          viper.GetBool("search-indexer-enable-upload"),
 				DeleteAfterUpload:     viper.GetBool("search-indexer-delete-after-upload"),
 				EnableIndexTruncation: viper.GetBool("search-indexer-enable-index-truncation"),
-				WritablePath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-indexer-writable-path")),
-				IndicesStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("search-common-indices-store-url")),
+				WritablePath:          mustReplaceDataDir(dataDir, viper.GetString("search-indexer-writable-path")),
+				IndicesStoreURL:       mustReplaceDataDir(dataDir, viper.GetString("search-common-indices-store-url")),
 				BlocksStoreURL:        blocksStoreURL,
 			}, &indexerApp.Modules{
-				BlockFilter: filter.TransformInPlace,
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				BlockMapper: mapper,
 				Tracker:     tracker,
 			}), nil

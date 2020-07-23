@@ -127,7 +127,7 @@ func (c *ABIDecoder) endBlock(block *pbcodec.Block) error {
 	blockRef := block.AsRef()
 	zlog.Debug("post-processing block", zap.Stringer("block", blockRef))
 	if c.activeBlockNum == noActiveBlockNum {
-		return fmt.Errorf("end block for block %s received while no active block present", block)
+		return fmt.Errorf("end block for block %s received while no active block present", blockRef)
 	}
 
 	zlog.Debug("processing implicit transactions", zap.Int("trx_op_count", len(block.UnfilteredImplicitTransactionOps)))
@@ -524,7 +524,7 @@ func (q *decodingQueue) decodeAction(action *pbcodec.Action, globalSequence uint
 		//
 		// FIXME: Probably that logging an error is too much, it's being done like this for now while we
 		//        tweak. Will probably move to INFO (depending on occurrences) or DEBUG.
-		zlog.Error("skipping action since we were not able to decode it against ABI",
+		zlog.Debug("skipping action since we were not able to decode it against ABI",
 			zap.Uint64("block_num", blockNum),
 			zap.String("trx_id", trxID),
 			zap.String("action", action.SimpleName()),

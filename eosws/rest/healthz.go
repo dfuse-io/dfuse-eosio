@@ -153,7 +153,7 @@ func HealthzHandler(hub *hub.SubscriptionHub, api *eos.API, blocksStore dstore.S
 		}
 
 		wg.Wait()
-		zlog.Debug("Healthz wait group done")
+		zlog.Debug("healthz wait group done")
 		json.NewEncoder(w).Encode(h)
 
 	})

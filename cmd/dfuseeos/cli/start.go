@@ -20,6 +20,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/filtering"
+	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
+
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
@@ -41,8 +47,6 @@ func init() {
 }
 
 func dfuseStartE(cmd *cobra.Command, args []string) (err error) {
-	cmd.SilenceUsage = true
-
 	dataDir := viper.GetString("global-data-dir")
 	userLog.Debug("dfuseeos binary started", zap.String("data_dir", dataDir))
 
@@ -76,8 +80,40 @@ func Start(dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create dmesh client: %w", err)
 	}
 
-	modules := &launcher.RuntimeModules{
+	blockfilter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"))
+	if err != nil {
+		return fmt.Errorf("unable to create block filter: %w", err)
+	}
+
+	/// SETUP CHAIN TRACKER
+	tracker := bstream.NewTracker(250)
+
+	blockmetaAddr := viper.GetString("common-blockmeta-addr")
+	if blockmetaAddr != "" {
+		conn, err := dgrpc.NewInternalClient(blockmetaAddr)
+		if err != nil {
+			userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
+		} else {
+			blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
+			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
+		}
+	}
+
+	blocksStoreURL := mustReplaceDataDir(dataDirAbs, viper.GetString("common-blocks-store-url"))
+	blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
+	if err != nil {
+		userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
+	} else {
+		tracker.AddResolver(codec.BlockstoreStartBlockResolver(blocksStore))
+	}
+
+	////////
+
+	modules := &launcher.Runtime{
 		SearchDmeshClient: meshClient,
+		BlockFilter:       blockfilter,
+		AbsDataDir:        dataDirAbs,
+		Tracker:           tracker,
 	}
 
 	err = bstream.ValidateRegistry()

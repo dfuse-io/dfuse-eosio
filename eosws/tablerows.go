@@ -98,7 +98,7 @@ func fetchTableRows(
 		if response.UpToBlockNum != 0 {
 			startBlockID = response.UpToBlockID
 			startBlockNum = eos.BlockNum(startBlockID)
-			zlogger.Info("Flux response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
+			zlogger.Info("flux response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
 		}
 		fetchSpan.End()
 	}

@@ -12,10 +12,7 @@ import { voteStore } from "../../../stores"
 import { AccountTokens } from "./account-tokens"
 import { UiHrDense } from "../../../atoms/ui-hr/ui-hr"
 import { useAccountBalances } from "../../../hooks/use-account-balances"
-// temp ignore for dev
-
 import { LCE } from "@dfuse/explorer"
-import { Config } from "../../../models/config"
 
 interface Props {
   account: Account
@@ -71,7 +68,7 @@ export class AccountSummary extends ContentLoaderComponent<Props, any> {
             <Widget account={account} />
           </Cell>
         </Grid>
-        {Config.disable_token_meta ? null : <Tokens accountName={account.account_name} />}
+        <Tokens accountName={account.account_name} />
         <AccountPermissions account={account} />
       </Cell>
     )

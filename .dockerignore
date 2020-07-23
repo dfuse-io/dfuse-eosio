@@ -1,0 +1,8 @@
+.git
+codec/testdata/pbblocks
+devel
+dist
+
+**/eosq-build
+**/node_modules
+**/rice-box.go

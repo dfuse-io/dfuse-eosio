@@ -52,7 +52,7 @@ func (p *Pipeline) Launch() {
 		}
 
 		//blk := block.ToNative().(*pbcodec.Block)
-		//zlog.Info("Implemented me for god sake!", zap.Any("block", blk))
+		//zlog.Info("implemented me for god sake!", zap.Any("block", blk))
 
 		// p.processExecutedTransactions(blk.AllExecutedTransactionTraces())
 
