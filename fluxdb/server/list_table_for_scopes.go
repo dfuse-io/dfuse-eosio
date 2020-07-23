@@ -103,7 +103,7 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 		}
 
 		return resp, nil
-	})
+	}, zlog)
 
 	nailer.PushAll(ctx, scopes)
 

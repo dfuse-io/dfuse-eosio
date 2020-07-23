@@ -69,7 +69,7 @@ func (s *Server) GetMultiContractsTableRows(request *pbfluxdb.GetMultiContractsT
 		}
 
 		return resp, nil
-	})
+	}, zlog)
 
 	nailer.PushAll(ctx, contracts)
 

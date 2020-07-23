@@ -21,8 +21,8 @@ require (
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
 	github.com/dfuse-io/dgraphql v0.0.2-0.20200702205930-77425a6665f8
-	github.com/dfuse-io/dhammer v0.0.0-20200709140046-8ff5bc08972d
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
+	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20200715193603-ea2a15e9e193
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c

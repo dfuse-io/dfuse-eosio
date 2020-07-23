@@ -95,7 +95,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 		}
 
 		return resp, nil
-	})
+	}, zlog)
 
 	nailer.PushAll(ctx, accounts)
 

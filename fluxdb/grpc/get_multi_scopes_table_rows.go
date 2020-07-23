@@ -93,7 +93,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbfluxdb.GetMultiScopesTableRo
 		}
 
 		return resp, nil
-	})
+	}, zlog)
 
 	nailer.PushAll(ctx, scopes)
 
