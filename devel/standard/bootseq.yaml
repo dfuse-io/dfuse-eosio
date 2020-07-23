@@ -150,6 +150,37 @@ boot_sequence:
       amount: 1000011821.0000 EOS  # 1B coins, as per distribution model + gift of RAM to new users.
       memo: "Creation of EOS. Credits and Acknowledgments: eosacknowledgments.io"
 
+  - op: token.transfer
+    label: Transfer Token
+    data:
+      from: eosio
+      to: eosio3
+      quantity: 10.0000 EOS
+      memo: "fund account eosio3"
+
+  - op: system.pushtransaction
+    label: Creating a custom transaction
+    data:
+      contract: eosio.token
+      action: transfer
+      payload:
+        from: eosio
+        to: eosio2
+        quantity: 10.0000 EOS
+        memo: "fund account eosio2"
+      actor: eosio
+      permission: active
+
+  - op: system.enable_protocol_features
+    label: Enabling chain protocol eatures
+
+  - op: system.activate_protocol_features
+    label: Activated specific protocol feature
+    data:
+      features:
+        - ONLY_LINK_TO_EXISTING_PERMISSION
+        - 2652f5f96006294109b3dd0bbde63693f55324af452b799ee137a81a905eed25
+
   - op: system.setcode
     label: Replacing eosio account from eosio.bios contract to eosio.system
     data:
