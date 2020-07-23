@@ -21,7 +21,7 @@ func (op *OpMigration) RequireValidation() bool {
 }
 
 func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in chan interface{}) error {
-	impt := newImporter(opPubkey, op.DataDir, in)
+	impt := newImporter(opPubkey, op.DataDir, in, c.Logger)
 
 	err := impt.init()
 	if err != nil {

@@ -41,13 +41,18 @@ type importer struct {
 	opPublicKey ecc.PublicKey
 	actionChan  chan interface{}
 	ctr         *contract
+	logger      *zap.Logger
 }
 
-func newImporter(opPublicKey ecc.PublicKey, dataDir string, actionChan chan interface{}) *importer {
+func newImporter(opPublicKey ecc.PublicKey, dataDir string, actionChan chan interface{}, logger *zap.Logger) *importer {
+	if logger == nil {
+		logger = zap.NewNop()
+	}
 	return &importer{
 		common:      common{dataDir: dataDir},
 		opPublicKey: opPublicKey,
 		actionChan:  actionChan,
+		logger:      logger,
 	}
 }
 
@@ -63,7 +68,7 @@ func (i *importer) init() error {
 		return fmt.Errorf("unable to open migration wasm cnt: %w", err)
 	}
 
-	zlog.Debug("read migrator contract")
+	i.logger.Debug("read migrator contract")
 	i.ctr = &contract{abi: abiCnt, code: wasmCnt}
 	return nil
 }
@@ -79,7 +84,7 @@ func (i *importer) inject() error {
 	}
 
 	for _, account := range accounts {
-		zlog.Debug("processing account", zap.String("account", account.name))
+		i.logger.Debug("processing account", zap.String("account", account.name))
 
 		err := account.setupAccountInfo()
 		if err != nil {
@@ -96,7 +101,7 @@ func (i *importer) inject() error {
 
 		err = i.migrateContract(account)
 		if err != nil {
-			zlog.Error("unable to process account",
+			i.logger.Error("unable to process account",
 				zap.String("account", account.name),
 				zap.Error(err),
 			)
@@ -106,7 +111,7 @@ func (i *importer) inject() error {
 	// cleanup
 	importerAuthority := i.importerAuthority()
 	for _, account := range accounts {
-		zlog.Debug("cleaning up account", zap.String("account", account.name))
+		i.logger.Debug("cleaning up account", zap.String("account", account.name))
 		err = i.setPermissions(account, &importerAuthority)
 		if err != nil {
 			return fmt.Errorf("unable to create permissions for accounts %q: %w", account.name, err)
@@ -117,12 +122,12 @@ func (i *importer) inject() error {
 }
 
 func (i *importer) migrateContract(accountData *Account) error {
-
 	err := accountData.setupAbi()
 	if err != nil {
 		return fmt.Errorf("unable to get account %q ABI: %w", accountData.name, err)
 	}
 
+	i.logger.Debug("setting importer contract")
 	err = i.setImporterContract(AN(accountData.name))
 	if err != nil {
 		return fmt.Errorf("unable to set migrator code for account: %w", err)
@@ -135,6 +140,10 @@ func (i *importer) migrateContract(accountData *Account) error {
 
 	for _, table := range tables {
 		// we need to create the payers account first before we can create the table rows
+		i.logger.Debug("migrating table",
+			zap.String("account", accountData.name),
+			zap.String("table", table),
+		)
 		err = accountData.migrateTable(
 			table,
 			func(action *eos.Action) {
@@ -172,7 +181,6 @@ func (i *importer) resetAccountContract(act *Account) error {
 }
 
 func (i *importer) setImporterContract(account eos.AccountName) error {
-	zlog.Debug("setting importer contract")
 	actions, err := system.NewSetContractContent(account, i.ctr.code, i.ctr.abi)
 	if err != nil {
 		return fmt.Errorf("unable to create set contract actions: %w", err)

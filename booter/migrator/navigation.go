@@ -21,6 +21,7 @@ func (i *importer) retrieveAccounts(newAccountFunc func(account *Account) error)
 				return nil
 			}
 			acc, err := newAccount(i.dataDir, acctName)
+			acc.SetLogger(i.logger)
 			if err != nil {
 				return fmt.Errorf("unable to create account %q: %w", acctName, err)
 
@@ -34,6 +35,7 @@ func (i *importer) retrieveAccounts(newAccountFunc func(account *Account) error)
 				out[index].hasContract = true
 			} else {
 				acc, err := newAccount(i.dataDir, acctName)
+				acc.SetLogger(i.logger)
 				if err != nil {
 					return fmt.Errorf("unable to create account %q: %w", acctName, err)
 
@@ -62,7 +64,7 @@ func walkScopes(dataDir string, f func(scope string) error) {
 }
 
 func isAccount(file os.FileInfo) bool {
-	return (file.Name() == "account.json")
+	return file.Name() == "account.json"
 }
 
 func isContract(file os.FileInfo) bool {
@@ -71,7 +73,7 @@ func isContract(file os.FileInfo) bool {
 }
 
 func isScope(file os.FileInfo) bool {
-	return (file.Name() == "rows.json")
+	return file.Name() == "rows.json"
 }
 
 func shouldSkip(file os.FileInfo) bool {

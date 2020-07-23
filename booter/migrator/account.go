@@ -31,6 +31,7 @@ type Account struct {
 	abi         *eos.ABI
 	ctr         *contract
 	info        *accountInfo
+	logger      *zap.Logger
 }
 
 func newAccount(dataDir string, account string) (*Account, error) {
@@ -39,9 +40,14 @@ func newAccount(dataDir string, account string) (*Account, error) {
 		return nil, fmt.Errorf("unable to generate account data: %w", err)
 	}
 	return &Account{
-		name: account,
-		path: path,
+		name:   account,
+		path:   path,
+		logger: zap.NewNop(),
 	}, nil
+}
+
+func (a *Account) SetLogger(logger *zap.Logger) {
+	a.logger = logger
 }
 
 func (a *Account) getAccountName() eos.AccountName { return AN(a.name) }
@@ -126,7 +132,7 @@ func (a *Account) readTableList() (out []string, err error) {
 	}
 	for _, file := range files {
 		if !file.IsDir() {
-			zlog.Warn("unexpected file in tables folder",
+			a.logger.Warn("unexpected file in tables folder",
 				zap.String("account", a.name),
 				zap.String("account_path", a.path),
 				zap.String("filename", file.Name()),
@@ -172,7 +178,7 @@ func (a *Account) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, 
 		ActionData: eos.NewActionData(Inject{Table: row.table, Scope: row.scope, Payer: eos.Name(row.Payer), Key: eos.Name(row.Key), Data: data}),
 	}
 	if traceEnable {
-		zlog.Debug("action data",
+		a.logger.Debug("action data",
 			zap.String("scope", string(row.scope)),
 			zap.String("payer", row.Payer),
 			zap.String("key", row.Key),

@@ -49,6 +49,7 @@ func testImporterData(t *testing.T, dataDir string) {
 		common:      common{dataDir: testMigrationDataDirPath(dataDir)},
 		opPublicKey: ecc.PublicKey{},
 		actionChan:  actions,
+		logger:      zap.NewNop(),
 	}
 	err := impt.init()
 	require.NoError(t, err)

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,6 +14,7 @@ func Test_retrieveContractAccounts(t *testing.T) {
 	dataDir := "migration-data"
 	i := &importer{
 		common: common{dataDir: testMigrationDataDirPath(dataDir)},
+		logger: zap.NewNop(),
 	}
 
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
