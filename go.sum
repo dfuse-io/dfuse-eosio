@@ -227,6 +227,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80/go.mod h1:LJXocN3Yp
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200709140046-8ff5bc08972d h1:QdCCIAoVS0ju5+JN6PrNVNjDeReuvFa79mf6T6BoJYs=
 github.com/dfuse-io/dhammer v0.0.0-20200709140046-8ff5bc08972d/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
+github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulVcyLu2SFVmUVFefcUoxUHqTs0V/DUc=
+github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSutKgJwa328F/bJ23rpWC8clt5LhCiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dlauncher v0.0.0-20200715193603-ea2a15e9e193 h1:W+gcmETqW0zuJLyLFfHhJU0T+oQ9NXMpW/SOekS3ymc=
@@ -247,6 +249,10 @@ github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGY
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/eosio-boot v0.0.0-20200723132010-e69f9b20fc3d h1:OEsAhU976D7/l6Djhc6B4FKoEpsmbe96T7hMEXmpZzk=
 github.com/dfuse-io/eosio-boot v0.0.0-20200723132010-e69f9b20fc3d/go.mod h1:OZ5tmQAtZgPIMbNxMt/ueKJbmXx0jxJv2rzrPy/eVHQ=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723162330-de038210c6c5 h1:WviS/Ms1fDX8rm8s5wlBDpz5oG5pl5nsMpURQapI3tM=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723162330-de038210c6c5/go.mod h1:OZ5tmQAtZgPIMbNxMt/ueKJbmXx0jxJv2rzrPy/eVHQ=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d h1:ZvVXr//h2KMb8+rJeHXjOpIROt3d2A8kBleAwV4sunw=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
@@ -317,6 +323,12 @@ github.com/eoscanada/eos-go v0.9.1-0.20200227221642-1b19518201a1/go.mod h1:6RuJF
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200723124523-15b8a308e4ad h1:zTFavzVF0ahwvBlDvqZ17ysy6W23DuzQy2mCIvaKEds=
 github.com/eoscanada/eos-go v0.9.1-0.20200723124523-15b8a308e4ad/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200723164750-1d323b9dd334 h1:AT/5qO+XmV6xvfIoKtRI5hrIWTFwkMLOgbvOsL2uXdc=
+github.com/eoscanada/eos-go v0.9.1-0.20200723164750-1d323b9dd334/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200723165729-425501625494 h1:DPgf2xiDYMJMG0qHbNJhV3GCz5UZ1bQKOVI/rkYNJ68=
+github.com/eoscanada/eos-go v0.9.1-0.20200723165729-425501625494/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82 h1:MHETOtdFMe0mLAq95Ftw5Cqa7pXQu8f15J9rMNKyiFs=
+github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
 github.com/eoscanada/eosc v1.4.0/go.mod h1:0I+yYzRUTbIMgQsBjBYyNdE5idtbUMMkUQM4fN5A3P4=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39 h1:JQ7Gc43VO/HJb/mNc9otItimhUi5nGKH7ZvINbidcyg=
