@@ -290,6 +290,8 @@ github.com/dfuse-io/eosio-boot v0.0.0-20200723131439-5efbf91c1f9e h1:vRUbOtuCPpd
 github.com/dfuse-io/eosio-boot v0.0.0-20200723131439-5efbf91c1f9e/go.mod h1:OZ5tmQAtZgPIMbNxMt/ueKJbmXx0jxJv2rzrPy/eVHQ=
 github.com/dfuse-io/eosio-boot v0.0.0-20200723132010-e69f9b20fc3d h1:OEsAhU976D7/l6Djhc6B4FKoEpsmbe96T7hMEXmpZzk=
 github.com/dfuse-io/eosio-boot v0.0.0-20200723132010-e69f9b20fc3d/go.mod h1:OZ5tmQAtZgPIMbNxMt/ueKJbmXx0jxJv2rzrPy/eVHQ=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d h1:ZvVXr//h2KMb8+rJeHXjOpIROt3d2A8kBleAwV4sunw=
+github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
@@ -371,6 +373,8 @@ github.com/eoscanada/eos-go v0.9.1-0.20200722183951-2b67efeb7cbd h1:a/JLqJiYI7Ch
 github.com/eoscanada/eos-go v0.9.1-0.20200722183951-2b67efeb7cbd/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200723124523-15b8a308e4ad h1:zTFavzVF0ahwvBlDvqZ17ysy6W23DuzQy2mCIvaKEds=
 github.com/eoscanada/eos-go v0.9.1-0.20200723124523-15b8a308e4ad/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82 h1:MHETOtdFMe0mLAq95Ftw5Cqa7pXQu8f15J9rMNKyiFs=
+github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
 github.com/eoscanada/eosc v1.4.0/go.mod h1:0I+yYzRUTbIMgQsBjBYyNdE5idtbUMMkUQM4fN5A3P4=
 github.com/eoscanada/pitreos v1.0.1-0.20190618150521-240402eb30e2 h1:qXzIzDwZsixtJfR6jHRFShEhOKrjYANdjHaPMb1uGCo=

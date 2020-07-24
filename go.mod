@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
 	github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
-	github.com/dfuse-io/eosio-boot v0.0.0-20200723132010-e69f9b20fc3d
+	github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
 	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
@@ -46,7 +46,7 @@ require (
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200723124523-15b8a308e4ad
+	github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
