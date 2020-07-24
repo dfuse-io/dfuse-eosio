@@ -54,7 +54,7 @@ type Counts struct {
 }
 
 func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block {
-	ref := bstream.BlockRefFromID(blkID)
+	ref := bstream.NewBlockRefFromID(blkID)
 
 	pbblock := &pbcodec.Block{
 		Id:     blkID,

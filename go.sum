@@ -229,6 +229,8 @@ github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f h1:U5y3Y5UE0w7amNe
 github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f/go.mod h1:xH/i4TFMt8koVQZ6WFms69WAsDWr2XsYL3Hkl7jkoLE=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8 h1:WcYHcCM05fMmcPe5/CrT+7lO2/ri2QtOsDrf/yrCCZA=
 github.com/dfuse-io/blockmeta v0.0.2-0.20200707183452-64757ade25e8/go.mod h1:RvJvIofMa0ETdKqp4a5TEblQMdXHoTKRQDC0lI9bRcM=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200724174723-8b30f0cb651d h1:5tr/rOtheS0Xf1qVTe/21ic40rM5pKQ9tVKlTaVQXnw=
+github.com/dfuse-io/blockmeta v0.0.2-0.20200724174723-8b30f0cb651d/go.mod h1:4L26b3+zMyFs9hAAT5bBy9iMl/7l2DwIpHqP+M0v7Hg=
 github.com/dfuse-io/bstream v0.0.2-0.20200707183302-64e1a90497ea h1:Xye8NJA3QUR5zOAxqKe5rmZmHWF6f/cBUbXeFR6BMis=
 github.com/dfuse-io/bstream v0.0.2-0.20200707183302-64e1a90497ea/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200714123252-e9115283f55f h1:3sATpfUBNfPxSkdcsA5CT3JXMXoypJdT0zMXrM7JEdI=
@@ -237,6 +239,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200715185351-418dc70e2924 h1:suKYlscErpN9
 github.com/dfuse-io/bstream v0.0.2-0.20200715185351-418dc70e2924/go.mod h1:BHEANTxf3ORDdJdGmQ+lJyX8JqjUH45WGBvBKBaMLQg=
 github.com/dfuse-io/bstream v0.0.2-0.20200724152201-64aae5bc532f h1:PnzmLveHCRTOkLH82En1UwKGIJL2lv3BKS84HVAcfSw=
 github.com/dfuse-io/bstream v0.0.2-0.20200724152201-64aae5bc532f/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
+github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736 h1:3VmVpJ57IqQqQ2b+o+me4y3yZVhMdk6DNapsyhVO9Cw=
+github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=

@@ -55,7 +55,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 	}
 
 	actionTraceRespWithBlock := func(blockID string, reqID string, index int, trace string) string {
-		ref := bstream.BlockRefFromID(blockID)
+		ref := bstream.NewBlockRefFromID(blockID)
 
 		out := fmt.Sprintf(`{"type":"action_trace","req_id":%q,"data":{"block_num":%d,"block_id":"%s","block_time":"0001-01-01T00:00:00Z","trx_id":"trx.1","idx":%d,"trace":%s}`, reqID, ref.Num(), blockID, index, trace)
 		out, _ = sjson.SetRaw(out, "data.trace.closest_unnotified_ancestor_action_ordinal", "0")
@@ -375,7 +375,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 
 	stamp, _ := ptypes.TimestampProto(time.Time{})
 
-	ref := bstream.BlockRefFromID(blockID)
+	ref := bstream.NewBlockRefFromID(blockID)
 	blk := &pbcodec.Block{
 		Id:     blockID,
 		Number: uint32(ref.Num()),

@@ -63,7 +63,7 @@ func (b *Block) LIBNum() uint64 {
 }
 
 func (b *Block) AsRef() bstream.BlockRef {
-	return bstream.BlockRefFromID(b.Id)
+	return bstream.NewBlockRef(b.Id, uint64(b.Number))
 }
 
 func (b *Block) Transactions() []*TransactionReceipt {

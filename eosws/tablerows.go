@@ -143,11 +143,11 @@ func fetchTableRows(
 			forkablePostGate = bstream.NewBlockNumGate(uint64(startBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 		}
 
-		forkableHandler := forkable.New(forkablePostGate, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(bstream.BlockRefFromID(irrID)))
+		irrRef := bstream.NewBlockRefFromID(irrID)
+		forkableHandler := forkable.New(forkablePostGate, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
 
 		metrics.IncListeners("get_table_rows")
 
-		irrRef := bstream.BlockRefFromID(irrID)
 		source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), forkableHandler, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))
 		source.OnTerminating(func(e error) {
 			metrics.CurrentListeners.Dec("get_table_rows")
