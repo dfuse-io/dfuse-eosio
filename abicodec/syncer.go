@@ -130,7 +130,7 @@ func (s *ABISyncer) streamABIChanges() error {
 			zlog.Debug("received search ABI match from client")
 		}
 
-		blockRef := bstream.BlockRefFromID(match.BlockID)
+		blockRef := bstream.NewBlockRef(match.BlockID, match.BlockNum)
 		if match.TransactionTrace == nil {
 			zlog.Debug("found a live marker")
 			s.handleLiveMaker(blockRef, match.Cursor)

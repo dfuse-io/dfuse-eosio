@@ -66,7 +66,8 @@ func (s *Server) prepareRead(
 	speculativeWrites = s.db.SpeculativeWritesFetcher(ctx, headBlock.ID(), chosenBlockNum)
 
 	if len(speculativeWrites) >= 1 {
-		upToBlock = bstream.BlockRefFromID(hex.EncodeToString(speculativeWrites[len(speculativeWrites)-1].BlockID))
+		lastSpeculativeWrite := speculativeWrites[len(speculativeWrites)-1]
+		upToBlock = bstream.NewBlockRef(hex.EncodeToString(lastSpeculativeWrite.BlockID), uint64(lastSpeculativeWrite.BlockNum))
 		zlog.Debug("speculative writes present",
 			zap.Int("speculative_write_count", len(speculativeWrites)),
 			zap.Stringer("up_to_block", upToBlock),

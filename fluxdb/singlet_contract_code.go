@@ -39,10 +39,10 @@ func (t ContractCodeSinglet) NewEntry(blockNum uint32, packedCode []byte) (*Cont
 
 	return &ContractCodeEntry{
 		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
-			Collection:  codePrefix,
-			TabletKey:   singletKey,
-			BlockNumKey: HexRevBlockNum(blockNum),
-			Payload:     packedCode,
+			Collection: codePrefix,
+			TabletKey:  singletKey,
+			HeightKey:  HexRevBlockNum(blockNum),
+			Payload:    packedCode,
 		}},
 	}, nil
 }
@@ -52,16 +52,16 @@ func (t ContractCodeSinglet) NewEntryFromKV(key string, value []byte) (SingletEn
 		return nil, errors.New("contract code entry value should have 0 bytes (deletion) or at least 1 byte (code)")
 	}
 
-	_, singletKey, blockNumKey, err := ExplodeSingletEntryKey(key)
+	_, singletKey, heightKey, err := ExplodeSingletEntryKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode singlet entry key %q: %s", key, err)
 	}
 
 	return &ContractCodeEntry{
 		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
-			Collection:  codePrefix,
-			TabletKey:   singletKey,
-			BlockNumKey: blockNumKey,
+			Collection: codePrefix,
+			TabletKey:  singletKey,
+			HeightKey:  heightKey,
 			// A deletion will automatically be recorded when the payload is empty, which represents a deletion
 			Payload: value,
 		}},

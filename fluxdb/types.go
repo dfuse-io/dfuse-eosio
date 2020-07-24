@@ -106,16 +106,16 @@ type BaseTabletRow struct {
 }
 
 func (r *BaseTabletRow) BlockNum() uint32 {
-	value, err := strconv.ParseUint(r.BlockNumKey, 16, 32)
+	value, err := strconv.ParseUint(r.HeightKey, 16, 32)
 	if err != nil {
-		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.BlockNumKey, err))
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.HeightKey, err))
 	}
 
 	return uint32(value)
 }
 
 func (r *BaseTabletRow) Key() string {
-	return r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey + "/" + r.PrimKey
+	return r.Collection + "/" + r.TabletKey + "/" + r.HeightKey + "/" + r.PrimKey
 }
 
 func (r *BaseTabletRow) PrimaryKey() string {
@@ -197,16 +197,16 @@ type BaseSingletEntry struct {
 }
 
 func (r *BaseSingletEntry) BlockNum() uint32 {
-	value, err := strconv.ParseUint(r.BlockNumKey, 16, 32)
+	value, err := strconv.ParseUint(r.HeightKey, 16, 32)
 	if err != nil {
-		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.BlockNumKey, err))
+		panic(fmt.Errorf("value %q is not a valid block num uint32 value: %w", r.HeightKey, err))
 	}
 
 	return math.MaxUint32 - uint32(value)
 }
 
 func (r *BaseSingletEntry) Key() string {
-	return r.Collection + "/" + r.TabletKey + "/" + r.BlockNumKey
+	return r.Collection + "/" + r.TabletKey + "/" + r.HeightKey
 }
 
 func (r *BaseSingletEntry) Singlet() Singlet {

@@ -40,9 +40,9 @@ func (t ContractABISinglet) NewEntry(blockNum uint32, packedABI []byte) (*Contra
 
 	return &ContractABIEntry{
 		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
-			Collection:  abiPrefix,
-			TabletKey:   singletKey,
-			BlockNumKey: HexRevBlockNum(blockNum),
+			Collection: abiPrefix,
+			TabletKey:  singletKey,
+			HeightKey:  HexRevBlockNum(blockNum),
 			// A deletion will automatically be recorded when the payload is empty, which represents a deletion
 			Payload: packedABI,
 		}},
@@ -54,17 +54,17 @@ func (t ContractABISinglet) NewEntryFromKV(key string, value []byte) (SingletEnt
 		return nil, errors.New("contract abi entry value should have 0 bytes (deletion) at-least 1 byte")
 	}
 
-	_, singletKey, blockNumKey, err := ExplodeSingletEntryKey(key)
+	_, singletKey, heightKey, err := ExplodeSingletEntryKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode singlet entry key %q: %s", key, err)
 	}
 
 	return &ContractABIEntry{
 		BaseSingletEntry: BaseSingletEntry{pbfluxdb.Row{
-			Collection:  abiPrefix,
-			TabletKey:   singletKey,
-			BlockNumKey: blockNumKey,
-			Payload:     value,
+			Collection: abiPrefix,
+			TabletKey:  singletKey,
+			HeightKey:  heightKey,
+			Payload:    value,
 		}},
 	}, nil
 }

@@ -335,10 +335,11 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 		return nil
 	})
 
-	forkHandler := forkable.New(handle, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
+	irrRef := bstream.NewBlockRefFromID(libID)
+	forkHandler := forkable.New(handle, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
 	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
 
-	source := subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkablePostGate)
+	source := subscriptionHub.NewSourceFromBlockRef(irrRef, forkablePostGate)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningPushInHandoffs, -1)
 	})

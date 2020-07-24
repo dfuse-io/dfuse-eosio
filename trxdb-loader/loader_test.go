@@ -78,7 +78,7 @@ func TestBigtableLoader(t *testing.T) {
 
 	ctx := context.Background()
 	blockID := "00000002aa"
-	previousRef := bstream.BlockRefFromID("00000001aa")
+	previousRef := bstream.NewBlockRefFromID("00000001aa")
 	loader.forkDB.InitLIB(previousRef)
 	block := testBlock(t, "00000002aa")
 	block.Header.Previous = previousRef.ID()
@@ -104,7 +104,7 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 
 	ctx := context.Background()
 	blockID := "00000002aa"
-	previousRef := bstream.BlockRefFromID("00000001aa")
+	previousRef := bstream.NewBlockRefFromID("00000001aa")
 	loader.forkDB.InitLIB(previousRef)
 	block := testBlock(t, "00000002aa")
 	block.Header.Previous = previousRef.ID()

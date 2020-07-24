@@ -52,10 +52,10 @@ func (t AuthLinkTablet) NewRow(blockNum uint32, contract, action, permission str
 
 	row := &AuthLinkRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  alPrefix,
-			TabletKey:   tabletKey,
-			BlockNumKey: HexBlockNum(blockNum),
-			PrimKey:     contract + ":" + action,
+			Collection: alPrefix,
+			TabletKey:  tabletKey,
+			HeightKey:  HexBlockNum(blockNum),
+			PrimKey:    contract + ":" + action,
 		}},
 	}
 
@@ -73,18 +73,18 @@ func (t AuthLinkTablet) NewRowFromKV(key string, value []byte) (TabletRow, error
 		return nil, errors.New("auth link tablet row value should have at exactly 0 bytes (deletion) or 8 bytes (permission)")
 	}
 
-	collection, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
+	collection, tabletKey, heightKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", key, err)
 	}
 
 	return &AuthLinkRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  collection,
-			TabletKey:   tabletKey,
-			BlockNumKey: blockNumKey,
-			PrimKey:     primaryKey,
-			Payload:     value,
+			Collection: collection,
+			TabletKey:  tabletKey,
+			HeightKey:  heightKey,
+			PrimKey:    primaryKey,
+			Payload:    value,
 		}},
 	}, nil
 }

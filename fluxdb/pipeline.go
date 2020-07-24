@@ -70,7 +70,7 @@ func (fdb *FluxDB) BuildPipeline(getBlockID bstream.EternalSourceStartBackAtBloc
 		gate := bstream.NewBlockIDGate(startBlock.ID(), bstream.GateExclusive, h, bstream.GateOptionWithLogger(zlog))
 
 		forkableOptions := []forkable.Option{forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepNew | forkable.StepIrreversible)}
-		if startBlock != EmptyBlockRef {
+		if !bstream.EqualsBlockRefs(startBlock, bstream.BlockRefEmpty) {
 			// Only when we do **not** start from the beginning (i.e. startBlock is the empty block ref), that the
 			// forkable should be initialized with an initial LIB value. Otherwise, when we start fresh, the forkable
 			// will automatically set its LIB to the first streamable block of the chain.
@@ -209,7 +209,7 @@ func (p *FluxDBHandler) updateSpeculativeWrites(newHeadBlock bstream.BlockRef) {
 
 func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error {
 	blk := rawBlk.ToNative().(*pbcodec.Block)
-	blkRef := bstream.BlockRefFromID(rawBlk.ID())
+	blkRef := rawBlk.AsRef()
 	if rawBlk.Num()%120 == 0 {
 		zlog.Info("processing block (1/120)", zap.Stringer("block", rawBlk))
 	}
@@ -229,16 +229,17 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 			}
 		}
 
-		p.serverForkDB.AddLink(
-			blkRef,
-			bstream.BlockRefFromID(rawBlk.PreviousID()),
-			fObj.Obj.(*WriteRequest),
-		)
+		var previousRef bstream.BlockRef
+		if rawBlk.Number != 0 {
+			previousRef = bstream.NewBlockRef(rawBlk.PreviousID(), rawBlk.Number-1)
+		}
+
+		p.serverForkDB.AddLink(blkRef, previousRef, fObj.Obj.(*WriteRequest))
 
 		// When we starting, if fluxdb internal forkdb has no LIB and we are seeing the first block, let's use it as the LIB
 		if !p.serverForkDB.HasLIB() && blk.Num() == bstream.GetProtocolFirstStreamableBlock {
 			zlog.Info("setting internal forkdb LIB to first streamable block")
-			p.serverForkDB.TrySetLIB(blk, bstream.BlockRefFromID(blk.PreviousID()), blk.Num())
+			p.serverForkDB.TrySetLIB(blk, previousRef, blk.Num())
 		}
 
 		p.updateSpeculativeWrites(rawBlk)

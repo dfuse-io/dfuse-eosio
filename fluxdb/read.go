@@ -361,7 +361,7 @@ func (fdb *FluxDB) FetchLastWrittenBlock(ctx context.Context) (out bstream.Block
 	out, err = fdb.store.FetchLastWrittenBlock(ctx, lastBlockKey)
 	if err == store.ErrNotFound {
 		zlogger.Info("last written block empty, returning block ID 0")
-		return EmptyBlockRef, nil
+		return bstream.BlockRefEmpty, nil
 	}
 
 	if err != nil {

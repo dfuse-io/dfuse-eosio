@@ -45,10 +45,10 @@ func (t AccountPermissionsTablet) NewRow(blockNum uint32, permissionName string,
 
 	row := &AccountPermissionsRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  permPrefix,
-			TabletKey:   tabletKey,
-			BlockNumKey: HexBlockNum(blockNum),
-			PrimKey:     permissionName,
+			Collection: permPrefix,
+			TabletKey:  tabletKey,
+			HeightKey:  HexBlockNum(blockNum),
+			PrimKey:    permissionName,
 		}},
 	}
 
@@ -63,18 +63,18 @@ func (t AccountPermissionsTablet) NewRow(blockNum uint32, permissionName string,
 }
 
 func (t AccountPermissionsTablet) NewRowFromKV(key string, value []byte) (TabletRow, error) {
-	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
+	_, tabletKey, heightKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", key, err)
 	}
 
 	return &AccountPermissionsRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  permPrefix,
-			TabletKey:   tabletKey,
-			BlockNumKey: blockNumKey,
-			PrimKey:     primaryKey,
-			Payload:     value,
+			Collection: permPrefix,
+			TabletKey:  tabletKey,
+			HeightKey:  heightKey,
+			PrimKey:    primaryKey,
+			Payload:    value,
 		}},
 	}, nil
 }

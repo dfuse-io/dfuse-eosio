@@ -242,7 +242,7 @@ func (l *TrxDBLoader) Launch() {
 
 func (l *TrxDBLoader) InitLIB(libID string) {
 	// Only works on EOS!
-	l.forkDB.InitLIB(bstream.BlockRefFromID(libID))
+	l.forkDB.InitLIB(bstream.NewBlockRefFromID(libID))
 }
 
 // StopBeforeBlock indicates the stop block (exclusive), means that

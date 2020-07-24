@@ -137,7 +137,7 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 
 	blocknumGate := bstream.NewBlockNumGate(uint64(authReq.StartBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 	metrics.IncListeners("get_action_traces")
-	irrRef := bstream.BlockRefFromID(irrID)
+	irrRef := bstream.NewBlockRefFromID(irrID)
 	source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), blocknumGate, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))
 
 	source.OnTerminating(func(_ error) {

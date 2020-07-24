@@ -53,10 +53,10 @@ func (t ContractStateTablet) NewRow(blockNum uint32, primaryKey string, payer st
 
 	row := &ContractStateRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  cstPrefix,
-			TabletKey:   tabletKey,
-			BlockNumKey: HexBlockNum(blockNum),
-			PrimKey:     primaryKey,
+			Collection: cstPrefix,
+			TabletKey:  tabletKey,
+			HeightKey:  HexBlockNum(blockNum),
+			PrimKey:    primaryKey,
 		}},
 	}
 
@@ -74,18 +74,18 @@ func (t ContractStateTablet) NewRowFromKV(key string, value []byte) (TabletRow, 
 		return nil, errors.New("contract state tablet row value should have 0 bytes (deletion) or at least 8 bytes (payer)")
 	}
 
-	_, tabletKey, blockNumKey, primaryKey, err := ExplodeTabletRowKey(key)
+	_, tabletKey, heightKey, primaryKey, err := ExplodeTabletRowKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("unable to explode tablet row key %q: %s", key, err)
 	}
 
 	return &ContractStateRow{
 		BaseTabletRow: BaseTabletRow{pbfluxdb.Row{
-			Collection:  cstPrefix,
-			TabletKey:   tabletKey,
-			BlockNumKey: blockNumKey,
-			PrimKey:     primaryKey,
-			Payload:     value,
+			Collection: cstPrefix,
+			TabletKey:  tabletKey,
+			HeightKey:  heightKey,
+			PrimKey:    primaryKey,
+			Payload:    value,
 		}},
 	}, nil
 }
