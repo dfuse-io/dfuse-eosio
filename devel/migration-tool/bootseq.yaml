@@ -17,7 +17,6 @@ boot_sequence:
 
   - op: migration.inject
     label: dfuse migration
-    disable_validation: true
     data:
-      data_dir: ./migration-data
+      data_dir: ./migration-data-edited
       account: dfuse.mgrt
