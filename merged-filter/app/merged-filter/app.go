@@ -63,7 +63,7 @@ func (a *App) Run() error {
 
 	var filter *mergedFilter.MergedFilter
 	if a.config.BatchMode {
-		filter = mergedFilter.NewBatchMergedFilter(blockFilter, srcBlocksStore, destBlocksStore, a.config.BatchStopBlock, a.config.BatchStartBlock)
+		filter = mergedFilter.NewBatchMergedFilter(blockFilter, srcBlocksStore, destBlocksStore, a.config.BatchStartBlock, a.config.BatchStopBlock)
 	} else {
 		tracker := bstream.NewTracker(250)
 		tracker.AddGetter(bstream.BlockStreamHeadTarget, bstream.RetryableBlockRefGetter(20, 10*time.Second, bstream.StreamHeadBlockRefGetter(a.config.BlockstreamAddr)))
