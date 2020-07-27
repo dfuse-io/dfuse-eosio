@@ -42,8 +42,18 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 		return nil
 	}
 
-	f.transfromInPlace(blk.ToNative().(*pbcodec.Block))
+	block := blk.ToNative().(*pbcodec.Block)
+	if !block.FilteringApplied {
+		f.transfromInPlace(block)
+		return nil
+	}
+
+	if block.FilteringIncludeFilterExpr != f.IncludeProgram.code ||
+		block.FilteringExcludeFilterExpr != f.ExcludeProgram.code {
+		panic(fmt.Sprintf("different block filter already applied: (inc) %s, (exc): %s", f.IncludeProgram.code, f.ExcludeProgram.code))
+	}
 	return nil
+
 }
 
 func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
