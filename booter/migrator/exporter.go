@@ -1,289 +1,561 @@
 package migrator
 
 import (
-	"context"
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
-	"time"
 
-	pbfluxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/fluxdb/v1"
-	zapbox "github.com/dfuse-io/dlauncher/zap-box"
 	"github.com/eoscanada/eos-go"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	eossnapshot "github.com/eoscanada/eos-go/snapshot"
 	"go.uber.org/zap"
 )
 
-var (
-	errCodeNotFound = errors.New("code not found")
-	errABINotFound  = errors.New("abi not found")
-	errABIInvalid   = errors.New("abi invalid")
-)
+type exporter struct {
+	snapshotPath  string
+	logger        *zap.Logger
+	outputDataDir string
 
-type Exporter struct {
-	common
+	accounts      map[eos.AccountName]*Account
+	codeSequences map[string][]eos.AccountName
 
-	ctx         context.Context
-	fluxdb      pbfluxdb.StateClient
-	irrBlockNum uint64
-	logger      *zapbox.CLILogger
-
-	notFoundCodes []string
-	notFoundABIs  []string
-	invalidABIs   []string
+	tableScopes  map[string]*tableScope // (account:table:scope)
+	currentTable *eossnapshot.TableIDObject
 }
 
-func NewExporter(ctx context.Context, fluxdb pbfluxdb.StateClient, exportDir string, irrBlockNum uint64, logger *zapbox.CLILogger) *Exporter {
-	return &Exporter{
-		ctx:         ctx,
-		fluxdb:      fluxdb,
-		irrBlockNum: irrBlockNum,
-		common:      common{dataDir: exportDir},
-		logger:      logger,
+type Option func(e *exporter) *exporter
+
+func WithLogger(logger *zap.Logger) Option {
+	return func(e *exporter) *exporter {
+		e.logger = logger
+		return e
 	}
 }
 
-func (e *Exporter) Export() error {
-	accounts, err := e.fetchAllAccounts()
+func NewExporter(snapshotPath, dataDir string, opts ...Option) (*exporter, error) {
+	if !fileExists(snapshotPath) {
+		return nil, fmt.Errorf("snapshot file not found %q", snapshotPath)
+	}
+
+	e := &exporter{
+		snapshotPath:  snapshotPath,
+		outputDataDir: dataDir,
+		accounts:      map[eos.AccountName]*Account{},
+		codeSequences: map[string][]eos.AccountName{},
+		tableScopes:   map[string]*tableScope{},
+	}
+
+	for _, opt := range opts {
+		e = opt(e)
+	}
+
+	return e, nil
+}
+
+func (e *exporter) Export() error {
+	reader, err := eossnapshot.NewReader(e.snapshotPath)
 	if err != nil {
-		return fmt.Errorf("fetch accounts: %w", err)
+		return fmt.Errorf("unable to create a snapshot reader: %w", err)
 	}
-
-	if err = e.common.createDataDir(); err != nil {
-		return fmt.Errorf("unable to create export directory: %w", err)
-	}
-
-	contracts, err := e.fetchAllContracts()
-	if err != nil {
-		return fmt.Errorf("fetch contracts: %w", err)
-	}
-
-	e.logger.Printf("Retrieved %d contracts, fetching all tables now", len(contracts))
-	for act, acctInfo := range accounts {
-		acct, err := newAccount(e.common.dataDir, act)
+	defer func() {
+		reader.Close()
+	}()
+	for {
+		section, err := reader.Next()
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			return fmt.Errorf("unable to initialize account %q storage: %w", act, err)
+			e.logger.Error("failed reading snapshot",
+				zap.String("snapshot_path", e.snapshotPath),
+				zap.Error(err),
+			)
+			return err
 		}
 
-		if err = acct.createDir(); err != nil {
-			return fmt.Errorf("unable to create account storage path: %w", err)
+		if traceEnable {
+			//e.logger.Info("new section",
+			//	zap.String("section_name", section.Name),
+			//	zap.Uint64("row_count", section.RowCount),
+			//	zap.Uint64("bytes_count", section.BufferSize),
+			//	zap.Uint64("bytes_count", section.Offset),
+			//)
 		}
 
-		if err := acct.writeAccount(acctInfo); err != nil {
-			return fmt.Errorf("unable to write account for %q: %w", act, err)
+		switch section.Name {
+		case eossnapshot.SectionNameAccountObject:
+			e.logger.Info("reading snapshot account objects")
+			err = section.Process(e.processAccountObject)
+		case eossnapshot.SectionNameAccountMetadataObject:
+			e.logger.Info("reading snapshot account metadata objects")
+			section.Process(e.processAccountMetadataObject)
+		case eossnapshot.SectionNamePermissionObject:
+			e.logger.Info("reading snapshot permission objects")
+			section.Process(e.processPermissionObject)
+		case eossnapshot.SectionNamePermissionLinkObject:
+			e.logger.Info("reading snapshot permission link objects")
+			section.Process(e.processPermissionLinkObject)
+		case eossnapshot.SectionNameCodeObject:
+			e.logger.Info("reading snapshot code objects")
+			section.Process(e.processCodeObject)
+		case eossnapshot.SectionNameContractTables:
+			e.logger.Info("reading snapshot contract tables")
+			section.Process(e.processContractTable)
 		}
 
-		if _, ok := contracts[act]; ok {
-			code, err := e.fetchCode(act)
-			if err == errCodeNotFound {
-				e.logger.Printf("no code found for contract %s, will NOT migrate data of this contract", act)
-				e.notFoundCodes = append(e.notFoundCodes, act)
-				continue
-			}
+		if err != nil {
+			e.logger.Error("failed processing snapshot section",
+				zap.String("section_name", string(section.Name)),
+				zap.Error(err),
+			)
+			return err
+		}
+	}
+	e.logger.Info("reading snapshot file completed",
+		zap.Int("account_count", len(e.accounts)),
+		zap.Int("table_count", len(e.tableScopes)),
+	)
 
-			if err != nil {
-				return fmt.Errorf("unable to fetch code for %q: %w", act, err)
-			}
+	e.logger.Info("exporting accounts")
+	for accountName, account := range e.accounts {
+		err = e.exportAccount(accountName, account)
+		if err != nil {
+			fmt.Errorf("failed to export account %q: %w", string(accountName), err)
+		}
+	}
 
-			abi, err := e.fetchABI(act)
-			if err == errABINotFound {
-				e.logger.Printf("no ABI found for contract %s, will NOT migrate data of this contract", act)
-				e.notFoundABIs = append(e.notFoundABIs, act)
-				continue
-			}
-
-			if err == errABIInvalid {
-				e.logger.Debug("abi was found but was invalid, continuing", zap.String("contract", act))
-				e.invalidABIs = append(e.invalidABIs, act)
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("unable to fetch ABI for %q: %w", act, err)
-			}
-
-			if err := acct.writeCode(code); err != nil {
-				return fmt.Errorf("unable to write ABI for %q: %w", act, err)
-			}
-
-			if err := acct.writeABI(abi); err != nil {
-				return fmt.Errorf("unable to write ABI for %q: %w", act, err)
-			}
-
-			if err := e.writeAllTables(act, acct, abi); err != nil {
-				return fmt.Errorf("unable to write all tables for %q: %w", act, err)
-			}
+	e.logger.Info("exporting table scopes")
+	for key, tblScope := range e.tableScopes {
+		err = e.exportTableScope(tblScope)
+		if err != nil {
+			fmt.Errorf("failed to export table-scope %s : %w", key, err)
 		}
 	}
 	return nil
 }
 
-func (e *Exporter) fetchAllAccounts() (map[string]*accountInfo, error) {
-	e.logger.Debug("fetching all accounts")
-
-	stream, err := e.fluxdb.StreamAccounts(e.ctx, &pbfluxdb.StreamAccountsRequest{
-		BlockNum: uint64(e.irrBlockNum),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("accounts stream: %w", err)
+func (e *exporter) processAccountObject(obj interface{}) error {
+	acc, ok := obj.(eossnapshot.AccountObject)
+	if !ok {
+		return fmt.Errorf("failed processing account object: unexpected object type: %T", obj)
 	}
 
-	accounts := map[string]*accountInfo{}
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			return accounts, nil
-		}
+	if _, found := e.accounts[acc.Name]; found {
+		return fmt.Errorf("failed processing account object: received seen account %q", string(acc.Name))
+	}
 
+	if traceEnable {
+		e.logger.Debug("processing account object: adding new account", zap.String("account_name", string(acc.Name)))
+	}
+
+	account, err := e.newAccount(acc)
+	if err != nil {
+		return fmt.Errorf("failed processing account object: unable to create account %q: %w", string(acc.Name), err)
+	}
+
+	e.accounts[acc.Name] = account
+	return nil
+}
+
+var emptyCodeHash = []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+func (e *exporter) processAccountMetadataObject(obj interface{}) error {
+	accMeta, ok := obj.(eossnapshot.AccountMetadataObject)
+	if !ok {
+		return fmt.Errorf("failed processing account metadata object: unexpected object type: %T", obj)
+	}
+
+	codeKey := accMeta.CodeHash.String()
+	accName := accMeta.Name
+
+	if bytes.Equal(accMeta.CodeHash, emptyCodeHash) {
+		if traceEnable {
+			e.logger.Debug("skipping blank code hash",
+				zap.String("account", string(accName)),
+			)
+		}
+		return nil
+	}
+	accounts, found := e.codeSequences[codeKey]
+	if !found {
+		accounts = []eos.AccountName{}
+		e.codeSequences[codeKey] = accounts
+	}
+
+	accounts = append(accounts, accName)
+
+	if traceEnable {
+		e.logger.Debug("processing account metadata object: storing code sequence",
+			zap.String("account", string(accName)),
+			zap.String("code_key", codeKey),
+			zap.Int("account_count", len(accounts)),
+		)
+	}
+
+	return nil
+}
+
+func (e *exporter) processPermissionObject(obj interface{}) error {
+	perm, ok := obj.(eossnapshot.PermissionObject)
+	if !ok {
+		return fmt.Errorf("process permission object: unexpected object type: %T", obj)
+	}
+	e.updatePermissionObject(perm)
+	return nil
+}
+
+func (e *exporter) processPermissionLinkObject(obj interface{}) error {
+	permLink, ok := obj.(eossnapshot.PermissionLinkObject)
+	if !ok {
+		return fmt.Errorf("process permission link object: unexpected object type: %T", obj)
+	}
+	e.updatePermissionLinkObject(permLink)
+	return nil
+}
+
+func (e *exporter) processCodeObject(obj interface{}) error {
+	code, ok := obj.(eossnapshot.CodeObject)
+	if !ok {
+		return fmt.Errorf("process code object: unexpected object type: %T", obj)
+	}
+	e.updateCodeObject(code)
+	return nil
+}
+
+func (e *exporter) newAccount(acc eossnapshot.AccountObject) (*Account, error) {
+	account, err := newAccount(e.outputDataDir, string(acc.Name))
+	if err != nil {
+		return nil, err
+	}
+
+	account.info = &AccountInfo{}
+	account.logger = e.logger
+
+	if len(acc.RawABI) > 0 {
+		account.ctr = NewContract(acc.RawABI, nil)
+
+		abi := new(eos.ABI)
+		err = eos.UnmarshalBinary(acc.RawABI, abi)
 		if err != nil {
-			return nil, fmt.Errorf("stream account: %w", err)
+			e.logger.Warn("unable to decode ABI",
+				zap.String("account", string(acc.Name)),
+				zap.Error(err),
+			)
+			return account, nil
+		}
+		account.abi = abi
+	}
+
+	return account, nil
+
+}
+
+func (e *exporter) updatePermissionObject(perm eossnapshot.PermissionObject) error {
+	acc, found := e.accounts[perm.Owner]
+	if !found {
+		return fmt.Errorf("failed updating account permission object: unknown account %q", string(perm.Owner))
+	}
+
+	if traceEnable {
+		e.logger.Debug("adding permission object to account",
+			zap.String("account", string(perm.Owner)),
+			zap.Reflect("permission", perm),
+		)
+	}
+
+	acc.info.Permissions = append(acc.info.Permissions, &permissionObject{
+		Parent:    perm.Parent,
+		Owner:     perm.Owner,
+		Name:      perm.Name,
+		Authority: &perm.Auth,
+	})
+	return nil
+}
+
+func (e *exporter) updatePermissionLinkObject(permLink eossnapshot.PermissionLinkObject) error {
+	acc, found := e.accounts[permLink.Account]
+	if !found {
+		return fmt.Errorf("failed updating account permission link object: unknown account %q", string(permLink.Account))
+	}
+
+	if traceEnable {
+		e.logger.Debug("adding permission link to account",
+			zap.String("account", string(permLink.Account)),
+			zap.Reflect("permission_link", permLink),
+		)
+	}
+
+	acc.info.LinkAuths = append(acc.info.LinkAuths, &LinkAuth{
+		Permission: string(permLink.RequiredPermission),
+		Contract:   string(permLink.Code),
+		Action:     string(permLink.MessageType),
+	})
+	return nil
+}
+
+func (e *exporter) updateCodeObject(code eossnapshot.CodeObject) error {
+	codeKey := code.CodeHash.String()
+	accounts, found := e.codeSequences[codeKey]
+	if !found {
+		return fmt.Errorf("failed updating account code: unknown code ref: %d", uint64(code.CodeRefCount))
+	}
+
+	for _, accName := range accounts {
+		acc, found := e.accounts[accName]
+		if !found {
+			return fmt.Errorf("failed updating account code: unknown account: %q", string(accName))
 		}
 
-		linkAuths := make([]*linkAuth, len(resp.LinkedPermissions))
-		for i, linkedPermission := range resp.LinkedPermissions {
-			linkAuths[i] = &linkAuth{
-				Permission: linkedPermission.PermissionName,
-				Contract:   linkedPermission.Contract,
-				Action:     linkedPermission.Action,
+		acc.ctr.Code = code.Code
+		if traceEnable {
+			e.logger.Debug("adding code to account",
+				zap.String("account", string(accName)),
+				zap.String("cod_ref", codeKey),
+			)
+		}
+
+	}
+	return nil
+}
+
+func (e *exporter) processContractTable(o interface{}) error {
+	tableId, ok := o.(*eossnapshot.TableIDObject)
+	if ok {
+		if err := e.processTableID(tableId); err != nil {
+			return err
+		}
+		e.currentTable = tableId
+		return nil
+	}
+
+	if e.currentTable == nil {
+		return fmt.Errorf("cannot process contract row without having a current table set")
+	}
+
+	var kind string
+	var secKey interface{}
+	var primKey string
+	var payer string
+	switch obj := o.(type) {
+	case *eossnapshot.KeyValueObject:
+		return e.processContractRow(obj)
+	case *eossnapshot.Index64Object:
+		kind = secondaryIndexKindUI64
+		primKey = obj.PrimKey
+		secKey = obj.SecondaryKey
+		payer = obj.Payer
+	case *eossnapshot.Index128Object:
+		kind = secondaryIndexKindUI128
+		primKey = obj.PrimKey
+		secKey = obj.SecondaryKey
+		payer = obj.Payer
+	case *eossnapshot.Index256Object:
+		kind = secondaryIndexKindUI256
+		primKey = obj.PrimKey
+		secKey = obj.SecondaryKey
+		payer = obj.Payer
+	case *eossnapshot.IndexDoubleObject:
+		kind = secondaryIndexKindDouble
+		primKey = obj.PrimKey
+		secKey = obj.SecondaryKey
+		payer = obj.Payer
+	case *eossnapshot.IndexLongDoubleObject:
+		kind = secondaryIndexKindLongDouble
+		primKey = obj.PrimKey
+		secKey = obj.SecondaryKey
+		payer = obj.Payer
+	}
+	return e.processContractRowIndex(primKey, kind, secKey, payer)
+}
+
+func (e *exporter) processTableID(obj *eossnapshot.TableIDObject) error {
+	tableName, index := mustExtractIndexNumber(obj.TableName)
+
+	tableScopeKey := tableScopeKey(obj.Code, tableName, obj.Scope)
+	tblScope, found := e.tableScopes[tableScopeKey]
+	if found && (index == 0) { // a table should only have index 0
+		return fmt.Errorf("received table id for a seen code-table-scope %s", tableScopeKey)
+	}
+
+	if !found && (index > 0) && traceEnable {
+		return fmt.Errorf("received table id index for a unseen code-table-scope%s", tableScopeKey)
+	}
+
+	if found && (index > 0) && traceEnable {
+		e.logger.Info("processing index table",
+			zap.String("account", obj.Code),
+			zap.String("table_name", tableName),
+			zap.String("raw_table_name", obj.TableName),
+			zap.String("scope", obj.Scope),
+			zap.Uint64("index", index),
+		)
+		tblScope.Payers[index] = obj.Payer
+		return nil
+	}
+
+	tblScope = &tableScope{
+		account: AN(obj.Code),
+		table:   TN(tableName),
+		scope:   SN(obj.Scope),
+		Payers:  make([]string, 16),
+		rows:    map[string]*tableRow{},
+	}
+	tblScope.Payers[index] = obj.Payer
+	e.tableScopes[tableScopeKey] = tblScope
+
+	if traceEnable {
+		e.logger.Info("process contract row: added table-scope",
+			zap.String("account", obj.Code),
+			zap.String("table_name", tableName),
+			zap.String("scope", obj.Scope),
+			zap.String("payer", obj.Payer),
+		)
+	}
+	return nil
+}
+
+func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
+	account, found := e.accounts[AN(e.currentTable.Code)]
+	if !found {
+		fmt.Errorf("unable to process contract row: unknown account %q", AN(e.currentTable.Code))
+	}
+
+	tableScopeKey := tableScopeKey(e.currentTable.Code, e.currentTable.TableName, e.currentTable.Scope)
+	tblScope, found := e.tableScopes[tableScopeKey]
+	if !found {
+		return fmt.Errorf("received contract row for unseen code-table-scope: %s", tableScopeKey)
+	}
+
+	tblRow := &tableRow{
+		Key:              obj.PrimKey,
+		Payer:            obj.Payer,
+		SecondaryIndexes: make([]*secondaryIndex, 16),
+	}
+
+	if _, found := tblScope.rows[obj.PrimKey]; found {
+		return fmt.Errorf("failed to process contract table row %s: primary key already seen %q", tableScopeKey, obj.PrimKey)
+	}
+
+	if account.abi != nil {
+		cnt, err := account.abi.DecodeTableRow(TN(e.currentTable.TableName), obj.Value)
+		if err != nil {
+			if traceEnable {
+				e.logger.Debug("unable to decode table row",
+					zap.String("account", e.currentTable.Code),
+					zap.String("table", e.currentTable.TableName),
+					zap.String("scope", e.currentTable.Scope),
+					zap.String("primary_key", obj.PrimKey),
+					zap.String("error", err.Error()),
+				)
 			}
+			tblRow.DataHex = obj.Value
+		} else {
+			tblRow.DataJSON = json.RawMessage(cnt)
+		}
+	} else {
+		tblRow.DataHex = obj.Value
+	}
+
+	tblScope.rows[obj.PrimKey] = tblRow
+	return nil
+}
+
+func (e *exporter) processContractRowIndex(primaryKey string, kind string, value interface{}, payer string) error {
+	tableName, index := mustExtractIndexNumber(e.currentTable.TableName)
+	tableScopeKey := tableScopeKey(e.currentTable.Code, tableName, e.currentTable.Scope)
+	tblScope, found := e.tableScopes[tableScopeKey]
+	if !found {
+		return fmt.Errorf("cannot process contract row index for unseen code-table-scope: %s", tableScopeKey)
+	}
+
+	tblRow, found := tblScope.rows[primaryKey]
+	if !found {
+		return fmt.Errorf("cannot process contract row index %s for unseen primary key %q", tableScopeKey, primaryKey)
+	}
+
+	tblRow.SecondaryIndexes[index] = &secondaryIndex{
+		Kind:  kind,
+		Value: value,
+		Payer: payer,
+	}
+	return nil
+}
+
+func tableScopeKey(Account, TableName, Scope string) string {
+	return fmt.Sprintf("%s:%s:%s", Account, TableName, Scope)
+}
+
+func (e *exporter) exportAccount(accountName eos.AccountName, account *Account) error {
+	if traceEnable {
+		e.logger.Debug("exporting account", zap.String("account", string(accountName)))
+	}
+
+	if err := account.createDir(); err != nil {
+		return fmt.Errorf("unable to create account dir for %q: %w", accountName, err)
+	}
+
+	if err := account.writeAccount(); err != nil {
+		return fmt.Errorf("unable to write account for %q: %w", accountName, err)
+	}
+
+	if account.ctr != nil {
+		if err := account.writeCode(); err != nil {
+			return fmt.Errorf("unable to write ABI for %q: %w", accountName, err)
 		}
 
-		accounts[resp.Account] = newAccountInfo(resp.Permissions, linkAuths)
-	}
-}
-
-func (e *Exporter) fetchAllContracts() (map[string]bool, error) {
-	// FIXME: We need a maximum timeout value for the initial call so that if the client is misconfigured,
-	//        the user does not wait like 15m before seeing the error.
-	e.logger.Debug("fetching all contracts")
-
-	contracts := map[string]bool{}
-
-	stream, err := e.fluxdb.StreamContracts(e.ctx, &pbfluxdb.StreamContractsRequest{
-		BlockNum: uint64(e.irrBlockNum),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("contracts stream: %w", err)
-	}
-
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			return contracts, nil
-		}
-
-		if err != nil {
-			return nil, fmt.Errorf("stream account: %w", err)
-		}
-
-		contracts[resp.Contract] = true
-	}
-}
-
-func (e *Exporter) fetchCode(contract string) ([]byte, error) {
-	resp, err := e.fluxdb.GetCode(e.ctx, &pbfluxdb.GetCodeRequest{
-		BlockNum: e.irrBlockNum,
-		Contract: contract,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("fetch code: %w", err)
-	}
-
-	if len(resp.RawCode) <= 0 {
-		return nil, errCodeNotFound
-	}
-
-	return resp.RawCode, nil
-}
-
-func (e *Exporter) fetchABI(contract string) (*eos.ABI, error) {
-	resp, err := e.fluxdb.GetABI(e.ctx, &pbfluxdb.GetABIRequest{
-		BlockNum: e.irrBlockNum,
-		Contract: contract,
-		ToJson:   false,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("fetch abi: %w", err)
-	}
-
-	if len(resp.RawAbi) <= 0 {
-		return nil, errABINotFound
-	}
-
-	abi := new(eos.ABI)
-	err = eos.UnmarshalBinary(resp.RawAbi, abi)
-	if err != nil {
-		e.logger.Debug("unable to decode ABI", zap.String("contract", contract))
-		return nil, errABIInvalid
-	}
-
-	return abi, nil
-}
-
-func (e *Exporter) writeAllTables(contract string, acct *Account, abi *eos.ABI) error {
-	e.logger.Debug("writing all tables", zap.String("contract", contract))
-	for _, table := range abi.Tables {
-		if err := e.writeTable(contract, acct, string(table.Name)); err != nil {
-			return fmt.Errorf("write table %q: %w", table.Name, err)
+		if err := account.writeABI(); err != nil {
+			return fmt.Errorf("unable to write ABI for %q: %w", accountName, err)
 		}
 	}
 
 	return nil
 }
 
-var allScopes = []string{"*"}
-
-func (e *Exporter) writeTable(contract string, acct *Account, table string) error {
-	stream, err := e.fluxdb.GetMultiScopesTableRows(e.ctx, &pbfluxdb.GetMultiScopesTableRowsRequest{
-		BlockNum:         uint64(e.irrBlockNum),
-		IrreversibleOnly: true,
-		Contract:         contract,
-		Table:            table,
-		ToJson:           true,
-		KeyType:          "name",
-		Scopes:           allScopes,
-	})
-	if err != nil {
-		return fmt.Errorf("multi table scopes stream: %w", err)
+func (s *exporter) exportTableScope(tableScope *tableScope) error {
+	if traceEnable {
+		s.logger.Debug("writing table scope",
+			zap.String("account", string(tableScope.account)),
+			zap.String("table", string(tableScope.table)),
+			zap.String("scope", string(tableScope.scope)),
+			zap.Int("row_count", len(tableScope.rows)),
+		)
 	}
 
-	tablePath, err := acct.TablePath(table)
+	account, found := s.accounts[tableScope.account]
+	if !found {
+		return fmt.Errorf("cannot export table-scope for unknown account %q", string(tableScope.account))
+	}
+
+	tablePath, err := account.TablePath(string(tableScope.table))
 	if err != nil {
 		return fmt.Errorf("unable to determine table path: %w", err)
 	}
 
-	seenScopes := []string{}
-	for {
-		resp, err := stream.Recv()
-		if err == io.EOF {
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("stream multi table scopes: %w", err)
-		}
-
-		scopePath, err := acct.ScopePath(tablePath, resp.Scope)
-		if err != nil {
-			return fmt.Errorf("unable to determine accout %q table %q scope %q path: %w", contract, table, resp.Scope, err)
-		}
-		seenScopes = append(seenScopes, resp.Scope)
-
-		if err = os.MkdirAll(string(scopePath), os.ModePerm); err != nil {
-			return fmt.Errorf("unable to create table scope storage path: %w", err)
-		}
-
-		if err = e.writeTableRows(acct.RowsPath(scopePath), resp.Row); err != nil {
-			return fmt.Errorf("write table scope rows: %w", err)
-		}
+	scopePath, err := account.ScopePath(tablePath, string(tableScope.scope))
+	if err != nil {
+		return fmt.Errorf("unable to determine accout %q table %q scope %q path: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
 	}
+
+	if err = os.MkdirAll(string(scopePath), os.ModePerm); err != nil {
+		return fmt.Errorf("unable to create table scope storage path: %w", err)
+	}
+
+	if err = s.writeTableInfo(account.TableScopeInfoPath(scopePath), tableScope); err != nil {
+		return fmt.Errorf("unable to write table rows: %s:%s:%s: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
+	}
+
+	if err = s.writeTableRows(account.RowsPath(scopePath), tableScope.rows); err != nil {
+		return fmt.Errorf("unable to write table rows: %s:%s:%s: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
+	}
+	return nil
 }
 
-func (e *Exporter) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResponse) error {
-	e.logger.Debug("writing table", zap.String("table_scope_path", string(rowsPath)), zap.Int("row_count", len(rows)))
+func (s *exporter) writeTableInfo(tableInfoPath string, table *tableScope) error {
+	return writeJSONFile(tableInfoPath, table)
+}
+
+func (s *exporter) writeTableRows(rowsPath string, rows map[string]*tableRow) error {
 	file, err := os.Create(rowsPath)
 	if err != nil {
 		return fmt.Errorf("open file: %w", err)
@@ -292,40 +564,31 @@ func (e *Exporter) writeTableRows(rowsPath string, rows []*pbfluxdb.TableRowResp
 
 	lastIndex := len(rows) - 1
 	file.WriteString("[")
-	for i, tabletRow := range rows {
+	itr := 0
+	for primKey, tabletRow := range rows {
 		encoder := json.NewEncoder(file)
 		encoder.SetEscapeHTML(false)
 
-		outRow := tableRow{
-			Key:   tabletRow.Key,
-			Payer: tabletRow.Payer,
-		}
-
-		if tabletRow.Json != "" {
-			outRow.DataJSON = json.RawMessage(tabletRow.Json)
-		} else {
-			outRow.DataHex = eos.HexBytes(tabletRow.Data)
-		}
-
 		file.WriteString("\n  ")
-		err := encoder.Encode(outRow)
+		err := encoder.Encode(tabletRow)
 		if err != nil {
-			return fmt.Errorf("unable to encode row %d: %w", i, err)
+			return fmt.Errorf("unable to encode row %q: %w", primKey, err)
 		}
 
-		if i != lastIndex {
+		if itr != lastIndex {
 			file.WriteString(",")
 		}
+		itr = itr + 1
 	}
 	file.WriteString("]")
-
 	return nil
 }
 
-func mustProtoTimestamp(in time.Time) *timestamp.Timestamp {
-	out, err := ptypes.TimestampProto(in)
+func mustExtractIndexNumber(tableName string) (table string, index uint64) {
+	name, err := eos.StringToName(tableName)
 	if err != nil {
-		panic(fmt.Sprintf("invalid timestamp conversion %q: %s", in, err))
+		panic(fmt.Sprintf("unable to convert table name %q to uint64: %s", name, err))
 	}
-	return out
+	// The last 4 bits of a tableName represents the count of the index
+	return eos.NameToString(name & 0xfffffffffffffff0), (name & 0x0f)
 }

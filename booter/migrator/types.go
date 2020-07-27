@@ -6,7 +6,7 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
-type DetailedTableRow struct {
+type detailedTableRow struct {
 	tableRow
 
 	account eos.AccountName
@@ -14,12 +14,34 @@ type DetailedTableRow struct {
 	scope   eos.ScopeName
 }
 
-//account dfuse.boot setCode wasm.contract
+type tableScope struct {
+	account eos.AccountName
+	table   eos.TableName
+	scope   eos.ScopeName
+	Payers  []string `json:"payers,omitempty"`
+	rows    map[string]*tableRow
+}
+
+const (
+	secondaryIndexKindUI64       string = "ui64"
+	secondaryIndexKindUI128      string = "ui128"
+	secondaryIndexKindUI256      string = "ui256"
+	secondaryIndexKindDouble     string = "dbl"
+	secondaryIndexKindLongDouble string = "ldbl"
+)
+
+type secondaryIndex struct {
+	Kind  string      `json:"kind,omitempty"`
+	Value interface{} `json:"value,omitempty"`
+	Payer string      `json:"payer,omitempty"`
+}
+
 type tableRow struct {
-	Key      string          `json:"key"`
-	Payer    string          `json:"payer"`
-	DataJSON json.RawMessage `json:"json_data,omitempty"`
-	DataHex  eos.HexBytes    `json:"hex_data,omitempty"`
+	Key              string            `json:"key"`
+	Payer            string            `json:"payer"`
+	DataJSON         json.RawMessage   `json:"json_data,omitempty"`
+	DataHex          eos.HexBytes      `json:"hex_data,omitempty"`
+	SecondaryIndexes []*secondaryIndex `json:"secondary_indexes,omitempty"`
 }
 
 // Transfer represents the `inject` struct on `migration` contract.

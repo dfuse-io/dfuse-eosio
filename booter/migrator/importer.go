@@ -8,10 +8,6 @@ import (
 	"reflect"
 	"strings"
 
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-
-	"github.com/dfuse-io/dfuse-eosio/codec"
-
 	"github.com/eoscanada/eos-go/system"
 
 	bootops "github.com/dfuse-io/eosio-boot/ops"
@@ -30,9 +26,16 @@ var nonceActionEntropy = func() string {
 
 const boxPath = "./code/build"
 
-type contract struct {
-	abi  []byte
-	code []byte
+type Contract struct {
+	RawABI []byte
+	Code   []byte
+}
+
+func NewContract(abi []byte, code []byte) *Contract {
+	return &Contract{
+		RawABI: abi,
+		Code:   code,
+	}
 }
 
 type importer struct {
@@ -40,7 +43,7 @@ type importer struct {
 
 	opPublicKey ecc.PublicKey
 	actionChan  chan interface{}
-	ctr         *contract
+	ctr         *Contract
 	logger      *zap.Logger
 }
 
@@ -69,7 +72,7 @@ func (i *importer) init() error {
 	}
 
 	i.logger.Debug("read migrator contract")
-	i.ctr = &contract{abi: abiCnt, code: wasmCnt}
+	i.ctr = NewContract(abiCnt, wasmCnt)
 	return nil
 }
 
@@ -95,7 +98,7 @@ func (i *importer) inject() error {
 		if err != nil {
 			return fmt.Errorf("unable to create permissions for accounts %q: %w", account.name, err)
 		}
-		if !account.hasContract {
+		if !account.hasCode {
 			continue
 		}
 
@@ -181,7 +184,7 @@ func (i *importer) resetAccountContract(act *Account) error {
 }
 
 func (i *importer) setImporterContract(account eos.AccountName) error {
-	actions, err := system.NewSetContractContent(account, i.ctr.code, i.ctr.abi)
+	actions, err := system.NewSetContractContent(account, i.ctr.Code, i.ctr.RawABI)
 	if err != nil {
 		return fmt.Errorf("unable to create set contract actions: %w", err)
 	}
@@ -202,26 +205,25 @@ func (i *importer) createAccount(account *Account) {
 }
 
 func (i *importer) createPermissions(account *Account) error {
-	currentParent := ""
+	currentParent := PN("")
 	for _, permission := range account.info.sortPermissions() {
-		parent := ""
-		if p, found := account.info.idToPerm[permission.ParentId]; found {
+		parent := PN("")
+		if p, found := account.info.nameToPerm[permission.Parent]; found {
 			parent = p.Name
 		}
 
 		// Small optimization here to push all permission that are on the same level (a.k.a have the same parent) in the same transaction
-		if (currentParent != "") && (currentParent != permission.Owner) {
+		if (currentParent != "") && (currentParent != permission.Parent) {
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}
 		currentParent = parent
 
 		// NOTE: even though the permission are correctly ordered in creation we neeed to ensure that the parent
 		// so we cannot push them all in a transaction
-		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), PN(parent), i.importerAuthority(), PN("owner")))
+		i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), permission.Name, parent, i.importerAuthority(), PN("owner")))
 	}
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 	return nil
-
 }
 
 func (i *importer) setPermissions(account *Account, importerAuthority *eos.Authority) error {
@@ -232,10 +234,9 @@ func (i *importer) setPermissions(account *Account, importerAuthority *eos.Autho
 	}
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 
-	var ownerPermission *pbcodec.PermissionObject
+	var ownerPermission *permissionObject
 	for _, permission := range account.info.sortPermissions() {
-		eosAuthority := codec.AuthoritiesToEOS(permission.Authority)
-		if i.shouldSetPermission(importerAuthority, &eosAuthority) {
+		if i.shouldSetPermission(importerAuthority, permission.Authority) {
 			if permission.Name == "owner" {
 				// we will only update the owner permission once all the permission for said account has been update
 				// since we are "signing" the actions with the current owner permission
@@ -244,19 +245,18 @@ func (i *importer) setPermissions(account *Account, importerAuthority *eos.Autho
 			}
 
 			parentName := PN("")
-			if parent, found := account.info.idToPerm[permission.ParentId]; found {
-				parentName = PN(parent.Name)
+			if parent, found := account.info.nameToPerm[permission.Parent]; found {
+				parentName = parent.Name
 			}
-			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(permission.Name), parentName, eosAuthority, PN("owner")))
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), permission.Name, parentName, *permission.Authority, PN("owner")))
 			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}
 	}
 
 	if ownerPermission != nil {
-		eosAuthority := codec.AuthoritiesToEOS(ownerPermission.Authority)
-		if i.shouldSetPermission(importerAuthority, &eosAuthority) {
-			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), PN(ownerPermission.Name), "", eosAuthority, PN("owner")))
+		if i.shouldSetPermission(importerAuthority, ownerPermission.Authority) {
+			i.actionChan <- (*bootops.TransactionAction)(system.NewUpdateAuth(account.getAccountName(), ownerPermission.Name, "", *ownerPermission.Authority, PN("owner")))
 			i.actionChan <- (*bootops.TransactionAction)(newNonceAction())
 			i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 		}

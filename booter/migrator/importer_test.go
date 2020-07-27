@@ -29,7 +29,7 @@ func Test_Importer(t *testing.T) {
 	tests := []struct {
 		fixture string
 	}{
-		{"migration-data"},
+		{"battlefield-snapshot"},
 	}
 	for _, test := range tests {
 		testImporterData(t, test.fixture)

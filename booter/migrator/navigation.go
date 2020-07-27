@@ -32,7 +32,7 @@ func (i *importer) retrieveAccounts(newAccountFunc func(account *Account) error)
 		} else if isContract(info) {
 			acctName := accountFromAccountPath(path)
 			if index, found := seenAccounts[acctName]; found {
-				out[index].hasContract = true
+				out[index].hasCode = true
 			} else {
 				acc, err := newAccount(i.dataDir, acctName)
 				acc.SetLogger(i.logger)
@@ -40,7 +40,7 @@ func (i *importer) retrieveAccounts(newAccountFunc func(account *Account) error)
 					return fmt.Errorf("unable to create account %q: %w", acctName, err)
 
 				}
-				acc.hasContract = true
+				acc.hasCode = true
 				out = append(out, acc)
 				seenAccounts[acctName] = len(out) - 1
 				return newAccountFunc(acc)

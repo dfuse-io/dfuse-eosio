@@ -55,7 +55,7 @@ func Test_retrieveContractAccounts(t *testing.T) {
 			assert.Fail(t, "Unable to find account in expected account list", "Account %q is not in expected account list", account.name)
 		}
 
-		assert.Equal(t, expectedAccounts[account.name], account.hasContract)
+		assert.Equal(t, expectedAccounts[account.name], account.hasCode)
 	}
 }
 

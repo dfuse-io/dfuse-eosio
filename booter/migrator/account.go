@@ -19,19 +19,17 @@ func init() {
 	traceEnable = os.Getenv("TRACE") == "true"
 }
 
-type AccountPath string
-type TablePath string
-type ScopePath string
-
 type sendActionFunc func(action *eos.Action)
 type Account struct {
-	name        string
-	path        string
-	hasContract bool
-	abi         *eos.ABI
-	ctr         *contract
-	info        *accountInfo
-	logger      *zap.Logger
+	name    string
+	path    string
+	hasCode bool
+
+	abi  *eos.ABI
+	ctr  *Contract
+	info *AccountInfo
+
+	logger *zap.Logger
 }
 
 func newAccount(dataDir string, account string) (*Account, error) {
@@ -72,10 +70,7 @@ func (a *Account) setupAbi() error {
 		return fmt.Errorf("unable to get account %q Code: %w", a.name, err)
 	}
 	a.abi = abi // store for late use to encode rows
-	a.ctr = &contract{
-		abi:  abiCnt,
-		code: code,
-	}
+	a.ctr = NewContract(abiCnt, code)
 	return nil
 }
 
@@ -97,7 +92,7 @@ func (a *Account) migrateTable(table string, sendAction sendActionFunc) error {
 		}
 
 		for _, row := range rows {
-			action, err := a.detailedTableRowToAction(&DetailedTableRow{
+			action, err := a.detailedTableRowToAction(&detailedTableRow{
 				tableRow: row,
 				account:  AN(a.name),
 				table:    TN(table),
@@ -115,7 +110,7 @@ func (a *Account) migrateTable(table string, sendAction sendActionFunc) error {
 }
 
 func (a *Account) setContractActions() ([]*eos.Action, error) {
-	return system.NewSetContractContent(AN(a.name), a.ctr.code, a.ctr.abi)
+	return system.NewSetContractContent(AN(a.name), a.ctr.Code, a.ctr.RawABI)
 
 }
 
@@ -144,7 +139,7 @@ func (a *Account) readTableList() (out []string, err error) {
 	return
 }
 
-func (a *Account) readRows(scpPath ScopePath) ([]tableRow, error) {
+func (a *Account) readRows(scpPath string) ([]tableRow, error) {
 	path := a.RowsPath(scpPath)
 	file, err := os.Open(path)
 	if err != nil {
@@ -163,7 +158,7 @@ func (a *Account) readRows(scpPath ScopePath) ([]tableRow, error) {
 	return rows, nil
 }
 
-func (a *Account) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, error) {
+func (a *Account) detailedTableRowToAction(row *detailedTableRow) (*eos.Action, error) {
 	data, err := a.decodeDetailedTableRow(row)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode row %q/%q/%q: %w", row.account, row.table, row.scope, err)
@@ -189,7 +184,7 @@ func (a *Account) detailedTableRowToAction(row *DetailedTableRow) (*eos.Action, 
 	return action, nil
 }
 
-func (a *Account) decodeDetailedTableRow(row *DetailedTableRow) ([]byte, error) {
+func (a *Account) decodeDetailedTableRow(row *detailedTableRow) ([]byte, error) {
 	tableDef := a.findTableDef(row.table)
 	if tableDef == nil {
 		return nil, fmt.Errorf("unable to find table definition %q in ABI for account: %q", row.table, row.account)
@@ -221,8 +216,8 @@ func (a *Account) readABI() (abi *eos.ABI, abiCnt []byte, err error) {
 	return abi, cnt, nil
 }
 
-func (a *Account) writeABI(abi *eos.ABI) error {
-	return writeJSONFile(a.abiPath(), abi)
+func (a *Account) writeABI() error {
+	return writeJSONFile(a.abiPath(), a.abi)
 }
 
 func (a *Account) abiPath() string {
@@ -238,11 +233,11 @@ func (a *Account) readCode() (code []byte, err error) {
 	return cnt, nil
 }
 
-func (a *Account) writeCode(code []byte) error {
-	return ioutil.WriteFile(a.codePath(), code, os.ModePerm)
+func (a *Account) writeCode() error {
+	return ioutil.WriteFile(a.codePath(), a.ctr.Code, os.ModePerm)
 }
 
-func (a *Account) readAccount() (accInfo *accountInfo, err error) {
+func (a *Account) readAccount() (accInfo *AccountInfo, err error) {
 	cnt, err := ioutil.ReadFile(a.accountPath())
 	if err != nil {
 		return nil, fmt.Errorf("unable to read account information %q at path %q: %w", a.name, a.accountPath(), err)
@@ -256,8 +251,8 @@ func (a *Account) readAccount() (accInfo *accountInfo, err error) {
 	return accInfo, err
 }
 
-func (a *Account) writeAccount(accInfo *accountInfo) error {
-	return writeJSONFile(a.accountPath(), accInfo)
+func (a *Account) writeAccount() error {
+	return writeJSONFile(a.accountPath(), a.info)
 }
 
 func (a *Account) accountPath() string {
@@ -278,27 +273,31 @@ func (a *Account) codePath() string {
 	return filepath.Join(a.path, "code.wasm")
 }
 
-func (a *Account) TablePath(table string) (TablePath, error) {
+func (a *Account) TablePath(table string) (string, error) {
 	if len(table) == 0 {
 		return "", fmt.Errorf("received an empty table")
 	}
 
 	table = encodeName(table)
-	return TablePath(filepath.Join(a.path, "tables", table)), nil
+	return filepath.Join(a.path, "tables", table), nil
 }
 
-func (a *Account) ScopePath(tblPath TablePath, scope string) (ScopePath, error) {
+func (a *Account) ScopePath(tblPath, scope string) (string, error) {
 	if len(scope) == 0 {
 		return "", fmt.Errorf("received an empty scope")
 	}
 
 	scope = encodeName(scope)
-	path := nestedPath(string(tblPath), scope)
-	return ScopePath(path), nil
+	path := nestedPath(tblPath, scope)
+	return path, nil
 }
 
-func (a *Account) RowsPath(scpPath ScopePath) string {
-	return filepath.Join(string(scpPath), "rows.json")
+func (a *Account) RowsPath(scpPath string) string {
+	return filepath.Join(scpPath, "rows.json")
+}
+
+func (a *Account) TableScopeInfoPath(scopePath string) string {
+	return filepath.Join(scopePath, "info.json")
 }
 
 func encodeName(name string) string {

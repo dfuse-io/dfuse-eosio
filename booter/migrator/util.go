@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"time"
+
+	pbts "github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/eoscanada/eos-go"
+	"github.com/golang/protobuf/ptypes"
 
 	rice "github.com/GeertJohan/go.rice"
 )
@@ -56,4 +60,13 @@ func fileExists(path string) bool {
 	}
 
 	return !info.IsDir()
+}
+
+func mustTimePointToProto(point eos.TimePoint) *pbts.Timestamp {
+	t := time.Unix(0, int64(point*1000))
+	time, err := ptypes.TimestampProto(t)
+	if err != nil {
+		panic(fmt.Sprintf("invalid timestamp conversion %q: %s", time, err))
+	}
+	return time
 }

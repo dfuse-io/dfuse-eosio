@@ -4,59 +4,57 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
 func TestAccountInfo_sortPermissions(t *testing.T) {
 	tests := []struct {
 		name   string
-		in     []*pbcodec.PermissionObject
-		expect []*pbcodec.PermissionObject
+		in     []*permissionObject
+		expect []*permissionObject
 	}{
 		{
 			name: "sorted owner and active",
-			in: []*pbcodec.PermissionObject{
-				{Id: 1, ParentId: 0, Name: "owner"},
-				{Id: 2, ParentId: 1, Name: "active"},
+			in: []*permissionObject{
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
-			expect: []*pbcodec.PermissionObject{
-				{Id: 1, ParentId: 0, Name: "owner"},
-				{Id: 2, ParentId: 1, Name: "active"},
+			expect: []*permissionObject{
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
 		},
 		{
 			name: "un-sorted owner and active",
-			in: []*pbcodec.PermissionObject{
-				{Id: 2, ParentId: 1, Name: "active"},
-				{Id: 1, ParentId: 0, Name: "owner"},
+			in: []*permissionObject{
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
 			},
-			expect: []*pbcodec.PermissionObject{
-				{Id: 1, ParentId: 0, Name: "owner"},
-				{Id: 2, ParentId: 1, Name: "active"},
+			expect: []*permissionObject{
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
 		},
 		{
 			name: " complex tree",
-			in: []*pbcodec.PermissionObject{
-				{Id: 21, ParentId: 12, Name: "transfers"},
-				{Id: 1, ParentId: 0, Name: "owner"},
-				{Id: 20, ParentId: 11, Name: "purger"},
-				{Id: 30, ParentId: 20, Name: "purgees"},
-				{Id: 10, ParentId: 2, Name: "claimer"},
-				{Id: 2, ParentId: 1, Name: "active"},
-				{Id: 11, ParentId: 2, Name: "blacklistops"},
-				{Id: 12, ParentId: 2, Name: "day2day"},
+			in: []*permissionObject{
+				{Parent: "day2day", Owner: "battlefield1", Name: "transfers"},
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
+				{Parent: "blacklistops", Owner: "battlefield1", Name: "purger"},
+				{Parent: "purger", Owner: "battlefield1", Name: "purgees"},
+				{Parent: "active", Owner: "battlefield1", Name: "claimer"},
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
+				{Parent: "active", Owner: "battlefield1", Name: "blacklistops"},
+				{Parent: "active", Owner: "battlefield1", Name: "day2day"},
 			},
-			expect: []*pbcodec.PermissionObject{
-				{Id: 1, ParentId: 0, Name: "owner"},
-				{Id: 2, ParentId: 1, Name: "active"},
-				{Id: 10, ParentId: 2, Name: "claimer"},
-				{Id: 11, ParentId: 2, Name: "blacklistops"},
-				{Id: 12, ParentId: 2, Name: "day2day"},
-				{Id: 20, ParentId: 11, Name: "purger"},
-				{Id: 21, ParentId: 12, Name: "transfers"},
-				{Id: 30, ParentId: 20, Name: "purgees"},
+			expect: []*permissionObject{
+				{Parent: "", Owner: "battlefield1", Name: "owner"},
+				{Parent: "owner", Owner: "battlefield1", Name: "active"},
+				{Parent: "active", Owner: "battlefield1", Name: "claimer"},
+				{Parent: "active", Owner: "battlefield1", Name: "blacklistops"},
+				{Parent: "active", Owner: "battlefield1", Name: "day2day"},
+				{Parent: "blacklistops", Owner: "battlefield1", Name: "purger"},
+				{Parent: "day2day", Owner: "battlefield1", Name: "transfers"},
+				{Parent: "purger", Owner: "battlefield1", Name: "purgees"},
 			},
 		},
 	}
