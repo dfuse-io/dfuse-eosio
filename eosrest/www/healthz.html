@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+
+<html>
+<head>
+
+    <script type = "text/javascript">
+        function WebSocketTest() {
+
+            if ("WebSocket" in window) {
+
+                let url = GetURLParameter("eosws_url");
+                let token = GetURLParameter("token");
+                let secret = GetURLParameter("secret");
+
+                let completeURL = url + "?token=" + token + "&secret=" + secret;
+                console.log("url: " + completeURL);
+
+                var ws = new WebSocket(completeURL);
+
+                ws.onopen = function() {
+                    ws.send('{"type":"get_head_info", "req_id":"' + guid() + '", "fetch":true, "listen": true}')
+                };
+
+                ws.onmessage = function (evt) {
+                    let received_msg = evt.data;
+                    let msg = JSON.parse(received_msg);
+
+                    switch (msg["type"]) {
+                        case "ping":
+                            let pingElem = document.getElementById("ping_data");
+                            pingElem.innerHTML = msg["data"];
+                            break;
+                        case "head_info":
+                            document.getElementById("head_block_num").innerHTML = msg["data"]["head_block_num"];
+                            document.getElementById("head_block_time").innerHTML = msg["data"]["head_block_time"];
+                            document.getElementById("lib_block_num").innerHTML = msg["data"]["last_irreversible_block_num"];
+                            document.getElementById("producer").innerHTML = msg["data"]["head_block_producer"];
+                            break;
+                    }
+                    console.log("Message ["+msg["type"]+"] received: " + received_msg )
+                };
+
+                ws.onclose = function() {
+                    console.log("Connection is closed...");
+                };
+            } else {
+
+                // The browser doesn't support WebSocket
+                console.log("WebSocket NOT supported by your Browser!");
+            }
+        }
+
+        function guid() {
+            function _p8(s) {
+                var p = (Math.random().toString(16)+"000000000").substr(2,8);
+                return s ? "-" + p.substr(0,4) + "-" + p.substr(4,4) : p ;
+            }
+            return _p8() + _p8(true) + _p8(true) + _p8();
+        }
+
+        /**
+         * @return {string}
+         */
+        function GetURLParameter(sParam) {
+            let sPageURL = window.location.search.substring(1);
+            let sURLVariables = sPageURL.split('&');
+            let paramCount = sURLVariables.length;
+            for (var i = 0; i < paramCount; i++) {
+                var sParameterKeyValue = sURLVariables[i].split('=');
+                var parameterName = sParameterKeyValue[0];
+                if (parameterName === sParam) {
+                    return sParameterKeyValue[1];
+                }
+            }
+        }
+    </script>
+
+</head>
+
+<body onload="WebSocketTest()">
+    <div id="ping">
+        <label>Last Ping</label>
+        <span id="ping_data"></span>
+    </div>
+    <div id="head_info">
+        <label>Head BLock:&nbsp;</label><span id="head_block_num"></span>
+        <label>Head BLock Time:&nbsp;</label><span id="head_block_time"></span>
+    </br>
+        <label>Lib Block Num:&nbsp;</label><span id="lib_block_num"></span>
+    </br>
+        <label>Producer:&nbsp;</label><span id="producer"></span>
+    </div>
+</body>
+</html>

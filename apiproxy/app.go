@@ -27,6 +27,7 @@ type Config struct {
 	AutocertDomains  []string
 	DgraphqlHTTPAddr string
 	EoswsHTTPAddr    string
+	EosrestHTTPAddr  string
 	NodeosHTTPAddr   string
 	RootHTTPAddr     string
 	AutocertCacheDir string
