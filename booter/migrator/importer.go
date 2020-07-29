@@ -24,8 +24,6 @@ var nonceActionEntropy = func() string {
 	return hex.EncodeToString(generateRandomNonce())
 }
 
-const boxPath = "./code/build"
-
 type Contract struct {
 	RawABI []byte
 	Code   []byte
@@ -60,7 +58,7 @@ func newImporter(opPublicKey ecc.PublicKey, dataDir string, actionChan chan inte
 }
 
 func (i *importer) init() error {
-	box := rice.MustFindBox(boxPath)
+	box := rice.MustFindBox("./code/build")
 	abiCnt, err := readBoxFile(box, "migrator.abi")
 	if err != nil {
 		return fmt.Errorf("unable to open migration abi cnt: %w", err)
@@ -79,6 +77,12 @@ func (i *importer) init() error {
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
+		if isNativeChainAccount(account) {
+			i.logger.Info("Skipping the creation of native account",
+				zap.String("account", account.name),
+			)
+			return nil
+		}
 		i.createAccount(account)
 		return nil
 	})
@@ -151,9 +155,19 @@ func (i *importer) migrateContract(accountData *Account) error {
 			table,
 			func(action *eos.Action) {
 				i.actionChan <- (*bootops.TransactionAction)(action)
+			},
+			func() {
 				i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 			},
 		)
+		if err != nil {
+			i.logger.Warn("unable to migrate account tables",
+				zap.String("account", accountData.name),
+				zap.String("table", table),
+				zap.Error(err),
+			)
+			continue
+		}
 		i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 	}
 
@@ -205,6 +219,12 @@ func (i *importer) createAccount(account *Account) {
 }
 
 func (i *importer) createPermissions(account *Account) error {
+	if isNativeChainAccount(account) {
+		i.logger.Info("skipping permission creation for native account",
+			zap.String("account", account.name),
+		)
+		return nil
+	}
 	currentParent := PN("")
 	for _, permission := range account.info.sortPermissions() {
 		parent := PN("")
@@ -227,14 +247,19 @@ func (i *importer) createPermissions(account *Account) error {
 }
 
 func (i *importer) setPermissions(account *Account, importerAuthority *eos.Authority) error {
-
+	if isNativeChainAccount(account) {
+		i.logger.Info("skipping permission setting for native account",
+			zap.String("account", account.name),
+		)
+		return nil
+	}
 	// the link auth is signed with active account so lets perform this first before potentially updating the active account
 	for _, linkAuth := range account.info.LinkAuths {
 		i.actionChan <- (*bootops.TransactionAction)(system.NewLinkAuth(account.getAccountName(), AN(linkAuth.Contract), eos.ActionName(linkAuth.Action), PN(linkAuth.Permission)))
 	}
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 
-	var ownerPermission *permissionObject
+	var ownerPermission *PermissionObject
 	for _, permission := range account.info.sortPermissions() {
 		if i.shouldSetPermission(importerAuthority, permission.Authority) {
 			if permission.Name == "owner" {
@@ -306,4 +331,14 @@ func generateRandomNonce() []byte {
 		panic(fmt.Sprintf("unable to correctly generate nonce: %s", err))
 	}
 	return nonce
+}
+
+func isNativeChainAccount(account *Account) bool {
+	nativeAccount := []string{"eosio", "eosio.null", "eosio.prods"}
+	for _, acc := range nativeAccount {
+		if acc == account.name {
+			return true
+		}
+	}
+	return false
 }

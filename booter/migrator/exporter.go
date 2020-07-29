@@ -75,12 +75,12 @@ func (e *exporter) Export() error {
 		}
 
 		if traceEnable {
-			//e.logger.Info("new section",
-			//	zap.String("section_name", section.Name),
-			//	zap.Uint64("row_count", section.RowCount),
-			//	zap.Uint64("bytes_count", section.BufferSize),
-			//	zap.Uint64("bytes_count", section.Offset),
-			//)
+			e.logger.Debug("new section",
+				zap.String("section_name", string(section.Name)),
+				zap.Uint64("row_count", section.RowCount),
+				zap.Uint64("bytes_count", section.BufferSize),
+				zap.Uint64("bytes_count", section.Offset),
+			)
 		}
 
 		switch section.Name {
@@ -264,7 +264,7 @@ func (e *exporter) updatePermissionObject(perm eossnapshot.PermissionObject) err
 		)
 	}
 
-	acc.info.Permissions = append(acc.info.Permissions, &permissionObject{
+	acc.info.Permissions = append(acc.info.Permissions, &PermissionObject{
 		Parent:    perm.Parent,
 		Owner:     perm.Owner,
 		Name:      perm.Name,
@@ -333,7 +333,7 @@ func (e *exporter) processContractTable(o interface{}) error {
 		return fmt.Errorf("cannot process contract row without having a current table set")
 	}
 
-	var kind string
+	var kind secondaryIndexKind
 	var secKey interface{}
 	var primKey string
 	var payer string
@@ -378,30 +378,32 @@ func (e *exporter) processTableID(obj *eossnapshot.TableIDObject) error {
 		return fmt.Errorf("received table id for a seen code-table-scope %s", tableScopeKey)
 	}
 
-	if !found && (index > 0) && traceEnable {
+	if !found && (index > 0) {
 		return fmt.Errorf("received table id index for a unseen code-table-scope%s", tableScopeKey)
 	}
 
-	if found && (index > 0) && traceEnable {
-		e.logger.Info("processing index table",
-			zap.String("account", obj.Code),
-			zap.String("table_name", tableName),
-			zap.String("raw_table_name", obj.TableName),
-			zap.String("scope", obj.Scope),
-			zap.Uint64("index", index),
-		)
-		tblScope.Payers[index] = obj.Payer
+	if found && (index > 0) {
+		if traceEnable {
+			e.logger.Debug("processing index table",
+				zap.String("account", obj.Code),
+				zap.String("table_name", tableName),
+				zap.String("raw_table_name", obj.TableName),
+				zap.String("scope", obj.Scope),
+				zap.Uint64("index", index),
+			)
+		}
+		tblScope.idxToPayers[index] = obj.Payer
 		return nil
 	}
 
 	tblScope = &tableScope{
-		account: AN(obj.Code),
-		table:   TN(tableName),
-		scope:   SN(obj.Scope),
-		Payers:  make([]string, 16),
-		rows:    map[string]*tableRow{},
+		account:     AN(obj.Code),
+		table:       TN(tableName),
+		scope:       SN(obj.Scope),
+		rows:        map[string]*tableRow{},
+		idxToPayers: map[uint64]string{},
 	}
-	tblScope.Payers[index] = obj.Payer
+	tblScope.idxToPayers[index] = obj.Payer
 	e.tableScopes[tableScopeKey] = tblScope
 
 	if traceEnable {
@@ -428,9 +430,9 @@ func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
 	}
 
 	tblRow := &tableRow{
-		Key:              obj.PrimKey,
-		Payer:            obj.Payer,
-		SecondaryIndexes: make([]*secondaryIndex, 16),
+		Key:          obj.PrimKey,
+		Payer:        obj.Payer,
+		idToSecIndex: map[uint64]*secondaryIndex{},
 	}
 
 	if _, found := tblScope.rows[obj.PrimKey]; found {
@@ -438,22 +440,21 @@ func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
 	}
 
 	if account.abi != nil {
-		cnt, err := account.abi.DecodeTableRow(TN(e.currentTable.TableName), obj.Value)
+		data, err := e.decodeTableRow(account.abi, obj)
 		if err != nil {
-			if traceEnable {
-				e.logger.Debug("unable to decode table row",
-					zap.String("account", e.currentTable.Code),
-					zap.String("table", e.currentTable.TableName),
-					zap.String("scope", e.currentTable.Scope),
-					zap.String("primary_key", obj.PrimKey),
-					zap.String("error", err.Error()),
-				)
-			}
-			tblRow.DataHex = obj.Value
+			e.logger.Debug("unable to decode table row",
+				zap.String("account", e.currentTable.Code),
+				zap.String("table", e.currentTable.TableName),
+				zap.String("scope", e.currentTable.Scope),
+				zap.String("primary_key", obj.PrimKey),
+				zap.String("error", err.Error()),
+			)
 		} else {
-			tblRow.DataJSON = json.RawMessage(cnt)
+			tblRow.DataJSON = data
 		}
-	} else {
+	}
+
+	if tblRow.DataJSON == nil {
 		tblRow.DataHex = obj.Value
 	}
 
@@ -461,8 +462,25 @@ func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
 	return nil
 }
 
-func (e *exporter) processContractRowIndex(primaryKey string, kind string, value interface{}, payer string) error {
-	tableName, index := mustExtractIndexNumber(e.currentTable.TableName)
+func (e *exporter) decodeTableRow(abi *eos.ABI, obj *eossnapshot.KeyValueObject) ([]byte, error) {
+	tableName := TN(e.currentTable.TableName)
+	tablDef := findTableDefInABI(abi, tableName)
+	if tablDef == nil {
+		return nil, fmt.Errorf("cannot find table definition %q", tableName)
+	}
+	cnt, err := abi.DecodeTableRow(tableName, obj.Value)
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode the data falling back on hex: %w", err)
+	}
+	_, err = abi.EncodeStruct(tablDef.Type, cnt)
+	if err != nil {
+		return nil, fmt.Errorf("unable to re-encoded the data falling back on hex: %w", err)
+	}
+	return json.RawMessage(cnt), nil
+}
+
+func (e *exporter) processContractRowIndex(primaryKey string, kind secondaryIndexKind, value interface{}, payer string) error {
+	tableName, id := mustExtractIndexNumber(e.currentTable.TableName)
 	tableScopeKey := tableScopeKey(e.currentTable.Code, tableName, e.currentTable.Scope)
 	tblScope, found := e.tableScopes[tableScopeKey]
 	if !found {
@@ -474,9 +492,14 @@ func (e *exporter) processContractRowIndex(primaryKey string, kind string, value
 		return fmt.Errorf("cannot process contract row index %s for unseen primary key %q", tableScopeKey, primaryKey)
 	}
 
-	tblRow.SecondaryIndexes[index] = &secondaryIndex{
+	rValue, err := json.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("cannot marshal secondary %q: %w", primaryKey, err)
+	}
+
+	tblRow.idToSecIndex[id] = &secondaryIndex{
 		Kind:  kind,
-		Value: value,
+		Value: json.RawMessage(rValue),
 		Payer: payer,
 	}
 	return nil
@@ -522,30 +545,24 @@ func (s *exporter) exportTableScope(tableScope *tableScope) error {
 		)
 	}
 
+	tableScope.setupPayer()
+
 	account, found := s.accounts[tableScope.account]
 	if !found {
 		return fmt.Errorf("cannot export table-scope for unknown account %q", string(tableScope.account))
 	}
 
-	tablePath, err := account.TablePath(string(tableScope.table))
-	if err != nil {
-		return fmt.Errorf("unable to determine table path: %w", err)
-	}
+	scopePath := account.scopePath(string(tableScope.table), string(tableScope.scope))
 
-	scopePath, err := account.ScopePath(tablePath, string(tableScope.scope))
-	if err != nil {
-		return fmt.Errorf("unable to determine accout %q table %q scope %q path: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
-	}
-
-	if err = os.MkdirAll(string(scopePath), os.ModePerm); err != nil {
+	if err := os.MkdirAll(string(scopePath), os.ModePerm); err != nil {
 		return fmt.Errorf("unable to create table scope storage path: %w", err)
 	}
 
-	if err = s.writeTableInfo(account.TableScopeInfoPath(scopePath), tableScope); err != nil {
+	if err := s.writeTableInfo(account.tableScopeInfoPath(string(tableScope.table), string(tableScope.scope)), tableScope); err != nil {
 		return fmt.Errorf("unable to write table rows: %s:%s:%s: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
 	}
 
-	if err = s.writeTableRows(account.RowsPath(scopePath), tableScope.rows); err != nil {
+	if err := s.writeTableRows(account.rowsPath(string(tableScope.table), string(tableScope.scope)), tableScope.rows); err != nil {
 		return fmt.Errorf("unable to write table rows: %s:%s:%s: %w", string(tableScope.account), string(tableScope.table), string(tableScope.scope), err)
 	}
 	return nil
@@ -566,10 +583,13 @@ func (s *exporter) writeTableRows(rowsPath string, rows map[string]*tableRow) er
 	file.WriteString("[")
 	itr := 0
 	for primKey, tabletRow := range rows {
+		tabletRow.setupSecondaryIndexes()
+
 		encoder := json.NewEncoder(file)
 		encoder.SetEscapeHTML(false)
 
 		file.WriteString("\n  ")
+
 		err := encoder.Encode(tabletRow)
 		if err != nil {
 			return fmt.Errorf("unable to encode row %q: %w", primKey, err)
@@ -582,13 +602,4 @@ func (s *exporter) writeTableRows(rowsPath string, rows map[string]*tableRow) er
 	}
 	file.WriteString("]")
 	return nil
-}
-
-func mustExtractIndexNumber(tableName string) (table string, index uint64) {
-	name, err := eos.StringToName(tableName)
-	if err != nil {
-		panic(fmt.Sprintf("unable to convert table name %q to uint64: %s", name, err))
-	}
-	// The last 4 bits of a tableName represents the count of the index
-	return eos.NameToString(name & 0xfffffffffffffff0), (name & 0x0f)
 }

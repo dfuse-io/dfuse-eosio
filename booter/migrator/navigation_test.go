@@ -2,6 +2,7 @@ package migrator
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"go.uber.org/zap"
@@ -10,10 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_retrieveContractAccounts(t *testing.T) {
-	dataDir := "migration-data"
+func Test_retrieveAccounts(t *testing.T) {
+	testDir := testMigrationDataDirPath("battlefield-snapshot")
+	if !folderExists(testDir) {
+		t.Skipf("Folder %q does not exist, skipping account retrieve test", testDir)
+		return
+	}
+
 	i := &importer{
-		common: common{dataDir: testMigrationDataDirPath(dataDir)},
+		common: common{dataDir: testDir},
 		logger: zap.NewNop(),
 	}
 
@@ -35,6 +41,8 @@ func Test_retrieveContractAccounts(t *testing.T) {
 		"eosio.msig":   true,
 		"eosio.ram":    false,
 		"eosio.token":  true,
+		"eosio.null":   false,
+		"eosio.prods":  false,
 		"eosio2":       false,
 		"eosio3":       false,
 		"eosio.names":  false,
@@ -60,9 +68,13 @@ func Test_retrieveContractAccounts(t *testing.T) {
 }
 
 func Test_walkScopes(t *testing.T) {
-	dataDir := "migration-data"
+	testDir := testMigrationDataDirPath("battlefield-snapshot")
+	if !folderExists(testDir) {
+		t.Skipf("Folder %q does not exist, skipping scope walking test", testDir)
+		return
+	}
 	scopes := []string{}
-	accountPath, err := newAccountPath(testMigrationDataDirPath(dataDir), "eosio.token")
+	accountPath, err := newAccountPath(testDir, "eosio.token")
 	require.NoError(t, err)
 
 	walkScopes(fmt.Sprintf("%s/tables/accounts", accountPath), func(scope string) error {
@@ -84,4 +96,17 @@ func Test_walkScopes(t *testing.T) {
 		"notified4",
 	}, scopes)
 
+}
+
+func folderExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return info.IsDir()
 }

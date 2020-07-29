@@ -9,34 +9,34 @@ import (
 func TestAccountInfo_sortPermissions(t *testing.T) {
 	tests := []struct {
 		name   string
-		in     []*permissionObject
-		expect []*permissionObject
+		in     []*PermissionObject
+		expect []*PermissionObject
 	}{
 		{
 			name: "sorted owner and active",
-			in: []*permissionObject{
+			in: []*PermissionObject{
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
-			expect: []*permissionObject{
+			expect: []*PermissionObject{
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
 		},
 		{
 			name: "un-sorted owner and active",
-			in: []*permissionObject{
+			in: []*PermissionObject{
 				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 			},
-			expect: []*permissionObject{
+			expect: []*PermissionObject{
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 			},
 		},
 		{
 			name: " complex tree",
-			in: []*permissionObject{
+			in: []*PermissionObject{
 				{Parent: "day2day", Owner: "battlefield1", Name: "transfers"},
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 				{Parent: "blacklistops", Owner: "battlefield1", Name: "purger"},
@@ -46,7 +46,7 @@ func TestAccountInfo_sortPermissions(t *testing.T) {
 				{Parent: "active", Owner: "battlefield1", Name: "blacklistops"},
 				{Parent: "active", Owner: "battlefield1", Name: "day2day"},
 			},
-			expect: []*permissionObject{
+			expect: []*PermissionObject{
 				{Parent: "", Owner: "battlefield1", Name: "owner"},
 				{Parent: "owner", Owner: "battlefield1", Name: "active"},
 				{Parent: "active", Owner: "battlefield1", Name: "claimer"},

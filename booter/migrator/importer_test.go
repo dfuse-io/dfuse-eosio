@@ -38,6 +38,17 @@ func Test_Importer(t *testing.T) {
 }
 
 func testImporterData(t *testing.T, dataDir string) {
+	if os.Getenv("MIGRATION_RUN") != "true" {
+		t.Skipf("Environment variable 'MIGRATION_RUN' must be set to true")
+		return
+	}
+
+	testDir := testMigrationDataDirPath(dataDir)
+	if !folderExists(testDir) {
+		t.Skipf("Folder %q does not exist, skipping importer test", testDir)
+		return
+	}
+
 	actions := make(chan interface{})
 	receivedActions := []interface{}{}
 
@@ -45,8 +56,12 @@ func testImporterData(t *testing.T, dataDir string) {
 		return "aaaaaaaaaaaa"
 	}
 
+	primKeyEntropyFunc = func() uint64 {
+		return 1
+	}
+
 	impt := &importer{
-		common:      common{dataDir: testMigrationDataDirPath(dataDir)},
+		common:      common{dataDir: testDir},
 		opPublicKey: ecc.PublicKey{},
 		actionChan:  actions,
 		logger:      zap.NewNop(),

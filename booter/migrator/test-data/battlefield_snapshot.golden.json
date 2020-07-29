@@ -2298,8 +2298,8 @@
         "table": "variant",
         "scope": "battlefield1",
         "payer": "battlefield1",
-        "id": ".........1.wi",
-        "data": "ce410000000000005e0000005e00000000000000"
+        "id": ".........2bg",
+        "data": "c08e0000000000002a0000002a00000000000000"
       }
     }
   },
@@ -2330,34 +2330,8 @@
         "table": "variant",
         "scope": "battlefield1",
         "payer": "battlefield1",
-        "id": ".........2vmb",
-        "data": "27b7000000000000870000008700000000000000"
-      }
-    }
-  },
-  {
-    "type": "TransactionBoundary",
-    "payload": {
-      "Signer": ""
-    }
-  },
-  {
-    "type": "EOSAction",
-    "payload": {
-      "account": "battlefield1",
-      "name": "inject",
-      "authorization": [
-        {
-          "actor": "battlefield1",
-          "permission": "active"
-        }
-      ],
-      "data": {
-        "table": "variant",
-        "scope": "battlefield1",
-        "payer": "battlefield1",
-        "id": ".........1exe",
-        "data": "da55000000000000e2000000e200000000000000"
+        "id": ".........1ag",
+        "data": "c04c000000000000920000009200000000000000"
       }
     }
   },
@@ -3966,7 +3940,7 @@
         "table": "accounts",
         "scope": "battlefeeld4",
         "payer": "eosio",
-        "id": "........ehboc",
+        "id": "........ehboa",
         "data": "01"
       }
     }
@@ -4018,7 +3992,7 @@
         "account": "eosio.token",
         "table": "accounts",
         "scope": "battlefeeld4",
-        "id": "........ehboc"
+        "id": "........ehboa"
       }
     }
   },
@@ -4043,7 +4017,7 @@
         "table": "accounts",
         "scope": "battlefield1",
         "payer": "eosio",
-        "id": "........ehboi",
+        "id": "........ehboa",
         "data": "01"
       }
     }
@@ -4095,7 +4069,7 @@
         "account": "eosio.token",
         "table": "accounts",
         "scope": "battlefield1",
-        "id": "........ehboi"
+        "id": "........ehboa"
       }
     }
   },

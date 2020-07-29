@@ -4,15 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
-	"time"
-
-	pbts "github.com/golang/protobuf/ptypes/timestamp"
-
-	"github.com/eoscanada/eos-go"
-	"github.com/golang/protobuf/ptypes"
 
 	rice "github.com/GeertJohan/go.rice"
+	"github.com/eoscanada/eos-go"
 )
 
 var AN = eos.AN
@@ -62,11 +58,46 @@ func fileExists(path string) bool {
 	return !info.IsDir()
 }
 
-func mustTimePointToProto(point eos.TimePoint) *pbts.Timestamp {
-	t := time.Unix(0, int64(point*1000))
-	time, err := ptypes.TimestampProto(t)
+func mustExtractIndexNumber(tableName string) (table string, index uint64) {
+	name, err := eos.StringToName(tableName)
 	if err != nil {
-		panic(fmt.Sprintf("invalid timestamp conversion %q: %s", time, err))
+		panic(fmt.Sprintf("unable to convert table name %q to uint64: %s", name, err))
 	}
-	return time
+	// The last 4 bits of a tableName represents the count of the index
+	return eos.NameToString(name & 0xfffffffffffffff0), (name & 0x0f)
+}
+
+func mustCreateIndexTable(tableName string, indexId uint64) (table string) {
+	name, err := eos.StringToName(tableName)
+	if err != nil {
+		panic(fmt.Sprintf("unable to convert table name %q to uint64: %s", name, err))
+	}
+	return eos.NameToString((name & 0xfffffffffffffff0) | (indexId & 0x0f))
+}
+
+func findTableDefInABI(abi *eos.ABI, table eos.TableName) *eos.TableDef {
+	for _, t := range abi.Tables {
+		if t.Name == table {
+			return &t
+		}
+	}
+	return nil
+}
+
+var primKeyEntropyFunc = func() uint64 {
+	return uint64(rand.Intn(20) + 2)
+}
+
+func mustIncrementPrimKey(primKey string) eos.Name {
+	// stringToName can never panic
+	i, err := eos.StringToName(primKey)
+	if err != nil {
+		panic(fmt.Sprintf("unable to convert table primary key %q to uint64: %s", primKey, err))
+	}
+
+	return eos.Name(eos.NameToString(i + primKeyEntropyFunc()))
+}
+
+func s(str string) *string {
+	return &str
 }

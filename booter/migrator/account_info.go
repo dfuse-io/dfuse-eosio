@@ -4,7 +4,7 @@ import (
 	"github.com/eoscanada/eos-go"
 )
 
-type permissionObject struct {
+type PermissionObject struct {
 	// Parent of this permission object
 	Parent eos.PermissionName `json:"parent,omitempty"`
 	// Owner is the account for which this permission belongs to
@@ -22,13 +22,13 @@ type LinkAuth struct {
 }
 
 type AccountInfo struct {
-	Permissions []*permissionObject `json:"permissions"`
+	Permissions []*PermissionObject `json:"permissions"`
 	LinkAuths   []*LinkAuth         `json:"link_auths"`
 
-	nameToPerm map[eos.PermissionName]*permissionObject
+	nameToPerm map[eos.PermissionName]*PermissionObject
 }
 
-func newAccountInfo(permissions []*permissionObject, linkAuths []*LinkAuth) *AccountInfo {
+func newAccountInfo(permissions []*PermissionObject, linkAuths []*LinkAuth) *AccountInfo {
 	info := &AccountInfo{
 		Permissions: permissions,
 		LinkAuths:   linkAuths,
@@ -38,17 +38,17 @@ func newAccountInfo(permissions []*permissionObject, linkAuths []*LinkAuth) *Acc
 }
 
 func (a *AccountInfo) setupIDtoPerm() {
-	a.nameToPerm = make(map[eos.PermissionName]*permissionObject, len(a.Permissions))
+	a.nameToPerm = make(map[eos.PermissionName]*PermissionObject, len(a.Permissions))
 	for _, perm := range a.Permissions {
 		a.nameToPerm[perm.Name] = perm
 	}
 }
 
-func (a *AccountInfo) sortPermissions() (out []*permissionObject) {
-	var roots []*permissionObject
-	parentToChildren := map[eos.PermissionName][]*permissionObject{}
+func (a *AccountInfo) sortPermissions() (out []*PermissionObject) {
+	var roots []*PermissionObject
+	parentToChildren := map[eos.PermissionName][]*PermissionObject{}
 	for _, perm := range a.Permissions {
-		if perm.Owner == "" {
+		if perm.Parent == "" {
 			roots = append(roots, perm)
 			continue
 		}
@@ -56,8 +56,8 @@ func (a *AccountInfo) sortPermissions() (out []*permissionObject) {
 		parentToChildren[perm.Parent] = append(parentToChildren[perm.Parent], perm)
 	}
 
-	var walk func(roots []*permissionObject, index int)
-	walk = func(roots []*permissionObject, index int) {
+	var walk func(roots []*PermissionObject, index int)
+	walk = func(roots []*PermissionObject, index int) {
 		if index >= len(roots) {
 			return
 		}
