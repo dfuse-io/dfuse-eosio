@@ -28,14 +28,11 @@ main() {
   fi
 
   if [[ $mode == "export" ]]; then
-    echo "Ensure you have a FluxDB sever app running (use 'fluxdb-reproc-dev1/start.sh')"
-    sleep 2
-
     rm -rf migration-data
-    dfuseeos -c migrator.yaml migrate -i 1000 "$@"
+    dfuseeos migrate -s "battlefield-snapshot.bin" "$@"
   elif [[ $mode == "import" ]]; then
     rm -rf dfuse-data
-    TRACE="true" WARN="(.*)" DEBUG="(.*booter.*|.*eosio-boot.*)" dfuseeos -c booter.yaml start "$@"
+    TRACE="true" WARN="(.*)" DEBUG="(.*booter.*|.*eosio-boot.*|.*dfuseeos*.*)" dfuseeos -c booter.yaml start "$@"
   else
     usage_error "You must specify either '-m export' or '-m import'"
   fi
