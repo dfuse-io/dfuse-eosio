@@ -4,6 +4,158 @@
     "types": [],
     "structs": [
         {
+            "name": "eject",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "idxc",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                },
+                {
+                    "name": "secondary",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "idxdbl",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                },
+                {
+                    "name": "secondary",
+                    "type": "float64"
+                }
+            ]
+        },
+        {
+            "name": "idxi",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                },
+                {
+                    "name": "secondary",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "idxii",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                },
+                {
+                    "name": "secondary",
+                    "type": "uint128"
+                }
+            ]
+        },
+        {
+            "name": "idxldbl",
+            "base": "",
+            "fields": [
+                {
+                    "name": "table",
+                    "type": "name"
+                },
+                {
+                    "name": "scope",
+                    "type": "name"
+                },
+                {
+                    "name": "payer",
+                    "type": "name"
+                },
+                {
+                    "name": "id",
+                    "type": "name"
+                },
+                {
+                    "name": "secondary",
+                    "type": "float128"
+                }
+            ]
+        },
+        {
             "name": "inject",
             "base": "",
             "fields": [
@@ -31,6 +183,36 @@
         }
     ],
     "actions": [
+        {
+            "name": "eject",
+            "type": "eject",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "idxc",
+            "type": "idxc",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "idxdbl",
+            "type": "idxdbl",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "idxi",
+            "type": "idxi",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "idxii",
+            "type": "idxii",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "idxldbl",
+            "type": "idxldbl",
+            "ricardian_contract": ""
+        },
         {
             "name": "inject",
             "type": "inject",
