@@ -32,7 +32,7 @@ main() {
     dfuseeos migrate -s "battlefield-snapshot.bin" "$@"
   elif [[ $mode == "import" ]]; then
     rm -rf dfuse-data
-    TRACE="true" WARN="(.*)" DEBUG="(.*booter.*|.*eosio-boot.*|.*dfuseeos*.*)" dfuseeos -c booter.yaml start "$@"
+    dfuseeos -c booter.yaml start "$@"
   else
     usage_error "You must specify either '-m export' or '-m import'"
   fi
