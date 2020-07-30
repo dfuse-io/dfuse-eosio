@@ -38,7 +38,7 @@ require (
 	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.3-0.20200724152216-947b231c83f9
-	github.com/dfuse-io/node-manager v0.0.2-0.20200721154543-04cfda1d7412
+	github.com/dfuse-io/node-manager v0.0.2-0.20200730191316-09265ef6d395
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
