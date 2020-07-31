@@ -166,11 +166,6 @@ func (s *NodeosSuperviser) HasData() bool {
 		return false
 	}
 
-	dir, err = ioutil.ReadDir(path.Join(s.options.DataDir, "state"))
-	if err != nil || len(dir) == 0 {
-		return false
-	}
-
 	return true
 }
 
