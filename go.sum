@@ -248,6 +248,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200724152201-64aae5bc532f h1:PnzmLveHCRTO
 github.com/dfuse-io/bstream v0.0.2-0.20200724152201-64aae5bc532f/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736 h1:3VmVpJ57IqQqQ2b+o+me4y3yZVhMdk6DNapsyhVO9Cw=
 github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
+github.com/dfuse-io/bstream v0.0.2-0.20200730171716-a46b819bf678 h1:uoL50hY3K9t6BTgJnp+y62qm4h8FhL9ooPOSZ8zqWCo=
+github.com/dfuse-io/bstream v0.0.2-0.20200730171716-a46b819bf678/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/dauth v0.0.0-20200407002455-d8256e743286/go.mod h1:obh8aJXWndrj0HSW+EYd/HQZiyLYg+fHdOWFMUUtyYM=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
@@ -310,6 +312,8 @@ github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJ
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/fluxdb v0.0.0-20200723210754-6a14a98fe0e2 h1:gywVYuHvMbwLsAw63caXoR4kkcG8G9SaCttTV5bO93I=
 github.com/dfuse-io/fluxdb v0.0.0-20200723210754-6a14a98fe0e2/go.mod h1:GJtOHMGemhIEjFo9jfmd6WXbfn71Z9a/101U3GlJ00o=
+github.com/dfuse-io/fluxdb v0.0.0-20200803160134-4566badd8fa5 h1:7w8WacKg+TI5nZlbcvEsuqKjqDFryD/3VWtljgFKvX4=
+github.com/dfuse-io/fluxdb v0.0.0-20200803160134-4566badd8fa5/go.mod h1:/Hv/ZXiKb71dbQr7BqevtvX+x1HlHYYgvlAh3QYgPqE=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
