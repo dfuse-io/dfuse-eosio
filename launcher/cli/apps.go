@@ -791,6 +791,7 @@ func init() {
 			cmd.Flags().Duration("search-live-shutdown-delay", 0*time.Second, "On shutdown, time to wait before actually leaving, to try and drain connections")
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
+			cmd.Flags().Int("search-live-hub-channel-size", 1000, "Search live hub channel size")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.RuntimeModules) (launcher.App, error) {
@@ -821,6 +822,7 @@ func init() {
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
 				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
+				HubChannelSize:           viper.GetInt("search-live-hub-channel-size"),
 			}, &liveApp.Modules{
 				BlockMapper: mapper,
 				Dmesh:       modules.SearchDmeshClient,

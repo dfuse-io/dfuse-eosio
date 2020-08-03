@@ -2,8 +2,10 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ 
 
 ## Unreleased
+* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
 
 ### Changed
 * In general: `eosdb` was renamed to `trxdb`, which shouldn't change much externally.
