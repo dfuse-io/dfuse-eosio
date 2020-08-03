@@ -80,14 +80,6 @@ require (
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
-	""
-	""
-	""
-	""
-	""
-	""
-	""
-	""
 )
 
 // to solve "github.com/ugorji/go/codec: ambiguous import: found package github.com/ugorji/go/codec in multiple modules:"
