@@ -35,7 +35,6 @@ import (
 )
 
 func Test_onGetTableRows(t *testing.T) {
-
 	archiveStore := dstore.NewMockStore(nil)
 
 	abiGetter := NewTestABIGetter()
@@ -44,7 +43,7 @@ func Test_onGetTableRows(t *testing.T) {
 		name              string
 		lib               uint32
 		archiveFiles      []archiveFiles
-		fluxDBResponse    string
+		stateDBResponse   string
 		abiForAccountName *ABIAccountName
 		msg               string
 		expectedOutput    []string
@@ -79,10 +78,10 @@ func Test_onGetTableRows(t *testing.T) {
     ]
 }
 `))}},
-			fluxDBResponse:    `{"last_irreversible_block_id":"00000001a","last_irreversible_block_num":1,"up_to_block_id":"00000001a","up_to_block_num":1,"rows":{"foo":"bar"}}`,
+			stateDBResponse:   `{"last_irreversible_block_id":"00000001a","last_irreversible_block_num":1,"up_to_block_id":"00000001a","up_to_block_num":1,"rows":[{"key":"a","payer":"eosio","json":"{\"foo\":\"bar\"}"}]}`,
 			abiForAccountName: &ABIAccountName{accountName: eos.AccountName("account.1"), abiString: `{"version":"eosio::abi/1.0","structs":[{"name":"struct_name_1","fields":[{"name":"struct_1_field_1","type":"string"}]}],"tables":[{"name":"table_name_1","index_type":"i64","key_names":["key_name_1"],"key_types":["string"],"type":"struct_name_1"}]}`},
 			msg:               `{"type":"get_table_rows","req_id":"abc","listen":false,"fetch":true,"data":{"code":"account.1","scope":"scope.1","table":"table.name.1","json":true}}`,
-			expectedOutput:    []string{`{"type":"table_snapshot","req_id":"abc","data":{"rows":{"foo":"bar"}}}`},
+			expectedOutput:    []string{`{"type":"table_snapshot","req_id":"abc","data":{"rows":[{"foo":"bar"}]}}`},
 		},
 	}
 
@@ -111,7 +110,10 @@ func Test_onGetTableRows(t *testing.T) {
 			conn, closer := newTestConnection(t, handler)
 			defer closer()
 
-			fluxClient.SetGetTableResponse(c.fluxDBResponse, nil)
+			mockRows := new(pbstatedb.MockStreamTableRows)
+			json.Unmarshal([]byte(c.stateDBResponse), mockRows)
+
+			stateClient.SetStreamTableRows(mockRows)
 
 			abiGetter.SetABIForAccount(c.abiForAccountName.abiString, c.abiForAccountName.accountName)
 

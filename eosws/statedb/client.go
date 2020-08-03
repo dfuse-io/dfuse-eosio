@@ -18,11 +18,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"sort"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
-	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"
 	"github.com/eoscanada/eos-go"
 )
 
@@ -70,7 +68,7 @@ type Global struct {
 	LastNameClose            string  `json:"last_name_close"`
 }
 
-type FluxHelper interface {
+type StateHelper interface {
 	QueryTotalActivatedStake(ctx context.Context) (float64, error)
 	QueryProducers(ctx context.Context) ([]Producer, float64, error)
 }
@@ -86,17 +84,21 @@ func NewDefaultFluxHelper(client pbstatedb.StateClient) *DefaultFluxHelper {
 }
 
 func (f *DefaultFluxHelper) QueryTotalActivatedStake(ctx context.Context) (float64, error) {
-	_, rows, err := f.fetchTableRows(ctx, 0, "eosio", "global", "eosio", "name")
+	response, err := f.client.GetTableRow(ctx, &pbstatedb.GetTableRowRequest{
+		BlockNum:   0,
+		Contract:   "eosio",
+		Table:      "global",
+		Scope:      "eosio",
+		PrimaryKey: "global",
+		KeyType:    "name",
+		ToJson:     true,
+	})
 	if err != nil {
 		return 0, fmt.Errorf("statedb read global table: %w", err)
 	}
 
-	if len(rows) <= 0 {
-		return 0, fmt.Errorf("missing global response")
-	}
-
 	var global Global
-	err = json.Unmarshal(rows[0], &global)
+	err = json.Unmarshal([]byte(response.Row.Json), &global)
 	if err != nil {
 		return 0, fmt.Errorf("umarshalling global chain info: %w", err)
 	}
@@ -105,24 +107,37 @@ func (f *DefaultFluxHelper) QueryTotalActivatedStake(ctx context.Context) (float
 }
 
 func (f *DefaultFluxHelper) QueryProducers(ctx context.Context) ([]Producer, float64, error) {
-	_, rows, err := f.fetchTableRows(ctx, 0, "eosio", "producers", "eosio", "name")
-	if err != nil {
-		return nil, 0, fmt.Errorf("statedb read producers table: %w", err)
+	request := &pbstatedb.StreamTableRowsRequest{
+		BlockNum: 0,
+		Contract: "eosio",
+		Table:    "producers",
+		Scope:    "eosio",
+		KeyType:  "name",
+		ToJson:   true,
 	}
 
 	sum := 0.0
+	i := 0
 	var producers []Producer
-	for i, row := range rows {
+	_, err := pbstatedb.ForEachTableRows(ctx, f.client, request, func(response *pbstatedb.TableRowResponse) error {
 		var producer Producer
-		err := json.Unmarshal(row, &producer)
+		err := json.Unmarshal([]byte(response.Json), &producer)
 		if err != nil {
-			return nil, 0.0, fmt.Errorf("unmarshal producer at index #%d", i)
+			return fmt.Errorf("unmarshal producer at index #%d", i)
 		}
 
 		sum += producer.TotalVotes
 		if producer.IsActive {
 			producers = append(producers, producer)
 		}
+
+		i++
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, 0, fmt.Errorf("statedb read producers table: %w", err)
 	}
 
 	sort.Slice(producers, func(i, j int) bool {
@@ -130,41 +145,4 @@ func (f *DefaultFluxHelper) QueryProducers(ctx context.Context) ([]Producer, flo
 	})
 
 	return producers, sum, nil
-}
-
-func (h *DefaultFluxHelper) fetchTableRows(
-	ctx context.Context,
-	blockNum uint32,
-	contract, table, scope string,
-	keyType string,
-) (ref *grpc.StreamReference, rows []json.RawMessage, err error) {
-	stream, err := h.client.StreamTableRows(ctx, &pbstatedb.StreamTableRowsRequest{
-		BlockNum: uint64(blockNum),
-		Contract: contract,
-		Table:    table,
-		Scope:    scope,
-		KeyType:  keyType,
-		ToJson:   true,
-	})
-	if err != nil {
-		return nil, nil, fmt.Errorf("stream creation: %w", err)
-	}
-
-	ref, err = grpc.ExtractStreamReference(stream)
-	if err != nil {
-		return nil, nil, fmt.Errorf("extract stream reference: %w", err)
-	}
-
-	for {
-		row, err := stream.Recv()
-		if err != nil {
-			if err == io.EOF {
-				return ref, rows, nil
-			}
-
-			return nil, nil, fmt.Errorf("unable to fetch all table rows: %w", err)
-		}
-
-		rows = append(rows, []byte(row.Json))
-	}
 }

@@ -50,7 +50,7 @@ type TRXDB struct {
 	HeadBlock    uint32 `json:"head_block"`
 	BlockLatency int    `json:"block_latency"`
 }
-type Flux struct {
+type StateDB struct {
 	HeadBlock    uint32 `json:"head_block"`
 	BlockLatency int    `json:"block_latency"`
 }
@@ -67,15 +67,15 @@ type Healthz struct {
 	Errors  []string `json:"errors"`
 	Hub     *Hub     `json:"hub,omitempty"`
 	TRXDB   *TRXDB   `json:"trxdb,omitempty"`
-	Flux    *Flux    `json:"flux,omitempty"`
+	StateDB *StateDB `json:"statedb,omitempty"`
 	Search  *Search  `json:"search,omitempty"`
 	Merger  *Merger  `json:"merger,omitempty"`
 	Healthy struct {
-		Hub    *bool `json:"hub,omitempty"`
-		Merger *bool `json:"merger,omitempty"`
-		TRXDB  *bool `json:"trxdb,omitempty"`
-		Flux   *bool `json:"flux,omitempty"`
-		Search *bool `json:"search,omitempty"`
+		Hub     *bool `json:"hub,omitempty"`
+		Merger  *bool `json:"merger,omitempty"`
+		TRXDB   *bool `json:"trxdb,omitempty"`
+		SatetDB *bool `json:"statedb,omitempty"`
+		Search  *bool `json:"search,omitempty"`
 	} `json:"healthy"`
 }
 
@@ -283,7 +283,7 @@ func healthCheckStateDB(ctx context.Context, h *Healthz, wg *sync.WaitGroup, sta
 	done := make(chan struct{})
 
 	go func() {
-		h.Flux = &Flux{}
+		h.StateDB = &StateDB{}
 
 		res, err := stateClient.GetTableRow(ctx, &pbstatedb.GetTableRowRequest{
 			Contract:   "eosio",
@@ -298,16 +298,16 @@ func healthCheckStateDB(ctx context.Context, h *Healthz, wg *sync.WaitGroup, sta
 			if res.UpToBlock != nil {
 				statedbHeadBlock := uint32(res.UpToBlock.Num)
 
-				h.Flux.HeadBlock = statedbHeadBlock
-				h.Flux.BlockLatency = int(headBlockNum - statedbHeadBlock)
+				h.StateDB.HeadBlock = statedbHeadBlock
+				h.StateDB.BlockLatency = int(headBlockNum - statedbHeadBlock)
 
 				if statedbHeadBlock > headBlockNum {
-					h.Flux.BlockLatency = 0
+					h.StateDB.BlockLatency = 0
 				}
 			}
 		}
-		isHealthy := h.Flux.BlockLatency < maxBlockLatencyStreams
-		h.Healthy.Flux = newBool(isHealthy)
+		isHealthy := h.StateDB.BlockLatency < maxBlockLatencyStreams
+		h.Healthy.SatetDB = newBool(isHealthy)
 
 		close(done)
 	}()
@@ -316,7 +316,7 @@ func healthCheckStateDB(ctx context.Context, h *Healthz, wg *sync.WaitGroup, sta
 	case <-done:
 	case <-time.After(maxSubsystemResponseTime):
 		h.Errors = append(h.Errors, "Flux health check time out")
-		h.Healthy.Flux = newBool(false)
+		h.Healthy.SatetDB = newBool(false)
 	}
 
 }

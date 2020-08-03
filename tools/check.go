@@ -39,18 +39,18 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	RunE:  checkTrxdbBlocksE,
 }
 
-var checkFluxShardsCmd = &cobra.Command{
+var checkStateDBShardsCmd = &cobra.Command{
 	Use:   "statedb-shards {dsn} {shard-count}",
 	Short: "Checks to see if all shards are aligned in StateDB reprocessing",
 	Args:  cobra.ExactArgs(2),
-	RunE:  checkFluxShardsE,
+	RunE:  checkStateDBShardsE,
 }
 
 func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkMergedBlocksCmd)
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
-	checkCmd.AddCommand(checkFluxShardsCmd)
+	checkCmd.AddCommand(checkStateDBShardsCmd)
 
 	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
 	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
@@ -59,7 +59,7 @@ func init() {
 	checkTrxdbBlocksCmd.Flags().Int64P("end-block", "e", 4294967296, "Block number to end at")
 }
 
-func checkFluxShardsE(cmd *cobra.Command, args []string) error {
+func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
 	storeDSN := args[0]
 	shards := args[1]
 	shardsInt, err := strconv.ParseInt(shards, 10, 32)

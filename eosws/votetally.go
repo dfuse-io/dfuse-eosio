@@ -50,13 +50,13 @@ func (ws *WSConn) onGetVoteTally(ctx context.Context, msg *wsmsg.GetVoteTally) {
 type VoteTallyHub struct {
 	CommonHub
 
-	fluxHelper statedb.FluxHelper
+	stateHelper statedb.StateHelper
 }
 
-func NewVoteTallyHub(fluxHelper statedb.FluxHelper) *VoteTallyHub {
+func NewVoteTallyHub(stateHelper statedb.StateHelper) *VoteTallyHub {
 	return &VoteTallyHub{
-		CommonHub:  CommonHub{name: "VoteTally"},
-		fluxHelper: fluxHelper,
+		CommonHub:   CommonHub{name: "VoteTally"},
+		stateHelper: stateHelper,
 	}
 }
 
@@ -76,12 +76,12 @@ func (h *VoteTallyHub) Launch(ctx context.Context) {
 
 func (h *VoteTallyHub) FetchVoteTally() (*wsmsg.VoteTally, error) {
 
-	totalActivatedStake, err := h.fluxHelper.QueryTotalActivatedStake(context.Background())
+	totalActivatedStake, err := h.stateHelper.QueryTotalActivatedStake(context.Background())
 	if err != nil {
 		return nil, derr.Wrap(err, "query total active stake")
 	}
 
-	producers, totalVotes, err := h.fluxHelper.QueryProducers(context.Background())
+	producers, totalVotes, err := h.stateHelper.QueryProducers(context.Background())
 	if err != nil {
 		return nil, derr.Wrap(err, "query producers")
 	}

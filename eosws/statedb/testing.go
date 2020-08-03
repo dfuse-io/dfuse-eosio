@@ -27,19 +27,19 @@ type TestProducersResponse struct {
 	err        error
 }
 
-type TestFluxHelper struct {
+type TestStateHelper struct {
 	totalActivatedStakeResponse *TestTotalActivatedStakeResponse
 	producersResponse           *TestProducersResponse
 }
 
-func (c *TestFluxHelper) SetTotalActivatedStakeResponse(totalActivatedStake float64, err error) {
+func (c *TestStateHelper) SetTotalActivatedStakeResponse(totalActivatedStake float64, err error) {
 	c.totalActivatedStakeResponse = &TestTotalActivatedStakeResponse{
 		totalActivatedStake: totalActivatedStake,
 		err:                 err,
 	}
 }
 
-func (c *TestFluxHelper) SetProducersResponse(producers []Producer, totalVotes float64, err error) {
+func (c *TestStateHelper) SetProducersResponse(producers []Producer, totalVotes float64, err error) {
 	c.producersResponse = &TestProducersResponse{
 		producers:  producers,
 		totalVotes: totalVotes,
@@ -47,14 +47,14 @@ func (c *TestFluxHelper) SetProducersResponse(producers []Producer, totalVotes f
 	}
 }
 
-func (c *TestFluxHelper) QueryTotalActivatedStake(ctx context.Context) (float64, error) {
+func (c *TestStateHelper) QueryTotalActivatedStake(ctx context.Context) (float64, error) {
 	return c.totalActivatedStakeResponse.totalActivatedStake, c.totalActivatedStakeResponse.err
 }
 
-func (c *TestFluxHelper) QueryProducers(ctx context.Context) ([]Producer, float64, error) {
+func (c *TestStateHelper) QueryProducers(ctx context.Context) ([]Producer, float64, error) {
 	return c.producersResponse.producers, c.producersResponse.totalVotes, c.producersResponse.err
 }
 
-func NewTestFluxHelper() *TestFluxHelper {
-	return &TestFluxHelper{}
+func NewTestStateHelper() *TestStateHelper {
+	return &TestStateHelper{}
 }

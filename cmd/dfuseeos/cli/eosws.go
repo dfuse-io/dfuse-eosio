@@ -22,6 +22,7 @@ func init() {
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
+			cmd.Flags().String("eosws-statedb-http-addr", StateDBHTTPServingAddr, "StateDB HTTP server address")
 			cmd.Flags().String("eosws-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
 			cmd.Flags().Bool("eosws-fetch-vote-tally", false, "Enable regularly fetching vote tally")
@@ -44,7 +45,8 @@ func init() {
 				SourceStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
-				StateDBGRPCHTTPAddr:         viper.GetString("eosws-statedb-grpc-addr"),
+				StateDBHTTPAddr:             viper.GetString("eosws-statedb-http-addr"),
+				StateDBGRPCAddr:             viper.GetString("eosws-statedb-grpc-addr"),
 				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
 				MeteringPlugin:              viper.GetString("common-metering-plugin"),
 				AuthPlugin:                  viper.GetString("common-auth-plugin"),

@@ -7,30 +7,29 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var showValue = false
 
-var fluxCmd = &cobra.Command{Use: "flux", Short: "Read from flux"}
+var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
 
-var fluxScanCmd = &cobra.Command{Use: "scan", Short: "scan read from flux KVStore", RunE: fluxScanE, Args: cobra.ExactArgs(2)}
-var fluxPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from flux KVStore", RunE: prefixScanE, Args: cobra.ExactArgs(1)}
+var statedbScanCmd = &cobra.Command{Use: "scan", Short: "scan read from StateDB KVStore", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
+var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from StateDB KVStore", RunE: prefixScanE, Args: cobra.ExactArgs(1)}
 
 func init() {
-	Cmd.AddCommand(fluxCmd)
-	fluxCmd.AddCommand(fluxScanCmd)
-	fluxCmd.AddCommand(fluxPrefixCmd)
-	fluxCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
+	Cmd.AddCommand(statedbCmd)
+	statedbCmd.AddCommand(statedbScanCmd)
+	statedbCmd.AddCommand(statedbPrefixCmd)
+	statedbCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
 
-	fluxScanCmd.Flags().Bool("unlimited", false, "scan will ignore the limit")
-	fluxCmd.PersistentFlags().Int("limit", 100, "limit the number of rows when doing scan or prefix")
+	statedbScanCmd.Flags().Bool("unlimited", false, "scan will ignore the limit")
+	statedbCmd.PersistentFlags().Int("limit", 100, "limit the number of rows when doing scan or prefix")
 }
 
-func fluxScanE(cmd *cobra.Command, args []string) (err error) {
+func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 	kv, err := store.New(viper.GetString("dsn"))
 	if err != nil {
 		return err

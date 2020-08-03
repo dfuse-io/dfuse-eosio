@@ -15,30 +15,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type fluxStakeRows []*fluxStakeRow
-
-type fluxStakeRow struct {
-	Key   string          `json:"key"`
-	Payer eos.AccountName `json:"payer"`
-	JSON  EOSStakeDbRow   `json:"json"`
-}
-
-type fluxBalanceRows []*fluxBalanceRow
-
-type fluxBalanceRow struct {
-	Key   string          `json:"key"`
-	Payer eos.AccountName `json:"payer"`
-	JSON  accountsDbRow   `json:"json"`
-}
-
-type fluxTokensResp []fluxTokenResp
-
-type fluxTokenResp struct {
-	Key   string          `json:"key"`
-	Payer eos.AccountName `json:"payer"`
-	JSON  statDbRow       `json:"json"`
-}
-
 func isRetryableStateDBError(err error) bool {
 	switch {
 	case strings.Contains(err.Error(), "connection refused"):
@@ -52,22 +28,18 @@ func isRetryableStateDBError(err error) bool {
 }
 
 func getSymbolFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient, account eos.AccountName, startBlockNum uint32) (out []eos.SymbolCode, err error) {
-	zlog.Debug("getting symbols for contract from flux",
+	zlog.Debug("getting symbols for contract from statedb",
 		zap.String("token_contract", string(account)),
 		zap.Uint32("start_block_num", startBlockNum),
 	)
 
-	stream, err := stateClient.StreamTableScopes(ctx, &pbstatedb.StreamTableScopesRequest{
-		BlockNum: uint64(startBlockNum),
-		Contract: string(account),
-		Table:    "stat",
-	})
+	scopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, uint64(startBlockNum), string(account), "stat")
 	if err != nil {
 		return nil, fmt.Errorf("statedb reading scopes list: %w", err)
 	}
 
-	for _, s := range scopesResp.Scopes {
-		symCode, err := eos.NameToSymbolCode(s)
+	for _, s := range scopes {
+		symCode, err := eos.NameToSymbolCode(eos.Name(s))
 		if err != nil {
 			zlog.Warn("stat scope to symbol list", zap.Error(err))
 			// we should just skip this token
@@ -190,7 +162,7 @@ func getTokensFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient
 		_, err := pbstatedb.ForEachTableRows(ctx, stateClient, getTokensReq, func(response *pbstatedb.TableRowResponse) error {
 			err = json.Unmarshal([]byte(response.Json), row)
 			if err != nil {
-				return nil, fmt.Errorf("cannot decode token row table from statedb for contract %q and symbol %q: %w", string(contract), symbol.String(), err)
+				return fmt.Errorf("cannot decode token row table from statedb for contract %q and symbol %q: %w", string(contract), symbol.String(), err)
 			}
 
 			if !row.valid() {
@@ -205,6 +177,7 @@ func getTokensFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient
 				MaximumSupply: uint64(row.MaxSupply.Amount),
 				TotalSupply:   uint64(row.Supply.Amount),
 			})
+			return nil
 		})
 
 		if err != nil {
@@ -216,12 +189,14 @@ func getTokensFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient
 			return nil, fmt.Errorf("cannot stream table from statedb for contract %q and symbol %q: %w", string(contract), symbol.String(), err)
 		}
 	}
+
+	return out, nil
 }
 
 func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient, startBlockNum uint32) (out []*cache.EOSStakeEntry, err error) {
 	zlog.Debug("getting EOSStaked token", zap.Uint32("start_block_num", startBlockNum))
 
-	tableScopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, startBlockNum, "eosio", "delband")
+	tableScopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, uint64(startBlockNum), "eosio", "delband")
 	if err != nil {
 		zlog.Warn("cannot get table scope", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Error(err))
 		return nil, err
@@ -230,17 +205,21 @@ func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateCli
 	ham := dhammer.NewHammer(20, 3, func(ctx context.Context, inScopes []interface{}) ([]interface{}, error) {
 		//zlog.Debug("batching scope stakes for delband", zap.Int("len", len(inScopes)))
 		getBalancesReq := &pbstatedb.StreamMultiScopesTableRowsRequest{
-			BlockNum: startBlockNum,
+			BlockNum: uint64(startBlockNum),
 			Contract: "eosio",
 			Table:    "delband",
-			Scopes:   inScopes.([]string),
 			KeyType:  "name",
 			ToJson:   true,
 		}
 
+		getBalancesReq.Scopes = make([]string, len(inScopes))
+		for i, scope := range inScopes {
+			getBalancesReq.Scopes[i] = scope.(string)
+		}
+
 		var out []interface{}
 		row := new(EOSStakeDbRow)
-		err := pbstatedb.ForEachMultiScopesTableRows(ctx, stateClient, getBalancesReq, func(scope string, response *pbstatedb.TableRowResponse) error {
+		_, err := pbstatedb.ForEachMultiScopesTableRows(ctx, stateClient, getBalancesReq, func(scope string, response *pbstatedb.TableRowResponse) error {
 			err = json.Unmarshal([]byte(response.Json), &row)
 			if err != nil {
 				zlog.Warn("unable to decode stake rows",
@@ -252,17 +231,19 @@ func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateCli
 			}
 
 			if !row.valid() {
-				zlog.Debug("stake row is not valid", zap.String("scope", string(table.Scope)))
+				zlog.Debug("stake row is not valid", zap.String("scope", scope))
 				// FIXME: Elsewhere, we skip the table completely, but here, we skip the row, what is the correct behavior
 				return nil
 			}
 
 			out = append(out, &cache.EOSStakeEntry{
-				From: row.JSON.From,
-				To:   row.JSON.To,
-				Net:  row.JSON.NetWeight.Amount,
-				Cpu:  row.JSON.CPUWeight.Amount,
+				From: row.From,
+				To:   row.To,
+				Net:  row.NetWeight.Amount,
+				Cpu:  row.CPUWeight.Amount,
 			})
+
+			return nil
 		})
 
 		if err != nil {
@@ -272,7 +253,7 @@ func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateCli
 		return out, nil
 	})
 
-	zlog.Info("starting dhammer", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Int("scope_count", len(scopesResp.Scopes)))
+	zlog.Info("starting dhammer", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Int("scope_count", len(tableScopes)))
 	ham.Start(ctx)
 
 	// scopes -> hammer
@@ -289,7 +270,7 @@ func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateCli
 		select {
 		case v, ok := <-ham.Out:
 			if !ok {
-				zlog.Info("get eos stakes finished", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Int("stakes", len(out)), zap.Int("scope_count", len(scopesResp.Scopes)))
+				zlog.Info("get eos stakes finished", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Int("stakes", len(out)), zap.Int("scope_count", len(tableScopes)))
 				if ham.Err() != nil && ham.Err() != context.Canceled {
 					zlog.Error("hammer error", zap.Error(ham.Err()))
 					return nil, ham.Err()

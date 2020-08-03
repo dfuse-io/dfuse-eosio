@@ -36,7 +36,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
-	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
+	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
@@ -241,7 +241,7 @@ func (a *App) Run() error {
 	}
 	stateClient := pbstatedb.NewStateClient(stateConn)
 
-	voteTallyHub := eosws.NewVoteTallyHub(fluxhelper.NewDefaultFluxHelper(stateClient))
+	voteTallyHub := eosws.NewVoteTallyHub(stateHelper.NewDefaultFluxHelper(stateClient))
 	if a.Config.FetchVoteTally {
 		go voteTallyHub.Launch(context.Background())
 	}
@@ -292,10 +292,10 @@ func (a *App) Run() error {
 
 	stateHTTPURL, err := url.Parse(stateHTTPAddr)
 	if err != nil {
-		return fmt.Errorf("cannot parse flux address: %w", err)
+		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
 	}
 
-	fluxProxy := rest.NewReverseProxy(stateHTTPURL, false)
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -356,7 +356,7 @@ func (a *App) Run() error {
 	chainRouter := coreRouter.PathPrefix("/").Subrouter()
 	wsRouter := coreRouter.PathPrefix("/").Subrouter()
 	restRouter := coreRouter.PathPrefix("/").Subrouter()
-	fluxRestRouter := coreRouter.PathPrefix("/").Subrouter()
+	statedbRestRouter := coreRouter.PathPrefix("/").Subrouter()
 	historyRestRouter := coreRouter.PathPrefix("/").Subrouter()
 	eosqRestRouter := coreRouter.PathPrefix("/").Subrouter()
 
@@ -430,29 +430,29 @@ func (a *App) Run() error {
 	restRouter.Path("/v0/transactions/{id}").Handler(rest.GetTransactionHandler(db))
 
 	// FluxDB (Chain State) REST API endpoints
-	fluxRestRouter.Use(authMiddleware)
-	fluxRestRouter.Use(eosws.RESTTrackingMiddleware)
-	fluxRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
+	statedbRestRouter.Use(authMiddleware)
+	statedbRestRouter.Use(eosws.RESTTrackingMiddleware)
+	statedbRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on REST APIs
 	// WARNING: Middleware is **configured** to ONLY track Query Ingress / Egress bytes.
 	//          This means that the middleware DOES NOT track Query requests / responses.
 	//          Req / Resp (Docs) is counted in the different endpoints
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
+	statedbRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
 		meter,
 		"eosws", "REST API - Chain State",
 		false, true))
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Path("/v0/state/abi").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/abi/bin_to_json").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/permission_links").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/key_accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table/row").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table_scopes").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/scopes").Handler(fluxProxy)
+	statedbRestRouter.Path("/v0/state/abi").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/abi/bin_to_json").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/permission_links").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/key_accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table/row").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table_scopes").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/scopes").Handler(statedbProxy)
 
 	historyRestRouter.Use(eosws.RESTTrackingMiddleware)
 	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(stateClient))

@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetMultiScopesTableRows(request *pbstatedb.StreamMultiScopesTableRowsRequest, stream pbstatedb.State_StreamMultiScopesTableRowsServer) error {
+func (s *Server) StreamMultiScopesTableRows(request *pbstatedb.StreamMultiScopesTableRowsRequest, stream pbstatedb.State_StreamMultiScopesTableRowsServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get multi scope tables rows",
@@ -80,7 +80,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbstatedb.StreamMultiScopesTab
 
 		resp := &pbstatedb.TableRowsScopeResponse{
 			Scope: scope,
-			Row:   make([]*pbstatedb.TableRowResponse, len(tabletRows)),
+			Rows:  make([]*pbstatedb.TableRowResponse, len(tabletRows)),
 		}
 
 		for i, tabletRow := range tabletRows {
@@ -89,7 +89,7 @@ func (s *Server) GetMultiScopesTableRows(request *pbstatedb.StreamMultiScopesTab
 				return nil, fmt.Errorf("creating table row response failed: %w", err)
 			}
 
-			resp.Row[i] = response
+			resp.Rows[i] = response
 		}
 
 		return resp, nil

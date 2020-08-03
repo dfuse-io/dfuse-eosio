@@ -25,7 +25,7 @@ func ForEachMultiScopesTableRows(ctx context.Context, client StateClient, reques
 		return nil, fmt.Errorf("new stream: %w", err)
 	}
 
-	ref, err := extractStreamReference(stream)
+	ref, err := ExtractStreamReference(stream)
 	if err != nil {
 		return nil, fmt.Errorf("stream reference: %w", err)
 	}
@@ -40,7 +40,7 @@ func ForEachMultiScopesTableRows(ctx context.Context, client StateClient, reques
 			return nil, fmt.Errorf("stream: %w", err)
 		}
 
-		for _, row := range response.Row {
+		for _, row := range response.Rows {
 			err = onEach(response.Scope, row)
 			if err != nil {
 				if err == SkipTable {
@@ -59,7 +59,7 @@ func ForEachTableRows(ctx context.Context, client StateClient, request *StreamTa
 		return nil, fmt.Errorf("new stream: %w", err)
 	}
 
-	ref, err := extractStreamReference(stream)
+	ref, err := ExtractStreamReference(stream)
 	if err != nil {
 		return nil, fmt.Errorf("stream reference: %w", err)
 	}
@@ -128,7 +128,7 @@ type StreamReference struct {
 	LastIrreversibleBlock bstream.BlockRef
 }
 
-func extractStreamReference(stream grpc.ClientStream) (*StreamReference, error) {
+func ExtractStreamReference(stream grpc.ClientStream) (*StreamReference, error) {
 	header, err := stream.Header()
 	if err != nil {
 		return nil, err

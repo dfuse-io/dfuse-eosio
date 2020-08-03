@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetTableRows(request *pbstatedb.StreamTableRowsRequest, stream pbstatedb.State_StreamTableRowsServer) error {
+func (s *Server) StreamTableRows(request *pbstatedb.StreamTableRowsRequest, stream pbstatedb.State_StreamTableRowsServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get table rows",

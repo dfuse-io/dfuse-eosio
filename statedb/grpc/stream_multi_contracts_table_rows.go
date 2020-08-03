@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetMultiContractsTableRows(request *pbstatedb.StreamMultiContractsTableRowsRequest, stream pbstatedb.State_StreamMultiContractsTableRowsServer) error {
+func (s *Server) StreamMultiContractsTableRows(request *pbstatedb.StreamMultiContractsTableRowsRequest, stream pbstatedb.State_StreamMultiContractsTableRowsServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get multi accounts tables rows",
@@ -56,7 +56,7 @@ func (s *Server) GetMultiContractsTableRows(request *pbstatedb.StreamMultiContra
 
 		resp := &pbstatedb.TableRowsContractResponse{
 			Contract: contract,
-			Row:      make([]*pbstatedb.TableRowResponse, len(rows)),
+			Rows:     make([]*pbstatedb.TableRowResponse, len(rows)),
 		}
 
 		for i, row := range rows {
@@ -65,7 +65,7 @@ func (s *Server) GetMultiContractsTableRows(request *pbstatedb.StreamMultiContra
 				return nil, fmt.Errorf("creating table row response failed: %w", err)
 			}
 
-			resp.Row[i] = response
+			resp.Rows[i] = response
 		}
 
 		return resp, nil

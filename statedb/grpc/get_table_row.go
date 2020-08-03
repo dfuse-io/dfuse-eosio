@@ -10,6 +10,7 @@ import (
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Server) GetTableRow(ctx context.Context, request *pbstatedb.GetTableRowRequest) (*pbstatedb.GetTableRowResponse, error) {
@@ -38,6 +39,11 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbstatedb.GetTableRow
 	)
 
 	if err != nil {
+		// If not `Unknown` code, return it as-is, it's already a status
+		if status.Code(err) != codes.Unknown {
+			return nil, err
+		}
+
 		return nil, derr.Statusf(codes.Internal, "read tablet %q row failed: %s", tablet, err)
 	}
 

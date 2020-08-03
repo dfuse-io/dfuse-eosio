@@ -21,7 +21,8 @@ import (
 	"testing"
 	"time"
 
-	fluxcli "github.com/dfuse-io/dfuse-eosio/statedb-client"
+	"github.com/dfuse-io/dfuse-eosio/eosws/statedb"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -29,8 +30,8 @@ import (
 func Test_onGetVoteTally(t *testing.T) {
 
 	subscriptionHub := newTestSubscriptionHub(t, 0, nil)
-	fluxClient := fluxcli.NewTestFluxClient()
-	fluxHelper := statedb.NewTestFluxHelper()
+	stateClient := pbstatedb.NewMockStateClient()
+	stateDBHelper := statedb.NewTestStateHelper()
 
 	cases := []struct {
 		name                   string
@@ -58,8 +59,8 @@ func Test_onGetVoteTally(t *testing.T) {
 	for _, c := range cases {
 
 		t.Run(c.name, func(t *testing.T) {
-			fluxHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
-			fluxHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
+			stateDBHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
+			stateDBHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
 
 			NowFunc = func() time.Time {
 				t := time.Time{}
@@ -67,7 +68,7 @@ func Test_onGetVoteTally(t *testing.T) {
 				return t
 			}
 
-			voteTallyHub := NewVoteTallyHub(fluxHelper)
+			voteTallyHub := NewVoteTallyHub(stateDBHelper)
 			go voteTallyHub.Launch(context.Background())
 
 			handler := NewWebsocketHandler(
@@ -75,7 +76,7 @@ func Test_onGetVoteTally(t *testing.T) {
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				voteTallyHub,
 				nil,
 				nil,
@@ -129,11 +130,11 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 
-			fluxHelper := statedb.NewTestFluxHelper()
-			fluxHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
-			fluxHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
+			stateHelper := statedb.NewTestStateHelper()
+			stateHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
+			stateHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
 
-			hub := NewVoteTallyHub(fluxHelper)
+			hub := NewVoteTallyHub(stateHelper)
 			NowFunc = func() time.Time {
 				t := time.Time{}
 				fmt.Println("time : ", t)

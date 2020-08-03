@@ -15,6 +15,7 @@ import (
 	"github.com/eoscanada/eos-go"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
 )
 
 func (s *Server) fetchHeadBlock(ctx context.Context, zlog *zap.Logger) (headBlock bstream.BlockRef) {
@@ -162,7 +163,7 @@ func (s *Server) readContractStateTableRow(
 
 	if tabletRow == nil {
 		zlogger.Debug("row deleted or never existed")
-		return nil, nil, statedb.DataRowNotFoundError(ctx, eos.AccountName(contract), eos.TableName(table), eos.AccountName(scope), primaryKey)
+		return nil, nil, derr.Status(codes.NotFound, fmt.Sprintf(`table row primary %q on "%s:%s:%s" deleted or never existed`, primaryKey, contract, table, scope))
 	}
 
 	var serializationInfo *rowSerializationInfo

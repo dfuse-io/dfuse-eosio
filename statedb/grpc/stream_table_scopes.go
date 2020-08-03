@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *Server) GetTableScopes(request *pbstatedb.StreamTableScopesRequest, stream pbstatedb.State_StreamTableScopesServer) error {
+func (s *Server) StreamTableScopes(request *pbstatedb.StreamTableScopesRequest, stream pbstatedb.State_StreamTableScopesServer) error {
 	ctx := stream.Context()
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("get table scopes",
