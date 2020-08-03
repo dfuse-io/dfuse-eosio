@@ -1,7 +1,7 @@
 start:
   args:
-  - fluxdb
+  - statedb
   flags:
     common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-dev1/v4
-    fluxdb-enable-inject-mode: true
-    fluxdb-enable-server-mode: false
+    statedb-enable-inject-mode: true
+    statedb-enable-server-mode: false

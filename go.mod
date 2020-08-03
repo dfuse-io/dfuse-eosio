@@ -19,7 +19,7 @@ require (
 	github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
-	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
+	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
 	github.com/dfuse-io/dgraphql v0.0.2-0.20200702205930-77425a6665f8
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
@@ -27,18 +27,19 @@ require (
 	github.com/dfuse-io/dlauncher v0.0.0-20200715193603-ea2a15e9e193
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
-	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
+	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
+	github.com/dfuse-io/fluxdb v0.0.0-20200723210754-6a14a98fe0e2
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
-	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
+	github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.3-0.20200724152216-947b231c83f9
 	github.com/dfuse-io/node-manager v0.0.2-0.20200721154543-04cfda1d7412
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3
+	github.com/dfuse-io/pbgo v0.0.6-0.20200729035815-5da1dbc5e2ac
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
 	github.com/dfuse-io/search v0.0.2-0.20200720132114-7d99c283251b
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
@@ -46,6 +47,7 @@ require (
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/eoscanada/eos-go v0.9.1-0.20200729231232-b7325cffe680
 	github.com/eoscanada/eosc v1.4.0
+	github.com/eoscanada/fluxdb v0.0.0-20200601150933-cf61e3405855
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
@@ -100,3 +102,7 @@ replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
+
+replace github.com/dfuse-io/fluxdb => /Users/maoueh/work/dfuse/fluxdb
+
+replace github.com/dfuse-io/bstream => /Users/maoueh/work/dfuse/bstream

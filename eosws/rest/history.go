@@ -23,7 +23,7 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
-	fluxcli "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	fluxcli "github.com/dfuse-io/dfuse-eosio/statedb-client"
 	"github.com/tidwall/gjson"
 )
 

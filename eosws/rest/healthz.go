@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
@@ -100,7 +100,7 @@ func SearchNotStuckHandler(searchEngine *eosws.SearchEngine) http.Handler {
 	})
 }
 
-func HealthzHandler(hub *hub.SubscriptionHub, api *eos.API, blocksStore dstore.Store, db eosws.DB, fluxClient fluxdb.Client, searchEngine *eosws.SearchEngine, expectedSecret string) http.Handler {
+func HealthzHandler(hub *hub.SubscriptionHub, api *eos.API, blocksStore dstore.Store, db eosws.DB, stateClient pbstatedb.StateClient, searchEngine *eosws.SearchEngine, expectedSecret string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		zlogger := logging.Logger(r.Context(), zlog)
 		h := &Healthz{
@@ -144,7 +144,7 @@ func HealthzHandler(hub *hub.SubscriptionHub, api *eos.API, blocksStore dstore.S
 		if full {
 			wg.Add(4)
 			go healthCheckBigTable(h, &wg, db, r, refHeadBlockNum)
-			go healthCheckFlux(r.Context(), h, &wg, fluxClient, refHeadBlockNum)
+			go healthCheckStateDB(r.Context(), h, &wg, stateClient, refHeadBlockNum)
 			go healthCheckSearch(r.Context(), h, &wg, searchEngine, refHeadBlockNum, zlogger)
 			go healthCheckMerger(h, &wg, refHeadBlockNum, blocksStore, zlogger)
 			if h.Hub.TimeLatencySec > int64(maxSecondsLatencyHubStatus) {
@@ -278,22 +278,32 @@ func healthCheckBigTable(h *Healthz, wg *sync.WaitGroup, db eosws.DB, r *http.Re
 
 }
 
-func healthCheckFlux(context context.Context, h *Healthz, wg *sync.WaitGroup, fluxClient fluxdb.Client, headBlockNum uint32) {
+func healthCheckStateDB(ctx context.Context, h *Healthz, wg *sync.WaitGroup, stateClient pbstatedb.StateClient, headBlockNum uint32) {
 	defer wg.Done()
 	done := make(chan struct{})
 
 	go func() {
-		req := fluxdb.NewGetTableRequest(eos.AccountName("eosio"), eos.Name("eosio"), eos.TableName("global"), "name")
 		h.Flux = &Flux{}
-		res, err := fluxClient.GetTable(context, 0, req)
+
+		res, err := stateClient.GetTableRow(ctx, &pbstatedb.GetTableRowRequest{
+			Contract:   "eosio",
+			Table:      "global",
+			Scope:      "eosio",
+			PrimaryKey: "global",
+		})
+
 		if err != nil {
 			h.Errors = append(h.Errors, err.Error())
 		} else {
-			fluxHeadBlock := res.UpToBlockNum
-			h.Flux.HeadBlock = fluxHeadBlock
-			h.Flux.BlockLatency = int(headBlockNum - fluxHeadBlock)
-			if fluxHeadBlock > headBlockNum {
-				h.Flux.BlockLatency = 0
+			if res.UpToBlock != nil {
+				statedbHeadBlock := uint32(res.UpToBlock.Num)
+
+				h.Flux.HeadBlock = statedbHeadBlock
+				h.Flux.BlockLatency = int(headBlockNum - statedbHeadBlock)
+
+				if statedbHeadBlock > headBlockNum {
+					h.Flux.BlockLatency = 0
+				}
 			}
 		}
 		isHealthy := h.Flux.BlockLatency < maxBlockLatencyStreams

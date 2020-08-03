@@ -24,8 +24,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
@@ -93,14 +93,14 @@ func Test_onGetTableRows(t *testing.T) {
 				archiveStore.SetFile(f.name, f.content)
 			}
 			subscriptionHub := newTestSubscriptionHub(t, c.lib, archiveStore)
-			fluxClient := fluxdb.NewTestFluxClient()
+			stateClient := pbstatedb.NewMockStateClient()
 
 			handler := NewWebsocketHandler(
 				abiGetter,
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,

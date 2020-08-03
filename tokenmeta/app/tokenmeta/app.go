@@ -25,23 +25,21 @@ import (
 
 	"github.com/dfuse-io/dmetrics"
 
-	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
-	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 )
 
 type Config struct {
 	GRPCListenAddr       string // Address to listen for incoming gRPC requests
-	FluxDBAddr           string // fluxdb URL
+	StateDBGRPCAddr      string // StateDB gRPC URL
 	BlockStreamAddr      string // gRPC URL to reach a stream of blocks
 	ABICodecAddr         string // Abi Codec URL
 	ABICacheBaseURL      string // cached ABIS base URL
@@ -49,7 +47,7 @@ type Config struct {
 	CacheFile            string // Path to GOB file containing tokenmeta cache. will try to Load and Save to that cache file
 	SaveEveryNBlock      uint32 // Save the cache after N blocks processed
 	BlocksStoreURL       string // GS path to read blocks archives
-	BootstrapBlockOffset uint64 // Block offset to ensure that we are not bootstrapping from flux on a reversible fork
+	BootstrapBlockOffset uint64 // Block offset to ensure that we are not bootstrapping from StateDB on a reversible fork
 }
 
 type App struct {
@@ -84,7 +82,7 @@ func (a *App) Run() error {
 	}
 
 	if tokenCache == nil {
-		zlog.Info(" tokenmeta cache was not setup generating it from abicodec and flux")
+		zlog.Info("tokenmeta cache was not setup generating it from abicodec and statedb")
 		tokenCache, err = a.createTokenMetaCacheFromAbi()
 		if err != nil {
 			if err == TokenmetaAppGeneratCacheFromAbiAborted {
@@ -124,7 +122,7 @@ func (a *App) Run() error {
 
 	gs, err := dgrpc.NewInternalClient(a.config.GRPCListenAddr)
 	if err != nil {
-		return fmt.Errorf("cannot create readiness probe")
+		return fmt.Errorf("cannot create readiness probe: %w", err)
 	}
 	a.readinessProbe = pbhealth.NewHealthClient(gs)
 
@@ -144,11 +142,6 @@ func (a *App) createTokenMetaCacheFromAbi() (*cache.DefaultCache, error) {
 		return nil, err
 	}
 
-	zlog.Info("initialize flux db client")
-	fluxClient := fluxdb.NewClient(a.config.FluxDBAddr, &ochttp.Transport{
-		Propagation: &stackdriverPropagation.HTTPFormat{},
-	})
-
 	zlog.Info("tokenmeta retrieving cached abi files",
 		zap.String("abi_cache_file", a.config.ABICacheFileName),
 	)
@@ -158,7 +151,15 @@ func (a *App) createTokenMetaCacheFromAbi() (*cache.DefaultCache, error) {
 		return nil, err
 	}
 
-	tokens, balances, stakedEntries, startBlock, err := tokenmeta.Bootstrap(cnt, fluxClient, a.config.BootstrapBlockOffset)
+	zlog.Info("initialize state db client")
+	stateConn, err := dgrpc.NewInternalClient(a.config.StateDBGRPCAddr)
+	if err != nil {
+		return nil, fmt.Errorf("cannot create statedb connection: %w", err)
+	}
+
+	stateClient := pbstatedb.NewStateClient(stateConn)
+
+	tokens, balances, stakedEntries, startBlock, err := tokenmeta.Bootstrap(cnt, stateClient, a.config.BootstrapBlockOffset)
 	if err != nil {
 		zlog.Warn("error bootstrap tokenmeta", zap.Error(err))
 		return nil, err

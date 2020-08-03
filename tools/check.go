@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
@@ -39,8 +40,8 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 }
 
 var checkFluxShardsCmd = &cobra.Command{
-	Use:   "flux-shards {dsn} {shard-count}",
-	Short: "Checks to see if all shards are aligned in flux reprocessing",
+	Use:   "statedb-shards {dsn} {shard-count}",
+	Short: "Checks to see if all shards are aligned in StateDB reprocessing",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkFluxShardsE,
 }
@@ -71,7 +72,7 @@ func checkFluxShardsE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore)
+	fdb := fluxdb.New(kvStore, &statedb.BlockMapper{})
 	fdb.SetSharding(0, int(shardsInt))
 	lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {

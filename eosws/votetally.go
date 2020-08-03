@@ -20,8 +20,8 @@ import (
 	"time"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
+	"github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"go.uber.org/zap"
 )
@@ -50,10 +50,10 @@ func (ws *WSConn) onGetVoteTally(ctx context.Context, msg *wsmsg.GetVoteTally) {
 type VoteTallyHub struct {
 	CommonHub
 
-	fluxHelper fluxdb.FluxHelper
+	fluxHelper statedb.FluxHelper
 }
 
-func NewVoteTallyHub(fluxHelper fluxdb.FluxHelper) *VoteTallyHub {
+func NewVoteTallyHub(fluxHelper statedb.FluxHelper) *VoteTallyHub {
 	return &VoteTallyHub{
 		CommonHub:  CommonHub{name: "VoteTally"},
 		fluxHelper: fluxHelper,

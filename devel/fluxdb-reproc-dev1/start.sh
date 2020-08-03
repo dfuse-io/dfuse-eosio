@@ -34,7 +34,7 @@ main() {
     active_pid=$!
 
     # We need to sleep more than really needed due to a "missing feature" in
-    # fluxdb. Fluxdb does not flush its accumulated write on exit of the application
+    # statedb. StateDB does not flush its accumulated write on exit of the application
     # so writes are not flushed when not enough block has passed.
     sleep 10
     kill -s TERM $active_pid &> /dev/null

@@ -21,8 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
-	fluxcli "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	fluxcli "github.com/dfuse-io/dfuse-eosio/statedb-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,14 +30,14 @@ func Test_onGetVoteTally(t *testing.T) {
 
 	subscriptionHub := newTestSubscriptionHub(t, 0, nil)
 	fluxClient := fluxcli.NewTestFluxClient()
-	fluxHelper := fluxdb.NewTestFluxHelper()
+	fluxHelper := statedb.NewTestFluxHelper()
 
 	cases := []struct {
 		name                   string
 		msg                    string
 		totalActivatedStake    float64
 		totalActivatedStakeErr error
-		producers              []fluxdb.Producer
+		producers              []statedb.Producer
 		producersTotalVotes    float64
 		producersErr           error
 		expectedOutput         []string
@@ -49,7 +48,7 @@ func Test_onGetVoteTally(t *testing.T) {
 			msg:                 `{"type":"get_vote_tally","req_id":"abc","listen":true,"fetch":true}`,
 			expectedOutput:      []string{`{"type":"vote_tally","req_id":"abc","data":{"vote_tally":{"total_activated_stake":999,"total_votes":777,"decay_weight":5.213924440732366e-89,"producers":[{"owner":"","total_votes":123,"producer_key":"producer.key","is_active":false,"url":"","unpaid_blocks":0,"location":0}]}}}`},
 			totalActivatedStake: 999,
-			producers: []fluxdb.Producer{
+			producers: []statedb.Producer{
 				{TotalVotes: 123, ProducerKey: "producer.key"},
 			},
 			producersTotalVotes: 777,
@@ -100,7 +99,7 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 		name                   string
 		totalActivatedStake    float64
 		totalActivatedStakeErr error
-		producers              []fluxdb.Producer
+		producers              []statedb.Producer
 		producersTotalVotes    float64
 		producersErr           error
 		expectedTallyJSON      string
@@ -110,7 +109,7 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 			name:                "sunny path",
 			expectedTallyJSON:   `{"total_activated_stake":999,"total_votes":777,"decay_weight":5.213924440732366e-89,"producers":[{"owner":"","total_votes":123,"producer_key":"producer.key","is_active":false,"url":"","unpaid_blocks":0,"location":0}]}`,
 			totalActivatedStake: 999,
-			producers: []fluxdb.Producer{
+			producers: []statedb.Producer{
 				{TotalVotes: 123, ProducerKey: "producer.key"},
 			},
 			producersTotalVotes: 777,
@@ -130,7 +129,7 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 
-			fluxHelper := fluxdb.NewTestFluxHelper()
+			fluxHelper := statedb.NewTestFluxHelper()
 			fluxHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
 			fluxHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
 

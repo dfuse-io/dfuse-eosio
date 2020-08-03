@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	tokenmetaApp "github.com/dfuse-io/dfuse-eosio/tokenmeta/app/tokenmeta"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -18,7 +16,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/tokenmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("tokenmeta-grpc-listen-addr", ":14001", "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("tokenmeta-fluxdb-addr", fmt.Sprintf("http://localhost%s/", FluxDBHTTPServingAddr), "Fluxdb address")
+			cmd.Flags().String("tokenmeta-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC address")
 			cmd.Flags().String("tokenmeta-abi-codec-addr", AbiServingAddr, "ABI Codec URL")
 			cmd.Flags().String("tokenmeta-abis-base-url", "{dfuse-data-dir}/storage/abicache", "cached ABIS base URL")
 			cmd.Flags().String("tokenmeta-abis-file-name", "abi-cache.json.zst", "cached ABIS filename")
@@ -32,7 +30,7 @@ func init() {
 
 			return tokenmetaApp.New(&tokenmetaApp.Config{
 				GRPCListenAddr:       viper.GetString("tokenmeta-grpc-listen-addr"),
-				FluxDBAddr:           viper.GetString("tokenmeta-fluxdb-addr"),
+				StateDBGRPCAddr:      viper.GetString("tokenmeta-statedb-grpc-addr"),
 				BlockStreamAddr:      viper.GetString("common-blockstream-addr"),
 				ABICodecAddr:         viper.GetString("tokenmeta-abi-codec-addr"),
 				ABICacheBaseURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("tokenmeta-abis-base-url")),

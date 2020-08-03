@@ -16,7 +16,7 @@ func init() {
 		MetricsID:   "dashboard",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dlauncher/dashboard.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
+			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGRPCServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
 			cmd.Flags().String("dashboard-metrics-api-addr", "http://127.0.0.1"+MetricsListenAddr, "HTTP address where to reach the metrics API endpoint")
 			cmd.Flags().String("dashboard-eos-node-manager-api-addr", NodeManagerHTTPServingAddr, "Address of the superviser manager api")

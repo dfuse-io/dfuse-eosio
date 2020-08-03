@@ -28,7 +28,7 @@ function main() {
 
   generate "dfuse/eosio/abicodec/v1/abicodec.proto"
   generate "dfuse/eosio/codec/v1/codec.proto"
-  generate "dfuse/eosio/fluxdb/v1/fluxdb.proto"
+  generate "dfuse/eosio/statedb/v1/" "statedb.proto" "tablet.proto" "singlet.proto"
   generate "dfuse/eosio/trxdb/v1/trxdb.proto"
   generate "dfuse/eosio/funnel/v1/funnel.proto"
   generate "dfuse/eosio/search/v1/search.proto"
@@ -39,8 +39,18 @@ function main() {
   echo "dfuse-io/proto-eosio revision: `GIT_DIR=$PROTO_EOSIO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
 }
 
+# usage:
+# - generate <protoPath>
+# - generate <protoBasePath/> [<file.proto> ...]
 function generate() {
-    protoc -I$PROTO -I$PROTO_EOSIO $1 --go_out=plugins=grpc,paths=source_relative:.
+    base=""
+    if [[ "$#" -gt 1 ]]; then
+      base="$1"; shift
+    fi
+
+    for file in "$@"; do
+      protoc -I$PROTO -I$PROTO_EOSIO $base$file --go_out=plugins=grpc,paths=source_relative:.
+    done
 }
 
 main "$@"

@@ -26,7 +26,7 @@ func init() {
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
-			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGrpcServingAddr, "Tokenmeta client endpoint url")
+			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGRPCServingAddr, "Tokenmeta client endpoint url")
 
 			return nil
 		},
