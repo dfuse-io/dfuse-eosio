@@ -42,7 +42,7 @@ require (
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
-	github.com/dfuse-io/search v0.0.2-0.20200728032756-2cf0e24e0681
+	github.com/dfuse-io/search v0.0.2-0.20200803165036-9ae17352423a
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a

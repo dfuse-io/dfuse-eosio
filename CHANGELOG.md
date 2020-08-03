@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity 
 * Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
 * Added `merged-filter` application (not running by default), that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
 * Added `tokenmeta` application, with its flags
