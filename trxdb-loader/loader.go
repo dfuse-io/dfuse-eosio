@@ -17,6 +17,7 @@ package trxdb_loader
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -407,7 +408,7 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 			var totalBlockSec float64 = 0
 			var avgBlockSec float64 = 0
 
-			l.lastTickBlocks[l.tickBlocksPointer % len(l.lastTickBlocks)] = blockSec
+			l.lastTickBlocks[l.tickBlocksPointer%len(l.lastTickBlocks)] = blockSec
 			l.tickBlocksPointer++
 
 			for _, curBlockSec := range l.lastTickBlocks {
@@ -423,8 +424,8 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 			zlog.Info("5sec AVG INSERT RATE",
 				zap.Uint64("block_num", blockNum),
 				zap.Uint64("last_tick_block", l.lastTickBlock),
-				zap.Float64("block_sec", blockSec),
-				zap.Float64("100_tick_avg", avgBlockSec),
+				zap.Float64("block_sec", math.Round(blockSec*100)/100),
+				zap.Float64("100_tick_avg", math.Round(avgBlockSec*100)/100),
 			)
 		}
 		l.lastTickTime = now
