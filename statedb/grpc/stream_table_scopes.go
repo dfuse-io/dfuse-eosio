@@ -39,7 +39,7 @@ func (s *Server) StreamTableScopes(request *pbstatedb.StreamTableScopesRequest, 
 		}
 
 		if !seen {
-			return derr.Statusf(codes.Internal, "table %s/%s does not exist in ABI at this block height", request.Contract, request.Table)
+			return derr.Statusf(codes.NotFound, "table %s/%s does not exist in ABI at block height %d", request.Contract, request.Table, actualBlockNum)
 		}
 	}
 

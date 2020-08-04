@@ -109,9 +109,12 @@ func extractListKeyAccountsRequest(r *http.Request) *listKeyAccountsRequest {
 	}
 }
 
+var emptyAccountNames = []string{}
+
 func sortedUniqueKeyAccounts(tabletRows []fluxdb.TabletRow) (out []string) {
 	if len(tabletRows) <= 0 {
-		return
+		// We return an actual array so the output is actually `[]` instead of `null`
+		return emptyAccountNames
 	}
 
 	accountNameSet := map[string]bool{}

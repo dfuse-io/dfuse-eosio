@@ -86,7 +86,7 @@ func (srv *EOSServer) prepareRead(
 
 func (srv *EOSServer) fetchHeadBlock(ctx context.Context, zlog *zap.Logger) (headBlock bstream.BlockRef) {
 	headBlock = srv.db.HeadBlock(ctx)
-	zlog.Debug("retrieved head block id", zap.String("head_block_id", headBlock.ID()), zap.Uint64("head_block_num", headBlock.Num()))
+	zlog.Debug("retrieved head block id", zap.Stringer("head_block", headBlock))
 
 	return
 }

@@ -45,11 +45,11 @@ func (s *Server) Serve() {
 func newMetadata(upToBlock, lastWrittenBlock bstream.BlockRef) metadata.MD {
 	md := metadata.New(map[string]string{})
 	if upToBlock != nil {
-		md.Set("flux-up-to-block-id", upToBlock.ID())
-		md.Set("flux-up-to-block-num", strconv.FormatUint(upToBlock.Num(), 10))
+		md.Set(pbstatedb.MetdataUpToBlockID, upToBlock.ID())
+		md.Set(pbstatedb.MetdataUpToBlockNum, strconv.FormatUint(upToBlock.Num(), 10))
 	}
 
-	md.Set("flux-last-irreversible-block-id", lastWrittenBlock.ID())
-	md.Set("flux-last-irreversible-block-num", strconv.FormatUint(lastWrittenBlock.Num(), 10))
+	md.Set(pbstatedb.MetdataLastIrrBlockID, lastWrittenBlock.ID())
+	md.Set(pbstatedb.MetdataLastIrrBlockNum, strconv.FormatUint(lastWrittenBlock.Num(), 10))
 	return md
 }

@@ -47,7 +47,7 @@ func (s *Server) GetKeyAccounts(ctx context.Context, request *pbstatedb.GetKeyAc
 		}
 
 		if !seen {
-			return nil, derr.Status(codes.Internal, "This public key does not exist at this block height")
+			return nil, derr.Status(codes.NotFound, "This public key does not exist at this block height")
 		}
 	}
 

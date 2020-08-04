@@ -20,7 +20,7 @@ func init() {
 			return nil, fluxdb.ErrInvalidKeyLengthAtLeast("auth link tablet identifier", 8, len(identifier))
 		}
 
-		return ContractStateTablet(identifier[0:8]), nil
+		return AuthLinkTablet(identifier[0:8]), nil
 	})
 }
 

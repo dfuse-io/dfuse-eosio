@@ -1,6 +1,7 @@
 package statedb
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
@@ -31,14 +32,18 @@ func init() {
 	})
 
 	var err error
-	if kaValue, err = proto.Marshal(&pbstatedb.KeyAccountValue{Empty: false}); err != nil {
-		panic(fmt.Errorf("unable to marshal empty key account payload: %w", err))
+	if kaValue, err = proto.Marshal(&pbstatedb.KeyAccountValue{Present: true}); err != nil {
+		panic(fmt.Errorf("unable to marshal key account payload: %w", err))
+	}
+
+	if len(kaValue) == 0 {
+		panic(errors.New("marshal key account payload should have at least 1 byte, got 0"))
 	}
 }
 
 func NewKeyAccountTablet(publicKey string) KeyAccountTablet {
 	if len(publicKey) > math.MaxUint16 {
-		panic(fmt.Errorf("only acceptiong public keys smaller than %d characters, got %d", math.MaxUint16, len(publicKey)))
+		panic(fmt.Errorf("only accepting public keys smaller than %d characters, got %d", math.MaxUint16, len(publicKey)))
 	}
 
 	key := make([]byte, 2+len(publicKey))
