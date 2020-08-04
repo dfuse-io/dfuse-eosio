@@ -49,7 +49,7 @@ func (db *DB) GetLastWrittenIrreversibleBlockRef(ctx context.Context) (ref bstre
 	}
 
 	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
-	return bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID)), nil
+	return bstream.NewBlockRefFromID(blockID), nil
 }
 
 func (db *DB) GetLastWrittenBlockID(ctx context.Context) (blockID string, err error) {
@@ -146,7 +146,7 @@ func (db *DB) GetClosestIrreversibleIDAtBlockNum(ctx context.Context, num uint32
 	}
 
 	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
-	return bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID)), nil
+	return bstream.NewBlockRefFromID(blockID), nil
 }
 
 func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bstream.BlockRef, err error) {
@@ -171,7 +171,7 @@ func (db *DB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ref bs
 	}
 
 	blockID := Keys.UnpackIrrBlocksKey(it.Item().Key)
-	ref = bstream.NewBlockRefFromID(bstream.BlockRefFromID(blockID))
+	ref = bstream.NewBlockRefFromID(blockID)
 
 	if ref.Num() != uint64(dposIrrNum) {
 		db.logger.Debug("get irr block by num: block num mismatch")

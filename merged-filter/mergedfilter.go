@@ -32,11 +32,30 @@ import (
 type MergedFilter struct {
 	*shutter.Shutter
 
-	srcStore         dstore.Store
-	destStore        dstore.Store
-	blockFilter      *filtering.BlockFilter
+	srcStore    dstore.Store
+	destStore   dstore.Store
+	blockFilter *filtering.BlockFilter
+
+	// live mode
 	tracker          *bstream.Tracker
 	truncationWindow uint64
+
+	// batch mode
+	batchMode  bool
+	startBlock uint64
+	stopBlock  uint64
+}
+
+func NewBatchMergedFilter(blockFilter *filtering.BlockFilter, srcBlockStore, destBlockStore dstore.Store, startBlock, stopBlock uint64) *MergedFilter {
+	return &MergedFilter{
+		Shutter:     shutter.New(),
+		srcStore:    srcBlockStore,
+		destStore:   destBlockStore,
+		blockFilter: blockFilter,
+		batchMode:   true,
+		startBlock:  startBlock,
+		stopBlock:   stopBlock,
+	}
 }
 
 func NewMergedFilter(blockFilter *filtering.BlockFilter, srcBlockStore, destBlockStore dstore.Store, tracker *bstream.Tracker, truncationWindow uint64) *MergedFilter {
@@ -58,15 +77,28 @@ func (f *MergedFilter) Launch() {
 		cancel()
 	})
 
-	headRef, err := f.tracker.Get(ctx, bstream.BlockStreamHeadTarget)
+	if f.batchMode {
+		f.Shutdown(f.process(ctx, f.startBlock))
+		return
+	}
+
+	startBlock, err := f.findLiveStartBlock(ctx)
 	if err != nil {
 		f.Shutdown(err)
 		return
 	}
 
+	f.Shutdown(f.process(ctx, startBlock))
+}
+
+func (f *MergedFilter) findLiveStartBlock(ctx context.Context) (uint64, error) {
+	headRef, err := f.tracker.Get(ctx, bstream.BlockStreamHeadTarget)
+	if err != nil {
+		return 0, err
+	}
+
 	headNum := headRef.Num()
 	headBase := headNum - (headNum % 100) // Round down to base 100
-
 	for {
 		baseFile := fmt.Sprintf("%010d", headBase)
 
@@ -81,8 +113,7 @@ func (f *MergedFilter) Launch() {
 		zlog.Info("checking for destination base file existence", zap.String("base_file", baseFile))
 		exists, err := f.destStore.FileExists(ctx, baseFile)
 		if err != nil {
-			f.Shutdown(err)
-			return
+			return 0, err
 		}
 
 		if exists {
@@ -94,7 +125,7 @@ func (f *MergedFilter) Launch() {
 		headBase -= 100
 	}
 
-	f.Shutdown(f.process(ctx, headBase))
+	return headBase, nil
 }
 
 func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
@@ -144,6 +175,7 @@ func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
 				if err != nil {
 					return err
 				}
+				defer writePipe.Close()
 
 				writeObjectDone := make(chan error, 1)
 				go func() {
@@ -196,9 +228,10 @@ func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
 		}
 
 		currentBase += 100
-		// if currentBase >= endBlock {
-		// 	break
-		// }
+		if f.batchMode && currentBase >= f.stopBlock {
+			zlog.Info("stopping: reached stop block and batchMode is set.")
+			break
+		}
 	}
 	return nil
 }

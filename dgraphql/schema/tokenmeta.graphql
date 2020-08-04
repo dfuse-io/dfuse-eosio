@@ -12,7 +12,7 @@ type TokenConnection {
 
 """A single Token response."""
 type TokenEdge {
-    """See https://docs.dfuse.io/guides/core-concepts/cursors"""
+    """See https://docs.dfuse.io/eosio/public-apis/reference/search/cursors"""
     cursor: String!
 
     """The Token object."""
@@ -65,7 +65,7 @@ type AccountBalanceConnection {
 
 """A single Token response."""
 type AccountBalanceEdge {
-    """See https://docs.dfuse.io/guides/core-concepts/cursors"""
+    """See https://docs.dfuse.io/eosio/public-apis/reference/search/cursors"""
     cursor: String!
 
     """The account balance object."""

@@ -204,7 +204,7 @@ func (p *FluxDBHandler) updateSpeculativeWrites(newHeadBlock bstream.BlockRef) {
 
 func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) error {
 	blk := rawBlk.ToNative().(*pbcodec.Block)
-	blkRef := bstream.BlockRefFromID(rawBlk.ID())
+	blkRef := rawBlk.AsRef()
 	if rawBlk.Num()%120 == 0 {
 		zlog.Info("processing block (1/120)", zap.Stringer("block", rawBlk))
 	}
@@ -224,16 +224,17 @@ func (p *FluxDBHandler) ProcessBlock(rawBlk *bstream.Block, rawObj interface{}) 
 			}
 		}
 
-		p.serverForkDB.AddLink(
-			blkRef,
-			bstream.BlockRefFromID(rawBlk.PreviousID()),
-			fObj.Obj.(*WriteRequest),
-		)
+		var previousRef bstream.BlockRef
+		if rawBlk.Number != 0 {
+			previousRef = bstream.NewBlockRef(rawBlk.PreviousID(), rawBlk.Number-1)
+		}
+
+		p.serverForkDB.AddLink(blkRef, previousRef, fObj.Obj.(*WriteRequest))
 
 		// When we starting, if fluxdb internal forkdb has no LIB and we are seeing the first block, let's use it as the LIB
 		if !p.serverForkDB.HasLIB() && blk.Num() == bstream.GetProtocolFirstStreamableBlock {
 			zlog.Info("setting internal forkdb LIB to first streamable block")
-			p.serverForkDB.TrySetLIB(blk, bstream.BlockRefFromID(blk.PreviousID()), blk.Num())
+			p.serverForkDB.TrySetLIB(blk, previousRef, blk.Num())
 		}
 
 		p.updateSpeculativeWrites(rawBlk)

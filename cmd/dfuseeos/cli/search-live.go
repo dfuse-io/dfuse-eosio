@@ -20,6 +20,7 @@ func init() {
 		MetricsID:   "live",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
+
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")
 			cmd.Flags().String("search-live-grpc-listen-addr", LiveServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-live-live-indices-path", "{dfuse-data-dir}/search/live", "Location for live indexes (ideally a ramdisk)")
@@ -29,6 +30,7 @@ func init() {
 			cmd.Flags().Uint64("search-live-start-block-drift-tolerance", 500, "allowed number of blocks between search archive and network head to get start block from the search archive")
 			cmd.Flags().Uint64("search-live-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			cmd.Flags().Int("search-live-preprocessor-concurrent-threads", 8, "Number of thread used to run file source preprocessor function")
+			cmd.Flags().Int("search-live-hub-channel-size", 1000, "Search live hub channel size")
 			return nil
 		},
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
@@ -52,16 +54,17 @@ func init() {
 				ServiceVersion:           viper.GetString("search-common-mesh-service-version"),
 				TierLevel:                viper.GetUint32("search-live-tier-level"),
 				GRPCListenAddr:           viper.GetString("search-live-grpc-listen-addr"),
+				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
 				BlockmetaAddr:            blockmetaAddr,
-				LiveIndexesPath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
 				BlocksStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				BlockstreamAddr:          blockstreamAddr,
+				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
 				StartBlockDriftTolerance: viper.GetUint64("search-live-start-block-drift-tolerance"),
 				ShutdownDelay:            viper.GetDuration("search-live-shutdown-delay"),
+				LiveIndexesPath:          mustReplaceDataDir(dfuseDataDir, viper.GetString("search-live-live-indices-path")),
 				TruncationThreshold:      viper.GetInt("search-live-truncation-threshold"),
 				RealtimeTolerance:        viper.GetDuration("search-live-realtime-tolerance"),
-				PublishInterval:          viper.GetDuration("search-common-mesh-publish-interval"),
-				HeadDelayTolerance:       viper.GetUint64("search-live-head-delay-tolerance"),
+				HubChannelSize:           viper.GetInt("search-live-hub-channel-size"),
 				PreProcConcurrentThreads: viper.GetInt("search-live-preprocessor-concurrent-threads"),
 			}, &liveApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,

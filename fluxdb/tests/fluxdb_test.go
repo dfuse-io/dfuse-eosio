@@ -441,7 +441,7 @@ func assertIrrBlockInfo(response *httpexpect.Object) {
 }
 
 func assertHeadBlockInfo(response *httpexpect.Object, blockRef string) {
-	ref := bstream.BlockRefFromID(blockRef)
+	ref := bstream.NewBlockRefFromID(blockRef)
 
 	response.ValueEqual("up_to_block_id", ref.ID())
 	response.ValueEqual("up_to_block_num", ref.Num())

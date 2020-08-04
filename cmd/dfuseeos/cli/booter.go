@@ -15,7 +15,7 @@ func init() {
 		Title:       "Booter",
 		Description: "Boots chain baed on provided bootseq",
 		MetricsID:   "booter",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/booter.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/(dfuse-eosio/booter.*|eosio-boot.*)", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("booter-bootseq", "./bootseq.yaml", "File path to the desired boot sequence")
 			cmd.Flags().String("booter-nodeos-api-addr", fmt.Sprintf("http://localhost%s/", NodeosAPIAddr), "Target API address to communicate with underlying nodeos")

@@ -62,9 +62,10 @@ func (p *Pipeline) Launch() {
 		return nil
 	})
 
+	irrRef := bstream.NewBlockRefFromID(libID)
 	gateHandler := bstream.NewBlockNumGate(uint64(startBlock), bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
-	forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
-	source := p.subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkableHandler)
+	forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
+	source := p.subscriptionHub.NewSourceFromBlockRef(irrRef, forkableHandler)
 
 	source.Run()
 	source.OnTerminating(func(e error) {

@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const defaultEosqAvailableNetworks = `[{ "id": "local", "is_test": true, "logo": "/images/eos-mainnet.png", "name": "Local Network", "url": "http://localhost:8080" }]`
+
 func init() {
 	// EOSQ
 	launcher.RegisterApp(&launcher.AppDef{
@@ -22,13 +24,11 @@ func init() {
 			cmd.Flags().String("eosq-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("eosq-api-key", EosqAPIKey, "API key used in eosq")
 			cmd.Flags().String("eosq-environment", "dev", "Environment where eosq will run (dev, dev, production)")
-			cmd.Flags().String("eosq-available-networks", "", "json string to configure the networks section of eosq.")
-			cmd.Flags().String("eosq-default-network", "local", "Default network that is displayed. It should correspond to an `id` in the available networks")
+			cmd.Flags().String("eosq-available-networks", defaultEosqAvailableNetworks, "json string to configure the networks section of eosq.")
+			cmd.Flags().String("eosq-default-network", "local", "Default network that is displayed. It should correspond to an `id` in the available networks config")
 			cmd.Flags().Bool("eosq-disable-analytics", true, "Disables sentry and segment")
 			cmd.Flags().Bool("eosq-display-price", false, "Should display prices via our price API")
 			cmd.Flags().String("eosq-price-ticker-name", "EOS", "The price ticker")
-			cmd.Flags().Bool("eosq-on-demand", false, "Is eosq deployed for an on-demand network")
-			cmd.Flags().Bool("eosq-disable-tokenmeta", true, "Disables tokenmeta calls from eosq")
 			return nil
 		},
 
@@ -44,8 +44,6 @@ func init() {
 				DefaultNetwork:    viper.GetString("eosq-default-network"),
 				DisplayPrice:      viper.GetBool("eosq-display-price"),
 				PriceTickerName:   viper.GetString("eosq-price-ticker-name"),
-				OnDemand:          viper.GetBool("eosq-on-demand"),
-				DisableTokenmeta:  viper.GetBool("eosq-disable-tokenmeta"),
 			}), nil
 		},
 	})

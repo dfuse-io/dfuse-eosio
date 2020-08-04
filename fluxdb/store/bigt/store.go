@@ -264,7 +264,7 @@ func (s *KVStore) FetchLastWrittenBlock(ctx context.Context, key string) (bstrea
 		return nil, store.ErrNotFound
 	}
 
-	return bstream.BlockRefFromID(string(row[lastBlockFamilyName][0].Value)), nil
+	return bstream.NewBlockRefFromID(string(row[lastBlockFamilyName][0].Value)), nil
 }
 
 func (s *KVStore) ScanLastShardsWrittenBlock(ctx context.Context, keyPrefix string, onBlockRef store.OnBlockRef) error {
@@ -275,7 +275,7 @@ func (s *KVStore) ScanLastShardsWrittenBlock(ctx context.Context, keyPrefix stri
 			return false
 		}
 
-		err2 = onBlockRef(row.Key(), bstream.BlockRefFromID(row[lastBlockFamilyName][0].Value))
+		err2 = onBlockRef(row.Key(), bstream.NewBlockRefFromID(string(row[lastBlockFamilyName][0].Value)))
 		if err2 == store.BreakScan {
 			return false
 		}

@@ -20,6 +20,4 @@ start:
   - tokenmeta
   - trxdb-loader
   flags:
-    # To use Bigtable Emulator
-    # common-trxdb-dsn: bigkv://dev.dev/test-trxdb?createTable=true
-    # common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")

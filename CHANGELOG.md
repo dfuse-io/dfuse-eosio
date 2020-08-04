@@ -10,7 +10,9 @@ date.
 # [Unreleased]
 
 ### Added
-* Added `merged-filter` application, that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
+* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity 
+* Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
+* Added `merged-filter` application (not running by default), that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
 * Added `tokenmeta` application, with its flags
 * Add `--search-live-preprocessor-concurrent-threads` Number of thread used to run file source preprocessor function
 * flag `abicodec-export-abis-file-name` will contain only the URL of the where to export the ABIs in JSON
@@ -23,13 +25,21 @@ date.
   * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
+* The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
+* The `--eosq-on-demand` flag was removed, this was unused in the codebase.
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 
 ### Changed
+* Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
+* EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
 * Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
 * Improved `nodeos` log interceptions (when using `(mindreader|node-manager)-log-to-zap` flag) by adjusting log level for specific lines, that should improve the overall experience and better notice what is really an important error. More tweaking on the adjustment will continue as an iterative process, don't hesitate to report log line that should adjusted.
 * Flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
 * Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
+
+### Fixed
+* Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
+
 
 # [v0.1.0-beta4] 2020-06-23
 

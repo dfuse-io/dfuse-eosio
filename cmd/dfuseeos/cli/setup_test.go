@@ -109,7 +109,7 @@ func Test_shouldRunSetup(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expectBool, shouldRunSetup(test.cmds, []*cobra.Command{
+			assert.Equal(t, test.expectBool, isMatchingCommand(test.cmds, []*cobra.Command{
 				StartCmd,
 			}))
 		})

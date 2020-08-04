@@ -36,7 +36,7 @@ func init() {
 		// Now that we also have a `mindreader_stdin` registered logger, we need to pay attention to the actual regexp to ensure we match only our packages!
 		Logger: launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/mindreader$", []zapcore.Level{zap.WarnLevel, zap.WarnLevel, zap.InfoLevel, zap.DebugLevel}),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("mindreader-manager-api-addr", EosMindreaderHTTPAddr, "The dfuse Node Manager API address")
+			cmd.Flags().String("mindreader-manager-api-addr", MindreaderHTTPServingAddr, "The dfuse Node Manager API address")
 			cmd.Flags().String("mindreader-nodeos-api-addr", MindreaderNodeosAPIAddr, "Target API address to communicate with underlying nodeos")
 			cmd.Flags().Bool("mindreader-connection-watchdog", false, "Force-reconnect dead peers automatically")
 			cmd.Flags().String("mindreader-config-dir", "./mindreader", "Directory for config files. ")
@@ -72,6 +72,7 @@ func init() {
 			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
+			cmd.Flags().Duration("mindreader-wait-upload-complete-on-shutdown", 30*time.Second, "When the mindreader is shutting down, it will wait up to that amount of time for the archiver to finish uploading the blocks before leaving anyway")
 			return nil
 		},
 		InitFunc: func(runtime *launcher.Runtime) error {
@@ -125,7 +126,7 @@ func init() {
 				viper.GetBool("mindreader-debug-deep-mind"),
 				metricsAndReadinessManager.UpdateHeadBlock,
 				&superviser.SuperviserOptions{
-					LocalNodeEndpoint: viper.GetString("mindreader-manager-api-addr"),
+					LocalNodeEndpoint: viper.GetString("mindreader-nodeos-api-addr"),
 					ConfigDir:         viper.GetString("mindreader-config-dir"),
 					BinPath:           viper.GetString("mindreader-nodeos-path"),
 					DataDir:           mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-data-dir")),
@@ -180,6 +181,7 @@ func init() {
 					chainOperator.Shutdown(nil)
 				},
 				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
+				viper.GetDuration("mindreader-wait-upload-complete-on-shutdown"),
 				appLogger,
 			)
 			if err != nil {

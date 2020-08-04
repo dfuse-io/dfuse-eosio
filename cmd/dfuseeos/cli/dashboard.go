@@ -19,7 +19,7 @@ func init() {
 			cmd.Flags().String("dashboard-grpc-listen-addr", DashboardGrpcServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dashboard-http-listen-addr", DashboardHTTPListenAddr, "TCP Listener addr for gRPC")
 			cmd.Flags().String("dashboard-metrics-api-addr", "http://127.0.0.1"+MetricsListenAddr, "HTTP address where to reach the metrics API endpoint")
-			cmd.Flags().String("dashboard-eos-node-manager-api-addr", EosManagerAPIAddr, "Address of the superviser manager api")
+			cmd.Flags().String("dashboard-eos-node-manager-api-addr", NodeManagerHTTPServingAddr, "Address of the superviser manager api")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {

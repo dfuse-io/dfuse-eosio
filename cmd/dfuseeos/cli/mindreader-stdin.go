@@ -56,16 +56,17 @@ func init() {
 			metricsAndReadinessManager := nodeManager.NewMetricsAndReadinessManager(headBlockTimeDrift, headBlockNumber, viper.GetDuration("mindreader-readiness-max-latency"))
 
 			return nodeMindreaderStdinApp.New(&nodeMindreaderStdinApp.Config{
-				GRPCAddr:                   viper.GetString("mindreader-grpc-listen-addr"),
-				ArchiveStoreURL:            archiveStoreURL,
-				MergeArchiveStoreURL:       mergeArchiveStoreURL,
-				MergeUploadDirectly:        viper.GetBool("mindreader-merge-and-store-directly"),
-				MindReadBlocksChanCapacity: viper.GetInt("mindreader-blocks-chan-capacity"),
-				StartBlockNum:              viper.GetUint64("mindreader-start-block-num"),
-				StopBlockNum:               viper.GetUint64("mindreader-stop-block-num"),
-				DiscardAfterStopBlock:      viper.GetBool("mindreader-discard-after-stop-num"),
-				FailOnNonContinuousBlocks:  viper.GetBool("mindreader-fail-on-non-contiguous-block"),
-				WorkingDir:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
+				GRPCAddr:                     viper.GetString("mindreader-grpc-listen-addr"),
+				ArchiveStoreURL:              archiveStoreURL,
+				MergeArchiveStoreURL:         mergeArchiveStoreURL,
+				MergeUploadDirectly:          viper.GetBool("mindreader-merge-and-store-directly"),
+				MindReadBlocksChanCapacity:   viper.GetInt("mindreader-blocks-chan-capacity"),
+				StartBlockNum:                viper.GetUint64("mindreader-start-block-num"),
+				StopBlockNum:                 viper.GetUint64("mindreader-stop-block-num"),
+				DiscardAfterStopBlock:        viper.GetBool("mindreader-discard-after-stop-num"),
+				FailOnNonContinuousBlocks:    viper.GetBool("mindreader-fail-on-non-contiguous-block"),
+				WorkingDir:                   mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
+				WaitUploadCompleteOnShutdown: viper.GetDuration("mindreader-wait-upload-complete-on-shutdown"),
 			}, &nodeMindreaderStdinApp.Modules{
 				ConsoleReaderFactory:       consoleReaderFactory,
 				ConsoleReaderTransformer:   consoleReaderBlockTransformer,

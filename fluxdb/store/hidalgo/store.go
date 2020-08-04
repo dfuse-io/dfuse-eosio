@@ -222,12 +222,12 @@ func (s *KVStore) FetchLastWrittenBlock(ctx context.Context, key string) (out bs
 		return nil, err
 	}
 
-	return bstream.BlockRefFromID(string(value)), nil
+	return bstream.NewBlockRefFromID(string(value)), nil
 }
 
 func (s *KVStore) ScanLastShardsWrittenBlock(ctx context.Context, keyPrefix string, onBlockRef store.OnBlockRef) error {
 	err := s.scanPrefix(ctx, s.tblLast, keyPrefix, func(key string, value []byte) error {
-		err := onBlockRef(key, bstream.BlockRefFromID(value))
+		err := onBlockRef(key, bstream.NewBlockRefFromID(string(value)))
 		if err == store.BreakScan {
 			return store.BreakScan
 		}

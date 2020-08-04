@@ -67,6 +67,7 @@ func (b *booter) Launch() {
 		b.nodeos,
 		filepath.Join(b.config.Datadir, "cache"),
 		eosboot.WithKeyBag(keybag),
+		eosboot.WithLogger(zlog),
 	)
 	if err != nil {
 		zlog.Error("failed to initialize booter", zap.Error(err))
