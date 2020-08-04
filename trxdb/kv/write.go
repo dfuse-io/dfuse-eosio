@@ -47,6 +47,9 @@ func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blk
 			}
 		}
 	}
+	/*else {
+		db.logger.Info("store is not purgeable, not setting height")
+	}*/
 	return nil
 }
 

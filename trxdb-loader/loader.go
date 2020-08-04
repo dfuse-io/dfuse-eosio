@@ -34,6 +34,9 @@ import (
 
 type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error)
 
+const MaxRetries = 5
+const BackoffBaseTime = 10 * time.Minute
+
 type TrxDBLoader struct {
 	*shutter.Shutter
 	processingJob             Job
@@ -51,6 +54,7 @@ type TrxDBLoader struct {
 	endBlock                  uint64
 	parallelFileDownloadCount int
 	healthy                   bool
+	retryCnt                  int
 	truncationWindow          uint64
 
 	forkDB *forkable.ForkDB
@@ -74,6 +78,7 @@ func NewTrxDBLoader(
 		batchSize:                 batchSize,
 		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
+		retryCnt:                  1,
 		blockFilter:               blockFilter,
 		truncationWindow:          truncationWindow,
 		lastTickBlocks:            make([]float64, 100),
@@ -348,7 +353,23 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	defer cancel()
 	err := l.db.Flush(ctx)
 	if err != nil {
-		return fmt.Errorf("db flush: %w", err)
+		for ok := true; ok; ok = l.retryCnt <= MaxRetries && err != nil {
+			zlog.Error("db flush failed", zap.Error(err))
+			retryBackoff := time.Duration(l.retryCnt) * BackoffBaseTime
+			zlog.Info("retrying flush", zap.Float64("backoff_time", retryBackoff.Seconds()))
+
+			time.Sleep(retryBackoff)
+			ctx, cancel = context.WithTimeout(context.Background(), 1*time.Minute)
+			defer cancel()
+			err = l.db.Flush(ctx)
+			l.retryCnt++
+		}
+
+		if err != nil {
+			return fmt.Errorf("db flush failed after reaching max retries (%d): %w", MaxRetries, err)
+		}
+	} else {
+		l.retryCnt = 1
 	}
 	return nil
 }
