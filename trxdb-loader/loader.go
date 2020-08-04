@@ -41,6 +41,9 @@ type TrxDBLoader struct {
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
+	lastTickBlocks            []float64
+	lastTickBlocksInit        bool
+	tickBlocksPointer         int
 	blocksStore               dstore.Store
 	blockFilter               func(blk *bstream.Block) error
 	blockStreamAddr           string
@@ -73,6 +76,9 @@ func NewTrxDBLoader(
 		parallelFileDownloadCount: parallelFileDownloadCount,
 		blockFilter:               blockFilter,
 		truncationWindow:          truncationWindow,
+		lastTickBlocks:            make([]float64, 100),
+		tickBlocksPointer:         0,
+		lastTickBlocksInit:        false,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -374,10 +380,30 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 	now := time.Now()
 	if l.lastTickTime.Before(now.Add(-5 * time.Second)) {
 		if !l.lastTickTime.IsZero() {
+
+			blockSec := float64(blockNum-l.lastTickBlock) / float64(now.Sub(l.lastTickTime)/time.Second)
+
+			var totalBlockSec float64 = 0
+			var avgBlockSec float64 = 0
+
+			l.lastTickBlocks[l.tickBlocksPointer % len(l.lastTickBlocks)] = blockSec
+			l.tickBlocksPointer++
+
+			for _, curBlockSec := range l.lastTickBlocks {
+				totalBlockSec += curBlockSec
+			}
+
+			if l.tickBlocksPointer < len(l.lastTickBlocks) {
+				avgBlockSec = totalBlockSec / float64(l.tickBlocksPointer)
+			} else {
+				avgBlockSec = totalBlockSec / float64(len(l.lastTickBlocks))
+			}
+
 			zlog.Info("5sec AVG INSERT RATE",
 				zap.Uint64("block_num", blockNum),
 				zap.Uint64("last_tick_block", l.lastTickBlock),
-				zap.Float64("block_sec", float64(blockNum-l.lastTickBlock)/float64(now.Sub(l.lastTickTime)/time.Second)),
+				zap.Float64("block_sec", blockSec),
+				zap.Float64("100_tick_avg", avgBlockSec),
 			)
 		}
 		l.lastTickTime = now
