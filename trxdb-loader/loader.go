@@ -35,7 +35,7 @@ import (
 type Job = func(blockNum uint64, blk *pbcodec.Block, fObj *forkable.ForkableObject) (err error)
 
 const MaxRetries = 5
-const BackoffBaseTime = 1 * time.Minute
+const BackoffBaseTime = 10 * time.Minute
 
 type TrxDBLoader struct {
 	*shutter.Shutter
@@ -349,7 +349,7 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	if err != nil {
 		for ok := true; ok; ok = l.retryCnt <= MaxRetries && err != nil {
 			zlog.Error("db flush failed", zap.Error(err))
-			retryBackoff := time.Duration(l.retryCnt) * 2 * BackoffBaseTime
+			retryBackoff := time.Duration(l.retryCnt) * BackoffBaseTime
 			zlog.Info("retrying flush", zap.Float64("backoff_time", retryBackoff.Seconds()))
 
 			time.Sleep(retryBackoff)
