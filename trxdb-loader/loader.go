@@ -42,9 +42,8 @@ type TrxDBLoader struct {
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
-	lastTickBlocks            []float64
-	lastTickBlocksInit        bool
-	tickBlocksPointer         int
+	lastBlockSecs             []float64
+	lastBlockSecsPointer      int
 	blocksStore               dstore.Store
 	blockFilter               func(blk *bstream.Block) error
 	blockStreamAddr           string
@@ -77,9 +76,8 @@ func NewTrxDBLoader(
 		parallelFileDownloadCount: parallelFileDownloadCount,
 		blockFilter:               blockFilter,
 		truncationWindow:          truncationWindow,
-		lastTickBlocks:            make([]float64, 100),
-		tickBlocksPointer:         0,
-		lastTickBlocksInit:        false,
+		lastBlockSecs:             make([]float64, 100),
+		lastBlockSecsPointer:      0,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -387,17 +385,17 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 			var totalBlockSec float64 = 0
 			var avgBlockSec float64 = 0
 
-			l.lastTickBlocks[l.tickBlocksPointer%len(l.lastTickBlocks)] = blockSec
-			l.tickBlocksPointer++
+			l.lastBlockSecs[l.lastBlockSecsPointer%len(l.lastBlockSecs)] = blockSec
+			l.lastBlockSecsPointer++
 
-			for _, curBlockSec := range l.lastTickBlocks {
+			for _, curBlockSec := range l.lastBlockSecs {
 				totalBlockSec += curBlockSec
 			}
 
-			if l.tickBlocksPointer < len(l.lastTickBlocks) {
-				avgBlockSec = totalBlockSec / float64(l.tickBlocksPointer)
+			if l.lastBlockSecsPointer < len(l.lastBlockSecs) {
+				avgBlockSec = totalBlockSec / float64(l.lastBlockSecsPointer)
 			} else {
-				avgBlockSec = totalBlockSec / float64(len(l.lastTickBlocks))
+				avgBlockSec = totalBlockSec / float64(len(l.lastBlockSecs))
 			}
 
 			zlog.Info("5sec AVG INSERT RATE",
