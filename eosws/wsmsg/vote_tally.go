@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
+	"github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 )
 
 func init() {
@@ -60,8 +60,8 @@ func (t *GetVoteTally) Validate(ctx context.Context) error {
 // other structs
 
 type VoteTallyData struct {
-	TotalActivatedStake float64           `json:"total_activated_stake"`
-	TotalVotes          float64           `json:"total_votes"`
-	DecayWeight         float64           `json:"decay_weight"`
-	Producers           []fluxdb.Producer `json:"producers"`
+	TotalActivatedStake float64            `json:"total_activated_stake"`
+	TotalVotes          float64            `json:"total_votes"`
+	DecayWeight         float64            `json:"decay_weight"`
+	Producers           []statedb.Producer `json:"producers"`
 }

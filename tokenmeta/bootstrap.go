@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
 	"github.com/eoscanada/eos-go"
@@ -15,9 +15,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func processContract(ctx context.Context, tokenContract eos.AccountName, startBlockNum uint32, fluxClient fluxdb.Client) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, err error) {
+func processContract(ctx context.Context, tokenContract eos.AccountName, startBlockNum uint32, stateClient pbstatedb.StateClient) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, err error) {
 	var symcodes []eos.SymbolCode
-	symcodes, err = getSymbolFromFlux(ctx, fluxClient, tokenContract, startBlockNum)
+	symcodes, err = getSymbolFromStateDB(ctx, stateClient, tokenContract, startBlockNum)
 	if err != nil {
 		return
 	}
@@ -27,16 +27,16 @@ func processContract(ctx context.Context, tokenContract eos.AccountName, startBl
 		return
 	}
 
-	tokens, err = getTokensFromFlux(ctx, fluxClient, tokenContract, symcodes, startBlockNum)
+	tokens, err = getTokensFromStateDB(ctx, stateClient, tokenContract, symcodes, startBlockNum)
 	if err != nil {
 		return
 	}
 
-	balances, err = getTokenBalancesFromFlux(ctx, fluxClient, tokenContract, symcodes, startBlockNum)
+	balances, err = getTokenBalancesFromStateDB(ctx, stateClient, tokenContract, symcodes, startBlockNum)
 	return
 }
 
-func Bootstrap(abisFileContent []byte, fluxClient fluxdb.Client, bootstrapblockOffset uint64) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, stakeds []*cache.EOSStakeEntry, startBlock bstream.BlockRef, err error) {
+func Bootstrap(abisFileContent []byte, stateClient pbstatedb.StateClient, bootstrapblockOffset uint64) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, stakeds []*cache.EOSStakeEntry, startBlock bstream.BlockRef, err error) {
 
 	startBlock = bstream.NewBlockRef("", 0)
 	tokenContracts := parseContractFromABIs(abisFileContent)
@@ -47,20 +47,20 @@ func Bootstrap(abisFileContent []byte, fluxClient fluxdb.Client, bootstrapblockO
 		// the cursor located in the ABIs cached (exported by abicodec) is following the live, thus there is no guaranty that it is
 		// irreversible. Tokenmeta start with a forkable which only processes irreversible blocks, so to avoid
 		// stalling forkable (starting it off with an ID within a fork block) we disregard the block id from abi codec cursor.
-		// Furthermore, we added a bootstrap block offeset to ensure when you are querying flux you do not hit reversible blocks
+		// Furthermore, we added a bootstrap block offeset to ensure when you are querying StateDB you do not hit reversible blocks
 		startBlock = bstream.NewBlockRef("", (abiStartBlock.Num() - bootstrapblockOffset))
 	}
 
 	ctx := context.Background()
 
-	sta, err := getEOSStakedFromFlux(ctx, fluxClient, uint32(startBlock.Num()))
+	sta, err := getEOSStakedFromStateDB(ctx, stateClient, uint32(startBlock.Num()))
 	stakeds = append(stakeds, sta...)
 
 	zlog.Info("looping through valid contracts", zap.Uint64("start_block_num", startBlock.Num()), zap.String("start_block_id", startBlock.ID()), zap.Int("valid_contracts_count", len(tokenContracts)))
 
 	for _, tokenContract := range tokenContracts {
 		for attempt := 1; true; attempt++ {
-			toks, bals, err := processContract(ctx, tokenContract, uint32(startBlock.Num()), fluxClient)
+			toks, bals, err := processContract(ctx, tokenContract, uint32(startBlock.Num()), stateClient)
 			if err == nil {
 				if toks == nil {
 					zlog.Info("skipping empty token contract",
@@ -72,7 +72,7 @@ func Bootstrap(abisFileContent []byte, fluxClient fluxdb.Client, bootstrapblockO
 				balances = append(balances, bals...)
 				break
 			}
-			if !isRetryableFluxError(err) {
+			if !isRetryableStateDBError(err) {
 				zlog.Info("skipping invalid token contract, unable to get symbols with non-retryable error",
 					zap.String("token_contract", string(tokenContract)),
 					zap.Error(err),

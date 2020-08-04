@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
@@ -35,10 +34,10 @@ import (
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
-	fluxhelper "github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/rest"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
@@ -53,7 +52,6 @@ import (
 	"github.com/eoscanada/eos-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 )
 
@@ -67,7 +65,8 @@ type Config struct {
 	SourceStoreURL      string
 	SearchAddr          string
 	SearchAddrSecondary string
-	FluxHTTPAddr        string
+	StateDBHTTPAddr     string
+	StateDBGRPCAddr     string
 
 	AuthenticateNodeosAPI bool
 
@@ -236,20 +235,13 @@ func (a *App) Run() error {
 
 	completionPipeline := completion.NewPipeline(completionInstance, head.ID(), lib.ID(), subscriptionHub)
 
-	var transport http.RoundTripper
-	if a.Config.UseOpencensusStackdriver {
-		transport = &ochttp.Transport{
-			Propagation: &stackdriverPropagation.HTTPFormat{},
-		}
+	stateConn, err := dgrpc.NewInternalClient(a.Config.StateDBGRPCAddr)
+	if err != nil {
+		return fmt.Errorf("failed getting statedb grpc conn: %w", err)
 	}
+	stateClient := pbstatedb.NewStateClient(stateConn)
 
-	fluxURLStr := a.Config.FluxHTTPAddr
-	if !strings.HasPrefix(fluxURLStr, "http") {
-		fluxURLStr = "http://" + fluxURLStr
-	}
-
-	fluxClient := fluxdb.NewClient(fluxURLStr, transport)
-	voteTallyHub := eosws.NewVoteTallyHub(fluxhelper.NewDefaultFluxHelper(fluxClient))
+	voteTallyHub := eosws.NewVoteTallyHub(stateHelper.NewDefaultFluxHelper(stateClient))
 	if a.Config.FetchVoteTally {
 		go voteTallyHub.Launch(context.Background())
 	}
@@ -263,7 +255,7 @@ func (a *App) Run() error {
 
 	irrFinder := eosws.NewDBReaderBaseIrrFinder(db)
 
-	abiGetter := eosws.NewDefaultABIGetter(fluxClient)
+	abiGetter := eosws.NewDefaultABIGetter(stateClient)
 	accountGetter := eosws.NewApiAccountGetter(api)
 
 	blockmetaClient, err := pbblockmeta.NewClient(a.Config.BlockmetaAddr)
@@ -271,7 +263,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("blockmeta connection error: %w", err)
 	}
 
-	wsHandler := eosws.NewWebsocketHandler(abiGetter, accountGetter, db, subscriptionHub, fluxClient, voteTallyHub, headInfoHub, priceHub, irrFinder, a.Config.FilesourceRateLimitPerBlock)
+	wsHandler := eosws.NewWebsocketHandler(abiGetter, accountGetter, db, subscriptionHub, stateClient, voteTallyHub, headInfoHub, priceHub, irrFinder, a.Config.FilesourceRateLimitPerBlock)
 
 	auth, err := authenticator.New(a.Config.AuthPlugin)
 	if err != nil {
@@ -293,12 +285,17 @@ func (a *App) Run() error {
 		return nil
 	}).Handler
 
-	fluxURL, err := url.Parse(fluxURLStr)
-	if err != nil {
-		return fmt.Errorf("cannot parse flux address: %w", err)
+	stateHTTPAddr := a.Config.StateDBHTTPAddr
+	if !strings.HasPrefix(stateHTTPAddr, "http") {
+		stateHTTPAddr = "http://" + stateHTTPAddr
 	}
 
-	fluxProxy := rest.NewReverseProxy(fluxURL, false)
+	stateHTTPURL, err := url.Parse(stateHTTPAddr)
+	if err != nil {
+		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
+	}
+
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -342,7 +339,7 @@ func (a *App) Run() error {
 	})
 
 	// Setup healthz
-	healthzHandler := rest.HealthzHandler(subscriptionHub, api, blocksStore, db, fluxClient, searchQueryHandler, a.Config.HealthzSecret)
+	healthzHandler := rest.HealthzHandler(subscriptionHub, api, blocksStore, db, stateClient, searchQueryHandler, a.Config.HealthzSecret)
 	healthzRouter := router.PathPrefix("/").Subrouter()
 	healthzRouter.Path("/healthz").Handler(healthzHandler)
 
@@ -359,7 +356,7 @@ func (a *App) Run() error {
 	chainRouter := coreRouter.PathPrefix("/").Subrouter()
 	wsRouter := coreRouter.PathPrefix("/").Subrouter()
 	restRouter := coreRouter.PathPrefix("/").Subrouter()
-	fluxRestRouter := coreRouter.PathPrefix("/").Subrouter()
+	statedbRestRouter := coreRouter.PathPrefix("/").Subrouter()
 	historyRestRouter := coreRouter.PathPrefix("/").Subrouter()
 	eosqRestRouter := coreRouter.PathPrefix("/").Subrouter()
 
@@ -433,32 +430,32 @@ func (a *App) Run() error {
 	restRouter.Path("/v0/transactions/{id}").Handler(rest.GetTransactionHandler(db))
 
 	// FluxDB (Chain State) REST API endpoints
-	fluxRestRouter.Use(authMiddleware)
-	fluxRestRouter.Use(eosws.RESTTrackingMiddleware)
-	fluxRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
+	statedbRestRouter.Use(authMiddleware)
+	statedbRestRouter.Use(eosws.RESTTrackingMiddleware)
+	statedbRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on REST APIs
 	// WARNING: Middleware is **configured** to ONLY track Query Ingress / Egress bytes.
 	//          This means that the middleware DOES NOT track Query requests / responses.
 	//          Req / Resp (Docs) is counted in the different endpoints
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
+	statedbRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
 		meter,
 		"eosws", "REST API - Chain State",
 		false, true))
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Path("/v0/state/abi").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/abi/bin_to_json").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/permission_links").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/key_accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table/row").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table_scopes").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/scopes").Handler(fluxProxy)
+	statedbRestRouter.Path("/v0/state/abi").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/abi/bin_to_json").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/permission_links").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/key_accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table/row").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table_scopes").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/scopes").Handler(statedbProxy)
 
 	historyRestRouter.Use(eosws.RESTTrackingMiddleware)
-	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(fluxClient))
+	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(stateClient))
 
 	/// Rest routes (Eosq accessible only)
 	eosqRestRouter.Use(authMiddleware)
@@ -506,7 +503,16 @@ func (a *App) Run() error {
 	go headInfoHub.Launch(context.Background())
 	go completionPipeline.Launch()
 
-	server := &http.Server{Addr: a.Config.HTTPListenAddr, Handler: handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed)}
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
+	}
+
+	server := &http.Server{
+		Addr:     a.Config.HTTPListenAddr,
+		Handler:  handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed),
+		ErrorLog: errorLogger,
+	}
 
 	go func() {
 		zlog.Info("serving HTTP", zap.String("listen_addr", a.Config.HTTPListenAddr))
