@@ -52,7 +52,6 @@ func init() {
 			cmd.Flags().String("mindreader-grpc-listen-addr", MindreaderGRPCAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Uint("mindreader-start-block-num", 0, "Blocks that were produced with smaller block number then the given block num are skipped")
 			cmd.Flags().Uint("mindreader-stop-block-num", 0, "Shutdown mindreader when we the following 'stop-block-num' has been reached, inclusively.")
-			cmd.Flags().Bool("mindreader-discard-after-stop-num", false, "ignore remaining blocks being processed after stop num (only useful if we discard the mindreader data after reprocessing a chunk of blocks)")
 			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/nodeos if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
@@ -69,7 +68,8 @@ func init() {
 			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
-			cmd.Flags().Bool("mindreader-merge-and-store-directly", false, "[BATCH] When enabled, do not write oneblock files, sidestep the merger and write the merged 100-blocks logs directly to --common-blocks-store-url")
+			cmd.Flags().Bool("mindreader-batch-mode", false, "Always write merged-block files directly, overwriting existing files. Use this flag for reprocessing, with a stop-block-num that stops before possible chain reorgs")
+			cmd.Flags().Duration("mindreader-merge-threshold-block-age", 12*time.Hour, "when processing blocks with a blocktime older than this threshold, they will be automatically merged")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			cmd.Flags().Duration("mindreader-wait-upload-complete-on-shutdown", 30*time.Second, "When the mindreader is shutting down, it will wait up to that amount of time for the archiver to finish uploading the blocks before leaving anyway")
@@ -163,17 +163,20 @@ func init() {
 			if err != nil {
 				return nil, fmt.Errorf("unable to create chain operator: %w", err)
 			}
-
+			blockmetaAddr := viper.GetString("common-blockmeta-addr")
+			tracker := runtime.Tracker.Clone()
+			tracker.AddGetter(bstream.NetworkLIBTarget, bstream.NetworkLIBBlockRefGetter(blockmetaAddr))
 			mindreaderPlugin, err := mindreader.NewMindReaderPlugin(
 				archiveStoreURL,
 				mergeArchiveStoreURL,
-				viper.GetBool("mindreader-merge-and-store-directly"),
+				viper.GetBool("mindreader-batch-mode"),
+				viper.GetDuration("mindreader-merge-threshold-block-age"),
 				mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
 				consoleReaderFactory,
 				consoleReaderBlockTransformer,
+				tracker,
 				viper.GetUint64("mindreader-start-block-num"),
 				viper.GetUint64("mindreader-stop-block-num"),
-				viper.GetBool("mindreader-discard-after-stop-num"),
 				viper.GetInt("mindreader-blocks-chan-capacity"),
 				metricsAndReadinessManager.UpdateHeadBlock,
 				chainOperator.SetMaintenance,
