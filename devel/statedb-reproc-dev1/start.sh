@@ -58,6 +58,11 @@ usage() {
   echo ""
   echo "Options"
   echo "    -c             Clean actual data directory first"
+  echo ""
+  echo "Environment"
+  echo "    INFO=<app>     Turn info logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo "    DEBUG=<app>    Turn debug logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo ""
 }
 
 main "$@"

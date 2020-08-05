@@ -52,6 +52,11 @@ usage() {
   echo "Options"
   echo "   -m export         Peform the export phase of the migration tool"
   echo "   -m import         Perform the import phase of the migration tool"
+  echo ""
+  echo "Environment"
+  echo "    INFO=<app>     Turn info logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo "    DEBUG=<app>    Turn debug logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo ""
 }
 
 main $@

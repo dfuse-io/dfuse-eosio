@@ -86,6 +86,11 @@ usage() {
   echo "    -p             Only launch the producer app"
   echo "    -m             Only launch the mindreader app (and all others)"
   echo "    -d <file>      Uses this deep ming log file (in '.dmlog' format) as the stdin pipe to the process instead of launching 'nodoes' process"
+  echo ""
+  echo "Environment"
+  echo "    INFO=<app>     Turn info logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo "    DEBUG=<app>    Turn debug logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo ""
 }
 
 main "$@"
