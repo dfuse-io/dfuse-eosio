@@ -6,8 +6,8 @@ import (
 
 const (
 	Protocol               pbbstream.Protocol = pbbstream.Protocol_EOS
-	TrxdbDSN               string             = "badger://{dfuse-data-dir}/storage/trxdb"   //%s will be replaced by `<data-dir>`
-	FluxDSN                string             = "badger://{dfuse-data-dir}/storage/statedb" //%s will be replaced by `<data-dir>/<flux-data-dir>
+	TrxDBDSN               string             = "badger://{dfuse-data-dir}/storage/trxdb"
+	StateDBDSN             string             = "badger://{dfuse-data-dir}/storage/statedb-v1"
 	MergedBlocksStoreURL   string             = "file://{dfuse-data-dir}/storage/merged-blocks"
 	FilteredBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/filtered-merged-blocks"
 	IndicesStoreURL        string             = "file://{dfuse-data-dir}/storage/indexes"
@@ -37,13 +37,14 @@ const (
 	DgraphqlHTTPServingAddr     string = ":13023"
 	DgraphqlGrpcServingAddr     string = ":13024"
 	EoswsHTTPServingAddr        string = ":13026"
-	ForkresolverServingAddr     string = ":13027"
-	ForkresolverHTTPServingAddr string = ":13028"
-	FluxDBServingAddr           string = ":13029"
+	ForkResolverServingAddr     string = ":13027"
+	ForkResolverHTTPServingAddr string = ":13028"
+	StateDBHTTPServingAddr      string = ":13029"
+	StateDBGRPCServingAddr      string = ":13032"
 	EosqHTTPServingAddr         string = ":13030"
-	DashboardGrpcServingAddr    string = ":13031"
+	DashboardGRPCServingAddr    string = ":13031"
 	FilteringRelayerServingAddr string = ":13032"
-	TokenmetaGrpcServingAddr    string = ":14001"
+	TokenmetaGRPCServingAddr    string = ":14001"
 	DashboardHTTPListenAddr     string = ":8081"
 	APIProxyHTTPListenAddr      string = ":8080"
 	MindreaderNodeosAPIAddr     string = ":9888"

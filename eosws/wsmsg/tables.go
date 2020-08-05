@@ -87,13 +87,7 @@ func NewTableDelta(blockNum uint32, dbop *v1.DBOp, stepType forkable.StepType) *
 type TableSnapshot struct {
 	CommonOut
 	Data struct {
-		Rows json.RawMessage `json:"rows"`
+		Rows []json.RawMessage `json:"rows"`
 		// insert the schtuffs here..
 	} `json:"data"`
-}
-
-func NewTableSnapshot(rows json.RawMessage) *TableSnapshot {
-	out := &TableSnapshot{}
-	out.Data.Rows = rows
-	return out
 }

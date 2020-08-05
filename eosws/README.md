@@ -3,7 +3,7 @@ eosws - EOSIO websocket and REST service
 
 EOSIO-specific websocket interface, REST interface, Push guarantee
 instrumented `/v1/chain/push_transaction` endpoint, and pass-through
-to [fluxdb](https://github.com/dfuse-io/dfuse-eosio/tree/develop/fluxdb).
+to [statedb](../statedb).
 
 ## *DEPRECATION NOTICE*
 
@@ -28,4 +28,4 @@ This service provides REST endpoints for:
 * paginated search
 * websocket streaming services
 * pass-through to `nodeos` nodes
-* pass-through to reach [FluxDB](../fluxdb/) (historical state database)
+* pass-through to reach [StateDB](../statedb/) (historical state database)

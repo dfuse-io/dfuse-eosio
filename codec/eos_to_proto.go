@@ -440,6 +440,15 @@ func AuthoritiesToDEOS(authority *eos.Authority) *pbcodec.Authority {
 	}
 }
 
+func AuthoritiesToEOS(authority *pbcodec.Authority) eos.Authority {
+	return eos.Authority{
+		Threshold: authority.Threshold,
+		Keys:      KeyWeightsToEOS(authority.Keys),
+		Accounts:  PermissionLevelWeightsToEOS(authority.Accounts),
+		Waits:     WaitWeightsToEOS(authority.Waits),
+	}
+}
+
 func WaitWeightsToDEOS(waits []eos.WaitWeight) (out []*pbcodec.WaitWeight) {
 	if len(waits) <= 0 {
 		return nil
@@ -452,7 +461,22 @@ func WaitWeightsToDEOS(waits []eos.WaitWeight) (out []*pbcodec.WaitWeight) {
 			Weight:  uint32(o.Weight),
 		}
 	}
-	return
+	return out
+}
+
+func WaitWeightsToEOS(waits []*pbcodec.WaitWeight) (out []eos.WaitWeight) {
+	if len(waits) <= 0 {
+		return nil
+	}
+
+	out = make([]eos.WaitWeight, len(waits))
+	for i, o := range waits {
+		out[i] = eos.WaitWeight{
+			WaitSec: o.WaitSec,
+			Weight:  uint16(o.Weight),
+		}
+	}
+	return out
 }
 
 func PermissionLevelWeightsToDEOS(weights []eos.PermissionLevelWeight) (out []*pbcodec.PermissionLevelWeight) {
@@ -512,6 +536,22 @@ func KeyWeightsToDEOS(keys []eos.KeyWeight) (out []*pbcodec.KeyWeight) {
 		}
 	}
 	return
+}
+
+func KeyWeightsToEOS(keys []*pbcodec.KeyWeight) (out []eos.KeyWeight) {
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]eos.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = eos.KeyWeight{
+			PublicKey: ecc.MustNewPublicKey(o.PublicKey),
+			Weight:    uint16(o.Weight),
+		}
+	}
+	return
+
 }
 
 func KeyWeightsPToDEOS(keys []*eos.KeyWeight) (out []*pbcodec.KeyWeight) {

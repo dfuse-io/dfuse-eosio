@@ -78,7 +78,7 @@ func TestCli(t *testing.T) {
 }
 
 func waitForAllAppsToBeReady(t *testing.T, timeout time.Duration) (notReadyApps []string) {
-	conn, err := dgrpc.NewInternalClient("localhost" + cli.DashboardGrpcServingAddr)
+	conn, err := dgrpc.NewInternalClient("localhost" + cli.DashboardGRPCServingAddr)
 	require.NoError(t, err)
 
 	// FIXME: Connect this context here to the test context so that if the test process is killed,

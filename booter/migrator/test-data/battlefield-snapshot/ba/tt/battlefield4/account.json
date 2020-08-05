@@ -1,0 +1,41 @@
+{
+  "permissions": [
+    {
+      "owner": "battlefield4",
+      "name": "owner",
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "parent": "owner",
+      "owner": "battlefield4",
+      "name": "active",
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+            "weight": 1
+          }
+        ],
+        "accounts": [
+          {
+            "permission": {
+              "actor": "battlefield4",
+              "permission": "eosio.code"
+            },
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": null
+}

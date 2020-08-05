@@ -10,7 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
-* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity 
+* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
 * Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
 * Added `merged-filter` application (not running by default), that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
 * Added `tokenmeta` application, with its flags
@@ -30,6 +30,8 @@ date.
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 
 ### Changed
+* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
+* **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
 * Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
 * EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
 * Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
@@ -40,6 +42,78 @@ date.
 ### Fixed
 * Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
 
+#### FluxDB to StateDB Migration
+
+FluxDB required an architecture re-design to fit with our vision about the tool and make it chain agnostic (so
+it is easier to re-use on our other supported chain).
+
+The code that was previously found here has been extracted to its own library (https://github.com/dfuse-io/fluxdb).
+There is now a new app named StateDB (`statedb` is the app identifier) in dfuse for EOSIO that uses FluxDB to
+support all previous API endpoints served by the FluxDB app as well as now offering a gRPC interface.
+
+While doing this, we had to change how keys and data were written to the underlying engine. This means that all
+your previous data stored cannot be read anymore by the new StateDB and that new data written by StateDB will
+not be compatible on a previous instance.
+
+What that means exactly is that StateDB will require to re-index all the current merged blocks up to live blocks
+before being able to serve requests. This is the main reason why we decided to rename the app, so you are forced
+to peform this step.
+
+Here the steps required to migrate to the new `statedb` app:
+
+- In your `dfuse.yaml` config, under replace the `fluxdb` app by `statedb` and all flags prefixed with
+  `fluxdb-` must now be prefixed with `statedb-`.
+
+  From:
+
+  ```yaml
+  start:
+  args:
+  - ...
+  - fluxdb
+  - ...
+  flags:
+    ...
+    fluxdb-http-listen-addr: :9090
+    ...
+  ```
+
+  To:
+
+  ```yaml
+  start:
+  args:
+  - ...
+  - statedb
+  - ...
+  flags:
+    ...
+    statedb-http-listen-addr: :9090
+    ...
+  ```
+
+- If you had a customization for `fluxdb-statedb-dsn`, you must first renamed it `statedb-store-dsn`
+  to `statedb-store-dsn`. **Important** You must use a new fresh database, so update your argument
+  so it points to a new database, ensuring we don't overwrite data over old now incompatible data.
+  If you did not customize the flag, continue reading, the default value has changed to point to a
+  fresh storage folder.
+
+  If you had a customization for `eosws-flux-addr`, rename to `eosws-statedb-grpc-addr` and ensure it
+  points to the StateDB GRPC address (and not the HTTP address), its value must be the same as the flag
+  `statedb-grpc-listen-addr`.
+
+- If you have a custom `fluxdb-max-threads` flag, removed it, customizing this value is not supported
+  anymore.
+
+- From an operator standpoint, what we suggest is to craft a `dfuse.yaml` config that starts StateDB
+  only in inject mode only. You let this instance run until StateDB reaches the live block of your
+  network.
+
+  Once you have reached this point, you can now perform a switch to the new StateDB database. Stop
+  the injecting instance. Stop your production instance, renaming old app id `fluxdb` to `statedb`
+  (and all flags) then reconfigure it so the `statedb-store-dsn` points to the database populated
+  by the injecting instance. At this point, you can restart your production node and continue
+  normally using the new `statedb` app.
 
 # [v0.1.0-beta4] 2020-06-23
 

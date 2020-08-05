@@ -8,7 +8,7 @@ start:
   - dgraphql
   - eosq
   - eosws
-  - fluxdb
+  - statedb
   - merger
   - mindreader
   - node-manager
