@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/hex"
@@ -22,7 +23,6 @@ import (
 var showValue = false
 
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
-
 var statedbScanCmd = &cobra.Command{Use: "scan", Short: "scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from StateDB store", RunE: prefixScanE, Args: cobra.ExactArgs(1)}
 
@@ -38,6 +38,7 @@ func init() {
 	}
 
 	statedbCmd.PersistentFlags().String("dsn", defaultBadger, "StateDB KV store DSN")
+	statedbCmd.PersistentFlags().StringP("table", "t", "00", "StateDB table id (single byte, hexadecimal encoded) to query from")
 
 	statedbScanCmd.Flags().Bool("unlimited", false, "scan will ignore the limit")
 	statedbCmd.PersistentFlags().Int("limit", 100, "limit the number of rows when doing scan or prefix")
@@ -54,6 +55,11 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 		limit = store.Unlimited
 	}
 
+	table, err := hex.DecodeString(viper.GetString("table"))
+	if err != nil {
+		return fmt.Errorf("table: %w", err)
+	}
+
 	startKey, err := hex.DecodeString(args[0])
 	if err != nil {
 		return fmt.Errorf("start key: %w", err)
@@ -64,8 +70,8 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("end key: %w", err)
 	}
 
-	start := append([]byte{0x00}, startKey...)
-	end := append([]byte{0x00}, endKey...)
+	start := append(table, startKey...)
+	end := append(table, endKey...)
 
 	rangeScan(kv, start, end, limit)
 	return nil
@@ -77,12 +83,17 @@ func prefixScanE(cmd *cobra.Command, args []string) (err error) {
 		return err
 	}
 
+	table, err := hex.DecodeString(viper.GetString("table"))
+	if err != nil {
+		return fmt.Errorf("table: %w", err)
+	}
+
 	prefixKey, err := hex.DecodeString(args[0])
 	if err != nil {
 		return fmt.Errorf("prefix key: %w", err)
 	}
 
-	prefix := append([]byte{0x00}, prefixKey...)
+	prefix := append(table, prefixKey...)
 	prefixScan(kv, prefix, viper.GetInt("limit"))
 	return nil
 }
@@ -136,7 +147,22 @@ func printIterator(it *store.Iterator) error {
 	return nil
 }
 
+var tableRows = []byte{0x00}
+var tableCheckpoint = []byte{0x01}
+
 func formatKey(key []byte) (string, error) {
+	if bytes.Equal(key[0:1], tableRows) {
+		return formatRowsKey(key)
+	}
+
+	if bytes.Equal(key[0:1], tableCheckpoint) {
+		return formatCheckpointKey(key)
+	}
+
+	return "", fmt.Errorf("unknown key table")
+}
+
+func formatRowsKey(key []byte) (string, error) {
 	key = key[1:]
 	if len(key) == 0 {
 		return "", nil
@@ -174,4 +200,8 @@ func formatKey(key []byte) (string, error) {
 	}
 
 	return "", fmt.Errorf("unknown key collection")
+}
+
+func formatCheckpointKey(key []byte) (string, error) {
+	return hex.EncodeToString(key[1:]), nil
 }

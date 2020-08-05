@@ -74,11 +74,11 @@ func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
 
 	fdb := fluxdb.New(kvStore, &statedb.BlockMapper{})
 	fdb.SetSharding(0, int(shardsInt))
-	lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
+	_, lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {
 		return err
 	}
-	fmt.Println("last block: ", lastBlock)
+	fmt.Println("Last block", lastBlock.String())
 	return nil
 }
 
