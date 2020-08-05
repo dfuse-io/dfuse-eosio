@@ -18,13 +18,12 @@ import (
 	"fmt"
 	"testing"
 
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 )
 
 func Test_onGetAccount(t *testing.T) {
-
 	subscriptionHub := newTestSubscriptionHub(t, 0, nil)
-	fluxClient := fluxdb.NewTestFluxClient()
+	stateClient := pbstatedb.NewMockStateClient()
 
 	cases := []struct {
 		name           string
@@ -63,7 +62,7 @@ func Test_onGetAccount(t *testing.T) {
 				testAccountGetter,
 				NewMockDB(""), // FIXME: this THING is NOT needed for those tests.. they are too all-encompassing.. better tests are needed.
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,

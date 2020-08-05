@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dstore"
+	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
@@ -38,18 +39,18 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	RunE:  checkTrxdbBlocksE,
 }
 
-var checkFluxShardsCmd = &cobra.Command{
-	Use:   "flux-shards {dsn} {shard-count}",
-	Short: "Checks to see if all shards are aligned in flux reprocessing",
+var checkStateDBShardsCmd = &cobra.Command{
+	Use:   "statedb-shards {dsn} {shard-count}",
+	Short: "Checks to see if all shards are aligned in StateDB reprocessing",
 	Args:  cobra.ExactArgs(2),
-	RunE:  checkFluxShardsE,
+	RunE:  checkStateDBShardsE,
 }
 
 func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkMergedBlocksCmd)
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
-	checkCmd.AddCommand(checkFluxShardsCmd)
+	checkCmd.AddCommand(checkStateDBShardsCmd)
 
 	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
 	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
@@ -58,7 +59,7 @@ func init() {
 	checkTrxdbBlocksCmd.Flags().Int64P("end-block", "e", 4294967296, "Block number to end at")
 }
 
-func checkFluxShardsE(cmd *cobra.Command, args []string) error {
+func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
 	storeDSN := args[0]
 	shards := args[1]
 	shardsInt, err := strconv.ParseInt(shards, 10, 32)
@@ -71,7 +72,7 @@ func checkFluxShardsE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore)
+	fdb := fluxdb.New(kvStore, &statedb.BlockMapper{})
 	fdb.SetSharding(0, int(shardsInt))
 	lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {

@@ -1,6 +1,7 @@
 package apiproxy
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -63,9 +64,15 @@ func (p *proxy) Launch() error {
 	router.PathPrefix("/v0").Handler(p.eoswsProxy)
 	router.PathPrefix("/").Handler(p.rootProxy)
 
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
+	}
+
 	p.httpServer = &http.Server{
-		Addr:    p.config.HTTPListenAddr,
-		Handler: router,
+		Addr:     p.config.HTTPListenAddr,
+		Handler:  router,
+		ErrorLog: errorLogger,
 	}
 
 	zlog.Info("starting http server", zap.String("listen_addr", p.config.HTTPListenAddr))
@@ -81,6 +88,7 @@ func (p *proxy) Launch() error {
 			Addr:      p.config.HTTPSListenAddr,
 			TLSConfig: m.TLSConfig(),
 			Handler:   router,
+			ErrorLog:  errorLogger,
 		}
 		go func() {
 			err := p.httpsServer.ListenAndServeTLS("", "")

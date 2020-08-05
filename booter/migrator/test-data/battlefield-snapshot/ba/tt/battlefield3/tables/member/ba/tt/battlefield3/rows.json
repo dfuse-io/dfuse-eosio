@@ -1,0 +1,5 @@
+[
+  {"key":"","payer":"battlefield3","json_data":{"expires_at":"1970-01-01T00:00:00","created_at":"2020-07-27T21:40:12","memo":"from onerror handler","amount":"0 ","account":"onerror","id":0},"secondary_indexes":[{"kind":"ui64","value":"onerror","payer":"battlefield3"}]}
+,
+  {"key":"............1","payer":"battlefield3","json_data":{"expires_at":"1970-01-01T00:00:00","created_at":"2020-07-27T21:40:12","memo":"from nested onerror handler","amount":"0 ","account":"nestonerror","id":1},"secondary_indexes":[{"kind":"ui64","value":"nestonerror","payer":"battlefield3"}]}
+]

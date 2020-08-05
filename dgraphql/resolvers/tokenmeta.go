@@ -325,6 +325,10 @@ func (r *Root) QueryTokenBalances(ctx context.Context, args *TokenBalancesReques
 		return nil, err
 	}
 
+	if len(resp.Tokens) <= 0 {
+		return nil, dgraphql.Errorf(ctx, "unable to get token with symbol %q on contract %q", args.Symbol, args.Contract)
+	}
+
 	contractSymbolBalances := resp.Tokens[0].Balances
 	if len(contractSymbolBalances) == 0 {
 		dmetering.EmitWithContext(dmetering.Event{

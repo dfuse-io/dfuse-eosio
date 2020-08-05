@@ -3,50 +3,48 @@ module github.com/dfuse-io/dfuse-eosio
 go 1.14
 
 require (
-	cloud.google.com/go/bigtable v1.2.0
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.6
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/ShinyTrinkets/overseer v0.3.0
-	github.com/abourget/llerrgroup v0.2.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
 	github.com/andreyvit/diff v0.0.0-20170406064948-c7f18ee00883
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blevesearch/bleve v1.0.9
-	github.com/coreos/bbolt v1.3.2
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200724174723-8b30f0cb651d
-	github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736
+	github.com/dfuse-io/bstream v0.0.2-0.20200730171716-a46b819bf678
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
-	github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0
+	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
 	github.com/dfuse-io/dgraphql v0.0.2-0.20200702205930-77425a6665f8
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
-	github.com/dfuse-io/dhammer v0.0.0-20200430014759-1292c689a063
+	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20200715193603-ea2a15e9e193
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
-	github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb
+	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
-	github.com/dfuse-io/eosio-boot v0.0.0-20200723192516-efc3ee9b7b4d
+	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
+	github.com/dfuse-io/fluxdb v0.0.0-20200804205803-c8d3765ea94f
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
-	github.com/dfuse-io/kvdb v0.0.2-0.20200710010346-890c913a6d19
+	github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.3-0.20200724152216-947b231c83f9
 	github.com/dfuse-io/node-manager v0.0.2-0.20200730195524-19d60a267bcd
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3
+	github.com/dfuse-io/pbgo v0.0.6-0.20200729035815-5da1dbc5e2ac
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
 	github.com/dfuse-io/search v0.0.2-0.20200803165036-9ae17352423a
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
-	github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82
+	github.com/eoscanada/eos-go v0.9.1-0.20200729231232-b7325cffe680
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
@@ -58,11 +56,9 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
-	github.com/hidal-go/hidalgo v0.0.0-20190814174001-42e03f3b5eaa
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/manifoldco/promptui v0.7.0
-	github.com/minio/highwayhash v1.0.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
@@ -80,10 +76,6 @@ require (
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
-	golang.org/x/mod v0.3.0 // indirect
-	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200702044944-0cc1aa72b347 // indirect
-	google.golang.org/api v0.15.0
 	google.golang.org/grpc v1.26.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8

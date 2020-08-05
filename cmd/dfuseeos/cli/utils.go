@@ -161,7 +161,7 @@ func maybeCheckNodeosVersion() {
 			We were unable to detect "nodeos" version on your system. This can be due to
 			one of the following reasons:
 			- You don't have "nodeos" installed on your system
-			- It's installed by no referred by your PATH environment variable, so we did not find it
+			- It's installed but not referred by your PATH environment variable, so we did not find it
 			- It's installed but execution of "nodeos --version" failed
 
 			Make sure you have a dfuse instrumented 'nodeos' binary, follow instructions
@@ -211,8 +211,8 @@ func maybeCheckNodeosVersion() {
 	}
 }
 
-func cliErrorAndExit(message string) {
-	fmt.Println(aurora.Red(message).String())
+func cliErrorAndExit(message string, args ...interface{}) {
+	fmt.Println(aurora.Red(fmt.Sprintf(message, args...)).String())
 	os.Exit(1)
 }
 

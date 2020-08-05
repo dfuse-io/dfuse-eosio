@@ -16,10 +16,10 @@ package eosws
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/dfuse-io/derr"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/eoscanada/eos-go"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 )
 
 type ABIGetter interface {
@@ -27,20 +27,25 @@ type ABIGetter interface {
 }
 
 type DefaultABIGetter struct {
-	client fluxdb.Client
+	client pbstatedb.StateClient
 }
 
-func NewDefaultABIGetter(client fluxdb.Client) *DefaultABIGetter {
+func NewDefaultABIGetter(client pbstatedb.StateClient) *DefaultABIGetter {
 	return &DefaultABIGetter{
 		client: client,
 	}
 }
 
-func (g *DefaultABIGetter) GetABI(ctx context.Context, blockNum uint32, account eos.AccountName) (*eos.ABI, error) {
-	response, err := g.client.GetABI(ctx, blockNum, account)
+func (g *DefaultABIGetter) GetABI(ctx context.Context, blockNum uint32, contract eos.AccountName) (*eos.ABI, error) {
+	response, err := g.client.GetABI(ctx, &pbstatedb.GetABIRequest{BlockNum: uint64(blockNum), Contract: string(contract)})
 	if err != nil {
-		return nil, derr.Wrapf(err, "unable to get ABI for %s", account)
+		return nil, fmt.Errorf("unable to get ABI for %q: %w", contract, err)
 	}
 
-	return response.ABI, nil
+	abi := new(eos.ABI)
+	if err = eos.UnmarshalBinary(response.RawAbi, abi); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal ABI for %q: %w", contract, err)
+	}
+
+	return abi, nil
 }

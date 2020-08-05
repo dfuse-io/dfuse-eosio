@@ -1,0 +1,32 @@
+{
+  "permissions": [
+    {
+      "owner": "battlefeeld4",
+      "name": "owner",
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "key": "PUB_WA_69UgrAmzcfTKUvJ5vbQ41GsdPMjopig6kgo6nhgntzp9QZEziFsUVGVCu2m9Q1L5D",
+            "weight": 1
+          }
+        ]
+      }
+    },
+    {
+      "parent": "owner",
+      "owner": "battlefeeld4",
+      "name": "active",
+      "authority": {
+        "threshold": 1,
+        "keys": [
+          {
+            "key": "PUB_WA_69UgrAmzcfTKUvJ5vbQ41GsdPMjopig6kgo6nhgntzp9QZEziFsUVGVCu2m9Q1L5D",
+            "weight": 1
+          }
+        ]
+      }
+    }
+  ],
+  "link_auths": null
+}

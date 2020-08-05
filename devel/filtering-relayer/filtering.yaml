@@ -7,7 +7,7 @@ start:
   - dgraphql
   - eosq
   - eosws
-  - fluxdb
+  - statedb
   - relayer
   - search-archive
   - search-indexer
