@@ -10,6 +10,8 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `--mindreader-merge-threshold-block-age` when processing blocks with a blocktime older than this threshold, they will be automatically merged: (default 12h)
+* Added `--mindreader-batch-mode` to force always merging blocks (like --mindreader-merge-and-store-directly did) AND overwriting existing files in destination.
 * Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
 * Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
 * Added `merged-filter` application (not running by default), that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
@@ -25,6 +27,8 @@ date.
   * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
+* The `--mindreader-merge-and-store-directly` flag was removed. That behavior is now activated by default when encountering 'old blocks'. Also see new flag mindreader-batch-mode.
+* The `--mindreader-discard-after-stop-num` flag was removed, its implementation was too complex and it had no case where it was really useful.
 * The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
 * The `--eosq-on-demand` flag was removed, this was unused in the codebase.
 * The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
@@ -32,6 +36,8 @@ date.
 ### Changed
 * **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
+* Mindreader now automatically start producing "merged blocks" instead of "one-block-files" the blocks are passed a certain age threshold (based on blocktime) OR if a "blockmeta" service can be reached and validates that the blocks numbers are lower than the Last Irreversible Block (LIB). When those conditions cease to be true - close to HEAD -,  it changes to producing one-block-files again (until restarted)
+* Mindreader can now use flag `--common-blockmeta-addr` so it can determine the network LIB and start producing "merged blocks"
 * Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
 * EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
 * Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
