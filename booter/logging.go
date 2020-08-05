@@ -1,4 +1,4 @@
-package boot
+package booter
 
 import (
 	"github.com/dfuse-io/logging"

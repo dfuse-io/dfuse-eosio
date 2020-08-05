@@ -50,7 +50,7 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 			// Billable event on REST API endpoint
 			// WARNING: Ingress / Egress bytess is taken care by the middleware
 			//////////////////////////////////////////////////////////////////////
-			//TODO: WARNING - /v0/state (flux) bill one document even though they may be very large
+			//TODO: WARNING - /v0/state (StateDB) bill one document even though they may be very large
 			dmetering.EmitWithContext(dmetering.Event{
 				Source:         "eosws",
 				Kind:           "REST API - Chain State",

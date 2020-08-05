@@ -1,4 +1,4 @@
-package boot
+package booter
 
 import (
 	"fmt"

@@ -27,8 +27,8 @@ import (
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
@@ -59,7 +59,7 @@ func (ws *WSConn) onGetTableRows(ctx context.Context, msg *wsmsg.GetTableRows) {
 		return
 	}
 
-	fetchTableRows(ws, startBlockNum, msg, ws.abiGetter, ws, ws.fluxClient, ws.irreversibleFinder, ctx, ws.subscriptionHub)
+	fetchTableRows(ws, startBlockNum, msg, ws.abiGetter, ws, ws.stateClient, ws.irreversibleFinder, ctx, ws.subscriptionHub)
 }
 
 func fetchTableRows(
@@ -68,7 +68,7 @@ func fetchTableRows(
 	msg *wsmsg.GetTableRows,
 	abiGetter ABIGetter,
 	emitter Emitter,
-	fluxClient fluxdb.Client,
+	stateClient pbstatedb.StateClient,
 	irrFinder IrreversibleFinder,
 	ctx context.Context,
 	hub *hub.SubscriptionHub,
@@ -79,26 +79,33 @@ func fetchTableRows(
 	if msg.Fetch {
 		spanContext, fetchSpan := dtracing.StartSpan(ctx, "fetch table rows")
 		if msg.StartBlock == 0 {
-			zlogger.Info("user requested start block 0, let fluxdb turns into head block instead of us doing it to prevent race condition")
+			zlogger.Info("user requested start block 0, let statedb turns into head block instead of us doing it to prevent race condition")
 			startBlockNum = 0
 		}
 
-		request := fluxdb.NewGetTableRequest(msg.Data.Code, *msg.Data.Scope, msg.Data.TableName, "name")
-		zlogger.Info("requesting data from fluxdb", zap.Uint32("start_block_num", startBlockNum), zap.Any("request", request))
+		request := &pbstatedb.StreamTableRowsRequest{
+			BlockNum: uint64(startBlockNum),
+			Contract: string(msg.Data.Code),
+			Table:    string(msg.Data.TableName),
+			Scope:    string(*msg.Data.Scope),
+			ToJson:   true,
+		}
 
-		response, err := fluxClient.GetTable(spanContext, startBlockNum, request)
+		zlogger.Info("requesting data from statedb", zap.Any("request", request))
+		ref, snapshot, err := fetchStateTableRows(spanContext, stateClient, request)
 		if err != nil {
-			emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "fluxdb client request failed"))
+			emitter.EmitErrorReply(ctx, msg, fmt.Errorf("fetch table rows: %w", err))
 			fetchSpan.End()
 			return
 		}
-		metrics.DocumentResponseCounter.Inc()
-		emitter.EmitReply(ctx, msg, wsmsg.NewTableSnapshot(response.Rows))
 
-		if response.UpToBlockNum != 0 {
-			startBlockID = response.UpToBlockID
-			startBlockNum = eos.BlockNum(startBlockID)
-			zlogger.Info("flux response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
+		metrics.DocumentResponseCounter.Inc()
+		emitter.EmitReply(spanContext, msg, snapshot)
+
+		if ref.UpToBlock != nil {
+			startBlockID = ref.UpToBlock.ID()
+			startBlockNum = uint32(ref.UpToBlock.Num())
+			zlogger.Info("state client response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
 		}
 		fetchSpan.End()
 	}
@@ -241,6 +248,16 @@ func newDBRow(data []byte, tableName eos.TableName, abi *eos.ABI, payer string, 
 		row.Hex = hex.EncodeToString(data)
 	}
 	return row
+}
+
+func fetchStateTableRows(ctx context.Context, stateClient pbstatedb.StateClient, request *pbstatedb.StreamTableRowsRequest) (ref *pbstatedb.StreamReference, out *wsmsg.TableSnapshot, err error) {
+	out = new(wsmsg.TableSnapshot)
+	ref, err = pbstatedb.ForEachTableRows(ctx, stateClient, request, func(row *pbstatedb.TableRowResponse) error {
+		out.Data.Rows = append(out.Data.Rows, []byte(row.Json))
+		return nil
+	})
+
+	return
 }
 
 type TableDeltaHandler struct {

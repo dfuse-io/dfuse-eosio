@@ -31,8 +31,8 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -201,13 +201,13 @@ func TestOnGetActionsTraces(t *testing.T) {
 			archiveStore := dstore.NewMockStore(nil)
 
 			subscriptionHub := newTestSubscriptionHub(t, 0, archiveStore)
-			fluxClient := fluxdb.NewTestFluxClient()
+			stateClient := pbstatedb.NewMockStateClient()
 			handler := NewWebsocketHandler(
 				nil,
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,

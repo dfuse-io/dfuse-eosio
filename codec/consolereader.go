@@ -84,7 +84,6 @@ func (l *ConsoleReader) setupScanner() {
 		close(l.readBuffer)
 		close(l.done)
 	}()
-
 }
 
 func (l *ConsoleReader) Done() <-chan interface{} {

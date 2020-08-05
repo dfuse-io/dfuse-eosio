@@ -26,7 +26,7 @@ end note
 node search
 
 node "trxdb-loader" as trxdbLoader
-node fluxdb
+node statedb
 
 database "Key/Value Store" as kvstore
 note right of kvstore
@@ -61,10 +61,10 @@ relayer1 <-- search : gRPC
 search <-- dgraphql
 dgraphql -> kvstore
 
-relayer1 <-- fluxdb
+relayer1 <-- statedb
 relayer1 <-- trxdbLoader
 
-fluxdb --> kvstore
+statedb --> kvstore
 trxdbLoader --> kvstore
 
 actor user

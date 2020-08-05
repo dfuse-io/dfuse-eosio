@@ -1,0 +1,17 @@
+my.db
+*.test
+*.db
+*.json.gz
+*~
+*.orig
+*.rej
+vendor
+
+.envrc
+.idea
+/data/
+
+.DS_store
+*.bbolt
+*.bolt
+badger.db/
