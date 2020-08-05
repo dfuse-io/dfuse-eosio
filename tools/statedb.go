@@ -203,5 +203,5 @@ func formatRowsKey(key []byte) (string, error) {
 }
 
 func formatCheckpointKey(key []byte) (string, error) {
-	return hex.EncodeToString(key[1:]), nil
+	return string(key[1:]), nil
 }
