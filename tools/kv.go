@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
@@ -30,7 +31,13 @@ func init() {
 	kvCmd.AddCommand(kvScanCmd)
 	kvCmd.AddCommand(kvGetCmd)
 
-	kvCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
+	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
+	cwd, err := os.Getwd()
+	if err == nil {
+		defaultBadger = "badger://" + cwd + "/dfuse-data/storage/statedb-v1"
+	}
+
+	kvCmd.PersistentFlags().String("dsn", defaultBadger, "KVStore DSN")
 	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
 	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
 }

@@ -80,6 +80,11 @@ usage() {
   echo "    -c                Clean actual data directory first"
   echo "    -s <snapshot>     Define the snapshot file to use to start from"
   echo "    -e <stopBlock>    Define the stop block where to stop processing"
+  echo ""
+  echo "Environment"
+  echo "    INFO=<app>     Turn info logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo "    DEBUG=<app>    Turn debug logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
+  echo ""
 }
 
 main "$@"
