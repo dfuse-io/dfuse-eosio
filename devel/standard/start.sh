@@ -2,15 +2,10 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+dfuseeos="$ROOT/../dfuseeos"
 clean=
 
-finish() {
-    kill -s TERM $active_pid &> /dev/null || true
-}
-
 main() {
-  current_dir="`pwd`"
-  trap "cd \"$current_dir\"" EXIT
   pushd "$ROOT" &> /dev/null
 
   while getopts "hc" opt; do
@@ -22,13 +17,11 @@ main() {
   done
   shift $((OPTIND-1))
 
-  compile_dfuseeos
-
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data &> /dev/null || true
   fi
 
-  dfuseeos -c $(basename $ROOT).yaml start
+  exec $dfuseeos -c $(basename $ROOT).yaml start
 }
 
 usage_error() {
@@ -48,15 +41,6 @@ usage() {
   echo ""
   echo "Options"
   echo "    -c             Clean actual data directory first"
-}
-
-compile_dfuseeos() {
-  pushd "$ROOT/../.." &> /dev/null
-    go install ./cmd/dfuseeos
-    if [[ $? != 0 ]]; then
-      exit 1
-    fi
-  popd &> /dev/null
 }
 
 main "$@"
