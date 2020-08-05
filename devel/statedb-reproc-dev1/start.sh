@@ -2,6 +2,7 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+dfuseeos="$ROOT/../dfuseeos"
 clean=
 active_pid=
 
@@ -10,8 +11,7 @@ finish() {
 }
 
 main() {
-  current_dir="`pwd`"
-  trap "cd \"$current_dir\"" EXIT
+  trap "finish" EXIT
   pushd "$ROOT" &> /dev/null
 
   while getopts "hc" opt; do
@@ -23,14 +23,12 @@ main() {
   done
   shift $((OPTIND-1))
 
-  compile_dfuseeos
-
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data &> /dev/null || true
   fi
 
   if [[ ! -d "dfuse-data" ]]; then
-    dfuseeos -c injector.yaml start &
+    $dfuseeos -c injector.yaml start &
     active_pid=$!
 
     # We need to sleep more than really needed due to a "missing feature" in
@@ -40,7 +38,7 @@ main() {
     kill -s TERM $active_pid &> /dev/null
   fi
 
-  dfuseeos -c server.yaml start
+  exec $dfuseeos -c server.yaml start
 }
 
 usage_error() {
@@ -60,15 +58,6 @@ usage() {
   echo ""
   echo "Options"
   echo "    -c             Clean actual data directory first"
-}
-
-compile_dfuseeos() {
-  pushd "$ROOT/../.." &> /dev/null
-    go install ./cmd/dfuseeos
-    if [[ $? != 0 ]]; then
-      exit 1
-    fi
-  popd &> /dev/null
 }
 
 main "$@"

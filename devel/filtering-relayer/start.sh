@@ -2,6 +2,7 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+dfuseeos="$ROOT/../dfuseeos"
 clean=
 all=true
 only_filtering=
@@ -14,8 +15,7 @@ finish() {
 }
 
 main() {
-  current_dir="`pwd`"
-  trap finish EXIT
+  trap "finish" EXIT
   pushd "$ROOT" &> /dev/null
 
   while getopts "hcfg" opt; do
@@ -29,8 +29,6 @@ main() {
   done
   shift $((OPTIND-1))
 
-  compile_dfuseeos
-
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data &> /dev/null || true
   fi
@@ -40,11 +38,11 @@ main() {
   sleep 2
 
   if [[ $all == true || $only_global == true ]]; then
-    dfuseeos -c global.yaml start &
+    $dfuseeos -c global.yaml start &
   fi
 
   if [[ $all == true || $only_filtering == true ]]; then
-    dfuseeos -c filtering.yaml start &
+    $dfuseeos -c filtering.yaml start &
   fi
 
   for job in `jobs -p`; do
@@ -69,15 +67,6 @@ usage() {
   echo ""
   echo "Options"
   echo "    -c             Clean actual data directory first"
-}
-
-compile_dfuseeos() {
-  pushd "$ROOT/../.." &> /dev/null
-    go install ./cmd/dfuseeos
-    if [[ $? != 0 ]]; then
-      exit 1
-    fi
-  popd &> /dev/null
 }
 
 main "$@"

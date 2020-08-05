@@ -24,7 +24,7 @@ func init() {
 			cmd.Flags().String("statedb-store-dsn", StateDBDSN, "kvdb connection string to State database")
 			cmd.Flags().String("statedb-http-listen-addr", StateDBHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("statedb-grpc-listen-addr", StateDBGRPCServingAddr, "Address to listen for incoming gRPC requests")
-			cmd.Flags().String("v-reproc-shard-store-url", "file://{dfuse-data-dir}/statedb/reproc-shards", "[BATCH] Storage url where all reproc shard write requests should be written to")
+			cmd.Flags().String("statedb-reproc-shard-store-url", "file://{dfuse-data-dir}/statedb/reproc-shards", "[BATCH] Storage url where all reproc shard write requests should be written to")
 			cmd.Flags().Uint64("statedb-reproc-shard-count", 0, "[BATCH] Number of shards to split in (in 'reproc-sharder' mode), or join (in 'reproc-injector' mode)")
 			cmd.Flags().Uint64("statedb-reproc-shard-start-block-num", 0, "[BATCH] Start processing block logs at this height, must be on a 100-blocks boundary")
 			cmd.Flags().Uint64("statedb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing block logs at this height, must be on a 100-blocks boundary")

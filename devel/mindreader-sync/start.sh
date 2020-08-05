@@ -45,7 +45,11 @@ main() {
 }
 
 valid_networks() {
-  ls mindreader
+  to_joined_list `ls mindreader | sort`
+}
+
+to_joined_list() {
+  echo "$@" | sed 's/ /, /g' | sed 's/, $//'
 }
 
 usage_error() {
