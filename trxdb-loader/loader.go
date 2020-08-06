@@ -17,6 +17,7 @@ package trxdb_loader
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -347,10 +348,11 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	defer cancel()
 	err := l.db.Flush(ctx)
 	if err != nil {
+		randSource := rand.NewSource(time.Now().UnixNano())
 		for ok := true; ok; ok = l.retryCnt <= MaxRetries && err != nil {
 			zlog.Error("db flush failed", zap.Error(err))
-			retryBackoff := time.Duration(l.retryCnt) * BackoffBaseTime
-			zlog.Info("retrying flush", zap.Float64("backoff_time", retryBackoff.Seconds()))
+			retryBackoff := time.Duration(l.retryCnt)*BackoffBaseTime + time.Duration(rand.New(randSource).Intn(120))*time.Second
+			zlog.Info("retrying flush", zap.Float64("backoff_time_sec", retryBackoff.Seconds()))
 
 			time.Sleep(retryBackoff)
 			ctx, cancel = context.WithTimeout(context.Background(), 1*time.Minute)
