@@ -45,8 +45,8 @@ type TrxDBLoader struct {
 	batchSize                 uint64
 	lastTickBlock             uint64
 	lastTickTime              time.Time
-	lastBlockSecs             []float64
-	lastBlockSecsPointer      int
+	prevBlockRates            []float64
+	prevBlockRatesPointer     int
 	blocksStore               dstore.Store
 	blockFilter               func(blk *bstream.Block) error
 	blockStreamAddr           string
@@ -81,8 +81,7 @@ func NewTrxDBLoader(
 		retryCnt:                  1,
 		blockFilter:               blockFilter,
 		truncationWindow:          truncationWindow,
-		lastBlockSecs:             make([]float64, 100),
-		lastBlockSecsPointer:      0,
+		prevBlockRates:            make([]float64, 100),
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -401,29 +400,29 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 	if l.lastTickTime.Before(now.Add(-5 * time.Second)) {
 		if !l.lastTickTime.IsZero() {
 
-			blockSec := float64(blockNum-l.lastTickBlock) / float64(now.Sub(l.lastTickTime)/time.Second)
+			blockRate := float64(blockNum-l.lastTickBlock) / float64(now.Sub(l.lastTickTime)/time.Second)
 
-			var totalBlockSec float64 = 0
-			var avgBlockSec float64 = 0
+			var totalBlockRate float64
+			var avgBlockRate float64
 
-			l.lastBlockSecs[l.lastBlockSecsPointer%len(l.lastBlockSecs)] = blockSec
-			l.lastBlockSecsPointer++
+			l.prevBlockRates[l.prevBlockRatesPointer%len(l.prevBlockRates)] = blockRate
+			l.prevBlockRatesPointer++
 
-			for _, curBlockSec := range l.lastBlockSecs {
-				totalBlockSec += curBlockSec
+			for _, curBlockSec := range l.prevBlockRates {
+				totalBlockRate += curBlockSec
 			}
 
-			if l.lastBlockSecsPointer < len(l.lastBlockSecs) {
-				avgBlockSec = totalBlockSec / float64(l.lastBlockSecsPointer)
+			if l.prevBlockRatesPointer < len(l.prevBlockRates) {
+				avgBlockRate = totalBlockRate / float64(l.prevBlockRatesPointer)
 			} else {
-				avgBlockSec = totalBlockSec / float64(len(l.lastBlockSecs))
+				avgBlockRate = totalBlockRate / float64(len(l.prevBlockRates))
 			}
 
 			zlog.Info("5sec AVG INSERT RATE",
 				zap.Uint64("block_num", blockNum),
 				zap.Uint64("last_tick_block", l.lastTickBlock),
-				zap.Float64("block_sec", math.Round(blockSec*100)/100),
-				zap.Float64("100_tick_avg", math.Round(avgBlockSec*100)/100),
+				zap.Float64("block_rate_last_5s", math.Round(blockRate*100)/100),
+				zap.Float64("block_rate_last_500s", math.Round(avgBlockRate*100)/100),
 			)
 		}
 		l.lastTickTime = now

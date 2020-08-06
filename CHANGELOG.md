@@ -46,6 +46,7 @@ date.
 * Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
 
 ### Fixed
+* Fixed issue with `mindreader` not stopping correctly (and showing any error) if the bootstrap phase (ex: restore-from-snapshot) failed.
 * Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
 
 #### FluxDB to StateDB Migration
