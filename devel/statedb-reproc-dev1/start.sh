@@ -23,19 +23,17 @@ main() {
   done
   shift $((OPTIND-1))
 
-  if [[ $clean == "true" ]]; then
-    rm -rf dfuse-data &> /dev/null || true
+  if [[ $clean == "true" && -d "dfuse-data" ]]; then
+    rm -rf dfuse-data 1> /dev/null
   fi
 
   if [[ ! -d "dfuse-data" ]]; then
-    $dfuseeos -c injector.yaml start &
-    active_pid=$!
-
     # We need to sleep more than really needed due to a "missing feature" in
     # statedb. StateDB does not flush its accumulated write on exit of the application
     # so writes are not flushed when not enough block has passed.
-    sleep 10
-    kill -s TERM $active_pid &> /dev/null
+    #
+    # The following call is blocking (due to usage of KILL_AFTER)
+    KILL_AFTER=15 $dfuseeos -c injector.yaml start
   fi
 
   exec $dfuseeos -c server.yaml start

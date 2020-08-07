@@ -45,7 +45,7 @@ func init() {
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("dsn"))
+	kv, err := store.New(viper.GetString("dsn"), store.WithEmptyValue())
 	if err != nil {
 		return err
 	}
