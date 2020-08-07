@@ -19,15 +19,15 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eoscanada/eos-go"
-
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosrest"
-	fluxcli "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/tidwall/gjson"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func GetKeyAccounts(fluxClient fluxcli.Client) http.Handler {
+func GetKeyAccounts(stateClient pbstatedb.StateClient) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
@@ -46,29 +46,37 @@ func GetKeyAccounts(fluxClient fluxcli.Client) http.Handler {
 		}
 
 		if pubKey == "" {
-			//val := url.Values{}
-			//val.Set("public_key", pubKey)
-			//eosrest.WriteError(w, r, derr.RequestValidationError(ctx, val))
-			eosrest.WriteJSON(w, r, &fluxcli.GetAccountByPubKeyResponses{
-				AccountNames: []eos.AccountName{},
+			eosrest.WriteJSON(w, r, &GetAccountByPubKeyResponses{
+				AccountNames: []string{},
 			})
 			return
 
 		}
 
-		resp, err := fluxClient.GetAccountByPubKey(ctx, 0, pubKey)
+		resp, err := stateClient.GetKeyAccounts(ctx, &pbstatedb.GetKeyAccountsRequest{
+			BlockNum:  0,
+			PublicKey: pubKey,
+		})
 
 		if err != nil {
-			response := derr.ToErrorResponse(ctx, err)
-			if response.Code == "data_public_key_not_found_error" {
-				eosrest.WriteJSON(w, r, &fluxcli.GetAccountByPubKeyResponses{
-					AccountNames: []eos.AccountName{},
+			if status.Code(err) == codes.NotFound {
+				eosrest.WriteJSON(w, r, &GetAccountByPubKeyResponses{
+					AccountNames: []string{},
 				})
 				return
 			}
+
 			eosrest.WriteError(w, r, derr.Wrap(err, fmt.Sprintf("failed to retrieve account for key: %s", pubKey)))
 		}
 
-		eosrest.WriteJSON(w, r, resp)
+		eosrest.WriteJSON(w, r, GetAccountByPubKeyResponses{
+			BlockNum:     uint32(resp.BlockNum),
+			AccountNames: resp.Accounts,
+		})
 	})
+}
+
+type GetAccountByPubKeyResponses struct {
+	BlockNum     uint32   `json:"block_num"`
+	AccountNames []string `json:"account_names"`
 }

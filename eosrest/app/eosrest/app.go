@@ -30,7 +30,7 @@ import (
 	_ "github.com/dfuse-io/dauth/ratelimiter/null"   // ratelimiter plugin
 	"github.com/dfuse-io/dfuse-eosio/eosrest"
 	"github.com/dfuse-io/dfuse-eosio/eosrest/rest"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dmetering"
@@ -48,10 +48,11 @@ type Config struct {
 
 	NodeosRPCEndpoint string
 
-	KVDBDSN       string
-	BlockmetaAddr string
-	SearchAddr    string
-	FluxHTTPAddr  string
+	KVDBDSN         string
+	BlockmetaAddr   string
+	SearchAddr      string
+	StateDBHTTPAddr string
+	StateDBGRPCAddr string
 
 	MeteringPlugin string
 	AuthPlugin     string
@@ -90,15 +91,13 @@ func (a *App) Run() error {
 	//	return fmt.Errorf("failed getting blockmeta grpc client: %w", err)
 	//}
 
-	fluxURLStr := a.Config.FluxHTTPAddr
-	if !strings.HasPrefix(fluxURLStr, "http") {
-		fluxURLStr = "http://" + fluxURLStr
+	stateConn, err := dgrpc.NewInternalClient(a.Config.StateDBGRPCAddr)
+	if err != nil {
+		return fmt.Errorf("failed getting statedb grpc conn: %w", err)
 	}
+	stateClient := pbstatedb.NewStateClient(stateConn)
 
-	fluxClient := fluxdb.NewClient(fluxURLStr, nil)
-
-	//irrFinder := eosrest.NewDBReaderBaseIrrFinder(db)
-	//abiGetter := eosrest.NewDefaultABIGetter(fluxClient)
+	//	abiGetter := eosrest.NewDefaultABIGetter(stateClient)
 	//accountGetter := eosrest.NewApiAccountGetter(api)
 
 	blockmetaClient, err := pbblockmeta.NewClient(a.Config.BlockmetaAddr)
@@ -114,12 +113,17 @@ func (a *App) Run() error {
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosrest.DfuseErrorHandler).Handler
 	corsMiddleware := eosrest.NewCORSMiddleware()
 
-	fluxURL, err := url.Parse(fluxURLStr)
-	if err != nil {
-		return fmt.Errorf("cannot parse flux address: %w", err)
+	stateHTTPAddr := a.Config.StateDBHTTPAddr
+	if !strings.HasPrefix(stateHTTPAddr, "http") {
+		stateHTTPAddr = "http://" + stateHTTPAddr
 	}
 
-	fluxProxy := rest.NewReverseProxy(fluxURL, false)
+	stateHTTPURL, err := url.Parse(stateHTTPAddr)
+	if err != nil {
+		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
+	}
+
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false)
 
 	searchConn, err := dgrpc.NewInternalClient(a.Config.SearchAddr)
 	if err != nil {
@@ -153,7 +157,8 @@ func (a *App) Run() error {
 	chainRouter := coreRouter.PathPrefix("/").Subrouter()
 	//wsRouter := coreRouter.PathPrefix("/").Subrouter()
 	restRouter := coreRouter.PathPrefix("/").Subrouter()
-	fluxRestRouter := coreRouter.PathPrefix("/").Subrouter()
+	statedbRestRouter := coreRouter.PathPrefix("/").Subrouter()
+
 	historyRestRouter := coreRouter.PathPrefix("/").Subrouter()
 
 	/// Chain endpoints
@@ -212,32 +217,32 @@ func (a *App) Run() error {
 	restRouter.Path("/v0/block_id/by_time").Handler(rest.BlockTimeHandler(blockmetaClient))
 	restRouter.Path("/v0/transactions/{id}").Handler(rest.GetTransactionHandler(db))
 
-	// FluxDB (Chain State) REST API endpoints
-	fluxRestRouter.Use(authMiddleware)
-	fluxRestRouter.Use(eosrest.RESTTrackingMiddleware)
+	// StateDB (Chain State) REST API endpoints
+	statedbRestRouter.Use(authMiddleware)
+	statedbRestRouter.Use(eosrest.RESTTrackingMiddleware)
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on REST APIs
 	// WARNING: Middleware is **configured** to ONLY track Query Ingress / Egress bytes.
 	//          This means that the middleware DOES NOT track Query requests / responses.
 	//          Req / Resp (Docs) is counted in the different endpoints
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
+	statedbRestRouter.Use(dmetering.NewMeteringMiddlewareFuncWithOptions(
 		meter,
 		"eosrest", "REST API - Chain State",
 		false, true))
 	//////////////////////////////////////////////////////////////////////
-	fluxRestRouter.Path("/v0/state/abi").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/abi/bin_to_json").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/permission_links").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/key_accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table/row").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/table_scopes").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/accounts").Handler(fluxProxy)
-	fluxRestRouter.Path("/v0/state/tables/scopes").Handler(fluxProxy)
+	statedbRestRouter.Path("/v0/state/abi").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/abi/bin_to_json").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/permission_links").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/key_accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table/row").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/table_scopes").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/accounts").Handler(statedbProxy)
+	statedbRestRouter.Path("/v0/state/tables/scopes").Handler(statedbProxy)
 
 	historyRestRouter.Use(eosrest.RESTTrackingMiddleware)
-	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(fluxClient))
+	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(stateClient))
 
 	server := &http.Server{Addr: a.Config.HTTPListenAddr, Handler: handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed)}
 

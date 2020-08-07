@@ -257,18 +257,6 @@ func checkHTTPError(err error, msg string, errorCode eoserr.Error, w http.Respon
 	return false
 }
 
-var corsRequestHeaders = []string{
-	"Origin",
-	"Access-Control-Request-Method",
-	"Access-Control-Request-Headers",
-}
-
-func deleteCORSHeaders(r *http.Request) {
-	for _, corsRequestHeader := range corsRequestHeaders {
-		r.Header.Del(corsRequestHeader)
-	}
-}
-
 func countUniqueElem(elements []string) int {
 	encountered := map[string]bool{}
 	for v := range elements {
