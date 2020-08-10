@@ -76,6 +76,7 @@ type Config struct {
 
 	FetchPrice     bool
 	FetchVoteTally bool
+	WithCompletion bool
 
 	FilesourceRateLimitPerBlock time.Duration
 	BlocksBufferSize            int
@@ -132,11 +133,6 @@ func (a *App) Run() error {
 	}
 
 	db := eosws.NewTRXDB(kdb)
-
-	completionInstance, err := completion.New(ctx, db)
-	if err != nil {
-		return fmt.Errorf("unable to initialize completion: %w", err)
-	}
 
 	blocksStore, err := dstore.NewDBinStore(a.Config.SourceStoreURL)
 	if err != nil {
@@ -232,8 +228,6 @@ func (a *App) Run() error {
 	}
 	go subscriptionHub.Launch()
 	go tailManager.Launch()
-
-	completionPipeline := completion.NewPipeline(completionInstance, head.ID(), lib.ID(), subscriptionHub)
 
 	stateConn, err := dgrpc.NewInternalClient(a.Config.StateDBGRPCAddr)
 	if err != nil {
@@ -480,7 +474,6 @@ func (a *App) Run() error {
 	eosqRestRouter.Path("/v0/blocks/{blockID}").Handler(rest.GetBlockHandler(db))
 	eosqRestRouter.Path("/v0/blocks/{blockID}/transactions").Handler(rest.GetBlockTransactionsHandler(db))
 	eosqRestRouter.Path("/v0/simple_search").Handler(rest.SimpleSearchHandler(db, blockmetaClient))
-	eosqRestRouter.Path("/v0/search/completion").Handler(rest.GetCompletionHandler(completionInstance))
 
 	zlog.Info("waiting for subscription hub to reach expected head block")
 	retryDelay := time.Duration(0)
@@ -501,7 +494,16 @@ func (a *App) Run() error {
 		break
 	}
 	go headInfoHub.Launch(context.Background())
-	go completionPipeline.Launch()
+
+	if a.Config.WithCompletion {
+		completionInstance, err := completion.New(ctx, db)
+		if err != nil {
+			return fmt.Errorf("unable to initialize completion: %w", err)
+		}
+		completionPipeline := completion.NewPipeline(completionInstance, head.ID(), lib.ID(), subscriptionHub)
+		eosqRestRouter.Path("/v0/search/completion").Handler(rest.GetCompletionHandler(completionInstance))
+		go completionPipeline.Launch()
+	}
 
 	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
 	if err != nil {
