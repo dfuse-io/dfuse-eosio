@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `--eosws-with-completion` (default: true) to allow control over that feature
 * Added `--mindreader-merge-threshold-block-age` when processing blocks with a blocktime older than this threshold, they will be automatically merged: (default 12h)
 * Added `--mindreader-batch-mode` to force always merging blocks (like --mindreader-merge-and-store-directly did) AND overwriting existing files in destination.
 * Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity

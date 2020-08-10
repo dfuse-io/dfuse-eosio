@@ -25,6 +25,7 @@ func init() {
 			cmd.Flags().String("eosws-statedb-http-addr", StateDBHTTPServingAddr, "StateDB HTTP server address")
 			cmd.Flags().String("eosws-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
+			cmd.Flags().Bool("eosws-with-completion", true, "Enable Completion endpoint (for eosq), will preload accounts on boot")
 			cmd.Flags().Bool("eosws-fetch-vote-tally", false, "Enable regularly fetching vote tally")
 			cmd.Flags().String("eosws-search-addr-secondary", "", "secondary search grpc endpoint")
 			cmd.Flags().Duration("eosws-filesource-ratelimit", 2*time.Millisecond, "time to sleep between blocks coming from filesource to control replay speed")
@@ -52,6 +53,7 @@ func init() {
 				AuthPlugin:                  viper.GetString("common-auth-plugin"),
 				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),
+				WithCompletion:              viper.GetBool("eosws-with-completion"),
 				FetchVoteTally:              viper.GetBool("eosws-fetch-vote-tally"),
 				FilesourceRateLimitPerBlock: viper.GetDuration("eosws-filesource-ratelimit"),
 				BlocksBufferSize:            viper.GetInt("eosws-blocks-buffer-size"),
