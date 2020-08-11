@@ -16,7 +16,6 @@ package codec
 
 import (
 	"bufio"
-	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -65,7 +64,7 @@ func (l *ConsoleReader) setupScanner() {
 	scanner := bufio.NewScanner(l.src)
 	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
-	l.readBuffer = make(chan string, 10)
+	l.readBuffer = make(chan string, 2000)
 
 	go func() {
 		for l.scanner.Scan() {
@@ -401,8 +400,7 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 	ctx.resetBlock()
 	ctx.activeBlockNum = blockNum
 
-	// FIXME: Connect to caller somehow, probably the one doing the `Read` call on the top-level reader
-	if err := ctx.abiDecoder.startBlock(context.Background(), uint64(blockNum)); err != nil {
+	if err := ctx.abiDecoder.startBlock(uint64(blockNum)); err != nil {
 		return fmt.Errorf("abi decoder: %w", err)
 	}
 

@@ -1,7 +1,6 @@
 package codec
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -423,7 +422,7 @@ func TestABIDecoder(t *testing.T) {
 			for _, block := range test.blocks {
 				maybePrintBlock(t, block)
 
-				err := decoder.startBlock(context.Background(), block.Num())
+				err := decoder.startBlock(block.Num())
 				require.NoError(t, err)
 
 				for _, trxTrace := range block.UnfilteredTransactionTraces {

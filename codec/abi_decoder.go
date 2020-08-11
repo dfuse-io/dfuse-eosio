@@ -14,7 +14,6 @@
 package codec
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -22,9 +21,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dhammer"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
+	"github.com/lytics/ordpool"
 	"go.uber.org/zap"
 )
 
@@ -42,7 +41,8 @@ var noActiveBlockNum uint64 = math.MaxUint64
 // That is to improve lock-contention.
 type ABIDecoder struct {
 	cache  *ABICache
-	hammer *dhammer.Hammer
+	pool   *ordpool.OrderedPool
+	poolIn chan<- interface{}
 
 	// The logic of truncation is the following. We assume we will always receives
 	// blocks in sequential order, expect when there is a fork, we could go back
@@ -80,9 +80,22 @@ func newABIDecoder() *ABIDecoder {
 		blockDone:        make(chan doneBlockJob),
 	}
 
-	a.hammer = dhammer.NewHammer(1, 8, a.executeDecodingJob, dhammer.SetInChanSize(100))
-	go a.startProcessQueue()
-	go a.hammer.Start(context.Background())
+	numWorkers := 24
+	a.pool = ordpool.New(numWorkers, a.executeDecodingJob)
+	a.pool.Start()
+	a.poolIn = a.pool.GetInputCh()
+
+	go func() {
+		// needs to read every time to not block the ordpool,
+		// but just sends the doneBlockJob forward
+		out := a.pool.GetOutputCh()
+		for {
+			x := <-out
+			if done, ok := x.(doneBlockJob); ok {
+				a.blockDone <- done
+			}
+		}
+	}()
 	return a
 }
 
@@ -111,7 +124,7 @@ func (c *ABIDecoder) addInitialABI(contract string, b64ABI string) error {
 	return c.cache.addABI(contract, 0, abi)
 }
 
-func (c *ABIDecoder) startBlock(ctx context.Context, blockNum uint64) error {
+func (c *ABIDecoder) startBlock(blockNum uint64) error {
 	zlog.Debug("starting a new block", zap.Uint64("block_num", blockNum), zap.Stringer("previous_block", c.lastSeenBlockRef))
 	if c.activeBlockNum != noActiveBlockNum {
 		return fmt.Errorf("start block for block #%d received while already processing block #%d", blockNum, c.activeBlockNum)
@@ -366,54 +379,41 @@ type dtrxDecodingJob struct {
 }
 
 func (d *ABIDecoder) addJobs(jobs []decodingJob) error {
+
 	for _, job := range jobs {
 		if traceEnabled {
 			zlog.Debug("adding decoding job to queue", zap.String("kind", job.kind()))
 		}
 
-		select {
-		case <-d.hammer.Terminating():
-			zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
-			return fmt.Errorf("unable to add job, hammer is terminating: %w", d.hammer.Err())
-		case d.hammer.In <- job:
-		}
+		d.poolIn <- job //FIXME catch shutdown or smth
+		//		select {
+		//		case <-d.hammer.Terminating():
+		//			zlog.Debug("decoding queue hammer terminating, stopping queuer routine")
+		//			return fmt.Errorf("unable to add job, hammer is terminating: %w", d.hammer.Err())
+		//		case d.hammer.In <- job:
+		//		}
 	}
 
 	return nil
 }
-
 func (d *ABIDecoder) drain() error {
-	d.hammer.In <- doneBlockJob(d.activeBlockNum)
+	d.poolIn <- doneBlockJob(d.activeBlockNum)
 
 	doneBlockNum := <-d.blockDone
 	if uint64(doneBlockNum) != d.activeBlockNum {
 		return fmt.Errorf("wrong blocknum returned from ABIDecoder: %d (expecting %d)", doneBlockNum, d.activeBlockNum)
 	}
 	return nil
-
-	//	if q.hammer.Err() != nil {
-	//		return fmt.Errorf("dhammer unexpected termination: %w", q.hammer.Err())
-	//	}
-	//
-	//	if len(q.hammer.In) != 0 || len(q.hammer.Out) != 0 {
-	//		return fmt.Errorf("dhammer terminated without being fully drained, still %d elements in In and %d elements in Out", len(q.hammer.In), len(q.hammer.Out))
-	//	}
-
-	//	zlog.Debug("dhammer terminated")
-	//	return nil
 }
 
-func (d *ABIDecoder) executeDecodingJob(ctx context.Context, batch []interface{}) ([]interface{}, error) {
-	if len(batch) != 1 {
-		return nil, fmt.Errorf("expecting batch to have a single element, got %d", len(batch))
-	}
+func (d *ABIDecoder) executeDecodingJob(inJob interface{}) (interface{}, error) {
 
-	done, ok := batch[0].(doneBlockJob)
+	done, ok := inJob.(doneBlockJob)
 	if ok {
-		return []interface{}{done}, nil
+		return done, nil
 	}
 
-	job := batch[0].(decodingJob)
+	job := inJob.(decodingJob)
 	if traceEnabled {
 		zlog.Debug("executing decoding job", zap.String("kind", job.kind()))
 	}
@@ -422,39 +422,13 @@ func (d *ABIDecoder) executeDecodingJob(ctx context.Context, batch []interface{}
 		return nil, fmt.Errorf("trying to decode a job for block num %d while decoding queue block num is %d", job.blockNum(), d.activeBlockNum)
 	}
 
-	switch v := batch[0].(type) {
+	switch v := inJob.(type) {
 	case actionDecodingJob:
 		return []interface{}{job.kind()}, d.decodeAction(v.action, v.globalSequence, job.trxID(), job.blockNum(), v.localCache)
 	case dtrxDecodingJob:
 		return []interface{}{job.kind()}, d.decodeAction(v.action, v.globalSequence, job.trxID(), job.blockNum(), v.localCache)
 	default:
 		return nil, fmt.Errorf("unknown decoding job kind %s", job.kind())
-	}
-}
-
-func (d *ABIDecoder) startProcessQueue() {
-	zlog.Debug("queue drainer routine started")
-
-	for {
-		select {
-		case out, ok := <-d.hammer.Out:
-			if !ok {
-				zlog.Debug("queue is now closed")
-				return
-			}
-
-			if done, ok := out.(doneBlockJob); ok {
-				d.blockDone <- done
-				zlog.Debug("queue block completed", zap.Uint64("blocknum", uint64(done)))
-				continue
-			}
-
-			if traceEnabled {
-				if jobKind, ok := out.(string); ok {
-					zlog.Debug("queue job completed", zap.String("kind", jobKind))
-				}
-			}
-		}
 	}
 }
 

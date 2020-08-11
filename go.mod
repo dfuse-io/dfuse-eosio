@@ -58,6 +58,8 @@ require (
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
+	github.com/lytics/lifecycle v0.0.0-20130117214539-7b4c4028d422 // indirect
+	github.com/lytics/ordpool v0.0.0-20130426221837-8d833f097fe7
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/onsi/ginkgo v1.11.0 // indirect
