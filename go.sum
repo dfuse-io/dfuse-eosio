@@ -148,6 +148,8 @@ github.com/blevesearch/zap/v13 v13.0.1 h1:NSCM6uKu77Vn/x9nlPp4pE1o/bftqcOWZEHSyZ
 github.com/blevesearch/zap/v13 v13.0.1/go.mod h1:XmyNLMvMf8Z5FjLANXwUeDW3e1+o77TTGUWrth7T9WI=
 github.com/blevesearch/zap/v14 v14.0.0 h1:HF8Ysjm13qxB0jTGaKLlatNXmJbQD8bY+PrPxm5v4hE=
 github.com/blevesearch/zap/v14 v14.0.0/go.mod h1:sUc/gPGJlFbSQ2ZUh/wGRYwkKx+Dg/5p+dd+eq6QMXk=
+github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 h1:DDGfHa7BWjL4YnC6+E63dPcxHo2sUxDIu8g3QgEJdRY=
+github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b h1:L/QXpzIa3pOvUGt1D1lA5KjYhPBAN/3iWdP7xeFS9F0=
 github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b/go.mod h1:H0wQNHz2YrLsuXOZozoeDmnHXkNCRmMW0gwFWDfEZDA=
@@ -272,10 +274,8 @@ github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b h1:kU8EhQuQ8Ee
 github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
-github.com/dfuse-io/fluxdb v0.0.0-20200805162333-d1127444f0b0 h1:AMCDTm1DHAFQHPOZgEWFsFPxKBju/Ws6RjdsvyyxAOw=
-github.com/dfuse-io/fluxdb v0.0.0-20200805162333-d1127444f0b0/go.mod h1:/Hv/ZXiKb71dbQr7BqevtvX+x1HlHYYgvlAh3QYgPqE=
-github.com/dfuse-io/fluxdb v0.0.0-20200810183621-d17b6dd9ea48 h1:99qYPlM4ksoz6Z1fdo/CmX5JqSTBKowkgkO4nr+6xZU=
-github.com/dfuse-io/fluxdb v0.0.0-20200810183621-d17b6dd9ea48/go.mod h1:/Hv/ZXiKb71dbQr7BqevtvX+x1HlHYYgvlAh3QYgPqE=
+github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9 h1:m0zAGCmLbwMswT0CkAGXdaj07pktCazw8bAm6kuS7fQ=
+github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9/go.mod h1:/Hv/ZXiKb71dbQr7BqevtvX+x1HlHYYgvlAh3QYgPqE=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
