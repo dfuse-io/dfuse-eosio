@@ -21,8 +21,8 @@ import (
 	"sort"
 
 	"github.com/dfuse-io/derr"
+	"github.com/dfuse-io/fluxdb-client"
 	"github.com/eoscanada/eos-go"
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 )
 
 type Producer struct {

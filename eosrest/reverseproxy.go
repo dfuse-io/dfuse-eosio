@@ -31,5 +31,10 @@ func NewReverseProxy(target *url.URL) *httputil.ReverseProxy {
 			req.Header.Set("User-Agent", "")
 		}
 	}
-	return &httputil.ReverseProxy{Director: director}
+	return &httputil.ReverseProxy{
+		Director: director,
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+		},
+	}
 }
