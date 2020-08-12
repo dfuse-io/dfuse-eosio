@@ -12,6 +12,7 @@ require (
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blevesearch/bleve v1.0.9
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200724174723-8b30f0cb651d
@@ -31,7 +32,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20200810183621-d17b6dd9ea48
+	github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
 	github.com/dfuse-io/kvdb v0.0.2-0.20200807025817-f1b87abdaad6
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
