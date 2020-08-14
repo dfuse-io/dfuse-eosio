@@ -10,6 +10,8 @@ date.
 # [Unreleased]
 
 ### Added
+* Added `--merger-one-block-deletion-threads` (default:10) to allow control over one-block-files deletion parallelism
++ Added `--merger-max-one-block-operations-batch-size` to allow control over one-block-files batches that are looked up on storage,
 * Added `--eosws-with-completion` (default: true) to allow control over that feature
 * Added `--mindreader-merge-threshold-block-age` when processing blocks with a blocktime older than this threshold, they will be automatically merged: (default 12h)
 * Added `--mindreader-batch-mode` to force always merging blocks (like --mindreader-merge-and-store-directly did) AND overwriting existing files in destination.
@@ -37,6 +39,8 @@ date.
 ### Changed
 * **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
+* Merger now deletes blocks that have been processed and are in his "seenBlocks" cache, so a mindreader restarting from recent snapshot will not clog your one-block-file storage
+* Merger now properly handles storage backend errors when looking for where to start
 * Mindreader now automatically start producing "merged blocks" instead of "one-block-files" the blocks are passed a certain age threshold (based on blocktime) OR if a "blockmeta" service can be reached and validates that the blocks numbers are lower than the Last Irreversible Block (LIB). When those conditions cease to be true - close to HEAD -,  it changes to producing one-block-files again (until restarted)
 * Mindreader can now use flag `--common-blockmeta-addr` so it can determine the network LIB and start producing "merged blocks"
 * Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
@@ -47,6 +51,7 @@ date.
 * Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
 
 ### Fixed
+* Fixed issue with `merger` with a possible panic when reading a one-block-file that is empty, for example on a non-atomic storage backend
 * Fixed issue with `mindreader` not stopping correctly (and showing any error) if the bootstrap phase (ex: restore-from-snapshot) failed.
 * Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
 
