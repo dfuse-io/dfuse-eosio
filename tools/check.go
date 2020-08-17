@@ -55,8 +55,8 @@ func init() {
 	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
 	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
 
-	checkTrxdbBlocksCmd.Flags().Int64P("start-block", "s", 0, "Block number to start at")
-	checkTrxdbBlocksCmd.Flags().Int64P("end-block", "e", 4294967296, "Block number to end at")
+	checkCmd.PersistentFlags().Uint64P("start-block", "s", 0, "Block number to start at")
+	checkCmd.PersistentFlags().Uint64P("end-block", "e", 4294967296, "Block number to end at")
 }
 
 func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
@@ -93,11 +93,17 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	var expected uint32
 	var count int
 	var baseNum32 uint32
-	currentStartBlk := uint32(0)
 	// startTime := time.Now()
 	holeFound := false
 	checkIndividualSegment := viper.GetBool("individual-segment")
 	printIndividualSegmentStats := viper.GetBool("print-stats")
+
+	startBlock := viper.GetUint64("start-block")
+	endBlock := viper.GetUint64("end-block")
+	expected = uint32(startBlock)
+	currentStartBlk := uint32(startBlock)
+
+	fmt.Println("expected is ", expected)
 
 	blocksStore, err := dstore.NewDBinStore(storeURL)
 	if err != nil {
@@ -113,6 +119,12 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
+		if baseNum < startBlock {
+			return nil
+		}
+		if endBlock != 0 && baseNum > endBlock {
+			return nil
+		}
 		baseNum32 = uint32(baseNum)
 
 		if checkIndividualSegment {
@@ -241,8 +253,8 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 	// FIXME: Seems `./dfuse-data/...` something doesn't work but `dfuse-data/...` works
 	dsn := args[0]
 
-	startBlock := uint64(viper.GetInt64("start-block"))
-	endBlock := uint64(viper.GetInt64("end-block"))
+	startBlock := uint64(viper.GetUint64("start-block"))
+	endBlock := uint64(viper.GetUint64("end-block"))
 
 	fmt.Printf("Checking block holes in trxdb at %s, from %d to %d\n", dsn, startBlock, endBlock)
 
