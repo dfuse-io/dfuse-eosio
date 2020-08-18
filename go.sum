@@ -295,6 +295,10 @@ github.com/dfuse-io/merger v0.0.3-0.20200724152216-947b231c83f9 h1:+veYaoTWv7j7i
 github.com/dfuse-io/merger v0.0.3-0.20200724152216-947b231c83f9/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
 github.com/dfuse-io/merger v0.0.3-0.20200813193037-208d86e877f9 h1:995hOnn4DExxNw9gZQGsmc0tdkoKh0728EdiJ3BDDTw=
 github.com/dfuse-io/merger v0.0.3-0.20200813193037-208d86e877f9/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
+github.com/dfuse-io/merger v0.0.3-0.20200818152705-1998b47aad85 h1:zEwP9DNr8AHEfiGM85x9kCKLKZ9Y9nFdLw9cXPa5T84=
+github.com/dfuse-io/merger v0.0.3-0.20200818152705-1998b47aad85/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
+github.com/dfuse-io/merger v0.0.3-0.20200818153519-fc11d47236e2 h1:V0qpnuRkNMcrrEsE8NlbiIQoiSxR+QahmlP4GGENHs4=
+github.com/dfuse-io/merger v0.0.3-0.20200818153519-fc11d47236e2/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
 github.com/dfuse-io/node-manager v0.0.2-0.20200806114600-c2357a71926d h1:h37jc8EMBYet6dX8n1Mjtt7NjGpP5uYUbZrLvbgD8ls=
 github.com/dfuse-io/node-manager v0.0.2-0.20200806114600-c2357a71926d/go.mod h1:Snh8WGAYzivZVLIvY5lXHeB5InueOH58U4/F+C/u+yM=
 github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6 h1:RQZU3rSGS1DYmMN4ZiVjY5YNcVlGih5V5iZC4yaMJRI=
