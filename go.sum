@@ -269,6 +269,10 @@ github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68/go.mod h1:pbb9dP
 github.com/dfuse-io/dstore v0.1.0/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc h1:CA91m/OhJH/jzoCT4GgBKGkM9mzlOZ4NbY2ay4IWths=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
+github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9 h1:nJFxXKBuZv8BBLGEvU8W7smEhd1q4VXPpMs+8UdmloE=
+github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
+github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae h1:H0MPMOKXbn7HlcNwCvevs7fRG68T5qxZFXh7Sg7ahBE=
+github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGYuyB5fpkLybwlzDRoOFOHfpQehyxNUw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
@@ -278,6 +282,10 @@ github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJ
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9 h1:m0zAGCmLbwMswT0CkAGXdaj07pktCazw8bAm6kuS7fQ=
 github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9/go.mod h1:/Hv/ZXiKb71dbQr7BqevtvX+x1HlHYYgvlAh3QYgPqE=
+github.com/dfuse-io/fluxdb v0.0.0-20200819050747-e4615fb0f1c2 h1:zhuapEQdesc1LB50pl/BaKkYd+Sa3UR8xsfzLG/XPMo=
+github.com/dfuse-io/fluxdb v0.0.0-20200819050747-e4615fb0f1c2/go.mod h1:t0Hf6PAH3ecPBKIZy0kYizITtxOqnnFO0BXlWaS+zKw=
+github.com/dfuse-io/fluxdb v0.0.0-20200819062603-79d29178660a h1:ZHv5MWnFP7qd7A3AAO3lvei6FcDeW7yhBlRqYnnTEa0=
+github.com/dfuse-io/fluxdb v0.0.0-20200819062603-79d29178660a/go.mod h1:t0Hf6PAH3ecPBKIZy0kYizITtxOqnnFO0BXlWaS+zKw=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
@@ -309,6 +317,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3 h1:WPl4jzZH6z5RvCU
 github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/pbgo v0.0.6-0.20200729035815-5da1dbc5e2ac h1:q6zeYYnzqm+eotaJAJ/zrPmDVK3MCiP/vzmXFK3D8zA=
 github.com/dfuse-io/pbgo v0.0.6-0.20200729035815-5da1dbc5e2ac/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
+github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d h1:SYL6cJUbLCmRWusJ2c5pqEwZaMwWenxqMZR+IQloy8Y=
+github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015 h1:U3g0fXe+Qzse7pw+/6QxKr24dqxdGla3hXGMIooZMj4=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20200803165036-9ae17352423a h1:JSlwcRGUUcJxUIpNfxkPw1T2EPTMdoPjk3Zq0PKfA2M=

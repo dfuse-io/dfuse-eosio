@@ -28,18 +28,18 @@ require (
 	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
-	github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc
+	github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20200812140457-086d625689d9
+	github.com/dfuse-io/fluxdb v0.0.0-20200819062603-79d29178660a
 	github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083
 	github.com/dfuse-io/kvdb v0.0.2-0.20200807025817-f1b87abdaad6
 	github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493
 	github.com/dfuse-io/merger v0.0.3-0.20200813193037-208d86e877f9
 	github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200729035815-5da1dbc5e2ac
+	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
 	github.com/dfuse-io/search v0.0.2-0.20200803165036-9ae17352423a
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2

@@ -30,12 +30,34 @@ main() {
   set -e
 
   if [[ ! -d "dfuse-data" ]]; then
-    # We need to sleep more than really needed due to a "missing feature" in
-    # statedb. StateDB does not flush its accumulated write on exit of the application
-    # so writes are not flushed when not enough block has passed.
+    # Each sharder generate all shards for a given range, this can be parallelize heavily as it depends only on `merged-blocks`
+    echo "Generating statedb shards"
+    $dfuseeos -c sharder-0-1000.yaml start
+    echo ""
+    $dfuseeos -c sharder-1000-2000.yaml start
+    echo ""
+
+    echo "Sharder is done"
+    tree ./dfuse-data/storage/statedb-shards
+
+    # Injecting can be parallelize up to N where N is the number of generated shards (3 in this example)
+    # Each injection instance runs sequentially for a given shard, but all shards can be injected in parallel.
     #
-    # The following call is blocking (due to usage of KILL_AFTER)
-    KILL_AFTER=15 $dfuseeos -c injector.yaml start
+    # This theorical only, the underlying storage might like having 64 instances writing to it, so scale this
+    # based on the throughput of your underlying storage engine. We usually runs like 8 to 16 in parallel on
+    # on heavy to medium networks.
+    echo "Injecting statedb shards into storage"
+    $dfuseeos -c shard-injector-000.yaml start
+    echo ""
+
+    $dfuseeos -c shard-injector-001.yaml start
+    echo ""
+
+    $dfuseeos -c shard-injector-002.yaml start
+    echo ""
+
+    echo "Shard injector is done"
+    echo ""
   fi
 
   exec $dfuseeos -c server.yaml start

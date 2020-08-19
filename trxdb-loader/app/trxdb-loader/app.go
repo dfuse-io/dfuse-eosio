@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
