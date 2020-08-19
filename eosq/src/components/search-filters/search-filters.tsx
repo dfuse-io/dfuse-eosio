@@ -234,7 +234,7 @@ export class SearchFilters extends React.Component<Props> {
 
   renderSections() {
     return searchStore.filterSections.map((section: FilterSection) => {
-      let content = null
+      let content: JSX.Element
       switch (section.type) {
         case FilterTypes.BLOCK_RANGE:
           content = this.displayBlockRange(section)

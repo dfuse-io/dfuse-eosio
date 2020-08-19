@@ -242,7 +242,7 @@ export class TransactionSearchResultPage extends ListContentLoaderComponent<Prop
   }
 
   render() {
-    let content = null
+    let content: JSX.Element | null
 
     if (searchStore.loadingTransactions) {
       content = this.renderLoading(t("transaction.list.loading"))

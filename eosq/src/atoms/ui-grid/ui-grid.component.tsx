@@ -24,7 +24,8 @@ import {
   maxWidth,
   maxHeight,
   fontWeight,
-  fontSize
+  fontSize,
+  compose
 } from "styled-system"
 import { styled } from "../../theme"
 import * as React from "react"
@@ -44,33 +45,62 @@ export interface CellExtraProps {
 }
 
 // FIXME: Complete grid support
+const gridStyle = compose(
+  alignSelf,
+  alignItems,
+  justifySelf,
+  gridColumnGap,
+  gridRowGap,
+  gridRow,
+  gridColumn,
+  gridTemplateColumns,
+  gridTemplateRows,
+  height,
+  width,
+  minHeight,
+  minWidth,
+  space,
+  color,
+  textAlign,
+  borders,
+  borderColor,
+  borderRadius,
+  maxWidth,
+  maxHeight
+)
+
 export const Grid: React.ComponentType<any> = styled.div`
   display: grid;
   position: relative;
   overflow: ${(props: CellExtraProps) => props.overflow};
   overflow-x: ${(props: CellExtraProps) => props.overflowX};
-  ${alignSelf};
-  ${alignItems};
-  ${justifySelf};
-  ${gridColumnGap};
-  ${gridRowGap};
-  ${gridRow};
-  ${gridColumn};
-  ${gridTemplateColumns};
-  ${gridTemplateRows};
-  ${height};
-  ${width};
-  ${minHeight};
-  ${minWidth};
-  ${space};
-  ${color};
-  ${textAlign};
-  ${borders};
-  ${borderColor};
-  ${borderRadius};
-  ${maxWidth};
-  ${maxHeight};
+  ${gridStyle}
 `
+
+const cellStyle = compose(
+  fontSize,
+  space,
+  color,
+  display,
+  alignSelf,
+  justifySelf,
+  gridColumn,
+  gridRow,
+  height,
+  width,
+  minHeight,
+  minWidth,
+  textAlign,
+  fontFamily,
+  lineHeight,
+  borders,
+  borderColor,
+  borderRadius,
+  alignItems,
+  maxWidth,
+  maxHeight,
+  fontWeight
+)
 
 export const Cell: React.ComponentType<any> = styled.div`
   position: relative;
@@ -87,26 +117,6 @@ export const Cell: React.ComponentType<any> = styled.div`
   left: ${(props: CellExtraProps) => props.left};
   right: ${(props: CellExtraProps) => props.right};
   vertical-align: ${(props: CellExtraProps) => props.verticalAlign};
-  ${fontSize};
-  ${display};
-  ${alignSelf};
-  ${justifySelf};
-  ${gridColumn};
-  ${gridRow};
-  ${height};
-  ${width};
-  ${minHeight};
-  ${minWidth};
-  ${space};
-  ${color};
-  ${textAlign};
-  ${fontFamily};
-  ${lineHeight};
-  ${borders};
-  ${borderColor};
-  ${borderRadius};
-  ${alignItems};
-  ${maxWidth};
-  ${maxHeight};
-  ${fontWeight};
+
+  ${cellStyle}
 `

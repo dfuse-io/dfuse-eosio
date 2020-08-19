@@ -81,7 +81,7 @@ export class BlockProgressPie extends React.Component<Props> {
     const dashArray = Math.PI * diameter
     const dashBarOffset = (1.0 - completion) * dashArray
 
-    let completedCircle = null
+    let completedCircle: JSX.Element | null = null
     if (completion >= 1.0) {
       completedCircle = this.renderCircle("progress-completed", 44, offsetX, offsetY, 0, 0)
     }
