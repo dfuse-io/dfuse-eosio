@@ -20,9 +20,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/dauth"
-
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	"github.com/dfuse-io/dauth/authenticator"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 
 	"github.com/dfuse-io/logging"
 
@@ -44,11 +43,10 @@ type WebsocketHandler struct {
 	voteTallyHub    *VoteTallyHub
 	priceHub        *PriceHub
 	headInfoHub     *HeadInfoHub
-	fluxAddr        string
 
 	connections        int
 	connectionsLock    sync.Mutex
-	fluxClient         fluxdb.Client
+	stateClient        pbstatedb.StateClient
 	irreversibleFinder IrreversibleFinder
 }
 
@@ -60,7 +58,7 @@ func init() {
 	shortIDGenerator = shortid.MustNew(1, shortid.DefaultABC, uint64(time.Now().UnixNano()))
 }
 
-func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB, subscriptionHub *hub.SubscriptionHub, fluxClient fluxdb.Client, voteTallyHub *VoteTallyHub, headInfoHub *HeadInfoHub, priceHub *PriceHub, irrFinder IrreversibleFinder, filesourceBlockRateLimit time.Duration) *WebsocketHandler {
+func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB, subscriptionHub *hub.SubscriptionHub, stateClient pbstatedb.StateClient, voteTallyHub *VoteTallyHub, headInfoHub *HeadInfoHub, priceHub *PriceHub, irrFinder IrreversibleFinder, filesourceBlockRateLimit time.Duration) *WebsocketHandler {
 	originChecker := func(r *http.Request) bool {
 		if r.Header.Get("Origin") == "" {
 			// For now, we do not check the origin. This is easier for our user using Node.js
@@ -90,7 +88,7 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 		db:                 db,
 		priceHub:           priceHub,
 		subscriptionHub:    subscriptionHub,
-		fluxClient:         fluxClient,
+		stateClient:        stateClient,
 		voteTallyHub:       voteTallyHub,
 		headInfoHub:        headInfoHub,
 		irreversibleFinder: irrFinder,
@@ -98,7 +96,7 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 
 	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		credentials := dauth.GetCredentials(ctx)
+		credentials := authenticator.GetCredentials(ctx)
 		// r.Trailer = http.Header{
 		// 	"X-Client-ID": []string{credentials.Id},
 		// }

@@ -19,18 +19,15 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	"github.com/dfuse-io/dgraphql"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSchema(t *testing.T) {
-	resolver := resolvers.NewRoot(nil, nil, nil, nil)
+	resolver, err := resolvers.NewRoot(nil, nil, nil, nil, nil, nil)
+	require.NoError(t, err)
 
 	// This makes the necessary parsing of all schemas to ensure resolver correctly
 	// resolves the full schema.
-	_, err := dgraphql.NewSchemas(resolver)
-
-	if err != nil {
-		message := "EOS invalid schema nor resolver"
-		assert.NoError(t, err, message)
-	}
+	_, err = dgraphql.NewSchemas(resolver)
+	require.NoError(t, err, "Invalid EOS schema nor resolver")
 }

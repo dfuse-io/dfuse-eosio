@@ -21,21 +21,21 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestPreprocessTokenization_EOS(t *testing.T) {
+func TestPreprocessTokenization(t *testing.T) {
 	tests := []struct {
 		name  string
 		block *pbcodec.Block
 	}{
 		{"standard-block", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{"receipt":{"receiver":"battlefield1"},"action":{"name":"transfer","account":"eosio","json_data":"{\"to\":\"eosio\"}"}}
 			]}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{"receipt":{"receiver":"other"},"action":{"name":"random","account":"account","json_data":"{\"proposer\":\"eosio\"}"}}
 			]}`,
 		)},
 		{"auth-keys", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},"action_traces":[
 				{
 					"receipt": {"receiver":"battlefield1"},
 					"action": {
@@ -47,7 +47,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			]}`,
 		)},
 		{"on-blocks", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[{"receipt": {"receiver":"eosio"}, "action": {"name":"transfer","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"},
@@ -59,13 +59,13 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-onerror-soft-fail", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
-				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"eosio","json_data":""}}],
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+				"action_traces":[{"receiver":"eosio","receipt": {"receiver":"eosio"}, "action": {"name":"onerror","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
 				]
 			}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"dtrexec","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"ram_ops":[
 					{"namespace": "NAMESPACE_DEFERRED_TRX", "action": "ACTION_REMOVE"}
@@ -73,13 +73,13 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-onerror-hard-fail", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_HARDFAIL"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_HARDFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"eosio","json_data":""}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
 				]
 			}`,
-			`{"id":"a2","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a2","index":1,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"dtrexec","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"ram_ops":[
 					{"namespace": "NAMESPACE_DEFERRED_TRX", "action": "ACTION_REMOVE"}
@@ -87,28 +87,28 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 			}`,
 		)},
 		{"dtrx-soft-fail-wrong-onerror", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_SOFTFAIL"},
 				"action_traces":[{"receipt": {"receiver":"any"}, "action": {"name":"onerror","account":"any","json_data":"{\"to\":\"toaccount\"}"}}],
 				"db_ops":[
 					{"code": "eosio", "scope": "eosio", "table_name": "producers", "primary_key": "eoshuobipool"}
 				]
 			}`,
 		)},
-		{"dfuse-hooks-at-input-not-indexed", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+		{"dfuse-events-at-input-not-indexed", deosTestBlock(t, "00000001a", nil,
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[{"receipt": {"receiver":"dfuseiohooks"}, "action": {"name":"event","account":"dfuseiohooks","json_data":"{\"data\":\"key=value\"}"}}]
 			}`,
 		)},
-		{"dfuse-hooks-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+		{"dfuse-events-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"event","account":"eosio","json_data":"{}"}, "action_ordinal":1},
 					{"receipt": {"receiver":"dfuseiohooks"}, "action": {"name":"event","account":"dfuseiohooks","json_data":"{\"data\":\"key=value\"}"},"action_ordinal":2,"creator_action_ordinal":1}
 				]
 			}`,
 		)},
-		{"dfuse-hooks-deep-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
-			`{"id":"a1","receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
+		{"dfuse-events-deep-inline-indexed-at-creator", deosTestBlock(t, "00000001a", nil,
+			`{"id":"a1","index":0,"receipt":{"status":"TRANSACTIONSTATUS_EXECUTED"},
 				"action_traces":[
 					{"receipt": {"receiver":"any"}, "action": {"name":"topevent","account":"eosio","json_data":"{}"}, "action_ordinal":1},
 					{"receipt": {"receiver":"any"}, "action": {"name":"childevent","account":"eosio","json_data":"{}"}, "action_ordinal":2,"creator_action_ordinal":1},
@@ -120,7 +120,7 @@ func TestPreprocessTokenization_EOS(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			blockMapper, _ := NewEOSBlockMapper("dfuseiohooks:event", "", "")
+			blockMapper, _ := NewBlockMapper("dfuseiohooks:event", false, "*")
 
 			goldenFilePath := filepath.Join("testdata", test.name+".golden.json")
 
@@ -196,9 +196,9 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	}
 
 	pbblock := &pbcodec.Block{
-		Id:                id,
-		Number:            eos.BlockNum(id),
-		TransactionTraces: trxTraces,
+		Id:                          id,
+		Number:                      eos.BlockNum(id),
+		UnfilteredTransactionTraces: trxTraces,
 	}
 
 	blockTime, err := time.Parse(time.RFC3339, "2006-01-02T15:04:05.5Z")
@@ -231,180 +231,4 @@ func deosTestBlock(t *testing.T, id string, blockCustomizer func(block *pbcodec.
 	}
 
 	return pbblock
-}
-
-func TestParseRestrictionsJSON(t *testing.T) {
-	// very shallow test, but we dont want to test actual golang JSON unmarshalling,
-	// just the general format of our restrictions
-	emptyRests, err := parseRestrictionsJSON("")
-	assert.NoError(t, err)
-	require.Len(t, emptyRests, 0)
-
-	rests, err := parseRestrictionsJSON(`[{"account":"eidosonecoin"},{"receiver":"eidosonecoin"},{"account":"eosio.token","data.to":"eidosonecoin"},{"account":"eosio.token","data.from":"eidosonecoin"}]`)
-	require.NoError(t, err)
-	assert.Len(t, rests, 4)
-}
-
-func TestFilterOut(t *testing.T) {
-	tests := []struct {
-		name         string
-		filterOn     string
-		filterOut    string
-		message      map[string]interface{}
-		expectedPass bool
-	}{
-		{
-			"filter nothing",
-			"",
-			"",
-			map[string]interface{}{"account": "whatever"},
-			true,
-		},
-		{
-			"filter nothing, with default programs",
-			"true",
-			"false",
-			map[string]interface{}{
-				"account": "whatever",
-			},
-			true,
-		},
-		{
-			"blacklist things FROM badguy",
-			`true`,
-			`account == "eosio.token" && data.from == "badguy"`,
-			map[string]interface{}{
-				"account": "eosio.token",
-				"data": map[string]interface{}{
-					"from": "goodguy",
-					"to":   "badguy",
-				},
-			},
-			true,
-		},
-		{
-			"blacklist things TO badguy",
-			`true`,
-			"account == 'eosio.token' && data.to == 'badguy'",
-			map[string]interface{}{
-				"account": "eosio.token",
-				"data": map[string]interface{}{
-					"from": "goodguy",
-					"to":   "badguy",
-				},
-			},
-			false,
-		},
-		{
-			"blacklist transfers to eidosonecoin",
-			"",
-			`account == 'eosio.token' && data.to == 'eidosonecoin'`,
-			map[string]interface{}{
-				"account": "eosio.token",
-				"data": map[string]interface{}{
-					"from": "goodguy",
-					"to":   "eidosonecoin",
-				},
-			},
-			false,
-		},
-		{
-			"non-matching identifier in filter-out program doesn't blacklist",
-			"",
-			`account == 'eosio.token' && data.from == 'broken'`,
-			map[string]interface{}{
-				"account": "eosio.token",
-				"action":  "issue",
-				"data": map[string]interface{}{
-					"to": "winner",
-				},
-			},
-			true,
-		},
-		{
-			"non-matching identifier in filter-on program still matches",
-			`account == 'eosio.token' && data.bob == 'broken'`,
-			``,
-			map[string]interface{}{
-				"account": "eosio.token",
-				"action":  "issue",
-				"data": map[string]interface{}{
-					"to": "winner",
-				},
-			},
-			false,
-		},
-		{
-			"both whitelist and blacklist fail",
-			`data.bob == 'broken'`,
-			`data.rita == 'rebroken'`,
-			map[string]interface{}{
-				"data": map[string]interface{}{
-					"denise": "winner",
-				},
-			},
-			false,
-		},
-		{
-			"whitelisted but blacklist cleans out",
-			`data.bob == '1'`,
-			`data.rita == '2'`,
-			map[string]interface{}{
-				"data": map[string]interface{}{
-					"bob":  "1",
-					"rita": "2",
-				},
-			},
-			false,
-		},
-		{
-			"whitelisted but blacklist broken so doesn't clean out",
-			`data.bob == '1'`,
-			`data.broken == 'really'`,
-			map[string]interface{}{
-				"data": map[string]interface{}{
-					"bob": "1",
-				},
-			},
-			true,
-		},
-
-		{
-			"block receiver",
-			"",
-			`receiver == "badguy"`,
-			map[string]interface{}{
-				"receiver": "badguy",
-			},
-			false,
-		},
-		{
-			"prevent a failure on evaluation, so matches because blacklist fails",
-			"",
-			`account == "badacct" && has(data.from) && data.from != "badguy"`,
-			map[string]interface{}{
-				"account":  "badacct",
-				"receiver": "badrecv",
-				"data": map[string]interface{}{},
-			},
-			true,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			mapper, err := NewEOSBlockMapper("", test.filterOn, test.filterOut)
-			assert.NoError(t, err)
-
-			assert.Equal(t, test.expectedPass, mapper.shouldIndexAction(test.message))
-		})
-	}
-}
-
-func TestCompileCELPrograms(t *testing.T) {
-	_, err := NewEOSBlockMapper("", "bro = '", "")
-	require.Error(t, err)
-
-	_, err = NewEOSBlockMapper("", "", "ken")
-	require.Error(t, err)
 }

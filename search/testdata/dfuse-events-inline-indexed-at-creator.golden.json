@@ -1,0 +1,33 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "eosio",
+      "action": "event",
+      "block_num": 1,
+      "event": {
+        "key": [
+          "value"
+        ]
+      },
+      "input": true,
+      "notif": true,
+      "receiver": "any",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  },
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "dfuseiohooks",
+      "action": "event",
+      "block_num": 1,
+      "input": false,
+      "notif": false,
+      "receiver": "dfuseiohooks",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  }
+]

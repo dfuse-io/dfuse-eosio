@@ -17,7 +17,7 @@ describe("UiDropdown", () => {
 function render(onSelect: (e: any) => void) {
   return (
     <UiDropDown
-      id={"id"}
+      id="id"
       onSelect={onSelect}
       options={[
         { label: "label 1", value: "value 1" },

@@ -26,7 +26,7 @@ const expectedLegacyParams: SearchQueryParams & LegacySearchQueryParams = {
 describe("SearchStore", () => {
   describe("defaultFilterSections", () => {
     it("should return the current defaults", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       expect(searchStore.defaultFilterSections).toEqual([
         {
           type: FilterTypes.BLOCK_RANGE,
@@ -44,7 +44,7 @@ describe("SearchStore", () => {
     it("should save the current block range in the attribute previousBlockRangeFilter", () => {
       const min = 20000000
       const max = 30000000
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "option", RangeOptions.CUSTOM)
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "min", min)
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "max", max)
@@ -58,7 +58,7 @@ describe("SearchStore", () => {
     it("should set the filter combination to BLOCK_RANGE", () => {
       const min = 20000000
       const max = 30000000
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "option", RangeOptions.CUSTOM)
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "min", min)
       searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "max", max)
@@ -71,7 +71,7 @@ describe("SearchStore", () => {
     it("should set the filter combination to LAST_BLOCKS_IRREVERSIBLE AND BLOCK_RANGE_IRREVERSIBLE", () => {
       const min = 20000000
       const max = 30000000
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       expect(searchStore.filterCombination).toEqual(FilterCombinations.LAST_BLOCKS)
       searchStore.updateFilter(FilterTypes.BLOCK_STATUS, "irreversibleOnly", true)
       searchStore.updateFilterCombinations()
@@ -88,21 +88,21 @@ describe("SearchStore", () => {
 
   describe("blockRangeParams", () => {
     it("should return a valid block range (0, 0) is default", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       expect(searchStore.blockRangeParams).toEqual({ startBlock: 0, blockCount: BLOCK_NUM_5M })
     })
   })
 
   describe("withReversible", () => {
     it("should return true by default", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       expect(searchStore.withReversible).toEqual(true)
     })
   })
 
   describe("updateFilter", () => {
     it("should update a the block status filter", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       expect(searchStore.withReversible).toEqual(true)
       searchStore.updateFilter(FilterTypes.BLOCK_STATUS, "irreversibleOnly", true)
       expect(searchStore.withReversible).toEqual(false)
@@ -111,7 +111,7 @@ describe("SearchStore", () => {
 
   describe("updateFromUrlParams", () => {
     it("should convert url params into filters", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       searchStore.updateFromUrlParams(expectedParams)
       expect(searchStore.query).toEqual("query")
       expect(searchStore.blockRangeParams).toEqual({ blockCount: 2000000, startBlock: 32000000 })
@@ -119,7 +119,7 @@ describe("SearchStore", () => {
     })
 
     it("should convert legacy url params into filters", () => {
-      let searchStore = new SearchStore()
+      const searchStore = new SearchStore()
       searchStore.updateFromUrlParams(expectedLegacyParams)
       expect(searchStore.query).toEqual("query")
       expect(searchStore.blockRangeParams).toEqual({ blockCount: 2000000, startBlock: 32000000 })

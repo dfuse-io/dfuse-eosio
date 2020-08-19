@@ -1,6 +1,6 @@
 import { t } from "i18next"
 import * as React from "react"
-import { formatTransactionID } from "../../helpers/formatters"
+import { formatTransactionID } from "@dfuse/explorer"
 import { TransactionReceiptStatus } from "../../models/transaction"
 import { Links } from "../../routes"
 

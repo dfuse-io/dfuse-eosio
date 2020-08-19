@@ -3,7 +3,7 @@ import { Cell } from "../../atoms/ui-grid/ui-grid.component"
 import { HeaderLogo } from "../header-elements/header-elements"
 import { MainMenu } from "../main-menu/main-menu.component"
 import { theme, styled } from "../../theme"
-import Box from "../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { Text } from "../../atoms/text/text.component"
 import { t } from "i18next"
@@ -233,12 +233,18 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
             pt={[4]}
             style={{ position: "absolute", bottom: "20px", textAlign: "center", width: "100%" }}
           >
-            <a href={`https://www.dfuse.io/${getCurrentLanguageValue()}`} title="dfuse API for EOS">
+            <a
+              href={`https://dfuse.io/${getCurrentLanguageValue()}`}
+              title="The dfuse Blockchain Data Platform"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <img
-                src={`https://www.dfuse.io/hubfs/built-with-dfuse${
+                src={`/images/built-with-dfuse${
                   getCurrentLanguageValue() === "zh" ? "-CN" : ""
                 }-01.png`}
-                title="dfuse API for EOS"
+                title="The dfuse Blockchain Data Platform"
+                alt="built-with-dfuse"
                 width="210"
                 height="auto"
               />

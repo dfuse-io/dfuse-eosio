@@ -22,9 +22,6 @@ import (
 )
 
 func init() {
-	//todo: merge transaction and transaction_traces into transaction
-	//todo: a transaction can have or not traces
-
 	RegisterIncomingMessage("get_transaction", GetTransaction{})
 	RegisterIncomingMessage("get_transaction_lifecycle", GetTransaction{})
 

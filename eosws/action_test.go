@@ -16,7 +16,6 @@ package eosws
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -29,13 +28,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -58,7 +55,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 	}
 
 	actionTraceRespWithBlock := func(blockID string, reqID string, index int, trace string) string {
-		ref := bstream.BlockRefFromID(blockID)
+		ref := bstream.NewBlockRefFromID(blockID)
 
 		out := fmt.Sprintf(`{"type":"action_trace","req_id":%q,"data":{"block_num":%d,"block_id":"%s","block_time":"0001-01-01T00:00:00Z","trx_id":"trx.1","idx":%d,"trace":%s}`, reqID, ref.Num(), blockID, index, trace)
 		out, _ = sjson.SetRaw(out, "data.trace.closest_unnotified_ancestor_action_ordinal", "0")
@@ -71,8 +68,6 @@ func TestOnGetActionsTraces(t *testing.T) {
 		out, _ = sjson.SetRaw(out, "data.trace.producer_block_id", `""`)
 		out, _ = sjson.SetRaw(out, "data.trace.trx_id", `""`)
 		out, _ = sjson.SetRaw(out, "data.trace.elapsed", `0`)
-		out, _ = sjson.SetRaw(out, "data.trace.except", `null`)
-		out, _ = sjson.SetRaw(out, "data.trace.error_code", `null`)
 		out, _ = sjson.SetRaw(out, "data.trace.block_time", `"1970-01-01T00:00:00"`)
 		return out
 	}
@@ -206,13 +201,13 @@ func TestOnGetActionsTraces(t *testing.T) {
 			archiveStore := dstore.NewMockStore(nil)
 
 			subscriptionHub := newTestSubscriptionHub(t, 0, archiveStore)
-			fluxClient := fluxdb.NewTestFluxClient()
+			stateClient := pbstatedb.NewMockStateClient()
 			handler := NewWebsocketHandler(
 				nil,
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,
@@ -221,7 +216,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 			)
 
 			conn, closer := newTestConnection(t, handler, &testCredentials{startBlock: 2})
-			// dauth.Credentials{
+			// authenticator.Credentials{
 			// 	StandardClaims: jwt.StandardClaims{Id: "testID"},
 			// 	Version:        1,
 			// 	Tier:           "beta-v1",
@@ -243,26 +238,6 @@ func TestOnGetActionsTraces(t *testing.T) {
 	}
 }
 
-type TestPipelineInitiator struct {
-	pipeline bstream.Pipeline
-}
-
-func (m *TestPipelineInitiator) NewPipeline(
-	ctx context.Context,
-	startBlockID string,
-	startBlockNum uint32,
-	emissionStartBlock uint32,
-	originMsg wsmsg.IncomingMessager,
-	pipeline bstream.Pipeline,
-	onClose func(),
-) {
-	m.pipeline = pipeline
-}
-
-func (m *TestPipelineInitiator) pushBlock(block *bstream.Block, obj *forkable.ForkableObject) {
-	m.pipeline.ProcessBlock(block, obj)
-}
-
 type archiveFiles struct {
 	name    string
 	content []byte
@@ -279,7 +254,7 @@ var defaultTraceID = "105445aa7843bc8bf206b12000100000"
 
 var defaultTestCredentials = &testCredentials{startBlock: 0}
 
-// dauth.Credentials{
+// authenticator.Credentials{
 // 	StandardClaims: jwt.StandardClaims{Id: "testID"},
 // 	Version:        1,
 // 	Tier:           "beta-v1",
@@ -287,12 +262,12 @@ var defaultTestCredentials = &testCredentials{startBlock: 0}
 // }
 
 func newTestConnection(t *testing.T, handler http.Handler, options ...interface{}) (*websocket.Conn, func()) {
-	credentials := dauth.Credentials(defaultTestCredentials)
+	credentials := authenticator.Credentials(defaultTestCredentials)
 	traceID := defaultTraceID
 
 	for _, option := range options {
 		switch value := option.(type) {
-		case dauth.Credentials:
+		case authenticator.Credentials:
 			credentials = value
 		case traceIDTestOpion:
 			traceID = string(value)
@@ -304,7 +279,7 @@ func newTestConnection(t *testing.T, handler http.Handler, options ...interface{
 	// Adds the required authKey to request context
 	testMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r.WithContext(dauth.WithCredentials(r.Context(), credentials)))
+			next.ServeHTTP(w, r.WithContext(authenticator.WithCredentials(r.Context(), credentials)))
 		})
 	}
 
@@ -366,7 +341,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 		return bstream.NewTestSource(h)
 	})
 
-	buf := bstream.NewBuffer("pubsubbuf")
+	buf := bstream.NewBuffer("pubsubbuf", zlog)
 	tailManager := bstream.NewSimpleTailManager(buf, 10)
 	subscriptionHub, err := hub.NewSubscriptionHub(uint64(startBlock), buf, tailManager.TailLock, fileSourceFactory, liveSourceFactory)
 	require.NoError(t, err)
@@ -400,7 +375,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 
 	stamp, _ := ptypes.TimestampProto(time.Time{})
 
-	ref := bstream.BlockRefFromID(blockID)
+	ref := bstream.NewBlockRefFromID(blockID)
 	blk := &pbcodec.Block{
 		Id:     blockID,
 		Number: uint32(ref.Num()),
@@ -408,7 +383,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 			Previous:  fmt.Sprintf("%08d", ref.Num()-1) + ref.ID()[8:],
 			Timestamp: stamp,
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "trx.1",
 				Receipt: &pbcodec.TransactionReceiptHeader{

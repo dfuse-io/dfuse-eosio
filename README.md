@@ -2,87 +2,126 @@
 [![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All **[dfuse.io](https://dfuse.io)** services for EOSIO, running from your
-laptop or from a container, released as a single statically linked
-binary.
+All **[dfuse.io services](https://dfuse.io/technology)** for EOSIO,
+running from your laptop or from a container, released as a single
+statically linked binary: `dfuseeos`.
 
 See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
 for other blockchain protocols implementations.
 
-
 ## Getting started
-
-### Prerequisites
 
 If it's the first time you boot a `nodeos` node, please review
 https://developers.eos.io/welcome/latest/tutorials/bios-boot-sequence
 and make sure you get a grasp of what this blockchain node is capable.
 
-You might want to have the [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
-installed, as well as `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
-[eosc](https://github.com/eoscanada/eosc/releases).
+The default settings of `dfuseeos` allow you to quickly bootstrap a working
+development chain by also managing the block producing node for you.
 
-### Install
+### Requirements
 
-Get a release from the _Releases_ tab in GitHub. Install the binary in your `PATH`.
+#### Operating System
+* This software runs on Linux or Mac OS X
 
-See [INSTALL.md](INSTALL.md) to install the dependencies (like an instrumented `nodeos`).
+#### dfuse Instrumented nodeos (deep-mind)
+* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
 
+#### Recommended tools
+* [eosio.cdt tools](https://github.com/EOSIO/eosio.cdt)
+* `cleos` (from [EOSIO/eos](https://github.com/EOSIO/eos)) or
+* [eosc](https://github.com/eoscanada/eosc/releases).
 
-#### Build from source
+### Installing
+
+#### From a pre-built release
+
+* Download a tarball from the [GitHub Releases Tab](https://github.com/dfuse-io/dfuse-eosio/releases).
+* Put the binary `dfuseeos` in your `PATH`.
+
+#### From source
+
+Build requirements:
+* `Git`
+* `Go` 1.14 or higher ([installation](https://golang.org/doc/install#install))
+* `yarn` 1.15 or higher ([installation](https://classic.yarnpkg.com/en/docs/install))
+* [rice](https://github.com/GeertJohan/go.rice) Go static assets embedder (see installation instructions below)
 
 ```
+# Install `rice` CLI tool if you don't have it already
+go get github.com/GeertJohan/go.rice
+go get github.com/GeertJohan/go.rice/rice
+
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
+
+pushd eosq
+  yarn install && yarn build
+popd
+
+# To generate the dashboard box you will need to clone the dlauncher repo at the same level of dfuse-eosio
+pushd ..
+    git clone https://github.com/dfuse-io/dlauncher
+    pushd dlauncher/dashboard
+        pushd client
+            yarn install && yarn build
+        popd
+        go generate .
+    popd
+popd
+
+go generate ./dashboard
+go generate ./eosq/app/eosq
+
 go install -v ./cmd/dfuseeos
 ```
 
+This will install the binary in your `$GOPATH/bin` folder (normally
+`$HOME/go/bin`). Make sure this folder is in your `PATH` env variable.
 
-### Usage
+### Usage (creating a new local chain)
 
-Initialize a new `dfuse.yaml` config file (answer 'y' for a quick start) with:
+1. Initialize a few configuration files in your working directory (`dfuse.yaml`, `mindreader/config.ini`, ...)
 
-    dfuseeos init
+```
+dfuseeos init
+```
 
-The created file will contain the private and public keys generated
-for the booted chain.
+2. Optionally copy over a boot sequence to have dfuse bootstraps your chain with accounts, system contracts to have a chain ready for development in matter of seconds:
 
-Boot your instance with:
+```
+wget -O bootseq.yaml https://raw.githubusercontent.com/dfuse-io/dfuse-eosio/develop/booter/examples/bootseq.dev.yaml
+```
 
-    dfuseeos start
+**Note** Check [booter/examples](./booter/examples) for other boot sequence templates.
 
-If you answered 'y', this will boot a producer node, a reader node,
-both communicating together, boot all dfuse services and expose a
-dashboard and all the APIs.
+3. Boot your instance with:
 
-A terminal prompt will list the graphical interfaces with their relevant links:
+```
+dfuseeos start
+```
 
-    Dashboard: http://localhost:8080
-    GraphiQL: http://localhost:13019
-    Eosq: http://localhost:8081
+4. A terminal prompt will list the graphical interfaces with their relevant links:
 
-The **Dashboard** is a diagnostic tool to monitor the status of each
-component of dfuse for EOSIO. It also provides a graph to visualize how far
-their head block has drifted from the current block.
+```
+Dashboard: http://localhost:8081
+Explorer & APIs:  http://localhost:8080
+GraphiQL:         http://localhost:8080/graphiql
+```
 
-To run the dashboard in dev mode:
+In this mode, two nodeos instances will now be running on your machine, a block producer node and a mindreader node, and the dfuse services should be ready in a matter of seconds.
 
-    cd dashboard/client
-    yarn install
-    yarn start
+### Usage (syncing existing chain)
 
-Head to the **GraphiQL** interface, and do a streaming search of
-what's happening on chain! All dfuse GraphQL queries are available here.
+If you chose to sync to an existing chain, only the mindreader node will launch. It may take a while for the initial sync depending on the size of the chain and the services may generate various error logs until it catches up. (More options for quickly syncing with an existing chain will be proposed in coming releases.)
 
-**Eosq**, our high precision block explorer is also integrated in box.
-Use it to test out search queries and view organized information
-such as accounts, transaction data, and inline actions.
-The built javascript folder is committed with the code for convenience.
-See [eosq README](eosq/README.md) for build instructions
+* See [Syncing a chain partially](./PARTIAL_SYNC.md)
+* See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 
+### Logging
+
+See [Logging](./LOGGING.md)
 
 ## Overview
-
 
 Here's a quick map of this repository:
 
@@ -103,6 +142,9 @@ dfuse Products's EOSIO-specific hooks and plugins:
 * [dgraphql resolvers](./dgraphql), with all data schemas for EOSIO
 * [blockmeta plugin](./blockmeta), for EOS-specific `kvdb` bridge.
 
+## Troubleshooting
+
+See [Troubleshooting](./TROUBLESHOOTING.md) section
 
 ## Contributing
 

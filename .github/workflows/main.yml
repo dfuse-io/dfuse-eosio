@@ -3,96 +3,43 @@ name: Build and Test
 on:
   push:
     branches:
-      - feature/checks
-    tags: []
+      - develop
   pull_request:
-  
+    branches:
+      - "**"
+
 jobs:
-  lint:
-    name: Build
-    env:
-      GOPRIVATE: github.com/dfuse-io/*
+  test:
+    name: Test
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-16.04]
+        os: [ubuntu-18.04]
     steps:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.14
 
       - name: Check out code
         uses: actions/checkout@v1
-      
-      - name: Granting private modules access
-        run: |
-          git config --global url."https://${{ secrets.GO_MODULES_TOKEN }}:x-oauth-basic@github.com/dfuse-io".insteadOf "https://github.com/dfuse-io" 
+
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run Unit tests.
+        run: go test ./...
 
       - name: Build dfuseeos
-        run: |
-          #go get -x
-          go build -o dfuseeos ./cmd/dfuseeos
-  
-# jobs:
+        run: go build -o dfuseeos ./cmd/dfuseeos
 
-#   test:
-#     name: Test
-#     runs-on: ${{ matrix.os }}
-#     strategy:
-#       matrix:
-#         os: [ubuntu-16.04]
-#     steps:
-#       - name: Set up Go
-#         uses: actions/setup-go@v1
-#         with:
-#           go-version: 1.13
-#       - name: Check out code
-#         uses: actions/checkout@v1
-#       - name: Run Unit tests.
-#         run: go test ./...
+      # This one might be a bit more complicated... Unsure how this will behave in Github's workflow environment.
+      # - name: Smoke Test
+      #   working-directory: tests
+      #   run: DEBUG=true E2E_TESTS=true go test
 
-  # build:
-  #   name: Build
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       # os: [ubuntu-16.04, macos-latest, windows-latest]
-  #       os: [ubuntu-16.04]
-  #   needs: [test]
-  #   steps:
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v1
-  #       with:
-  #         go-version: 1.13
-  #     - name: Check out code
-  #       uses: actions/checkout@v1
-  #     - name: Build
-  #       run: go build -o dfuseeos ./cmd/dfuseeos
-  #     - name: Upload binary
-  #       uses: actions/upload-artifact@v1
-  #       with:
-  #         name: files
-  #         path: dfuseeos
-
-  # smoke:
-  #   name: Smoke Test
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #     os: [ubuntu-16.04]
-  #   needs: [build]
-  #   steps:
-  #     - name: Set up Go
-  #       uses: actions/setup-go@v1
-  #       with:
-  #         go-version: 1.13
-  #     - name: Check out code
-  #       uses: actions/checkout@v1
-  #     - name: Download artifacts from build step
-  #       uses: actions/download-artifact@v1
-  #       with:
-  #         name: files
-  #     - name: Smoke Test Time
-  #       run: mv files/dfuseeos . && cwd tests && DEBUG=true E2E_TESTS=true go test
-  

@@ -1,11 +1,11 @@
 import { Cell } from "../../../atoms/ui-grid/ui-grid.component"
 import { SearchShortcut } from "../../search-shortcut/search-shortcut"
 import { AutorizationBox } from "../../authorization-box/authorization-box.component"
-import { DetailLine } from "../../../atoms/pills/detail-line"
+import { DetailLine, JsonWrapper } from "@dfuse/explorer"
 import { t } from "i18next"
 import { LinkStyledText, Text } from "../../../atoms/text/text.component"
 import { theme, styled } from "../../../theme"
-import { JsonWrapper } from "../../../atoms/json-wrapper/json-wrapper"
+
 import { RamUsage } from "../../ram-usage/ram-usage.component"
 import { DBOperations } from "../../db-operations/db-operations.component"
 import * as React from "react"
@@ -107,7 +107,7 @@ export class PillTabContentComponent extends React.Component<Props, State> {
   renderReceiverInfo() {
     if (this.props.traceInfo) {
       return (
-        <DetailLine compact={true} label={t("transaction.pill.receiver")}>
+        <DetailLine variant="compact" label={t("transaction.pill.receiver")}>
           <SearchShortcut query={`receiver:${this.props.traceInfo.receiver}`}>
             <MonospaceTextLink to={Links.viewAccount({ id: this.props.traceInfo.receiver })}>
               {this.props.traceInfo.receiver}
@@ -125,7 +125,7 @@ export class PillTabContentComponent extends React.Component<Props, State> {
       query = `${query} receiver:${this.props.traceInfo.receiver}`
     }
     return (
-      <DetailLine compact={true} label={t("transaction.pill.account")}>
+      <DetailLine variant="compact" label={t("transaction.pill.account")}>
         <SearchShortcut query={query}>
           <MonospaceTextLink to={Links.viewAccount({ id: this.props.action.account })}>
             {this.props.action.account}
@@ -141,7 +141,7 @@ export class PillTabContentComponent extends React.Component<Props, State> {
       query = `${query} receiver:${this.props.traceInfo.receiver}`
     }
     return (
-      <DetailLine compact={true} label={t("transaction.pill.action_name")}>
+      <DetailLine variant="compact" label={t("transaction.pill.action_name")}>
         <SearchShortcut query={query}>
           <Text>{this.props.action.name}</Text>
         </SearchShortcut>
@@ -163,14 +163,14 @@ export class PillTabContentComponent extends React.Component<Props, State> {
     )
 
     return (
-      <DetailLine compact={true} label={t("transaction.pill.authorization")}>
+      <DetailLine variant="compact" label={t("transaction.pill.authorization")}>
         <Text>{authorizations}</Text>
       </DetailLine>
     )
   }
 
   renderDisplayFullContentButton() {
-    return !this.props.displayFullContentButton ? (
+    return this.props.displayFullContentButton ? (
       <Cell float="right">
         <LinkStyledText color={theme.colors.link} onClick={() => this.props.onDisplayFullContent()}>
           Show Full Content

@@ -1,0 +1,20 @@
+{
+  "permissions": [
+    {
+      "owner": "eosio.null",
+      "name": "owner",
+      "authority": {
+        "threshold": 1
+      }
+    },
+    {
+      "parent": "owner",
+      "owner": "eosio.null",
+      "name": "active",
+      "authority": {
+        "threshold": 1
+      }
+    }
+  ],
+  "link_auths": null
+}

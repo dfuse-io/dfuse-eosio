@@ -1,6 +1,6 @@
 import { t } from "i18next"
 import * as React from "react"
-import { compactString, formatNumber, NBSP } from "../../helpers/formatters"
+import { compactString, formatNumber, NBSP } from "@dfuse/explorer"
 import { DeferredOperation, TransactionReceiptStatus } from "../../models/transaction"
 import { Links } from "../../routes"
 

@@ -32,12 +32,6 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 	var srcTx *pbcodec.TransactionLifecycle
 	var err error
 
-	startBlockID, err := ws.db.GetLastWrittenBlockID(ctx)
-	if err != nil {
-		ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get last written block"))
-		return
-	}
-
 	srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
 	if err != nil {
 		if !msg.Listen {
@@ -55,13 +49,20 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 	}
 
 	if msg.Listen {
-		libID, err := ws.db.GetIrreversibleIDAtBlockID(ctx, startBlockID)
+
+		libID, err := ws.db.GetLastWrittenIrreversibleBlockRef(ctx)
 		if err != nil {
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get lib"))
 			return
 		}
 
+		exclusiveGateID := libID.ID()
+		if srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libID.Num() {
+			exclusiveGateID = srcTx.ExecutionTrace.ProducerBlockId
+		}
+
 		wantedTrxID := msg.Data.ID
+
 		resendNextNewBlock := false
 		handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
 			// un an undo or redo notice, we wait for the next "normal" block
@@ -80,8 +81,8 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 
 			blk := block.ToNative().(*pbcodec.Block)
 
-			transactionIds := make([]string, len(blk.TransactionTraces))
-			for i, transaction := range blk.TransactionTraces {
+			transactionIds := make([]string, len(blk.TransactionTraces()))
+			for i, transaction := range blk.TransactionTraces() {
 				transactionIds[i] = transaction.Id
 			}
 
@@ -135,9 +136,9 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			handler = NewProgressHandler(handler, ws, msg, ctx).ProcessBlock
 		}
 
-		gateHandler := bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler)
-		forkableHandler := forkable.New(gateHandler, forkable.WithExclusiveLIB(libID))
-		firstGate := bstream.NewBlockIDGate(libID.ID(), bstream.GateInclusive, forkableHandler)
+		gateHandler := bstream.NewBlockIDGate(exclusiveGateID, bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+		forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(libID))
+		firstGate := bstream.NewBlockIDGate(libID.ID(), bstream.GateInclusive, forkableHandler, bstream.GateOptionWithLogger(zlog))
 
 		metrics.IncListeners("get_transaction")
 		source := ws.subscriptionHub.NewSourceFromBlockRef(libID, firstGate)
@@ -156,7 +157,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			return
 		}
 
-		ws.EmitReply(ctx, msg, wsmsg.NewListening(eos.BlockNum(startBlockID)))
+		ws.EmitReply(ctx, msg, wsmsg.NewListening(eos.BlockNum(exclusiveGateID)))
 		go source.Run()
 
 	}

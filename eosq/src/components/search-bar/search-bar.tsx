@@ -6,7 +6,7 @@ import { Links } from "../../routes"
 import { RouteComponentProps } from "react-router"
 import queryString from "query-string"
 import { metricsStore, searchStore } from "../../stores"
-import { formatNumber, NBSP } from "../../helpers/formatters"
+import { formatNumber, NBSP } from "@dfuse/explorer"
 import { t } from "i18next"
 import { performStructuredSearch } from "../../services/search"
 import { ExternalTextLink } from "../../atoms/text/text.component"
@@ -17,7 +17,7 @@ import { theme } from "../../theme"
 import {
   OmniSearchResponse,
   fetchTypeaheadSuggestions,
-  omniSearch,
+  omniSearch
 } from "../../clients/websocket/eosws"
 
 interface Props extends RouteComponentProps<{}> {}
@@ -38,9 +38,9 @@ export class SearchBar extends React.Component<Props> {
           {
             id: "blocks",
             suggestions: [
-              { label: formatNumber(blockNumCandidate), key: blockNumCandidate.toString() },
-            ],
-          },
+              { label: formatNumber(blockNumCandidate), key: blockNumCandidate.toString() }
+            ]
+          }
         ]
         suggestions = [...blockSuggestion, ...suggestions]
       }
@@ -100,7 +100,7 @@ export class SearchBar extends React.Component<Props> {
   onStructuredSearchSubmit = (query: string) => {
     this.props.history.push(
       `${Links.viewTransactionSearch()}?${queryString.stringify({
-        q: encodeURIComponent(query),
+        q: encodeURIComponent(query)
       })}`
     )
     performStructuredSearch("")

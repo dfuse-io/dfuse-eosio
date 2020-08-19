@@ -24,6 +24,18 @@ import (
 	"go.opencensus.io/plugin/ochttp"
 )
 
+var corsRequestHeaders = []string{
+	"Origin",
+	"Access-Control-Request-Method",
+	"Access-Control-Request-Headers",
+}
+
+func deleteCORSHeaders(r *http.Request) {
+	for _, corsRequestHeader := range corsRequestHeaders {
+		r.Header.Del(corsRequestHeader)
+	}
+}
+
 func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReverseProxy {
 	director := func(req *http.Request) {
 		if stripQuerystring {
@@ -32,6 +44,7 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.Host = target.Host
+		deleteCORSHeaders(req)
 		req.Header.Set("Host", target.Host)
 		if _, ok := req.Header["User-Agent"]; !ok {
 			// explicitly disable User-Agent so it's not set to default value
@@ -50,7 +63,7 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 			// Billable event on REST API endpoint
 			// WARNING: Ingress / Egress bytess is taken care by the middleware
 			//////////////////////////////////////////////////////////////////////
-			//TODO: WARNING - /v0/state (flux) bill one document even though they may be very large
+			//TODO: WARNING - /v0/state (StateDB) bill one document even though they may be very large
 			dmetering.EmitWithContext(dmetering.Event{
 				Source:         "eosws",
 				Kind:           "REST API - Chain State",

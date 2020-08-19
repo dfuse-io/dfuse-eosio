@@ -41,7 +41,7 @@ func ToV1BlockSummary(in *pbcodec.BlockWithRefs) (*BlockSummary, error) {
 		ID:               in.Id,
 		Irreversible:     in.Irreversible,
 		Header:           codec.BlockHeaderToEOS(in.Block.Header),
-		TransactionCount: int(in.Block.TransactionCount),
+		TransactionCount: int(in.Block.UnfilteredTransactionCount),
 		BlockNum:         in.Block.Number,
 		DPoSLIBNum:       in.Block.DposIrreversibleBlocknum,
 	}

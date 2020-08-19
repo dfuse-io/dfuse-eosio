@@ -1,5 +1,6 @@
 import * as React from "react"
-import { Pill, PillLogoProps } from "../../../../atoms/pills/pill"
+import { Pill, PillLogoProps, Box, PillClickable, MonospaceText } from "@dfuse/explorer"
+import { theme } from "../../../../theme"
 import { TransferBox } from "../../../../atoms/pills/pill-transfer-box"
 import { getMemoText } from "../../../../helpers/action.helpers"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
@@ -41,28 +42,49 @@ export class SenseGenesisTransferPillComponent extends GenericPillComponent {
     )
   }
 
-  render() {
-    const memoText = getMemoText(this.props.action)
+  renderPill2 = () => {
     const colorVariant = this.isReceiveTransfer()
       ? "traceActionReceiveBackground"
       : "traceActionSendBackground"
 
+    if (!this.props.headerAndTitleOptions.title) {
+      return (
+        <Box px="2px" bg={this.props.pill2Color || theme.colors[colorVariant]}>
+          &nbsp;
+        </Box>
+      )
+    }
+
+    const WrapperComponent = this.props.disabled ? Box : PillClickable
+
+    return (
+      <WrapperComponent bg={this.props.pill2Color || theme.colors[colorVariant]}>
+        <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
+          {this.props.headerAndTitleOptions.title}
+        </MonospaceText>
+      </WrapperComponent>
+    )
+  }
+
+  render() {
+    const memoText = getMemoText(this.props.action)
     return (
       <Pill
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
         info={memoText}
-        colorVariant={colorVariant}
-        colorVariantHeader={this.props.headerAndTitleOptions.header.color}
         headerText={this.renderHeaderText()}
         renderExpandedContent={() => {
           return this.renderExpandedContent()
         }}
         renderInfo={this.renderLevel2Template}
         content={this.renderContent()}
-        title={this.props.headerAndTitleOptions.title}
       />
     )
   }

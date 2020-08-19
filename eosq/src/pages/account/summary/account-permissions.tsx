@@ -25,7 +25,7 @@ import {
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"
 import Collapsible from "react-collapsible"
 import { MonospaceTextLink } from "../../../atoms/text-elements/misc"
-import { secondsToTime } from "../../../helpers/formatters"
+import { secondsToTime } from "@dfuse/explorer"
 import { assignHierarchy, HierarchyData } from "../../../helpers/account.helpers"
 import { AutorizationBox } from "../../../components/authorization-box/authorization-box.component"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"

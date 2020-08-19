@@ -1,15 +1,11 @@
 export default {
   footer: {
-    telegram: "Support on Telegram",
-    subTitle: "Developed by dfuse for the EOS community",
-    copyright: "© {{year}} dfuse Platform Inc. All Rights Reserved.",
-    madeWithLove: "Made with Love by",
+    telegram: "Community & team support on Telegram",
+    aboutDfuse: "dfuse is an open source blockchain data platform",
+    copyright: "© 2018-{{year}} dfuse Platform Inc. All Rights Reserved.",
     privacyPolicy: "Privacy Policy",
-    privacyPolicyLink: "https://www.eoscanada.com/en/privacy-policy",
-    termsOfServicesLink: "https://www.dfuse.io/en/terms",
+    privacyPolicyLink: "https://dfuse.io/en/privacy-policy",
     termsOfServices: "Terms of Service",
-    eoscanada: "EOS Canada",
-    eoscanadaLink: "https://www.eoscanada.com",
-    eoscanadaLinkCombined: "Made with love by <0>EOS Canada</0>"
+    termsOfServicesLink: "https://dfuse.io/en/terms"
   }
 }

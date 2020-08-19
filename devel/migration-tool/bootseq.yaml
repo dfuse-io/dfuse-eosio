@@ -1,0 +1,60 @@
+keys:
+  boot: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3 # EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+
+contents:
+  # this contract is required only to setup protocol features
+  - name: eosio.system.1.8.3.abi
+    url: https://github.com/dfuse-io/eosio.contracts/releases/download/v1.8.3/eosio.system-1.8.3.abi
+  - name: eosio.system.1.8.3.wasm
+    url: https://github.com/dfuse-io/eosio.contracts/releases/download/v1.8.3/eosio.system-1.8.3.wasm
+
+  - name: eosio.system.abi
+    url: https://github.com/dfuse-io/eosio.contracts/releases/download/v1.9.1/eosio.system-1.9.1.abi
+  - name: eosio.system.wasm
+    url: https://github.com/dfuse-io/eosio.contracts/releases/download/v1.9.1/eosio.system-1.9.1.wasm
+
+################################# BOOT SEQUENCE ###################################
+boot_sequence:
+  - op: migration.inject
+    label: dfuse migration
+    data:
+      data_dir: ./migration-data
+      account: dfuse.mgrt
+
+  # set system contract
+  - op: system.enable_protocol_features
+    label: Enabling chain protocol eatures
+
+  - op: system.setcode
+    label: Setting eosio account contract to eosio.system 1.8.3
+    data:
+      account: eosio
+      contract_name_ref: eosio.system.1.8.3
+
+  - op: system.activate_protocol_features
+    label: Activated specific protocol feature
+    data:
+      features:
+        - GET_SENDER
+        - FORWARD_SETCODE
+        - ONLY_BILL_FIRST_AUTHORIZER
+        - RESTRICT_ACTION_TO_SELF
+        - DISALLOW_EMPTY_PRODUCER_SCHEDULE
+        - FIX_LINKAUTH_RESTRICTION
+        - REPLACE_DEFERRED
+        - NO_DUPLICATE_DEFERRED_ID
+        - ONLY_LINK_TO_EXISTING_PERMISSION
+        - RAM_RESTRICTIONS
+        - WEBAUTHN_KEY
+        - WTMSIG_BLOCK_SIGNATURES
+
+  - op: sleep
+    label: Wait for protocol feature to correcty activate
+    data:
+      duration: 2s
+
+  - op: system.setcode
+    label: Setting eosio account from eosio.bios contract to eosio.system
+    data:
+      account: eosio
+      contract_name_ref: eosio.system

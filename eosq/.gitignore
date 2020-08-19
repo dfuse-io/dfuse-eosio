@@ -1,7 +1,12 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 # Build
+/build
+/eosq-build
 /eosq
 /config.json
+
+/rice-box.go
+/app/eosq/rice-box.go
 
 # dependencies
 /node_modules

@@ -1,8 +1,0 @@
-type Query {
-    """ALPHA Get a single block by its ID or its number. You cannot specify both."""
-    block(
-        id: String,
-        num: Uint32
-    ): Block
-}
-

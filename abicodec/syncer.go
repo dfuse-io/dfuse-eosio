@@ -25,9 +25,9 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
@@ -48,7 +48,7 @@ type ABISyncer struct {
 	cancelSyncer func()
 }
 
-func NewSyncer(cache Cache, dbReader eosdb.DBReader, searchAddr string, onLive func()) (*ABISyncer, error) {
+func NewSyncer(cache Cache, dbReader trxdb.DBReader, searchAddr string, onLive func()) (*ABISyncer, error) {
 	zlog.Info("initializing syncer", zap.String("search_addr", searchAddr))
 	searchConn, err := dgrpc.NewInternalClient(searchAddr)
 	if err != nil {
@@ -76,14 +76,17 @@ func (s *ABISyncer) cleanup(error) {
 }
 
 func (s *ABISyncer) Sync() {
+
 	for {
 		zlog.Info("starting ABI syncer")
 		err := s.streamABIChanges()
-		if err != nil && !errors.Is(err, context.Canceled) {
-			zlog.Info("the search stream ended with error", zap.Error(err))
+		zlog.Info("abi codec stream abi changes", zap.Error(err))
+		if err != nil {
+			if !errors.Is(err, context.Canceled) {
+				zlog.Info("the search stream ended with error", zap.Error(err))
+			}
 		}
 
-		zlog.Info("waiting before startng ABI syncer")
 		select {
 		case <-s.syncCtx.Done():
 			return
@@ -109,7 +112,7 @@ func (s *ABISyncer) streamABIChanges() error {
 		Mode:               pbsearch.RouterRequest_STREAMING,
 	})
 	if err != nil {
-		return fmt.Errorf("unble to init search query for all ABIs: %w", err)
+		return fmt.Errorf("unable to init search query for all ABIs: %w", err)
 	}
 
 	for {
@@ -127,7 +130,7 @@ func (s *ABISyncer) streamABIChanges() error {
 			zlog.Debug("received search ABI match from client")
 		}
 
-		blockRef := bstream.BlockRefFromID(match.BlockID)
+		blockRef := bstream.NewBlockRef(match.BlockID, match.BlockNum)
 		if match.TransactionTrace == nil {
 			zlog.Debug("found a live marker")
 			s.handleLiveMaker(blockRef, match.Cursor)
@@ -138,6 +141,7 @@ func (s *ABISyncer) streamABIChanges() error {
 		for _, action := range match.MatchingActions {
 			s.handleABIAction(blockRef, transactionID, action, match.Undo)
 		}
+		s.cache.SetCursor(match.Cursor)
 	}
 }
 

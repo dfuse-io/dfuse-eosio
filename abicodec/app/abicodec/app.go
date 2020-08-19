@@ -20,8 +20,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
@@ -30,14 +29,14 @@ import (
 )
 
 type Config struct {
-	GRPCListenAddr       string
-	SearchAddr           string
-	KvdbDSN              string
-	CacheBaseURL         string
-	CacheStateName       string
-	ExportCache          bool
-	ExportCacheURL       string
-	EnableReadinessProbe bool
+	GRPCListenAddr     string
+	SearchAddr         string
+	KvdbDSN            string
+	CacheBaseURL       string
+	CacheStateName     string
+	ExportABIsEnabled  bool
+	ExportABIsBaseURL  string
+	ExportABIsFilename string
 }
 
 type App struct {
@@ -54,7 +53,9 @@ func New(config *Config) *App {
 }
 
 func (a *App) Run() error {
-	zlog.Info("initiating cache", zap.String("cache_state_path", a.config.CacheBaseURL), zap.String("cache_state_name", a.config.CacheStateName))
+	zlog.Info("running abicodec cache", zap.Reflect("config", a.config))
+
+	zlog.Info("initiating cache", zap.String("", a.config.CacheBaseURL), zap.String("cache_state_name", a.config.CacheStateName))
 	store, err := dstore.NewSimpleStore(a.config.CacheBaseURL)
 	if err != nil {
 		return fmt.Errorf("unable to init store: %w", err)
@@ -62,18 +63,18 @@ func (a *App) Run() error {
 
 	cache, err := abicodec.NewABICache(store, a.config.CacheStateName)
 	if err != nil {
-		return fmt.Errorf("unble to init ABI cache: %w", err)
+		return fmt.Errorf("unable to init ABI cache: %w", err)
 	}
 
-	backuper := abicodec.NewBackuper(cache, a.config.ExportCache, a.config.ExportCacheURL)
+	backuper := abicodec.NewBackuper(cache, a.config.ExportABIsEnabled, a.config.ExportABIsBaseURL, a.config.ExportABIsFilename)
 	go backuper.BackupPeriodically(30 * time.Second)
 
 	backuper.OnTerminated(a.Shutdown)
 	a.OnTerminating(backuper.Shutdown)
 
-	dbReader, err := eosdb.New(a.config.KvdbDSN)
+	dbReader, err := trxdb.New(a.config.KvdbDSN, trxdb.WithLogger(zlog))
 	if err != nil {
-		return fmt.Errorf("unble to init KVDB connection: %w", err)
+		return fmt.Errorf("unable to init KVDB connection: %w", err)
 	}
 
 	server := abicodec.NewServer(cache, a.config.GRPCListenAddr)
@@ -83,10 +84,13 @@ func (a *App) Run() error {
 
 	go server.Serve()
 
-	onLive := func() { server.SetReady() }
+	onLive := func() {
+		backuper.IsLive = true
+		server.SetReady()
+	}
 	syncer, err := abicodec.NewSyncer(cache, dbReader, a.config.SearchAddr, onLive)
 	if err != nil {
-		return fmt.Errorf("unble to create ABI syncer: %w", err)
+		return fmt.Errorf("unable to create ABI syncer: %w", err)
 	}
 
 	syncer.OnTerminated(a.Shutdown)
@@ -94,13 +98,11 @@ func (a *App) Run() error {
 
 	go syncer.Sync()
 
-	if a.config.EnableReadinessProbe {
-		gs, err := dgrpc.NewInternalClient(a.config.GRPCListenAddr)
-		if err != nil {
-			return fmt.Errorf("cannot create readiness probe")
-		}
-		a.readinessProbe = pbhealth.NewHealthClient(gs)
+	gs, err := dgrpc.NewInternalClient(a.config.GRPCListenAddr)
+	if err != nil {
+		return fmt.Errorf("cannot create readiness probe")
 	}
+	a.readinessProbe = pbhealth.NewHealthClient(gs)
 
 	return nil
 }

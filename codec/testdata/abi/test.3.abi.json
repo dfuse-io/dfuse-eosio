@@ -1,0 +1,20 @@
+{
+  "version": "eosio::abi/1.0",
+  "structs": [
+    {
+      "name": "value",
+      "base": "",
+      "fields": [
+        {
+          "name": "quantity",
+          "type": "asset"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    { "name": "act3", "type": "value" }
+  ],
+  "ricardian_clauses": [{"id":"name", "body":"test.3.abi.json"}],
+  "abi_extensions": []
+}

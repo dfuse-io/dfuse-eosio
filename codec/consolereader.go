@@ -26,14 +26,19 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
+	"go.uber.org/zap"
 )
+
+var supportedVersions = []string{"12", "13"}
 
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
 type ConsoleReader struct {
-	src     io.Reader
-	scanner *bufio.Scanner
-	close   func()
+	src        io.Reader
+	scanner    *bufio.Scanner
+	close      func()
+	readBuffer chan string
+	done       chan interface{}
 
 	ctx *parseCtx
 }
@@ -48,6 +53,7 @@ func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 		src:   reader,
 		close: func() {},
 		ctx:   newParseCtx(),
+		done:  make(chan interface{}),
 	}
 	l.setupScanner()
 	return l, nil
@@ -56,8 +62,31 @@ func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 func (l *ConsoleReader) setupScanner() {
 	buf := make([]byte, 50*1024*1024)
 	scanner := bufio.NewScanner(l.src)
-	scanner.Buffer(buf, 50*1024*1024)
+	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
+	l.readBuffer = make(chan string, 2000)
+
+	go func() {
+		for l.scanner.Scan() {
+			line := l.scanner.Text()
+			if !strings.HasPrefix(line, "DMLOG ") {
+				continue
+			}
+			l.readBuffer <- line
+		}
+
+		err := l.scanner.Err()
+		if err != nil && err != io.EOF {
+			zlog.Error("console read line scanner encountered an error", zap.Error(err))
+		}
+
+		close(l.readBuffer)
+		close(l.done)
+	}()
+}
+
+func (l *ConsoleReader) Done() <-chan interface{} {
+	return l.done
 }
 
 func (l *ConsoleReader) Close() {
@@ -65,6 +94,7 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
+	abiDecoder     *ABIDecoder
 	block          *pbcodec.Block
 	activeBlockNum int64
 
@@ -74,21 +104,21 @@ type parseCtx struct {
 
 func newParseCtx() *parseCtx {
 	return &parseCtx{
-		block: &pbcodec.Block{},
-		trx:   &pbcodec.TransactionTrace{},
+		abiDecoder: newABIDecoder(),
+		block:      &pbcodec.Block{},
+		trx:        &pbcodec.TransactionTrace{},
 	}
 }
 
 func (l *ConsoleReader) Read() (out interface{}, err error) {
 	ctx := l.ctx
 
-	for l.scanner.Scan() {
-		line := l.scanner.Text()
-		if !strings.HasPrefix(line, "DMLOG ") {
-			continue
-		}
-
+	for line := range l.readBuffer {
 		line = line[6:]
+
+		if traceEnabled {
+			zlog.Debug("extracing deep mind data from line", zap.String("line", line))
+		}
 
 		// Order of conditions is based (approximately) on those that will appear more often
 		switch {
@@ -138,10 +168,15 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFailedDTrxOp(line)
 
 		case strings.HasPrefix(line, "ACCEPTED_BLOCK"):
-			return ctx.readAcceptedBlock(line)
+			block, err := ctx.readAcceptedBlock(line)
+			if err != nil {
+				return nil, l.formatError(line, err)
+			}
+
+			return block, nil
 
 		case strings.HasPrefix(line, "START_BLOCK"):
-			ctx.readStartBlock(line)
+			err = ctx.readStartBlock(line)
 
 		case strings.HasPrefix(line, "FEATURE_OP ACTIVATE"):
 			err = ctx.readFeatureOpActivate(line)
@@ -150,16 +185,25 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFeatureOpPreActivate(line)
 
 		case strings.HasPrefix(line, "SWITCH_FORK"):
-			zlog.Info("Fork signal, restarting state accumulation from beginning")
+			zlog.Info("fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
 
+		case strings.HasPrefix(line, "ABIDUMP START"):
+			err = ctx.readABIStart(line)
+		case strings.HasPrefix(line, "ABIDUMP ABI"):
+			err = ctx.readABIDump(line)
+		case strings.HasPrefix(line, "ABIDUMP END"):
+			//noop
+
+		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
+			err = ctx.readDeepmindVersion(line)
+
 		default:
-			return nil, fmt.Errorf("unsupported log line: %q", line)
+			zlog.Info("unknown log line", zap.String("line", line))
 		}
 
 		if err != nil {
-			chunks := strings.SplitN(line, " ", 2)
-			return nil, fmt.Errorf("%s: %s (line %q)", chunks[0], err, line)
+			return nil, l.formatError(line, err)
 		}
 	}
 
@@ -168,6 +212,11 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 	}
 
 	return nil, l.scanner.Err()
+}
+
+func (l *ConsoleReader) formatError(line string, err error) error {
+	chunks := strings.SplitN(line, " ", 2)
+	return fmt.Errorf("%s: %s (line %q)", chunks[0], err, line)
 }
 
 type creationOp struct {
@@ -236,7 +285,7 @@ func (ctx *parseCtx) recordTableOp(operation *pbcodec.TableOp) {
 }
 
 func (ctx *parseCtx) recordTrxOp(operation *pbcodec.TrxOp) {
-	ctx.block.ImplicitTransactionOps = append(ctx.block.ImplicitTransactionOps, operation)
+	ctx.block.UnfilteredImplicitTransactionOps = append(ctx.block.UnfilteredImplicitTransactionOps, operation)
 }
 
 func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
@@ -261,7 +310,11 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		// We add the failed deferred trace first, before the "real" trace (the `onerror` handler)
 		// since it was ultimetaly ran first. There is no ops possible on the trace expect the
 		// transferred RAM op, so it's all good to attach it directly.
-		ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, failedTrace)
+		ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, failedTrace)
+
+		if err := ctx.abiDecoder.processTransaction(failedTrace); err != nil {
+			return fmt.Errorf("abi decoding failed trace: %w", err)
+		}
 
 		// When the `onerror` `trace` receipt is `soft_fail`, it means the `onerror` handler
 		// succeed. But when it's `hard_fail` it means either no handler was defined, or the one
@@ -289,9 +342,13 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.RlimitOps = ctx.trx.RlimitOps
 	trace.TableOps = ctx.trx.TableOps
 
-	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
-	ctx.resetTrx()
+	ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, trace)
 
+	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
+		return fmt.Errorf("abi decoding trace: %w", err)
+	}
+
+	ctx.resetTrx()
 	return nil
 }
 
@@ -343,11 +400,15 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 	ctx.resetBlock()
 	ctx.activeBlockNum = blockNum
 
+	if err := ctx.abiDecoder.startBlock(uint64(blockNum)); err != nil {
+		return fmt.Errorf("abi decoder: %w", err)
+	}
+
 	return nil
 }
 
 // Line format:
-//   ACCEPTED_BLOCK ${block_num} ${block_json}
+//   ACCEPTED_BLOCK ${block_num} ${block_state_hex}
 func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -363,27 +424,26 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		return nil, fmt.Errorf("block_num %d doesn't match the active block num (%d)", blockNum, ctx.activeBlockNum)
 	}
 
+	blockStateHex, err := hex.DecodeString(chunks[2])
+	if err != nil {
+		return nil, fmt.Errorf("unable to decode block %d state hex: %w", blockNum, err)
+	}
+
 	blockState := &eos.BlockState{}
-	err = json.Unmarshal([]byte(chunks[2]), &blockState)
+	err = unmarshalBinary(blockStateHex, blockState)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshalling blockState: %s", err)
+		return nil, fmt.Errorf("unmarshalling binary block state: %w", err)
 	}
 
-	signedBlock := &eos.SignedBlock{}
-	err = json.Unmarshal(
-		json.RawMessage(gjson.Get(chunks[2], "block").Raw),
-		&signedBlock,
-	)
+	signedBlock := blockState.SignedBlock
 
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling signed block: %s", err)
-	}
-
-	ctx.block.Id = blockState.BlockID
+	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
+	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
+	// TransactionCount, TransactionTraceCount)
+	ctx.block.Version = 1
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
-	ctx.block.ConfirmCount = blockState.ConfirmCount
 	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
 	ctx.block.DposProposedIrreversibleBlocknum = blockState.DPoSProposedIrreversibleBlockNum
 	ctx.block.Validated = blockState.Validated
@@ -392,6 +452,11 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	ctx.block.ProducerToLastImpliedIrb = ProducerToLastImpliedIrbToDEOS(blockState.ProducerToLastImpliedIRB)
 	ctx.block.ActivatedProtocolFeatures = ActivatedProtocolFeaturesToDEOS(blockState.ActivatedProtocolFeatures)
 	ctx.block.ProducerSignature = signedBlock.ProducerSignature.String()
+
+	ctx.block.ConfirmCount = make([]uint32, len(blockState.ConfirmCount))
+	for i, count := range blockState.ConfirmCount {
+		ctx.block.ConfirmCount[i] = uint32(count)
+	}
 
 	if blockState.PendingSchedule != nil {
 		ctx.block.PendingSchedule = PendingScheduleToDEOS(blockState.PendingSchedule)
@@ -423,37 +488,44 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	// End (versions)
 
-	ctx.block.TransactionCount = uint32(len(signedBlock.Transactions))
+	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
 	for idx, transaction := range signedBlock.Transactions {
 		deosTransaction := TransactionReceiptToDEOS(&transaction)
 		deosTransaction.Index = uint64(idx)
 
-		ctx.block.Transactions = append(ctx.block.Transactions, deosTransaction)
+		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
 	}
 
-	ctx.block.TransactionTraceCount = uint32(len(ctx.block.TransactionTraces))
-	for idx, t := range ctx.block.TransactionTraces {
+	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
+	for idx, t := range ctx.block.UnfilteredTransactionTraces {
 		t.Index = uint64(idx)
 		t.BlockTime = ctx.block.Header.Timestamp
 		t.ProducerBlockId = ctx.block.Id
 		t.BlockNum = uint64(ctx.block.Number)
 
 		for _, actionTrace := range t.ActionTraces {
-			ctx.block.ExecutedTotalActionCount++
+			ctx.block.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				ctx.block.ExecuteInputActionCount++
+				ctx.block.UnfilteredExecutedInputActionCount++
 			}
 		}
 	}
 
 	block := ctx.block
-	ctx.resetBlock()
 
+	zlog.Debug("blocking until abi decoder has decoded every transaction pushed to it")
+	err = ctx.abiDecoder.endBlock(ctx.block)
+	if err != nil {
+		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
+	}
+
+	zlog.Debug("abi decoder terminated all decoding operations, resetting block")
+	ctx.resetBlock()
 	return block, nil
 }
 
 // Line format:
-//   APPLIED_TRANSACTION ${block_num} ${traces_json}
+//   APPLIED_TRANSACTION ${block_num} ${trace_hex}
 func (ctx *parseCtx) readAppliedTransaction(line string) error {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -469,13 +541,18 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("saw transactions from block %d while active block is %d", blockNum, ctx.activeBlockNum)
 	}
 
-	transactionTrace := &eos.TransactionTrace{}
-	err = json.Unmarshal(json.RawMessage(chunks[2]), &transactionTrace)
+	trxTraceHex, err := hex.DecodeString(chunks[2])
 	if err != nil {
-		return fmt.Errorf("unmarshal transaction trace: %s", err)
+		return fmt.Errorf("unable to decode transaction trace hex at block num %d: %w", blockNum, err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(transactionTrace))
+	trxTrace := &eos.TransactionTrace{}
+	err = unmarshalBinary(trxTraceHex, trxTrace)
+	if err != nil {
+		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
+	}
+
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace))
 }
 
 // Line formats:
@@ -606,24 +683,44 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 	}
 
 	opString := chunks[1]
-	op, ok := pbcodec.DTrxOp_Operation_value["OPERATION_"+opString]
+	rawOp, ok := pbcodec.DTrxOp_Operation_value["OPERATION_"+opString]
 	if !ok {
 		return fmt.Errorf("operation %q unknown", opString)
 	}
+
+	op := pbcodec.DTrxOp_Operation(rawOp)
 
 	actionIndex, err := strconv.Atoi(chunks[2])
 	if err != nil {
 		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
 	}
 
-	trx := &eos.SignedTransaction{}
-	err = json.Unmarshal([]byte(chunks[10]), trx)
+	trxHex, err := hex.DecodeString(chunks[10])
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
+		return fmt.Errorf("unable to decode signed transaction hex: %w", err)
+	}
+
+	var signedTrx *eos.SignedTransaction
+	if op == pbcodec.DTrxOp_OPERATION_PUSH_CREATE {
+		signedTrx = new(eos.SignedTransaction)
+		err = unmarshalBinary(trxHex, signedTrx)
+		if err != nil {
+			return fmt.Errorf("unmarshal binary signed transaction: %w", err)
+		}
+	} else {
+		trx := &eos.Transaction{}
+		err = unmarshalBinary(trxHex, trx)
+		if err != nil {
+			return fmt.Errorf("unmarshal binary transaction: %w", err)
+		}
+
+		signedTrx = &eos.SignedTransaction{
+			Transaction: trx,
+		}
 	}
 
 	ctx.recordDTrxOp(&pbcodec.DTrxOp{
-		Operation:     pbcodec.DTrxOp_Operation(op),
+		Operation:     op,
 		ActionIndex:   uint32(actionIndex),
 		Sender:        chunks[3],
 		SenderId:      chunks[4],
@@ -632,7 +729,7 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 		DelayUntil:    chunks[7],
 		ExpirationAt:  chunks[8],
 		TransactionId: chunks[9],
-		Transaction:   SignedTransactionToDEOS(trx),
+		Transaction:   SignedTransactionToDEOS(signedTrx),
 	})
 
 	return nil
@@ -710,14 +807,14 @@ func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 	return nil
 }
 
-// Line formats:
-//   PERM_OP INS ${action_id} ${data}
-//   PERM_OP UPD ${action_id} ${data}
-//   PERM_OP REM ${action_id} ${data} <-- {"old": <old>, "new": <new>}
+// Line formats: (the `[...]` represents optional fields)
+//   PERM_OP INS ${action_id} [${permission_id}] ${data}
+//   PERM_OP UPD ${action_id} [${permission_id}] ${data}
+//   PERM_OP REM ${action_id} [${permission_id}] ${data} <-- {"old": <old>, "new": <new>}
 func (ctx *parseCtx) readPermOp(line string) error {
-	chunks := strings.SplitN(line, " ", 4)
-	if len(chunks) != 4 {
-		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
+	chunks, err := splitNToM(line, 4, 5)
+	if err != nil {
+		return err
 	}
 
 	actionIndex, err := strconv.Atoi(chunks[2])
@@ -726,6 +823,17 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	}
 
 	opString := chunks[1]
+	dataChunk := chunks[3]
+	var permissionID uint64
+
+	// A `PERM_OP` with 5 fields have ["permission_id"] field in index #3 set and data chunk is actually index #4
+	if len(chunks) == 5 {
+		permissionID, err = strconv.ParseUint(chunks[3], 10, 64)
+		if err != nil {
+			return fmt.Errorf("permission_id is not a valid number, got: %q", chunks[3])
+		}
+		dataChunk = chunks[4]
+	}
 
 	op := pbcodec.PermOp_OPERATION_UNKNOWN
 	var oldData, newData []byte
@@ -733,19 +841,19 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	switch opString {
 	case "INS":
 		op = pbcodec.PermOp_OPERATION_INSERT
-		newData = []byte(chunks[3])
+		newData = []byte(dataChunk)
 
 	case "UPD":
 		op = pbcodec.PermOp_OPERATION_UPDATE
 
-		oldJSONResult := gjson.Get(chunks[3], "old")
+		oldJSONResult := gjson.Get(dataChunk, "old")
 		if !oldJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", dataChunk)
 		}
 
-		newJSONResult := gjson.Get(chunks[3], "new")
+		newJSONResult := gjson.Get(dataChunk, "new")
 		if !newJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", dataChunk)
 		}
 
 		oldData = []byte(oldJSONResult.Raw)
@@ -754,7 +862,7 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	case "REM":
 		op = pbcodec.PermOp_OPERATION_REMOVE
 
-		oldData = []byte(chunks[3])
+		oldData = []byte(dataChunk)
 
 	default:
 		return fmt.Errorf("unknown PERM_OP op: %q", opString)
@@ -769,21 +877,25 @@ func (ctx *parseCtx) readPermOp(line string) error {
 		newPerm := &permissionObject{}
 		err = json.Unmarshal(newData, &newPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall new perm data: %s", err)
+			return fmt.Errorf("unmashal new perm data: %s", err)
 		}
+
 		permOp.NewPerm = newPerm.ToProto()
+		permOp.NewPerm.Id = permissionID
 	}
 
 	if len(oldData) > 0 {
 		oldPerm := &permissionObject{}
 		err = json.Unmarshal(oldData, &oldPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall old perm data: %s", err)
+			return fmt.Errorf("unmashal old perm data: %s", err)
 		}
+
 		permOp.OldPerm = oldPerm.ToProto()
+		permOp.OldPerm.Id = permissionID
+
 	}
 
-	// TODO: fix this, make sure permissionObject is in DEOS mode already..
 	ctx.recordPermOp(permOp)
 
 	return nil
@@ -841,6 +953,102 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		Delta:       int64(delta),
 	})
 	return nil
+}
+
+// Line format:
+//  Version 12
+//    DEEP_MIND_VERSION ${major_version}
+//
+//  Version 13
+//    DEEP_MIND_VERSION ${major_version} ${minor_version}
+func (ctx *parseCtx) readDeepmindVersion(line string) error {
+	chunks, err := splitNToM(line, 2, 3)
+	if err != nil {
+		return err
+	}
+
+	majorVersion := chunks[1]
+	if !inSupportedVersion(majorVersion) {
+		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
+	}
+
+	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
+
+	return nil
+}
+
+func inSupportedVersion(majorVersion string) bool {
+	for _, supportedVersion := range supportedVersions {
+		if majorVersion == supportedVersion {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Line format:
+//  Version 12
+//    ABIDUMP START
+//
+//  Version 13
+//    ABIDUMP START ${block_num} ${global_sequence_num}
+func (ctx *parseCtx) readABIStart(line string) error {
+	chunks := strings.SplitN(line, " ", -1)
+
+	var logFields []zap.Field
+	switch len(chunks) {
+	case 2: // Version 12
+		break
+	case 4: // Version 13
+		blockNum, err := strconv.Atoi(chunks[2])
+		if err != nil {
+			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
+		}
+
+		globalSequence, err := strconv.Atoi(chunks[3])
+		if err != nil {
+			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
+		}
+
+		logFields = append(logFields, zap.Int("block_num", blockNum), zap.Int("global_sequence", globalSequence))
+	default:
+		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
+	}
+
+	zlog.Info("read ABI start marker", logFields...)
+	ctx.abiDecoder.resetCache()
+	return nil
+}
+
+// Line format:
+//  Version 12
+//    ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//
+//  Version 13
+//    ABIDUMP ABI ${contract} ${base64_abi}
+func (ctx *parseCtx) readABIDump(line string) error {
+	chunks, err := splitNToM(line, 4, 5)
+	if err != nil {
+		return err
+	}
+
+	var contract, rawABI string
+	switch len(chunks) {
+	case 5: // Version 12
+		contract = chunks[3]
+		rawABI = chunks[4]
+
+	case 4: // Version 13
+		contract = chunks[2]
+		rawABI = chunks[3]
+	}
+
+	if traceEnabled {
+		zlog.Debug("read initial ABI for contract", zap.String("contract", contract))
+	}
+
+	return ctx.abiDecoder.addInitialABI(contract, rawABI)
 }
 
 // Line format:
@@ -998,18 +1206,43 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 		return fmt.Errorf("unknown kind: %q", opString)
 	}
 
-	trx := &eos.SignedTransaction{}
-	err := json.Unmarshal([]byte(chunks[4]), trx)
+	name := chunks[2]
+	trxID := chunks[3]
+
+	trxHex, err := hex.DecodeString(chunks[4])
 	if err != nil {
-		return fmt.Errorf("cannot unmarshal eos transaction: %s", err)
+		return fmt.Errorf("unable to decode signed transaction %s hex: %w", trxID, err)
+	}
+
+	trx := &eos.SignedTransaction{}
+	err = unmarshalBinary(trxHex, trx)
+	if err != nil {
+		return fmt.Errorf("unmarshal binary signed transaction %s: %w", trxID, err)
 	}
 
 	ctx.recordTrxOp(&pbcodec.TrxOp{
 		Operation:     op,
-		Name:          chunks[2], // "onblock" or "onerror"
-		TransactionId: chunks[3], // the hash of the transaction
+		Name:          name,  // "onblock" or "onerror"
+		TransactionId: trxID, // the hash of the transaction
 		Transaction:   SignedTransactionToDEOS(trx),
 	})
 
 	return nil
+}
+
+func unmarshalBinary(data []byte, v interface{}) error {
+	decoder := eos.NewDecoder(data)
+	decoder.DecodeActions(false)
+	decoder.DecodeP2PMessage(false)
+
+	return decoder.Decode(v)
+}
+
+func splitNToM(line string, min, max int) ([]string, error) {
+	chunks := strings.SplitN(line, " ", -1)
+	if len(chunks) < min || len(chunks) > max {
+		return nil, fmt.Errorf("expected between %d to %d fields (inclusively), got %d", min, max, len(chunks))
+	}
+
+	return chunks, nil
 }

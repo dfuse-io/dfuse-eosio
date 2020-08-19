@@ -9,7 +9,7 @@ import { fontSize, space } from "styled-system"
 import { theme, styled } from "../../theme"
 import { faTelegramPlane } from "@fortawesome/free-brands-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { NBSP } from "../../helpers/formatters"
+import { BULLET, NBSP } from "@dfuse/explorer"
 import { getCurrentLanguageValue } from "../settings-selectors/settings.helpers"
 
 const LogoLink: React.ComponentType<any> = styled(Link)`
@@ -36,11 +36,6 @@ const LogoSecond: React.ComponentType<any> = styled.div`
   ${fontSize};
   top: -10px;
   position: relative;
-`
-
-const StyledLogoImg: React.ComponentType<any> = styled.img`
-  max-height: 16px;
-  margin-bottom: 6px;
 `
 
 const StyledText: React.ComponentType<any> = styled(Text)`
@@ -77,19 +72,12 @@ const BaseFooter = () => (
               q
             </LogoSecond>
           </LogoLink>
-          <Cell pt={[3]}>
-            <Text color={theme.colors.primary}>{t("footer.subTitle")}</Text>
-          </Cell>
-          <ExternalTextLink to="https://eoscanada.com">
-            <StyledLogoImg src="/images/logo-eos-canada.svg" />
-          </ExternalTextLink>
         </Cell>
         <Cell justifySelf="right" textAlign="right" alignSelf="right" pt={[4]}>
-          <ExternalTextLink to="https://t.me/eoscanada">
+          <ExternalTextLink to="https://t.me/dfuseAPI">
             <StyledText pr={[2]} display="inline-block" color={theme.colors.bleu6}>
               {t("footer.telegram")}
             </StyledText>
-            {NBSP}
             <StyledFont color={theme.colors.bleu6} icon={faTelegramPlane} size="lg" />
           </ExternalTextLink>
         </Cell>
@@ -107,30 +95,36 @@ const BaseFooter = () => (
       textAlign="center"
     >
       <a
-        href={`https://www.dfuse.io/${getCurrentLanguageValue()}`}
-        title="dfuse API for EOS"
+        href={`https://dfuse.io/${getCurrentLanguageValue()}`}
+        title="The dfuse Blockchain Data Platform"
         target="_blank"
+        rel="noopener noreferrer"
       >
         <img
-          src={`https://www.dfuse.io/hubfs/built-with-dfuse${
-            getCurrentLanguageValue() === "zh" ? "-CN" : ""
-          }-01.png`}
-          title="dfuse API for EOS"
+          src={`/images/built-with-dfuse${getCurrentLanguageValue() === "zh" ? "-CN" : ""}-01.png`}
+          title="The dfuse Blockchain Data Platform"
+          alt="built-with-dfuse"
           width="210"
           height="auto"
         />
+        <Text color={theme.colors.bleu6} fontSize={[1]}>
+          {t("footer.aboutDfuse")}
+        </Text>
       </a>
     </Cell>
     <Cell p={[3]} mt={[3]} borderTop={`1px solid ${theme.colors.bleu10}`} textAlign="center">
       <Text color={theme.colors.primary} fontSize={[1]}>
         {t("footer.copyright", { year: new Date().getFullYear() })}
-        &nbsp;
+      </Text>
+      <Text color={theme.colors.primary} fontSize={[1]}>
         <ExternalTextLink fontSize={[1]} to={t("footer.privacyPolicyLink")}>
           <StyledText display="inline-block" fontSize={[1]} color={theme.colors.bleu6}>
             {t("footer.privacyPolicy")}
           </StyledText>
         </ExternalTextLink>
-        .{NBSP}
+        {NBSP}
+        {BULLET}
+        {NBSP}
         <ExternalTextLink fontSize={[1]} to={t("footer.termsOfServicesLink")}>
           <StyledText display="inline-block" fontSize={[1]} color={theme.colors.bleu6}>
             {t("footer.termsOfServices")}

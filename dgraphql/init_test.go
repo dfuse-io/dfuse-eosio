@@ -24,6 +24,6 @@ import (
 func init() {
 	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") != "" {
 		logger, _ := zap.NewDevelopment()
-		logging.Set(logger)
+		logging.Override(logger)
 	}
 }

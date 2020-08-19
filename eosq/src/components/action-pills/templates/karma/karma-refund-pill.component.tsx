@@ -1,10 +1,9 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import Box from "../../../../atoms/ui-box/ui-box.component"
+import { Box, PillLogoProps } from "@dfuse/explorer"
 import { getKarmaClaimLevel1Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 import { ExternalTextLink } from "../../../../atoms/text/text.component"
-import { PillLogoProps } from "../../../../atoms/pills/pill"
 
 export class KarmaRefundPillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {

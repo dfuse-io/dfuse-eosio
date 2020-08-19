@@ -22,15 +22,12 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosdb/mdl"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	v0 "github.com/dfuse-io/eosws-go/mdl/v0"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	"github.com/dfuse-io/opaque"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang-collections/collections/stack"
 	"github.com/tidwall/sjson"
-	"go.uber.org/zap"
 )
 
 // TransactionList represents a list of TransactionLifecycle with some cursor
@@ -65,12 +62,12 @@ func ToV1TransactionLifecycle(in *pbcodec.TransactionLifecycle) (*v1.Transaction
 		// DBOps:                   ToV1DBOps(in.DbOps),
 		// RAMOps:                  ToV1RAMOps(in.RamOps),
 		// TableOps:                ToV1TableOps(in.TableOps),
-		PubKeys:                 codec.PublicKeysToEOS(in.PublicKeys),
-		CreatedBy:               createdBy,
-		CanceledBy:              canceledBy,
-		ExecutionIrreversible:   in.ExecutionIrreversible,
-		CreationIrreversible:    in.CreationIrreversible,
-		CancelationIrreversible: in.CancelationIrreversible,
+		PubKeys:                     codec.PublicKeysToEOS(in.PublicKeys),
+		CreatedBy:                   createdBy,
+		CanceledBy:                  canceledBy,
+		ExecutionIrreversible:       in.ExecutionIrreversible,
+		DTrxCreationIrreversible:    in.CreationIrreversible,
+		DTrxCancelationIrreversible: in.CancelationIrreversible,
 	}
 
 	if in.ExecutionTrace != nil {
@@ -472,33 +469,6 @@ func ToV1ActionReceipt(receiver string, in *pbcodec.ActionReceipt) v1.ActionRece
 		ABISequence:    eos.Uint64(in.AbiSequence),
 	}
 	return out
-}
-
-func ToV1TransactionList(list *mdl.TransactionList) (*TransactionList, error) {
-	opaqueNextCursor, err := opaque.ToOpaque(list.NextCursor)
-	if err != nil {
-		zlog.Error("converting cursor", zap.Error(err))
-		return nil, err
-	}
-
-	out := &TransactionList{
-		Cursor: opaqueNextCursor,
-	}
-
-	var outList []*v1.TransactionLifecycle
-	for _, tx := range list.Transactions {
-		// FIXME: which Chain Discriminator should we be using here?
-		lifecycle := pbcodec.MergeTransactionEvents(tx, func(id string) bool { return true })
-		v1Lifecycle, err := ToV1TransactionLifecycle(lifecycle)
-		if err != nil {
-			return nil, fmt.Errorf("transaction list: %w", err)
-		}
-		outList = append(outList, v1Lifecycle)
-	}
-
-	out.Transactions = outList
-
-	return out, nil
 }
 
 type ExtendedStack struct {

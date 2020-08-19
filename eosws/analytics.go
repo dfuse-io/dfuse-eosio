@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dfuse-io/dauth"
+	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 )
@@ -49,7 +49,7 @@ func TrackUserEvent(ctx context.Context, name string, keyvals ...interface{}) {
 		}
 	}
 
-	creds := dauth.GetCredentials(ctx)
+	creds := authenticator.GetCredentials(ctx)
 	fields = append(fields, creds.GetLogFields()...)
 	zlogger.Info(name, fields...)
 }

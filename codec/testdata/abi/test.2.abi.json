@@ -1,0 +1,20 @@
+{
+  "version": "eosio::abi/1.0",
+  "structs": [
+    {
+      "name": "value",
+      "base": "",
+      "fields": [
+        {
+          "name": "to",
+          "type": "uint64"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    { "name": "act2", "type": "value" }
+  ],
+  "ricardian_clauses": [{"id":"name", "body":"test.2.abi.json"}],
+  "abi_extensions": []
+}

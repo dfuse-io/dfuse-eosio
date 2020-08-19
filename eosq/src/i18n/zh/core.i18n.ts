@@ -10,9 +10,9 @@ export default {
     tagline2: "",
 
     networkOptions: {
-      mainnet: "EOS主网",
-      kylin: "麒麟测试网",
-      jungle: "Jungle 测试网"
+      eos_mainnet: "EOS主网",
+      eos_kylin: "麒麟测试网",
+      eos_eosio: "EOSIO 测试网"
     },
     maintenance: {
       start: "我们目前正在将我们的后端迁移到",

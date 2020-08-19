@@ -52,7 +52,7 @@ func (p *Pipeline) Launch() {
 		}
 
 		//blk := block.ToNative().(*pbcodec.Block)
-		//zlog.Info("Implemented me for god sake!", zap.Any("block", blk))
+		//zlog.Info("implemented me for god sake!", zap.Any("block", blk))
 
 		// p.processExecutedTransactions(blk.AllExecutedTransactionTraces())
 
@@ -62,9 +62,10 @@ func (p *Pipeline) Launch() {
 		return nil
 	})
 
-	gateHandler := bstream.NewBlockNumGate(uint64(startBlock), bstream.GateExclusive, handler)
-	forkableHandler := forkable.New(gateHandler, forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
-	source := p.subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkableHandler)
+	irrRef := bstream.NewBlockRefFromID(libID)
+	gateHandler := bstream.NewBlockNumGate(uint64(startBlock), bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+	forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
+	source := p.subscriptionHub.NewSourceFromBlockRef(irrRef, forkableHandler)
 
 	source.Run()
 	source.OnTerminating(func(e error) {

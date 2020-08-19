@@ -6,8 +6,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
-	_ "github.com/dfuse-io/dfuse-eosio/eosdb/bigt"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/logging"
@@ -30,7 +29,7 @@ func ExampleEOSClient() {
 		return
 	}
 
-	dbReader, err := eosdb.New(kvdbDSN)
+	dbReader, err := trxdb.New(kvdbDSN)
 	if err != nil {
 		fmt.Println(fmt.Errorf("unable to create EOS database instance: %w", err))
 		return

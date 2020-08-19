@@ -1,7 +1,10 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-import { DataEmpty } from "../../atoms/data-empty/data-empty.component"
+
+// temp ignore for dev
+
+import { DataEmpty } from "@dfuse/explorer"
 import { Panel } from "../../atoms/panel/panel.component"
 import { fetchBlockList } from "../../services/block"
 import { ListBlocks } from "../../components/list-blocks/list-blocks.component"

@@ -58,7 +58,7 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	deleteCORSHeaders(r)
 
 	pushTransactionGuaranteeOption := r.Header.Get("X-Eos-Push-Guarantee")
-	if r.URL.EscapedPath() != "/v1/chain/push_transaction" || pushTransactionGuaranteeOption == "" {
+	if (r.URL.EscapedPath() != "/v1/chain/push_transaction" && r.URL.EscapedPath() != "/v1/chain/send_transaction") || pushTransactionGuaranteeOption == "" {
 		t.dumbAPIProxy.ServeHTTP(w, r)
 		return
 	}
@@ -135,7 +135,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	normalizedGuarantee := guarantee
 	switch guarantee {
 	case "in-block":
-		zlog.Debug("Waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
+		zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
 		trxTraceFoundChan, shutdownFunc = awaitTransactionInBlock(ctx, trxID, liveSourceFactory)
 	case "handoff:1", "handoffs:1":
 		normalizedGuarantee = "handoffs:1"
@@ -163,7 +163,14 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
 	timedoutContext, cancel := context.WithTimeout(ctx, 1*time.Minute)
-	pushResp, err := t.API.PushTransactionRaw(timedoutContext, tx)
+
+	var pushResp json.RawMessage
+	if r.URL.EscapedPath() == "/v1/chain/push_transaction" {
+		pushResp, err = t.API.PushTransactionRaw(timedoutContext, tx)
+	} else {
+		pushResp, err = t.API.SendTransactionRaw(timedoutContext, tx)
+	}
+
 	cancel()
 	if err != nil {
 		if err.Error() == context.Canceled.Error() {
@@ -175,7 +182,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			apiErrCnt, err := json.Marshal(apiErr)
 			if err == nil {
 				w.WriteHeader(apiErr.Code)
-				w.Write([]byte(apiErrCnt))
+				w.Write(apiErrCnt)
 				return
 			}
 		}
@@ -250,18 +257,6 @@ func checkHTTPError(err error, msg string, errorCode eoserr.Error, w http.Respon
 	return false
 }
 
-var corsRequestHeaders = []string{
-	"Origin",
-	"Access-Control-Request-Method",
-	"Access-Control-Request-Headers",
-}
-
-func deleteCORSHeaders(r *http.Request) {
-	for _, corsRequestHeader := range corsRequestHeaders {
-		r.Header.Del(corsRequestHeader)
-	}
-}
-
 func countUniqueElem(elements []string) int {
 	encountered := map[string]bool{}
 	for v := range elements {
@@ -328,10 +323,11 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 		return nil
 	})
 
-	forkHandler := forkable.New(handle, forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
-	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler)
+	irrRef := bstream.NewBlockRefFromID(libID)
+	forkHandler := forkable.New(handle, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
+	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
 
-	source := subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkablePostGate)
+	source := subscriptionHub.NewSourceFromBlockRef(irrRef, forkablePostGate)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningPushInHandoffs, -1)
 	})
@@ -366,7 +362,7 @@ func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFacto
 
 	trxTraceFoundChan := make(chan *pbcodec.TransactionTrace)
 
-	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithFilters(forkable.StepIrreversible))
+	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 	source := sourceFactory(irrForkableHandler)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningIrreversible, -1)
@@ -393,7 +389,7 @@ func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan 
 }
 
 func traceExecutedInBlock(trxID string, blk *pbcodec.Block) *pbcodec.TransactionTrace {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		if trxTrace.Id == trxID {
 			return trxTrace
 		}

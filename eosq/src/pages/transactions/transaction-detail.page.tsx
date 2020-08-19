@@ -12,15 +12,17 @@ import { TransactionDetailHeader } from "./summary/transaction-detail-header"
 import { PannelTitleBanner } from "../../atoms/panel/panel-title-banner"
 import { Text } from "../../atoms/text/text.component"
 import { WrappingText } from "../../atoms/text-elements/misc"
-import { DataLoading } from "../../atoms/data-loading/data-loading.component"
+
+// temp ignore for dev
+
+import { DataLoading, DataError, BULLET, truncateString } from "@dfuse/explorer"
+
 import { PageContainer } from "../../components/page-container/page-container"
 import { TransactionLifecycle, Stream } from "@dfuse/client"
 import { TransactionContents } from "./transaction-contents"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { registerTransactionLifecycleListener } from "../../streams/transaction-listeners"
-import { DataError } from "../../atoms/data-error/data-error.component"
 import { TransactionLifecycleWrap } from "../../services/transaction-lifecycle"
-import { BULLET, truncateString } from "../../helpers/formatters"
 
 export interface PathParams {
   id: string

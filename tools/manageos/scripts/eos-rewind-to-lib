@@ -1,0 +1,47 @@
+#!/bin/bash
+# description: (for mindreader only) Rewind nodeos by setting its HEAD to its LIB
+curl -sS -XPOST localhost:8080/v1/maintenance?sync=true
+
+nodeos --config-dir=/etc/nodeos --data-dir=/nodeos-data --pause-on-startup --read-mode=read-only --allowed-connection=none &
+NODEOSPID=$!
+while sleep 1; do
+	HEAD=$(cleos get info 2>&1 |awk '/"head_block_num"/ {print $2}' |sed 's/,//')
+	if [[ "$HEAD" != "" ]]; then
+ 		break
+	fi
+	if [ -n "$NODEOSPID" -a -e /proc/$NODEOSPID ]; then
+	    echo "waiting for nodeos to answer..."
+        else
+		echo "nodeos process died. cannot continue rewind, you may need to restore from pitreos."
+		return 1
+	fi
+done
+
+kill $NODEOSPID
+wait $NODEOSPID
+
+
+nodeos --config-dir=/etc/nodeos --data-dir=/nodeos-data --pause-on-startup --read-mode=irreversible --allowed-connection=none &
+NODEOSPID=$!
+while sleep 1; do
+	NEWHEAD=$(cleos get info 2>&1 |awk '/"head_block_num"/ {print $2}' |sed 's/,//')
+	if [[ "$NEWHEAD" != "" ]]; then
+ 		break
+	fi
+	if [ -n "$NODEOSPID" -a -e /proc/$NODEOSPID ]; then
+	    echo "waiting for nodeos to answer..."
+        else
+		echo "nodeos process died. cannot continue rewind, you may need to restore from pitreos."
+		return 1
+	fi
+done
+
+kill $NODEOSPID
+wait $NODEOSPID
+
+
+echo -e "\nHead rewound from $HEAD to $NEWHEAD"
+echo "You may need to run 'eos-reset-continuity-check' if you mindreader was locked because of a non-contiguous block before you run 'eos-resume' again..."
+
+
+

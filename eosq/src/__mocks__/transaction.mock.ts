@@ -15,14 +15,14 @@ interface ActionMockParams {
   name?: string
 }
 
-export const getTraceInfoMock = function(params: ActionMockParams): TraceInfo {
+export function getTraceInfoMock(params: ActionMockParams): TraceInfo {
   return {
     receiver: "receiver",
     inline_traces: [getActionTraceMock(params)]
   }
 }
 
-export const getActionTraceMock = function(params: ActionMockParams): ActionTrace<any> {
+export function getActionTraceMock(params: ActionMockParams): ActionTrace<any> {
   return {
     act: getActionMock(params),
     elapsed: 123,
@@ -44,7 +44,7 @@ export const getActionTraceMock = function(params: ActionMockParams): ActionTrac
   }
 }
 
-export const getActionMock = function(params: ActionMockParams): Action<any> {
+export function getActionMock(params: ActionMockParams): Action<any> {
   return {
     account: params.account ? params.account : "eosio",
     name: params.name ? params.name : "transfer",
@@ -103,7 +103,7 @@ export const getTransactionMock = () => {
   } as Transaction
 }
 
-export const getTransactionRefMock = function(): ExtDTrxOp {
+export function getTransactionRefMock(): ExtDTrxOp {
   return {
     src_trx_id: "src_trx_id",
     block_num: 123,
@@ -182,7 +182,7 @@ export function generateTransactionTrace(
     act: actions[0],
     elapsed: 912,
     console: "something",
-    trx_id: index + "1asasa1212",
+    trx_id: `${index}1asasa1212`,
     inline_traces: inlineTraces
   }
 }

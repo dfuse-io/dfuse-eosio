@@ -4,9 +4,7 @@
     "data": {
       "account": "eosio",
       "action": "onerror",
-      "auth": null,
       "block_num": 1,
-      "data": null,
       "db": {
         "key": [
           "producers/eosio/eoshuobipool"
@@ -17,8 +15,8 @@
         ]
       },
       "input": true,
-      "notif": true,
-      "receiver": "any",
+      "notif": false,
+      "receiver": "eosio",
       "scheduled": false,
       "trx_idx": 0
     }

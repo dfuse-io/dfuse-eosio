@@ -1,12 +1,11 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-import { formatPercentage } from "../../helpers/formatters"
+import { formatPercentage, Spinner } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { Text } from "../../atoms/text/text.component"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
-import { Spinner } from "../../atoms/spinner/spinner"
 
 const MiddleChild: React.ComponentType<any> = styled(Cell)`
   position: absolute;
@@ -120,7 +119,7 @@ export class BlockProgressPie extends React.Component<Props> {
   }
 
   renderIrreversibleImage() {
-    return <img width="60%" src="/images/picto-irreversible-03.svg" />
+    return <img width="60%" src="/images/picto-irreversible-03.svg" alt="irreversible" />
   }
 
   isDataProvided() {

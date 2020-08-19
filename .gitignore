@@ -7,11 +7,19 @@
 /dfuse
 dashboard/client/.npmrc
 .DS_Store
-/tools/output.log
+/bootstrapping/output.log
 /dfuse.yaml
 /dfuse-data
-rice-box.go
+*/rice-box.go
 /dist
 *SOURCE_ME.sh*
+<<<<<<< HEAD
 dfuseeos
 /build
+=======
+/dfuseeos
+*dbin*
+/proj*
+/dashboard/client/node_modules
+/dashboard/dashboard-build
+>>>>>>> 60baab7afa16d26bc941f8371d6807a75402a311

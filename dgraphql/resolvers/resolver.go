@@ -22,14 +22,17 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 	"unicode/utf8"
 
+	rateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
+	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
 	"github.com/dfuse-io/dgraphql/metrics"
@@ -49,23 +52,29 @@ import (
 // Root is the root resolver.
 type Root struct {
 	searchClient             pbsearch.RouterClient
-	trxsReader               eosdb.TransactionsReader
-	blocksReader             eosdb.BlocksReader
-	accountsReader           eosdb.AccountsReader
+	trxsReader               trxdb.TransactionsReader
+	blocksReader             trxdb.BlocksReader
+	accountsReader           trxdb.AccountsReader
 	blockmetaClient          *pbblockmeta.Client
 	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
 	abiCodecClient           pbabicodec.DecoderClient
+	tokenmetaClient          pbtokenmeta.TokenMetaClient
+
+	requestRateLimiter            rateLimiter.RateLimiter
+	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader eosdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient) *Root {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter, tokenmetaClient pbtokenmeta.TokenMetaClient) (interface{}, error) {
 	return &Root{
-		searchClient:    searchClient,
-		trxsReader:      dbReader,
-		blocksReader:    dbReader,
-		accountsReader:  dbReader,
-		blockmetaClient: blockMetaClient,
-		abiCodecClient:  abiCodecClient,
-	}
+		searchClient:       searchClient,
+		trxsReader:         dbReader,
+		blocksReader:       dbReader,
+		accountsReader:     dbReader,
+		tokenmetaClient:    tokenmetaClient,
+		blockmetaClient:    blockMetaClient,
+		abiCodecClient:     abiCodecClient,
+		requestRateLimiter: requestRateLimiter,
+	}, nil
 }
 
 // CAREFUL - this mirrored in the BigQuery schema - if you change this, make sure to be backwards compatible
@@ -80,6 +89,9 @@ type SearchArgs struct {
 }
 
 func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchArgs) (*SearchTransactionsForwardResponse, error) {
+	if err := r.RateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	res, err := r.querySearchTransactionsBoth(ctx, true, args)
 	if err != nil {
 		return nil, err
@@ -124,6 +136,10 @@ func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchAr
 }
 
 func (r *Root) QuerySearchTransactionsBackward(ctx context.Context, args SearchArgs) (*SearchTransactionsBackwardResponse, error) {
+	if err := r.RateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
+
 	res, err := r.querySearchTransactionsBoth(ctx, false, args)
 	if err != nil {
 		return nil, err
@@ -307,6 +323,9 @@ type StreamSearchArgs struct {
 }
 
 func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
+	if err := r.RateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	/////////////////////////////////////////////////////////////////////////
 	// DO NOT change this without updating BigQuery analytics
 	analytics.TrackUserEvent(ctx, "dgraphql", "SubscriptionSearchTransactionsForward", "StreamSearchArgs", args)
@@ -316,6 +335,9 @@ func (r *Root) SubscriptionSearchTransactionsForward(ctx context.Context, args S
 }
 
 func (r *Root) SubscriptionSearchTransactionsBackward(ctx context.Context, args StreamSearchArgs) (<-chan *SearchTransactionForwardResponse, error) {
+	if err := r.RateLimit(ctx, "search"); err != nil {
+		return nil, err
+	}
 	/////////////////////////////////////////////////////////////////////////
 	// DO NOT change this without updating BigQuery analytics
 	analytics.TrackUserEvent(ctx, "dgraphql", "SubscriptionSearchTransactionsBackward", "StreamSearchArgs", args)
@@ -330,6 +352,7 @@ type matchOrError struct {
 }
 
 func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbcodec.TransactionEvent, rowMap map[string]int, abiCodecClient pbabicodec.DecoderClient) (*SearchTransactionForwardResponse, error) {
+	zl := logging.Logger(ctx, zlog)
 	if m.err != nil {
 		return &SearchTransactionForwardResponse{
 			err: dgraphql.UnwrapError(ctx, m.err),
@@ -369,7 +392,7 @@ func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbcodec
 	// From Archive (kvdb lookup)
 	idx, ok := rowMap[match.TrxIdPrefix]
 	if !ok { // careful, kvdb can return {"prefix": nil}
-		zlog.Error("cannot get transaction data from match", zap.String("trx_id_prefix", match.TrxIdPrefix))
+		zl.Error("cannot get transaction data from match", zap.String("trx_id_prefix", match.TrxIdPrefix))
 		// TODO: implement some graphs, increasing internal server errors, we want to avoid
 		// this, but we don't see any data about it..
 		return &SearchTransactionForwardResponse{
@@ -379,7 +402,7 @@ func processMatchOrError(ctx context.Context, m *matchOrError, rows [][]*pbcodec
 
 	events := rows[idx]
 	if events == nil {
-		zlog.Error("cannot get transaction data from match", zap.String("trx_id_prefix", match.TrxIdPrefix))
+		zl.Error("cannot get transaction data from match", zap.String("trx_id_prefix", match.TrxIdPrefix))
 		// TODO: implement some graphs, increasing internal server errors, we want to avoid
 		// this, but we don't see any data about it..
 		return &SearchTransactionForwardResponse{

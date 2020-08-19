@@ -20,12 +20,12 @@ import (
 
 	"github.com/dfuse-io/blockmeta"
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"go.uber.org/zap"
 )
 
 type EOSBlockmetaDB struct {
-	Driver eosdb.Driver
+	Driver trxdb.DB
 }
 
 func (db *EOSBlockmetaDB) BlockIDAt(ctx context.Context, start time.Time) (id string, err error) {
@@ -84,13 +84,12 @@ func (db *EOSBlockmetaDB) GetForkPreviousBlocks(ctx context.Context, forkTop bst
 				if row.Irreversible {
 					return blocks, nil
 				}
-				zlog.Debug("found block",
-					zap.Uint64("row_num", row.Block.Num()),
-					zap.String("row_id", row.Block.ID()),
-				)
-				// blocks = append(blocks, row.Block.AsRef())
-				blocks = append(blocks, bstream.BlockRefFromID(row.Block.Id))
-				next = bstream.BlockRefFromID(row.Block.PreviousID())
+
+				bstream.NewBlockRef(row.Block.Id, uint64(row.Block.Number))
+				zlog.Debug("found block", zap.Stringer("row", row.Block))
+
+				blocks = append(blocks)
+				next = bstream.NewBlockRefFromID(row.Block.PreviousID())
 			}
 		}
 		if window <= 100 {

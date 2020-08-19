@@ -1,0 +1,15 @@
+[
+  {
+    "trx_id": "a1",
+    "data": {
+      "account": "dfuseiohooks",
+      "action": "event",
+      "block_num": 1,
+      "input": true,
+      "notif": false,
+      "receiver": "dfuseiohooks",
+      "scheduled": false,
+      "trx_idx": 0
+    }
+  }
+]

@@ -16,11 +16,13 @@ package abicodec
 
 import (
 	"bytes"
+	"context"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,7 +38,7 @@ type Cache interface {
 	SaveState() error
 	SetCursor(cursor string)
 	GetCursor() string
-	Upload(url string) error
+	Export(baseURL string, filename string) error
 }
 
 type DefaultCache struct {
@@ -52,7 +54,10 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	zlog.Info("loading cache", zap.String("cache_name", cacheName))
 	start := time.Now()
 
-	exist, err := store.FileExists(cacheName)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	exist, err := store.FileExists(ctx, cacheName)
 	if err != nil {
 		return nil, fmt.Errorf("validating existance of cache file %s: %s", cacheName, err)
 	}
@@ -67,7 +72,7 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 
 	}
 
-	r, err := store.OpenObject(cacheName)
+	r, err := store.OpenObject(ctx, cacheName)
 	defer r.Close()
 
 	if err != nil {
@@ -85,7 +90,7 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	cache.store = store
 	cache.cacheName = cacheName
 
-	zlog.Info("Cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
 	return cache, nil
 
 }
@@ -103,11 +108,13 @@ func (c *DefaultCache) SetABIAtBlockNum(account string, blockNum uint32, abi *eo
 
 	if accountItems, ok := c.Abis[account]; ok {
 
+		replace := false
 		var newItemIndex int
 		for i := len(accountItems) - 1; i >= 0; i-- {
 			item := accountItems[i]
 			if item.BlockNum == blockNum {
 				newItemIndex = i
+				replace = true
 				break
 			}
 			if item.BlockNum < blockNum {
@@ -120,7 +127,11 @@ func (c *DefaultCache) SetABIAtBlockNum(account string, blockNum uint32, abi *eo
 			BlockNum: blockNum,
 			ABI:      abi,
 		}
-		accountItems = append(accountItems[:newItemIndex], append([]*ABICacheItem{newItem}, accountItems[newItemIndex:]...)...)
+		if replace {
+			accountItems[newItemIndex] = newItem
+		} else {
+			accountItems = append(accountItems[:newItemIndex], append([]*ABICacheItem{newItem}, accountItems[newItemIndex:]...)...)
+		}
 		c.Abis[account] = accountItems
 		return
 	}
@@ -171,14 +182,17 @@ func (c *DefaultCache) SaveState() error {
 		return err
 	}
 
-	err = c.store.WriteObject(c.cacheName, bytes.NewReader(b.Bytes()))
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	err = c.store.WriteObject(ctx, c.cacheName, bytes.NewReader(b.Bytes()))
 	if err != nil {
 		return fmt.Errorf("saving cache: %s", err)
 	}
 
 	c.dirty = false
 
-	zlog.Info("Cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
 	return nil
 }
 
@@ -207,20 +221,16 @@ func (c *DefaultCache) Load(workerID string) (string, error) {
 	return c.Cursor, nil
 }
 
-func (c *DefaultCache) Upload(storeUrl string) error {
+func (c *DefaultCache) Export(baseURL, filename string) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	u, err := url.Parse(storeUrl)
-	if err != nil {
-		return fmt.Errorf("cannot pause upload url: %s", storeUrl)
-	}
-	filename := path.Base(u.Path)
+	zlog.Debug("exporting ABIs",
+		zap.String("base_url", baseURL),
+		zap.String("filename", filename),
+	)
 
-	u.Path = path.Dir(u.Path)
-	baseUrl := u.String()
-
-	store, err := dstore.NewStore(baseUrl, "", "zstd", true)
+	store, err := dstore.NewStore(baseURL, "", "zstd", true)
 	if err != nil {
 		return fmt.Errorf("error creating export store: %w", err)
 	}
@@ -230,13 +240,26 @@ func (c *DefaultCache) Upload(storeUrl string) error {
 		return fmt.Errorf("error marshalling default cache: %w", err)
 	}
 
-	fname := fmt.Sprintf("%s.zst", filename)
-	err = store.WriteObject(fname, bytes.NewReader(data))
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	err = store.WriteObject(ctx, filename, bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("exporting cache: %w", err)
 	}
 
 	return nil
+}
+
+func getStoreInfo(storeUrl string) (baseURL, filename string, err error) {
+	u, err := url.Parse(storeUrl)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot pause upload url: %s", storeUrl)
+	}
+	filename = path.Base(u.Path)
+	u.Path = path.Dir(u.Path)
+	baseURL = strings.TrimRight(u.String(), "/")
+	return
 }
 
 func (c *DefaultCache) Save(cursor string, workerID string) error {

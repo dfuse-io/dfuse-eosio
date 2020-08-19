@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbgraphql "github.com/dfuse-io/pbgo/dfuse/graphql/v1"
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +38,9 @@ type QueryBlockRequest struct {
 }
 
 func (r *Root) QueryBlock(ctx context.Context, req QueryBlockRequest) (*Block, error) {
+	if err := r.RateLimit(ctx, "block"); err != nil {
+		return nil, err
+	}
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("querying block by num/id", zap.Reflect("request", req))
 
@@ -157,7 +160,7 @@ func (b *Block) Header() *BlockHeader {
 }
 
 func (b *Block) ExecutedTransactionCount() commonTypes.Uint32 {
-	return commonTypes.Uint32(b.blkWithRefs.Block.TransactionCount)
+	return commonTypes.Uint32(b.blkWithRefs.Block.UnfilteredTransactionCount)
 }
 
 type TransactionTracesReq struct {

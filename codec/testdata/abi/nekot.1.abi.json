@@ -1,0 +1,34 @@
+{
+  "version": "eosio::abi/1.0",
+  "types": [
+    {
+      "new_type_name": "account_name",
+      "type": "name"
+    }
+  ],
+  "structs": [
+    {
+      "name": "transfer",
+      "base": "",
+      "fields": [
+        {
+          "name": "ot",
+          "type": "account_name"
+        },
+        {
+          "name": "quantity",
+          "type": "asset"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "transfer",
+      "type": "transfer"
+    }
+  ],
+  "tables": [],
+  "ricardian_clauses": [{"id":"name", "body":"nekot.1.abi.json"}],
+  "abi_extensions": []
+}

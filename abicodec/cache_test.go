@@ -15,6 +15,7 @@
 package abicodec
 
 import (
+	"context"
 	"encoding/hex"
 	"os"
 	"testing"
@@ -48,6 +49,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 		blockNum           uint32
 		expectedABIAtIndex int
 		expectedVersion    string
+		expectedCacheSize  int
 	}{
 		{
 			name:               "first one",
@@ -57,6 +59,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 0,
 			expectedVersion:    "version.1",
+			expectedCacheSize:  1,
 		},
 		{
 			name: "Second one",
@@ -73,6 +76,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.2",
+			expectedCacheSize:  2,
 		},
 		{
 			name: "To middle",
@@ -93,6 +97,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           2,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.2",
+			expectedCacheSize:  3,
 		},
 		{
 			name: "To the end",
@@ -113,6 +118,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           10,
 			expectedABIAtIndex: 2,
 			expectedVersion:    "version.3",
+			expectedCacheSize:  3,
 		},
 		{
 			name: "Replace",
@@ -133,6 +139,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			blockNum:           3,
 			expectedABIAtIndex: 1,
 			expectedVersion:    "version.3",
+			expectedCacheSize:  2,
 		},
 	}
 
@@ -146,6 +153,7 @@ func TestABICache_SetABIAtBlockNum(t *testing.T) {
 			cache.Abis = c.items
 			cache.SetABIAtBlockNum(c.account, c.blockNum, NewTestABI(c.version))
 			assert.Equal(t, c.expectedVersion, cache.Abis[c.account][c.expectedABIAtIndex].ABI.Version)
+			assert.Equal(t, c.expectedCacheSize, len(cache.Abis[c.account]))
 		})
 	}
 
@@ -228,6 +236,7 @@ func TestDefaultCache_ABIAtBlockNum(t *testing.T) {
 	}
 
 }
+
 func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 	testCases := []struct {
 		name            string
@@ -307,14 +316,15 @@ func TestDefaultCache_RemoveABIAtBlockNum(t *testing.T) {
 
 func TestDefaultCache_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
+	ctx := context.Background()
 
 	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
-	exist, err := store.FileExists(cacheName)
+	exist, err := store.FileExists(ctx, cacheName)
 	require.NoError(t, err)
 	if exist {
-		err := store.DeleteObject(cacheName)
+		err := store.DeleteObject(ctx, cacheName)
 		require.NoError(t, err)
 	}
 
@@ -355,14 +365,15 @@ func TestDefaultCache_Save_Load(t *testing.T) {
 
 func TestDefaultCache_Large_Save_Load(t *testing.T) {
 	cacheName := "test_cache.bin"
+	ctx := context.Background()
 
 	store, err := dstore.NewSimpleStore("file:///tmp")
 	require.NoError(t, err)
 
-	exist, err := store.FileExists(cacheName)
+	exist, err := store.FileExists(ctx, cacheName)
 	require.NoError(t, err)
 	if exist {
-		err := store.DeleteObject(cacheName)
+		err := store.DeleteObject(ctx, cacheName)
 		require.NoError(t, err)
 	}
 
@@ -399,5 +410,44 @@ func TestDefaultCache_Large_Save_Load(t *testing.T) {
 	//a := accountABIS[0]
 	//require.Equal(t, uint32(2), a.BlockNum)
 	//require.Equal(t, "eosio::abi/1.0", a.ABI.Version)
+
+}
+
+func Test_Upload(t *testing.T) {
+	tests := []struct {
+		name           string
+		url            string
+		expectBaseURL  string
+		expectFileName string
+		expectError    bool
+	}{
+		{
+			name:           "golden path",
+			url:            "gs://dfuseio-global-abicache-us/eos-dev1-v3.json.zst",
+			expectBaseURL:  "gs://dfuseio-global-abicache-us",
+			expectFileName: "eos-dev1-v3.json.zst",
+			expectError:    false,
+		},
+		{
+			name:           "does not add a compression extension, it expect it to already be configured",
+			url:            "gs://dfuseio-global-abicache-us/eos-dev1-v3.json",
+			expectBaseURL:  "gs://dfuseio-global-abicache-us",
+			expectFileName: "eos-dev1-v3.json",
+			expectError:    false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			baseURL, filename, err := getStoreInfo(test.url)
+			if test.expectError {
+				require.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expectBaseURL, baseURL)
+				assert.Equal(t, test.expectFileName, filename)
+			}
+		})
+	}
 
 }

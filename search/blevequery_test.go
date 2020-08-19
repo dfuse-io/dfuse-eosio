@@ -41,7 +41,7 @@ func Test_validateQueryFields(t *testing.T) {
 		},
 		{
 			"data.from:eoscanadacom data.nested.deep:value account:test",
-			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested'. Contact our support team for more."),
+			derr.Status(codes.InvalidArgument, "The following fields you are trying to search are not currently indexed: 'data.nested.deep'. Contact our support team for more."),
 		},
 		{
 			"data.from.something:value data.auth.keys.key:value",

@@ -17,9 +17,15 @@ package dgraphql
 import (
 	"fmt"
 
+	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
+
+	"go.uber.org/zap"
+
+	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
+	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dfuse-eosio/eosdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
@@ -29,62 +35,69 @@ import (
 
 type Config struct {
 	dgraphqlApp.Config
-	SearchAddr    string
-	ABICodecAddr  string
-	BlockMetaAddr string
-	KVDBDSN       string
+	RatelimiterPlugin string
+	SearchAddr        string
+	ABICodecAddr      string
+	BlockMetaAddr     string
+	TokenmetaAddr     string
+	KVDBDSN           string
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
-	schemas, err := SetupSchemas(&Config{
-		SearchAddr:    config.SearchAddr,
-		ABICodecAddr:  config.ABICodecAddr,
-		BlockMetaAddr: config.BlockMetaAddr,
-		KVDBDSN:       config.KVDBDSN,
-	})
-	if err != nil {
-		return nil, err
-	}
+	zlog.Info("new dgraphql eosio app", zap.Reflect("config", config))
 
 	dgraphqlBaseConfig := config.Config
-	dgraphqlBaseConfig.Schemas = schemas
 
-	return dgraphqlApp.New(&dgraphqlBaseConfig), nil
+	return dgraphqlApp.New(&dgraphqlBaseConfig, &SchemaFactory{config: config}), nil
 }
 
-var RootResolverFactory = eosResolver.NewRoot
+type SchemaFactory struct {
+	config *Config
+}
 
-func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
-
+func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := eosdb.New(config.KVDBDSN)
+	dbReader, err := trxdb.New(f.config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
-		return nil, fmt.Errorf("invalid eosdb connection info provided: %w", err)
+		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}
 
-	zlog.Info("creating abicodec grpc client")
-	abiConn, err := dgrpc.NewInternalClient(config.ABICodecAddr)
+	zlog.Info("creating abicodec grpc client", zap.String("abicodec_addr", f.config.ABICodecAddr))
+	abiConn, err := dgrpc.NewInternalClient(f.config.ABICodecAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting abi grpc client: %w", err)
 	}
 	abiClient := pbabicodec.NewDecoderClient(abiConn)
 
-	zlog.Info("creating blockmeta grpc client")
-	blockMetaClient, err := pbblockmeta.NewClient(config.BlockMetaAddr)
+	zlog.Info("creating blockmeta grpc client", zap.String("blockmeta_addr", f.config.BlockMetaAddr))
+	blockMetaClient, err := pbblockmeta.NewClient(f.config.BlockMetaAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating blockmeta client: %w", err)
 	}
 
-	zlog.Info("creating search grpc client")
-
-	searchConn, err := dgrpc.NewInternalClient(config.SearchAddr)
+	zlog.Info("creating search grpc client", zap.String("search_addr", f.config.SearchAddr))
+	searchConn, err := dgrpc.NewInternalClient(f.config.SearchAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting search grpc client: %w", err)
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
+	zlog.Info("creating tokenmeta grpc client", zap.String("tokenmeta_addr", f.config.TokenmetaAddr))
+	tokenmetaConn, err := dgrpc.NewInternalClient(f.config.TokenmetaAddr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+	}
+	tokenmetaClient := pbtokenmeta.NewTokenMetaClient(tokenmetaConn)
+
+	rateLimiter, err := drateLimiter.New(f.config.RatelimiterPlugin)
+	derr.Check("unable to initialize rate limiter", err)
+
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient)
+	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create root resolver: %w", err)
+	}
+
 	schemas, err := dgraphql.NewSchemas(resolver)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse schema: %w", err)

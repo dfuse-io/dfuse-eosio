@@ -31,6 +31,10 @@ type testCredentials struct {
 	startBlock int64
 }
 
+func (c *testCredentials) GetUserID() string {
+	return ""
+}
+
 func (c *testCredentials) GetLogFields() []zap.Field {
 	return nil
 }

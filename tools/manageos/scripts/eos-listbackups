@@ -1,0 +1,3 @@
+#!/bin/bash
+# description: List last available pitreos backups
+curl -sS 'localhost:8080/v1/list_backups'

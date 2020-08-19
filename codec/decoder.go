@@ -50,7 +50,8 @@ func BlockDecoder(blk *bstream.Block) (interface{}, error) {
 	// rebuild everything mostly)
 	//
 	// We reconstruct the transaction & action count values
-	block.PopulateActionAndTransactionCount()
+
+	block.MigrateV0ToV1()
 
 	return block, nil
 }
