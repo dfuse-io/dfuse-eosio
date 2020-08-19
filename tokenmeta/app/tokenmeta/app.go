@@ -195,15 +195,14 @@ func (a *App) getAbiCacheFile(store dstore.Store, abiCacheFilename string) ([]by
 
 		reader, err := store.OpenObject(context.Background(), abiCacheFilename)
 		if err != nil {
-			zlog.Warn("abi cache file is not available, retrying...", zap.Error(err))
+			zlog.Info("abi cache file is not available, retrying...", zap.Error(err))
 			continue
 		}
 		defer reader.Close()
 
 		cnt, err := ioutil.ReadAll(reader)
 		if err != nil {
-			zlog.Info("error reading abi cache file, retrying....", zap.Error(err))
-			continue
+			return nil, fmt.Errorf("read abi cache file: %w", err)
 		}
 		return cnt, nil
 	}

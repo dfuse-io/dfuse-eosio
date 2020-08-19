@@ -56,7 +56,7 @@ func getTokenBalancesFromStateDB(ctx context.Context, stateClient pbstatedb.Stat
 	zlog.Debug("getting token balances for a token account from statedb", zap.String("token_contract", string(contract)), zap.Uint32("start_block_num", startBlockNum))
 	tableScopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, uint64(startBlockNum), string(contract), "accounts")
 	if err != nil {
-		zlog.Warn("cannot get table scope", zap.Error(err))
+		zlog.Info("cannot get table scope", zap.Error(err))
 		return nil, err
 	}
 
@@ -198,7 +198,7 @@ func getEOSStakedFromStateDB(ctx context.Context, stateClient pbstatedb.StateCli
 
 	tableScopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, uint64(startBlockNum), "eosio", "delband")
 	if err != nil {
-		zlog.Warn("cannot get table scope", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Error(err))
+		zlog.Info("cannot get table scope", zap.String("account", "eosio"), zap.String("table", "delband"), zap.Error(err))
 		return nil, err
 	}
 
