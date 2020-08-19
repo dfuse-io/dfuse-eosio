@@ -51,6 +51,7 @@ date.
 * Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
 
 ### Fixed
+* Fixed issue where `blockmeta` was not serving on GRPC at all because it couldn't figure out where to start on the stream
 * Fixed issue with `merger` with a possible panic when reading a one-block-file that is empty, for example on a non-atomic storage backend
 * Fixed issue with `mindreader` not stopping correctly (and showing any error) if the bootstrap phase (ex: restore-from-snapshot) failed.
 * Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
