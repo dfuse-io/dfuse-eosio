@@ -14,248 +14,189 @@
 
 package statedb
 
-// import (
-// 	"sort"
-// 	"strings"
-// 	"testing"
+import (
+	"fmt"
+	"testing"
 
-// 	"github.com/dfuse-io/dfuse-eosio/codec"
-// 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-// 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
-// 	"github.com/stretchr/testify/assert"
-// 	"github.com/stretchr/testify/require"
-// )
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/fluxdb"
+	"github.com/dfuse-io/jsonpb"
+	eos "github.com/eoscanada/eos-go"
+	"github.com/golang/protobuf/proto"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
-// func TestPreprocessBlock_DbOps(t *testing.T) {
-// 	tests := []struct {
-// 		name   string
-// 		input  []*pbcodec.DBOp
-// 		expect []TabletRow
-// 	}{
-// 		{
-// 			name: "nothing if update doesn't change",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer/payer", "data/data"),
-// 			},
-// 			expect: nil,
-// 		},
-// 		{
-// 			name: "two different keys, two different writes",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
-// 				testDBOp("INS", "eosio/scope/table1/key2", "/payer2", "/d2"),
-// 			},
-// 			expect: []TabletRow{
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "payer1", []byte("d1"), false),
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key2", "payer2", []byte("d2"), false),
-// 			},
-// 		},
-// 		{
-// 			name: "two updt, one sticks",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
-// 			},
-// 			expect: []TabletRow{
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "payer1", []byte("d2"), false),
-// 			},
-// 		},
-// 		{
-// 			name: "remove, take it out",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d0/"),
-// 			},
-// 			expect: []TabletRow{
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
-// 			},
-// 		},
-// 		{
-// 			name: "UPD+UPD+REM, keep the rem",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d2/"),
-// 			},
-// 			expect: []TabletRow{
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
-// 			},
-// 		},
-// 		{
-// 			name: "UPD+REM+INS+REM, still keep the rem",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d0/d1"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d2"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d2/"),
-// 			},
-// 			expect: []TabletRow{
-// 				mustCreateContractStateTabletRow("eosio", "scope", "table1", 0, "key1", "", nil, true),
-// 			},
-// 		},
-// 		{
-// 			name: "gobble up INS+DEL",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
-// 			},
-// 			expect: nil,
-// 		},
-// 		{
-// 			name: "gobble up multiple INS+DEL",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d1/"),
-// 			},
-// 			expect: nil,
-// 		},
-// 		{
-// 			name: "gobble up INS+UPD+UPD+DEL",
-// 			input: []*pbcodec.DBOp{
-// 				testDBOp("INS", "eosio/scope/table1/key1", "/payer1", "/d1"),
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d1/d2"),
-// 				testDBOp("UPD", "eosio/scope/table1/key1", "payer1/payer1", "d2/d3"),
-// 				testDBOp("REM", "eosio/scope/table1/key1", "payer1/", "d3/"),
-// 			},
-// 			expect: nil,
-// 		},
-// 	}
+func TestBlockMapper(t *testing.T) {
+	validABI := &eos.ABI{}
 
-// 	for _, test := range tests {
-// 		t.Run(test.name, func(t *testing.T) {
+	tests := []struct {
+		name            string
+		input           *pbcodec.Block
+		expectedEntries []string
+		expectedRows    []string
+	}{
+		{
+			name: "nothing if update doesn't change",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "data/data"),
+			)),
+			expectedRows: nil,
+		},
+		{
+			name: "two different keys, two different writes",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "/............1", "/d1"),
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key2", "/............2", "/d2"),
+			)),
+			expectedRows: []string{
+				`cst:eosio:scope:table1:0000000000000001:key1 => {"payer":"1","data":"6431"}`,
+				`cst:eosio:scope:table1:0000000000000001:key2 => {"payer":"2","data":"6432"}`,
+			},
+		},
+		{
+			name: "two update, one sticks",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d0/d1"),
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d1/d2"),
+			)),
+			expectedRows: []string{
+				`cst:eosio:scope:table1:0000000000000001:key1 => {"payer":"1","data":"6432"}`,
+			},
+		},
+		{
+			name: "remove, take it out",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d0/"),
+			)),
+			expectedRows: []string{
+				`cst:eosio:scope:table1:0000000000000001:key1 => {}`,
+			},
+		},
+		{
+			name: "UPD+UPD+REM, keep the rem",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d0/d1"),
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d1/d2"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d2/"),
+			)),
+			expectedRows: []string{
+				`cst:eosio:scope:table1:0000000000000001:key1 => {}`,
+			},
+		},
+		{
+			name: "UPD+UPD+REM, keep the rem",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d0/d1"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d1/"),
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "/............1", "/d2"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d2/"),
+			)),
+			expectedRows: []string{
+				`cst:eosio:scope:table1:0000000000000001:key1 => {}`,
+			},
+		},
+		{
+			name: "gobble up INS+REM",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "/............1", "/d1"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d1/"),
+			)),
+			expectedRows: nil,
+		},
+		{
+			name: "gobble up multiple INS+DEL",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "............1/", "/d1"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d1/"),
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "/............1", "/d2"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d2/"),
+			)),
+			expectedRows: nil,
+		},
+		{
+			name: "gobble up INS+UPD+UPD+DEL",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.DBOp(t, "INS", "eosio/scope/table1/key1", "............1/", "/d1"),
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1/", "d1/d2"),
+				ct.DBOp(t, "UPD", "eosio/scope/table1/key1", "............1/............1", "d2/d3"),
+				ct.DBOp(t, "REM", "eosio/scope/table1/key1", "............1/", "d3/"),
+			)),
+			expectedRows: nil,
+		},
 
-// 			blk := newBlock("0000003a", []string{"1", "2"})
-// 			blk.TransactionTraces()[0].DbOps = test.input
+		{
+			name: "valid ABI gives a singlet entry",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.ActionTraceSetABI(t, "eosio", validABI),
+			)),
+			expectedEntries: []string{
+				`abi:eosio:fffffffffffffffe => {"rawAbi":"000000000000000000"}`,
+			},
+		},
+		{
+			name: "invalid ABI is not an error and is ignored",
+			input: ct.Block(t, "00000001aa", ct.TrxTrace(t,
+				ct.ActionTraceSetABI(t, "eosio", nil, ct.UndecodedActionData),
+			)),
+			expectedEntries: nil,
+		},
+	}
 
-// 			bstreamBlock, err := codec.BlockFromProto(blk)
-// 			require.NoError(t, err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			blk := ct.ToBstreamBlock(t, test.input)
+			mapper := &BlockMapper{}
 
-// 			req, err := PreprocessBlock(bstreamBlock)
-// 			require.NoError(t, err)
+			req, err := mapper.Map(blk)
+			require.NoError(t, err)
 
-// 			assert.ElementsMatch(t, test.expect, req.(*WriteRequest).TabletRows)
-// 		})
-// 	}
-// }
+			var stringEntries []string
+			for _, entry := range req.SingletEntries {
+				stringEntries = append(stringEntries, entryToString(t, entry))
+			}
+			assert.ElementsMatch(t, test.expectedEntries, stringEntries)
 
-// func testDBOp(op string, path, payers, datas string) *pbcodec.DBOp {
-// 	chunks := strings.SplitN(path, "/", 4)
-// 	payerChunks := strings.SplitN(payers, "/", 2)
-// 	dataChunks := strings.SplitN(datas, "/", 2)
+			var stringRows []string
+			for _, row := range req.TabletRows {
+				stringRows = append(stringRows, rowToString(t, row))
+			}
 
-// 	out := &pbcodec.DBOp{
-// 		Code:       chunks[0],
-// 		Scope:      chunks[1],
-// 		TableName:  chunks[2],
-// 		PrimaryKey: chunks[3],
-// 		OldPayer:   payerChunks[0],
-// 		NewPayer:   payerChunks[1],
-// 		OldData:    []byte(dataChunks[0]),
-// 		NewData:    []byte(dataChunks[1]),
-// 	}
-// 	switch op {
-// 	case "INS":
-// 		out.Operation = pbcodec.DBOp_OPERATION_INSERT
-// 	case "REM":
-// 		out.Operation = pbcodec.DBOp_OPERATION_REMOVE
-// 	case "UPD":
-// 		out.Operation = pbcodec.DBOp_OPERATION_UPDATE
-// 	default:
-// 		panic("wtf-happy? I know not that thing")
-// 	}
-// 	return out
-// }
+			assert.ElementsMatch(t, test.expectedRows, stringRows)
+		})
+	}
+}
 
-// func newBlock(blockID string, trxIDs []string) *pbcodec.Block {
-// 	traces := make([]*pbcodec.TransactionTrace, len(trxIDs))
-// 	for i, trxID := range trxIDs {
-// 		traces[i] = &pbcodec.TransactionTrace{
-// 			Id: trxID,
-// 		}
-// 	}
+func entryToString(t *testing.T, entry fluxdb.SingletEntry) string {
+	return genericElementToString(t, entry.String(), entry)
+}
 
-// 	blk := &pbcodec.Block{
-// 		Id:                          blockID,
-// 		UnfilteredTransactionTraces: traces,
-// 		Header: &pbcodec.BlockHeader{
-// 			Timestamp: &timestamp.Timestamp{Seconds: 1569604302},
-// 		},
-// 	}
-// 	return blk
-// }
+func rowToString(t *testing.T, row fluxdb.TabletRow) string {
+	return genericElementToString(t, row.String(), row)
+}
 
-// func newPermOp(operation string, actionIndex int, oldPerm, newPerm *pbcodec.PermissionObject) *pbcodec.PermOp {
-// 	pbcodecOperation := pbcodec.PermOp_OPERATION_UNKNOWN
-// 	switch operation {
-// 	case "INS":
-// 		pbcodecOperation = pbcodec.PermOp_OPERATION_INSERT
-// 	case "UPD":
-// 		pbcodecOperation = pbcodec.PermOp_OPERATION_UPDATE
-// 	case "REM":
-// 		pbcodecOperation = pbcodec.PermOp_OPERATION_REMOVE
-// 	}
+type fluxDBElement interface {
+	MarshalValue() ([]byte, error)
+}
 
-// 	return &pbcodec.PermOp{
-// 		Operation:   pbcodecOperation,
-// 		ActionIndex: uint32(actionIndex),
-// 		OldPerm:     oldPerm,
-// 		NewPerm:     newPerm,
-// 	}
-// }
+type protoableFluxDBElement interface {
+	ToProto() (proto.Message, error)
+}
 
-// func newPermOpData(account string, permission string, publicKeys []string) *pbcodec.PermissionObject {
-// 	authKeys := make([]*pbcodec.KeyWeight, len(publicKeys))
-// 	for i, publicKey := range publicKeys {
-// 		authKeys[i] = &pbcodec.KeyWeight{PublicKey: publicKey, Weight: 1}
-// 	}
+func genericElementToString(t *testing.T, key string, element fluxDBElement) string {
+	if v, ok := element.(protoableFluxDBElement); ok {
+		message, err := v.ToProto()
+		require.NoError(t, err)
 
-// 	return &pbcodec.PermissionObject{
-// 		Owner: account,
-// 		Name:  permission,
-// 		Authority: &pbcodec.Authority{
-// 			Keys: authKeys,
-// 		},
-// 	}
-// }
+		out, err := jsonpb.MarshalToString(message)
+		require.NoError(t, err)
 
-// func sortedFluxRows(rows []TabletRow, blockNum uint32) []TabletRow {
-// 	sort.Slice(rows, func(i, j int) bool {
-// 		return rows[i].Key() < rows[j].Key()
-// 	})
+		return fmt.Sprintf("%s => %s", key, out)
+	}
 
-// 	return rows
-// }
+	value, err := element.MarshalValue()
+	require.NoError(t, err)
 
-// func mustCreateContractTableScopeTabletRow(contract, table string, blockNum uint32, scope string, payer string, isDeletion bool) TabletRow {
-// 	row, err := NewContractTableScopeTablet(contract, table).NewRow(blockNum, scope, payer, isDeletion)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return row
-// }
-
-// func mustCreateContractStateTabletRow(contract, scope, table string, blockNum uint32, primaryKey string, payer string, data []byte, isDeletion bool) TabletRow {
-// 	row, err := NewContractStateTablet(contract, scope, table).NewRow(blockNum, primaryKey, payer, data, isDeletion)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return row
-// }
-
-// func mustCreateAuthLinkTabletRow(account string, blockNum uint32, contract, action, permission string, isDeletion bool) TabletRow {
-// 	row, err := NewAuthLinkTablet(account).NewRow(blockNum, contract, action, permission, isDeletion)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return row
-// }
-
-// func mustCreateKeyAccountTabletRow(publicKey string, blockNum uint32, account, permission string, isDeletion bool) *KeyAccountRow {
-// 	tablet := NewKeyAccountTablet(publicKey)
-// 	k, err := tablet.NewRow(blockNum, account, permission, isDeletion)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return k
-// }
+	return fmt.Sprintf("%s => %x", key, value)
+}

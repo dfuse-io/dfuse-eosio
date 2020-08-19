@@ -83,6 +83,15 @@ func (r *ContractStateRow) Info() (payer string, rowData []byte, err error) {
 	return eos.NameToString(pb.Payer), pb.Data, nil
 }
 
+func (r *ContractStateRow) ToProto() (proto.Message, error) {
+	pb := &pbstatedb.ContractStateValue{}
+	if err := proto.Unmarshal(r.Value(), pb); err != nil {
+		return nil, err
+	}
+
+	return pb, nil
+}
+
 func (r *ContractStateRow) String() string {
 	return r.Stringify(bytesToName(r.PrimaryKey()))
 }

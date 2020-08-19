@@ -281,6 +281,16 @@ func (a *Action) SimpleName() string {
 	return a.Account + ":" + a.Name
 }
 
+// HasJSONDecodedData returns wheter we were able in an upstream step top ABI decode
+// this action binary data `RawData` into a valid JSON string. If `false`, it means the
+// action `RawData` is ill-formed agaisnt the contract's ABI and as such, it was not
+// decoded at all.
+//
+// If `true`, it means a valid JSON representation of the action is available.
+func (a *Action) HasJSONDecodedData() bool {
+	return len(a.JsonData) > 0
+}
+
 func (a *Action) UnmarshalData(into interface{}) error {
 	return json.Unmarshal([]byte(a.JsonData), into)
 }

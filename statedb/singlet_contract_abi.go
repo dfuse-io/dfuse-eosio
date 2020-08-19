@@ -55,6 +55,10 @@ type ContractABIEntry struct {
 }
 
 func NewContractABIEntry(blockNum uint64, actionTrace *pbcodec.ActionTrace) (entry *ContractABIEntry, err error) {
+	if !actionTrace.Action.HasJSONDecodedData() {
+		return nil, nil
+	}
+
 	var setABI *system.SetABI
 	if err := actionTrace.Action.UnmarshalData(&setABI); err != nil {
 		return nil, err
@@ -102,4 +106,13 @@ func (r *ContractABIEntry) ABI(options ...ContractABIOption) (abi *eos.ABI, rawB
 	}
 
 	return abi, rawABI, nil
+}
+
+func (r *ContractABIEntry) ToProto() (proto.Message, error) {
+	pb := &pbstatedb.ContractABIValue{}
+	if err := proto.Unmarshal(r.Value(), pb); err != nil {
+		return nil, err
+	}
+
+	return pb, nil
 }

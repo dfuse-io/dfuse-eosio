@@ -211,9 +211,12 @@ func Trx(t testing.T, elements ...interface{}) *pbcodec.Transaction {
 
 type ActionData string
 type actionMatched bool
+type undecodedActionData bool
 
 var ActionMatched = actionMatched(true)
+var UndecodedActionData = undecodedActionData(true)
 
+type ActionIndex uint32
 type ExecutionIndex uint32
 type GlobalSequence uint64
 
@@ -251,11 +254,18 @@ func ActionTraceFail(t testing.T, tripletName string, components ...interface{})
 }
 
 func ActionTraceSetABI(t testing.T, account string, abi *eos.ABI, components ...interface{}) *pbcodec.ActionTrace {
-	abiData, err := eos.MarshalBinary(abi)
+	var abiHex []byte
+	var err error
+	if abi != nil {
+		abiHex, err = eos.MarshalBinary(abi)
+		require.NoError(t, err)
+	}
+
+	setABI := &system.SetABI{Account: eos.AccountName(account), ABI: eos.HexBytes(abiHex)}
+	rawData, err := eos.MarshalBinary(setABI)
 	require.NoError(t, err)
 
-	setABI := &system.SetABI{Account: eos.AccountName(account), ABI: eos.HexBytes(abiData)}
-	rawData, err := eos.MarshalBinary(setABI)
+	jsonData, err := json.Marshal(setABI)
 	require.NoError(t, err)
 
 	actTrace := &pbcodec.ActionTrace{
@@ -264,9 +274,10 @@ func ActionTraceSetABI(t testing.T, account string, abi *eos.ABI, components ...
 			Receiver: "eosio",
 		},
 		Action: &pbcodec.Action{
-			Account: "eosio",
-			Name:    "setabi",
-			RawData: rawData,
+			Account:  "eosio",
+			Name:     "setabi",
+			JsonData: string(jsonData),
+			RawData:  rawData,
 		},
 	}
 
@@ -287,6 +298,8 @@ func transformActionTrace(t testing.T, actTrace *pbcodec.ActionTrace, components
 
 	for _, component := range components {
 		switch v := component.(type) {
+		case undecodedActionData:
+			actTrace.Action.JsonData = ""
 		case ExecutionIndex:
 			actTrace.ExecutionIndex = uint32(v)
 		case GlobalSequence:
@@ -366,7 +379,6 @@ func TrxOp(t testing.T, signedTrx *pbcodec.SignedTransaction) *pbcodec.TrxOp {
 	return op
 }
 
-type DtrxOpActionIndex uint32
 type DtrxOpPayer string
 
 func DtrxOp(t testing.T, operation string, trxID string, components ...interface{}) *pbcodec.DTrxOp {
@@ -379,7 +391,7 @@ func DtrxOp(t testing.T, operation string, trxID string, components ...interface
 
 	for _, component := range components {
 		switch v := component.(type) {
-		case DtrxOpActionIndex:
+		case ActionIndex:
 			op.ActionIndex = uint32(v)
 		case DtrxOpPayer:
 			op.Payer = string(v)
@@ -400,6 +412,146 @@ func ToTimestamp(t time.Time) *pbts.Timestamp {
 	}
 
 	return el
+}
+
+func DBOp(t testing.T, op string, path string, payer string, data string, components ...interface{}) *pbcodec.DBOp {
+	paths := strings.Split(path, "/")
+
+	// Split those with → instead, will probably improve readability
+	payers := strings.Split(payer, "/")
+	datas := strings.Split(data, "/")
+
+	op = strings.ToUpper(op)
+	shortOpToLongOp := map[string]string{
+		"INS": "INSERT",
+		"UPD": "UPDATE",
+		"REM": "REMOVE",
+	}
+	longOp, found := shortOpToLongOp[op]
+	if found {
+		op = longOp
+	}
+
+	dbOp := &pbcodec.DBOp{
+		Operation:  pbcodec.DBOp_Operation(pbcodec.DBOp_Operation_value["OPERATION_"+op]),
+		Code:       paths[0],
+		TableName:  paths[1],
+		Scope:      paths[2],
+		PrimaryKey: paths[3],
+	}
+
+	if payers[0] != "" {
+		dbOp.OldPayer = payers[0]
+	}
+
+	if payers[1] != "" {
+		dbOp.NewPayer = payers[1]
+	}
+
+	var abi *eos.ABI
+	for _, component := range components {
+		switch v := component.(type) {
+		case *eos.ABI:
+			abi = v
+		default:
+			failInvalidComponent(t, "db op", component)
+		}
+	}
+
+	dataToBinary := func(content string) []byte {
+		if abi != nil {
+			data, err := abi.EncodeTable(eos.TableName(dbOp.TableName), []byte(content))
+			require.NoError(t, err)
+
+			return data
+		}
+
+		return []byte(content)
+	}
+
+	if datas[0] != "" {
+		dbOp.OldData = dataToBinary(datas[0])
+	}
+
+	if datas[1] != "" {
+		dbOp.NewData = dataToBinary(datas[1])
+	}
+
+	return dbOp
+}
+
+type OldPerm *pbcodec.PermissionObject
+type NewPerm *pbcodec.PermissionObject
+
+func PermOp(t testing.T, op string, components ...interface{}) *pbcodec.PermOp {
+	op = strings.ToUpper(op)
+	shortOpToLongOp := map[string]string{
+		"INS": "INSERT",
+		"UPD": "UPDATE",
+		"REM": "REMOVE",
+	}
+	longOp, found := shortOpToLongOp[op]
+	if found {
+		op = longOp
+	}
+
+	permOp := &pbcodec.PermOp{
+		Operation: pbcodec.PermOp_Operation(pbcodec.PermOp_Operation_value["OPERATION_"+op]),
+	}
+
+	for _, component := range components {
+		switch v := component.(type) {
+		case OldPerm:
+			permOp.OldPerm = v
+		case NewPerm:
+			permOp.OldPerm = v
+		case ActionIndex:
+			permOp.ActionIndex = uint32(v)
+		default:
+			failInvalidComponent(t, "perm op", component)
+		}
+	}
+
+	return permOp
+}
+
+type PublicKey string
+
+func Permission(t testing.T, accountPermission string, components ...interface{}) *pbcodec.PermissionObject {
+	paths := strings.Split(accountPermission, "@")
+
+	permission := &pbcodec.PermissionObject{
+		Owner: paths[0],
+		Name:  paths[1],
+	}
+
+	for _, component := range components {
+		switch v := component.(type) {
+		case PublicKey:
+			keyWeight := &pbcodec.KeyWeight{PublicKey: string(v), Weight: 1}
+			if permission.Authority == nil {
+				permission.Authority = &pbcodec.Authority{}
+			}
+
+			permission.Authority.Keys = append(permission.Authority.Keys, keyWeight)
+		default:
+			failInvalidComponent(t, "permission object", component)
+		}
+	}
+
+	return permission
+}
+
+func TableOp(t testing.T, op string, path string, payer string) *pbcodec.TableOp {
+	paths := strings.Split(path, "/")
+
+	return &pbcodec.TableOp{
+		Operation: pbcodec.TableOp_Operation(pbcodec.TableOp_Operation_value["OPERATION_"+strings.ToUpper(op)]),
+		Code:      paths[0],
+		TableName: paths[1],
+		Scope:     paths[2],
+		Payer:     payer,
+	}
 }
 
 type ignoreComponent func(v interface{}) bool

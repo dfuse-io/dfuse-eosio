@@ -289,6 +289,8 @@ github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3i
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
 github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083 h1:KA+jup9WJqqXRLx/EwOhwTJWo6xMwGMBu5aWJkzfugg=
 github.com/dfuse-io/jsonpb v0.0.0-20200629203253-eb615da38083/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
+github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
+github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360 h1:gBitu/N6GAQqMsBnENYOHwbhQvoy2wEPMccgj8D2OZI=
 github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360/go.mod h1:fmJCZtKh7k3/TtVPH72AaBw+DfNjqXGCorfT5PMLpgA=
@@ -299,6 +301,8 @@ github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilH
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493 h1:rMaoK/SwpP+wVvLtq2cLUF7nnO0N8gE4PLXt0YVtKqU=
 github.com/dfuse-io/logging v0.0.0-20200611143916-aade15324493/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
+github.com/dfuse-io/logging v0.0.0-20200819170935-85f72399491a h1:L7CvV1OEGixk5pc5QpE2rIpR3m/2r7dEdUqtmxcpfkM=
+github.com/dfuse-io/logging v0.0.0-20200819170935-85f72399491a/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/merger v0.0.3-0.20200819165818-6ab286a63ba8 h1:dMlsChukr5qlp2/f+//cqZpzBYp25p5hDsWgkhkcqfo=
 github.com/dfuse-io/merger v0.0.3-0.20200819165818-6ab286a63ba8/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
 github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6 h1:RQZU3rSGS1DYmMN4ZiVjY5YNcVlGih5V5iZC4yaMJRI=
