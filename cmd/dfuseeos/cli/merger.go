@@ -17,7 +17,7 @@ func init() {
 		MetricsID:   "merger",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().Duration("merger-time-between-store-lookups", 10*time.Second, "delay between source store polling (should be higher for remote storage)")
+			cmd.Flags().Duration("merger-time-between-store-lookups", 5*time.Second, "delay between source store polling (should be higher for remote storage)")
 			cmd.Flags().String("merger-state-file", "{dfuse-data-dir}/merger/merger.seen.gob", "Path to file containing last written block number, as well as a map of all 'seen blocks' in the 'max-fixable-fork' range")
 			cmd.Flags().Bool("merger-batch-mode", false, "Ignores the state file, starts and stop based on flags")
 			cmd.Flags().Uint64("merger-start-block-num", 0, "BATCH MODE: Set the block number where we should start processing")
