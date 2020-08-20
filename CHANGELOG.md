@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added possibility to run StateDB reprocessing sharder using scratch directory via flag `--statedb-reproc-shard-scratch-directory` to reduce RAM usage when producing shards for a given chain segment.
 * Added `--merger-one-block-deletion-threads` (default:10) to allow control over one-block-files deletion parallelism
 + Added `--merger-max-one-block-operations-batch-size` to allow control over one-block-files batches that are looked up on storage,
 * Added `--eosws-with-completion` (default: true) to allow control over that feature
@@ -30,7 +31,7 @@ date.
   * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
-* The `--merger-delete-blocks-before` flag is now removed and is the only behavior for merger. 
+* The `--merger-delete-blocks-before` flag is now removed and is the only behavior for merger.
 * The `--mindreader-merge-and-store-directly` flag was removed. That behavior is now activated by default when encountering 'old blocks'. Also see new flag mindreader-batch-mode.
 * The `--mindreader-discard-after-stop-num` flag was removed, its implementation was too complex and it had no case where it was really useful.
 * The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
