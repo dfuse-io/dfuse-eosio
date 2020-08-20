@@ -271,6 +271,8 @@ github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9 h1:nJFxXKBuZv8BB
 github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae h1:H0MPMOKXbn7HlcNwCvevs7fRG68T5qxZFXh7Sg7ahBE=
 github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
+github.com/dfuse-io/dstore v0.1.1-0.20200820172424-8e0e519ece2f h1:HaF0V3RomVAuIio3BznpS5tfzil8MkP8ENtmzofNFg0=
+github.com/dfuse-io/dstore v0.1.1-0.20200820172424-8e0e519ece2f/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGYuyB5fpkLybwlzDRoOFOHfpQehyxNUw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
@@ -311,6 +313,8 @@ github.com/dfuse-io/merger v0.0.3-0.20200819165818-6ab286a63ba8 h1:dMlsChukr5qlp
 github.com/dfuse-io/merger v0.0.3-0.20200819165818-6ab286a63ba8/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
 github.com/dfuse-io/merger v0.0.3-0.20200820010402-82fe6a890463 h1:gwCm2wv94S6M12YclSDF9FV9l9qhOqDs8KbgacUJROQ=
 github.com/dfuse-io/merger v0.0.3-0.20200820010402-82fe6a890463/go.mod h1:QifZGibE21EChWVuYpu+gX1Ilo6mKI6m3odT6kGJcHE=
+github.com/dfuse-io/merger v0.0.3-0.20200820172522-57dbc654ed58 h1:OkHe74jZ2zeTz6noxBxfTqDAuUnvEcfU3fAcP+sp3mw=
+github.com/dfuse-io/merger v0.0.3-0.20200820172522-57dbc654ed58/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6 h1:RQZU3rSGS1DYmMN4ZiVjY5YNcVlGih5V5iZC4yaMJRI=
 github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6/go.mod h1:Snh8WGAYzivZVLIvY5lXHeB5InueOH58U4/F+C/u+yM=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
