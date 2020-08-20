@@ -267,6 +267,8 @@ github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68/go.mod h1:pbb9dP
 github.com/dfuse-io/dstore v0.1.0/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc h1:CA91m/OhJH/jzoCT4GgBKGkM9mzlOZ4NbY2ay4IWths=
 github.com/dfuse-io/dstore v0.1.1-0.20200625162605-1ae140e138fc/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
+github.com/dfuse-io/dstore v0.1.1-0.20200710184930-fca0932f671b h1:2IcyNmT2YPwYrljnrHjx/V94d2/tlqc2oT3iPRegJIo=
+github.com/dfuse-io/dstore v0.1.1-0.20200710184930-fca0932f671b/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9 h1:nJFxXKBuZv8BBLGEvU8W7smEhd1q4VXPpMs+8UdmloE=
 github.com/dfuse-io/dstore v0.1.1-0.20200819043022-7cdd92b6d8a9/go.mod h1:1dqWgmsMTFiBTsMw/7FM7AEBZiJm0/3f78EIR58MajI=
 github.com/dfuse-io/dstore v0.1.1-0.20200819053845-a4a471d042ae h1:H0MPMOKXbn7HlcNwCvevs7fRG68T5qxZFXh7Sg7ahBE=
