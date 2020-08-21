@@ -5,33 +5,32 @@ import (
 	"net/http"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
-
 	"github.com/gorilla/mux"
 )
 
-type WalletServer struct {
+type Server struct {
 	addr string
 
 	httpServer *http.Server
 	mux        *mux.Router
 
-	walletStore *wallet.Store
+	service *accounthist.Service
 }
 
-func New(addr string, walletStore *wallet.Store) *WalletServer {
-	srv := &WalletServer{
+func New(addr string, service *accounthist.Service) *Server {
+	srv := &Server{
 		addr: addr,
 		mux:  mux.NewRouter(),
 
-		walletStore: walletStore,
+		service: service,
 	}
 
-	srv.mux.Methods("GET").Path("/v0/wallet/{account}/transactions").HandlerFunc(srv.GetTransactionsHandler)
+	srv.mux.Methods("GET").Path("/v0/wallet/{account}/actions").HandlerFunc(srv.GetActionsHandler)
 
 	return srv
 }
 
-func (srv *WalletServer) Serve() error {
+func (srv *Server) Serve() error {
 	srv.httpServer = &http.Server{
 		Addr:    srv.addr,
 		Handler: srv.mux,
@@ -40,6 +39,6 @@ func (srv *WalletServer) Serve() error {
 	return srv.httpServer.ListenAndServe()
 }
 
-func (srv *WalletServer) Stop(ctx context.Context) error {
+func (srv *Server) Stop(ctx context.Context) error {
 	return srv.httpServer.Shutdown(ctx)
 }

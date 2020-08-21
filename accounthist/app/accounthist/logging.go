@@ -1,4 +1,4 @@
-package wallet_api
+package accounthist
 
 import (
 	"github.com/dfuse-io/logging"

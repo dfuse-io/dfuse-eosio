@@ -28,9 +28,9 @@ func init() {
 			return accounthistApp.New(&accounthistApp.Config{
 				GRPCListenAddr:  viper.GetString("accounthist-grpc-listen-addr"),
 				KvdbDSN:         mustReplaceDataDir(dfuseDataDir, viper.GetString("accounthist-dsn")),
-				SourceStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				BlocksStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				BlockstreamAddr: blockstreamAddr,
-			}), nil
+			}, &accounthistApp.Modules{}), nil
 		},
 	})
 }
