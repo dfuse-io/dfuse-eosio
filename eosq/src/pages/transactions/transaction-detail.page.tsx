@@ -9,7 +9,7 @@ import { metricsStore } from "../../stores"
 import { ContentLoaderComponent } from "../../components/content-loader/content-loader.component"
 import { Panel } from "../../atoms/panel/panel.component"
 import { TransactionDetailHeader } from "./summary/transaction-detail-header"
-import { PannelTitleBanner } from "../../atoms/panel/panel-title-banner"
+import { PanelTitleBanner } from "../../atoms/panel/panel-title-banner"
 import { Text } from "../../atoms/text/text.component"
 import { WrappingText } from "../../atoms/text-elements/misc"
 
@@ -115,7 +115,7 @@ export class TransactionDetailPage extends ContentLoaderComponent<Props, State> 
 
   renderNotSeenYet(transactionId: string) {
     return [
-      <PannelTitleBanner key="0" title={t("transaction.banner.title")} content={transactionId} />,
+      <PanelTitleBanner key="0" title={t("transaction.banner.title")} content={transactionId} />,
       <Grid key="1" gridRowGap={[3]}>
         <Panel>
           <Cell p={[3, 4]}>
@@ -145,7 +145,7 @@ export class TransactionDetailPage extends ContentLoaderComponent<Props, State> 
 
     return (
       <PageContainer>
-        <PannelTitleBanner
+        <PanelTitleBanner
           title={t("transaction.banner.title")}
           content={this.props.match.params.id}
         />

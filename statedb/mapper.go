@@ -21,6 +21,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/fluxdb"
+	"go.uber.org/zap"
 )
 
 type BlockMapper struct {
@@ -42,6 +43,7 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 	blockNum := req.BlockRef.Num()
 	for _, trx := range blk.TransactionTraces() {
 		for _, dbOp := range trx.DbOps {
+			zlog.Debug("db op", zap.Reflect("op", dbOp))
 			// There is no change in this row, not sure how it got here, discarding it anyway
 			if dbOp.Operation == pbcodec.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {
 				continue
@@ -92,6 +94,11 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 				abiEntry, err := NewContractABIEntry(req.BlockRef.Num(), act)
 				if err != nil {
 					return nil, fmt.Errorf("unable to extract abi entry: %w", err)
+				}
+
+				if abiEntry == nil {
+					zlog.Debug("abi entry not added since it was not decoded correctly")
+					continue
 				}
 
 				lastSingletEntryMap[keyForEntry(abiEntry)] = abiEntry

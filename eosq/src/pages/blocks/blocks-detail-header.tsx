@@ -15,7 +15,7 @@ import { BlockProgressPie } from "./block-progress-pie"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { ContentLoaderComponent } from "../../components/content-loader/content-loader.component"
 import { Panel } from "../../atoms/panel/panel.component"
-import { PannelTitleBanner } from "../../atoms/panel/panel-title-banner"
+import { PanelTitleBanner } from "../../atoms/panel/panel-title-banner"
 import { UiToolTip } from "../../atoms/ui-tooltip/ui-tooltip"
 import { NavigationButtons } from "../../atoms/navigation-buttons/navigation-buttons"
 import { PageContainer } from "../../components/page-container/page-container"
@@ -218,7 +218,7 @@ export class BlockHeader extends ContentLoaderComponent<Props, any> {
 
     return (
       <PageContainer>
-        <PannelTitleBanner title="Block #" content={formatNumber(block.block_num)}>
+        <PanelTitleBanner title="Block #" content={formatNumber(block.block_num)}>
           <NavigationButtons
             onNext={() => this.goToBlock(next as BlockSummary)}
             onPrev={() => this.goToBlock(prev as BlockSummary)}
@@ -226,7 +226,7 @@ export class BlockHeader extends ContentLoaderComponent<Props, any> {
             showPrev={!!prev}
             showFirst={false}
           />
-        </PannelTitleBanner>
+        </PanelTitleBanner>
         <Panel>
           <PanelContentWrapper pt={[0]}>
             <Grid gridTemplateColumns={["1fr", "4fr 200px"]}>

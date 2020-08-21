@@ -124,7 +124,7 @@ export function getRankInfo(
 }
 
 export function getWebsiteInfo(account: Account, votes: Vote[]) {
-  let link = null
+  let link: string
   let verified = false
 
   if (!account.account_verifications) {

@@ -10,6 +10,7 @@ date.
 # [Unreleased]
 
 ### Added
+* Added possibility to run StateDB reprocessing sharder using scratch directory via flag `--statedb-reproc-shard-scratch-directory` to reduce RAM usage when producing shards for a given chain segment.
 * Added `--merger-one-block-deletion-threads` (default:10) to allow control over one-block-files deletion parallelism
 + Added `--merger-max-one-block-operations-batch-size` to allow control over one-block-files batches that are looked up on storage,
 * Added `--eosws-with-completion` (default: true) to allow control over that feature
@@ -30,6 +31,7 @@ date.
   * `--trxdb-loader-truncation-purge-interval`
 
 ### Removed
+* The `--merger-delete-blocks-before` flag is now removed and is the only behavior for merger.
 * The `--mindreader-merge-and-store-directly` flag was removed. That behavior is now activated by default when encountering 'old blocks'. Also see new flag mindreader-batch-mode.
 * The `--mindreader-discard-after-stop-num` flag was removed, its implementation was too complex and it had no case where it was really useful.
 * The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
@@ -39,6 +41,7 @@ date.
 ### Changed
 * **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
+* Merger now restarts from the last produced bundle based on its state file (merger-seen.gob) if it exists. It will go through all existing remote merged-blocks files to populate its seen-blocks-cache and keep progressing this way, so duplicate one-blocks-files will be deleted, but extraneous ones (forked blocks) will be included further away in the merged-blocks produced by the merger.. Flag renamed: `merger-seen-blocks-file` to `merger-state-file` to reflect this change.
 * Merger now deletes blocks that have been processed and are in his "seenBlocks" cache, so a mindreader restarting from recent snapshot will not clog your one-block-file storage
 * Merger now properly handles storage backend errors when looking for where to start
 * Mindreader now automatically start producing "merged blocks" instead of "one-block-files" the blocks are passed a certain age threshold (based on blocktime) OR if a "blockmeta" service can be reached and validates that the blocks numbers are lower than the Last Irreversible Block (LIB). When those conditions cease to be true - close to HEAD -,  it changes to producing one-block-files again (until restarted)
