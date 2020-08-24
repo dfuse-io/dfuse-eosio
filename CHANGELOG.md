@@ -7,57 +7,64 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
-# [Unreleased]
+# [v0.1.0-beta5] 2020-08-24
+
+## PUBLIC API Changes
 
 ### Added
-* Added possibility to run StateDB reprocessing sharder using scratch directory via flag `--statedb-reproc-shard-scratch-directory` to reduce RAM usage when producing shards for a given chain segment.
+* Added `tokens`, `accountBalances`, `tokenBalances` calls to dgraphql (based on tokenmeta)
+
+## System Administration Changes
+
+### Changed
+* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
+* **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
+* `merger` now restarts from the last produced bundle based on its state file (merger-seen.gob) if it exists. It will go through all existing remote merged-blocks files to populate its seen-blocks-cache and keep progressing this way, so duplicate one-blocks-files will be deleted, but extraneous ones (forked blocks) will be included further away in the merged-blocks produced by the merger.. Flag renamed: `merger-seen-blocks-file` to `merger-state-file` to reflect this change.
+* `merger` now deletes blocks that have been processed and are in his "seenBlocks" cache, so a mindreader restarting from recent snapshot will not clog your one-block-file storage
+* `merger` now properly handles storage backend errors when looking for where to start
+* `mindreader` now automatically produces "merged blocks" instead of "one-block-files" when catching up (based on blocktime or if a blockmeta is reachable at `--common-blockmeta-addr`)
+* `mindreader` now sets optimal EOS VM settings automatically if the platform supports it them when doing `dfuseeos init`.
+* Changed `--abicodec-export-cache-url` flag to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
+* Changed `--abicodec-export-cache` flag to `abicodec-export-abis-enabled`.
+
+### Added
+* Added `tokenmeta` app, with its flags
+* Added support for **filtered** *blocks*, *search indices* and *trxdb*, with `--common-include-filter-expr` and `--common-include-filter-expr`.
+* Added `merged-filter` app (not running by default), that generates filtered merged blocks files from regular merged blocks files.
+* Added truncation handling to `trxdb-loader`, which will only keep a _moving window of data_ in `trxdb`, and delete preceding transactions. Enabling that feature requires reprocessing trxdb.
+  * `--trxdb-loader-truncation-enabled`
+  * `--trxdb-loader-truncation-window`
+  * `--trxdb-loader-truncation-purge-interval`
+* Added `--statedb-reproc-shard-scratch-directory` to run StateDB reprocessing sharder using scratch directory to reduce RAM usage
 * Added `--merger-one-block-deletion-threads` (default:10) to allow control over one-block-files deletion parallelism
 + Added `--merger-max-one-block-operations-batch-size` to allow control over one-block-files batches that are looked up on storage,
 * Added `--eosws-with-completion` (default: true) to allow control over that feature
 * Added `--mindreader-merge-threshold-block-age` when processing blocks with a blocktime older than this threshold, they will be automatically merged: (default 12h)
 * Added `--mindreader-batch-mode` to force always merging blocks (like --mindreader-merge-and-store-directly did) AND overwriting existing files in destination.
-* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
 * Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
-* Added `merged-filter` application (not running by default), that takes merged blocks files (100-blocks files), filters them according to the `--common-include-filter-expr` and `--common-include-filter-expr`.
-* Added `tokenmeta` application, with its flags
-* Add `--search-live-preprocessor-concurrent-threads` Number of thread used to run file source preprocessor function
-* flag `abicodec-export-abis-file-name` will contain only the URL of the where to export the ABIs in JSON
+* Added `--search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
+* Added `--search-live-preprocessor-concurrent-threads`: number of thread used to run file source preprocessor function
+* Added `--abicodec-export-abis-file-name`, contains the URL where to export the ABIs in JSON
 * Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
 * Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
-* Experimental support for `netkv://127.0.0.1:1234` as a possible `kvdb` database backend, which allows decoupling of single pods deployment into using an extremely simple networked k/v store, using the same badger backend and database as when you boot with default parameters.
-* Truncation handling to `trxdb-loader`, which will only keep a _moving window of data_ in `trxdb`, based on a window of blocks. Uses flags:
-  * `--trxdb-loader-truncation-enabled`
-  * `--trxdb-loader-truncation-window`
-  * `--trxdb-loader-truncation-purge-interval`
+* Added **Experimental** support for kvdb backend `netkv://`, an extremely simple network layer over `badger` to allow running dfuse components in separate instances.
 
 ### Removed
 * The `--merger-delete-blocks-before` flag is now removed and is the only behavior for merger.
 * The `--mindreader-merge-and-store-directly` flag was removed. That behavior is now activated by default when encountering 'old blocks'. Also see new flag mindreader-batch-mode.
 * The `--mindreader-discard-after-stop-num` flag was removed, its implementation was too complex and it had no case where it was really useful.
+* The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
 * The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
 * The `--eosq-on-demand` flag was removed, this was unused in the codebase.
-* The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
-
-### Changed
-* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
-* **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
-* Merger now restarts from the last produced bundle based on its state file (merger-seen.gob) if it exists. It will go through all existing remote merged-blocks files to populate its seen-blocks-cache and keep progressing this way, so duplicate one-blocks-files will be deleted, but extraneous ones (forked blocks) will be included further away in the merged-blocks produced by the merger.. Flag renamed: `merger-seen-blocks-file` to `merger-state-file` to reflect this change.
-* Merger now deletes blocks that have been processed and are in his "seenBlocks" cache, so a mindreader restarting from recent snapshot will not clog your one-block-file storage
-* Merger now properly handles storage backend errors when looking for where to start
-* Mindreader now automatically start producing "merged blocks" instead of "one-block-files" the blocks are passed a certain age threshold (based on blocktime) OR if a "blockmeta" service can be reached and validates that the blocks numbers are lower than the Last Irreversible Block (LIB). When those conditions cease to be true - close to HEAD -,  it changes to producing one-block-files again (until restarted)
-* Mindreader can now use flag `--common-blockmeta-addr` so it can determine the network LIB and start producing "merged blocks"
-* Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
-* EOS VM settings on mindreader are now automatically added if the platform supports it them when doing `dfuseeos init`.
-* Fixed a bunch of small issues with `dfuseeos tools check merged-blocks` command, like inverted start/end block in detected holes and false valid ranges when the first segment is not 0. Fixed also issue where a leading `./` was not working as expected.
-* Improved `nodeos` log interceptions (when using `(mindreader|node-manager)-log-to-zap` flag) by adjusting log level for specific lines, that should improve the overall experience and better notice what is really an important error. More tweaking on the adjustment will continue as an iterative process, don't hesitate to report log line that should adjusted.
-* Flag `abicodec-export-cache-url` changed to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
-* Flag `abicodec-export-cache` changed to `abicodec-export-abis-enabled`.
 
 ### Fixed
 * Fixed issue where `blockmeta` was not serving on GRPC at all because it couldn't figure out where to start on the stream
 * Fixed issue with `merger` with a possible panic when reading a one-block-file that is empty, for example on a non-atomic storage backend
 * Fixed issue with `mindreader` not stopping correctly (and showing any error) if the bootstrap phase (ex: restore-from-snapshot) failed.
 * Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
+* Fixed issue with `dfuseeos tools check merged-blocks` (start/end block, false valid ranges when the first segment is not 0, etc.)
+* Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
+* `mindreader` and `node-manager` improved `nodeos` log handling
 
 #### FluxDB to StateDB Migration
 
