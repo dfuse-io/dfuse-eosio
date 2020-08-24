@@ -35,6 +35,7 @@ func init() {
 		// Filtering
 		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
 		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
+		cmd.Flags().String("common-system-actions-include-filter-expr", "(receiver == 'eosio' && action in ['linkauth', 'unlinkauth', 'newaccount', 'setabi'])", "[COMMON] Actions to keep regardless of the include or exclude filter expressions.")
 
 		// Search flags
 		cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")

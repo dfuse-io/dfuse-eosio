@@ -9,11 +9,12 @@ import (
 )
 
 type BlockFilter struct {
-	IncludeProgram *CELFilter
-	ExcludeProgram *CELFilter
+	IncludeProgram              *CELFilter
+	ExcludeProgram              *CELFilter
+	SystemActionsIncludeProgram *CELFilter
 }
 
-func NewBlockFilter(includeProgramCode, excludeProgramCode string) (*BlockFilter, error) {
+func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsIncludeProgramCode string) (*BlockFilter, error) {
 	includeFilter, err := newCELFilterInclude(includeProgramCode)
 	if err != nil {
 		return nil, fmt.Errorf("include filter: %w", err)
@@ -24,9 +25,15 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode string) (*BlockFilter
 		return nil, fmt.Errorf("exclude filter: %w", err)
 	}
 
+	saIncludeFilter, err := newCELFilterSystemActionsInclude(systemActionsIncludeProgramCode)
+	if err != nil {
+		return nil, fmt.Errorf("system actions include filter: %w", err)
+	}
+
 	return &BlockFilter{
-		IncludeProgram: includeFilter,
-		ExcludeProgram: excludeFilter,
+		IncludeProgram:              includeFilter,
+		ExcludeProgram:              excludeFilter,
+		SystemActionsIncludeProgram: saIncludeFilter,
 	}, nil
 }
 
@@ -60,6 +67,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteringApplied = true
 	block.FilteringIncludeFilterExpr = f.IncludeProgram.code
 	block.FilteringExcludeFilterExpr = f.ExcludeProgram.code
+	block.FilteringSystemActionsFilterExpr = f.SystemActionsIncludeProgram.code
 
 	var filteredTrxTrace []*pbcodec.TransactionTrace
 	filteredExecutedInputActionCount := uint32(0)
@@ -70,11 +78,13 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 		trxTraceAddedToFiltered := false
 		trxTraceExcluded := true
 		for _, actTrace := range trxTrace.ActionTraces {
-			if !f.shouldProcess(trxTrace, actTrace) {
+			passes, isSystem := f.shouldProcess(trxTrace, actTrace)
+			if !passes {
 				continue
 			}
 
 			actTrace.FilteringMatched = true
+			actTrace.FilteringMatchedSystemActionFilter = isSystem
 			filteredExecutedTotalActionCount++
 			if actTrace.IsInput() {
 				filteredExecutedInputActionCount++
@@ -89,11 +99,13 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 
 		if trxTrace.FailedDtrxTrace != nil {
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				if !f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace) {
+				passes, isSystem := f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace)
+				if !passes {
 					continue
 				}
 
 				actTrace.FilteringMatched = true
+				actTrace.FilteringMatchedSystemActionFilter = isSystem
 				if !trxTraceAddedToFiltered {
 					filteredTrxTrace = append(filteredTrxTrace, trxTrace)
 					trxTraceAddedToFiltered = true
@@ -156,18 +168,24 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
-func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) bool {
+func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) (pass bool, isSystem bool) {
 	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled}
 	// If the include program does not match, there is nothing more to do here
 	if !f.IncludeProgram.match(&activation) {
-		return false
+		if f.SystemActionsIncludeProgram.match(&activation) {
+			return true, true
+		}
+		return false, false
 	}
 
 	// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
 	if f.ExcludeProgram.match(&activation) {
-		return false
+		if f.SystemActionsIncludeProgram.match(&activation) {
+			return true, true
+		}
+		return false, false
 	}
 
 	// We are included and NOT excluded, this transaction trace/action trace match the block filter
-	return true
+	return true, false
 }

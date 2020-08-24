@@ -36,16 +36,17 @@ func init() {
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			dfuseDataDir := runtime.AbsDataDir
 			return mergedFilterApp.New(&mergedFilterApp.Config{
-				DestBlocksStoreURL:   mustReplaceDataDir(dfuseDataDir, viper.GetString("merged-filter-destination-blocks-store-url")),
-				SourceBlocksStoreURL: mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				TruncationEnabled:    viper.GetBool("merged-filter-truncation-enabled"),
-				TruncationWindow:     viper.GetUint64("merged-filter-truncation-window"),
-				BatchMode:            viper.GetBool("merged-filter-batch-mode"),
-				BatchStartBlock:      viper.GetUint64("merged-filter-batch-start-block"),
-				BatchStopBlock:       viper.GetUint64("merged-filter-batch-stop-block"),
-				IncludeFilterExpr:    viper.GetString("common-include-filter-expr"),
-				ExcludeFilterExpr:    viper.GetString("common-exclude-filter-expr"),
-				BlockstreamAddr:      viper.GetString("common-blockstream-addr"),
+				DestBlocksStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("merged-filter-destination-blocks-store-url")),
+				SourceBlocksStoreURL:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				TruncationEnabled:              viper.GetBool("merged-filter-truncation-enabled"),
+				TruncationWindow:               viper.GetUint64("merged-filter-truncation-window"),
+				BatchMode:                      viper.GetBool("merged-filter-batch-mode"),
+				BatchStartBlock:                viper.GetUint64("merged-filter-batch-start-block"),
+				BatchStopBlock:                 viper.GetUint64("merged-filter-batch-stop-block"),
+				IncludeFilterExpr:              viper.GetString("common-include-filter-expr"),
+				ExcludeFilterExpr:              viper.GetString("common-exclude-filter-expr"),
+				SystemActionsExcludeFilterExpr: viper.GetString("common-system-actions-exclude-filter-expr"),
+				BlockstreamAddr:                viper.GetString("common-blockstream-addr"),
 			}), nil
 		},
 	})
