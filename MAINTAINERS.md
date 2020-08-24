@@ -5,7 +5,7 @@
 
 # Release process
 
-* Rebuild ../dlauncher/dashboard and run `go generate ./...`
+* Rebuild ../dlauncher/dashboard from the and run `go generate ./...`
 
 * Test your stuff (./devel contains a few scenarios that you can run).
 
