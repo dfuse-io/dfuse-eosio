@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	_ "github.com/dfuse-io/dfuse-eosio/accounthist/codec"
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
@@ -25,6 +25,7 @@ const (
 type Service struct {
 	*shutter.Shutter
 
+	shardNum    byte // 0 is live
 	blockFilter func(blk *bstream.Block) error
 
 	blocksStore dstore.Store
@@ -34,9 +35,10 @@ type Service struct {
 	source        bstream.Source
 }
 
-func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error) *Service {
+func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte) *Service {
 	return &Service{
 		Shutter:       shutter.New(),
+		shardNum:      shardNum,
 		kvStore:       kvdb,
 		blocksStore:   blocksStore,
 		blockFilter:   blockFilter,
@@ -50,7 +52,7 @@ func (ws *Service) Launch() {
 	ws.source.Run()
 }
 
-func (ws *Service) GetActions(ctx context.Context, account string) ([]*pbcodec.ActionTrace, error) {
+func (ws *Service) GetActions(ctx context.Context, account string) ([]*pbaccounthist.ActionData, error) {
 	return ws.scanActions(ctx, account)
 }
 
@@ -113,6 +115,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		return fmt.Errorf("error while flushing block checkpoint write to store: %w", err)
 	}
 
+	if blk.Num()%100 == 0 {
+		zlog.Info("flushed block", zap.Uint64("block_num", blk.Num()))
+	}
+
 	return nil
 }
 
@@ -134,7 +140,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account string) (out seq
 
 func (ws *Service) GetLastProcessedBlock(ctx context.Context) (uint64, error) {
 	key := make([]byte, lastBlockKeyLen)
-	encodeLastProcessedBlockKey(key)
+	encodeLastProcessedBlockKey(key, ws.shardNum)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
@@ -151,7 +157,7 @@ func (ws *Service) GetLastProcessedBlock(ctx context.Context) (uint64, error) {
 
 func (ws *Service) writeLastProcessedBlock(ctx context.Context, blockNumber uint64) error {
 	key := make([]byte, lastBlockKeyLen)
-	encodeLastProcessedBlockKey(key)
+	encodeLastProcessedBlockKey(key, ws.shardNum)
 
 	value := make([]byte, 8)
 	binary.LittleEndian.PutUint64(value, blockNumber)
@@ -177,12 +183,12 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 
 	it := ws.kvStore.Prefix(ctx, key, 1)
 	for it.Next() {
-		newact := &pbcodec.ActionTrace{}
+		newact := &pbaccounthist.ActionData{}
 		if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
 			return
 		}
-		out.lastGlobalSeq = newact.Receipt.GlobalSequence
-		out.historySeqNum = decodeActionKeySeqNum(it.Item().Key)
+		out.lastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
+		_, out.historySeqNum = decodeActionKeySeqNum(it.Item().Key)
 	}
 	if it.Err() != nil {
 		err = it.Err()
@@ -192,7 +198,7 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 	return
 }
 
-func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbcodec.ActionTrace, error) {
+func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbaccounthist.ActionData, error) {
 	key := make([]byte, actionPrefixKeyLen)
 	encodeActionPrefixKey(key, account)
 
@@ -204,14 +210,15 @@ func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbcodec.
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	actions := make([]*pbcodec.ActionTrace, 0, maxEntriesPerAccount)
+	actions := make([]*pbaccounthist.ActionData, 0, maxEntriesPerAccount)
 	it := ws.kvStore.Prefix(ctx, key, maxEntriesPerAccount)
 	for it.Next() {
-		newact := &pbcodec.ActionTrace{}
+		newact := &pbaccounthist.ActionData{}
 		err := proto.Unmarshal(it.Item().Value, newact)
 		if err != nil {
 			return nil, err
 		}
+		newact.Key = it.Item().Key
 		actions = append(actions, newact)
 	}
 	if err := it.Err(); err != nil {
@@ -223,9 +230,13 @@ func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbcodec.
 
 func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace) error {
 	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, account, sequenceNumber)
+	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
-	rawTrace, err := proto.Marshal(actionTrace)
+	d := &pbaccounthist.ActionData{}
+	d.ActionTrace = actionTrace
+	d.SequenceNumber = sequenceNumber
+
+	rawTrace, err := proto.Marshal(d)
 	if err != nil {
 		return err
 	}
@@ -244,7 +255,7 @@ func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumb
 
 func (ws *Service) deleteAction(ctx context.Context, account string, sequenceNumber uint64) error {
 	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, account, sequenceNumber)
+	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
 	keys := make([][]byte, 1)
 	keys[0] = key

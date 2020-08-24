@@ -21,6 +21,7 @@ type Config struct {
 	GRPCListenAddr  string
 	BlocksStoreURL  string //FileSourceBaseURL
 	BlockstreamAddr string // LiveSourceAddress
+	ShardNum        byte
 }
 
 type Modules struct {
@@ -62,7 +63,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter)
+	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum)
 
 	if err = service.SetupSource(); err != nil {
 		return fmt.Errorf("error setting up source: %w", err)
