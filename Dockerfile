@@ -12,8 +12,12 @@ RUN rm -rf /var/cache/apt/*
 
 FROM node:12 AS dlauncher
 WORKDIR /work
+ADD go.mod /work
 RUN apt update && apt-get -y install git
-RUN cd /work && git clone https://github.com/dfuse-io/dlauncher.git . &&\
+RUN cd /work && git clone https://github.com/dfuse-io/dlauncher.git dlauncher &&\
+	grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
+    cd dlauncher &&\
+    git checkout "$(cat ../dlauncher.hash)" &&\
     cd dashboard/client &&\
     yarn install && yarn build
 
@@ -29,7 +33,7 @@ ADD . /work
 WORKDIR /work
 COPY --from=eosq      /work/ /work/eosq
 # The copy needs to be one level higher than work, the dashboard generates expects this file layout
-COPY --from=dlauncher /work/ /dlauncher
+COPY --from=dlauncher /work/dlauncher /dlauncher
 RUN cd /dlauncher/dashboard && go generate
 RUN cd /work/eosq/app/eosq && go generate
 RUN cd /work/dashboard && go generate

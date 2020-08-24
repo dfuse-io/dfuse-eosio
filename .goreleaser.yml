@@ -7,8 +7,7 @@ release:
   name_template: '{{.Tag}}'
 before:
   hooks:
-    - eosq/build.sh
-    - dashboard/client/build.sh
+    - ./scripts/build.sh
     # Requires `rice` to be installed: go get github.com/GeertJohan/go.rice/rice
     - go generate ./...
 builds:
@@ -22,8 +21,6 @@ builds:
     - darwin
   goarch:
     - amd64
-  hooks:
-    post: ./scripts/remove_rice_boxes.sh
 archives:
 - replacements:
     darwin: macOS

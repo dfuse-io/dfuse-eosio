@@ -5,7 +5,9 @@
 
 # Release process
 
-* Test your stuff.
+* Rebuild ../dlauncher/dashboard and run `go generate ./...`
+
+* Test your stuff (./devel contains a few scenarios that you can run).
 
 * Modify the CHANGELOG.md to reflect the tag you're about to build and push
 
