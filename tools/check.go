@@ -42,26 +42,26 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	RunE:  checkTrxdbBlocksE,
 }
 
-var checkStateDBShardsSharderCmd = &cobra.Command{
-	Use:   "statedb-shards-sharder {store} {shard-count}",
-	Short: "Checks to see if all shards written to storage are present",
+var checkStateDBReprocSharderCmd = &cobra.Command{
+	Use:   "statedb-reproc-sharder {store} {shard-count}",
+	Short: "Checks to see if all StateDB reprocessing shards are present in the store",
 	Args:  cobra.ExactArgs(2),
-	RunE:  checkStateDBShardsSharderE,
+	RunE:  checkStateDBReprocSharderE,
 }
 
-var checkStateDBShardsInjectorCmd = &cobra.Command{
+var checkStateDBReprocInjectorCmd = &cobra.Command{
 	Use:   "statedb-shards-injector {dsn} {shard-count}",
-	Short: "Checks to see if all shards written to StateDB store are aligned",
+	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
 	Args:  cobra.ExactArgs(2),
-	RunE:  checkStateDBShardsInjectorE,
+	RunE:  checkStateDBReprocInjectorE,
 }
 
 func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkMergedBlocksCmd)
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
-	checkCmd.AddCommand(checkStateDBShardsSharderCmd)
-	checkCmd.AddCommand(checkStateDBShardsInjectorCmd)
+	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
+	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
 
 	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
 	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
@@ -70,7 +70,7 @@ func init() {
 	checkCmd.PersistentFlags().Uint64P("end-block", "e", 4294967296, "Block number to end at")
 }
 
-func checkStateDBShardsInjectorE(cmd *cobra.Command, args []string) error {
+func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 	storeDSN := args[0]
 	shards := args[1]
 	shardsInt, err := strconv.ParseInt(shards, 10, 32)
@@ -112,7 +112,7 @@ func (b blockNum) String() string {
 	return "#" + strings.ReplaceAll(humanize.Comma(int64(b)), ",", " ")
 }
 
-func checkStateDBShardsSharderE(cmd *cobra.Command, args []string) error {
+func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 	storeURL := args[0]
 	shards := args[1]
 	shardCount, err := strconv.ParseUint(shards, 10, 64)
@@ -226,6 +226,7 @@ func checkStateDBShardsSharderE(cmd *cobra.Command, args []string) error {
 		problemDetected = true
 	}
 
+	fmt.Println("")
 	if problemDetected {
 		fmt.Printf("🆘 Problem(s) detected!\n")
 	} else {
