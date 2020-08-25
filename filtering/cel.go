@@ -43,7 +43,7 @@ func newCELFilterInclude(code string) (*CELFilter, error) {
 }
 
 func newCELFilterSystemActionsInclude(code string) (*CELFilter, error) {
-	return newCELFilter("system action inclusion", code, []string{"", "true", "*"}, true)
+	return newCELFilter("system action inclusion", code, []string{"false", ""}, false)
 }
 
 func newCELFilterExclude(code string) (*CELFilter, error) {

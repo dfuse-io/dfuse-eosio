@@ -80,7 +80,11 @@ func Start(dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create dmesh client: %w", err)
 	}
 
-	blockfilter, err := filtering.NewBlockFilter(viper.GetString("common-include-filter-expr"), viper.GetString("common-exclude-filter-expr"), viper.GetString("common-system-actions-include-filter-expr"))
+	blockfilter, err := filtering.NewBlockFilter(
+		viper.GetString("common-include-filter-expr"),
+		viper.GetString("common-exclude-filter-expr"),
+		viper.GetString("common-system-actions-include-filter-expr"),
+	)
 	if err != nil {
 		return fmt.Errorf("unable to create block filter: %w", err)
 	}

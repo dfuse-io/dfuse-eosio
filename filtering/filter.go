@@ -67,7 +67,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteringApplied = true
 	block.FilteringIncludeFilterExpr = f.IncludeProgram.code
 	block.FilteringExcludeFilterExpr = f.ExcludeProgram.code
-	block.FilteringSystemActionsFilterExpr = f.SystemActionsIncludeProgram.code
+	block.FilteringSystemActionsIncludeFilterExpr = f.SystemActionsIncludeProgram.code
 
 	var filteredTrxTrace []*pbcodec.TransactionTrace
 	filteredExecutedInputActionCount := uint32(0)
