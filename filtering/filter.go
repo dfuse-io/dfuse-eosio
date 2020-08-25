@@ -56,8 +56,16 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 	}
 
 	if block.FilteringIncludeFilterExpr != f.IncludeProgram.code ||
-		block.FilteringExcludeFilterExpr != f.ExcludeProgram.code {
-		panic(fmt.Sprintf("different block filter already applied: (inc) %s, (exc): %s", f.IncludeProgram.code, f.ExcludeProgram.code))
+		block.FilteringExcludeFilterExpr != f.ExcludeProgram.code ||
+		block.FilteringSystemActionsIncludeFilterExpr != f.SystemActionsIncludeProgram.code {
+		panic(fmt.Sprintf("different block filter already applied, include [applied %q, trying %q], exclude [applied %q, trying %q] and system include [applied %q, trying %q]",
+			block.FilteringIncludeFilterExpr,
+			f.IncludeProgram.code,
+			block.FilteringExcludeFilterExpr,
+			f.ExcludeProgram.code,
+			block.FilteringSystemActionsIncludeFilterExpr,
+			f.SystemActionsIncludeProgram.code,
+		))
 	}
 	return nil
 
