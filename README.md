@@ -53,7 +53,7 @@ go get github.com/GeertJohan/go.rice
 go get github.com/GeertJohan/go.rice/rice
 ```
 
-_Please note that if you're getting yarn dependency warnings while running the `yarn install && yarn build` commands below, you can normally safely ignore those and move forward with the installation. If you're getting an error while installing and/or compiling, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)._
+_Please note that if you're getting yarn dependency warnings while running the `yarn install && yarn build` commands below, you can normally safely ignore those and move forward with the installation. If you're getting an error while installing and/or compiling, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md#installing--compiling-error)._
 
 ```
 # clone the dfuse-eosio repo
@@ -81,8 +81,8 @@ go generate ./eosq/app/eosq
 go install -v ./cmd/dfuseeos
 ```
 
-This will install the binary in your `$GOPATH/bin` folder (normally
-`$HOME/go/bin`). Make sure this folder is in your `PATH` env variable.
+This will install the binary in your `$GOPATH/bin` folder (normally `$HOME/go/bin`). Make sure this folder is in your `PATH` env variable. If it's missing, take a look at [TROUBLESHOOTING.md](TROUBLESHOOTING.md#gopathbin-folder-missing-from-path-env-variable).
+
 
 ### Usage (creating a new local chain)
 
