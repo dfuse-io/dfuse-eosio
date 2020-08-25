@@ -1,5 +1,14 @@
 # Troubleshooting
 
+## installing / compiling error
+
+If you're getting one or more error message like:
+* `warning Error running install script for optional dependency:`
+* `No receipt for 'com.apple.pkg.CLTools_Executables' found at '/'.`
+* `gyp: No Xcode or CLT version detected!`
+
+It probably means that your local Command Line Tools for Xcode was somehow corrupted. You should do a clean uninstall of Command Line Tools for Xcode, and then reinstall Command Line Tools for Xcode. This article should point you in the right direction: [How to resolve, No Xcode or CLT version detected!](https://medium.com/@mrjohnkilonzi/how-to-resolve-no-xcode-or-clt-version-detected-d0cf2b10a750).
+
 ## failed continuity check (mindreader)
 
 * **Symptom**:
