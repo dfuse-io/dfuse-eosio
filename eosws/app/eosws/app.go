@@ -139,40 +139,6 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up source blocks store: %w", err)
 	}
 
-	//	var lastWrittenBlockID string
-	//	for {
-	//		var err error
-	//		lastWrittenBlockID, err = db.GetLastWrittenBlockID(ctx)
-	//		if err != nil || lastWrittenBlockID == "" {
-	//			zlog.Debug("cannot get last written block id (empty or error), retrying forever...", zap.Error(err))
-	//			time.Sleep(time.Second)
-	//			select {
-	//			case <-time.After(5 * time.Second):
-	//			case <-a.Shutter.Terminating():
-	//				return nil
-	//			}
-	//			continue
-	//		}
-	//		zlog.Info("last Written Block ID", zap.String("last_written_block_id", lastWrittenBlockID), zap.Uint32("num", eos.BlockNum(lastWrittenBlockID)))
-	//		break
-	//	}
-	//
-	//	var lib bstream.BlockRef
-	//	for {
-	//		var err error
-	//		lib, err = db.GetIrreversibleIDAtBlockID(ctx, lastWrittenBlockID)
-	//		if err != nil {
-	//			zlog.Debug("cannot get LIB, retrying", zap.Error(err), zap.String("last_written_block_id", lastWrittenBlockID))
-	//			select {
-	//			case <-time.After(5 * time.Second):
-	//			case <-a.Shutter.Terminating():
-	//				return nil
-	//			}
-	//			continue
-	//		}
-	//		break
-	//	}
-	//
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
 	})
