@@ -16,14 +16,17 @@ func (ws *Service) SetupSource() error {
 		return fmt.Errorf("could not get last processed block: %w", err)
 	}
 
-	if lastProcessedBlock < bstream.GetProtocolFirstStreamableBlock {
-		lastProcessedBlock = bstream.GetProtocolFirstStreamableBlock // TODO: use the generic Chain First block whatever
+	gateType := bstream.GateExclusive
+
+	if lastProcessedBlock <= bstream.GetProtocolFirstStreamableBlock {
+		lastProcessedBlock = bstream.GetProtocolFirstStreamableBlock
+		gateType = bstream.GateInclusive
 	}
 
 	// WARN: this is IRREVERSIBLE ONLY, we'll need to check start block when
 	// we want some reversible segment support.
 
-	gate := bstream.NewBlockNumGate(lastProcessedBlock, bstream.GateExclusive, ws, bstream.GateOptionWithLogger(zlog))
+	gate := bstream.NewBlockNumGate(lastProcessedBlock, gateType, ws, bstream.GateOptionWithLogger(zlog))
 	gate.MaxHoldOff = 1000
 
 	forkableHandler := forkable.New(gate,

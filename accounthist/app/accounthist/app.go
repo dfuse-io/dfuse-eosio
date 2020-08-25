@@ -17,11 +17,13 @@ type startFunc func()
 type stopFunc func(error)
 
 type Config struct {
-	KvdbDSN         string
-	GRPCListenAddr  string
-	BlocksStoreURL  string //FileSourceBaseURL
-	BlockstreamAddr string // LiveSourceAddress
-	ShardNum        byte
+	KvdbDSN              string
+	GRPCListenAddr       string
+	BlocksStoreURL       string //FileSourceBaseURL
+	BlockstreamAddr      string // LiveSourceAddress
+	ShardNum             byte
+	MaxEntriesPerAccount uint64
+	FlushBlocksInterval  uint64
 }
 
 type Modules struct {
@@ -58,12 +60,16 @@ func (a *App) Run() error {
 		zlog.Fatal("could not create kvstore", zap.Error(err))
 	}
 
+	if true {
+		kvdb = accounthist.NewRWCache(kvdb)
+	}
+
 	blocksStore, err := dstore.NewDBinStore(conf.BlocksStoreURL)
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum)
+	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval)
 
 	if err = service.SetupSource(); err != nil {
 		return fmt.Errorf("error setting up source: %w", err)

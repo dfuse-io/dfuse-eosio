@@ -13,7 +13,7 @@ const (
 
 	actionPrefixKeyLen = 9
 	actionKeyLen       = 18
-	lastBlockKeyLen    = 10
+	lastBlockKeyLen    = 2
 )
 
 func encodeActionPrefixKey(key []byte, account string) {

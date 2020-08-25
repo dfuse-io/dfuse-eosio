@@ -18,31 +18,36 @@ import (
 )
 
 const (
-	maxEntriesPerAccount = 10
-	databaseTimeout      = 5 * time.Second
+	databaseTimeout = 5 * time.Second
 )
 
 type Service struct {
 	*shutter.Shutter
 
-	shardNum    byte // 0 is live
-	blockFilter func(blk *bstream.Block) error
+	shardNum             byte // 0 is live
+	maxEntriesPerAccount uint64
+	flushBlocksInterval  uint64
+	blockFilter          func(blk *bstream.Block) error
 
 	blocksStore dstore.Store
 	kvStore     store.KVStore
 
 	historySeqMap map[string]sequenceData
 	source        bstream.Source
+
+	rwCache *RWCache
 }
 
-func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte) *Service {
+func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64) *Service {
 	return &Service{
-		Shutter:       shutter.New(),
-		shardNum:      shardNum,
-		kvStore:       kvdb,
-		blocksStore:   blocksStore,
-		blockFilter:   blockFilter,
-		historySeqMap: make(map[string]sequenceData),
+		maxEntriesPerAccount: maxEntriesPerAccount,
+		flushBlocksInterval:  flushBlocksInterval,
+		Shutter:              shutter.New(),
+		shardNum:             shardNum,
+		kvStore:              kvdb,
+		blocksStore:          blocksStore,
+		blockFilter:          blockFilter,
+		historySeqMap:        make(map[string]sequenceData),
 	}
 }
 
@@ -70,40 +75,42 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		}
 
 		for _, act := range tx.ActionTraces {
-			sequenceData, err := ws.getSequenceData(ctx, act.Account())
-			if err != nil {
-				return fmt.Errorf("error while getting sequence data for account %v: %w", act.Account(), err)
-			}
-
 			if act.Receipt == nil {
 				continue
 			}
-			if act.Receipt.GlobalSequence <= sequenceData.lastGlobalSeq {
-				zlog.Debug("this block has already been processed for this account", zap.Uint64("block", blk.Num()), zap.String("account", act.Account()))
-				continue
+
+			accts := map[string]bool{act.Receiver: true}
+			for _, v := range act.Action.Authorization {
+				accts[v.Actor] = true
 			}
 
-			if sequenceData.historySeqNum+1 > maxEntriesPerAccount {
-				//TODO: batch these?
-				err := ws.deleteAction(ctx, act.Account(), sequenceData.historySeqNum-maxEntriesPerAccount)
+			for acct := range accts {
+				acctSeqData, err := ws.getSequenceData(ctx, acct)
 				if err != nil {
-					return fmt.Errorf("error while deleting action: %w", err)
+					return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
 				}
+
+				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
+					zlog.Debug("this block has already been processed for this account", zap.Uint64("block", blk.Num()), zap.String("account", acct))
+					continue
+				}
+
+				if acctSeqData.historySeqNum+1 > ws.maxEntriesPerAccount {
+					err := ws.deleteAction(ctx, acct, acctSeqData.historySeqNum-ws.maxEntriesPerAccount)
+					if err != nil {
+						return fmt.Errorf("error while deleting action: %w", err)
+					}
+				}
+
+				//fmt.Println("Writing action", acct, acctSeqData.historySeqNum)
+
+				if err = ws.writeAction(ctx, acct, acctSeqData.historySeqNum, act); err != nil {
+					return fmt.Errorf("error while writing action to store: %w", err)
+				}
+
+				acctSeqData.Increment(act.Receipt.GlobalSequence)
+				ws.updateHistorySeq(acct, acctSeqData)
 			}
-
-			//fmt.Println("Writing action", sequenceData.historySeqNum)
-
-			if err = ws.writeAction(ctx, act.Account(), sequenceData.historySeqNum, act); err != nil {
-				return fmt.Errorf("error while writing action to store: %w", err)
-			}
-
-			sequenceData.Increment(act.Receipt.GlobalSequence)
-			ws.updateHistorySeq(act.Account(), sequenceData)
-		}
-
-		// before saving checkpoints in sequence data, make sure all actions are safely written to store
-		if err := ws.flush(ctx); err != nil {
-			return fmt.Errorf("error while flushing action writes to store: %w", err)
 		}
 	}
 
@@ -111,12 +118,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	if err := ws.writeLastProcessedBlock(ctx, blk.Num()); err != nil {
 		return fmt.Errorf("error while saving block checkpoint")
 	}
-	if err := ws.flush(ctx); err != nil {
-		return fmt.Errorf("error while flushing block checkpoint write to store: %w", err)
-	}
 
-	if blk.Num()%100 == 0 {
-		zlog.Info("flushed block", zap.Uint64("block_num", blk.Num()))
+	if err := ws.flush(ctx, blk.Num()); err != nil {
+		return fmt.Errorf("error while flushing block checkpoint write to store: %w", err)
 	}
 
 	return nil
@@ -170,6 +174,12 @@ func (ws *Service) updateHistorySeq(account string, seqData sequenceData) {
 }
 
 func (ws *Service) readSequenceData(ctx context.Context, account string) (out sequenceData, err error) {
+
+	// TWO GOALS:
+	// * for the current `shardNum`, pick up where `lastGlobalSeq` was stopped INSIDE this `shardNum`
+	// * get the TOP-MOST shardNum (== 0), or even a few of the top-most shard-nums, to know
+	//   if I should not simply ignore that account going forward (say I'm in a very old shard)
+
 	key := make([]byte, actionPrefixKeyLen)
 	encodeActionPrefixKey(key, account)
 
@@ -210,8 +220,8 @@ func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbaccoun
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	actions := make([]*pbaccounthist.ActionData, 0, maxEntriesPerAccount)
-	it := ws.kvStore.Prefix(ctx, key, maxEntriesPerAccount)
+	actions := make([]*pbaccounthist.ActionData, 0, ws.maxEntriesPerAccount)
+	it := ws.kvStore.Prefix(ctx, key, int(ws.maxEntriesPerAccount))
 	for it.Next() {
 		newact := &pbaccounthist.ActionData{}
 		err := proto.Unmarshal(it.Item().Value, newact)
@@ -257,9 +267,6 @@ func (ws *Service) deleteAction(ctx context.Context, account string, sequenceNum
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
-	keys := make([][]byte, 1)
-	keys[0] = key
-
 	zlog.Debug("deleting action",
 		zap.Uint64("sequence", sequenceNumber),
 		zap.String("account", account),
@@ -269,12 +276,17 @@ func (ws *Service) deleteAction(ctx context.Context, account string, sequenceNum
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	return ws.kvStore.BatchDelete(ctx, keys)
+	return ws.kvStore.BatchDelete(ctx, [][]byte{key})
 }
 
-func (ws *Service) flush(ctx context.Context) error {
+func (ws *Service) flush(ctx context.Context, blkNum uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	return ws.kvStore.FlushPuts(ctx)
+	if blkNum%ws.flushBlocksInterval == 0 {
+		zlog.Info("flushed block", zap.Uint64("block_num", blkNum))
+		return ws.kvStore.FlushPuts(ctx)
+	}
+
+	return nil
 }
