@@ -9,6 +9,16 @@ If you're getting one or more error message like:
 
 It probably means that your local Command Line Tools for Xcode was somehow corrupted. You should do a clean uninstall of Command Line Tools for Xcode, and then reinstall Command Line Tools for Xcode. This article should point you in the right direction: [How to resolve, No Xcode or CLT version detected!](https://medium.com/@mrjohnkilonzi/how-to-resolve-no-xcode-or-clt-version-detected-d0cf2b10a750).
 
+## $GOPATH/bin folder missing from `PATH` env variable
+
+On macOS, open `.zshrc` with your editor of choice from the terminal (like `sudo nano ~/.zshrc)` and add this line:
+```
+export PATH="$GOPATH/bin:$PATH"
+```
+
+Save your changes and then either enter `source ~/.zshrc` to make the changes effective immediatly for that specific terminal window or quit Terminal and re-open it.
+
+
 ## failed continuity check (mindreader)
 
 * **Symptom**:
