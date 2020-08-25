@@ -50,7 +50,12 @@ Build requirements:
 # Install `rice` CLI tool if you don't have it already
 go get github.com/GeertJohan/go.rice
 go get github.com/GeertJohan/go.rice/rice
+```
 
+_Please note that if you're getting yarn dependency warnings while running the `yarn install && yarn build` commands below, you can normally safely ignore those and move forward with the installation._
+
+```
+# clone the dfuse-eosio repo
 git clone https://github.com/dfuse-io/dfuse-eosio
 cd dfuse-eosio
 
