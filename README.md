@@ -21,7 +21,7 @@ development chain by also managing the block producing node for you.
 ### Requirements
 
 #### Operating System
-* This software runs on Linux or Mac OS X
+* Linux or macOS (no Windows support for now)
 
 #### dfuse Instrumented nodeos (deep-mind)
 * See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
@@ -45,6 +45,7 @@ Build requirements:
 * `Go` 1.14 or higher ([installation](https://golang.org/doc/install#install))
 * `yarn` 1.15 or higher ([installation](https://classic.yarnpkg.com/en/docs/install))
 * [rice](https://github.com/GeertJohan/go.rice) Go static assets embedder (see installation instructions below)
+* (On macOS) [Command Line Tools for Xcode](https://developer.apple.com/xcode/features/)
 
 ```
 # Install `rice` CLI tool if you don't have it already
@@ -52,7 +53,7 @@ go get github.com/GeertJohan/go.rice
 go get github.com/GeertJohan/go.rice/rice
 ```
 
-_Please note that if you're getting yarn dependency warnings while running the `yarn install && yarn build` commands below, you can normally safely ignore those and move forward with the installation._
+_Please note that if you're getting yarn dependency warnings while running the `yarn install && yarn build` commands below, you can normally safely ignore those and move forward with the installation. If you're getting an error while installing and/or compiling, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md)._
 
 ```
 # clone the dfuse-eosio repo
