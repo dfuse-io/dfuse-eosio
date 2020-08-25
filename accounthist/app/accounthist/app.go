@@ -24,6 +24,9 @@ type Config struct {
 	ShardNum             byte
 	MaxEntriesPerAccount uint64
 	FlushBlocksInterval  uint64
+
+	StartBlockNum uint64
+	StopBlockNum  uint64
 }
 
 type Modules struct {
@@ -69,7 +72,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval)
+	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval, a.config.StartBlockNum, a.config.StopBlockNum)
 
 	if err = service.SetupSource(); err != nil {
 		return fmt.Errorf("error setting up source: %w", err)

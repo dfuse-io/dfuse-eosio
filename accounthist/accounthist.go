@@ -36,9 +36,12 @@ type Service struct {
 	source        bstream.Source
 
 	rwCache *RWCache
+
+	startBlockNum uint64
+	stopBlockNum  uint64
 }
 
-func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64) *Service {
+func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64, startBlockNum, stopBlockNum uint64) *Service {
 	return &Service{
 		maxEntriesPerAccount: maxEntriesPerAccount,
 		flushBlocksInterval:  flushBlocksInterval,
@@ -48,6 +51,8 @@ func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(b
 		blocksStore:          blocksStore,
 		blockFilter:          blockFilter,
 		historySeqMap:        make(map[string]sequenceData),
+		startBlockNum:        startBlockNum,
+		stopBlockNum:         stopBlockNum,
 	}
 }
 
@@ -63,6 +68,16 @@ func (ws *Service) GetActions(ctx context.Context, account string) ([]*pbaccount
 
 func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	ctx := context.Background()
+
+	if ws.stopBlockNum != 0 && blk.Num() >= ws.stopBlockNum {
+		// FLUSH all the things
+		if err := ws.forceFlush(ctx, blk.Num()); err != nil {
+			ws.Shutdown(err)
+			return fmt.Errorf("flushing when stopping: %w", err)
+		}
+		ws.Shutdown(nil)
+		return nil
+	}
 
 	block, ok := blk.ToNative().(*pbcodec.Block)
 	if !ok {
@@ -279,13 +294,16 @@ func (ws *Service) deleteAction(ctx context.Context, account string, sequenceNum
 	return ws.kvStore.BatchDelete(ctx, [][]byte{key})
 }
 
+func (ws *Service) forceFlush(ctx context.Context, blkNum uint64) error {
+	zlog.Info("flushed block", zap.Uint64("block_num", blkNum))
+	return ws.kvStore.FlushPuts(ctx)
+}
 func (ws *Service) flush(ctx context.Context, blkNum uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
 	if blkNum%ws.flushBlocksInterval == 0 {
-		zlog.Info("flushed block", zap.Uint64("block_num", blkNum))
-		return ws.kvStore.FlushPuts(ctx)
+		return ws.forceFlush(ctx, blkNum)
 	}
 
 	return nil

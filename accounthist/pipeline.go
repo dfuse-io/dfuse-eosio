@@ -11,6 +11,8 @@ import (
 func (ws *Service) SetupSource() error {
 	ctx := context.Background()
 
+	// Retrieved lastProcessedBlock must be in the shard's range, and that shouldn't
+	// change across invocations, or in the lifetime of the database.
 	lastProcessedBlock, err := ws.GetLastProcessedBlock(ctx)
 	if err != nil {
 		return fmt.Errorf("could not get last processed block: %w", err)
@@ -18,13 +20,17 @@ func (ws *Service) SetupSource() error {
 
 	gateType := bstream.GateExclusive
 
+	if ws.startBlockNum != 0 && lastProcessedBlock < ws.startBlockNum {
+		lastProcessedBlock = ws.startBlockNum
+		gateType = bstream.GateInclusive
+	}
+
 	if lastProcessedBlock <= bstream.GetProtocolFirstStreamableBlock {
 		lastProcessedBlock = bstream.GetProtocolFirstStreamableBlock
 		gateType = bstream.GateInclusive
 	}
 
-	// WARN: this is IRREVERSIBLE ONLY, we'll need to check start block when
-	// we want some reversible segment support.
+	// WARN: this is IRREVERSIBLE ONLY
 
 	gate := bstream.NewBlockNumGate(lastProcessedBlock, gateType, ws, bstream.GateOptionWithLogger(zlog))
 	gate.MaxHoldOff = 1000
