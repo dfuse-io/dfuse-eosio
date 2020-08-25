@@ -50,7 +50,7 @@ var checkStateDBReprocSharderCmd = &cobra.Command{
 }
 
 var checkStateDBReprocInjectorCmd = &cobra.Command{
-	Use:   "statedb-shards-injector {dsn} {shard-count}",
+	Use:   "statedb-reproc-injector {dsn} {shard-count}",
 	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkStateDBReprocInjectorE,
@@ -83,7 +83,7 @@ func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore, &statedb.BlockMapper{})
+	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{})
 	fdb.SetSharding(0, int(shardsInt))
 	_, lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {

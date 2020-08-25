@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"
@@ -36,22 +37,31 @@ type Config struct {
 	GRPCListenAddr string
 }
 
+type Modules struct {
+	BlockFilter        func(blk *bstream.Block) error
+	StartBlockResolver bstream.StartBlockResolver
+}
+
 type App struct {
 	*appFluxdb.App
 
 	config *Config
 }
 
-func New(config *Config) *App {
+func New(config *Config, modules *Modules) *App {
 	app := &App{
 		config: config,
 	}
 
 	app.App = appFluxdb.New(
 		config.Config,
-		&statedb.BlockMapper{},
-		app.startForServeMode,
-		app.startForInjectMode,
+		&appFluxdb.Modules{
+			BlockFilter:        modules.BlockFilter,
+			BlockMapper:        &statedb.BlockMapper{},
+			StartBlockResolver: modules.StartBlockResolver,
+			OnServerMode:       app.startForServeMode,
+			OnInjectMode:       app.startForInjectMode,
+		},
 	)
 
 	return app

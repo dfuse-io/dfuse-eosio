@@ -8,7 +8,7 @@ start:
     statedb-enable-reproc-sharder-mode: true
     statedb-reproc-shard-count: 3
     statedb-reproc-shard-start-block-num: 0
-    statedb-reproc-shard-stop-block-num: 1000
+    statedb-reproc-shard-stop-block-num: 999
     statedb-reproc-shard-store-url: "file://{dfuse-data-dir}/storage/statedb-shards"
     # By default, sharder keeps everything in RAM for faster reprocessing, but if you chain segment
     # is heavy, this can starts to cost a lot of RAM. By using a scratch directory, you instruct the
