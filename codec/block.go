@@ -55,10 +55,8 @@ func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockRe
 		var errFound = errors.New("found")
 		num := uint32(targetBlockNum)
 		fs := bstream.NewFileSource(blocksStore, targetBlockNum, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
-			blk := block.ToNative().(*pbcodec.Block)
-
-			if blk.Number == num {
-				dposLibNum = blk.DposIrreversibleBlocknum
+			if block.Number == uint64(num) {
+				dposLibNum = uint32(block.LibNum)
 				return errFound
 			}
 
