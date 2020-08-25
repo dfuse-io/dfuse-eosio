@@ -23,4 +23,5 @@ It probably means that your local Command Line Tools for Xcode was somehow corru
 curl -sS -XPOST localhost:13009/v1/snapshot_restore
 ```
 
-
+## Can't find a solution?
+If your issue isn't listed here, search the [issues](https://github.com/dfuse-io/dfuse-eosio/issues) section for a similar issue. If you can't find anything, open a new issue and someone from the community or the dfuse team will get to it.
