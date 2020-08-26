@@ -92,7 +92,7 @@ func (ws *Service) SetupSource() error {
 	fs := bstream.NewFileSource(
 		ws.blocksStore,
 		fileSourceStartBlockNum,
-		12, // parallel download count
+		2, // parallel download count
 		preprocFunc,
 		forkableHandler,
 		bstream.FileSourceWithLogger(zlog),

@@ -42,6 +42,9 @@ type Service struct {
 	stopBlockNum  uint64
 
 	tracker *bstream.Tracker
+
+	lastWrite        time.Time
+	lastBlockWritten uint64
 }
 
 func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64, startBlockNum, stopBlockNum uint64, tracker *bstream.Tracker) *Service {
@@ -311,6 +314,15 @@ func (ws *Service) flush(ctx context.Context, blkNum uint64) error {
 	defer cancel()
 
 	if blkNum%ws.flushBlocksInterval == 0 {
+		if !ws.lastWrite.IsZero() {
+			blocks := blkNum - ws.lastBlockWritten
+			timeDelta := time.Since(ws.lastWrite)
+			deltaInSeconds := float64(timeDelta) / float64(time.Second)
+			blocksPerSec := float64(blocks) / deltaInSeconds
+			zlog.Info("block throughput", zap.Float64("blocks_per_secs", blocksPerSec))
+		}
+		ws.lastWrite = time.Now()
+		ws.lastBlockWritten = blkNum
 		return ws.forceFlush(ctx, blkNum)
 	}
 
