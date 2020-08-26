@@ -39,6 +39,8 @@ func init() {
 				SaveEveryNBlock:      viper.GetUint32("tokenmeta-save-every-n-block"),
 				BlocksStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				BootstrapBlockOffset: viper.GetUint64("tokenmeta-bootstrap-block-offset"),
+			}, &tokenmetaApp.Modules{
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})

@@ -17,6 +17,7 @@ package eosws
 import (
 	"context"
 	"testing"
+	"time"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
@@ -69,7 +70,7 @@ func Test_onGetHeadInfo(t *testing.T) {
 
 			conn.WriteMessage(1, []byte(c.msg))
 
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 
 		})
 	}

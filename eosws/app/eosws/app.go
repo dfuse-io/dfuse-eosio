@@ -86,17 +86,23 @@ type Config struct {
 	HealthzSecret            string
 }
 
-// Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
-type App struct {
-	*shutter.Shutter
-	Config *Config
+type Modules struct {
+	BlockFilter func(blk *bstream.Block) error
 }
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
-func New(config *Config) *App {
+type App struct {
+	*shutter.Shutter
+	Config  *Config
+	Modules *Modules
+}
+
+// Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		Config:  config,
+		Modules: modules,
 	}
 }
 
@@ -139,13 +145,20 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up source blocks store: %w", err)
 	}
 
+	var preprocessor bstream.PreprocessFunc
+	if a.Modules.BlockFilter != nil {
+		preprocessor = bstream.PreprocessFunc(func(blk *bstream.Block) (interface{}, error) {
+			return nil, a.Modules.BlockFilter(blk)
+		})
+	}
+
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
 	})
 
 	buffer := bstream.NewBuffer("sub-hub", zlog)
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
+		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, preprocessor, h)
 		return src
 	})
 

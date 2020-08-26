@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
@@ -119,7 +120,7 @@ func Test_onGetTableRows(t *testing.T) {
 
 			err := conn.WriteMessage(1, []byte(c.msg))
 			require.NoError(t, err)
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 		})
 	}
 }
@@ -191,7 +192,7 @@ func TestTableDeltaHandler_ProcessBlock(t *testing.T) {
 
 			require.NoError(t, err)
 			emitter := NewTestEmitter(context.Background(), nil)
-			handler := NewTableDeltaHandler(msg, emitter, context.Background(), zlog, func() *eos.ABI {
+			handler := newTableDeltaHandler(context.Background(), msg, emitter, zlog, func() *eos.ABI {
 				return abi
 			})
 			err = handler.ProcessBlock(c.block, fobj)

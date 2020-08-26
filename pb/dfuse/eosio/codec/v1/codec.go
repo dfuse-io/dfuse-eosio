@@ -151,6 +151,36 @@ func (b *Block) MigrateV0ToV1() {
 	}
 }
 
+type FilteringActionMatcher interface {
+	Matched(actionIndex uint32) bool
+}
+
+var AlwaysIncludedFilteringActionMatcher = filteringActionMatcherFunc(func(_ uint32) bool { return true })
+
+type filteringActionMatcherFunc func(actionIndex uint32) bool
+
+func (f filteringActionMatcherFunc) Matched(actionIndex uint32) bool {
+	return f(actionIndex)
+}
+
+func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace) FilteringActionMatcher {
+	if !b.FilteringApplied {
+		// If no filtering was ever applied, all action indices are assumed to be included
+		return AlwaysIncludedFilteringActionMatcher
+	}
+
+	matchingActionIndices := make(map[uint32]bool)
+	for _, actTrace := range trxTrace.ActionTraces {
+		if actTrace.FilteringMatched {
+			matchingActionIndices[actTrace.ExecutionIndex] = true
+		}
+	}
+
+	return filteringActionMatcherFunc(func(actionIndex uint32) bool {
+		return matchingActionIndices[actionIndex]
+	})
+}
+
 func (t *TransactionTrace) HasBeenReverted() bool {
 	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
 	if t.Receipt == nil {

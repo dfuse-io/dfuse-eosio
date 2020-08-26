@@ -42,8 +42,14 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 
 	blockNum := req.BlockRef.Num()
 	for _, trx := range blk.TransactionTraces() {
+		actionMatcher := blk.FilteringActionMatcher(trx)
+
 		for _, dbOp := range trx.DbOps {
 			zlog.Debug("db op", zap.Reflect("op", dbOp))
+			if !actionMatcher.Matched(dbOp.ActionIndex) {
+				continue
+			}
+
 			// There is no change in this row, not sure how it got here, discarding it anyway
 			if dbOp.Operation == pbcodec.DBOp_OPERATION_UPDATE && bytes.Equal(dbOp.OldData, dbOp.NewData) && dbOp.OldPayer == dbOp.NewPayer {
 				continue
@@ -69,6 +75,10 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 		}
 
 		for _, permOp := range trx.PermOps {
+			if !actionMatcher.Matched(permOp.ActionIndex) {
+				continue
+			}
+
 			rows, err := permOpToKeyAccountRows(blockNum, permOp)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create key account rows for perm op: %w", err)
@@ -80,6 +90,10 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 		}
 
 		for _, tableOp := range trx.TableOps {
+			if !actionMatcher.Matched(tableOp.ActionIndex) {
+				continue
+			}
+
 			row, err := NewContractTableScopeRow(blockNum, tableOp)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create contract table scope row for table op: %w", err)
@@ -89,8 +103,13 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 		}
 
 		for _, act := range trx.ActionTraces {
-			switch act.FullName() {
-			case "eosio:eosio:setabi":
+			if act.Receiver != "eosio" {
+				continue
+			}
+
+			// We always process those regardless of the filtering applied to the block
+			switch act.SimpleName() {
+			case "eosio:setabi":
 				abiEntry, err := NewContractABIEntry(req.BlockRef.Num(), act)
 				if err != nil {
 					return nil, fmt.Errorf("unable to extract abi entry: %w", err)
@@ -103,7 +122,7 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 
 				lastSingletEntryMap[keyForEntry(abiEntry)] = abiEntry
 
-			case "eosio:eosio:linkauth":
+			case "eosio:linkauth":
 				authLinkRow, err := NewInsertAuthLinkRow(blockNum, act)
 				if err != nil {
 					return nil, fmt.Errorf("unable to extract link auth: %w", err)
@@ -111,7 +130,7 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 
 				lastTabletRowMap[keyForRow(authLinkRow)] = authLinkRow
 
-			case "eosio:eosio:unlinkauth":
+			case "eosio:unlinkauth":
 				authLinkRow, err := NewDeleteAuthLinkRow(blockNum, act)
 				if err != nil {
 					return nil, fmt.Errorf("unable to extract unlink auth: %w", err)
