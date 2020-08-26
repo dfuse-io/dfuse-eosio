@@ -24,7 +24,6 @@ import (
 	"strconv"
 	"strings"
 
-	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
@@ -35,14 +34,12 @@ import (
 	"github.com/dfuse-io/opaque"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
-	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
 type SearchEngine struct {
 	trxdb        DB
-	httpClient   *http.Client
 	searchClient pbsearch.RouterClient
 }
 
@@ -50,9 +47,6 @@ func NewSearchEngine(db DB, searchClient pbsearch.RouterClient) *SearchEngine {
 	return &SearchEngine{
 		trxdb:        db,
 		searchClient: searchClient,
-		httpClient: &http.Client{Transport: &ochttp.Transport{
-			Propagation: &stackdriverPropagation.HTTPFormat{},
-		}},
 	}
 }
 
