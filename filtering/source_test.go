@@ -11,13 +11,14 @@ import (
 
 func TestFilteringPreprocessor(t *testing.T) {
 	tests := []struct {
-		name             string
-		include, exclude string
-		block            *pbcodec.Block
-		expected         *pbcodec.Block
+		name     string
+		exprs    filters
+		block    *pbcodec.Block
+		expected *pbcodec.Block
 	}{
 		{
-			"standard", "*", `receiver == "spamcoint"`,
+			"standard",
+			filters{"*", `receiver == "spamcoint"`, ""},
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -34,10 +35,10 @@ func TestFilteringPreprocessor(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// We assign them manually in the expected block to keep them in sync with ther `include`, `exclude` test parameters
-			test.expected.FilteringIncludeFilterExpr = test.include
-			test.expected.FilteringExcludeFilterExpr = test.exclude
+			test.expected.FilteringIncludeFilterExpr = test.exprs.include
+			test.expected.FilteringExcludeFilterExpr = test.exprs.exclude
 
-			filter, err := NewBlockFilter(test.include, test.exclude)
+			filter, err := NewBlockFilter(test.exprs.include, test.exprs.exclude, test.exprs.system)
 			require.NoError(t, err)
 
 			preprocessor := &FilteringPreprocessor{Filter: filter}
@@ -54,16 +55,16 @@ func TestFilteringPreprocessor(t *testing.T) {
 func TestFilteringTwice(t *testing.T) {
 	tests := []struct {
 		name                      string
-		include, exclude          string
-		include2, exclude2        string
+		exprs1                    filters
+		exprs2                    filters
 		block                     *pbcodec.Block
 		expected                  *pbcodec.Block
 		shouldPanicOnSecondFilter bool
 	}{
 		{
 			"standard",
-			"*", `receiver == "spamcoint"`,
-			"*", `receiver == "spamcoint"`,
+			filters{"*", `receiver == "spamcoint"`, ""},
+			filters{"*", `receiver == "spamcoint"`, ""},
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -78,8 +79,8 @@ func TestFilteringTwice(t *testing.T) {
 		},
 		{
 			"panicky",
-			"*", `receiver == "spamcoint"`,
-			"*", `receiver == "spamcoin"`,
+			filters{"*", `receiver == "spamcoint"`, ""},
+			filters{"*", `receiver == "spamcoin"`, ""},
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -99,10 +100,10 @@ func TestFilteringTwice(t *testing.T) {
 
 			defer func() { recover() }()
 			// We assign them manually in the expected block to keep them in sync with ther `include`, `exclude` test parameters
-			test.expected.FilteringIncludeFilterExpr = test.include
-			test.expected.FilteringExcludeFilterExpr = test.exclude
+			test.expected.FilteringIncludeFilterExpr = test.exprs1.include
+			test.expected.FilteringExcludeFilterExpr = test.exprs1.exclude
 
-			filter, err := NewBlockFilter(test.include, test.exclude)
+			filter, err := NewBlockFilter(test.exprs1.include, test.exprs1.exclude, test.exprs1.system)
 			require.NoError(t, err)
 
 			preprocessor := &FilteringPreprocessor{Filter: filter}
@@ -113,7 +114,7 @@ func TestFilteringTwice(t *testing.T) {
 
 			assert.Equal(t, test.expected, blk.ToNative().(*pbcodec.Block))
 
-			filter2, err := NewBlockFilter(test.include2, test.exclude2)
+			filter2, err := NewBlockFilter(test.exprs2.include, test.exprs2.exclude, test.exprs2.system)
 			require.NoError(t, err)
 
 			preprocessor2 := &FilteringPreprocessor{Filter: filter2}

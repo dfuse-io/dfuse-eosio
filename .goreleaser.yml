@@ -7,10 +7,7 @@ release:
   name_template: '{{.Tag}}'
 before:
   hooks:
-    - eosq/build.sh
-    - dashboard/client/build.sh
-    # Requires `rice` to be installed: go get github.com/GeertJohan/go.rice/rice
-    - go generate ./...
+    - ./scripts/build.sh -f -p
 builds:
 - env:
   - CGO_ENABLED=0
@@ -22,8 +19,6 @@ builds:
     - darwin
   goarch:
     - amd64
-  hooks:
-    post: ./scripts/remove_rice_boxes.sh
 archives:
 - replacements:
     darwin: macOS
@@ -36,6 +31,10 @@ archives:
   - CHANGELOG.md
   - CONTRIBUTING.md
   - DEPENDENCIES.md
+  - FILTERING.md
+  - DEBUG.md
+  - TROUBLESHOOTING.md
+  - COMMANDS.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:

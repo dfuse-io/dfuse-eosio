@@ -3,17 +3,19 @@
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
 
 force_build=
+prepare_only=
 skip_checks=
 yes=
 
 main() {
   pushd "$ROOT" &> /dev/null
 
-  while getopts "hsyf" opt; do
+  while getopts "hsyfp" opt; do
     case $opt in
       h) usage && exit 0;;
       f) force_build=true;;
       s) skip_checks=true;;
+	  p) prepare_only=true;;
       y) yes=true;;
       \?) usage_error "Invalid option: -$OPTARG";;
     esac
@@ -63,12 +65,14 @@ build() {
 
   if [[ $force_build == true ]]; then
     echo "Generating static assets"
-    go generate ./dashboard
-    go generate ./eosq/app/eosq
+    go generate ./...
   fi
+  GIT_COMMIT="$(git describe --match=NeVeRmAtCh --always --abbrev=7 --dirty)"
 
-  echo "Building & installing dfuseeos binary"
-  go install ./cmd/dfuseeos
+  if ! [[ $prepare_only == true ]]; then
+    echo "Building & installing dfuseeos binary for $GIT_COMMIT"
+    go install -ldflags "-X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
+  fi
 }
 
 checks() {

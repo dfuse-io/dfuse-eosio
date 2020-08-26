@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -17,9 +18,11 @@ import (
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
@@ -39,18 +42,26 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	RunE:  checkTrxdbBlocksE,
 }
 
-var checkStateDBShardsCmd = &cobra.Command{
-	Use:   "statedb-shards {dsn} {shard-count}",
-	Short: "Checks to see if all shards are aligned in StateDB reprocessing",
+var checkStateDBReprocSharderCmd = &cobra.Command{
+	Use:   "statedb-reproc-sharder {store} {shard-count}",
+	Short: "Checks to see if all StateDB reprocessing shards are present in the store",
 	Args:  cobra.ExactArgs(2),
-	RunE:  checkStateDBShardsE,
+	RunE:  checkStateDBReprocSharderE,
+}
+
+var checkStateDBReprocInjectorCmd = &cobra.Command{
+	Use:   "statedb-reproc-injector {dsn} {shard-count}",
+	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
+	Args:  cobra.ExactArgs(2),
+	RunE:  checkStateDBReprocInjectorE,
 }
 
 func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkMergedBlocksCmd)
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
-	checkCmd.AddCommand(checkStateDBShardsCmd)
+	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
+	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
 
 	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
 	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
@@ -59,7 +70,7 @@ func init() {
 	checkCmd.PersistentFlags().Uint64P("end-block", "e", 4294967296, "Block number to end at")
 }
 
-func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
+func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 	storeDSN := args[0]
 	shards := args[1]
 	shardsInt, err := strconv.ParseInt(shards, 10, 32)
@@ -72,13 +83,156 @@ func checkStateDBShardsE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore, &statedb.BlockMapper{})
+	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{})
 	fdb.SetSharding(0, int(shardsInt))
 	_, lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {
 		return err
 	}
 	fmt.Println("Last block", lastBlock.String())
+	return nil
+}
+
+type blockRange struct {
+	start uint64
+	stop  uint64
+}
+
+func (b blockRange) ReprocRange() string {
+	return fmt.Sprintf("%d:%d", b.start, b.stop+1)
+}
+
+func (b blockRange) String() string {
+	return fmt.Sprintf("%s - %s", blockNum(b.start), blockNum(b.stop))
+}
+
+type blockNum uint64
+
+func (b blockNum) String() string {
+	return "#" + strings.ReplaceAll(humanize.Comma(int64(b)), ",", " ")
+}
+
+func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
+	storeURL := args[0]
+	shards := args[1]
+	shardCount, err := strconv.ParseUint(shards, 10, 64)
+	if err != nil {
+		return fmt.Errorf("shard count parsing: %w", err)
+	}
+
+	fmt.Printf("Checking statedb sharder holes on %s\n", storeURL)
+	number := regexp.MustCompile(`(\d{3})/(\d{10})-(\d{10})`)
+
+	shardsStore, err := dstore.NewStore(storeURL, "", "", false)
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	seenShard := map[uint64]int{}
+	expectedShard := uint64(0)
+	expectedStart := uint64(0)
+	lastPrintedValidStart := uint64(0)
+	previousRange := blockRange{0, 0}
+	problemDetected := false
+
+	err = shardsStore.Walk(ctx, "", ".tmp", func(filename string) error {
+		match := number.FindStringSubmatch(filename)
+		if match == nil {
+			zlog.Debug("skipping file not matching regex", zap.String("file", filename))
+			return nil
+		}
+
+		shardIndex, _ := strconv.ParseUint(match[1], 10, 32)
+		startBlock, _ := strconv.ParseUint(match[2], 10, 64)
+		stopBlock, _ := strconv.ParseUint(match[3], 10, 64)
+
+		zlog.Debug("dealing with element",
+			zap.Uint64("shard_index", shardIndex),
+			zap.Stringer("expected_start", blockNum(expectedStart)),
+			zap.Stringer("range", blockRange{startBlock, stopBlock}),
+			zap.String("file", filename),
+		)
+
+		if shardIndex != expectedShard {
+			if len(seenShard) > 0 {
+				fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, previousRange.stop})
+			}
+
+			offsetToExpected := shardIndex - expectedShard
+
+			// If we never seen any shard or the shard is not the direct next one, we are missing some shards
+			if len(seenShard) <= 0 || offsetToExpected > 1 {
+				if len(seenShard) > 0 {
+					fmt.Println()
+				}
+
+				for i := expectedShard; i < shardIndex; i++ {
+					fmt.Printf("❌ Shard #%03d! (Missing)\n", i)
+				}
+				problemDetected = true
+			}
+
+			expectedShard = shardIndex
+			expectedStart = 0
+			lastPrintedValidStart = 0
+
+			fmt.Println()
+			fmt.Printf("✅ Shard #%03d\n", shardIndex)
+		} else if len(seenShard) == 0 && shardIndex == 0 {
+			fmt.Printf("✅ Shard #%03d\n", shardIndex)
+		}
+
+		if startBlock != expectedStart {
+			// This happens when current covers a subset of the last seen element (previous is `100 - 299` but we are `199 - 299`)
+			if startBlock <= expectedStart && stopBlock < expectedStart {
+				fmt.Printf("❌ Range %s! (Subset of previous range %s)\n", blockRange{startBlock, stopBlock}, blockRange{previousRange.start, previousRange.stop})
+			} else {
+				fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
+
+				// This happens when current covers a superset of the last seen element (previous is `100 - 199` but we are `100 - 299`)
+				if startBlock <= expectedStart {
+					fmt.Printf("❌ Range %s! (Superset of previous range %s)\n", blockRange{startBlock, stopBlock}, blockRange{previousRange.start, previousRange.stop})
+				} else {
+					// Otherwise, we do not follow last seen element (previous is `100 - 199` but we are `299 - 300`)
+					missingRange := blockRange{expectedStart, startBlock - 1}
+					fmt.Printf("❌ Range %s! (Missing, [%s])\n", missingRange, missingRange.ReprocRange())
+				}
+			}
+
+			problemDetected = true
+			lastPrintedValidStart = stopBlock + 1
+		} else if startBlock-lastPrintedValidStart >= 15_000_000 {
+			fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, stopBlock})
+			lastPrintedValidStart = stopBlock + 1
+		}
+
+		previousRange = blockRange{startBlock, stopBlock}
+		expectedStart = stopBlock + 1
+		seenShard[shardIndex] = seenShard[shardIndex] + 1
+		return nil
+	})
+
+	if len(seenShard) > 0 {
+		fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, previousRange.stop})
+	}
+
+	if uint64(len(seenShard)) != shardCount {
+		for i := uint64(len(seenShard)); i < shardCount; i++ {
+			fmt.Printf("❌ Shard #%03d is completely missing!\n", i)
+		}
+		problemDetected = true
+	}
+
+	fmt.Println("")
+	if problemDetected {
+		fmt.Printf("🆘 Problem(s) detected!\n")
+	} else {
+		fmt.Printf("🆗 All good, no problem detected\n")
+	}
+
 	return nil
 }
 
