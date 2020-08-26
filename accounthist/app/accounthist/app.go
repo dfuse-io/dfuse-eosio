@@ -31,6 +31,7 @@ type Config struct {
 
 type Modules struct {
 	BlockFilter func(blk *bstream.Block) error
+	Tracker     *bstream.Tracker
 }
 
 type App struct {
@@ -72,7 +73,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval, a.config.StartBlockNum, a.config.StopBlockNum)
+	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval, a.config.StartBlockNum, a.config.StopBlockNum, a.modules.Tracker)
 
 	if err = service.SetupSource(); err != nil {
 		return fmt.Errorf("error setting up source: %w", err)

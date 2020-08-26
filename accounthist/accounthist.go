@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/bstream/forkable"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
@@ -39,9 +40,11 @@ type Service struct {
 
 	startBlockNum uint64
 	stopBlockNum  uint64
+
+	tracker *bstream.Tracker
 }
 
-func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64, startBlockNum, stopBlockNum uint64) *Service {
+func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64, startBlockNum, stopBlockNum uint64, tracker *bstream.Tracker) *Service {
 	return &Service{
 		maxEntriesPerAccount: maxEntriesPerAccount,
 		flushBlocksInterval:  flushBlocksInterval,
@@ -53,6 +56,7 @@ func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(b
 		historySeqMap:        make(map[string]sequenceData),
 		startBlockNum:        startBlockNum,
 		stopBlockNum:         stopBlockNum,
+		tracker:              tracker,
 	}
 }
 
@@ -75,10 +79,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		return nil
 	}
 
-	block, ok := blk.ToNative().(*pbcodec.Block)
-	if !ok {
-		return fmt.Errorf("could not decode block to native *pbcodec.Block")
-	}
+	block := blk.ToNative().(*pbcodec.Block)
+	fObj := obj.(*forkable.ForkableObject)
+	rawTraceMap := fObj.Obj.(map[uint64][]byte)
 
 	for _, tx := range block.TransactionTraces() {
 		if tx.HasBeenReverted() {
@@ -115,7 +118,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 
 				//fmt.Println("Writing action", acct, acctSeqData.historySeqNum)
 
-				if err = ws.writeAction(ctx, acct, acctSeqData.historySeqNum, act); err != nil {
+				rawTrace := rawTraceMap[act.Receipt.GlobalSequence]
+
+				if err = ws.writeAction(ctx, acct, acctSeqData.historySeqNum, act, rawTrace); err != nil {
 					return fmt.Errorf("error while writing action to store: %w", err)
 				}
 
@@ -256,23 +261,23 @@ func (ws *Service) GetActions(req *pbaccounthist.GetActionsRequest, stream pbacc
 	return nil
 }
 
-func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace) error {
+func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
-	d := &pbaccounthist.ActionData{}
-	d.ActionTrace = actionTrace
-	d.SequenceNumber = sequenceNumber
+	// d := &pbaccounthist.ActionData{}
+	// d.ActionTrace = actionTrace
+	// d.SequenceNumber = sequenceNumber
 
-	rawTrace, err := proto.Marshal(d)
-	if err != nil {
-		return err
-	}
+	// rawTrace, err := proto.Marshal(d)
+	// if err != nil {
+	// 	return err
+	// }
 
 	zlog.Debug("writing action",
 		zap.String("account", account),
-		zap.String("action", actionTrace.String()),
-		zap.String("key", hex.EncodeToString(key)),
+		zap.Stringer("action", actionTrace),
+		//zap.String("key", hex.EncodeToString(key)),
 	)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)

@@ -51,7 +51,10 @@ func init() {
 				FlushBlocksInterval:  flushBlocksInterval,
 				StartBlockNum:        viper.GetUint64("accounthist-start-block-num"),
 				StopBlockNum:         viper.GetUint64("accounthist-stop-block-num"),
-			}, &accounthistApp.Modules{}), nil
+			}, &accounthistApp.Modules{
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
+				Tracker:     runtime.Tracker,
+			}), nil
 		},
 	})
 }
