@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	databaseTimeout = 5 * time.Second
+	databaseTimeout = 10 * time.Minute
 )
 
 type Service struct {
