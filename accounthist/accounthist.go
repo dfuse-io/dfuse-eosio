@@ -131,7 +131,7 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	}
 
 	if err := ws.flush(ctx, blk.Num()); err != nil {
-		return fmt.Errorf("error while flushing block checkpoint write to store: %w", err)
+		return fmt.Errorf("error while flushing: %w", err)
 	}
 
 	return nil
