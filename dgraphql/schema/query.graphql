@@ -1,4 +1,25 @@
 type Query {
+  """
+  Retrieve the last actions that: 1) notified an account, or 2) was authorized by an account
+  in reverse order (recent to old).
+
+  NOTE: this does not retrieve Transactions, but Action Traces.
+  NOTE 2: usually, the backing service of this method holds a _truncated_ window of history, per account.  For the full history, use `searchTransactionsBackward` instead.
+
+  Read the `cursor` in the response, and pass it back to `cursor` to continue exactly where you left off.
+  """
+  getAccountHistoryActions(
+    "Account name to query for actions"
+    account: String!
+
+    "Maximum number of actions returned in this page"
+    limit: Int64 = 100
+
+    "Optional cursor to continue where you left off, taken from results of a previous call to this `getActions` query."
+    cursor: String
+  ): GetAccountHistoryActionsConnection!
+
+
     """
     Search the blockchain forward for transaction *execution traces* based on `query`.
 
