@@ -62,10 +62,6 @@ func (ws *Service) Launch() {
 	ws.source.Run()
 }
 
-func (ws *Service) GetActions(ctx context.Context, account string) ([]*pbaccounthist.ActionData, error) {
-	return ws.scanActions(ctx, account)
-}
-
 func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	ctx := context.Background()
 
@@ -223,7 +219,12 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 	return
 }
 
-func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbaccounthist.ActionData, error) {
+func (ws *Service) GetActions(req *pbaccounthist.GetActionsRequest, stream pbaccounthist.AccountHistory_GetActionsServer) error {
+	ctx := stream.Context()
+	account := req.Account
+
+	// TODO: triple check that `account` is an EOS Name (encode / decode and check for ==, otherwise, BadRequest)
+
 	key := make([]byte, actionPrefixKeyLen)
 	encodeActionPrefixKey(key, account)
 
@@ -235,22 +236,24 @@ func (ws *Service) scanActions(ctx context.Context, account string) ([]*pbaccoun
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	actions := make([]*pbaccounthist.ActionData, 0, ws.maxEntriesPerAccount)
 	it := ws.kvStore.Prefix(ctx, key, int(ws.maxEntriesPerAccount))
 	for it.Next() {
 		newact := &pbaccounthist.ActionData{}
 		err := proto.Unmarshal(it.Item().Value, newact)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		newact.Key = it.Item().Key
-		actions = append(actions, newact)
+
+		if err := stream.Send(newact); err != nil {
+			return err
+		}
 	}
 	if err := it.Err(); err != nil {
-		return nil, fmt.Errorf("error while fetching actions from store: %w", err)
+		return fmt.Errorf("error while fetching actions from store: %w", err)
 	}
 
-	return actions, nil
+	return nil
 }
 
 func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace) error {

@@ -2,6 +2,7 @@ package accounthist
 
 import (
 	"context"
+	"time"
 
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
@@ -45,6 +46,8 @@ func (c *RWCache) BatchDelete(ctx context.Context, keys [][]byte) error {
 }
 
 func (c *RWCache) FlushPuts(ctx context.Context) error {
+	t0 := time.Now()
+
 	var countFirstKeys, countLastKeys int
 	lastKeys := map[string][]byte{}
 	for k, v := range c.puts {
@@ -82,7 +85,8 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 		return err
 	}
 
-	zlog.Info("flushed keys to storage", zap.Int("put_first_keys", countFirstKeys), zap.Int("put_last_keys", countLastKeys), zap.Int("deleted_keys", len(keys)))
+	d0 := time.Since(t0)
+	zlog.Info("flushed keys to storage", zap.Int("put_first_keys", countFirstKeys), zap.Int("put_last_keys", countLastKeys), zap.Int("deleted_keys", len(keys)), zap.Duration("time_delta", d0))
 
 	c.puts = map[string][]byte{}
 	c.deletes = map[string]struct{}{}

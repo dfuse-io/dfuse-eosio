@@ -78,13 +78,8 @@ func (a *App) Run() error {
 		return fmt.Errorf("error setting up source: %w", err)
 	}
 
-	httpServer := server.New(conf.GRPCListenAddr, service)
-
-	go func() {
-		if err := httpServer.Serve(); err != nil {
-			zlog.Info("http servie shutting down", zap.Error(err))
-		}
-	}()
+	server := server.New(conf.GRPCListenAddr, service)
+	go server.Serve()
 
 	// FIXME: what's in a go routine, what's in `Launch()`, which returns an error, dunno dunno!
 

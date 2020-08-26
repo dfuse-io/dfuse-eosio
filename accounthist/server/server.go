@@ -1,44 +1,41 @@
 package server
 
 import (
-	"context"
-	"net/http"
+	"fmt"
+	"net"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
-	"github.com/gorilla/mux"
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
+	"github.com/dfuse-io/dgrpc"
 )
 
 type Server struct {
-	addr string
-
-	httpServer *http.Server
-	mux        *mux.Router
+	grpcAddr string
 
 	service *accounthist.Service
 }
 
-func New(addr string, service *accounthist.Service) *Server {
-	srv := &Server{
-		addr: addr,
-		mux:  mux.NewRouter(),
-
-		service: service,
+func New(grpcAddr string, service *accounthist.Service) *Server {
+	s := &Server{
+		grpcAddr: grpcAddr,
+		service:  service,
 	}
 
-	srv.mux.Methods("GET").Path("/v0/wallet/{account}/actions").HandlerFunc(srv.GetActionsHandler)
-
-	return srv
+	return s
 }
 
-func (srv *Server) Serve() error {
-	srv.httpServer = &http.Server{
-		Addr:    srv.addr,
-		Handler: srv.mux,
+func (s *Server) Serve() {
+	grpcServer := dgrpc.NewServer(dgrpc.WithLogger(zlog))
+	pbaccounthist.RegisterAccountHistoryServer(grpcServer, s.service)
+
+	lis, err := net.Listen("tcp", s.grpcAddr)
+	if err != nil {
+		s.service.Shutdown(fmt.Errorf("failed listening grpc %q: %w", s.grpcAddr, err))
+		return
 	}
 
-	return srv.httpServer.ListenAndServe()
-}
-
-func (srv *Server) Stop(ctx context.Context) error {
-	return srv.httpServer.Shutdown(ctx)
+	if err := grpcServer.Serve(lis); err != nil {
+		s.service.Shutdown(fmt.Errorf("error on grpcServer.Serve: %w", err))
+		return
+	}
 }

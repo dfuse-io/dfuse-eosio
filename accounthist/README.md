@@ -13,3 +13,14 @@ truncate aggressively on those accounts that spew mucho actions to the
 chain.
 
 It brings a nice balance of value per byte kept.
+
+
+
+
+
+Usage
+-----
+
+```
+grpcurl -plaintext -d '{"account": "eosio"}' localhost:13033 dfuse.eosio.accounthist.v1.AccountHistory.GetActions
+```
