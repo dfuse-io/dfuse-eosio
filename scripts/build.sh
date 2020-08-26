@@ -41,6 +41,7 @@ build() {
     popd > /dev/null
   fi
 
+  DLAUNCHER=$(grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1)
   pushd .. > /dev/null
     if [[ ! -d dlauncher ]]; then
       echo "Cloning dlauncher dependency"
@@ -50,6 +51,9 @@ build() {
         git pull
       popd > /dev/null
     fi
+    pushd dlauncher
+      git checkout $DLAUNCHER
+    popd >/dev/null
 
     if [[ ! -d dlauncher/dashboard/dashboard-build || $force_build == true ]]; then
       pushd dlauncher/dashboard > /dev/null
