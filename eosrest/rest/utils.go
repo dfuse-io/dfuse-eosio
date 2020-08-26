@@ -19,9 +19,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/dmetering"
-	"go.opencensus.io/plugin/ochttp"
 )
 
 var corsRequestHeaders = []string{
@@ -75,8 +73,8 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 
 			return nil
 		},
-		Transport: &ochttp.Transport{
-			Propagation: &stackdriverPropagation.HTTPFormat{},
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
 		},
 	}
 }
