@@ -154,7 +154,7 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater Bat
 		tokenizedActions := map[uint32]prepedDoc{}
 
 		for idx, actTrace := range trxTrace.ActionTraces {
-			if !actTrace.FilteringMatched {
+			if blk.FilteringApplied && !actTrace.FilteringMatched {
 				continue
 			}
 			data := m.tokenizer.tokenize(actTrace)
