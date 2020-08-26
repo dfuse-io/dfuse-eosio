@@ -19,8 +19,8 @@ date.
 ### Changed
 * **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
-* `merger` now restarts from the last produced bundle based on its state file (merger-seen.gob) if it exists. It will go through all existing remote merged-blocks files to populate its seen-blocks-cache and keep progressing this way, so duplicate one-blocks-files will be deleted, but extraneous ones (forked blocks) will be included further away in the merged-blocks produced by the merger.. Flag renamed: `merger-seen-blocks-file` to `merger-state-file` to reflect this change.
-* `merger` now deletes blocks that have been processed and are in his "seenBlocks" cache, so a mindreader restarting from recent snapshot will not clog your one-block-file storage
+* `merger` startblock behavior changed, now relies on state-file, see https://github.com/dfuse-io/merger/issues/1
+* Changed `merger-seen-blocks-file` flag to `merger-state-file` to reflect this change.
 * `merger` now properly handles storage backend errors when looking for where to start
 * `mindreader` now automatically produces "merged blocks" instead of "one-block-files" when catching up (based on blocktime or if a blockmeta is reachable at `--common-blockmeta-addr`)
 * `mindreader` now sets optimal EOS VM settings automatically if the platform supports it them when doing `dfuseeos init`.
