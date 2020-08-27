@@ -8,6 +8,7 @@ const (
 	Protocol               pbbstream.Protocol = pbbstream.Protocol_EOS
 	TrxDBDSN               string             = "badger://{dfuse-data-dir}/storage/trxdb"
 	StateDBDSN             string             = "badger://{dfuse-data-dir}/storage/statedb-v1"
+	AccountHistDSN         string             = "badger://{dfuse-data-dir}/storage/accounthist"
 	MergedBlocksStoreURL   string             = "file://{dfuse-data-dir}/storage/merged-blocks"
 	FilteredBlocksStoreURL string             = "file://{dfuse-data-dir}/storage/filtered-merged-blocks"
 	IndicesStoreURL        string             = "file://{dfuse-data-dir}/storage/indexes"
@@ -44,6 +45,7 @@ const (
 	EosqHTTPServingAddr         string = ":13030"
 	DashboardGRPCServingAddr    string = ":13031"
 	FilteringRelayerServingAddr string = ":13032"
+	AccountHistGRPCServingAddr  string = ":13034"
 	TokenmetaGRPCServingAddr    string = ":14001"
 	DashboardHTTPListenAddr     string = ":8081"
 	APIProxyHTTPListenAddr      string = ":8080"
