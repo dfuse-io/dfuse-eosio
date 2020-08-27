@@ -7,6 +7,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/dfuse-io/dgrpc"
+	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -28,6 +29,7 @@ func (s *Server) Serve() {
 	grpcServer := dgrpc.NewServer(dgrpc.WithLogger(zlog))
 	pbaccounthist.RegisterAccountHistoryServer(grpcServer, s.service)
 
+	zlog.Info("listening for accounthist", zap.String("addr", s.grpcAddr))
 	lis, err := net.Listen("tcp", s.grpcAddr)
 	if err != nil {
 		s.service.Shutdown(fmt.Errorf("failed listening grpc %q: %w", s.grpcAddr, err))

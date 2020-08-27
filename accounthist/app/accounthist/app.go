@@ -75,12 +75,12 @@ func (a *App) Run() error {
 
 	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval, a.config.StartBlockNum, a.config.StopBlockNum, a.modules.Tracker)
 
+	server := server.New(conf.GRPCListenAddr, service)
+	go server.Serve()
+
 	if err = service.SetupSource(); err != nil {
 		return fmt.Errorf("error setting up source: %w", err)
 	}
-
-	server := server.New(conf.GRPCListenAddr, service)
-	go server.Serve()
 
 	// FIXME: what's in a go routine, what's in `Launch()`, which returns an error, dunno dunno!
 

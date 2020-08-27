@@ -68,7 +68,7 @@ func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop
 			decls.NewIdent("input", decls.Bool, nil),
 			decls.NewIdent("notif", decls.Bool, nil),
 			decls.NewIdent("scheduled", decls.Bool, nil),
-			decls.NewIdent("action_count", decls.Int, nil),
+			decls.NewIdent("trx_action_count", decls.Int, nil), // Amount of actions in the transaction in which this action is part of.
 
 			// Those are not supported right now, so they are commented out for now to generate an error when using them
 			// decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
@@ -132,7 +132,7 @@ type actionTraceActivation struct {
 	cachedData map[string]interface{}
 
 	trxScheduled bool
-	actionCount  int
+	trxActionCount  int
 }
 
 func (a *actionTraceActivation) Parent() interpreter.Activation {
@@ -145,8 +145,8 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	}
 
 	switch name {
-	case "action_count":
-		return a.actionCount, true
+	case "trx_action_count":
+		return a.trxActionCount, true
 	case "receiver":
 		if a.trace.Receipt != nil {
 			return a.trace.Receipt.Receiver, true

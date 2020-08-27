@@ -73,7 +73,7 @@ func (ws *Service) SetupSource() error {
 					continue
 				}
 
-				acctData := &pbaccounthist.ActionData{ActionTrace: act}
+				acctData := &pbaccounthist.ActionRow{Version: 0, ActionTrace: act}
 				rawTrace, err := proto.Marshal(acctData)
 				if err != nil {
 					return nil, err

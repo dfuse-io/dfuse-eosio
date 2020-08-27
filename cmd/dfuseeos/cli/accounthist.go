@@ -18,7 +18,7 @@ func init() {
 		MetricsID:   "accounthist",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/accounthist/.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("accounthist-grpc-listen-addr", AccountHistServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("accounthist-grpc-listen-addr", AccountHistGRPCServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("accounthist-dsn", AccountHistDSN, "kvdb connection string to the accoun thistory database.")
 			cmd.Flags().Int("accounthist-shard-num", 0, "[BATCH] Shard number, between 0 and 255 inclusive. Keep default for live process")
 			cmd.Flags().Int("accounthist-max-entries-per-account", 1000, "Number of actions to keep in history for each account")

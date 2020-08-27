@@ -157,7 +157,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 }
 
 func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) bool {
-	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, actionCount: len(trxTrace.ActionTraces)}
+	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces)}
 	// If the include program does not match, there is nothing more to do here
 	if !f.IncludeProgram.match(&activation) {
 		return false

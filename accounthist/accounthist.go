@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -14,6 +15,7 @@ import (
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
+	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )
@@ -33,7 +35,7 @@ type Service struct {
 	blocksStore dstore.Store
 	kvStore     store.KVStore
 
-	historySeqMap map[string]sequenceData
+	historySeqMap map[uint64]sequenceData
 	source        bstream.Source
 
 	rwCache *RWCache
@@ -56,7 +58,7 @@ func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(b
 		kvStore:              kvdb,
 		blocksStore:          blocksStore,
 		blockFilter:          blockFilter,
-		historySeqMap:        make(map[string]sequenceData),
+		historySeqMap:        make(map[uint64]sequenceData),
 		startBlockNum:        startBlockNum,
 		stopBlockNum:         stopBlockNum,
 		tracker:              tracker,
@@ -102,7 +104,8 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 			}
 
 			for acct := range accts {
-				acctSeqData, err := ws.getSequenceData(ctx, acct)
+				acctUint := eos.MustStringToName(acct)
+				acctSeqData, err := ws.getSequenceData(ctx, acctUint)
 				if err != nil {
 					return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
 				}
@@ -113,7 +116,7 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 				}
 
 				if acctSeqData.historySeqNum+1 > ws.maxEntriesPerAccount {
-					err := ws.deleteAction(ctx, acct, acctSeqData.historySeqNum-ws.maxEntriesPerAccount)
+					err := ws.deleteAction(ctx, acctUint, acctSeqData.historySeqNum-ws.maxEntriesPerAccount)
 					if err != nil {
 						return fmt.Errorf("error while deleting action: %w", err)
 					}
@@ -123,12 +126,12 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 
 				rawTrace := rawTraceMap[act.Receipt.GlobalSequence]
 
-				if err = ws.writeAction(ctx, acct, acctSeqData.historySeqNum, act, rawTrace); err != nil {
+				if err = ws.writeAction(ctx, acctUint, acctSeqData.historySeqNum, act, rawTrace); err != nil {
 					return fmt.Errorf("error while writing action to store: %w", err)
 				}
 
 				acctSeqData.Increment(act.Receipt.GlobalSequence)
-				ws.updateHistorySeq(acct, acctSeqData)
+				ws.updateHistorySeq(acctUint, acctSeqData)
 			}
 		}
 	}
@@ -145,7 +148,7 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	return nil
 }
 
-func (ws *Service) getSequenceData(ctx context.Context, account string) (out sequenceData, err error) {
+func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out sequenceData, err error) {
 	out, ok := ws.historySeqMap[account]
 	if ok {
 		return
@@ -188,11 +191,11 @@ func (ws *Service) writeLastProcessedBlock(ctx context.Context, blockNumber uint
 	return ws.kvStore.Put(ctx, key, value)
 }
 
-func (ws *Service) updateHistorySeq(account string, seqData sequenceData) {
+func (ws *Service) updateHistorySeq(account uint64, seqData sequenceData) {
 	ws.historySeqMap[account] = seqData
 }
 
-func (ws *Service) readSequenceData(ctx context.Context, account string) (out sequenceData, err error) {
+func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out sequenceData, err error) {
 
 	// TWO GOALS:
 	// * for the current `shardNum`, pick up where `lastGlobalSeq` was stopped INSIDE this `shardNum`
@@ -203,7 +206,7 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 	encodeActionPrefixKey(key, account)
 
 	zlog.Debug("reading sequence data",
-		zap.String("account", account),
+		//zap.String("account", account),
 		zap.String("key", hex.EncodeToString(key)),
 	)
 
@@ -212,7 +215,7 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 
 	it := ws.kvStore.Prefix(ctx, key, 1)
 	for it.Next() {
-		newact := &pbaccounthist.ActionData{}
+		newact := &pbaccounthist.ActionRow{}
 		if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
 			return
 		}
@@ -230,30 +233,53 @@ func (ws *Service) readSequenceData(ctx context.Context, account string) (out se
 func (ws *Service) GetActions(req *pbaccounthist.GetActionsRequest, stream pbaccounthist.AccountHistory_GetActionsServer) error {
 	ctx := stream.Context()
 	account := req.Account
+	accountName := eos.NameToString(account)
 
-	// TODO: triple check that `account` is an EOS Name (encode / decode and check for ==, otherwise, BadRequest)
+	// TODO: triple check that `account` is an EOS Name (encode / decode and check for ==, otherwise, BadRequest), perhaps at the DGraphQL level plz
 
-	key := make([]byte, actionPrefixKeyLen)
-	encodeActionPrefixKey(key, account)
+	queryShardNum := byte(255)
+	querySeqNum := uint64(math.MaxUint64)
+	if req.Cursor != nil {
+		// TODO: we could check that the Cursor.ShardNum doesn't go above 255
+		queryShardNum = byte(req.Cursor.ShardNum)
+		querySeqNum = req.Cursor.SequenceNumber - 1 // FIXME: CHECK BOUNDARIES, this is EXCLUSIVE, so do we -1, +1 ?
+	}
 
-	zlog.Debug("scanning actions",
-		zap.String("account", account),
-		zap.String("key", hex.EncodeToString(key)),
+	if req.Limit < 0 {
+		return fmt.Errorf("negative limit is not valid")
+	}
+
+	startKey := make([]byte, actionKeyLen)
+	encodeActionKey(startKey, account, queryShardNum, querySeqNum)
+	endKey := make([]byte, actionKeyLen)
+	encodeActionKey(endKey, account, 0, 0)
+
+	zlog.Info("scanning actions",
+		zap.String("account", accountName),
+		zap.String("start_key", hex.EncodeToString(startKey)), // TODO: turn into a hex Stringer(), instead of encoding it all the time
+		zap.String("end_key", hex.EncodeToString(endKey)),     // TODO: turn into a hex Stringer(), instead of encoding it all the time
 	)
 
+	limit := int(ws.maxEntriesPerAccount)
+	if req.Limit != 0 && int(req.Limit) < limit {
+		limit = int(req.Limit)
+	}
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
-
-	it := ws.kvStore.Prefix(ctx, key, int(ws.maxEntriesPerAccount))
+	it := ws.kvStore.Scan(ctx, startKey, endKey, limit)
 	for it.Next() {
-		newact := &pbaccounthist.ActionData{}
+		newact := &pbaccounthist.ActionRow{}
 		err := proto.Unmarshal(it.Item().Value, newact)
 		if err != nil {
 			return err
 		}
-		newact.Key = it.Item().Key
 
-		if err := stream.Send(newact); err != nil {
+		newresp := &pbaccounthist.ActionResponse{
+			Cursor:      actionKeyToCursor(account, it.Item().Key),
+			ActionTrace: newact.ActionTrace,
+		}
+
+		if err := stream.Send(newresp); err != nil {
 			return err
 		}
 	}
@@ -264,21 +290,12 @@ func (ws *Service) GetActions(req *pbaccounthist.GetActionsRequest, stream pbacc
 	return nil
 }
 
-func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
+func (ws *Service) writeAction(ctx context.Context, account uint64, sequenceNumber uint64, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
-	// d := &pbaccounthist.ActionData{}
-	// d.ActionTrace = actionTrace
-	// d.SequenceNumber = sequenceNumber
-
-	// rawTrace, err := proto.Marshal(d)
-	// if err != nil {
-	// 	return err
-	// }
-
 	zlog.Debug("writing action",
-		zap.String("account", account),
+		zap.Uint64("account", account),
 		zap.Stringer("action", actionTrace),
 		//zap.String("key", hex.EncodeToString(key)),
 	)
@@ -289,13 +306,13 @@ func (ws *Service) writeAction(ctx context.Context, account string, sequenceNumb
 	return ws.kvStore.Put(ctx, key, rawTrace)
 }
 
-func (ws *Service) deleteAction(ctx context.Context, account string, sequenceNumber uint64) error {
+func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNumber uint64) error {
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
 
 	zlog.Debug("deleting action",
 		zap.Uint64("sequence", sequenceNumber),
-		zap.String("account", account),
+		//zap.String("account", account),
 		zap.String("key", hex.EncodeToString(key)),
 	)
 

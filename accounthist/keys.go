@@ -2,8 +2,6 @@ package accounthist
 
 import (
 	"encoding/binary"
-
-	"github.com/eoscanada/eos-go"
 )
 
 const (
@@ -16,18 +14,18 @@ const (
 	lastBlockKeyLen    = 2
 )
 
-func encodeActionPrefixKey(key []byte, account string) {
+func encodeActionPrefixKey(key []byte, account uint64) {
 	_ = key[actionPrefixKeyLen-1] //bounds check
 
 	key[0] = prefixAction
-	binary.LittleEndian.PutUint64(key[1:], encodeAccountName(account))
+	binary.LittleEndian.PutUint64(key[1:], account)
 }
 
-func encodeActionKey(key []byte, account string, shardNum byte, sequenceNumber uint64) {
+func encodeActionKey(key []byte, account uint64, shardNum byte, sequenceNumber uint64) {
 	_ = key[actionKeyLen-1] //bounds check
 
 	key[0] = prefixAction
-	binary.LittleEndian.PutUint64(key[1:], encodeAccountName(account))
+	binary.LittleEndian.PutUint64(key[1:], account)
 	key[9] = ^shardNum
 	binary.BigEndian.PutUint64(key[10:], ^sequenceNumber)
 }
@@ -35,7 +33,6 @@ func encodeActionKey(key []byte, account string, shardNum byte, sequenceNumber u
 func decodeActionKeySeqNum(key []byte) (byte, uint64) {
 	_ = key[actionKeyLen-1] //bounds check
 
-	//binary.LittleEndian.ReadUint64(key[1:], encodeAccountName(account))
 	shardNum := key[9]
 	seqNum := binary.BigEndian.Uint64(key[10:])
 	return ^shardNum, ^seqNum
@@ -45,8 +42,4 @@ func encodeLastProcessedBlockKey(key []byte, shardNum byte) {
 	_ = key[lastBlockKeyLen-1] //bounds check
 	key[0] = prefixLastBlock
 	key[1] = shardNum
-}
-
-func encodeAccountName(account string) uint64 {
-	return eos.MustStringToName(account)
 }

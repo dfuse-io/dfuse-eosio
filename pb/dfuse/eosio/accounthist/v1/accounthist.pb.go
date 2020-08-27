@@ -26,12 +26,12 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type GetActionsRequest struct {
-	Account                string   `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
-	ExclusiveUpperBoundKey []byte   `protobuf:"bytes,2,opt,name=exclusive_upper_bound_key,json=exclusiveUpperBoundKey,proto3" json:"exclusive_upper_bound_key,omitempty"`
-	Count                  uint32   `protobuf:"varint,3,opt,name=count,proto3" json:"count,omitempty"`
-	XXX_NoUnkeyedLiteral   struct{} `json:"-"`
-	XXX_unrecognized       []byte   `json:"-"`
-	XXX_sizecache          int32    `json:"-"`
+	Account              uint64   `protobuf:"varint,1,opt,name=account,proto3" json:"account,omitempty"`
+	Limit                uint32   `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+	Cursor               *Cursor  `protobuf:"bytes,3,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *GetActionsRequest) Reset()         { *m = GetActionsRequest{} }
@@ -59,85 +59,197 @@ func (m *GetActionsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetActionsRequest proto.InternalMessageInfo
 
-func (m *GetActionsRequest) GetAccount() string {
+func (m *GetActionsRequest) GetAccount() uint64 {
 	if m != nil {
 		return m.Account
-	}
-	return ""
-}
-
-func (m *GetActionsRequest) GetExclusiveUpperBoundKey() []byte {
-	if m != nil {
-		return m.ExclusiveUpperBoundKey
-	}
-	return nil
-}
-
-func (m *GetActionsRequest) GetCount() uint32 {
-	if m != nil {
-		return m.Count
 	}
 	return 0
 }
 
-type ActionData struct {
-	Key                  []byte          `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	SequenceNumber       uint64          `protobuf:"varint,2,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
-	ActionTrace          *v1.ActionTrace `protobuf:"bytes,3,opt,name=action_trace,json=actionTrace,proto3" json:"action_trace,omitempty"`
+func (m *GetActionsRequest) GetLimit() uint32 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+func (m *GetActionsRequest) GetCursor() *Cursor {
+	if m != nil {
+		return m.Cursor
+	}
+	return nil
+}
+
+type ActionResponse struct {
+	Cursor               *Cursor         `protobuf:"bytes,1,opt,name=cursor,proto3" json:"cursor,omitempty"`
+	ActionTrace          *v1.ActionTrace `protobuf:"bytes,2,opt,name=action_trace,json=actionTrace,proto3" json:"action_trace,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *ActionData) Reset()         { *m = ActionData{} }
-func (m *ActionData) String() string { return proto.CompactTextString(m) }
-func (*ActionData) ProtoMessage()    {}
-func (*ActionData) Descriptor() ([]byte, []int) {
+func (m *ActionResponse) Reset()         { *m = ActionResponse{} }
+func (m *ActionResponse) String() string { return proto.CompactTextString(m) }
+func (*ActionResponse) ProtoMessage()    {}
+func (*ActionResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_4c22ddb60199ece6, []int{1}
 }
 
-func (m *ActionData) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ActionData.Unmarshal(m, b)
+func (m *ActionResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ActionResponse.Unmarshal(m, b)
 }
-func (m *ActionData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ActionData.Marshal(b, m, deterministic)
+func (m *ActionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ActionResponse.Marshal(b, m, deterministic)
 }
-func (m *ActionData) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ActionData.Merge(m, src)
+func (m *ActionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActionResponse.Merge(m, src)
 }
-func (m *ActionData) XXX_Size() int {
-	return xxx_messageInfo_ActionData.Size(m)
+func (m *ActionResponse) XXX_Size() int {
+	return xxx_messageInfo_ActionResponse.Size(m)
 }
-func (m *ActionData) XXX_DiscardUnknown() {
-	xxx_messageInfo_ActionData.DiscardUnknown(m)
+func (m *ActionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActionResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_ActionData proto.InternalMessageInfo
+var xxx_messageInfo_ActionResponse proto.InternalMessageInfo
 
-func (m *ActionData) GetKey() []byte {
+func (m *ActionResponse) GetCursor() *Cursor {
 	if m != nil {
-		return m.Key
+		return m.Cursor
 	}
 	return nil
 }
 
-func (m *ActionData) GetSequenceNumber() uint64 {
-	if m != nil {
-		return m.SequenceNumber
-	}
-	return 0
-}
-
-func (m *ActionData) GetActionTrace() *v1.ActionTrace {
+func (m *ActionResponse) GetActionTrace() *v1.ActionTrace {
 	if m != nil {
 		return m.ActionTrace
 	}
 	return nil
 }
 
+type ActionRow struct {
+	Version              uint32          `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	ActionTrace          *v1.ActionTrace `protobuf:"bytes,2,opt,name=action_trace,json=actionTrace,proto3" json:"action_trace,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *ActionRow) Reset()         { *m = ActionRow{} }
+func (m *ActionRow) String() string { return proto.CompactTextString(m) }
+func (*ActionRow) ProtoMessage()    {}
+func (*ActionRow) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c22ddb60199ece6, []int{2}
+}
+
+func (m *ActionRow) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ActionRow.Unmarshal(m, b)
+}
+func (m *ActionRow) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ActionRow.Marshal(b, m, deterministic)
+}
+func (m *ActionRow) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActionRow.Merge(m, src)
+}
+func (m *ActionRow) XXX_Size() int {
+	return xxx_messageInfo_ActionRow.Size(m)
+}
+func (m *ActionRow) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActionRow.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActionRow proto.InternalMessageInfo
+
+func (m *ActionRow) GetVersion() uint32 {
+	if m != nil {
+		return m.Version
+	}
+	return 0
+}
+
+func (m *ActionRow) GetActionTrace() *v1.ActionTrace {
+	if m != nil {
+		return m.ActionTrace
+	}
+	return nil
+}
+
+type Cursor struct {
+	Version              uint32   `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Magic                uint32   `protobuf:"varint,2,opt,name=magic,proto3" json:"magic,omitempty"`
+	Account              uint64   `protobuf:"varint,3,opt,name=account,proto3" json:"account,omitempty"`
+	ShardNum             uint32   `protobuf:"varint,4,opt,name=shard_num,json=shardNum,proto3" json:"shard_num,omitempty"`
+	SequenceNumber       uint64   `protobuf:"varint,5,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Cursor) Reset()         { *m = Cursor{} }
+func (m *Cursor) String() string { return proto.CompactTextString(m) }
+func (*Cursor) ProtoMessage()    {}
+func (*Cursor) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c22ddb60199ece6, []int{3}
+}
+
+func (m *Cursor) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Cursor.Unmarshal(m, b)
+}
+func (m *Cursor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Cursor.Marshal(b, m, deterministic)
+}
+func (m *Cursor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Cursor.Merge(m, src)
+}
+func (m *Cursor) XXX_Size() int {
+	return xxx_messageInfo_Cursor.Size(m)
+}
+func (m *Cursor) XXX_DiscardUnknown() {
+	xxx_messageInfo_Cursor.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Cursor proto.InternalMessageInfo
+
+func (m *Cursor) GetVersion() uint32 {
+	if m != nil {
+		return m.Version
+	}
+	return 0
+}
+
+func (m *Cursor) GetMagic() uint32 {
+	if m != nil {
+		return m.Magic
+	}
+	return 0
+}
+
+func (m *Cursor) GetAccount() uint64 {
+	if m != nil {
+		return m.Account
+	}
+	return 0
+}
+
+func (m *Cursor) GetShardNum() uint32 {
+	if m != nil {
+		return m.ShardNum
+	}
+	return 0
+}
+
+func (m *Cursor) GetSequenceNumber() uint64 {
+	if m != nil {
+		return m.SequenceNumber
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*GetActionsRequest)(nil), "dfuse.eosio.accounthist.v1.GetActionsRequest")
-	proto.RegisterType((*ActionData)(nil), "dfuse.eosio.accounthist.v1.ActionData")
+	proto.RegisterType((*ActionResponse)(nil), "dfuse.eosio.accounthist.v1.ActionResponse")
+	proto.RegisterType((*ActionRow)(nil), "dfuse.eosio.accounthist.v1.ActionRow")
+	proto.RegisterType((*Cursor)(nil), "dfuse.eosio.accounthist.v1.Cursor")
 }
 
 func init() {
@@ -145,29 +257,32 @@ func init() {
 }
 
 var fileDescriptor_4c22ddb60199ece6 = []byte{
-	// 337 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x52, 0x4d, 0x4f, 0xeb, 0x30,
-	0x10, 0x94, 0x5f, 0xdf, 0x87, 0xde, 0xb6, 0x14, 0xb0, 0x10, 0x2a, 0x3d, 0x85, 0x1e, 0xa0, 0x07,
-	0xea, 0xd0, 0x72, 0x42, 0x9c, 0x5a, 0x55, 0x02, 0xa9, 0x82, 0x43, 0x04, 0x17, 0x2e, 0x51, 0xe2,
-	0x2e, 0xd4, 0x82, 0xc6, 0x21, 0xb6, 0x03, 0xbd, 0xf0, 0x0f, 0xf8, 0xcf, 0xc8, 0x76, 0x4b, 0x23,
-	0xa1, 0x72, 0xdb, 0xd9, 0x1d, 0xcf, 0x64, 0x67, 0x03, 0x27, 0xd3, 0x07, 0xa3, 0x30, 0x44, 0xa9,
-	0x84, 0x0c, 0x13, 0xce, 0xa5, 0xc9, 0xf4, 0x4c, 0x28, 0x1d, 0x96, 0xfd, 0x2a, 0x64, 0x79, 0x21,
-	0xb5, 0xa4, 0x6d, 0xc7, 0x66, 0x8e, 0xcd, 0xaa, 0xe3, 0xb2, 0xdf, 0x0e, 0xaa, 0x4a, 0x5c, 0x4e,
-	0x91, 0x5b, 0x0d, 0x57, 0xf8, 0xd7, 0x9d, 0x77, 0xd8, 0xbd, 0x44, 0x3d, 0xe4, 0x5a, 0xc8, 0x4c,
-	0x45, 0xf8, 0x62, 0x50, 0x69, 0xda, 0x82, 0x7f, 0x4b, 0xa1, 0x16, 0x09, 0x48, 0xf7, 0x7f, 0xb4,
-	0x82, 0xf4, 0x1c, 0x0e, 0xf0, 0x8d, 0x3f, 0x1b, 0x25, 0x4a, 0x8c, 0x4d, 0x9e, 0x63, 0x11, 0xa7,
-	0xd2, 0x64, 0xd3, 0xf8, 0x09, 0x17, 0xad, 0x5f, 0x01, 0xe9, 0x36, 0xa2, 0xfd, 0x2f, 0xc2, 0x9d,
-	0x9d, 0x8f, 0xec, 0x78, 0x82, 0x0b, 0xba, 0x07, 0x7f, 0xbc, 0x64, 0x2d, 0x20, 0xdd, 0xad, 0xc8,
-	0x83, 0xce, 0x07, 0x01, 0xf0, 0xee, 0xe3, 0x44, 0x27, 0x74, 0x07, 0x6a, 0x56, 0x89, 0x38, 0x25,
-	0x5b, 0xd2, 0x63, 0xd8, 0x56, 0xf6, 0xb3, 0x32, 0x8e, 0x71, 0x66, 0xe6, 0x29, 0x16, 0xce, 0xe7,
-	0x77, 0xd4, 0x5c, 0xb5, 0x6f, 0x5c, 0x97, 0x8e, 0xa1, 0x91, 0x38, 0xa1, 0x58, 0x17, 0x09, 0x47,
-	0x67, 0x53, 0x1f, 0x1c, 0xb2, 0x6a, 0x3c, 0x7e, 0xf3, 0xb2, 0xcf, 0xbc, 0xe5, 0xad, 0x25, 0x46,
-	0xf5, 0x64, 0x0d, 0x06, 0xaf, 0xd0, 0x1c, 0xfa, 0x5d, 0xaf, 0x84, 0xd2, 0xb2, 0x58, 0x50, 0x04,
-	0x58, 0x27, 0x44, 0x7b, 0x6c, 0x73, 0xdc, 0xec, 0x5b, 0x92, 0xed, 0xa3, 0x9f, 0xe8, 0xeb, 0xbd,
-	0x4f, 0xc9, 0xe8, 0xfa, 0x7e, 0xf2, 0x28, 0xf4, 0xcc, 0xa4, 0x8c, 0xcb, 0x79, 0xe8, 0x5e, 0xf5,
-	0x84, 0x5c, 0x16, 0xfe, 0x80, 0x79, 0x1a, 0x6e, 0xfe, 0x33, 0x2e, 0xf2, 0xb4, 0xd2, 0x48, 0xff,
-	0xba, 0xf3, 0x9e, 0x7d, 0x06, 0x00, 0x00, 0xff, 0xff, 0x61, 0xf5, 0x4a, 0xdf, 0x4c, 0x02, 0x00,
-	0x00,
+	// 386 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0xbd, 0x4e, 0xf3, 0x30,
+	0x14, 0x95, 0xbf, 0xfe, 0x7c, 0xd4, 0xa5, 0x45, 0x58, 0x1d, 0xa2, 0xb2, 0x84, 0x2c, 0x54, 0x88,
+	0x26, 0xb4, 0x6c, 0x30, 0xf1, 0x23, 0x81, 0x84, 0xe8, 0x10, 0x31, 0xb1, 0x54, 0x89, 0x6b, 0x5a,
+	0x0b, 0x12, 0x07, 0xdb, 0x09, 0x42, 0x0c, 0xbc, 0x03, 0x13, 0x8f, 0x8b, 0x72, 0x9d, 0xa8, 0xa9,
+	0x50, 0x2b, 0x21, 0xb1, 0xe5, 0x5c, 0xdf, 0x73, 0xee, 0xb5, 0xcf, 0x09, 0x3e, 0x9a, 0x3d, 0xa6,
+	0x8a, 0x79, 0x4c, 0x28, 0x2e, 0xbc, 0x80, 0x52, 0x91, 0xc6, 0x7a, 0xc1, 0x95, 0xf6, 0xb2, 0x51,
+	0x15, 0xba, 0x89, 0x14, 0x5a, 0x90, 0x3e, 0x74, 0xbb, 0xd0, 0xed, 0x56, 0x8f, 0xb3, 0x51, 0xdf,
+	0xae, 0x2a, 0x51, 0x31, 0x63, 0x34, 0xd7, 0x80, 0x0f, 0xc3, 0x76, 0x3e, 0xf0, 0xee, 0x35, 0xd3,
+	0xe7, 0x54, 0x73, 0x11, 0x2b, 0x9f, 0xbd, 0xa4, 0x4c, 0x69, 0x62, 0xe1, 0xff, 0x85, 0x90, 0x85,
+	0x6c, 0x34, 0xa8, 0xfb, 0x25, 0x24, 0x3d, 0xdc, 0x78, 0xe6, 0x11, 0xd7, 0xd6, 0x3f, 0x1b, 0x0d,
+	0x3a, 0xbe, 0x01, 0xe4, 0x14, 0x37, 0x69, 0x2a, 0x95, 0x90, 0x56, 0xcd, 0x46, 0x83, 0xf6, 0xd8,
+	0x71, 0xd7, 0xef, 0xe4, 0x5e, 0x42, 0xa7, 0x5f, 0x30, 0x9c, 0x4f, 0x84, 0xbb, 0x66, 0xbc, 0xcf,
+	0x54, 0x22, 0x62, 0xc5, 0x2a, 0x72, 0xe8, 0xb7, 0x72, 0xe4, 0x0a, 0x6f, 0x07, 0xa0, 0x36, 0xd5,
+	0x32, 0xa0, 0x0c, 0xf6, 0x6c, 0x8f, 0xf7, 0x57, 0x14, 0xcc, 0xfd, 0xb3, 0x91, 0x6b, 0xe6, 0xde,
+	0xe7, 0x8d, 0x7e, 0x3b, 0x58, 0x02, 0xe7, 0x09, 0xb7, 0x8a, 0x9d, 0xc4, 0x6b, 0xfe, 0x1a, 0x19,
+	0x93, 0x8a, 0x8b, 0x18, 0xf6, 0xe9, 0xf8, 0x25, 0xfc, 0xa3, 0x61, 0x5f, 0x08, 0x37, 0xcd, 0x2d,
+	0x36, 0x8c, 0xea, 0xe1, 0x46, 0x14, 0xcc, 0x39, 0x2d, 0x1f, 0x1e, 0x40, 0xd5, 0xa8, 0xda, 0xaa,
+	0x51, 0x7b, 0xb8, 0xa5, 0x16, 0x81, 0x9c, 0x4d, 0xe3, 0x34, 0xb2, 0xea, 0xc0, 0xd9, 0x82, 0xc2,
+	0x24, 0x8d, 0xc8, 0x01, 0xde, 0x51, 0xb9, 0xd5, 0x31, 0x65, 0xf9, 0x79, 0xc8, 0xa4, 0xd5, 0x00,
+	0x7a, 0xb7, 0x2c, 0x4f, 0xa0, 0x3a, 0x7e, 0xcf, 0xbd, 0x01, 0xc1, 0x1b, 0xae, 0xb4, 0x90, 0x6f,
+	0x84, 0x63, 0xbc, 0xcc, 0x0b, 0x19, 0x6e, 0x72, 0xe6, 0x47, 0xae, 0xfa, 0x87, 0x9b, 0xda, 0x57,
+	0x43, 0x70, 0x8c, 0x2e, 0xee, 0x1e, 0x6e, 0xe7, 0x5c, 0x2f, 0xd2, 0xd0, 0xa5, 0x22, 0xf2, 0x80,
+	0x39, 0xe4, 0xa2, 0xf8, 0x30, 0x91, 0x4e, 0x42, 0x6f, 0xfd, 0xbf, 0x72, 0x96, 0x84, 0x95, 0x42,
+	0xd8, 0x84, 0xc0, 0x9f, 0x7c, 0x07, 0x00, 0x00, 0xff, 0xff, 0x28, 0x92, 0x5c, 0x07, 0x5e, 0x03,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -209,7 +324,7 @@ func (c *accountHistoryClient) GetActions(ctx context.Context, in *GetActionsReq
 }
 
 type AccountHistory_GetActionsClient interface {
-	Recv() (*ActionData, error)
+	Recv() (*ActionResponse, error)
 	grpc.ClientStream
 }
 
@@ -217,8 +332,8 @@ type accountHistoryGetActionsClient struct {
 	grpc.ClientStream
 }
 
-func (x *accountHistoryGetActionsClient) Recv() (*ActionData, error) {
-	m := new(ActionData)
+func (x *accountHistoryGetActionsClient) Recv() (*ActionResponse, error) {
+	m := new(ActionResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -251,7 +366,7 @@ func _AccountHistory_GetActions_Handler(srv interface{}, stream grpc.ServerStrea
 }
 
 type AccountHistory_GetActionsServer interface {
-	Send(*ActionData) error
+	Send(*ActionResponse) error
 	grpc.ServerStream
 }
 
@@ -259,7 +374,7 @@ type accountHistoryGetActionsServer struct {
 	grpc.ServerStream
 }
 
-func (x *accountHistoryGetActionsServer) Send(m *ActionData) error {
+func (x *accountHistoryGetActionsServer) Send(m *ActionResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
