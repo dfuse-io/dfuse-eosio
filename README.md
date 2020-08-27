@@ -96,6 +96,10 @@ You should also take a look at our Docs:
 * [System Admin Guide](https://docs.dfuse.io/eosio/admin-guide/)
 * [Large Chains Preparation](https://docs.dfuse.io/eosio/admin-guide/large-chains-preparation/)
 
+## Filtering
+
+* See [Filtering](https://docs.dfuse.io/eosio/admin-guide/filtering/)
+
 ## Overview - Repository Map
 
 The glue:
