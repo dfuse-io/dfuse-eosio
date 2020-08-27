@@ -71,7 +71,7 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func Init(runProducer bool, configFile string) error {
-	toRun := []string{"all", "-mindreader-stdin", "-merged-filter"}
+	toRun := []string{"all", "-mindreader-stdin", "-merged-filter", "-accounthist"}
 	if !runProducer {
 		toRun = append(toRun, "-node-manager")
 	}
