@@ -151,6 +151,20 @@ func (b *Block) MigrateV0ToV1() {
 	}
 }
 
+
+func (b *Block) MigrateV1ToV2() {
+	if b.Version != 1 {
+		return
+	}
+	b.Version = 2
+
+	if b.FilteringApplied {
+		// prendre filtering_include_filter_expr -> mettre dans un pbcodec.FilteringFilters{}
+		// hasher ceux qui sont trop gros? tous? pour tous les blocks où blockNum%100 != 0
+		// on append ce FilteredApplied à
+	}
+}
+
 func (t *TransactionTrace) HasBeenReverted() bool {
 	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
 	if t.Receipt == nil {
