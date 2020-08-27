@@ -1,23 +1,33 @@
 package accounthist
 
 import (
-	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_writeActionKey_lexicalOrdering(t *testing.T) {
-	account := "omgomgomgomg"
-
+func TestActionKey(t *testing.T) {
 	key1Bytes := make([]byte, actionKeyLen)
-	encodeActionKey(key1Bytes, account, uint64(1))
-	key1 := hex.EncodeToString(key1Bytes)
 
-	key2Bytes := make([]byte, actionKeyLen)
-	encodeActionKey(key2Bytes, account, uint64(2))
-	key2 := hex.EncodeToString(key2Bytes)
+	encodeActionKey(key1Bytes, "mama", 1, uint64(1))
+	assert.Equal(t,
+		[]byte{
+			0x2,
+			0x0, 0x0, 0x0, 0x0, 0x0, 0x60, 0xa4, 0x91,
+			0xfe,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+		},
+		key1Bytes,
+	)
 
-	// newest key should be first in the ordering.
-	assert.Greater(t, key1, key2)
+	encodeActionKey(key1Bytes, "b1", 2, uint64(256))
+	assert.Equal(t,
+		[]byte{
+			0x2,
+			0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x38,
+			0xfd,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xff,
+		},
+		key1Bytes,
+	)
 }
