@@ -175,7 +175,7 @@ func printWelcomeMessage(apps []string) {
 		return
 	}
 
-	format := "Your instance should be ready in a few seconds, here some relevant links:\n"
+	format := "Your instance should be ready in a few seconds, here are some relevant links:\n"
 	var formatArgs []interface{}
 
 	if hasDashboard {
