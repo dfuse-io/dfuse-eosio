@@ -7,6 +7,13 @@ project adheres to
 [MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
 date.
 
+# Unreleased
+
+### Changed
+
+* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
+* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
+
 # [v0.1.0-beta5] 2020-08-24
 
 ## PUBLIC API Changes
