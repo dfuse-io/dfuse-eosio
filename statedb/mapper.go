@@ -42,7 +42,7 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 
 	blockNum := req.BlockRef.Num()
 	for _, trx := range blk.TransactionTraces() {
-		actionMatcher := blk.FilteringActionMatcher(trx)
+		actionMatcher := blk.FilteringActionMatcher(trx, isRequiredSystemAction)
 
 		for _, dbOp := range trx.DbOps {
 			zlog.Debug("db op", zap.Reflect("op", dbOp))
@@ -74,11 +74,8 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 			}
 		}
 
+		// All perms ops comes from required system actions, so we process them all
 		for _, permOp := range trx.PermOps {
-			if !actionMatcher.Matched(permOp.ActionIndex) {
-				continue
-			}
-
 			rows, err := permOpToKeyAccountRows(blockNum, permOp)
 			if err != nil {
 				return nil, fmt.Errorf("unable to create key account rows for perm op: %w", err)
@@ -107,7 +104,7 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 				continue
 			}
 
-			// We always process those regardless of the filtering applied to the block
+			// We always process those regardless of the filtering applied to the block since they are all system actions
 			switch act.SimpleName() {
 			case "eosio:setabi":
 				abiEntry, err := NewContractABIEntry(req.BlockRef.Num(), act)
@@ -145,6 +142,15 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 	addTabletRowsToRequest(req, lastTabletRowMap)
 
 	return req, nil
+}
+
+func isRequiredSystemAction(actTrace *pbcodec.ActionTrace) bool {
+	if actTrace.Receiver != "eosio" || actTrace.Action.Account != "eosio" {
+		return false
+	}
+
+	actionName := actTrace.Action.Name
+	return actionName == "setabi" || actionName == "newaccount" || actionName == "updateauth" || actionName == "deleteauth" || actionName == "linkauth" || actionName == "unlinkauth"
 }
 
 func addSingletEntriesToRequest(request *fluxdb.WriteRequest, singleEntriesMap map[string]fluxdb.SingletEntry) {

@@ -15,7 +15,7 @@ main() {
       h) usage && exit 0;;
       f) force_build=true;;
       s) skip_checks=true;;
-	  p) prepare_only=true;;
+      p) prepare_only=true;;
       y) yes=true;;
       \?) usage_error "Invalid option: -$OPTARG";;
     esac
@@ -41,14 +41,16 @@ build() {
     popd > /dev/null
   fi
 
-  DLAUNCHER=$(grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1)
+  dlauncher_hash=`grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1`
   pushd .. > /dev/null
     if [[ ! -d dlauncher ]]; then
       echo "Cloning dlauncher dependency"
       git clone https://github.com/dfuse-io/dlauncher
+      git checkout $dlauncher_hash
     elif [[ $force_build == true ]]; then
       pushd dlauncher > /dev/null
         git pull
+        git checkout $dlauncher_hash
       popd > /dev/null
     fi
     pushd dlauncher
@@ -71,9 +73,10 @@ build() {
     echo "Generating static assets"
     go generate ./...
   fi
-  GIT_COMMIT="$(git describe --match=NeVeRmAtCh --always --abbrev=7 --dirty)"
 
   if ! [[ $prepare_only == true ]]; then
+    GIT_COMMIT="$(git describe --match=NeVeRmAtCh --always --abbrev=7 --dirty)"
+
     echo "Building & installing dfuseeos binary for $GIT_COMMIT"
     go install -ldflags "-X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
   fi
@@ -84,16 +87,21 @@ checks() {
   if ! command -v go &> /dev/null; then
     echo "The 'go' command (version 1.14+) is required to build a version locally, install it following https://golang.org/doc/install#install"
     found_error=true
+  else
+    if ! (go version | grep -qE 'go1\.(1[456789]|[2-9][0-9]+)'); then
+      echo "Your 'go' version (`go version`) is too low, requires go 1.14+, if you think it's a mistake, use '-s' flag to skip checks"
+      found_error=true
+    fi
   fi
 
   if ! command -v yarn &> /dev/null; then
     echo "The 'yarn' command (version 1.12+) is required to build a version locally, install it following https://classic.yarnpkg.com/en/docs/install"
     found_error=true
-  fi
-
-  if ! (go version | grep -qE 'go1.(1[456789]|[2-9][0-9]+)'); then
-    echo "Your 'go' version (`go version`) is too low, requires go 1.14+, if you think it's a mistake, use '-s' flag to skip checks"
-    found_error=true
+  else
+    if ! (yarn --version | grep -qE '1\.(1[3456789]|[2-9][0-9])'); then
+      echo "Your 'yarn' version (`yarn --version`) is too low, requires Yarn 1.12+, if you think it's a mistake, use '-s' flag to skip checks"
+      found_error=true
+    fi
   fi
 
   if ! command -v rice &> /dev/null; then
@@ -110,8 +118,7 @@ checks() {
     fi
 
     if [[ $install_rice == true ]]; then
-      # Hopefully, we will end up outside a Go module!
-      pushd .. > /dev/null
+      pushd /tmp > /dev/null
         set -e
         echo "Installing 'rice' executable"
         go get github.com/GeertJohan/go.rice
@@ -140,7 +147,7 @@ usage_error() {
 }
 
 usage() {
-  echo "usage: ./scripts/build.sh [-s] [-y]"
+  echo "usage: ./scripts/build.sh [-f] [-s] [-y] [-p]"
   echo ""
   echo "Checks build requirements and build a development local version of the"
   echo "'dfuseeos' binary."
@@ -149,6 +156,7 @@ usage() {
   echo "   -f          Force re-build all dependencies (eosq, dashboard)"
   echo "   -s          Skip all checks usually performed by this script"
   echo "   -y          Answers yes to all question asked by this script"
+  echo "   -p          Prepare only all required artifacts for build, but don't run the build actually"
 }
 
 main "$@"

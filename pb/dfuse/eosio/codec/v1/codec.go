@@ -163,16 +163,25 @@ func (f filteringActionMatcherFunc) Matched(actionIndex uint32) bool {
 	return f(actionIndex)
 }
 
-func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace) FilteringActionMatcher {
+type ActionMatcher func(actTrace *ActionTrace) bool
+
+func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace, requiredSystemActions ...ActionMatcher) FilteringActionMatcher {
 	if !b.FilteringApplied {
-		// If no filtering was ever applied, all action indices are assumed to be included
+		// If no filtering was ever applied, all action are assumed to be included
 		return AlwaysIncludedFilteringActionMatcher
 	}
 
 	matchingActionIndices := make(map[uint32]bool)
 	for _, actTrace := range trxTrace.ActionTraces {
 		if actTrace.FilteringMatched {
-			matchingActionIndices[actTrace.ExecutionIndex] = true
+			shouldInclude := true
+			if actTrace.FilteringMatchedSystemActionFilter && !isRequiredSystemAction(actTrace, requiredSystemActions) {
+				shouldInclude = false
+			}
+
+			if shouldInclude {
+				matchingActionIndices[actTrace.ExecutionIndex] = true
+			}
 		}
 	}
 
@@ -181,8 +190,18 @@ func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace) FilteringActi
 	})
 }
 
+func isRequiredSystemAction(actTrace *ActionTrace, requiredSystemActions []ActionMatcher) bool {
+	for _, matcher := range requiredSystemActions {
+		if matcher(actTrace) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (t *TransactionTrace) HasBeenReverted() bool {
-	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
+	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if not present to play safe
 	if t.Receipt == nil {
 		return true
 	}
