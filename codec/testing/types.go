@@ -180,6 +180,16 @@ func TrxTrace(t testing.T, components ...interface{}) *pbcodec.TransactionTrace 
 		}
 	}
 
+	for i, actTrace := range trace.ActionTraces {
+		// Let's auto-assign all ExecutionIndex automatically if they are unset
+		if actTrace.ExecutionIndex == 0 {
+			// Unless it's 0 and not the first one, in which case someone already played with it and we should not change it
+			if i != 0 {
+				actTrace.ExecutionIndex = uint32(i)
+			}
+		}
+	}
+
 	return trace
 }
 
@@ -210,10 +220,15 @@ func Trx(t testing.T, elements ...interface{}) *pbcodec.Transaction {
 }
 
 type ActionData string
-type actionMatched bool
+type actionMatched struct {
+	matched bool
+	system  bool
+}
 type undecodedActionData bool
 
-var ActionMatched = actionMatched(true)
+var ActionMatched = actionMatched{true, false}
+var ActionSystemMatched = actionMatched{true, true}
+
 var UndecodedActionData = undecodedActionData(true)
 
 type ActionIndex uint32
@@ -305,7 +320,8 @@ func transformActionTrace(t testing.T, actTrace *pbcodec.ActionTrace, components
 		case GlobalSequence:
 			actTrace.Receipt.GlobalSequence = uint64(v)
 		case actionMatched:
-			actTrace.FilteringMatched = bool(v)
+			actTrace.FilteringMatched = bool(v.matched)
+			actTrace.FilteringMatchedSystemActionFilter = bool(v.system)
 		default:
 			failInvalidComponent(t, "action trace", component, ignoreIfActionComponent)
 		}

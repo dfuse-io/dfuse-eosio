@@ -54,7 +54,7 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	}
 	targetActions := mapString(msg.Data.ActionNames)
 
-	handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+	handler := bstream.HandlerFunc(func(block *bstream.Block, _ interface{}) error {
 		blk := block.ToNative().(*pbcodec.Block)
 
 		for _, trx := range blk.TransactionTraces() {
@@ -63,8 +63,14 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 				continue
 			}
 
+			actionMatcher := blk.FilteringActionMatcher(trx)
+
 			allActions := trx.ActionTraces
 			for actIdx, act := range allActions {
+				if !actionMatcher.Matched(act.ExecutionIndex) {
+					continue
+				}
+
 				if !targetReceivers[string(act.Receiver)] {
 					continue
 				}

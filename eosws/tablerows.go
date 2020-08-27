@@ -23,7 +23,6 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
@@ -59,10 +58,11 @@ func (ws *WSConn) onGetTableRows(ctx context.Context, msg *wsmsg.GetTableRows) {
 		return
 	}
 
-	fetchTableRows(ws, startBlockNum, msg, ws.abiGetter, ws, ws.stateClient, ws.irreversibleFinder, ctx, ws.subscriptionHub)
+	fetchTableRows(ctx, ws, startBlockNum, msg, ws.abiGetter, ws, ws.stateClient, ws.irreversibleFinder)
 }
 
 func fetchTableRows(
+	ctx context.Context,
 	ws *WSConn,
 	startBlockNum uint32,
 	msg *wsmsg.GetTableRows,
@@ -70,8 +70,6 @@ func fetchTableRows(
 	emitter Emitter,
 	stateClient pbstatedb.StateClient,
 	irrFinder IrreversibleFinder,
-	ctx context.Context,
-	hub *hub.SubscriptionHub,
 ) {
 	zlogger := logging.Logger(ctx, zlog)
 
@@ -105,7 +103,7 @@ func fetchTableRows(
 		if ref.UpToBlock != nil {
 			startBlockID = ref.UpToBlock.ID()
 			startBlockNum = uint32(ref.UpToBlock.Num())
-			zlogger.Info("state client response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
+			zlogger.Info("state client response", zap.Stringer("up_to_block", ref.UpToBlock))
 		}
 		fetchSpan.End()
 	}
@@ -116,7 +114,7 @@ func fetchTableRows(
 		var err error
 
 		var abiChangeHandler *ABIChangeHandler
-		tableDeltaHandler := NewTableDeltaHandler(msg, emitter, ctx, zlog, func() *eos.ABI {
+		tableDeltaHandler := newTableDeltaHandler(ctx, msg, emitter, zlog, func() *eos.ABI {
 			return abiChangeHandler.CurrentABI()
 		})
 
@@ -156,7 +154,7 @@ func fetchTableRows(
 		metrics.IncListeners("get_table_rows")
 
 		source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), forkableHandler, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))
-		source.OnTerminating(func(e error) {
+		source.OnTerminating(func(_ error) {
 			metrics.CurrentListeners.Dec("get_table_rows")
 			listenSpan.End()
 		})
@@ -179,12 +177,18 @@ func fetchTableRows(
 }
 
 func tableDeltasFromBlock(block *bstream.Block, msg *wsmsg.GetTableRows, abi *eos.ABI, step forkable.StepType, zlog *zap.Logger) []*wsmsg.TableDelta {
-	zlog.Debug("about to stream table deltas from block", zap.Stringer("block", block), zap.String("step", step.String()))
+	zlog.Debug("about to stream table deltas from block", zap.Stringer("block", block), zap.Stringer("step", step))
 	var deltas []*wsmsg.TableDelta
 
 	blk := block.ToNative().(*pbcodec.Block)
 	for _, trxTrace := range blk.TransactionTraces() {
+		actionMatcher := blk.FilteringActionMatcher(trxTrace)
+
 		for _, dbOp := range trxTrace.DbOps {
+			if !actionMatcher.Matched(dbOp.ActionIndex) {
+				continue
+			}
+
 			if dbOp.Code != string(msg.Data.Code) || dbOp.TableName != string(msg.Data.TableName) || dbOp.Scope != string(*msg.Data.Scope) {
 				continue
 			}
@@ -260,7 +264,7 @@ func fetchStateTableRows(ctx context.Context, stateClient pbstatedb.StateClient,
 	return
 }
 
-type TableDeltaHandler struct {
+type tableDeltaHandler struct {
 	msg        *wsmsg.GetTableRows
 	emitter    Emitter
 	ctx        context.Context
@@ -268,11 +272,11 @@ type TableDeltaHandler struct {
 	getABIFunc func() *eos.ABI
 }
 
-func NewTableDeltaHandler(msg *wsmsg.GetTableRows, emitter Emitter, ctx context.Context, zlog *zap.Logger, getABIFunc func() *eos.ABI) *TableDeltaHandler {
-	return &TableDeltaHandler{msg: msg, emitter: emitter, ctx: ctx, zlog: zlog, getABIFunc: getABIFunc}
+func newTableDeltaHandler(ctx context.Context, msg *wsmsg.GetTableRows, emitter Emitter, zlog *zap.Logger, getABIFunc func() *eos.ABI) *tableDeltaHandler {
+	return &tableDeltaHandler{msg: msg, emitter: emitter, ctx: ctx, zlog: zlog, getABIFunc: getABIFunc}
 }
 
-func (h *TableDeltaHandler) ProcessBlock(block *bstream.Block, obj interface{}) error {
+func (h *tableDeltaHandler) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	fObj := obj.(*forkable.ForkableObject)
 
 	if fObj.Step == forkable.StepNew || fObj.Step == forkable.StepUndo || fObj.Step == forkable.StepRedo {

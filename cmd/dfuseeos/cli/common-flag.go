@@ -18,7 +18,8 @@ func init() {
 
 		// Network config
 		cmd.Flags().String("common-network-id", NetworkID, "Short network identifier, for billing purposes (usually maps namespaces on deployments). Used by: dgraphql")
-		cmd.Flags().String("common-chain-id", "", "Chain ID in hex. Used by: trxdb-loader (to reverse the signatures and extract public keys)") // TODO: eventually, pluck that from somewhere instead of asking for it here (!). You risk noticing its missing very late, and it'll require reprocessing if you want the pubkeys.
+		// TODO: eventually, pluck that from somewhere instead of asking for it here (!). You risk noticing its missing very late, and it'll require reprocessing if you want the pubkeys.
+		cmd.Flags().String("common-chain-id", "", "Chain ID in hex. Used by: trxdb-loader (to reverse the signatures and extract public keys)")
 
 		// Authentication, metering and rate limiter plugins
 		cmd.Flags().String("common-auth-plugin", "null://", "Auth plugin URI, see dfuse-io/dauth repository")
@@ -33,9 +34,9 @@ func init() {
 		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
 
 		// Filtering
-		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
-		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded. See https://github.com/dfuse-io/dfuse-eosio/blob/develop/FILTERING.md.")
-		cmd.Flags().String("common-system-actions-include-filter-expr", "receiver == 'eosio' && action in ['linkauth', 'unlinkauth', 'newaccount', 'setabi']", "[COMMON] CEL program to determine which actions to keep regardless of the include or exclude filter expressions, those are actions required by dfuse system(s) to function properly, change it only if you known what you are doing.")
+		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
+		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
+		cmd.Flags().String("common-system-actions-include-filter-expr", "receiver == 'eosio' && action in ['updateauth', 'deleteauth', 'linkauth', 'unlinkauth', 'newaccount', 'setabi']", "[COMMON] CEL program to determine which actions to keep regardless of the include or exclude filter expressions, those are actions required by dfuse system(s) to function properly, change it only if you known what you are doing, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
 
 		// Search flags
 		cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")

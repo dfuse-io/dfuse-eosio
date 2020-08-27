@@ -121,10 +121,8 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 
 		TrackUserEvent(childCtx, "ws_conn_start", "connection_count", s.connections)
 
-		conn := NewWSConn(s, c, db, credentials, filesourceBlockRateLimit, childCtx)
+		conn := NewWSConn(s, c, credentials, filesourceBlockRateLimit, childCtx)
 		go conn.handleWSIncoming()
-		//conn.handleHeartbeats()
-		//_ = conn.conn.Close()
 
 		go conn.handleHeartbeats()
 		select {

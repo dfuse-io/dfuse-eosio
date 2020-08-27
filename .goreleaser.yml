@@ -7,12 +7,13 @@ release:
   name_template: '{{.Tag}}'
 before:
   hooks:
-    - ./scripts/build.sh -f -p
+    - ./scripts/build.sh -f -p -y
 builds:
 - env:
   - CGO_ENABLED=0
   main: ./cmd/dfuseeos
   ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}}
+  mod_timestamp: '{{ .CommitTimestamp }}'
   binary: dfuseeos
   goos:
     - linux
@@ -31,10 +32,7 @@ archives:
   - CHANGELOG.md
   - CONTRIBUTING.md
   - DEPENDENCIES.md
-  - FILTERING.md
-  - DEBUG.md
   - TROUBLESHOOTING.md
-  - COMMANDS.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:

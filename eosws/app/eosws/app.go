@@ -16,7 +16,6 @@
 package eosws
 
 import (
-	"compress/gzip"
 	"context"
 	"fmt"
 	"net/http"
@@ -50,7 +49,6 @@ import (
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
@@ -86,17 +84,23 @@ type Config struct {
 	HealthzSecret            string
 }
 
-// Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
-type App struct {
-	*shutter.Shutter
-	Config *Config
+type Modules struct {
+	BlockFilter func(blk *bstream.Block) error
 }
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
-func New(config *Config) *App {
+type App struct {
+	*shutter.Shutter
+	Config  *Config
+	Modules *Modules
+}
+
+// Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		Config:  config,
+		Modules: modules,
 	}
 }
 
@@ -139,13 +143,20 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up source blocks store: %w", err)
 	}
 
+	var preprocessor bstream.PreprocessFunc
+	if a.Modules.BlockFilter != nil {
+		preprocessor = bstream.PreprocessFunc(func(blk *bstream.Block) (interface{}, error) {
+			return nil, a.Modules.BlockFilter(blk)
+		})
+	}
+
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
 	})
 
 	buffer := bstream.NewBuffer("sub-hub", zlog)
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
+		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, preprocessor, h)
 		return src
 	})
 
@@ -232,6 +243,7 @@ func (a *App) Run() error {
 
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosws.DfuseErrorHandler).Handler
 	corsMiddleware := eosws.NewCORSMiddleware()
+	compressionMiddleware := mux.MiddlewareFunc(eosws.CompressionMiddleware)
 	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
 		type authTier interface {
 			AuthenticatedTier() string
@@ -293,8 +305,8 @@ func (a *App) Run() error {
 	// Order of router definitions is important, prefix:(/a/b) must be defined before /a
 	router := mux.NewRouter()
 
-	// Root path to return 200
-	router.Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) { // needed for transitioning load balancers to /healthz without downtime
+	// Root path to return 200, needed for transitioning load balancers to /healthz without downtime
+	router.Path("/").HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { //
 		_, _ = w.Write([]byte("ok"))
 	})
 
@@ -324,6 +336,8 @@ func (a *App) Run() error {
 	if a.Config.AuthenticateNodeosAPI {
 		chainRouter.Use(authMiddleware)
 	}
+
+	chainRouter.Use(compressionMiddleware)
 	chainRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	chainRouter.Use(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -371,6 +385,7 @@ func (a *App) Run() error {
 	wsRouter.Path("/v1/stream").Handler(wsHandler)
 
 	/// Primary REST API endpoints
+	restRouter.Use(compressionMiddleware)
 	restRouter.Use(authMiddleware)
 	restRouter.Use(eosws.RESTTrackingMiddleware)
 	restRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
@@ -385,11 +400,13 @@ func (a *App) Run() error {
 		"eosws", "REST API",
 		false, true))
 	//////////////////////////////////////////////////////////////////////
+
 	restRouter.Path("/v0/search/transactions").Handler(searchQueryHandler)
 	restRouter.Path("/v0/block_id/by_time").Handler(rest.BlockTimeHandler(blockmetaClient))
 	restRouter.Path("/v0/transactions/{id}").Handler(rest.GetTransactionHandler(db))
 
 	// FluxDB (Chain State) REST API endpoints
+	statedbRestRouter.Use(compressionMiddleware)
 	statedbRestRouter.Use(authMiddleware)
 	statedbRestRouter.Use(eosws.RESTTrackingMiddleware)
 	statedbRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
@@ -414,10 +431,12 @@ func (a *App) Run() error {
 	statedbRestRouter.Path("/v0/state/tables/accounts").Handler(statedbProxy)
 	statedbRestRouter.Path("/v0/state/tables/scopes").Handler(statedbProxy)
 
+	historyRestRouter.Use(compressionMiddleware)
 	historyRestRouter.Use(eosws.RESTTrackingMiddleware)
 	historyRestRouter.Path("/v1/history/get_key_accounts").Methods("GET", "POST").Handler(rest.GetKeyAccounts(stateClient))
 
 	/// Rest routes (Eosq accessible only)
+	eosqRestRouter.Use(compressionMiddleware)
 	eosqRestRouter.Use(authMiddleware)
 	eosqRestRouter.Use(hasEosqTierMiddleware)
 	eosqRestRouter.Use(eosws.RESTTrackingMiddleware)
@@ -478,7 +497,7 @@ func (a *App) Run() error {
 
 	server := &http.Server{
 		Addr:     a.Config.HTTPListenAddr,
-		Handler:  handlers.CompressHandlerLevel(corsMiddleware(router), gzip.BestSpeed),
+		Handler:  corsMiddleware(router),
 		ErrorLog: errorLogger,
 	}
 

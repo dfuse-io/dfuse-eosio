@@ -18,19 +18,19 @@ func init() {
 		MetricsID:   "statedb",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/(fluxdb.*|dfuse-eosio/statedb.*)", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().Bool("statedb-enable-server-mode", true, "Enables flux server mode, launch a server")
-			cmd.Flags().Bool("statedb-enable-inject-mode", true, "Enables flux inject mode, writes into its database")
-			cmd.Flags().Bool("statedb-enable-reproc-sharder-mode", false, "[BATCH] Enables flux reproc shard mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set")
-			cmd.Flags().Bool("statedb-enable-reproc-injector-mode", false, "[BATCH] Enables flux reproc injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set")
-			cmd.Flags().Bool("statedb-enable-pipeline", true, "Enables fluxdb without a blocks pipeline, useful for running a development server (**do not** use this in prod)")
-			cmd.Flags().String("statedb-store-dsn", StateDBDSN, "kvdb connection string to State database")
+			cmd.Flags().Bool("statedb-enable-server-mode", true, "Enables StateDB server mode, launched HTTP & gRPC servers, if set to `false`, the service will not accept HTTP nor gRPC requests")
+			cmd.Flags().Bool("statedb-enable-inject-mode", true, "Enables StateDB inject mode, process new blocks writing state information into the database, if set to 'false', new state information will not be recorded!")
+			cmd.Flags().Bool("statedb-enable-reproc-sharder-mode", false, "[BATCH] Enables StateDB reprocessing sharder mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set")
+			cmd.Flags().Bool("statedb-enable-reproc-injector-mode", false, "[BATCH] Enables StateDB reprocessing injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set")
+			cmd.Flags().Bool("statedb-enable-pipeline", true, "[DEV] Enables StateDB without a blocks pipeline, useful for running a development server (**do not** use this in production)")
+			cmd.Flags().String("statedb-store-dsn", StateDBDSN, "KV database connection string for State database")
 			cmd.Flags().String("statedb-http-listen-addr", StateDBHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("statedb-grpc-listen-addr", StateDBGRPCServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("statedb-reproc-shard-store-url", "file://{dfuse-data-dir}/statedb/reproc-shards", "[BATCH] Storage url where all reproc shard write requests should be written to")
 			cmd.Flags().String("statedb-reproc-shard-scratch-directory", "", "[BATCH] Provide a scratch directory where sharder while write each element composing a shard to a temporary file instead of holding everything in RAM, trade-off between I/O bound and RAM bound")
 			cmd.Flags().Uint64("statedb-reproc-shard-count", 0, "[BATCH] Number of shards to split in (in 'reproc-sharder' mode), or join (in 'reproc-injector' mode)")
-			cmd.Flags().Uint64("statedb-reproc-shard-start-block-num", 0, "[BATCH] Start processing block logs at this height, must be on a 100-blocks boundary")
-			cmd.Flags().Uint64("statedb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing block logs at this height, must be on a 100-blocks boundary")
+			cmd.Flags().Uint64("statedb-reproc-shard-start-block-num", 0, "[BATCH] Start processing blocks at this height, must be on a 100-blocks boundary")
+			cmd.Flags().Uint64("statedb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing blocks at this height, must be on a 100-blocks boundary, inclusive value")
 			cmd.Flags().Uint64("statedb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
 			return nil
 		},

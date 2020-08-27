@@ -152,11 +152,13 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater Bat
 		}
 
 		tokenizedActions := map[uint32]prepedDoc{}
+		actionMatcher := blk.FilteringActionMatcher(trxTrace, isRequiredSystemAction)
 
 		for idx, actTrace := range trxTrace.ActionTraces {
-			if blk.FilteringApplied && !actTrace.FilteringMatched {
+			if !actionMatcher.Matched(actTrace.ExecutionIndex) {
 				continue
 			}
+
 			data := m.tokenizer.tokenize(actTrace)
 			// `block_num`, `trx_idx`: used for sorting
 			data["block_num"] = blk.Num()
@@ -215,6 +217,10 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater Bat
 		}
 	}
 	return nil
+}
+
+func isRequiredSystemAction(actTrace *pbcodec.ActionTrace) bool {
+	return actTrace.Receiver == "eosio" && actTrace.Action.Account == "eosio" && actTrace.Action.Name == "setabi"
 }
 
 func (m *BlockMapper) processRAMOps(ramOps []*pbcodec.RAMOp) map[string][]string {

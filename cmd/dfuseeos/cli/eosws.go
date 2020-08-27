@@ -60,6 +60,8 @@ func init() {
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
 				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
 				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
+			}, &eoswsApp.Modules{
+				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil
 		},
 	})
