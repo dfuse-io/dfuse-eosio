@@ -95,10 +95,10 @@ checks() {
   fi
 
   if ! command -v yarn &> /dev/null; then
-    echo "The 'yarn' command (version 1.12+) is required to build a version locally, install it following https://classic.yarnpkg.com/en/docs/install"
+    echo "The 'yarn' command (version 1.10+) is required to build a version locally, install it following https://classic.yarnpkg.com/en/docs/install"
     found_error=true
   else
-    if ! (yarn --version | grep -qE '1\.(1[3456789]|[2-9][0-9])'); then
+    if ! (yarn --version | grep -qE '1\.(1[[0-9]|[2-9][0-9])'); then
       echo "Your 'yarn' version (`yarn --version`) is too low, requires Yarn 1.12+, if you think it's a mistake, use '-s' flag to skip checks"
       found_error=true
     fi
