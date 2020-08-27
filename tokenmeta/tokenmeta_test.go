@@ -38,7 +38,7 @@ func TestTokenMeta_shouldProcessDbop(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			assert.Equal(t, test.expectValue, shouldProcessDbop(test.dbop))
+			assert.Equal(t, test.expectValue, shouldProcessDbop(test.dbop, pbcodec.AlwaysIncludedFilteringActionMatcher))
 		})
 	}
 

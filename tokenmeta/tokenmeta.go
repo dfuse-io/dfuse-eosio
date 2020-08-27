@@ -52,15 +52,16 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	muts := &cache.MutationsBatch{}
 	blk := block.ToNative().(*pbcodec.Block)
 
-	if (blk.Number % 120) == 0 {
-		zlog.Info("process blk 1/120", zap.String("block_id", block.ID()), zap.Uint64("blocker_number", block.Number))
+	if (blk.Number % 600) == 0 {
+		zlog.Info("process blk 1/600", zap.Stringer("block", block))
 	}
 
 	for _, trx := range blk.TransactionTraces() {
-		zlogger := zlog.With(zap.Uint64("blk_id", block.Num()), zap.String("trx_id", trx.Id))
+		zlogger := zlog.With(zap.String("trx_id", trx.Id))
+		actionMatcher := blk.FilteringActionMatcher(trx)
 
 		for _, dbop := range trx.DbOps {
-			if !shouldProcessDbop(dbop) {
+			if !shouldProcessDbop(dbop, actionMatcher) {
 				continue
 			}
 			zlog.Debug("processing dbop", zap.String("contract", dbop.Code), zap.String("table", dbop.TableName), zap.String("scope", dbop.Scope), zap.String("primary_key", dbop.PrimaryKey))
@@ -197,18 +198,12 @@ func (i *TokenMeta) Launch() error {
 	return nil
 }
 
-func shouldProcessDbop(dbop *pbcodec.DBOp) bool {
-	if dbop.TableName == string(AccountsTable) || dbop.TableName == string(StatTable) {
-		return true
+func shouldProcessDbop(dbop *pbcodec.DBOp, actionMatcher pbcodec.FilteringActionMatcher) bool {
+	if !actionMatcher.Matched(dbop.ActionIndex) {
+		return false
 	}
-	return false
-}
 
-func shouldProcessAction(actionTrace *pbcodec.ActionTrace) bool {
-	if actionTrace.Action.Name == "close" {
-		return true
-	}
-	return false
+	return dbop.TableName == string(AccountsTable) || dbop.TableName == string(StatTable)
 }
 
 func TokenToEOSSymbol(e *pbtokenmeta.Token) *eos.Symbol {

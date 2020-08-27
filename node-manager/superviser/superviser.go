@@ -148,6 +148,7 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlock
 			"wabt.hpp:.*misaligned reference":                                 logplugin.NoDisplay,
 			"controller.cpp:.*No existing chain state or fork database.":      zap.InfoLevel,
 			"controller.cpp:.*Initializing new blockchain with genesis state": zap.InfoLevel,
+			"platform_timer_accurac:.*Checktime timer":                        zap.InfoLevel,
 		})))
 	} else {
 		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, logger))

@@ -60,9 +60,7 @@ func init() {
 			cmd.Flags().Bool("node-manager-force-production", true, "Forces the production of blocks")
 			return nil
 		},
-		InitFunc: func(modules *launcher.Runtime) error {
-			// TODO: check if `~/.dfuse/binaries/nodeos-{ProducerNodeVersion}` exists, if not download from:
-			// curl https://abourget.keybase.pub/dfusebox/binaries/nodeos-{ProducerNodeVersion}
+		InitFunc: func(*launcher.Runtime) error {
 			if err := CheckNodeosInstallation(viper.GetString("node-manager-nodeos-path")); err != nil {
 				return err
 			}

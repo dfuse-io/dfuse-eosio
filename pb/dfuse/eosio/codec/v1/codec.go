@@ -164,9 +164,57 @@ func (b *Block) MigrateV1ToV2() {
 		// on append ce FilteredApplied à
 	}
 }
+type FilteringActionMatcher interface {
+	Matched(actionIndex uint32) bool
+}
+
+var AlwaysIncludedFilteringActionMatcher = filteringActionMatcherFunc(func(_ uint32) bool { return true })
+
+type filteringActionMatcherFunc func(actionIndex uint32) bool
+
+func (f filteringActionMatcherFunc) Matched(actionIndex uint32) bool {
+	return f(actionIndex)
+}
+
+type ActionMatcher func(actTrace *ActionTrace) bool
+
+func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace, requiredSystemActions ...ActionMatcher) FilteringActionMatcher {
+	if !b.FilteringApplied {
+		// If no filtering was ever applied, all action are assumed to be included
+		return AlwaysIncludedFilteringActionMatcher
+	}
+
+	matchingActionIndices := make(map[uint32]bool)
+	for _, actTrace := range trxTrace.ActionTraces {
+		if actTrace.FilteringMatched {
+			shouldInclude := true
+			if actTrace.FilteringMatchedSystemActionFilter && !isRequiredSystemAction(actTrace, requiredSystemActions) {
+				shouldInclude = false
+			}
+
+			if shouldInclude {
+				matchingActionIndices[actTrace.ExecutionIndex] = true
+			}
+		}
+	}
+
+	return filteringActionMatcherFunc(func(actionIndex uint32) bool {
+		return matchingActionIndices[actionIndex]
+	})
+}
+
+func isRequiredSystemAction(actTrace *ActionTrace, requiredSystemActions []ActionMatcher) bool {
+	for _, matcher := range requiredSystemActions {
+		if matcher(actTrace) {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (t *TransactionTrace) HasBeenReverted() bool {
-	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
+	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if not present to play safe
 	if t.Receipt == nil {
 		return true
 	}

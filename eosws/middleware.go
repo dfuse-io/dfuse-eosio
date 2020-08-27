@@ -15,6 +15,7 @@
 package eosws
 
 import (
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -36,6 +37,10 @@ type AuthFeatureChecker = func(ctx context.Context, credentials authenticator.Cr
 
 type AuthFeatureMiddleware struct {
 	checker AuthFeatureChecker
+}
+
+func CompressionMiddleware(next http.Handler) http.Handler {
+	return handlers.CompressHandlerLevel(next, gzip.BestSpeed)
 }
 
 func OpenCensusMiddleware(next http.Handler) http.Handler {

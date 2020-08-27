@@ -233,7 +233,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 			require.NoError(t, err)
 			go subscriptionHub.Launch()
 
-			validateOutput(t, reqID, test.expectedMsgFactory(reqID), conn)
+			validateOutput(t, reqID, test.expectedMsgFactory(reqID), conn, 5*time.Second)
 		})
 	}
 }
@@ -301,9 +301,9 @@ func newTestConnection(t *testing.T, handler http.Handler, options ...interface{
 	}
 }
 
-func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *websocket.Conn) {
+func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *websocket.Conn, timeout time.Duration) {
 	for _, expected := range expectedOutput {
-		output := nextMessage(t, reqID, conn)
+		output := nextMessage(t, reqID, conn, timeout)
 
 		// Let's not check content of message that are ignored
 		//fmt.Println("expected: ", expected)
@@ -313,10 +313,19 @@ func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *w
 	}
 }
 
-func nextMessage(t *testing.T, reqID string, conn *websocket.Conn) string {
+func nextMessage(t *testing.T, reqID string, conn *websocket.Conn, timeout time.Duration) string {
 	message := ""
 	for {
+		conn.SetReadDeadline(time.Now().Add(timeout))
 		_, r, err := conn.NextReader()
+		if err != nil {
+			if strings.HasSuffix(err.Error(), "i/o timeout") {
+				require.Fail(t, "timeout error", "We never received the expected WebSocket message in time (timeout of %s)", timeout)
+			} else {
+				require.NoError(t, err)
+			}
+		}
+
 		rawOutput, err := ioutil.ReadAll(r)
 		require.NoError(t, err)
 

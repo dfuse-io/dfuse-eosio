@@ -22,6 +22,7 @@ main() {
     esac
   done
   shift $((OPTIND-1))
+  [[ $1 = "--" ]] && shift
 
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data 1> /dev/null
@@ -32,13 +33,14 @@ main() {
   if [[ ! -d "dfuse-data" ]]; then
     # Each sharder generate all shards for a given range, this can be parallelize heavily as it depends only on `merged-blocks`
     echo "Generating statedb shards"
-    $dfuseeos -c sharder-0-1000.yaml start
+    $dfuseeos -c sharder-0-1000.yaml start "$@"
     echo ""
-    $dfuseeos -c sharder-1000-2000.yaml start
+    $dfuseeos -c sharder-1000-2000.yaml start "$@"
     echo ""
 
     echo "Sharder is done"
-    tree ./dfuse-data/storage/statedb-shards
+    $dfuseeos tools check statedb-reproc-sharder dfuse-data/storage/statedb-shards 3
+    echo ""
 
     # Injecting can be parallelize up to N where N is the number of generated shards (3 in this example)
     # Each injection instance runs sequentially for a given shard, but all shards can be injected in parallel.
@@ -47,20 +49,20 @@ main() {
     # based on the throughput of your underlying storage engine. We usually runs like 8 to 16 in parallel on
     # on heavy to medium networks.
     echo "Injecting statedb shards into storage"
-    $dfuseeos -c shard-injector-000.yaml start
+    $dfuseeos -c shard-injector-000.yaml start "$@"
     echo ""
 
-    $dfuseeos -c shard-injector-001.yaml start
+    $dfuseeos -c shard-injector-001.yaml start "$@"
     echo ""
 
-    $dfuseeos -c shard-injector-002.yaml start
+    $dfuseeos -c shard-injector-002.yaml start "$@"
     echo ""
 
     echo "Shard injector is done"
     echo ""
   fi
 
-  exec $dfuseeos -c server.yaml start
+  exec $dfuseeos -c server.yaml start "$@"
 }
 
 usage_error() {
@@ -74,7 +76,7 @@ usage_error() {
 }
 
 usage() {
-  echo "usage: start.sh [-c]"
+  echo "usage: start.sh [-c] [-- ... dfuseeos extra args]"
   echo ""
   echo "Start $(basename $ROOT) environment."
   echo ""

@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dmetrics"
 
 	"github.com/dfuse-io/derr"
@@ -50,16 +51,23 @@ type Config struct {
 	BootstrapBlockOffset uint64 // Block offset to ensure that we are not bootstrapping from StateDB on a reversible fork
 }
 
+type Modules struct {
+	BlockFilter func(blk *bstream.Block) error
+}
+
 type App struct {
 	*shutter.Shutter
-	config         *Config
+	config  *Config
+	modules *Modules
+
 	readinessProbe pbhealth.HealthClient
 }
 
-func New(config *Config) *App {
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
 		config:  config,
+		modules: modules,
 	}
 }
 
@@ -111,7 +119,7 @@ func (a *App) Run() error {
 	tmeta.OnTerminated(a.Shutdown)
 	a.OnTerminating(tmeta.Shutdown)
 
-	tmeta.SetupPipeline(startBlock, a.config.BlockStreamAddr, blocksStore)
+	tmeta.SetupPipeline(startBlock, a.modules.BlockFilter, a.config.BlockStreamAddr, blocksStore)
 
 	server := tokenmeta.NewServer(tokenCache)
 

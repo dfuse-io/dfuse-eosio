@@ -30,8 +30,9 @@ type Config struct {
 	TruncationEnabled bool
 	TruncationWindow  uint64
 
-	IncludeFilterExpr string
-	ExcludeFilterExpr string
+	IncludeFilterExpr              string
+	ExcludeFilterExpr              string
+	SystemActionsIncludeFilterExpr string
 }
 
 func New(config *Config) *App {
@@ -56,7 +57,7 @@ func (a *App) Run() error {
 
 	zlog.Info("writing to store", zap.String("store_url", a.config.DestBlocksStoreURL))
 
-	blockFilter, err := filtering.NewBlockFilter(a.config.IncludeFilterExpr, a.config.ExcludeFilterExpr)
+	blockFilter, err := filtering.NewBlockFilter(a.config.IncludeFilterExpr, a.config.ExcludeFilterExpr, a.config.SystemActionsIncludeFilterExpr)
 	if err != nil {
 		return err
 	}

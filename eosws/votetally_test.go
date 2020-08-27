@@ -89,7 +89,7 @@ func Test_onGetVoteTally(t *testing.T) {
 
 			conn.WriteMessage(1, []byte(c.msg))
 
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 
 		})
 	}

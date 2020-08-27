@@ -53,19 +53,17 @@ func dfuseInitE(cmd *cobra.Command, args []string) (err error) {
 
 	if runProducer {
 		userLog.Printf("")
-		userLog.Printf("Here the key pair controlling 'eosio' to interact with your local chain:")
+		userLog.Printf("Here are the key pair controlling 'eosio' to interact with your local chain:")
 		userLog.Printf("")
 		userLog.Printf("  Public Key:  EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV")
 		userLog.Printf("  Private Key: 5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3")
 	} else {
 		userLog.Printf("")
-		userLog.Printf("IMPORANT: Move the remote network's 'genesis.json' file in './mindreader' directory")
+		userLog.Printf("IMPORANT: Move the remote network's 'genesis.json' file in the './mindreader' directory")
 	}
 
 	userLog.Printf("")
-	userLog.Printf("Initialization completed, to kickstart your environment run:")
-	userLog.Printf("")
-	userLog.Printf("  dfuseeos start")
+	userLog.Printf("Initialization completed! To kickstart your environment, run: 'dfuseeos start'")
 
 	return nil
 }

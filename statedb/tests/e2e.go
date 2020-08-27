@@ -39,7 +39,7 @@ func e2eTest(t *testing.T, storeFactory StoreFactory, tester e2eTester) {
 
 	mapper := &statedb.BlockMapper{}
 
-	db := fluxdb.New(kvStore, mapper)
+	db := fluxdb.New(kvStore, nil, mapper)
 	defer db.Close()
 
 	handler := fluxdb.NewHandler(db)
