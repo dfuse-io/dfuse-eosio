@@ -115,6 +115,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
 				}
 
+				if acctSeqData.maxEntries == 0 {
+					continue
+				}
+
 				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
 					zlog.Debug("this block has already been processed for this account", zap.Uint64("block", blk.Num()), zap.String("account", acct))
 					continue
@@ -132,7 +136,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					return fmt.Errorf("error while writing action to store: %w", err)
 				}
 
-				acctSeqData.Increment(act.Receipt.GlobalSequence)
+				acctSeqData.historySeqNum++
+				acctSeqData.lastGlobalSeq = act.Receipt.GlobalSequence
+
 				ws.updateHistorySeq(acctUint, acctSeqData)
 			}
 		}
@@ -157,6 +163,9 @@ func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqD
 		// si le dernier que j'ai effacé était 500, delete 501 jusqu'à 1001
 		deleteSeq := acctSeqData.historySeqNum - acctSeqData.maxEntries
 
+		// THERE'S AN OFF BY ONE ISSUE HERE, WE NEVER DELETE THE historySeqNum == 0
+		// but I thought we didn't even WRITE that historySeqNum.. because we start that
+		// history at `1` when we create a new `sequenceData` (!)
 		if acctSeqData.lastDeletedSeq >= deleteSeq {
 			return acctSeqData.lastDeletedSeq, nil
 		} else {
@@ -182,7 +191,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 	out, err = ws.readSequenceData(ctx, account)
 	if err == store.ErrNotFound {
 		out = sequenceData{
-			historySeqNum: 1,
+			historySeqNum: 1, // FIXME: where is this initialized? How come are we writing some actions at index 0 ?!?
 			maxEntries:    ws.maxEntriesPerAccount,
 		}
 	} else if err != nil {

@@ -52,6 +52,7 @@ func (ws *Service) SetupSource() error {
 	var fileSourceStartBlockNum uint64
 	if checkpoint.LastWrittenBlockId != "" {
 		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(checkpoint.LastWrittenBlockId, checkpoint.LastWrittenBlockNum)))
+		fileSourceStartBlockNum = checkpoint.LastWrittenBlockNum
 	} else {
 		fsStartNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
 		if err != nil {
