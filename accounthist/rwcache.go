@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+
 type RWCache struct {
 	store.KVStore
 
@@ -50,6 +51,12 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 
 	var countFirstKeys, countLastKeys int
 	lastKeys := map[string][]byte{}
+	// FIXME: this is RISKY, because keys are written out of order. If
+	// that's the case we might write, for a given account, some
+	// out-of-order actions and their seqNum.  When we reboot, we
+	// won't properly get the highest, and we won't know there are
+	// holes below, for this shard.
+	// SOLUTION: sort the keys first, in which order?
 	for k, v := range c.puts {
 		bkey := []byte(k)
 		if c.isLastRow != nil && c.isLastRow(bkey) {
@@ -65,23 +72,23 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 		return err
 	}
 
-	// Put some rows last
-	for k, v := range lastKeys {
-		countLastKeys++
-		if err := c.KVStore.Put(ctx, []byte(k), v); err != nil {
-			return err
-		}
-	}
-	if err := c.KVStore.FlushPuts(ctx); err != nil {
-		return err
-	}
-
 	keys := make([][]byte, 0, len(c.deletes))
 	for k := range c.deletes {
 		keys = append(keys, []byte(k))
 	}
 
 	if err := c.KVStore.BatchDelete(ctx, keys); err != nil {
+		return err
+	}
+
+	for k, v := range lastKeys {
+		countLastKeys++
+		if err := c.KVStore.Put(ctx, []byte(k), v); err != nil {
+			return err
+		}
+	}
+
+	if err := c.KVStore.FlushPuts(ctx); err != nil {
 		return err
 	}
 

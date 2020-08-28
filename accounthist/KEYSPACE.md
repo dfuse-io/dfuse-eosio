@@ -20,10 +20,13 @@ put: [03] -> block 1
 
 block: 4
 
-02:00000ef3438a:ff:ffffffffffff8
-02:00000ef3438a:fe:fffffffffffff
-02:00000ef3438a:fe:ffffffffffffe
+02:00000ef3438a:ff:ffffffffff600 -> 1000
+02:00000ef3438a:ff:ffffffffffff7
+02:00000ef3438a:ff:ffffffffffff6
+02:00000ef3438a:fc:fffffffffffff
+02:00000ef3438a:fc:ffffffffffffe
 02:00000ef3438a:60:fffffffffffff
+
 
 02:00000ef3438a:ff:ffffffffffffe
 02:00000ef3438a:ff:fffffffffffff
@@ -38,13 +41,13 @@ put: [02][eosio][^00000002] -> action234,glob_seq
 put: [02][eosio][^00000003] -> action345
 #put: [01][eosio] -> seq=3
 
-put: [03][ff] -> block 4
-put: [04][ff] -> block 1
+put: [03][ff] -> firstblockofshard: 10000, target: 0 (infinity), block 2_000_000
+put: [03][fe] -> firstblockofshard: 5000, target: 9999, block 8000
+put: [03][f4] -> firstblockofshard: 1, target: 4999, block 4000
 
 block: 5
 
 put: [02][eosio][^00000004] -> action456
-#put: [01][eosio] -> seq=4
 del: [02][eosio][^00000001] -> action123
 
 put: [03] -> block 5

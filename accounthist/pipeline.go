@@ -9,48 +9,62 @@ import (
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 )
 
 func (ws *Service) SetupSource() error {
 	ctx := context.Background()
 
+	var startProcessingBlockNum uint64
+	gateType := bstream.GateInclusive
+
 	// Retrieved lastProcessedBlock must be in the shard's range, and that shouldn't
 	// change across invocations, or in the lifetime of the database.
-	lastProcessedBlock, err := ws.GetLastProcessedBlock(ctx)
+	checkpoint, err := ws.GetShardCheckpoint(ctx)
 	if err != nil {
-		return fmt.Errorf("could not get last processed block: %w", err)
+		return fmt.Errorf("fetching shard checkpoint: %w", err)
 	}
-
-	gateType := bstream.GateExclusive
-
-	if ws.startBlockNum != 0 && lastProcessedBlock < ws.startBlockNum {
-		lastProcessedBlock = ws.startBlockNum
-		gateType = bstream.GateInclusive
+	if checkpoint == nil {
+		startBlock := ws.startBlockNum
+		if startBlock <= bstream.GetProtocolFirstStreamableBlock {
+			startBlock = bstream.GetProtocolFirstStreamableBlock
+		}
+		zlog.Info("starting without checkpoint", zap.Int("shard_num", int(ws.shardNum)), zap.Uint64("block_num", startBlock))
+		checkpoint = &pbaccounthist.ShardCheckpoint{
+			InitialStartBlock: startBlock,
+		}
+		startProcessingBlockNum = startBlock
+	} else {
+		zlog.Info("starting from checkpoint", zap.Int("shard_num", int(ws.shardNum)), zap.String("block_id", checkpoint.LastWrittenBlockId), zap.Uint64("block_num", checkpoint.LastWrittenBlockNum))
+		startProcessingBlockNum = checkpoint.LastWrittenBlockNum
+		gateType = bstream.GateExclusive
 	}
-
-	if lastProcessedBlock <= bstream.GetProtocolFirstStreamableBlock {
-		lastProcessedBlock = bstream.GetProtocolFirstStreamableBlock
-		gateType = bstream.GateInclusive
-	}
-
-	fileSourceStartBlockNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, lastProcessedBlock)
-	if err != nil {
-		return err
-	}
+	checkpoint.TargetStopBlock = ws.stopBlockNum
+	ws.lastCheckpoint = checkpoint
 
 	// WARN: this is IRREVERSIBLE ONLY
-
-	gate := bstream.NewBlockNumGate(lastProcessedBlock, gateType, ws, bstream.GateOptionWithLogger(zlog))
-	gate.MaxHoldOff = 1000
 
 	options := []forkable.Option{
 		forkable.WithLogger(zlog),
 		forkable.WithFilters(forkable.StepIrreversible),
 	}
-	if previousIrreversibleID != "" {
-		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(previousIrreversibleID, fileSourceStartBlockNum)))
+
+	var fileSourceStartBlockNum uint64
+	if checkpoint.LastWrittenBlockId != "" {
+		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(checkpoint.LastWrittenBlockId, checkpoint.LastWrittenBlockNum)))
+	} else {
+		fsStartNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
+		if err != nil {
+			return err
+		}
+
+		if previousIrreversibleID != "" {
+			options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(previousIrreversibleID, fsStartNum)))
+		}
+		fileSourceStartBlockNum = fsStartNum
 	}
 
+	gate := bstream.NewBlockNumGate(startProcessingBlockNum, gateType, ws, bstream.GateOptionWithLogger(zlog))
 	forkableHandler := forkable.New(gate, options...)
 
 	preprocFunc := func(blk *bstream.Block) (interface{}, error) {
