@@ -351,6 +351,8 @@ github.com/dfuse-io/search v0.0.2-0.20200830152909-3ffcbdf6c282 h1:+Ihq6B1QNNl0W
 github.com/dfuse-io/search v0.0.2-0.20200830152909-3ffcbdf6c282/go.mod h1:+neGet95U3c0xohA07XqSOF0b+5LKZC+jDmJUiD6sfY=
 github.com/dfuse-io/search v0.0.2-0.20200831162323-222e2050e8f9 h1:uD8EizxIozZ2rg1NWbWP7KOd/dCu0EnapxNbdVnIPE8=
 github.com/dfuse-io/search v0.0.2-0.20200831162323-222e2050e8f9/go.mod h1:+neGet95U3c0xohA07XqSOF0b+5LKZC+jDmJUiD6sfY=
+github.com/dfuse-io/search v0.0.2-0.20200831190646-5e8ef5a63a2a h1:w9NYi24XTES/pMMHfD0GFPbdo8z9Vgy9vwnt0Jv4g2k=
+github.com/dfuse-io/search v0.0.2-0.20200831190646-5e8ef5a63a2a/go.mod h1:+neGet95U3c0xohA07XqSOF0b+5LKZC+jDmJUiD6sfY=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2/go.mod h1:TY7lgsDrNonQ7nUtwGK4En08cuG7eRrV743DZozvehk=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
