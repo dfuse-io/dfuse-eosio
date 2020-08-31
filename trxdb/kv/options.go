@@ -12,9 +12,7 @@ func (db *DB) SetLogger(logger *zap.Logger) error {
 }
 
 func (db *DB) SetPurgeableStore(ttl, purgeInterval uint64) error {
-	if traceEnabled {
-		zlog.Debug("applying pur")
-	}
+	zlog.Info("applying purgeable option")
 
 	if db.writeStore != nil {
 		db.writeStore = kvdbstore.NewPurgeableStore([]byte{TblTTL}, db.writeStore, ttl)

@@ -19,10 +19,12 @@ import "go.uber.org/zap"
 type Option func(db DB) error
 
 func WithLogger(logger *zap.Logger) Option {
+	type loggeableStore interface {
+		SetLogger(*zap.Logger) error
+	}
+
 	return func(db DB) error {
-		if d, ok := db.(interface {
-			SetLogger(*zap.Logger) error
-		}); ok {
+		if d, ok := db.(loggeableStore); ok {
 			return d.SetLogger(logger)
 		}
 		return nil
@@ -30,10 +32,12 @@ func WithLogger(logger *zap.Logger) Option {
 }
 
 func WithPurgeableStoreOption(ttl, purgeInterval uint64) Option {
+	type purgeableStore interface {
+		SetPurgeableStore(ttl, purgeInterval uint64) error
+	}
+
 	return func(db DB) error {
-		if d, ok := db.(interface {
-			SetPurgeableStore(ttl, purgeInterval uint64) error
-		}); ok {
+		if d, ok := db.(purgeableStore); ok {
 			return d.SetPurgeableStore(ttl, purgeInterval)
 		}
 		return nil

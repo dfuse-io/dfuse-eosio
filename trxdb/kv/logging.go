@@ -21,13 +21,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var traceEnabled bool
+var traceEnabled = os.Getenv("TRACE") == "true"
 var zlog *zap.Logger
 
 func init() {
 	logging.Register("github.com/dfuse-io/dfuse-eosio/trxdb/kv", &zlog)
-
-	if os.Getenv("TRACE") == "true" {
-		traceEnabled = true
-	}
 }
