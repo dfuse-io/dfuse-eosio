@@ -64,6 +64,7 @@ func init() {
 				GRPCListenAddr: viper.GetString("statedb-grpc-listen-addr"),
 			}, &statedbApp.Modules{
 				BlockFilter:        runtime.BlockFilter.TransformInPlace,
+				BlockMeta:          runtime.BlockMeta,
 				StartBlockResolver: runtime.Tracker.ResolveStartBlock,
 			}), nil
 		},

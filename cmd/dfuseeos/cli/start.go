@@ -89,17 +89,18 @@ func Start(dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create block filter: %w", err)
 	}
 
-	/// SETUP CHAIN TRACKER
+	// Block meta & chain tracker
+	var blockMeta pbblockmeta.BlockIDClient
 	tracker := bstream.NewTracker(250)
 
 	blockmetaAddr := viper.GetString("common-blockmeta-addr")
 	if blockmetaAddr != "" {
 		conn, err := dgrpc.NewInternalClient(blockmetaAddr)
 		if err != nil {
-			userLog.Warn("cannot get grpc connection to blockmeta, disabling this startBlockResolver for search indexer", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
+			userLog.Warn("cannot get grpc connection to blockmeta, some services will not leverage it, expect rough edges", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 		} else {
-			blockmetaCli := pbblockmeta.NewBlockIDClient(conn)
-			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockmetaCli)))
+			blockMeta = pbblockmeta.NewBlockIDClient(conn)
+			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockMeta)))
 		}
 	}
 
@@ -111,11 +112,10 @@ func Start(dataDir string, args []string) (err error) {
 		tracker.AddResolver(codec.BlockstoreStartBlockResolver(blocksStore))
 	}
 
-	////////
-
 	modules := &launcher.Runtime{
 		SearchDmeshClient: meshClient,
 		BlockFilter:       blockfilter,
+		BlockMeta:         blockMeta,
 		AbsDataDir:        dataDirAbs,
 		Tracker:           tracker,
 	}
