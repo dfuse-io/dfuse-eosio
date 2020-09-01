@@ -3,5 +3,5 @@ start:
   - accounthist
   flags:
     common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-dev1/v4
-    accounthist-enable-injection-mode: true
+    accounthist-enable-injector-mode: true
     accounthist-enable-server-mode: false

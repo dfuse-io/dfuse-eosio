@@ -24,7 +24,7 @@ type Config struct {
 	ShardNum             byte
 	MaxEntriesPerAccount uint64
 	FlushBlocksInterval  uint64
-	EnableInjection      bool
+	EnableInjector       bool
 	EnableServer         bool
 
 	StartBlockNum uint64
@@ -95,7 +95,7 @@ func (a *App) Run() error {
 		go server.Serve()
 	}
 
-	if a.config.EnableInjection {
+	if a.config.EnableInjector {
 		if err = service.SetupSource(); err != nil {
 			return fmt.Errorf("error setting up source: %w", err)
 		}
@@ -110,7 +110,7 @@ func (a *App) Run() error {
 }
 
 func (c *Config) validate() error {
-	if !c.EnableInjection && !c.EnableServer {
+	if !c.EnableInjector && !c.EnableServer {
 		return errors.New("both enable injection and enable server were disabled, this is invalid, at least one of them must be enabled, or both")
 	}
 

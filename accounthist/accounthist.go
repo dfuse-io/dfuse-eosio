@@ -349,11 +349,7 @@ func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData 
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, acctSeqData.historySeqNum)
 
-	zlog.Debug("writing action",
-		zap.Uint64("account", account),
-		zap.Stringer("action", actionTrace),
-		zap.Stringer("key", Key(key)),
-	)
+	zlog.Debug("writing action", zap.Stringer("account", EOSName(account)), zap.Stringer("key", Key(key)))
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()

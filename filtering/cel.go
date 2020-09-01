@@ -135,8 +135,8 @@ type actionTraceActivation struct {
 	trace      *pbcodec.ActionTrace
 	cachedData map[string]interface{}
 
-	trxScheduled bool
-	trxActionCount  int
+	trxScheduled   bool
+	trxActionCount int
 }
 
 func (a *actionTraceActivation) Parent() interpreter.Activation {
@@ -212,9 +212,8 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 // This must follow rules taken in `search/tokenization.go`, ideally we would share this, maybe would be a good idea to
 // put the logic in an helper method on type `pbcodec.PermissionLevel` directly.
 func tokenizeEOSAuthority(authorizations []*pbcodec.PermissionLevel) (out []string) {
-	out = make([]string, len(authorizations))
+	out = make([]string, len(authorizations)*2)
 	for i, auth := range authorizations {
-
 		out[i*2] = auth.Actor
 		out[i*2+1] = auth.Authorization()
 	}

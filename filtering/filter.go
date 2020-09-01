@@ -197,3 +197,7 @@ func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace
 	// We are included and NOT excluded, this transaction trace/action trace match the block filter
 	return true, false
 }
+
+func (f *BlockFilter) String() string {
+	return fmt.Sprintf("[include: %s, exclude: %s, system: %s]", f.IncludeProgram.code, f.ExcludeProgram.code, f.SystemActionsIncludeProgram.code)
+}

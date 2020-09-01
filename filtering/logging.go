@@ -7,13 +7,9 @@ import (
 	"go.uber.org/zap"
 )
 
-var traceEnabled = false
+var traceEnabled = os.Getenv("TRACE") == "true"
 var zlog *zap.Logger
 
 func init() {
 	logging.Register("github.com/dfuse-io/dfuse-eosio/filtering", &zlog)
-
-	if os.Getenv("TRACE") == "true" {
-		traceEnabled = true
-	}
 }

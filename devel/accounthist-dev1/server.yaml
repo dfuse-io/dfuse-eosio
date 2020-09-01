@@ -2,6 +2,6 @@ start:
   args:
   - accounthist
   flags:
-    accounthist-enable-injection-mode: false
+    accounthist-enable-injector-mode: false
     accounthist-enable-server-mode: true
     accounthist-grpc-listen-addr: :9000

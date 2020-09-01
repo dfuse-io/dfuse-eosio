@@ -302,6 +302,7 @@ func ActionTraceSetABI(t testing.T, account string, abi *eos.ABI, components ...
 func transformActionTrace(t testing.T, actTrace *pbcodec.ActionTrace, components []interface{}) *pbcodec.ActionTrace {
 	ignoreIfActionComponent := ignoreComponent(func(component interface{}) bool {
 		switch component.(type) {
+		case actionComponent:
 		case ActionData:
 		default:
 			return false
@@ -334,6 +335,39 @@ func CFAAction(t testing.T, pairName string, abi *eos.ABI, data string) ContextF
 	return ContextFreeAction(Action(t, pairName, abi, data))
 }
 
+type Authorization string
+
+func (a Authorization) apply(action *pbcodec.Action) {
+	parts := strings.Split(string(a), "@")
+	account := parts[0]
+
+	permission := "active"
+	if len(parts) > 1 {
+		permission = parts[1]
+	}
+
+	action.Authorization = append(action.Authorization, &pbcodec.PermissionLevel{
+		Actor:      account,
+		Permission: permission,
+	})
+}
+
+type actionComponent interface {
+	apply(action *pbcodec.Action)
+}
+
+type authorizations []string
+
+func Authorizations(elements ...string) authorizations {
+	return authorizations(elements)
+}
+
+func (a authorizations) apply(action *pbcodec.Action) {
+	for _, authorization := range a {
+		Authorization(authorization).apply(action)
+	}
+}
+
 func Action(t testing.T, pairName string, components ...interface{}) *pbcodec.Action {
 	parts := strings.Split(pairName, ":")
 	account := parts[0]
@@ -349,12 +383,28 @@ func Action(t testing.T, pairName string, components ...interface{}) *pbcodec.Ac
 		require.NoError(t, err)
 	}
 
-	return &pbcodec.Action{
+	action := &pbcodec.Action{
 		Account:  account,
 		Name:     actionName,
 		RawData:  rawData,
 		JsonData: data,
 	}
+
+	for _, component := range components {
+		switch v := component.(type) {
+		case actionComponent:
+			v.apply(action)
+		case *eos.ABI:
+		case ActionData:
+		case actionMatched:
+		case GlobalSequence:
+			// Ignored
+		default:
+			failInvalidComponent(t, "action", component)
+		}
+	}
+
+	return action
 }
 
 func findABIComponent(components []interface{}) *eos.ABI {

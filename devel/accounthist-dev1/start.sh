@@ -38,7 +38,7 @@ main() {
     # so writes are not flushed when not enough block has passed.
     #
     # The following call is blocking (due to usage of KILL_AFTER)
-    KILL_AFTER=15 $dfuseeos -c injector.yaml start "$@"
+    KILL_AFTER=${KILL_AFTER:-15} $dfuseeos -c injector.yaml start "$@"
   fi
 
   exec $dfuseeos -c server.yaml start "$@"
