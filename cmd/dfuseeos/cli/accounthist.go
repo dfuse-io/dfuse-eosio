@@ -23,6 +23,8 @@ func init() {
 			cmd.Flags().Int("accounthist-shard-num", 0, "[BATCH] Shard number, between 0 and 255 inclusive. Keep default for live process")
 			cmd.Flags().Int("accounthist-max-entries-per-account", 1000, "Number of actions to keep in history for each account")
 			cmd.Flags().Int("accounthist-flush-blocks-interval", 1000, "Flush to storage each X blocks.  Use 1 when live. Use a high number in batch, serves as checkpointing between restarts.")
+			cmd.Flags().Bool("accounthist-enable-injection-mode", true, "Enable mode where blocks are ingested, processed and saved to the database, when false, no write operations happen.")
+			cmd.Flags().Bool("accounthist-enable-server-mode", true, "Enable mode where the gRPC server is started and answers request(s), when false, the server is disabled and no requet(s) will be handled.")
 			cmd.Flags().Int("accounthist-start-block-num", 0, "[BATCH] Start at this block")
 			cmd.Flags().Int("accounthist-stop-block-num", 0, "[BATCH] Stop at this block (exclusive)")
 			return nil
@@ -46,6 +48,8 @@ func init() {
 				KvdbDSN:              mustReplaceDataDir(dfuseDataDir, viper.GetString("accounthist-dsn")),
 				BlocksStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				BlockstreamAddr:      blockstreamAddr,
+				EnableInjection:      viper.GetBool("accounthist-enable-injection-mode"),
+				EnableServer:         viper.GetBool("accounthist-enable-server-mode"),
 				ShardNum:             byte(shardNum),
 				MaxEntriesPerAccount: viper.GetUint64("accounthist-max-entries-per-account"),
 				FlushBlocksInterval:  flushBlocksInterval,
