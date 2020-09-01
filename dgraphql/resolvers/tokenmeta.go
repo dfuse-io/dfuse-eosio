@@ -113,11 +113,6 @@ func (r *Root) QueryTokens(ctx context.Context, args *TokensRequest) (*TokenConn
 		}, "token")))
 	}
 
-	count := int64(len(edges))
-	if count == 0 {
-		count = 1
-	}
-
 	//////////////////////////////////////////////////////////////////////////////////
 	// Billable event on GraphQL Query - One Request, One  Outbound Document per edge
 	// WARNING: Ingress / Egress bytess is taken care by the middleware
@@ -127,7 +122,7 @@ func (r *Root) QueryTokens(ctx context.Context, args *TokensRequest) (*TokenConn
 		Kind:           "GraphQL Query",
 		Method:         "Tokens",
 		RequestsCount:  1,
-		ResponsesCount: count,
+		ResponsesCount: countMinOne(len(edges)),
 	}, ctx)
 	//////////////////////////////////////////////////////////////////////
 
@@ -255,16 +250,12 @@ func (r *Root) QueryAccountBalances(ctx context.Context, args *AccountBalancesRe
 	// Billable event on GraphQL Query - One Request, Many Outbound Documents ???
 	// WARNING: Ingress / Egress bytess is taken care by the middleware
 	//////////////////////////////////////////////////////////////////////
-	count := int64(len(edges))
-	if count == 0 {
-		count = 1
-	}
 	dmetering.EmitWithContext(dmetering.Event{
 		Source:         "dgraphql",
 		Kind:           "GraphQL Query",
 		Method:         "AccountBalances",
 		RequestsCount:  1,
-		ResponsesCount: count,
+		ResponsesCount: countMinOne(len(edges)),
 	}, ctx)
 	//////////////////////////////////////////////////////////////////////
 
@@ -383,16 +374,12 @@ func (r *Root) QueryTokenBalances(ctx context.Context, args *TokenBalancesReques
 	// Billable event on GraphQL Query - One Request, Many Outbound Documents ???
 	// WARNING: Ingress / Egress bytess is taken care by the middleware
 	//////////////////////////////////////////////////////////////////////
-	count := int64(len(edges))
-	if count == 0 {
-		count = 1
-	}
 	dmetering.EmitWithContext(dmetering.Event{
 		Source:         "dgraphql",
 		Kind:           "GraphQL Query",
 		Method:         "TokenBalances",
 		RequestsCount:  1,
-		ResponsesCount: count,
+		ResponsesCount: countMinOne(len(edges)),
 	}, ctx)
 	//////////////////////////////////////////////////////////////////////
 

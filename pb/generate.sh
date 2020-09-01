@@ -33,6 +33,7 @@ function main() {
   generate "dfuse/eosio/funnel/v1/funnel.proto"
   generate "dfuse/eosio/search/v1/search.proto"
   generate "dfuse/eosio/tokenmeta/v1/tokenmeta.proto"
+  generate "dfuse/eosio/accounthist/v1/accounthist.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
   echo "dfuse-io/proto revision: `GIT_DIR=$PROTO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt

@@ -96,6 +96,10 @@ You should also take a look at our Docs:
 * [System Admin Guide](https://docs.dfuse.io/eosio/admin-guide/)
 * [Large Chains Preparation](https://docs.dfuse.io/eosio/admin-guide/large-chains-preparation/)
 
+## Filtering
+
+* See [Filtering](https://docs.dfuse.io/eosio/admin-guide/filtering/)
+
 ## Overview - Repository Map
 
 The glue:
@@ -125,7 +129,7 @@ See [Troubleshooting](./TROUBLESHOOTING.md)
 
 ## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our Code of Conduct, [CONVENTIONS.md](CONVENTIONS.md) for coding conventions, and processes for submitting pull requests.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our Code of Conduct & processes for submitting pull requests, and [CONVENTIONS.md](CONVENTIONS.md) for our coding conventions.
 
 ## License
 

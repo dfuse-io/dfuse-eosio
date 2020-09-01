@@ -30,7 +30,7 @@ func BlockDecoder(blk *bstream.Block) (interface{}, error) {
 	}
 
 	if blk.Version() != 1 {
-		return nil, fmt.Errorf("this decoder only knows about version 1, got %d", blk.Version())
+		return nil, fmt.Errorf("this decoder only knows about bstream.Block version 1, got %d", blk.Version())
 	}
 
 	block := new(pbcodec.Block)
@@ -51,7 +51,13 @@ func BlockDecoder(blk *bstream.Block) (interface{}, error) {
 	//
 	// We reconstruct the transaction & action count values
 
+	const MAX_SUPPORTED_PBCODEC_VERSION = 1
+	if block.Version > MAX_SUPPORTED_PBCODEC_VERSION {
+		return nil, fmt.Errorf("future block formats not supported, this code supports dfuse.eosio.codec.v1.Block version %d, received version %d", MAX_SUPPORTED_PBCODEC_VERSION, block.Version)
+	}
+
 	block.MigrateV0ToV1()
+	//block.MigrateV1ToV2()
 
 	return block, nil
 }

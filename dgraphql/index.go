@@ -17,20 +17,19 @@ package dgraphql
 import (
 	"fmt"
 
-	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
-
-	"go.uber.org/zap"
-
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
+	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"go.uber.org/zap"
 )
 
 type Config struct {
@@ -40,6 +39,7 @@ type Config struct {
 	ABICodecAddr      string
 	BlockMetaAddr     string
 	TokenmetaAddr     string
+	AccountHistAddr   string
 	KVDBDSN           string
 }
 
@@ -92,8 +92,15 @@ func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	rateLimiter, err := drateLimiter.New(f.config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
+	zlog.Info("creating accounthist grpc client", zap.String("accounthist_addr", f.config.AccountHistAddr))
+	accountHistConn, err := dgrpc.NewInternalClient(f.config.AccountHistAddr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+	}
+	accountHistClient := pbaccounthist.NewAccountHistoryClient(accountHistConn)
+
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient)
+	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient, accountHistClient)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

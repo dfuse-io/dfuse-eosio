@@ -27,6 +27,7 @@ import (
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/fluxdb"
 	appFluxdb "github.com/dfuse-io/fluxdb/app/fluxdb"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"go.uber.org/zap"
 )
 
@@ -39,6 +40,7 @@ type Config struct {
 
 type Modules struct {
 	BlockFilter        func(blk *bstream.Block) error
+	BlockMeta          pbblockmeta.BlockIDClient
 	StartBlockResolver bstream.StartBlockResolver
 }
 
@@ -56,11 +58,15 @@ func New(config *Config, modules *Modules) *App {
 	app.App = appFluxdb.New(
 		config.Config,
 		&appFluxdb.Modules{
-			BlockFilter:        modules.BlockFilter,
+			// Required dependencies
+			OnInjectMode:       app.startForInjectMode,
+			OnServerMode:       app.startForServeMode,
 			BlockMapper:        &statedb.BlockMapper{},
 			StartBlockResolver: modules.StartBlockResolver,
-			OnServerMode:       app.startForServeMode,
-			OnInjectMode:       app.startForInjectMode,
+
+			// Optional dependencies
+			BlockFilter: modules.BlockFilter,
+			BlockMeta:   modules.BlockMeta,
 		},
 	)
 

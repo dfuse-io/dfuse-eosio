@@ -57,7 +57,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 		}
 
 		exclusiveGateID := libID.ID()
-		if srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libID.Num() {
+		if srcTx != nil && srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libID.Num() {
 			exclusiveGateID = srcTx.ExecutionTrace.ProducerBlockId
 		}
 

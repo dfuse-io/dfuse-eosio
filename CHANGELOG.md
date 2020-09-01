@@ -9,6 +9,10 @@ date.
 
 # Unreleased
 
+### Added
+
+* Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
+
 ### Changed
 
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.

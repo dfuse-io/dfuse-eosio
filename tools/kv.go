@@ -40,6 +40,7 @@ func init() {
 	kvCmd.PersistentFlags().String("dsn", defaultBadger, "KVStore DSN")
 	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
 	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
+	kvPrefixCmd.Flags().Int("limit", 100, "limit the number of rows when doing prefix")
 }
 
 func kvPrefix(cmd *cobra.Command, args []string) (err error) {
@@ -47,7 +48,12 @@ func kvPrefix(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return fmt.Errorf("error decoding prefix %q: %s", args[0], err)
 	}
-	return getPrefix(prefix)
+
+	// WARN: I think this `limit` doesn't work!?!
+	viper.BindPFlag("limit", cmd.Flags().Lookup("limit"))
+	limit := viper.GetInt("limit")
+
+	return getPrefix(prefix, limit)
 }
 
 func kvScan(cmd *cobra.Command, args []string) (err error) {
@@ -65,6 +71,8 @@ func kvScan(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("error decoding range end %q: %s", args[1], err)
 	}
 
+	// WARN: I think this doesn't work!?!
+	viper.BindPFlag("limit", cmd.Flags().Lookup("limit"))
 	limit := viper.GetInt("limit")
 
 	it := kv.Scan(context.Background(), start, end, limit)
@@ -104,13 +112,13 @@ func get(key []byte) error {
 	return nil
 }
 
-func getPrefix(prefix []byte) error {
+func getPrefix(prefix []byte, limit int) error {
 	kv, err := store.New(viper.GetString("dsn"))
 	if err != nil {
 		return err
 	}
 
-	it := kv.Prefix(context.Background(), prefix, store.Unlimited)
+	it := kv.Prefix(context.Background(), prefix, limit)
 	for it.Next() {
 		item := it.Item()
 		printKVEntity(item.Key, item.Value, false, true)

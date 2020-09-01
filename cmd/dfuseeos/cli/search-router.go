@@ -24,6 +24,7 @@ func init() {
 			cmd.Flags().Bool("search-router-enable-retry", false, "Enables the router's attempt to retry a backend search if there is an error. This could have adverse consequences when search through the live")
 			cmd.Flags().Uint64("search-router-head-delay-tolerance", 0, "Number of blocks above a backend's head we allow a request query to be served (Live & Router)")
 			cmd.Flags().Uint64("search-router-lib-delay-tolerance", 0, "Number of blocks above a backend's lib we allow a request query to be served (Live & Router)")
+			cmd.Flags().Int64("search-router-truncation-low-block-num", 0, "Low block num at which data is truncated (for partially-sync'ed chains), negative is relative to head, 0 is not-truncated.")
 			return nil
 		},
 		FactoryFunc: func(modules *launcher.Runtime) (launcher.App, error) {
@@ -35,12 +36,13 @@ func init() {
 			eosSearch.RegisterHandlers(indexedTerms)
 
 			return routerApp.New(&routerApp.Config{
-				ServiceVersion:     viper.GetString("search-common-mesh-service-version"),
-				BlockmetaAddr:      viper.GetString("common-blockmeta-addr"),
-				GRPCListenAddr:     viper.GetString("search-router-grpc-listen-addr"),
-				HeadDelayTolerance: viper.GetUint64("search-router-head-delay-tolerance"),
-				LibDelayTolerance:  viper.GetUint64("search-router-lib-delay-tolerance"),
-				EnableRetry:        viper.GetBool("search-router-enable-retry"),
+				ServiceVersion:        viper.GetString("search-common-mesh-service-version"),
+				BlockmetaAddr:         viper.GetString("common-blockmeta-addr"),
+				GRPCListenAddr:        viper.GetString("search-router-grpc-listen-addr"),
+				HeadDelayTolerance:    viper.GetUint64("search-router-head-delay-tolerance"),
+				LibDelayTolerance:     viper.GetUint64("search-router-lib-delay-tolerance"),
+				EnableRetry:           viper.GetBool("search-router-enable-retry"),
+				TruncationLowBlockNum: viper.GetInt64("search-router-truncation-low-block-num"),
 			}, &routerApp.Modules{
 				Dmesh: modules.SearchDmeshClient,
 			}), nil

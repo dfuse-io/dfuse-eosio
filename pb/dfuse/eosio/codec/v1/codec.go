@@ -151,6 +151,19 @@ func (b *Block) MigrateV0ToV1() {
 	}
 }
 
+
+func (b *Block) MigrateV1ToV2() {
+	if b.Version != 1 {
+		return
+	}
+	b.Version = 2
+
+	if b.FilteringApplied {
+		// prendre filtering_include_filter_expr -> mettre dans un pbcodec.FilteringFilters{}
+		// hasher ceux qui sont trop gros? tous? pour tous les blocks où blockNum%100 != 0
+		// on append ce FilteredApplied à
+	}
+}
 type FilteringActionMatcher interface {
 	Matched(actionIndex uint32) bool
 }

@@ -37,7 +37,7 @@ curl -sS -XPOST localhost:13009/v1/snapshot_restore
 You can obtain the actual head block information seen by mindreader instance using:
 
 ```bash
-grpcurl -v -plaintext -d '{}' localhost:13010 dfuse.headinfo.v1.HeadInfo.GetHeadInfo
+grpcurl -plaintext -d '{}' localhost:13010 dfuse.headinfo.v1.HeadInfo.GetHeadInfo
 ```
 
 ## Relayer Stream
@@ -53,7 +53,7 @@ grpcurl -plaintext -d '{}' localhost:13011 dfuse.bstream.v1.BlockStream.Blocks |
 You can obtain the last irreversible Block ID as seen by the blockmeta component with:
 
 ```bash
-grpcurl -plaintext    -d '{}' localhost:13015 dfuse.blockmeta.v1.BlockID.LIBID
+grpcurl -plaintext -d '{}' localhost:13015 dfuse.blockmeta.v1.BlockID.LIBID
 ```
 
 ## Blockmeta Block Information
@@ -62,8 +62,23 @@ You can obtain information about a given block number (like if it's known to the
 blockmeta component with:
 
 ```bash
-grpcurl -plaintext    -d '{"blockNum":"545"}' localhost:13015 dfuse.blockmeta.v1.BlockID.NumToID
+grpcurl -plaintext -d '{"blockNum":"545"}' localhost:13015 dfuse.blockmeta.v1.BlockID.NumToID
 ```
+
+## Search Archive
+
+When you see a bunch of `unable to open read only indexes` due to a `cannot allocate memory` error:
+
+```log
+2020-08-27T13:59:53.518Z (search-archive) unable to open read only indexes (archive/pool.go:521){"idx_start_block": 32496000, "error": "opening scorch index: cannot allocate memory"}
+2020-08-27T13:59:53.518Z (search-archive) unable to open read only indexes (archive/pool.go:521){"idx_start_block": 32489000, "error": "cannot create new shard: missing boundaries info in bleve shard"}
+```
+
+You might have been hit by the limit of memory allocated to memory map files, which is what the underlying tool powering
+dfuse Search uses. This limit can be configured on the Linux kernel using `vm.max_map_count` config.
+
+You can test temporarly that it fixes the problem by issuing the command `sysctl -w vm.max_map_count=500000`. To make the
+setting permanent, edit or create the file `/etc/sysctl.conf` and add the config value to it.
 
 ## Can't find a solution?
 

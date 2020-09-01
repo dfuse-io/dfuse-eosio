@@ -26,7 +26,7 @@ func init() {
 			cmd.Flags().Bool("search-indexer-delete-after-upload", true, "Delete local indexes after uploading them")
 			cmd.Flags().Int("search-indexer-start-block", 0, "Start indexing from block num")
 			cmd.Flags().Uint("search-indexer-stop-block", 0, "Stop indexing at block num")
-			cmd.Flags().Bool("search-indexer-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stoip block")
+			cmd.Flags().Bool("search-indexer-enable-batch-mode", false, "Enabled the indexer in batch mode with a start & stop block")
 			cmd.Flags().Bool("search-indexer-verbose", false, "Verbose logging")
 			cmd.Flags().Bool("search-indexer-enable-index-truncation", false, "Enable index truncation, requires a relative --start-block (negative number)")
 			cmd.Flags().Uint64("search-indexer-shard-size", 200, "Number of blocks to store in a given Bleve index")

@@ -1,12 +1,35 @@
 type Query {
+  """
+  WARNING: This is a BETA Query. IT MIGHT STILL CHANGE.
+
+  Retrieve the last actions, that are irreversible, and that:
+  1) notified an account, or
+  2) was authorized by an account.
+
+  Results are _actions_, returned in reverse order (from recent to older actions).
+
+  NOTE: usually, the backing service of this method holds a _truncated_ window of history, per account.
+
+  Read the `cursor` in the response, and pass it back to `cursor` to continue paginating. This is a short-lived cursor, especially as the truncation window goes by.
+  """
+  getAccountHistoryActions(
+    "Account name to query for actions"
+    account: String!
+
+    "Maximum number of actions returned in this page.  Max limit allowed for this call is 1000"
+    limit: Int64 = 100
+
+    "Optional cursor to continue where you left off, taken from results of a previous call to this `getActions` query."
+    cursor: String
+  ): AccountHistoryActionsConnection!
+
+
     """
     Search the blockchain forward for transaction *execution traces* based on `query`.
 
-    When the returned `cursor` is empty, it means you have reached the end of the specified block
-    range.
+    When the returned `cursor` is empty, it means you have reached the end of the specified block range.
 
-    WARN: always consider the `undo` field in forward searches, which signal that the matching element
-    was in fact REMOVED from the chain because of blocks reorganization.
+    WARN: always consider the `undo` field in forward searches, which signal that the matching element was in fact REMOVED from the chain because of blocks reorganization.
 
     See also the streaming version under `Subscription`
     """

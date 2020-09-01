@@ -27,6 +27,7 @@ func init() {
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGRPCServingAddr, "Tokenmeta client endpoint url")
+			cmd.Flags().String("dgraphql-accounthist-addr", AccountHistGRPCServingAddr, "Account history client endpoint url")
 
 			return nil
 		},
@@ -39,6 +40,7 @@ func init() {
 				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
 				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
 				TokenmetaAddr:     viper.GetString("dgraphql-tokenmeta-addr"),
+				AccountHistAddr:   viper.GetString("dgraphql-accounthist-addr"),
 				KVDBDSN:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{

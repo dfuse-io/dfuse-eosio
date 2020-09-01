@@ -19,9 +19,9 @@ func init() {
 			cmd.Flags().Uint64("merged-filter-truncation-window", 0, "Number of blocks to keep history of filtered merged blocks. Used as start position when no filtered files exist.")
 			cmd.Flags().String("merged-filter-destination-blocks-store-url", FilteredBlocksStoreURL, "Object Store where to write filtered blocks store.  Sources from --common-blocks-store-url.")
 
-			cmd.Flags().Bool("merged-filter-batch-mode", false, "Use this to explicitly set start/stop block numbers for processing and ignore current chain head")
-			cmd.Flags().Uint64("merged-filter-batch-start-block", 0, "When running in batch mode, block number (rounded) where to start processing")
-			cmd.Flags().Uint64("merged-filter-batch-stop-block", 0, "When running in batch mode, block number (rounded) where to stop processing")
+			cmd.Flags().Bool("merged-filter-batch-mode", false, "[BATCH] Use this to explicitly set start/stop block numbers for processing and ignore current chain head")
+			cmd.Flags().Uint64("merged-filter-batch-start-block", 0, "[BATCH] When running in batch mode, block number (rounded) where to start processing")
+			cmd.Flags().Uint64("merged-filter-batch-stop-block", 0, "[BATCH] When running in batch mode, block number (rounded) where to stop processing")
 			return nil
 		},
 		InitFunc: func(runtime *launcher.Runtime) (err error) {

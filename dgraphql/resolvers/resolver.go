@@ -29,6 +29,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
@@ -59,12 +60,13 @@ type Root struct {
 	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
 	abiCodecClient           pbabicodec.DecoderClient
 	tokenmetaClient          pbtokenmeta.TokenMetaClient
+	accountHistClient        pbaccounthist.AccountHistoryClient
 
 	requestRateLimiter            rateLimiter.RateLimiter
 	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter, tokenmetaClient pbtokenmeta.TokenMetaClient) (interface{}, error) {
+func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter, tokenmetaClient pbtokenmeta.TokenMetaClient, accountHistClient pbaccounthist.AccountHistoryClient) (interface{}, error) {
 	return &Root{
 		searchClient:       searchClient,
 		trxsReader:         dbReader,
@@ -74,6 +76,7 @@ func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockM
 		blockmetaClient:    blockMetaClient,
 		abiCodecClient:     abiCodecClient,
 		requestRateLimiter: requestRateLimiter,
+		accountHistClient:  accountHistClient,
 	}, nil
 }
 
@@ -111,11 +114,6 @@ func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchAr
 	analytics.TrackUserEvent(ctx, "dgraphql", "QuerySearchTransactionsForward", "SearchArgs", args, "SearchResultsCount", len(res))
 	/////////////////////////////////////////////////////////////////////////
 
-	count := int64(len(res))
-	if count == 0 {
-		count = 1
-	}
-
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on GraphQL Query - One Request, Many Oubound Documents
 	// WARNING: Ingress / Egress bytess is taken care by the middleware
@@ -125,7 +123,7 @@ func (r *Root) QuerySearchTransactionsForward(ctx context.Context, args SearchAr
 		Kind:           "GraphQL Query",
 		Method:         "SearchTransactionsForward",
 		RequestsCount:  1,
-		ResponsesCount: count,
+		ResponsesCount: countMinOne(len(res)),
 	}, ctx)
 	//////////////////////////////////////////////////////////////////////
 
@@ -166,11 +164,6 @@ func (r *Root) QuerySearchTransactionsBackward(ctx context.Context, args SearchA
 	analytics.TrackUserEvent(ctx, "dgraphql", "QuerySearchTransactionsBackward", "SearchArgs", args, "SearchResultsCount", len(res))
 	/////////////////////////////////////////////////////////////////////////
 
-	count := int64(len(backwardized))
-	if count == 0 {
-		count = 1
-	}
-
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on GraphQL Query - One Request, Many Oubound Documents
 	// WARNING: Ingress / Egress bytess is taken care by the middleware
@@ -180,7 +173,7 @@ func (r *Root) QuerySearchTransactionsBackward(ctx context.Context, args SearchA
 		Kind:           "GraphQL Query",
 		Method:         "SearchTransactionsBackward",
 		RequestsCount:  1,
-		ResponsesCount: count,
+		ResponsesCount: countMinOne(len(backwardized)),
 	}, ctx)
 	//////////////////////////////////////////////////////////////////////
 
@@ -219,7 +212,6 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 		WithReversible:     !args.IrreversibleOnly,
 		Mode:               pbsearch.RouterRequest_PAGINATED,
 	})
-
 	if err != nil {
 		zlogger.Error("unable to start search transaction trace stream", zap.Error(err))
 		// TODO: extract `status` from the grpc call, and transform into meaningful
@@ -775,7 +767,7 @@ func (t *TransactionTrace) flattenActions() (out []*ActionTrace) {
 	}
 
 	for _, actionTrace := range t.t.ActionTraces {
-		out = append(out, newActionTrace(uint64(t.blockNum()), actionTrace, t, t.abiCodecClient))
+		out = append(out, newActionTrace(actionTrace, t, t.abiCodecClient))
 	}
 
 	for _, match := range t.matchingActionIndexes {
@@ -953,7 +945,6 @@ func (h *TransactionReceiptHeader) NetUsageWords() commonTypes.Uint32 {
 }
 
 type ActionTrace struct {
-	blockNum    uint64
 	actionTrace *pbcodec.ActionTrace
 	trxTrace    *TransactionTrace
 	matched     bool
@@ -961,10 +952,9 @@ type ActionTrace struct {
 	abiCodecClient pbabicodec.DecoderClient
 }
 
-func newActionTrace(blockNum uint64, actionTrace *pbcodec.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
+func newActionTrace(actionTrace *pbcodec.ActionTrace, trxTrace *TransactionTrace, abiCodecClient pbabicodec.DecoderClient) (out *ActionTrace) {
 	return &ActionTrace{
 		abiCodecClient: abiCodecClient,
-		blockNum:       blockNum,
 		actionTrace:    actionTrace,
 		trxTrace:       trxTrace,
 	}
@@ -996,6 +986,10 @@ func (t *ActionTrace) Authorization() (out []*PermissionLevel) { return t.Action
 func (t *ActionTrace) Data() *commonTypes.JSON                 { return t.Action().Data() }
 func (t *ActionTrace) JSON() *commonTypes.JSON                 { return t.Action().JSON() }
 func (t *ActionTrace) HexData() string                         { return t.Action().HexData() }
+func (t *ActionTrace) TrxID() string                           { return t.actionTrace.TransactionId }
+func (t *ActionTrace) BlockNum() types.Uint64                  { return types.Uint64(t.actionTrace.BlockNum) }
+func (t *ActionTrace) BlockID() string                         { return t.actionTrace.ProducerBlockId }
+func (t *ActionTrace) BlockTime() graphql.Time                 { return toTime(t.actionTrace.BlockTime) }
 
 func (t *ActionTrace) Console() string       { return t.actionTrace.Console }
 func (t *ActionTrace) ContextFree() bool     { return t.actionTrace.ContextFree }
@@ -1092,7 +1086,7 @@ func (t *ActionTrace) DBOps(args DBOpsArgs) (out []*DBOp) {
 			continue
 		}
 
-		out = append(out, newDBOp(dbOp, t.blockNum, t.abiCodecClient))
+		out = append(out, newDBOp(dbOp, t.actionTrace.BlockNum, t.abiCodecClient))
 	}
 
 	return

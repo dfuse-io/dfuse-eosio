@@ -1,3 +1,3 @@
-generate.sh - Mon Aug 24 16:35:39 EDT 2020 - maoueh
+generate.sh - Fri 28 Aug 2020 04:52:02 PM EDT - abourget
 dfuse-io/proto revision: ef66837f403a517d99068686f446708c9a04eb3a
-dfuse-io/proto-eosio revision: 0579dec40ac7ca769245bd40f2cf606860727821
+dfuse-io/proto-eosio revision: 1f2feb049bd4e4c7fe9a4356776a27e74e10ee11
