@@ -117,11 +117,9 @@ func (a *App) Run() error {
 	}
 
 	httpSrv := &http.Server{
-		Addr:         a.config.HTTPListenAddr,
-		Handler:      healthzHandler,
-		ReadTimeout:  10 * time.Millisecond,
-		WriteTimeout: 10 * time.Millisecond,
-		ErrorLog:     errorLogger,
+		Addr:     a.config.HTTPListenAddr,
+		Handler:  healthzHandler,
+		ErrorLog: errorLogger,
 	}
 	zlog.Info("starting webserver", zap.String("http_addr", a.config.HTTPListenAddr))
 	go httpSrv.ListenAndServe()
