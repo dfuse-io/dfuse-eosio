@@ -1,12 +1,12 @@
 package accounthist
 
 import (
+	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
-	"github.com/dfuse-io/dfuse-eosio/accounthist/server"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
@@ -24,6 +24,8 @@ type Config struct {
 	ShardNum             byte
 	MaxEntriesPerAccount uint64
 	FlushBlocksInterval  uint64
+	EnableInjector       bool
+	EnableServer         bool
 
 	StartBlockNum uint64
 	StopBlockNum  uint64
@@ -39,11 +41,7 @@ type App struct {
 	config  *Config
 	modules *Modules
 
-	service     *accounthist.Service
-	httpServer  *http.Server
-	blockFilter func(blk *bstream.Block) error
-
-	//shutdownFuncs []stopFunc
+	service *accounthist.Service
 }
 
 func New(config *Config, modules *Modules) *App {
@@ -57,9 +55,12 @@ func New(config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
-	conf := a.config
+	zlog.Info("starting accounthist app", zap.Reflect("config", a.config))
+	if err := a.config.validate(); err != nil {
+		return fmt.Errorf("invalid config: %w", err)
+	}
 
-	kvdb, err := store.New(conf.KvdbDSN)
+	kvdb, err := store.New(a.config.KvdbDSN)
 	if err != nil {
 		zlog.Fatal("could not create kvstore", zap.Error(err))
 	}
@@ -68,26 +69,50 @@ func (a *App) Run() error {
 		kvdb = accounthist.NewRWCache(kvdb)
 	}
 
-	blocksStore, err := dstore.NewDBinStore(conf.BlocksStoreURL)
+	blocksStore, err := dstore.NewDBinStore(a.config.BlocksStoreURL)
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(kvdb, blocksStore, a.modules.BlockFilter, a.config.ShardNum, a.config.MaxEntriesPerAccount, a.config.FlushBlocksInterval, a.config.StartBlockNum, a.config.StopBlockNum, a.modules.Tracker)
+	service := accounthist.NewService(
+		kvdb,
+		blocksStore,
+		a.modules.BlockFilter,
+		a.config.ShardNum,
+		a.config.MaxEntriesPerAccount,
+		a.config.FlushBlocksInterval,
+		a.config.StartBlockNum,
+		a.config.StopBlockNum,
+		a.modules.Tracker,
+	)
 
-	server := server.New(conf.GRPCListenAddr, service)
-	go server.Serve()
+	if a.config.EnableServer {
+		server := grpc.New(a.config.GRPCListenAddr, service)
 
-	if err = service.SetupSource(); err != nil {
-		return fmt.Errorf("error setting up source: %w", err)
+		a.OnTerminating(server.Terminate)
+		server.OnTerminated(a.Shutdown)
+
+		go server.Serve()
 	}
 
-	// FIXME: what's in a go routine, what's in `Launch()`, which returns an error, dunno dunno!
+	if a.config.EnableInjector {
+		if err = service.SetupSource(); err != nil {
+			return fmt.Errorf("error setting up source: %w", err)
+		}
 
-	a.OnTerminating(service.Shutdown)
-	service.OnTerminated(a.Shutdown)
+		a.OnTerminating(service.Shutdown)
+		service.OnTerminated(a.Shutdown)
 
-	go service.Launch()
+		go service.Launch()
+	}
+
+	return nil
+}
+
+func (c *Config) validate() error {
+	if !c.EnableInjector && !c.EnableServer {
+		return errors.New("both enable injection and enable server were disabled, this is invalid, at least one of them must be enabled, or both")
+	}
 
 	return nil
 }

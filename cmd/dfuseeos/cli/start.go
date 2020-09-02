@@ -80,7 +80,7 @@ func Start(dataDir string, args []string) (err error) {
 		return fmt.Errorf("unable to create dmesh client: %w", err)
 	}
 
-	blockfilter, err := filtering.NewBlockFilter(
+	blockFilter, err := filtering.NewBlockFilter(
 		viper.GetString("common-include-filter-expr"),
 		viper.GetString("common-exclude-filter-expr"),
 		viper.GetString("common-system-actions-include-filter-expr"),
@@ -88,6 +88,8 @@ func Start(dataDir string, args []string) (err error) {
 	if err != nil {
 		return fmt.Errorf("unable to create block filter: %w", err)
 	}
+
+	zlog.Info("configured block filter", zap.Stringer("block_filter", blockFilter))
 
 	// Block meta & chain tracker
 	var blockMeta pbblockmeta.BlockIDClient
@@ -114,7 +116,7 @@ func Start(dataDir string, args []string) (err error) {
 
 	modules := &launcher.Runtime{
 		SearchDmeshClient: meshClient,
-		BlockFilter:       blockfilter,
+		BlockFilter:       blockFilter,
 		BlockMeta:         blockMeta,
 		AbsDataDir:        dataDirAbs,
 		Tracker:           tracker,

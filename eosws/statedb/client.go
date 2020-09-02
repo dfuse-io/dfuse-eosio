@@ -58,14 +58,14 @@ type Global struct {
 	TotalRAMStake                  eos.Int64 `json:"total_ram_stake"`
 	LastProducerScheduleUpdate     string    `json:"last_producer_schedule_update"`
 	//LastPervoteBucketFill          int64     `json:"last_pervote_bucket_fill,string"`
-	PervoteBucket       int     `json:"pervote_bucket"`
-	PerblockBucket      int     `json:"perblock_bucket"`
-	TotalUnpaidBlocks   int     `json:"total_unpaid_blocks"`
-	TotalActivatedStake float64 `json:"total_activated_stake,string"`
+	PervoteBucket       eos.Int64   `json:"pervote_bucket"`
+	PerblockBucket      eos.Int64   `json:"perblock_bucket"`
+	TotalUnpaidBlocks   eos.Int64   `json:"total_unpaid_blocks"`
+	TotalActivatedStake eos.Float64 `json:"total_activated_stake"`
 	//ThreshActivatedStakeTime       int64     `json:"thresh_activated_stake_time,string"`
-	LastProducerScheduleSize int     `json:"last_producer_schedule_size"`
-	TotalProducerVoteWeight  float64 `json:"total_producer_vote_weight,string"`
-	LastNameClose            string  `json:"last_name_close"`
+	LastProducerScheduleSize eos.Int64   `json:"last_producer_schedule_size"`
+	TotalProducerVoteWeight  eos.Float64 `json:"total_producer_vote_weight"`
+	LastNameClose            string      `json:"last_name_close"`
 }
 
 type StateHelper interface {
@@ -103,7 +103,7 @@ func (f *DefaultFluxHelper) QueryTotalActivatedStake(ctx context.Context) (float
 		return 0, fmt.Errorf("umarshalling global chain info: %w", err)
 	}
 
-	return global.TotalActivatedStake, nil
+	return float64(global.TotalActivatedStake), nil
 }
 
 func (f *DefaultFluxHelper) QueryProducers(ctx context.Context) ([]Producer, float64, error) {

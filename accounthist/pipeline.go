@@ -79,12 +79,14 @@ func (ws *Service) SetupSource() error {
 		// Go through `blk`, loop all those transaction traces, all those actions
 		// and proto marshal them all in parallel
 		block := blk.ToNative().(*pbcodec.Block)
-		for _, tx := range block.TransactionTraces() {
-			if tx.HasBeenReverted() {
+		for _, trxTrace := range block.TransactionTraces() {
+			if trxTrace.HasBeenReverted() {
 				continue
 			}
-			for _, act := range tx.ActionTraces {
-				if act.Receipt == nil {
+
+			actionMatcher := block.FilteringActionMatcher(trxTrace)
+			for _, act := range trxTrace.ActionTraces {
+				if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
 					continue
 				}
 
@@ -101,17 +103,13 @@ func (ws *Service) SetupSource() error {
 		return out, nil
 	}
 
-	// another filter func:
-	// return map[uint64][]byte{}
-
 	fs := bstream.NewFileSource(
 		ws.blocksStore,
 		fileSourceStartBlockNum,
-		2, // parallel download count
+		2,
 		preprocFunc,
 		forkableHandler,
 		bstream.FileSourceWithLogger(zlog),
-		//bstream.FileSourceParallelPreprocessing(12),
 	)
 
 	ws.source = fs

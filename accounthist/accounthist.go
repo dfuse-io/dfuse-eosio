@@ -2,7 +2,6 @@ package accounthist
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"time"
@@ -49,26 +48,51 @@ type Service struct {
 	lastBlockWritten uint64
 }
 
-func NewService(kvdb store.KVStore, blocksStore dstore.Store, blockFilter func(blk *bstream.Block) error, shardNum byte, maxEntriesPerAccount, flushBlocksInterval uint64, startBlockNum, stopBlockNum uint64, tracker *bstream.Tracker) *Service {
+func NewService(
+	kvdb store.KVStore,
+	blocksStore dstore.Store,
+	blockFilter func(blk *bstream.Block) error,
+	shardNum byte,
+	maxEntriesPerAccount uint64,
+	flushBlocksInterval uint64,
+	startBlockNum uint64,
+	stopBlockNum uint64,
+	tracker *bstream.Tracker,
+) *Service {
 	return &Service{
-		maxEntriesPerAccount: maxEntriesPerAccount,
-		flushBlocksInterval:  flushBlocksInterval,
-		Shutter:              shutter.New(),
-		shardNum:             shardNum,
+		Shutter: shutter.New(),
+
 		kvStore:              kvdb,
 		blocksStore:          blocksStore,
 		blockFilter:          blockFilter,
-		historySeqMap:        make(map[uint64]sequenceData),
+		shardNum:             shardNum,
+		maxEntriesPerAccount: maxEntriesPerAccount,
+		flushBlocksInterval:  flushBlocksInterval,
 		startBlockNum:        startBlockNum,
 		stopBlockNum:         stopBlockNum,
 		tracker:              tracker,
+
+		historySeqMap: make(map[uint64]sequenceData),
 	}
 }
 
 func (ws *Service) Launch() {
-	ws.source.OnTerminating(ws.Shutdown)
-	ws.OnTerminating(ws.source.Shutdown)
+	ws.source.OnTerminating(func(err error) {
+		zlog.Info("block source shutted down, notifying service about its termination")
+		ws.Shutdown(err)
+	})
+
+	ws.OnTerminating(func(_ error) {
+		zlog.Info("service shutted down, shutting down block source")
+		ws.source.Shutdown(nil)
+	})
+
 	ws.source.Run()
+}
+
+func (ws *Service) Shutdown(err error) {
+	zlog.Info("service shutting down, about to terminate child services")
+	ws.Shutter.Shutdown(err)
 }
 
 func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
@@ -80,26 +104,23 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	isLastInStreak := fObj.StepIndex+1 == fObj.StepCount
 
 	if ws.stopBlockNum != 0 && blk.Num() >= ws.stopBlockNum {
-		// FLUSH all the things
 		if err := ws.forceFlush(ctx, block); err != nil {
 			ws.Shutdown(err)
 			return fmt.Errorf("flushing when stopping: %w", err)
 		}
+
 		ws.Shutdown(nil)
 		return nil
 	}
 
-	for _, tx := range block.TransactionTraces() {
-		if tx.HasBeenReverted() {
+	for _, trxTrace := range block.TransactionTraces() {
+		if trxTrace.HasBeenReverted() {
 			continue
 		}
 
-		for _, act := range tx.ActionTraces {
-			if act.Receipt == nil {
-				continue
-			}
-
-			if block.FilteringApplied && !act.FilteringMatched {
+		actionMatcher := block.FilteringActionMatcher(trxTrace)
+		for _, act := range trxTrace.ActionTraces {
+			if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
 				continue
 			}
 
@@ -120,7 +141,7 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 				}
 
 				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
-					zlog.Debug("this block has already been processed for this account", zap.Uint64("block", blk.Num()), zap.String("account", acct))
+					zlog.Debug("this block has already been processed for this account", zap.Stringer("block", blk), zap.String("account", acct))
 					continue
 				}
 
@@ -144,7 +165,6 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		}
 	}
 
-	// save block progress
 	if err := ws.writeLastProcessedBlock(ctx, block); err != nil {
 		return fmt.Errorf("error while saving block checkpoint")
 	}
@@ -154,6 +174,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	}
 
 	return nil
+}
+
+func (ws *Service) Terminate() {
+
 }
 
 func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqData sequenceData) (lastDeletedSeq uint64, err error) {
@@ -168,17 +192,18 @@ func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqD
 		// history at `1` when we create a new `sequenceData` (!)
 		if acctSeqData.lastDeletedSeq >= deleteSeq {
 			return acctSeqData.lastDeletedSeq, nil
-		} else {
-			for i := acctSeqData.lastDeletedSeq + 1; i <= deleteSeq; i++ {
-				// from acctSeqData.lastDeletedSeq up to `deleteSeq`
-				err := ws.deleteAction(ctx, account, i)
-				if err != nil {
-					return 0, fmt.Errorf("error while deleting action: %w", err)
-				}
-			}
-			return deleteSeq, nil
 		}
+
+		for i := acctSeqData.lastDeletedSeq + 1; i <= deleteSeq; i++ {
+			// from acctSeqData.lastDeletedSeq up to `deleteSeq`
+			err := ws.deleteAction(ctx, account, i)
+			if err != nil {
+				return 0, fmt.Errorf("error while deleting action: %w", err)
+			}
+		}
+		return deleteSeq, nil
 	}
+
 	return acctSeqData.lastDeletedSeq, nil
 }
 
@@ -254,10 +279,10 @@ func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntri
 		encodeActionKey(endKey, account+1, 0, 0)
 
 		zlog.Debug("reading sequence data",
-			//zap.String("account", account),
+			zap.Stringer("account", EOSName(account)),
 			zap.Int("shard_num", int(nextShardNum)),
-			zap.String("start_key", hex.EncodeToString(startKey)),
-			zap.String("end_key", hex.EncodeToString(endKey)),
+			zap.Stringer("start_key", Key(startKey)),
+			zap.Stringer("end_key", Key(endKey)),
 		)
 
 		ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
@@ -294,8 +319,8 @@ func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out se
 	encodeActionPrefixKey(key, account)
 
 	zlog.Debug("reading sequence data",
-		//zap.String("account", account),
-		zap.String("key", hex.EncodeToString(key)),
+		zap.Stringer("account", EOSName(account)),
+		zap.Stringer("key", Key(key)),
 	)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
@@ -324,11 +349,7 @@ func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData 
 	key := make([]byte, actionKeyLen)
 	encodeActionKey(key, account, ws.shardNum, acctSeqData.historySeqNum)
 
-	zlog.Debug("writing action",
-		zap.Uint64("account", account),
-		zap.Stringer("action", actionTrace),
-		//zap.String("key", hex.EncodeToString(key)),
-	)
+	zlog.Debug("writing action", zap.Stringer("account", EOSName(account)), zap.Stringer("key", Key(key)))
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
@@ -348,8 +369,8 @@ func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNum
 
 	zlog.Debug("deleting action",
 		zap.Uint64("sequence", sequenceNumber),
-		//zap.String("account", account),
-		zap.String("key", hex.EncodeToString(key)),
+		zap.Stringer("account", EOSName(account)),
+		zap.Stringer("key", Key(key)),
 	)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
