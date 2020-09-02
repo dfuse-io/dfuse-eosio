@@ -22,7 +22,7 @@ func init() {
 			cmd.Flags().Bool("statedb-enable-inject-mode", true, "Enables StateDB inject mode, process new blocks writing state information into the database, if set to 'false', new state information will not be recorded!")
 			cmd.Flags().Bool("statedb-enable-reproc-sharder-mode", false, "[BATCH] Enables StateDB reprocessing sharder mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set")
 			cmd.Flags().Bool("statedb-enable-reproc-injector-mode", false, "[BATCH] Enables StateDB reprocessing injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set")
-			cmd.Flags().Bool("statedb-enable-pipeline", true, "[DEV] Enables StateDB without a blocks pipeline, useful for running a development server (**do not** use this in production)")
+			cmd.Flags().Bool("statedb-enable-pipeline", true, "Enables the blocks pipeline to keep up with live data (only set to false when testing locally)")
 			cmd.Flags().String("statedb-store-dsn", StateDBDSN, "KV database connection string for State database")
 			cmd.Flags().String("statedb-http-listen-addr", StateDBHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("statedb-grpc-listen-addr", StateDBGRPCServingAddr, "Address to listen for incoming gRPC requests")
