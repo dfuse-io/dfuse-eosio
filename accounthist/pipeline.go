@@ -68,9 +68,24 @@ func (ws *Service) SetupSource() error {
 	gate := bstream.NewBlockNumGate(startProcessingBlockNum, gateType, ws, bstream.GateOptionWithLogger(zlog))
 	forkableHandler := forkable.New(gate, options...)
 
-	preprocFunc := func(blk *bstream.Block) (interface{}, error) {
-		if ws.blockFilter != nil {
-			if err := ws.blockFilter(blk); err != nil {
+	fs := bstream.NewFileSource(
+		ws.blocksStore,
+		fileSourceStartBlockNum,
+		2,
+		preprocessingFunc(ws.blockFilter),
+		forkableHandler,
+		bstream.FileSourceWithLogger(zlog),
+	)
+
+	ws.source = fs
+
+	return nil
+}
+
+func preprocessingFunc(blockFilter func(blk *bstream.Block) error) bstream.PreprocessFunc {
+	return func(blk *bstream.Block) (interface{}, error) {
+		if blockFilter != nil {
+			if err := blockFilter(blk); err != nil {
 				return nil, err
 			}
 		}
@@ -102,17 +117,4 @@ func (ws *Service) SetupSource() error {
 
 		return out, nil
 	}
-
-	fs := bstream.NewFileSource(
-		ws.blocksStore,
-		fileSourceStartBlockNum,
-		2,
-		preprocFunc,
-		forkableHandler,
-		bstream.FileSourceWithLogger(zlog),
-	)
-
-	ws.source = fs
-
-	return nil
 }

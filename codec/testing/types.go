@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	pbts "github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/mitchellh/go-testing-interface"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
@@ -38,6 +40,16 @@ func (h Hash) Bytes(t testing.T) []byte {
 	require.NoErrorf(t, err, "hash %q is to valid hex: %w", h)
 
 	return bytes
+}
+
+func AutoGlobalSequence() *autoGlobalSequence {
+	return &autoGlobalSequence{
+		count: atomic.NewUint64(0),
+	}
+}
+
+type autoGlobalSequence struct {
+	count *atomic.Uint64
 }
 
 type FilteredBlock struct {
@@ -94,6 +106,7 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 			pbblock.UnfilteredTransactionTraces = append(pbblock.UnfilteredTransactionTraces, v)
 		case *pbcodec.TrxOp:
 			pbblock.UnfilteredImplicitTransactionOps = append(pbblock.UnfilteredImplicitTransactionOps, v)
+		case *autoGlobalSequence:
 		case FilteredBlock:
 			// Performed at the very end
 		default:
@@ -102,6 +115,19 @@ func Block(t testing.T, blkID string, components ...interface{}) *pbcodec.Block 
 	}
 
 	pbblock.MigrateV0ToV1()
+
+	if component := findTypedComponent(components, (*autoGlobalSequence)(nil)); component != nil {
+		globalSequence := component.(*autoGlobalSequence)
+		for _, trxTrace := range pbblock.UnfilteredTransactionTraces {
+			for _, actTrace := range trxTrace.ActionTraces {
+				// We only deal with set Receipt, if it's not set, we assume the caller wanted it like it
+				if actTrace.Receipt != nil {
+					sequence := globalSequence.count.Inc()
+					actTrace.Receipt.GlobalSequence = sequence
+				}
+			}
+		}
+	}
 
 	// Need to go at the end to ensure we catch all transaction traces
 	if component := findComponent(components, func(component interface{}) bool { _, ok := component.(FilteredBlock); return ok }); component != nil {
@@ -235,8 +261,8 @@ type ActionIndex uint32
 type ExecutionIndex uint32
 type GlobalSequence uint64
 
-func ActionTrace(t testing.T, tripletName string, components ...interface{}) *pbcodec.ActionTrace {
-	parts := strings.Split(tripletName, ":")
+func ActionTrace(t testing.T, receiverAccountActionNameTriplet string, components ...interface{}) *pbcodec.ActionTrace {
+	parts := strings.Split(receiverAccountActionNameTriplet, ":")
 	receiver := parts[0]
 
 	var account, actionName string
@@ -426,6 +452,17 @@ func findActionData(components []interface{}) string {
 func findComponent(components []interface{}, doesMatch func(component interface{}) bool) interface{} {
 	for _, component := range components {
 		if doesMatch(component) {
+			return component
+		}
+	}
+
+	return nil
+}
+
+func findTypedComponent(components []interface{}, typeInfo interface{}) interface{} {
+	searchedType := reflect.TypeOf(typeInfo)
+	for _, component := range components {
+		if reflect.TypeOf(component) == searchedType {
 			return component
 		}
 	}
