@@ -248,7 +248,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 
 	out.maxEntries = maxEntriesForAccount
 
-	zlog.Debug("max entries for account", zap.Int("shard_num", int(ws.shardNum)), zap.Uint64("account", account), zap.Uint64("max_entries", maxEntriesForAccount))
+	zlog.Debug("max entries for account", zap.Int("shard_num", int(ws.shardNum)), zap.Stringer("account", EOSName(account)), zap.Uint64("max_entries", maxEntriesForAccount))
 
 	return
 }

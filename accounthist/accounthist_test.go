@@ -10,6 +10,7 @@ import (
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,10 +37,10 @@ func TestLiveShard(t *testing.T) {
 	)
 
 	results := listActions(t, s, "some1", nil)
-	require.Len(t, results, 0)
+	require.Len(t, results, 1)
 
-	// assert.Equal(t, "some1:00:0", results[0].StringCursor())
-	// assert.Equal(t, ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1)), results[0].actionTrace)
+	assert.Equal(t, "some1:00:0", results[0].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1)), results[0].actionTrace)
 }
 
 func streamBlocks(t *testing.T, s *Service, blocks ...*pbcodec.Block) {
