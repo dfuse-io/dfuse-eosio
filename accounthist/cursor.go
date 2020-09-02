@@ -16,7 +16,5 @@ func actionKeyToCursor(account uint64, key []byte) *pbaccounthist.Cursor {
 }
 
 func cursorToActionKey(cursor *pbaccounthist.Cursor) []byte {
-	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, cursor.Account, byte(cursor.ShardNum), cursor.SequenceNumber)
-	return key
+	return encodeActionKey(cursor.Account, byte(cursor.ShardNum), cursor.SequenceNumber)
 }

@@ -29,11 +29,9 @@ func (ws *Service) StreamActions(
 		querySeqNum = cursor.SequenceNumber - 1 // FIXME: CHECK BOUNDARIES, this is EXCLUSIVE, so do we -1, +1 ?
 	}
 
-	startKey := make([]byte, actionKeyLen)
-	encodeActionKey(startKey, account, queryShardNum, querySeqNum)
+	startKey := encodeActionKey(account, queryShardNum, querySeqNum)
 
-	endKey := make([]byte, actionKeyLen)
-	encodeActionKey(endKey, account, 0, 0)
+	endKey := encodeActionKey(account, 0, 0)
 
 	if limit == 0 || limit > ws.maxEntriesPerAccount {
 		limit = ws.maxEntriesPerAccount

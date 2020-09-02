@@ -124,7 +124,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 				continue
 			}
 
-			accts := map[string]bool{act.Receiver: true}
+			accts := map[string]bool{
+				act.Receiver: true,
+			}
 			for _, v := range act.Action.Authorization {
 				accts[v.Actor] = true
 			}
@@ -140,8 +142,13 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					continue
 				}
 
+				// when shard 1 starts it will based the first seen action on values in shard 0. the last aciotn for an account
+				// will always have a greater last global seq
 				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
-					zlog.Debug("this block has already been processed for this account", zap.Stringer("block", blk), zap.String("account", acct))
+					zlog.Debug("this block has already been processed for this account",
+						zap.Stringer("block", blk),
+						zap.String("account", acct),
+					)
 					continue
 				}
 
@@ -150,14 +157,14 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					return err
 				}
 
-				acctSeqData.lastDeletedSeq = lastDeletedSeq
+				acctSeqData.lastDeletedOrdinal = lastDeletedSeq
 				rawTrace := rawTraceMap[act.Receipt.GlobalSequence]
 
 				if err = ws.writeAction(ctx, acctUint, acctSeqData, act, rawTrace); err != nil {
 					return fmt.Errorf("error while writing action to store: %w", err)
 				}
 
-				acctSeqData.historySeqNum++
+				acctSeqData.nextOrdinal++
 				acctSeqData.lastGlobalSeq = act.Receipt.GlobalSequence
 
 				ws.updateHistorySeq(acctUint, acctSeqData)
@@ -181,20 +188,29 @@ func (ws *Service) Terminate() {
 }
 
 func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqData sequenceData) (lastDeletedSeq uint64, err error) {
-	if acctSeqData.historySeqNum+1 > acctSeqData.maxEntries {
+
+	// a) value of nextOrdinal:  5 (i.e. you have written 4 actions)
+	// b) value of nextOrdinal:  6 (i.e. you have written 5 actions)
+	// c) value of nextOrdinal:  12 (i.e. you have written 5 actions the last one being the 11th you saw) 11-10-9-8-7
+	// max entries is 5
+	// number of written actions is = nextOrdinal - 1
+	//if (acctSeqData.nextOrdinal - 1) > acctSeqData.maxEntries {
+	//
+	//}
+	if (acctSeqData.nextOrdinal - 1) > acctSeqData.maxEntries {
 		// j'écris 2001, va effacer 1001 (last deleted devrait être 1000, si y'avait aucune config change)
 		// si le dernier que j'ai effacé était 1500, perds pas ton temps
 		// si le dernier que j'ai effacé était 500, delete 501 jusqu'à 1001
-		deleteSeq := acctSeqData.historySeqNum - acctSeqData.maxEntries
 
+		deleteSeq := acctSeqData.nextOrdinal - acctSeqData.maxEntries
 		// THERE'S AN OFF BY ONE ISSUE HERE, WE NEVER DELETE THE historySeqNum == 0
 		// but I thought we didn't even WRITE that historySeqNum.. because we start that
 		// history at `1` when we create a new `sequenceData` (!)
-		if acctSeqData.lastDeletedSeq >= deleteSeq {
-			return acctSeqData.lastDeletedSeq, nil
+		if acctSeqData.lastDeletedOrdinal >= deleteSeq {
+			return acctSeqData.lastDeletedOrdinal, nil
 		}
 
-		for i := acctSeqData.lastDeletedSeq + 1; i <= deleteSeq; i++ {
+		for i := acctSeqData.lastDeletedOrdinal + 1; i <= deleteSeq; i++ {
 			// from acctSeqData.lastDeletedSeq up to `deleteSeq`
 			err := ws.deleteAction(ctx, account, i)
 			if err != nil {
@@ -204,7 +220,7 @@ func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqD
 		return deleteSeq, nil
 	}
 
-	return acctSeqData.lastDeletedSeq, nil
+	return acctSeqData.lastDeletedOrdinal, nil
 }
 
 func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out sequenceData, err error) {
@@ -216,8 +232,8 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 	out, err = ws.readSequenceData(ctx, account)
 	if err == store.ErrNotFound {
 		out = sequenceData{
-			historySeqNum: 1, // FIXME: where is this initialized? How come are we writing some actions at index 0 ?!?
-			maxEntries:    ws.maxEntriesPerAccount,
+			nextOrdinal: 1, // FIXME: where is this initialized? How come are we writing some actions at index 0 ?!?
+			maxEntries:  ws.maxEntriesPerAccount,
 		}
 	} else if err != nil {
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
@@ -238,8 +254,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 }
 
 func (ws *Service) GetShardCheckpoint(ctx context.Context) (*pbaccounthist.ShardCheckpoint, error) {
-	key := make([]byte, lastBlockKeyLen)
-	encodeLastProcessedBlockKey(key, ws.shardNum)
+	key := encodeLastProcessedBlockKey(ws.shardNum)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
@@ -273,10 +288,8 @@ func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntri
 			break
 		}
 
-		startKey := make([]byte, actionKeyLen)
-		encodeActionKey(startKey, account, nextShardNum, math.MaxUint64)
-		endKey := make([]byte, actionKeyLen)
-		encodeActionKey(endKey, account+1, 0, 0)
+		startKey := encodeActionKey(account, nextShardNum, math.MaxUint64)
+		endKey := encodeActionKey(account+1, 0, 0)
 
 		zlog.Debug("reading sequence data",
 			zap.Stringer("account", EOSName(account)),
@@ -315,27 +328,33 @@ func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntri
 
 // readSequenceData returns sequenceData for a given account, for the current shard
 func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out sequenceData, err error) {
-	key := make([]byte, actionPrefixKeyLen)
-	encodeActionPrefixKey(key, account)
+
+	// find the row with the biggest ordinal value for the current shard
+	startKey := encodeActionKey(account, ws.shardNum, math.MaxUint64)
+	endKey := encodeActionKey(account+1, 0, 0)
 
 	zlog.Debug("reading sequence data",
 		zap.Stringer("account", EOSName(account)),
-		zap.Stringer("key", Key(key)),
+		zap.Int("shard_num", int(ws.shardNum)),
+		zap.Stringer("start_key", Key(startKey)),
+		zap.Stringer("end_key", Key(endKey)),
 	)
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	it := ws.kvStore.Prefix(ctx, key, 1)
+	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
 	for it.Next() {
 		newact := &pbaccounthist.ActionRow{}
 		if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
 			return
 		}
+		// unique identifying global sequence per account
 		out.lastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
-		_, out.historySeqNum = decodeActionKeySeqNum(it.Item().Key)
-		out.historySeqNum++
-		out.lastDeletedSeq = newact.LastDeletedSeq
+		// internal sequence number for a given shard
+		_, out.nextOrdinal = decodeActionKeySeqNum(it.Item().Key)
+		out.nextOrdinal++
+		out.lastDeletedOrdinal = newact.LastDeletedSeq
 	}
 	if it.Err() != nil {
 		err = it.Err()
@@ -346,16 +365,19 @@ func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out se
 }
 
 func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData sequenceData, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
-	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, account, ws.shardNum, acctSeqData.historySeqNum)
+	key := encodeActionKey(account, ws.shardNum, acctSeqData.nextOrdinal)
 
 	zlog.Debug("writing action", zap.Stringer("account", EOSName(account)), zap.Stringer("key", Key(key)))
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
 
-	if acctSeqData.lastDeletedSeq != 0 {
-		appendSeq := &pbaccounthist.ActionRowAppend{LastDeletedSeq: acctSeqData.lastDeletedSeq}
+	if acctSeqData.lastDeletedOrdinal != 0 {
+		// this is will append the protobuf pbaccounthist.ActionRowAppend to the protobuf pbaccounthist.ActionRow, since
+		// both struct have the field last_deleted_seq with the same index (3), when unmarshalling the row
+		// into an pbaccounthist.ActionRow the value of `last_deleted_seq` in the appended pbaccounthist.ActionRowAppend will
+		// override the value defined in the pbaccounthist.ActionRow struct
+		appendSeq := &pbaccounthist.ActionRowAppend{LastDeletedSeq: acctSeqData.lastDeletedOrdinal}
 		encodedAppendSeq, _ := proto.Marshal(appendSeq)
 		rawTrace = append(rawTrace, encodedAppendSeq...)
 	}
@@ -364,8 +386,7 @@ func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData 
 }
 
 func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNumber uint64) error {
-	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, account, ws.shardNum, sequenceNumber)
+	key := encodeActionKey(account, ws.shardNum, sequenceNumber)
 
 	zlog.Debug("deleting action",
 		zap.Uint64("sequence", sequenceNumber),
@@ -380,8 +401,7 @@ func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNum
 }
 
 func (ws *Service) writeLastProcessedBlock(ctx context.Context, blk *pbcodec.Block) error {
-	key := make([]byte, lastBlockKeyLen)
-	encodeLastProcessedBlockKey(key, ws.shardNum)
+	key := encodeLastProcessedBlockKey(ws.shardNum)
 
 	ws.lastCheckpoint.LastWrittenBlockNum = blk.Num()
 	ws.lastCheckpoint.LastWrittenBlockId = blk.ID()
