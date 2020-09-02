@@ -41,7 +41,7 @@ func decodeActionKeySeqNum(key []byte) (byte, uint64) {
 
 	shardNum := key[9]
 	seqNum := binary.BigEndian.Uint64(key[10:])
-	return ^shardNum, ^seqNum
+	return shardNum, ^seqNum
 }
 
 func encodeLastProcessedBlockKey(shardNum byte) []byte {

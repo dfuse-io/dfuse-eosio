@@ -183,41 +183,35 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	return nil
 }
 
-func (ws *Service) Terminate() {
-
-}
-
 func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqData sequenceData) (lastDeletedSeq uint64, err error) {
+	// The `nextOrdinal` represents the next ordinal to be written, it's not written yet, so the
+	// actual last written value is the next ordinal minus one. The ordinal starts at 1, so it
+	// represents the count directly (until the ordinal goes over the limit).
+	lastWrittenOrdinal := acctSeqData.nextOrdinal - 1
 
-	// a) value of nextOrdinal:  5 (i.e. you have written 4 actions)
-	// b) value of nextOrdinal:  6 (i.e. you have written 5 actions)
-	// c) value of nextOrdinal:  12 (i.e. you have written 5 actions the last one being the 11th you saw) 11-10-9-8-7
-	// max entries is 5
-	// number of written actions is = nextOrdinal - 1
-	//if (acctSeqData.nextOrdinal - 1) > acctSeqData.maxEntries {
-	//
-	//}
-	if (acctSeqData.nextOrdinal - 1) > acctSeqData.maxEntries {
-		// j'écris 2001, va effacer 1001 (last deleted devrait être 1000, si y'avait aucune config change)
-		// si le dernier que j'ai effacé était 1500, perds pas ton temps
-		// si le dernier que j'ai effacé était 500, delete 501 jusqu'à 1001
+	// If the last written ordinal is bigger than the max allowed entries for this account, adjust our sliding window by deleting anything below least recent ordinal
+	if lastWrittenOrdinal > acctSeqData.maxEntries {
+		// Don't forget, we are in a sliding window setup, so if last written was 12, assuming max entry of 5,
+		// we have normally a window composed of ordinals [8, 9, 10, 11, 12], so anything from 7 and downwards should
+		// be deleted.
+		leastRecentOrdinal := lastWrittenOrdinal - acctSeqData.maxEntries
 
-		deleteSeq := acctSeqData.nextOrdinal - acctSeqData.maxEntries
-		// THERE'S AN OFF BY ONE ISSUE HERE, WE NEVER DELETE THE historySeqNum == 0
-		// but I thought we didn't even WRITE that historySeqNum.. because we start that
-		// history at `1` when we create a new `sequenceData` (!)
-		if acctSeqData.lastDeletedOrdinal >= deleteSeq {
+		// Assuming for this account that the last deleted ordinal is already higher or equal to our least
+		// recent ordinal, it means there is nothing to do since everything below this last deleted ordinal
+		// should already be gone.
+		if acctSeqData.lastDeletedOrdinal >= leastRecentOrdinal {
 			return acctSeqData.lastDeletedOrdinal, nil
 		}
 
-		for i := acctSeqData.lastDeletedOrdinal + 1; i <= deleteSeq; i++ {
-			// from acctSeqData.lastDeletedSeq up to `deleteSeq`
+		// Let's assume our last deleted ordinal was 5, let's delete everything from 5 up and including 7
+		zlog.Debug("deleting all actions between last deleted and now least recent ordinal", zap.Uint64("last_deleted_ordinal", acctSeqData.lastDeletedOrdinal), zap.Uint64("least_recent_ordinal", leastRecentOrdinal))
+		for i := acctSeqData.lastDeletedOrdinal + 1; i <= leastRecentOrdinal; i++ {
 			err := ws.deleteAction(ctx, account, i)
 			if err != nil {
 				return 0, fmt.Errorf("error while deleting action: %w", err)
 			}
 		}
-		return deleteSeq, nil
+		return leastRecentOrdinal, nil
 	}
 
 	return acctSeqData.lastDeletedOrdinal, nil
@@ -231,10 +225,9 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 
 	out, err = ws.readSequenceData(ctx, account)
 	if err == store.ErrNotFound {
-		out = sequenceData{
-			nextOrdinal: 1, // FIXME: where is this initialized? How come are we writing some actions at index 0 ?!?
-			maxEntries:  ws.maxEntriesPerAccount,
-		}
+		zlog.Debug("account never seen before, initializing a new sequence data", zap.Stringer("account", EOSName(account)))
+		out.nextOrdinal = 1
+		out.maxEntries = ws.maxEntriesPerAccount
 	} else if err != nil {
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
 		return
@@ -247,7 +240,6 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 	}
 
 	out.maxEntries = maxEntriesForAccount
-
 	zlog.Debug("max entries for account", zap.Int("shard_num", int(ws.shardNum)), zap.Stringer("account", EOSName(account)), zap.Uint64("max_entries", maxEntriesForAccount))
 
 	return
@@ -331,7 +323,7 @@ func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out se
 
 	// find the row with the biggest ordinal value for the current shard
 	startKey := encodeActionKey(account, ws.shardNum, math.MaxUint64)
-	endKey := encodeActionKey(account+1, 0, 0)
+	endKey := store.Key(encodeActionPrefixKey(account)).PrefixNext()
 
 	zlog.Debug("reading sequence data",
 		zap.Stringer("account", EOSName(account)),
@@ -344,22 +336,24 @@ func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out se
 	defer cancel()
 
 	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
-	for it.Next() {
-		newact := &pbaccounthist.ActionRow{}
-		if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
-			return
-		}
-		// unique identifying global sequence per account
-		out.lastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
-		// internal sequence number for a given shard
-		_, out.nextOrdinal = decodeActionKeySeqNum(it.Item().Key)
-		out.nextOrdinal++
-		out.lastDeletedOrdinal = newact.LastDeletedSeq
+	hasNext := it.Next()
+	if !hasNext && it.Err() != nil {
+		return out, fmt.Errorf("scan last action: %w", it.Err())
 	}
-	if it.Err() != nil {
-		err = it.Err()
+
+	if !hasNext {
+		return out, store.ErrNotFound
+	}
+
+	newact := &pbaccounthist.ActionRow{}
+	if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
 		return
 	}
+
+	_, out.nextOrdinal = decodeActionKeySeqNum(it.Item().Key)
+	out.nextOrdinal++
+	out.lastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
+	out.lastDeletedOrdinal = newact.LastDeletedSeq
 
 	return
 }
@@ -388,11 +382,13 @@ func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData 
 func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNumber uint64) error {
 	key := encodeActionKey(account, ws.shardNum, sequenceNumber)
 
-	zlog.Debug("deleting action",
-		zap.Uint64("sequence", sequenceNumber),
-		zap.Stringer("account", EOSName(account)),
-		zap.Stringer("key", Key(key)),
-	)
+	if traceEnabled {
+		zlog.Debug("deleting action",
+			zap.Uint64("sequence", sequenceNumber),
+			zap.Stringer("account", EOSName(account)),
+			zap.Stringer("key", Key(key)),
+		)
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()

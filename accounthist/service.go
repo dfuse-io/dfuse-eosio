@@ -22,7 +22,7 @@ func (ws *Service) StreamActions(
 ) error {
 	logger := logging.Logger(ctx, zlog)
 
-	queryShardNum := byte(255)
+	queryShardNum := byte(0x00)
 	querySeqNum := uint64(math.MaxUint64)
 	if cursor != nil {
 		queryShardNum = byte(cursor.ShardNum)

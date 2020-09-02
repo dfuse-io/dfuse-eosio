@@ -22,7 +22,7 @@ func TestLiveShard(t *testing.T) {
 		shardNum:             0,
 		maxEntriesPerAccount: 2,
 		flushBlocksInterval:  1,
-		kvStore:              kvStore,
+		kvStore:              NewRWCache(kvStore),
 		historySeqMap:        map[uint64]sequenceData{},
 		lastCheckpoint:       &pbaccounthist.ShardCheckpoint{},
 	}
@@ -39,7 +39,7 @@ func TestLiveShard(t *testing.T) {
 	results := listActions(t, s, "some1", nil)
 	require.Len(t, results, 1)
 
-	assert.Equal(t, "some1:00:0", results[0].StringCursor())
+	assert.Equal(t, "some1:00:1", results[0].StringCursor())
 	assert.Equal(t, ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1)), results[0].actionTrace)
 }
 
@@ -75,96 +75,3 @@ func listActions(t *testing.T, s *Service, account string, cursor *pbaccounthist
 
 	return out
 }
-
-// type testKV struct {
-// 	store.KVStore
-// 	puts    []kv
-// 	deletes [][]byte
-
-// 	scans    []*scanCall
-// 	prefixes []*prefixCall
-// 	flushes  int
-// }
-
-// type kv struct {
-// 	key, value []byte
-// }
-
-// type scanCall struct {
-// 	startKey []byte
-// 	endKey   []byte
-// 	result   []store.KV
-// }
-
-// type prefixCall struct {
-// 	prefix []byte
-// 	result []store.KV
-// }
-
-// func (m *testKV) Put(ctx context.Context, key, value []byte) error {
-// 	m.puts = append(m.puts, kv{key, value})
-// 	return nil
-// }
-
-// func (m *testKV) TestScan(result []store.KV) *scanCall {
-// 	call := &scanCall{
-// 		result: result,
-// 	}
-// 	m.scans = append(m.scans, call)
-// 	return call
-// }
-
-// func (m *testKV) Scan(ctx context.Context, start, end []byte, limit int) *store.Iterator {
-// 	fmt.Println("CALLING SCAN")
-// 	call := m.scans[0]
-// 	m.scans = m.scans[1:]
-
-// 	call.startKey = start
-// 	call.endKey = end
-
-// 	it := store.NewIterator(ctx)
-// 	go func() {
-// 		for _, res := range call.result {
-// 			it.PushItem(res)
-// 		}
-// 		it.PushFinished()
-// 	}()
-// 	return it
-// }
-
-// func (m *testKV) TestPrefix(result []store.KV) *prefixCall {
-// 	call := &prefixCall{
-// 		result: result,
-// 	}
-// 	m.prefixes = append(m.prefixes, call)
-// 	return call
-// }
-
-// func (m *testKV) Prefix(ctx context.Context, prefix []byte, limit int) *store.Iterator {
-// 	fmt.Println("CALL PREFIX")
-// 	call := m.prefixes[0]
-// 	m.prefixes = m.prefixes[1:]
-
-// 	call.prefix = prefix
-
-// 	it := store.NewIterator(ctx)
-// 	go func() {
-// 		for _, res := range call.result {
-// 			it.PushItem(res)
-// 		}
-// 		it.PushFinished()
-// 	}()
-// 	return it
-// }
-
-// func (m *testKV) DeleteBatch(ctx context.Context, keys [][]byte) error {
-// 	for _, key := range keys {
-// 		m.deletes = append(m.deletes, key)
-// 	}
-// 	return nil
-// }
-
-// func (m *testKV) FlushPuts(ctx context.Context) error {
-// 	m.flushes++
-// 	return nil
-// }
