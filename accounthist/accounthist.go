@@ -7,13 +7,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
-	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 )
@@ -43,9 +41,14 @@ type Service struct {
 
 	tracker *bstream.Tracker
 
-	lastWrite        time.Time
-	lastCheckpoint   *pbaccounthist.ShardCheckpoint
-	lastBlockWritten uint64
+	lastCheckpoint *pbaccounthist.ShardCheckpoint
+
+	lastWrittenBlock *lastWrittenBlock
+}
+
+type lastWrittenBlock struct {
+	blockNum  uint64
+	writtenAt time.Time
 }
 
 func NewService(
@@ -93,98 +96,6 @@ func (ws *Service) Launch() {
 func (ws *Service) Shutdown(err error) {
 	zlog.Info("service shutting down, about to terminate child services")
 	ws.Shutter.Shutdown(err)
-}
-
-func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
-	ctx := context.Background()
-
-	block := blk.ToNative().(*pbcodec.Block)
-	fObj := obj.(*forkable.ForkableObject)
-	rawTraceMap := fObj.Obj.(map[uint64][]byte)
-	isLastInStreak := fObj.StepIndex+1 == fObj.StepCount
-
-	if ws.stopBlockNum != 0 && blk.Num() >= ws.stopBlockNum {
-		zlog.Info("stop block num reached, flushing all writes",
-			zap.Uint64("stop_block_num", ws.stopBlockNum),
-			zap.Uint64("current_block_num", blk.Num()),
-		)
-		if err := ws.forceFlush(ctx, block); err != nil {
-			ws.Shutdown(err)
-			return fmt.Errorf("flushing when stopping: %w", err)
-		}
-
-		ws.Shutdown(nil)
-		return nil
-	}
-
-	for _, trxTrace := range block.TransactionTraces() {
-		if trxTrace.HasBeenReverted() {
-			continue
-		}
-
-		actionMatcher := block.FilteringActionMatcher(trxTrace)
-		for _, act := range trxTrace.ActionTraces {
-			if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
-				continue
-			}
-
-			accts := map[string]bool{
-				act.Receiver: true,
-			}
-			for _, v := range act.Action.Authorization {
-				accts[v.Actor] = true
-			}
-
-			for acct := range accts {
-				acctUint := eos.MustStringToName(acct)
-				acctSeqData, err := ws.getSequenceData(ctx, acctUint)
-				if err != nil {
-					return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
-				}
-
-				if acctSeqData.maxEntries == 0 {
-					continue
-				}
-
-				// when shard 1 starts it will based the first seen action on values in shard 0. the last aciotn for an account
-				// will always have a greater last global seq
-				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
-					zlog.Debug("this block has already been processed for this account",
-						zap.Stringer("block", blk),
-						zap.String("account", acct),
-					)
-					continue
-				}
-
-				lastDeletedSeq, err := ws.deleteStaleRows(ctx, acctUint, acctSeqData)
-				if err != nil {
-					return err
-				}
-
-				acctSeqData.lastDeletedOrdinal = lastDeletedSeq
-				rawTrace := rawTraceMap[act.Receipt.GlobalSequence]
-
-				if err = ws.writeAction(ctx, acctUint, acctSeqData, act, rawTrace); err != nil {
-					return fmt.Errorf("error while writing action to store: %w", err)
-				}
-
-				acctSeqData.nextOrdinal++
-				acctSeqData.lastGlobalSeq = act.Receipt.GlobalSequence
-
-				ws.updateHistorySeq(acctUint, acctSeqData)
-			}
-		}
-	}
-
-	if err := ws.writeLastProcessedBlock(ctx, block); err != nil {
-		return fmt.Errorf("error while saving block checkpoint")
-	}
-
-	if err := ws.flush(ctx, block, isLastInStreak); err != nil {
-		return fmt.Errorf("error while flushing: %w", err)
-	}
-
-	return nil
 }
 
 func (ws *Service) deleteStaleRows(ctx context.Context, account uint64, acctSeqData sequenceData) (lastDeletedSeq uint64, err error) {
@@ -309,7 +220,7 @@ func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntri
 		var rows int
 		for it.Next() {
 			rows++
-			currentShardNum, historySeqNum := decodeActionKeySeqNum(it.Item().Key)
+			_, currentShardNum, historySeqNum := decodeActionKeySeqNum(it.Item().Key)
 			seenActions += historySeqNum
 
 			if seenActions >= ws.maxEntriesPerAccount {
@@ -330,44 +241,8 @@ func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntri
 	return ws.maxEntriesPerAccount - seenActions, nil
 }
 
-// readSequenceData returns sequenceData for a given account, for the current shard
 func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out sequenceData, err error) {
-
-	// find the row with the biggest ordinal value for the current shard
-	startKey := encodeActionKey(account, ws.shardNum, math.MaxUint64)
-	endKey := store.Key(encodeActionPrefixKey(account)).PrefixNext()
-
-	zlog.Info("reading last sequence data for current shard",
-		zap.Stringer("account", EOSName(account)),
-		zap.Int("current_shard_num", int(ws.shardNum)),
-		zap.Stringer("start_key", Key(startKey)),
-		zap.Stringer("end_key", Key(endKey)),
-	)
-
-	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
-	defer cancel()
-
-	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
-	hasNext := it.Next()
-	if !hasNext && it.Err() != nil {
-		return out, fmt.Errorf("scan last action: %w", it.Err())
-	}
-
-	if !hasNext {
-		return out, store.ErrNotFound
-	}
-
-	newact := &pbaccounthist.ActionRow{}
-	if err = proto.Unmarshal(it.Item().Value, newact); err != nil {
-		return
-	}
-
-	_, out.nextOrdinal = decodeActionKeySeqNum(it.Item().Key)
-	out.nextOrdinal++
-	out.lastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
-	out.lastDeletedOrdinal = newact.LastDeletedSeq
-
-	return
+	return shardLastSequenceData(ctx, ws.kvStore, account, ws.shardNum)
 }
 
 func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData sequenceData, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
@@ -429,14 +304,23 @@ func (ws *Service) flush(ctx context.Context, blk *pbcodec.Block, lastInStreak b
 	realtimeFlush := time.Since(blk.MustTime()) < 20*time.Minute && lastInStreak
 	onFlushIntervalBoundary := blk.Num()%ws.flushBlocksInterval == 0
 	if realtimeFlush || onFlushIntervalBoundary {
-		if !ws.lastWrite.IsZero() {
-			blocks := blk.Num() - ws.lastBlockWritten
-			timeDelta := time.Since(ws.lastWrite)
+
+		if ws.lastWrittenBlock != nil {
+			blocks := blk.Num() - ws.lastWrittenBlock.blockNum
+			timeDelta := time.Since(ws.lastWrittenBlock.writtenAt)
 			deltaInSeconds := float64(timeDelta) / float64(time.Second)
 			blocksPerSec := float64(blocks) / deltaInSeconds
-			zlog.Info("block throughput", zap.Float64("blocks_per_secs", blocksPerSec))
+			zlog.Info("block throughput",
+				zap.Float64("blocks_per_secs", blocksPerSec),
+				zap.Uint64("last_written_block_num", ws.lastWrittenBlock.blockNum),
+				zap.Uint64("current_block_num", blk.Num()),
+				zap.Time("last_written_block_at", ws.lastWrittenBlock.writtenAt),
+			)
 		}
-		ws.lastWrite = time.Now()
+		ws.lastWrittenBlock = &lastWrittenBlock{
+			blockNum:  blk.Num(),
+			writtenAt: time.Now(),
+		}
 		return ws.forceFlush(ctx, blk)
 	}
 	return nil

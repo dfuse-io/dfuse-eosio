@@ -32,3 +32,27 @@ func TestActionKey(t *testing.T) {
 		key1Bytes,
 	)
 }
+
+func Test_decodeActionKeySeqNum(t *testing.T) {
+	account, shardNum, ordinalNum := decodeActionKeySeqNum([]byte{
+		0x2,
+		0x0, 0x0, 0x0, 0x0, 0x0, 0x60, 0xa4, 0x91,
+		0x01,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+	})
+	mamaUint, _ := eos.StringToName("mama")
+	assert.Equal(t, mamaUint, account)
+	assert.Equal(t, byte(1), shardNum)
+	assert.Equal(t, uint64(1), ordinalNum)
+
+	account, shardNum, ordinalNum = decodeActionKeySeqNum([]byte{
+		0x2,
+		0x20, 0x29, 0x32, 0xc9, 0x4c, 0x83, 0x30, 0x55,
+		0x02,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xff,
+	})
+	eoscanadacomUint, _ := eos.StringToName("eoscanadacom")
+	assert.Equal(t, eoscanadacomUint, account)
+	assert.Equal(t, byte(2), shardNum)
+	assert.Equal(t, uint64(256), ordinalNum)
+}

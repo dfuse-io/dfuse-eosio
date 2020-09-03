@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
 type RWCache struct {
 	store.KVStore
 
@@ -93,7 +92,12 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 	}
 
 	d0 := time.Since(t0)
-	zlog.Info("flushed keys to storage", zap.Int("put_first_keys", countFirstKeys), zap.Int("put_last_keys", countLastKeys), zap.Int("deleted_keys", len(keys)), zap.Duration("time_delta", d0))
+	zlog.Info("flushed keys to storage",
+		zap.Int("put_first_keys", countFirstKeys),
+		zap.Int("put_last_keys", countLastKeys),
+		zap.Int("deleted_keys", len(keys)),
+		zap.Duration("time_delta", d0),
+	)
 
 	c.puts = map[string][]byte{}
 	c.deletes = map[string]struct{}{}
