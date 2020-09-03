@@ -64,7 +64,6 @@ func Test_onGetVoteTally(t *testing.T) {
 
 			NowFunc = func() time.Time {
 				t := time.Time{}
-				fmt.Println("time : ", t)
 				return t
 			}
 

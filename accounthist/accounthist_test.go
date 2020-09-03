@@ -1,173 +1,88 @@
 package accounthist
 
 import (
-	"context"
-	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/bstream/forkable"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/dfuse-io/kvdb/store"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestSharding(t *testing.T) {
-	// ct.Block(t, "00000001aa", ct.FilteredBlock{
-	// 	UnfilteredStats: ct.Counts{2, 2, 2},
-	// 	FilteredStats:   ct.Counts{1, 1, 1},
-	// },
-	// 	ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount", ct.ActionMatched)),
-	// ),
+func TestLiveShard(t *testing.T) {
+	kvStore, cleanup := getKVTestFactory(t)
+	defer cleanup()
 
-	fObj := &forkable.ForkableObject{Obj: map[uint64][]byte{}, StepIndex: 0, StepCount: 1}
-
-	kv := &testKV{}
 	s := &Service{
-		shardNum:             1,
+		shardNum:             0,
 		maxEntriesPerAccount: 2,
 		flushBlocksInterval:  1,
-		kvStore:              kv,
+		kvStore:              NewRWCache(kvStore),
 		historySeqMap:        map[uint64]sequenceData{},
 		lastCheckpoint:       &pbaccounthist.ShardCheckpoint{},
 	}
-	scall1 := kv.TestScan([]store.KV{})
-	pcall1 := kv.TestPrefix([]store.KV{})
 
-	scall2 := kv.TestScan([]store.KV{})
-	pcall2 := kv.TestPrefix([]store.KV{})
+	autoGlobalSequence := ct.AutoGlobalSequence()
 
-	require.NoError(t, s.ProcessBlock(ct.ToBstreamBlock(t, ct.Block(t, "00000001a",
-		ct.TrxTrace(t, ct.ActionTrace(t, "............1:some:thing", ct.GlobalSequence(1))),
-		ct.TrxTrace(t, ct.ActionTrace(t, "............2:some:thing", ct.GlobalSequence(1))),
-	)), fObj))
+	streamBlocks(t, s,
+		ct.Block(t, "00000001aa", autoGlobalSequence,
+			ct.TrxTrace(t, ct.ActionTrace(t, "some1:some:thing")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some2:some:thing")),
+		),
+	)
 
-	fmt.Println("MAMA", s.historySeqMap)
-	assert.Equal(t, uint64(1), s.historySeqMap[1].historySeqNum)
-	assert.Equal(t, []byte{
-		0x2,
-		0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0xff,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-	}, scall1.startKey)
-	assert.Equal(t, []byte{
-		0x2,
-		0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-	}, pcall1.prefix)
+	results := listActions(t, s, "some1", nil)
+	require.Len(t, results, 1)
 
-	assert.Equal(t, []byte{
-		0x2,
-		0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-		0xff,
-		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-	}, scall2.startKey)
-	assert.Equal(t, []byte{
-		0x2,
-		0x2, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-	}, pcall2.prefix)
-
-	// require.NoError(t, s.ProcessBlock(ct.ToBstreamBlock(t, ct.Block(t, "00000002a",
-	// 	ct.TrxTrace(t, ct.ActionTrace(t, "1:some:thing")),
-	// 	ct.TrxTrace(t, ct.ActionTrace(t, "2:some:thing")),
-	// )), fObj))
-
-	// process a shard 0
-	// two blocks
-	// two action traces on two different accounts per block
-	// maxEntries = 3
-	// process shard 1
+	assert.Equal(t, "some1:00:1", results[0].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1)), results[0].actionTrace)
 }
 
-type testKV struct {
-	store.KVStore
-	puts    []kv
-	deletes [][]byte
+func TestLiveShard_DeleteWindow(t *testing.T) {
+	kvStore, cleanup := getKVTestFactory(t)
+	defer cleanup()
 
-	scans    []*scanCall
-	prefixes []*prefixCall
-	flushes  int
-}
-
-type kv struct {
-	key, value []byte
-}
-
-type scanCall struct {
-	startKey []byte
-	endKey   []byte
-	result   []store.KV
-}
-
-type prefixCall struct {
-	prefix []byte
-	result []store.KV
-}
-
-func (m *testKV) Put(ctx context.Context, key, value []byte) error {
-	m.puts = append(m.puts, kv{key, value})
-	return nil
-}
-
-func (m *testKV) TestScan(result []store.KV) *scanCall {
-	call := &scanCall{
-		result: result,
+	s := &Service{
+		shardNum:             0,
+		maxEntriesPerAccount: 2,
+		flushBlocksInterval:  1,
+		kvStore:              NewRWCache(kvStore),
+		historySeqMap:        map[uint64]sequenceData{},
+		lastCheckpoint:       &pbaccounthist.ShardCheckpoint{},
 	}
-	m.scans = append(m.scans, call)
-	return call
-}
 
-func (m *testKV) Scan(ctx context.Context, start, end []byte, limit int) *store.Iterator {
-	fmt.Println("CALLING SCAN")
-	call := m.scans[0]
-	m.scans = m.scans[1:]
+	autoGlobalSequence := ct.AutoGlobalSequence()
 
-	call.startKey = start
-	call.endKey = end
+	streamBlocks(t, s,
+		ct.Block(t, "00000001aa", autoGlobalSequence,
+			ct.TrxTrace(t, ct.ActionTrace(t, "some1:some:thing1")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some2:some:thing2")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some2:some:thing3")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some2:some:thing4")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some2:some:thing5")),
+		),
 
-	it := store.NewIterator(ctx)
-	go func() {
-		for _, res := range call.result {
-			it.PushItem(res)
-		}
-		it.PushFinished()
-	}()
-	return it
-}
+		ct.Block(t, "00000002aa", autoGlobalSequence,
+			ct.TrxTrace(t, ct.ActionTrace(t, "some1:some:bing1")),
+			ct.TrxTrace(t, ct.ActionTrace(t, "some1:some:bing2")),
+		),
+	)
 
-func (m *testKV) TestPrefix(result []store.KV) *prefixCall {
-	call := &prefixCall{
-		result: result,
-	}
-	m.prefixes = append(m.prefixes, call)
-	return call
-}
+	results := listActions(t, s, "some1", nil)
+	require.Len(t, results, 2)
 
-func (m *testKV) Prefix(ctx context.Context, prefix []byte, limit int) *store.Iterator {
-	fmt.Println("CALL PREFIX")
-	call := m.prefixes[0]
-	m.prefixes = m.prefixes[1:]
+	assert.Equal(t, "some1:00:3", results[0].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some1:some:bing2", ct.GlobalSequence(7)), results[0].actionTrace)
 
-	call.prefix = prefix
+	assert.Equal(t, "some1:00:2", results[1].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some1:some:bing1", ct.GlobalSequence(6)), results[1].actionTrace)
 
-	it := store.NewIterator(ctx)
-	go func() {
-		for _, res := range call.result {
-			it.PushItem(res)
-		}
-		it.PushFinished()
-	}()
-	return it
-}
+	results = listActions(t, s, "some2", nil)
+	require.Len(t, results, 2)
 
-func (m *testKV) DeleteBatch(ctx context.Context, keys [][]byte) error {
-	for _, key := range keys {
-		m.deletes = append(m.deletes, key)
-	}
-	return nil
-}
+	assert.Equal(t, "some2:00:4", results[0].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some2:some:thing5", ct.GlobalSequence(5)), results[0].actionTrace)
 
-func (m *testKV) FlushPuts(ctx context.Context) error {
-	m.flushes++
-	return nil
+	assert.Equal(t, "some2:00:3", results[1].StringCursor())
+	assert.Equal(t, ct.ActionTrace(t, "some2:some:thing4", ct.GlobalSequence(4)), results[1].actionTrace)
 }

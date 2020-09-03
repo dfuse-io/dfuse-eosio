@@ -71,6 +71,7 @@ func init() {
 				FailOnNonContinuousBlocks:    viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 				WorkingDir:                   mustReplaceDataDir(dfuseDataDir, viper.GetString("mindreader-working-dir")),
 				WaitUploadCompleteOnShutdown: viper.GetDuration("mindreader-wait-upload-complete-on-shutdown"),
+				OneblockSuffix:               viper.GetString("mindreader-oneblock-suffix"),
 			}, &nodeMindreaderStdinApp.Modules{
 				ConsoleReaderFactory:       consoleReaderFactory,
 				ConsoleReaderTransformer:   consoleReaderBlockTransformer,

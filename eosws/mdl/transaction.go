@@ -403,7 +403,6 @@ func ToV1ActionTraceRaw(parentAction *pbcodec.ActionTrace, actions []*pbcodec.Ac
 	}
 
 	if withInlines {
-		//fmt.Println("INLINE", string(rawChildTraces))
 		rawTrace, err = sjson.SetRawBytes(rawTrace, "inline_traces", rawChildTraces)
 		if err != nil {
 			return nil, fmt.Errorf("set raw byte: %w", err)
