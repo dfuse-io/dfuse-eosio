@@ -33,6 +33,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		return nil
 	}
 
+	if (blk.Number % 1000) == 0 {
+		zlog.Info("processing blk 1/1000", zap.Stringer("block", block))
+	}
+
 	for _, trxTrace := range block.TransactionTraces() {
 		if trxTrace.HasBeenReverted() {
 			continue
