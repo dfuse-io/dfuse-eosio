@@ -104,6 +104,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	isLastInStreak := fObj.StepIndex+1 == fObj.StepCount
 
 	if ws.stopBlockNum != 0 && blk.Num() >= ws.stopBlockNum {
+		zlog.Info("stop block num reached, flushing all writes",
+			zap.Uint64("stop_block_num", ws.stopBlockNum),
+			zap.Uint64("current_block_num", blk.Num()),
+		)
 		if err := ws.forceFlush(ctx, block); err != nil {
 			ws.Shutdown(err)
 			return fmt.Errorf("flushing when stopping: %w", err)
@@ -225,7 +229,9 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 
 	out, err = ws.readSequenceData(ctx, account)
 	if err == store.ErrNotFound {
-		zlog.Debug("account never seen before, initializing a new sequence data", zap.Stringer("account", EOSName(account)))
+		zlog.Info("account never seen before, initializing a new sequence data",
+			zap.Stringer("account", EOSName(account)),
+		)
 		out.nextOrdinal = 1
 		out.maxEntries = ws.maxEntriesPerAccount
 	} else if err != nil {
@@ -240,7 +246,13 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out seq
 	}
 
 	out.maxEntries = maxEntriesForAccount
-	zlog.Debug("max entries for account", zap.Int("shard_num", int(ws.shardNum)), zap.Stringer("account", EOSName(account)), zap.Uint64("max_entries", maxEntriesForAccount))
+	zlog.Debug("account sequence data setup",
+		zap.Int("shard_num", int(ws.shardNum)),
+		zap.Stringer("account", EOSName(account)),
+		zap.Uint64("max_entries", maxEntriesForAccount),
+		zap.Uint64("next_ordinal", out.nextOrdinal),
+		zap.Uint64("last_global_sequence", out.lastGlobalSeq),
+	)
 
 	return
 }
@@ -325,9 +337,9 @@ func (ws *Service) readSequenceData(ctx context.Context, account uint64) (out se
 	startKey := encodeActionKey(account, ws.shardNum, math.MaxUint64)
 	endKey := store.Key(encodeActionPrefixKey(account)).PrefixNext()
 
-	zlog.Debug("reading sequence data",
+	zlog.Info("reading last sequence data for current shard",
 		zap.Stringer("account", EOSName(account)),
-		zap.Int("shard_num", int(ws.shardNum)),
+		zap.Int("current_shard_num", int(ws.shardNum)),
 		zap.Stringer("start_key", Key(startKey)),
 		zap.Stringer("end_key", Key(endKey)),
 	)
