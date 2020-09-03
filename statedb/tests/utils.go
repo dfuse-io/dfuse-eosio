@@ -92,8 +92,6 @@ func unifiedDiff(t *testing.T, tag string, expected, actual interface{}) string 
 	err = ioutil.WriteFile(actualFile, actualBytes, 0600)
 	require.NoError(t, err)
 
-	fmt.Println("Expected", string(expectedBytes))
-
 	cmd := exec.Command("diff", "-u", expectedFile, actualFile)
 	out, _ := cmd.Output()
 

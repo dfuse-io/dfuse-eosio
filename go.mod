@@ -34,7 +34,7 @@ require (
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/fluxdb v0.0.0-20200831181525-241a44ab80ff
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20200807025817-f1b87abdaad6
+	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
 	github.com/dfuse-io/logging v0.0.0-20200819170935-85f72399491a
 	github.com/dfuse-io/merger v0.0.3-0.20200903033541-569fa79e942c
 	github.com/dfuse-io/node-manager v0.0.2-0.20200903032905-fb973e9221c1
