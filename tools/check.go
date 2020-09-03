@@ -185,12 +185,28 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 			fmt.Printf("✅ Shard #%03d\n", shardIndex)
 		}
 
-		if startBlock != expectedStart {
+		brokenRange := false
+		if stopBlock <= startBlock {
+			brokenRange = true
+			problemDetected = true
+
+			fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
+			lastPrintedValidStart = previousRange.stop + 1
+
+			fmt.Printf("❌ Range %s! (Broken range, start block is greater or equal to stop block)\n", blockRange{startBlock, stopBlock})
+		} else if startBlock != expectedStart {
+			problemDetected = true
+
 			// This happens when current covers a subset of the last seen element (previous is `100 - 299` but we are `199 - 299`)
 			if startBlock <= expectedStart && stopBlock < expectedStart {
 				fmt.Printf("❌ Range %s! (Subset of previous range %s)\n", blockRange{startBlock, stopBlock}, blockRange{previousRange.start, previousRange.stop})
 			} else {
-				fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
+				if lastPrintedValidStart != expectedStart {
+					fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
+					lastPrintedValidStart = stopBlock + 1
+				} else {
+					lastPrintedValidStart = startBlock
+				}
 
 				// This happens when current covers a superset of the last seen element (previous is `100 - 199` but we are `100 - 299`)
 				if startBlock <= expectedStart {
@@ -201,17 +217,16 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 					fmt.Printf("❌ Range %s! (Missing, [%s])\n", missingRange, missingRange.ReprocRange())
 				}
 			}
-
-			problemDetected = true
-			lastPrintedValidStart = stopBlock + 1
 		} else if startBlock-lastPrintedValidStart >= 15_000_000 {
 			fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, stopBlock})
 			lastPrintedValidStart = stopBlock + 1
 		}
 
-		previousRange = blockRange{startBlock, stopBlock}
-		expectedStart = stopBlock + 1
 		seenShard[shardIndex] = seenShard[shardIndex] + 1
+		if !brokenRange {
+			previousRange = blockRange{startBlock, stopBlock}
+			expectedStart = stopBlock + 1
+		}
 		return nil
 	})
 
