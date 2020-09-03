@@ -69,6 +69,7 @@ func init() {
 			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().Bool("mindreader-batch-mode", false, "Always write merged-block files directly, overwriting existing files. Use this flag for reprocessing, with a stop-block-num that stops before possible chain reorgs")
+			cmd.Flags().String("mindreader-oneblock-suffix", "", "If non-empty, the oneblock files will be appended with that suffix, so that mindreaders can each write their file for a given block instead of competing for writes.")
 			cmd.Flags().Duration("mindreader-merge-threshold-block-age", 12*time.Hour, "when processing blocks with a blocktime older than this threshold, they will be automatically merged")
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
@@ -185,6 +186,7 @@ func init() {
 				},
 				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 				viper.GetDuration("mindreader-wait-upload-complete-on-shutdown"),
+				viper.GetString("mindreader-oneblock-suffix"),
 				appLogger,
 			)
 			if err != nil {
