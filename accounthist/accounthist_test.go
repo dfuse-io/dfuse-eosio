@@ -6,7 +6,6 @@ import (
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLiveShard(t *testing.T) {
@@ -18,7 +17,7 @@ func TestLiveShard(t *testing.T) {
 		maxEntriesPerAccount: 2,
 		flushBlocksInterval:  1,
 		kvStore:              NewRWCache(kvStore),
-		historySeqMap:        map[uint64]sequenceData{},
+		historySeqMap:        map[uint64]SequenceData{},
 		lastCheckpoint:       &pbaccounthist.ShardCheckpoint{},
 	}
 
@@ -31,11 +30,9 @@ func TestLiveShard(t *testing.T) {
 		),
 	)
 
-	results := listActions(t, s, "some1", nil)
-	require.Len(t, results, 1)
-
-	assert.Equal(t, "some1:00:1", results[0].StringCursor())
-	assert.Equal(t, ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1)), results[0].actionTrace)
+	assert.Equal(t, []*actionResult{
+		{cursor: "some1:00:1", actionTrace: ct.ActionTrace(t, "some1:some:thing", ct.GlobalSequence(1))},
+	}, listActions(t, s, "some1", nil))
 }
 
 func TestLiveShard_DeleteWindow(t *testing.T) {
@@ -47,7 +44,7 @@ func TestLiveShard_DeleteWindow(t *testing.T) {
 		maxEntriesPerAccount: 2,
 		flushBlocksInterval:  1,
 		kvStore:              NewRWCache(kvStore),
-		historySeqMap:        map[uint64]sequenceData{},
+		historySeqMap:        map[uint64]SequenceData{},
 		lastCheckpoint:       &pbaccounthist.ShardCheckpoint{},
 	}
 
@@ -68,21 +65,13 @@ func TestLiveShard_DeleteWindow(t *testing.T) {
 		),
 	)
 
-	results := listActions(t, s, "some1", nil)
-	require.Len(t, results, 2)
+	assert.Equal(t, []*actionResult{
+		{cursor: "some1:00:3", actionTrace: ct.ActionTrace(t, "some1:some:bing2", ct.GlobalSequence(7))},
+		{cursor: "some1:00:2", actionTrace: ct.ActionTrace(t, "some1:some:bing1", ct.GlobalSequence(6))},
+	}, listActions(t, s, "some1", nil))
 
-	assert.Equal(t, "some1:00:3", results[0].StringCursor())
-	assert.Equal(t, ct.ActionTrace(t, "some1:some:bing2", ct.GlobalSequence(7)), results[0].actionTrace)
-
-	assert.Equal(t, "some1:00:2", results[1].StringCursor())
-	assert.Equal(t, ct.ActionTrace(t, "some1:some:bing1", ct.GlobalSequence(6)), results[1].actionTrace)
-
-	results = listActions(t, s, "some2", nil)
-	require.Len(t, results, 2)
-
-	assert.Equal(t, "some2:00:4", results[0].StringCursor())
-	assert.Equal(t, ct.ActionTrace(t, "some2:some:thing5", ct.GlobalSequence(5)), results[0].actionTrace)
-
-	assert.Equal(t, "some2:00:3", results[1].StringCursor())
-	assert.Equal(t, ct.ActionTrace(t, "some2:some:thing4", ct.GlobalSequence(4)), results[1].actionTrace)
+	assert.Equal(t, []*actionResult{
+		{cursor: "some2:00:4", actionTrace: ct.ActionTrace(t, "some2:some:thing5", ct.GlobalSequence(5))},
+		{cursor: "some2:00:3", actionTrace: ct.ActionTrace(t, "some2:some:thing4", ct.GlobalSequence(4))},
+	}, listActions(t, s, "some2", nil))
 }

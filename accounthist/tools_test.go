@@ -15,6 +15,8 @@ func Test_shardSummary(t *testing.T) {
 	kvStore, cleanup := getKVTestFactory(t)
 	defer cleanup()
 	maxEntries := uint64(10)
+
+	s := newTestService(kvStore, 0, 1000)
 	runShard(t, 0, maxEntries, kvStore,
 		ct.Block(t, "00000002bb",
 			ct.TrxTrace(t, ct.ActionTrace(t, "a:some:cthing1", ct.GlobalSequence(3))),
@@ -32,11 +34,11 @@ func Test_shardSummary(t *testing.T) {
 		),
 	)
 
-	summary, err := shardSummary(context.Background(), kvStore, eos.MustStringToName("a"), 5)
+	summary, err := s.ShardSummary(context.Background(), eos.MustStringToName("a"))
 	require.NoError(t, err)
-	assert.Equal(t, summary, []*sequenceData{
-		{nextOrdinal: 6, lastGlobalSeq: 7},
-		{nextOrdinal: 3, lastGlobalSeq: 2},
+	assert.Equal(t, summary, []*shardSummary{
+		{ShardNum: 0, SeqData: SequenceData{CurrentOrdinal: 5, LastGlobalSeq: 7}},
+		{ShardNum: 1, SeqData: SequenceData{CurrentOrdinal: 2, LastGlobalSeq: 2}},
 	})
 
 }

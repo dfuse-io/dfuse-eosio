@@ -22,9 +22,9 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	if ws.stopBlockNum != 0 && blk.Num() >= ws.stopBlockNum {
 		zlog.Info("stop block num reached, flushing all writes",
 			zap.Uint64("stop_block_num", ws.stopBlockNum),
-			zap.Uint64("current_block_num", blk.Num()),
+			zap.Uint64("block_num", blk.Num()),
 		)
-		if err := ws.forceFlush(ctx, block); err != nil {
+		if err := ws.forceFlush(ctx); err != nil {
 			ws.Shutdown(err)
 			return fmt.Errorf("flushing when stopping: %w", err)
 		}
@@ -34,7 +34,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	}
 
 	if (blk.Number % 1000) == 0 {
-		zlog.Info("processing blk 1/1000", zap.Stringer("block", block))
+		zlog.Info("processing blk 1/1000",
+			zap.String("block_id", block.Id),
+			zap.Uint32("block_num", block.Number),
+		)
 	}
 
 	for _, trxTrace := range block.TransactionTraces() {
@@ -62,13 +65,13 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
 				}
 
-				if acctSeqData.maxEntries == 0 {
+				if acctSeqData.MaxEntries == 0 {
 					continue
 				}
 
 				// when shard 1 starts it will based the first seen action on values in shard 0. the last aciotn for an account
 				// will always have a greater last global seq
-				if act.Receipt.GlobalSequence <= acctSeqData.lastGlobalSeq {
+				if act.Receipt.GlobalSequence <= acctSeqData.LastGlobalSeq {
 					zlog.Debug("this block has already been processed for this account",
 						zap.Stringer("block", blk),
 						zap.String("account", acct),
@@ -81,15 +84,17 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 					return err
 				}
 
-				acctSeqData.lastDeletedOrdinal = lastDeletedSeq
+				acctSeqData.LastDeletedOrdinal = lastDeletedSeq
 				rawTrace := rawTraceMap[act.Receipt.GlobalSequence]
 
+				// since the current ordinal is the last assgined order number we need to
+				// increment it before we write a new action
+				acctSeqData.CurrentOrdinal++
 				if err = ws.writeAction(ctx, acctUint, acctSeqData, act, rawTrace); err != nil {
 					return fmt.Errorf("error while writing action to store: %w", err)
 				}
 
-				acctSeqData.nextOrdinal++
-				acctSeqData.lastGlobalSeq = act.Receipt.GlobalSequence
+				acctSeqData.LastGlobalSeq = act.Receipt.GlobalSequence
 
 				ws.updateHistorySeq(acctUint, acctSeqData)
 			}
