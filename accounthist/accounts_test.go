@@ -2,6 +2,7 @@ package accounthist
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/eoscanada/eos-go"
@@ -38,13 +39,14 @@ func Test_scanAccount(t *testing.T) {
 		shard      byte
 		ordinalNum uint64
 	}{
-		{account: accountA, shard: 0, ordinalNum: 2},
 		{account: accountC, shard: 0, ordinalNum: 1},
-		{account: accountD, shard: 1, ordinalNum: 3},
 		{account: accountB, shard: 1, ordinalNum: 1},
+		{account: accountD, shard: 1, ordinalNum: 3},
+		{account: accountA, shard: 0, ordinalNum: 2},
 	}
 	index := 0
 	shardZeroService.ScanAccounts(context.Background(), func(account uint64, shard byte, ordinalNum uint64) error {
+		fmt.Println("account: ", eos.NameToString(account))
 		assert.Equal(t, expectedAccounts[index], struct {
 			account    uint64
 			shard      byte
