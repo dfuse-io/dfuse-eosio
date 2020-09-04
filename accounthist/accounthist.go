@@ -205,7 +205,7 @@ func (ws *Service) updateHistorySeq(account uint64, seqData SequenceData) {
 }
 
 func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntries uint64, err error) {
-	shardsToCheck := w
+	shardsToCheck := 1
 	nextShardNum := byte(0)
 	var seenActions uint64
 	for i := 0; i < shardsToCheck; i++ {
