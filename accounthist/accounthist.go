@@ -159,7 +159,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
 		return
 	}
-
+	err = nil
 	out.MaxEntries = ws.maxEntriesPerAccount
 	//maxEntriesForAccount, err := ws.readMaxEntries(ctx, account)
 	//if err != nil {

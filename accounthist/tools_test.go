@@ -4,11 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/eoscanada/eos-go"
-	"github.com/stretchr/testify/require"
-
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
+	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_shardSummary(t *testing.T) {
