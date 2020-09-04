@@ -159,15 +159,13 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
 		return
 	}
-	err = nil
-	out.MaxEntries = ws.maxEntriesPerAccount
-	//maxEntriesForAccount, err := ws.readMaxEntries(ctx, account)
-	//if err != nil {
-	//	err = fmt.Errorf("error fetching max entries: %w", err)
-	//	return
-	//}
-	//
-	//out.MaxEntries = maxEntriesForAccount
+	maxEntriesForAccount, err := ws.readMaxEntries(ctx, account)
+	if err != nil {
+		err = fmt.Errorf("error fetching max entries: %w", err)
+		return
+	}
+
+	out.MaxEntries = maxEntriesForAccount
 	zlog.Debug("account sequence data setup",
 		zap.Int("shard_num", int(ws.shardNum)),
 		zap.Stringer("account", EOSName(account)),
@@ -207,9 +205,10 @@ func (ws *Service) updateHistorySeq(account uint64, seqData SequenceData) {
 }
 
 func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntries uint64, err error) {
+	shardsToCheck := w
 	nextShardNum := byte(0)
 	var seenActions uint64
-	for i := 0; i < 5; i++ {
+	for i := 0; i < shardsToCheck; i++ {
 		if nextShardNum >= ws.shardNum {
 			// we'll stop writing only if FUTURE shards have covered our `maxEntriesPerAccount`.
 			break
