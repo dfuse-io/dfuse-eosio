@@ -13,7 +13,7 @@ import (
 )
 
 var accounthistCmd = &cobra.Command{Use: "accounthist", Short: "Read from accout history", RunE: dmeshE}
-var accountReadCmd = &cobra.Command{Use: "account", Short: "Read an account", RunE: accountReadE, Args: cobra.ExactArgs(1)}
+var accountReadCmd = &cobra.Command{Use: "read", Short: "Read an account", RunE: accountReadE, Args: cobra.ExactArgs(1)}
 var accountScanCmd = &cobra.Command{Use: "scan", Short: "Scan accounts", RunE: accountScanE}
 
 func init() {
