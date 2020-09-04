@@ -3,9 +3,9 @@ package tools
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -24,6 +24,8 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
+
+var errStopWalk = errors.New("stop walk")
 
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
 var checkMergedBlocksCmd = &cobra.Command{
@@ -63,11 +65,9 @@ func init() {
 	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
 	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
 
-	checkMergedBlocksCmd.Flags().Bool("individual-segment", false, "Open each merged blocks segment and ensure it contains all blocks it should")
-	checkMergedBlocksCmd.Flags().Bool("print-stats", false, "Natively decode each block in the segment and print statistics about it")
+	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check")
 
-	checkCmd.PersistentFlags().Uint64P("start-block", "s", 0, "Block number to start at")
-	checkCmd.PersistentFlags().Uint64P("end-block", "e", 4294967296, "Block number to end at")
+	checkMergedBlocksCmd.Flags().BoolP("print-stats", "s", false, "Natively decode each block in the segment and print statistics about it, ensuring it contains the required blocks")
 }
 
 func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
@@ -91,19 +91,6 @@ func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 	}
 	fmt.Println("Last block", lastBlock.String())
 	return nil
-}
-
-type blockRange struct {
-	start uint64
-	stop  uint64
-}
-
-func (b blockRange) ReprocRange() string {
-	return fmt.Sprintf("%d:%d", b.start, b.stop+1)
-}
-
-func (b blockRange) String() string {
-	return fmt.Sprintf("%s - %s", blockNum(b.start), blockNum(b.stop))
 }
 
 type blockNum uint64
@@ -135,7 +122,7 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 	expectedShard := uint64(0)
 	expectedStart := uint64(0)
 	lastPrintedValidStart := uint64(0)
-	previousRange := blockRange{0, 0}
+	previousRange := BlockRange{0, 0}
 	problemDetected := false
 
 	err = shardsStore.Walk(ctx, "", ".tmp", func(filename string) error {
@@ -152,13 +139,13 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 		zlog.Debug("dealing with element",
 			zap.Uint64("shard_index", shardIndex),
 			zap.Stringer("expected_start", blockNum(expectedStart)),
-			zap.Stringer("range", blockRange{startBlock, stopBlock}),
+			zap.Stringer("range", BlockRange{startBlock, stopBlock}),
 			zap.String("file", filename),
 		)
 
 		if shardIndex != expectedShard {
 			if len(seenShard) > 0 {
-				fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, previousRange.stop})
+				fmt.Printf("✅ Range %s\n", BlockRange{lastPrintedValidStart, previousRange.Stop})
 			}
 
 			offsetToExpected := shardIndex - expectedShard
@@ -190,19 +177,19 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 			brokenRange = true
 			problemDetected = true
 
-			fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
-			lastPrintedValidStart = previousRange.stop + 1
+			fmt.Printf("✅ Range %s\n", BlockRange{lastPrintedValidStart, expectedStart - 1})
+			lastPrintedValidStart = previousRange.Stop + 1
 
-			fmt.Printf("❌ Range %s! (Broken range, start block is greater or equal to stop block)\n", blockRange{startBlock, stopBlock})
+			fmt.Printf("❌ Range %s! (Broken range, start block is greater or equal to stop block)\n", BlockRange{startBlock, stopBlock})
 		} else if startBlock != expectedStart {
 			problemDetected = true
 
 			// This happens when current covers a subset of the last seen element (previous is `100 - 299` but we are `199 - 299`)
 			if startBlock <= expectedStart && stopBlock < expectedStart {
-				fmt.Printf("❌ Range %s! (Subset of previous range %s)\n", blockRange{startBlock, stopBlock}, blockRange{previousRange.start, previousRange.stop})
+				fmt.Printf("❌ Range %s! (Subset of previous range %s)\n", BlockRange{startBlock, stopBlock}, BlockRange{previousRange.Start, previousRange.Stop})
 			} else {
 				if lastPrintedValidStart != expectedStart {
-					fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, expectedStart - 1})
+					fmt.Printf("✅ Range %s\n", BlockRange{lastPrintedValidStart, expectedStart - 1})
 					lastPrintedValidStart = stopBlock + 1
 				} else {
 					lastPrintedValidStart = startBlock
@@ -210,28 +197,28 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 
 				// This happens when current covers a superset of the last seen element (previous is `100 - 199` but we are `100 - 299`)
 				if startBlock <= expectedStart {
-					fmt.Printf("❌ Range %s! (Superset of previous range %s)\n", blockRange{startBlock, stopBlock}, blockRange{previousRange.start, previousRange.stop})
+					fmt.Printf("❌ Range %s! (Superset of previous range %s)\n", BlockRange{startBlock, stopBlock}, BlockRange{previousRange.Start, previousRange.Stop})
 				} else {
 					// Otherwise, we do not follow last seen element (previous is `100 - 199` but we are `299 - 300`)
-					missingRange := blockRange{expectedStart, startBlock - 1}
+					missingRange := BlockRange{expectedStart, startBlock - 1}
 					fmt.Printf("❌ Range %s! (Missing, [%s])\n", missingRange, missingRange.ReprocRange())
 				}
 			}
 		} else if startBlock-lastPrintedValidStart >= 15_000_000 {
-			fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, stopBlock})
+			fmt.Printf("✅ Range %s\n", BlockRange{lastPrintedValidStart, stopBlock})
 			lastPrintedValidStart = stopBlock + 1
 		}
 
 		seenShard[shardIndex] = seenShard[shardIndex] + 1
 		if !brokenRange {
-			previousRange = blockRange{startBlock, stopBlock}
+			previousRange = BlockRange{startBlock, stopBlock}
 			expectedStart = stopBlock + 1
 		}
 		return nil
 	})
 
 	if len(seenShard) > 0 {
-		fmt.Printf("✅ Range %s\n", blockRange{lastPrintedValidStart, previousRange.stop})
+		fmt.Printf("✅ Range %s\n", BlockRange{lastPrintedValidStart, previousRange.Stop})
 	}
 
 	if uint64(len(seenShard)) != shardCount {
@@ -252,7 +239,7 @@ func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
 }
 
 func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
-	storeURL := filepath.Clean(args[0])
+	storeURL := args[0]
 	fileBlockSize := uint32(100)
 
 	fmt.Printf("Checking block holes on %s\n", storeURL)
@@ -262,17 +249,17 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	var expected uint32
 	var count int
 	var baseNum32 uint32
-	// startTime := time.Now()
 	holeFound := false
-	checkIndividualSegment := viper.GetBool("individual-segment")
 	printIndividualSegmentStats := viper.GetBool("print-stats")
 
-	startBlock := viper.GetUint64("start-block")
-	endBlock := viper.GetUint64("end-block")
-	expected = uint32(startBlock)
-	currentStartBlk := uint32(startBlock)
+	blockRange, err := getBlockRangeFromFlag()
+	if err != nil {
+		return err
+	}
 
-	fmt.Println("expected is ", expected)
+	expected = uint32(blockRange.Start)
+	currentStartBlk := uint32(blockRange.Start)
+	seenFilters := map[string]FilteringFilters{}
 
 	blocksStore, err := dstore.NewDBinStore(storeURL)
 	if err != nil {
@@ -280,24 +267,30 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := context.Background()
-	blocksStore.Walk(ctx, "", ".tmp", func(filename string) error {
+	walkPrefix := walkBlockPrefix(blockRange, fileBlockSize)
+
+	zlog.Debug("walking merged blocks", zap.Stringer("block_range", blockRange), zap.String("walk_prefix", walkPrefix))
+	err = blocksStore.Walk(ctx, walkPrefix, ".tmp", func(filename string) error {
 		match := number.FindStringSubmatch(filename)
 		if match == nil {
 			return nil
 		}
 
+		zlog.Debug("received merged blocks", zap.String("filename", filename))
+
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum < startBlock {
+		if baseNum < blockRange.Start {
 			return nil
 		}
-		if endBlock != 0 && baseNum > endBlock {
-			return nil
-		}
+
 		baseNum32 = uint32(baseNum)
 
-		if checkIndividualSegment {
-			validateBlockSegment(blocksStore, filename, fileBlockSize, printIndividualSegmentStats)
+		if printIndividualSegmentStats {
+			newSeenFilters := validateBlockSegment(blocksStore, filename, fileBlockSize, blockRange, printIndividualSegmentStats)
+			for key, filters := range newSeenFilters {
+				seenFilters[key] = filters
+			}
 		}
 
 		if baseNum32 != expected {
@@ -318,10 +311,31 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 			currentStartBlk = baseNum32 + fileBlockSize
 		}
 
+		if !blockRange.Unbounded() && roundToBundleEndBlock(baseNum32, fileBlockSize) >= uint32(blockRange.Stop-1) {
+			return errStopWalk
+		}
+
 		return nil
 	})
+	if err != nil && err != errStopWalk {
+		return err
+	}
 
-	fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, roundToBundleEndBlock(baseNum32, fileBlockSize))
+	actualEndBlock := roundToBundleEndBlock(baseNum32, fileBlockSize)
+	if !blockRange.Unbounded() {
+		actualEndBlock = uint32(blockRange.Stop)
+	}
+
+	fmt.Printf("✅ Valid blocks range %d - %d\n", currentStartBlk, actualEndBlock)
+
+	if len(seenFilters) > 0 {
+		fmt.Println()
+		fmt.Println("Seen filters")
+		for _, filters := range seenFilters {
+			fmt.Printf("- [Include %q, Exclude %q, System %q]\n", filters.Include, filters.Exclude, filters.System)
+		}
+		fmt.Println()
+	}
 
 	if holeFound {
 		fmt.Printf("🆘 Holes found!\n")
@@ -332,6 +346,33 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func walkBlockPrefix(blockRange BlockRange, fileBlockSize uint32) string {
+	if blockRange.Unbounded() {
+		return ""
+	}
+
+	startString := fmt.Sprintf("%010d", roundToBundleStartBlock(uint32(blockRange.Start), fileBlockSize))
+	endString := fmt.Sprintf("%010d", roundToBundleEndBlock(uint32(blockRange.Stop-1), fileBlockSize)+1)
+
+	offset := 0
+	for i := 0; i < len(startString); i++ {
+		if startString[i] != endString[i] {
+			return string(startString[0:i])
+		}
+
+		offset++
+	}
+
+	// At this point, the two strings are equal, to return the string
+	return startString
+}
+
+func roundToBundleStartBlock(block, fileBlockSize uint32) uint32 {
+	// From a non-rounded block `1085` and size of `100`, we remove from it the value of
+	// `modulo % fileblock` (`85`) making it flush (`1000`).
+	return block - (block % fileBlockSize)
+}
+
 func roundToBundleEndBlock(block, fileBlockSize uint32) uint32 {
 	// From a non-rounded block `1085` and size of `100`, we remove from it the value of
 	// `modulo % fileblock` (`85`) making it flush (`1000`) than adding to it the last
@@ -340,7 +381,7 @@ func roundToBundleEndBlock(block, fileBlockSize uint32) uint32 {
 	return block - (block % fileBlockSize) + (fileBlockSize - 1)
 }
 
-func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, printIndividualSegmentStats bool) {
+func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, blockRange BlockRange, printIndividualSegmentStats bool) (seenFilters map[string]FilteringFilters) {
 	reader, err := store.OpenObject(context.Background(), segment)
 	if err != nil {
 		fmt.Printf("❌ Unable to read blocks segment %s: %s\n", segment, err)
@@ -359,6 +400,10 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 	for {
 		block, err := readerFactory.Read()
 		if block != nil {
+			if !blockRange.Unbounded() && block.Number >= blockRange.Stop {
+				return
+			}
+
 			seenBlockCount++
 
 			if printIndividualSegmentStats {
@@ -378,7 +423,6 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 						eosBlock.GetFilteredExecutedInputActionCount(),
 						eosBlock.GetUnfilteredExecutedInputActionCount(),
 					)
-
 				} else {
 					fmt.Printf("Block %s (%d bytes): %d transactions (%d traces), %d actions (%d input)\n",
 						block,
@@ -389,6 +433,17 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 						eosBlock.GetUnfilteredExecutedInputActionCount(),
 					)
 				}
+
+				if seenFilters == nil {
+					seenFilters = map[string]FilteringFilters{}
+				}
+
+				filters := FilteringFilters{
+					eosBlock.FilteringIncludeFilterExpr,
+					eosBlock.FilteringExcludeFilterExpr,
+					eosBlock.FilteringSystemActionsIncludeFilterExpr,
+				}
+				seenFilters[filters.Key()] = filters
 			}
 
 			continue
