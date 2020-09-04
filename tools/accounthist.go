@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -15,15 +16,60 @@ import (
 var accounthistCmd = &cobra.Command{Use: "accounthist", Short: "Read from accout history", RunE: dmeshE}
 var accountReadCmd = &cobra.Command{Use: "read", Short: "Read an account", RunE: accountReadE, Args: cobra.ExactArgs(1)}
 var accountScanCmd = &cobra.Command{Use: "scan", Short: "Scan accounts", RunE: accountScanE}
+var accountCheckpointCmd = &cobra.Command{Use: "checkpoint", Short: "Get a shard's checkpoint", RunE: accountsCheckpointE}
 
 func init() {
 	Cmd.AddCommand(accounthistCmd)
 	accounthistCmd.AddCommand(accountReadCmd)
 	accounthistCmd.AddCommand(accountScanCmd)
+	accounthistCmd.AddCommand(accountCheckpointCmd)
 
 	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
 	accountScanCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
+}
 
+func accountsCheckpointE(cmd *cobra.Command, args []string) (err error) {
+
+	kvdb, err := store.New(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("failed to setup db: %w", err)
+	}
+	kvdb = accounthist.NewRWCache(kvdb)
+
+	shardStr := args[0]
+	shard, err := strconv.ParseUint(shardStr, 0, 64)
+	if err != nil {
+		return fmt.Errorf("Unable to determine shard value from: %s: %w", shardStr, err)
+	}
+
+	service := accounthist.NewService(
+		kvdb,
+		nil,
+		nil,
+		byte(shard),
+		1000,
+		1,
+		0,
+		0,
+		nil,
+	)
+
+	checkpoint, err := service.GetShardCheckpoint(cmd.Context())
+	if err != nil {
+		return err
+	}
+	if checkpoint == nil {
+		fmt.Printf("No checkpoint found for shard: %d\n", shard)
+		return nil
+	}
+
+	fmt.Printf("Checkpoint for shard: %d\n", shard)
+	fmt.Printf("Initial Start Block for shard: %d\n", checkpoint.InitialStartBlock)
+	fmt.Printf("Target Stop Block for shard: %d\n", checkpoint.TargetStopBlock)
+	fmt.Printf("Last Written Block Num for shard: %d\n", checkpoint.LastWrittenBlockNum)
+	fmt.Printf("Last Written Block Id for shard: %s\n", checkpoint.LastWrittenBlockId)
+
+	return nil
 }
 
 func accountReadE(cmd *cobra.Command, args []string) (err error) {
@@ -95,7 +141,7 @@ func accountScanE(cmd *cobra.Command, args []string) (err error) {
 		if count > scanLimit {
 			return fmt.Errorf("scan limit reached")
 		}
-		fmt.Printf("Account:   %-12v   at shard: %d with action count: %d\n", eos.NameToString(account), int(shard), ordinalNum)
+		fmt.Printf("Account:   %-12v   at shard: %d with last ordinal count: %d\n", eos.NameToString(account), int(shard), ordinalNum)
 		count++
 		return nil
 	})
