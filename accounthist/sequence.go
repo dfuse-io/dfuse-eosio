@@ -29,7 +29,7 @@ func (ws *Service) shardNewestSequenceData(ctx context.Context, account uint64, 
 	startKey := encodeActionKey(account, shardNum, math.MaxUint64)
 	endKey := store.Key(encodeActionKey(account, shardNum, 0)).PrefixNext()
 
-	zlog.Info("reading last sequence data for current shard",
+	zlog.Debug("reading last sequence data for current shard",
 		zap.Stringer("account", EOSName(account)),
 		zap.Int("current_shard_num", int(shardNum)),
 		zap.Stringer("start_key", Key(startKey)),

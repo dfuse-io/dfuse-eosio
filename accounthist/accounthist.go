@@ -150,7 +150,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 	out, err = ws.shardNewestSequenceData(ctx, account, ws.shardNum, ws.processSequenceDataKeyValue)
 
 	if err == store.ErrNotFound {
-		zlog.Info("account never seen before, initializing a new sequence data",
+		zlog.Debug("account never seen before, initializing a new sequence data",
 			zap.Stringer("account", EOSName(account)),
 		)
 		out.CurrentOrdinal = 0
