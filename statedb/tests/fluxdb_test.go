@@ -68,6 +68,9 @@ func getKVTestFactory(t *testing.T) func() (store.KVStore, StoreCleanupFunc) {
 
 func runAll(t *testing.T, storeFactory StoreFactory) {
 	all := map[string][]e2eTester{
+		"abi": {
+			testStateABIHex,
+		},
 		"table": {
 			testStateTableSingleRowHeadHex,
 			testStateTableSingleRowHeadJSON,
@@ -95,6 +98,14 @@ func runAll(t *testing.T, storeFactory StoreFactory) {
 			})
 		}
 	}
+}
+
+func testStateABIHex(ctx context.Context, t *testing.T, feedSourceWithBlocks blocksFeeder, e *httpexpect.Expect) {
+	feedSourceWithBlocks(tableBlocks(t)...)
+
+	response := okQueryStateABI(e, "eosio.test", "")
+
+	jsonValueEqual(t, "abi", `{"abi": "0e656f73696f3a3a6162692f312e3000010576616c7565000102746f0675696e743634000100000000008139bd0000000576616c756500000000", "account": "eosio.test", "block_num": 5}`, response.Path("$"))
 }
 
 func testStateTableSingleRowHeadHex(ctx context.Context, t *testing.T, feedSourceWithBlocks blocksFeeder, e *httpexpect.Expect) {
@@ -341,6 +352,15 @@ func tableBlocks(t *testing.T) []*pbcodec.Block {
 			),
 		),
 	}
+}
+
+func okQueryStateABI(e *httpexpect.Expect, account string, extraQuery string) (response *httpexpect.Object) {
+	queryString := fmt.Sprintf("account=%s", account)
+	if extraQuery != "" {
+		queryString += "" + extraQuery
+	}
+
+	return okQuery(e, "/v0/state/abi", queryString)
 }
 
 func okQueryStateTable(e *httpexpect.Expect, table string, extraQuery string) (response *httpexpect.Object) {
