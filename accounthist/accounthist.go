@@ -3,7 +3,6 @@ package accounthist
 import (
 	"context"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/dfuse-io/bstream"
@@ -205,51 +204,52 @@ func (ws *Service) updateHistorySeq(account uint64, seqData SequenceData) {
 }
 
 func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntries uint64, err error) {
-	shardsToCheck := 1
-	nextShardNum := byte(0)
-	var seenActions uint64
-	for i := 0; i < shardsToCheck; i++ {
-		if nextShardNum >= ws.shardNum {
-			// we'll stop writing only if FUTURE shards have covered our `maxEntriesPerAccount`.
-			break
-		}
-
-		startKey := encodeActionKey(account, nextShardNum, math.MaxUint64)
-		endKey := encodeActionKey(account+1, 0, 0)
-
-		zlog.Debug("reading sequence data",
-			zap.Stringer("account", EOSName(account)),
-			zap.Int("shard_num", int(nextShardNum)),
-			zap.Stringer("start_key", Key(startKey)),
-			zap.Stringer("end_key", Key(endKey)),
-		)
-
-		ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
-		defer cancel()
-
-		it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
-		var rows int
-		for it.Next() {
-			rows++
-			_, currentShardNum, historySeqNum := decodeActionKeySeqNum(it.Item().Key)
-			seenActions += historySeqNum
-
-			if seenActions >= ws.maxEntriesPerAccount {
-				return 0, nil
-			}
-
-			nextShardNum = currentShardNum + 1
-		}
-		if it.Err() != nil {
-			err = it.Err()
-			return
-		}
-		if rows == 0 {
-			break
-		}
-	}
-
-	return ws.maxEntriesPerAccount - seenActions, nil
+	return ws.maxEntriesPerAccount, nil
+	//shardsToCheck := 0
+	//nextShardNum := byte(0)
+	//var seenActions uint64
+	//for i := 0; i < shardsToCheck; i++ {
+	//	if nextShardNum >= ws.shardNum {
+	//		// we'll stop writing only if FUTURE shards have covered our `maxEntriesPerAccount`.
+	//		break
+	//	}
+	//
+	//	startKey := encodeActionKey(account, nextShardNum, math.MaxUint64)
+	//	endKey := encodeActionKey(account+1, 0, 0)
+	//
+	//	zlog.Debug("reading sequence data",
+	//		zap.Stringer("account", EOSName(account)),
+	//		zap.Int("shard_num", int(nextShardNum)),
+	//		zap.Stringer("start_key", Key(startKey)),
+	//		zap.Stringer("end_key", Key(endKey)),
+	//	)
+	//
+	//	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
+	//	defer cancel()
+	//
+	//	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
+	//	var rows int
+	//	for it.Next() {
+	//		rows++
+	//		_, currentShardNum, historySeqNum := decodeActionKeySeqNum(it.Item().Key)
+	//		seenActions += historySeqNum
+	//
+	//		if seenActions >= ws.maxEntriesPerAccount {
+	//			return 0, nil
+	//		}
+	//
+	//		nextShardNum = currentShardNum + 1
+	//	}
+	//	if it.Err() != nil {
+	//		err = it.Err()
+	//		return
+	//	}
+	//	if rows == 0 {
+	//		break
+	//	}
+	//}
+	//
+	//return ws.maxEntriesPerAccount - seenActions, nil
 }
 
 func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData SequenceData, actionTrace *pbcodec.ActionTrace, rawTrace []byte) error {
