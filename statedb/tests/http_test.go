@@ -30,6 +30,7 @@ import (
 	_ "github.com/dfuse-io/kvdb/store/badger"
 
 	"github.com/dfuse-io/bstream"
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/fluxdb/store"
 	fluxdbKV "github.com/dfuse-io/fluxdb/store/kv"
@@ -68,6 +69,9 @@ func getKVTestFactory(t *testing.T) func() (store.KVStore, StoreCleanupFunc) {
 
 func runAll(t *testing.T, storeFactory StoreFactory) {
 	all := map[string][]e2eTester{
+		"abi": {
+			testStateABIHex,
+		},
 		"table": {
 			testStateTableSingleRowHeadHex,
 			testStateTableSingleRowHeadJSON,
@@ -95,6 +99,14 @@ func runAll(t *testing.T, storeFactory StoreFactory) {
 			})
 		}
 	}
+}
+
+func testStateABIHex(ctx context.Context, t *testing.T, feedSourceWithBlocks blocksFeeder, e *httpexpect.Expect) {
+	feedSourceWithBlocks(tableBlocks(t)...)
+
+	response := okQueryStateABI(e, "eosio.test", "")
+
+	jsonValueEqual(t, "abi", `{"abi": "0e656f73696f3a3a6162692f312e3000010576616c7565000102746f0675696e743634000100000000008139bd0000000576616c756500000000", "account": "eosio.test", "block_num": 5}`, response.Path("$"))
 }
 
 func testStateTableSingleRowHeadHex(ctx context.Context, t *testing.T, feedSourceWithBlocks blocksFeeder, e *httpexpect.Expect) {
@@ -238,109 +250,118 @@ func tableBlocks(t *testing.T) []*pbcodec.Block {
 
 	return []*pbcodec.Block{
 		// Block #2 | Sets ABI on `eosio.token` (v1) and `eosio.test` (v1)
-		testBlock(t, "00000002aa", "00000001aa",
-			trxTrace(t, actionSetABI(t, "eosio.token", eosioTokenABI1)),
-			trxTrace(t, actionSetABI(t, "eosio.test", eosioTestABI1)),
+		ct.Block(t, "00000002aa",
+			ct.TrxTrace(t, ct.ActionTraceSetABI(t, "eosio.token", eosioTokenABI1)),
+			ct.TrxTrace(t, ct.ActionTraceSetABI(t, "eosio.test", eosioTestABI1)),
 		),
 
 		// Block #3
-		testBlock(t, "00000003aa", "00000002aa",
+		ct.Block(t, "00000003aa",
 			// Creates three balances `eosio1`, `eosio2`, `eosio3` on `eosio.token`
-			trxTrace(t,
-				tableOp(t, "insert", "eosio.token/accounts/eosio1", "eosio1"),
-				dbOp(t, eosioTokenABI1, "insert", "eosio.token/accounts/eosio1/eos", "/eosio1", `/{"balance":"1.0000 EOS"}`),
+			ct.TrxTrace(t,
+				ct.TableOp(t, "insert", "eosio.token/accounts/eosio1", "eosio1"),
+				ct.DBOp(t, "insert", "eosio.token/accounts/eosio1/eos", "/eosio1", `/{"balance":"1.0000 EOS"}`, eosioTokenABI1),
 
-				tableOp(t, "insert", "eosio.token/accounts/eosio2", "eosio2"),
-				dbOp(t, eosioTokenABI1, "insert", "eosio.token/accounts/eosio2/eos", "/eosio2", `/{"balance":"2.0000 EOS"}`),
+				ct.TableOp(t, "insert", "eosio.token/accounts/eosio2", "eosio2"),
+				ct.DBOp(t, "insert", "eosio.token/accounts/eosio2/eos", "/eosio2", `/{"balance":"2.0000 EOS"}`, eosioTokenABI1),
 
-				tableOp(t, "insert", "eosio.token/accounts/eosio3", "eosio3"),
-				dbOp(t, eosioTokenABI1, "insert", "eosio.token/accounts/eosio3/eos", "/eosio3", `/{"balance":"3.0000 EOS"}`),
+				ct.TableOp(t, "insert", "eosio.token/accounts/eosio3", "eosio3"),
+				ct.DBOp(t, "insert", "eosio.token/accounts/eosio3/eos", "/eosio3", `/{"balance":"3.0000 EOS"}`, eosioTokenABI1),
 			),
 
 			// Add three rows (keys `a`, `b` & `c`) to `eosio.test` contract, on table `rows` under scope `s`, then update key `b` within same transaction
-			trxTrace(t,
-				tableOp(t, "insert", "eosio.test/rows/s", "s"),
-				dbOp(t, eosioTestABI1, "insert", "eosio.test/rows/s/a", "/s", `/{"from":"a"}`),
-				dbOp(t, eosioTestABI1, "insert", "eosio.test/rows/s/b", "/s", `/{"from":"b"}`),
-				dbOp(t, eosioTestABI1, "insert", "eosio.test/rows/s/c", "/s", `/{"from":"c"}`),
-				dbOp(t, eosioTestABI1, "update", "eosio.test/rows/s/b", "s/s", `{"from":"b"}/{"from":"b2"}`),
+			ct.TrxTrace(t,
+				ct.TableOp(t, "insert", "eosio.test/rows/s", "s"),
+				ct.DBOp(t, "insert", "eosio.test/rows/s/a", "/s", `/{"from":"a"}`, eosioTestABI1),
+				ct.DBOp(t, "insert", "eosio.test/rows/s/b", "/s", `/{"from":"b"}`, eosioTestABI1),
+				ct.DBOp(t, "insert", "eosio.test/rows/s/c", "/s", `/{"from":"c"}`, eosioTestABI1),
+				ct.DBOp(t, "update", "eosio.test/rows/s/b", "s/s", `{"from":"b"}/{"from":"b2"}`, eosioTestABI1),
 			),
 
 			// Update balance of `eosio2` on `eosio.token` within same block, but in different transaction
-			trxTrace(t,
-				dbOp(t, eosioTokenABI1, "update", "eosio.token/accounts/eosio2/eos", "eosio2/eosio2", `{"balance":"2.0000 EOS"}/{"balance":"20.0000 EOS"}`),
+			ct.TrxTrace(t,
+				ct.DBOp(t, "update", "eosio.token/accounts/eosio2/eos", "eosio2/eosio2", `{"balance":"2.0000 EOS"}/{"balance":"20.0000 EOS"}`, eosioTokenABI1),
 			),
 		),
 
 		// Block #4
-		testBlock(t, "00000004aa", "00000003aa",
+		ct.Block(t, "00000004aa",
 			// Add a new token contract `eosio.nekot` (to test `/tables/accounts` calls) and populate odd rows from `eosio.token`
-			trxTrace(t,
-				actionSetABI(t, "eosio.nekot", eosioNekotABI1),
+			ct.TrxTrace(t,
+				ct.ActionTraceSetABI(t, "eosio.nekot", eosioNekotABI1),
 
-				tableOp(t, "insert", "eosio.nekot/accounts/eosio1", "eosio1"),
-				dbOp(t, eosioNekotABI1, "insert", "eosio.nekot/accounts/eosio1/eos", "/eosio1", `/{"balance":"1.0000 SOE"}`),
+				ct.TableOp(t, "insert", "eosio.nekot/accounts/eosio1", "eosio1"),
+				ct.DBOp(t, "insert", "eosio.nekot/accounts/eosio1/eos", "/eosio1", `/{"balance":"1.0000 SOE"}`, eosioNekotABI1),
 
-				tableOp(t, "insert", "eosio.nekot/accounts/eosio3", "eosio3"),
-				dbOp(t, eosioNekotABI1, "insert", "eosio.nekot/accounts/eosio3/eos", "/eosio3", `/{"balance":"3.0000 SOE"}`),
+				ct.TableOp(t, "insert", "eosio.nekot/accounts/eosio3", "eosio3"),
+				ct.DBOp(t, "insert", "eosio.nekot/accounts/eosio3/eos", "/eosio3", `/{"balance":"3.0000 SOE"}`, eosioNekotABI1),
 			),
 
 			// Modify `eosio.token` `eosio1` balance and delete `eosio3`
-			trxTrace(t,
-				dbOp(t, eosioTokenABI1, "update", "eosio.token/accounts/eosio1/eos", "eosio1/eosio1", `{"balance":"1.0000 EOS"}/{"balance":"10.0000 EOS"}`),
+			ct.TrxTrace(t,
+				ct.DBOp(t, "update", "eosio.token/accounts/eosio1/eos", "eosio1/eosio1", `{"balance":"1.0000 EOS"}/{"balance":"10.0000 EOS"}`, eosioTokenABI1),
 
-				dbOp(t, eosioTokenABI1, "remove", "eosio.token/accounts/eosio3/eos", "eosio3/", `{"balance":"3.0000 EOS"}/`),
-				tableOp(t, "remove", "eosio.token/accounts/eosio3", "eosio3"),
+				ct.DBOp(t, "remove", "eosio.token/accounts/eosio3/eos", "eosio3/", `{"balance":"3.0000 EOS"}/`, eosioTokenABI1),
+				ct.TableOp(t, "remove", "eosio.token/accounts/eosio3", "eosio3"),
 			),
 		),
 
 		// Block #5
-		testBlock(t, "00000005aa", "00000004aa",
+		ct.Block(t, "00000005aa",
 			// Remove all rows (keys `a`, `b`) of `eosio.test`
-			trxTrace(t,
-				dbOp(t, eosioTestABI1, "remove", "eosio.test/rows/s/a", "s/", `{"from":"a"}/`),
-				dbOp(t, eosioTestABI1, "remove", "eosio.test/rows/s/b", "s/", `{"from":"b2"}/`),
-				dbOp(t, eosioTestABI1, "remove", "eosio.test/rows/s/b", "s/", `{"from":"c"}/`),
-				tableOp(t, "remove", "eosio.test/rows/s", "s"),
+			ct.TrxTrace(t,
+				ct.DBOp(t, "remove", "eosio.test/rows/s/a", "s/", `{"from":"a"}/`, eosioTestABI1),
+				ct.DBOp(t, "remove", "eosio.test/rows/s/b", "s/", `{"from":"b2"}/`, eosioTestABI1),
+				ct.DBOp(t, "remove", "eosio.test/rows/s/b", "s/", `{"from":"c"}/`, eosioTestABI1),
+				ct.TableOp(t, "remove", "eosio.test/rows/s", "s"),
 			),
 
 			// Set a new ABI on `eosio.test`
-			trxTrace(t, actionSetABI(t, "eosio.test", eosioTestABI2)),
+			ct.TrxTrace(t, ct.ActionTraceSetABI(t, "eosio.test", eosioTestABI2)),
 
 			// Re-add all rows on `eosio.test` using new ABI
-			trxTrace(t,
-				tableOp(t, "insert", "eosio.test/rows2/s", "s"),
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/a", "/s", `/{"to":1}`),
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/b", "/s", `/{"to":2}`),
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/c", "/s", `/{"to":3}`),
+			ct.TrxTrace(t,
+				ct.TableOp(t, "insert", "eosio.test/rows2/s", "s"),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/a", "/s", `/{"to":1}`, eosioTestABI2),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/b", "/s", `/{"to":2}`, eosioTestABI2),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/c", "/s", `/{"to":3}`, eosioTestABI2),
 			),
 
 			// Add a new token contract `eosio.nekot` (to test `/tables/accounts` calls) and populate odd rows from `eosio.token`
-			trxTrace(t,
-				tableOp(t, "insert", "eosio.nekot/accounts/eosio5", "eosio5"),
-				dbOp(t, eosioNekotABI1, "insert", "eosio.nekot/accounts/eosio5/........cpbp3", "/eosio5", `/{"balance":"5.0000 SOE"}`),
+			ct.TrxTrace(t,
+				ct.TableOp(t, "insert", "eosio.nekot/accounts/eosio5", "eosio5"),
+				ct.DBOp(t, "insert", "eosio.nekot/accounts/eosio5/........cpbp3", "/eosio5", `/{"balance":"5.0000 SOE"}`, eosioNekotABI1),
 			),
 		),
 
 		// Block #6 | This block will be in the reversible segment, i.e. in the speculative writes
-		testBlock(t, "00000006aa", "00000005aa",
+		ct.Block(t, "00000006aa",
 			// Update balance of `eosio2` on `eosio.token`
-			trxTrace(t,
-				dbOp(t, eosioTokenABI1, "update", "eosio.token/accounts/eosio2/eos", "eosio2/eosio2", `{"balance":"20.0000 EOS"}/{"balance":"22.0000 EOS"}`),
+			ct.TrxTrace(t,
+				ct.DBOp(t, "update", "eosio.token/accounts/eosio2/eos", "eosio2/eosio2", `{"balance":"20.0000 EOS"}/{"balance":"22.0000 EOS"}`, eosioTokenABI1),
 			),
 
 			// Delete rows `a` from `eosio.test`, update `b` and add three new rows (`d`, `e` & `f`)
-			trxTrace(t,
-				dbOp(t, eosioTestABI2, "remove", "eosio.test/rows2/s/a", "s/", `{"to":1}/`),
+			ct.TrxTrace(t,
+				ct.DBOp(t, "remove", "eosio.test/rows2/s/a", "s/", `{"to":1}/`, eosioTestABI2),
 
-				dbOp(t, eosioTestABI2, "update", "eosio.test/rows2/s/b", "s/s", `{"to":2}/{"to":20}`),
+				ct.DBOp(t, "update", "eosio.test/rows2/s/b", "s/s", `{"to":2}/{"to":20}`, eosioTestABI2),
 
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/d", "/s", `/{"to":4}`),
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/e", "/s", `/{"to":5}`),
-				dbOp(t, eosioTestABI2, "insert", "eosio.test/rows2/s/f", "/s", `/{"to":6}`),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/d", "/s", `/{"to":4}`, eosioTestABI2),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/e", "/s", `/{"to":5}`, eosioTestABI2),
+				ct.DBOp(t, "insert", "eosio.test/rows2/s/f", "/s", `/{"to":6}`, eosioTestABI2),
 			),
 		),
 	}
+}
+
+func okQueryStateABI(e *httpexpect.Expect, account string, extraQuery string) (response *httpexpect.Object) {
+	queryString := fmt.Sprintf("account=%s", account)
+	if extraQuery != "" {
+		queryString += "" + extraQuery
+	}
+
+	return okQuery(e, "/v0/state/abi", queryString)
 }
 
 func okQueryStateTable(e *httpexpect.Expect, table string, extraQuery string) (response *httpexpect.Object) {

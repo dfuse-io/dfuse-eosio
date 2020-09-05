@@ -21,6 +21,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/server"
@@ -55,7 +56,7 @@ func e2eTest(t *testing.T, storeFactory StoreFactory, tester e2eTester) {
 	server := server.New(":25678", db)
 
 	runSource := func(blocks ...*pbcodec.Block) {
-		source := bstream.NewMockSource(bstreamBlocks(t, blocks...), bstream.NewPreprocessor(preprocessor, forkable.New(handler, forkable.WithLogger(zlog))))
+		source := bstream.NewMockSource(ct.ToBstreamBlocks(t, blocks), bstream.NewPreprocessor(preprocessor, forkable.New(handler, forkable.WithLogger(zlog))))
 		source.Run()
 
 		require.NoError(t, source.Err())
