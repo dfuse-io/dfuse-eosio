@@ -16,6 +16,8 @@ package server
 
 import (
 	"encoding/binary"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
@@ -145,4 +147,27 @@ func convertKey(key []byte, keyConverter KeyConverter) (string, error) {
 
 func bytesToName(bytes []byte) string {
 	return eos.NameToString(binary.BigEndian.Uint64(bytes))
+}
+
+// hexBytes is used within JSON exchange object to serialize as an hexadecimal
+// encoded value
+type hexBytes []byte
+
+func (t hexBytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(hex.EncodeToString(t))
+}
+
+func (t *hexBytes) UnmarshalJSON(data []byte) (err error) {
+	var s string
+	err = json.Unmarshal(data, &s)
+	if err != nil {
+		return
+	}
+
+	*t, err = hex.DecodeString(s)
+	return
+}
+
+func (t hexBytes) String() string {
+	return hex.EncodeToString(t)
 }

@@ -18,7 +18,7 @@ func encodeActionPrefixKey(account uint64) []byte {
 	key := make([]byte, actionPrefixKeyLen)
 
 	key[0] = prefixAction
-	binary.LittleEndian.PutUint64(key[1:], account)
+	binary.BigEndian.PutUint64(key[1:], account)
 	return key
 }
 
@@ -27,7 +27,7 @@ func encodeActionKey(account uint64, shardNum byte, ordinalNumber uint64) []byte
 
 	key[0] = prefixAction
 
-	binary.LittleEndian.PutUint64(key[1:], account)
+	binary.BigEndian.PutUint64(key[1:], account)
 
 	// We want the rows to be sorted by shard ascending 0 -> n
 	key[9] = shardNum
@@ -36,12 +36,12 @@ func encodeActionKey(account uint64, shardNum byte, ordinalNumber uint64) []byte
 	return key
 }
 
-func decodeActionKeySeqNum(key []byte) (byte, uint64) {
+func decodeActionKeySeqNum(key []byte) (uint64, byte, uint64) {
 	_ = key[actionKeyLen-1] //bounds check
-
+	account := binary.BigEndian.Uint64(key[1:])
 	shardNum := key[9]
-	seqNum := binary.BigEndian.Uint64(key[10:])
-	return shardNum, ^seqNum
+	ordinalNumber := binary.BigEndian.Uint64(key[10:])
+	return account, shardNum, ^ordinalNumber
 }
 
 func encodeLastProcessedBlockKey(shardNum byte) []byte {
