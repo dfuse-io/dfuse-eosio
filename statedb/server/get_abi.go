@@ -64,11 +64,13 @@ func (srv *EOSServer) getABIHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		_, response.ABI, err = abiEntry.ABI(statedb.ContractABIPackedOnly)
+		_, rawABI, err := abiEntry.ABI(statedb.ContractABIPackedOnly)
 		if err != nil {
 			writeError(ctx, w, fmt.Errorf("read ABI: %w", err))
 			return
 		}
+
+		response.ABI = hexBytes(rawABI)
 	}
 
 	writeResponse(ctx, w, response)

@@ -24,22 +24,6 @@ import (
 	"github.com/francoispqt/gojay"
 )
 
-//func (s *onTheFlyABISerializer) MarshalJSON() ([]byte, error) {
-//	jsonData, err := s.abi.DecodeTableRowTyped(s.tableTypeName, s.rowDataToDecode)
-//	if err != nil {
-//		// This can be both a problem from our standpoint as well as a bigger problem showing a bug in our decoder
-//		return json.Marshal(map[string]interface{}{
-//			"hex":   eos.HexBytes(s.rowDataToDecode),
-//			"error": fmt.Sprintf("ABI from block %d, row struct %q, data: %q, err: %w", s.abiAtBlockNum, s.tableTypeName, hex.EncodeToString(s.rowDataToDecode), err),
-//		})
-//	}
-//
-//	// FIXME: something faster than that?
-//	return json.Marshal(map[string]interface{}{
-//		"json": json.RawMessage(jsonData),
-//	})
-//}
-
 func (r *getTableRowsResponse) MarshalJSONObject(enc *gojay.Encoder) {
 	r.commonStateResponse.MarshalJSONObject(enc)
 	r.readTableResponse.MarshalJSONObject(enc)

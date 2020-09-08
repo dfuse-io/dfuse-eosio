@@ -34,14 +34,14 @@ require (
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/fluxdb v0.0.0-20200831181525-241a44ab80ff
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20200807025817-f1b87abdaad6
+	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
 	github.com/dfuse-io/logging v0.0.0-20200819170935-85f72399491a
-	github.com/dfuse-io/merger v0.0.3-0.20200820190200-4370814d32ce
-	github.com/dfuse-io/node-manager v0.0.2-0.20200813012016-72fd864261d6
+	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
+	github.com/dfuse-io/node-manager v0.0.2-0.20200903032905-fb973e9221c1
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
-	github.com/dfuse-io/search v0.0.2-0.20200831190646-5e8ef5a63a2a
+	github.com/dfuse-io/search v0.0.2-0.20200904194008-18293494d518
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a

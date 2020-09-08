@@ -151,7 +151,6 @@ func (b *Block) MigrateV0ToV1() {
 	}
 }
 
-
 func (b *Block) MigrateV1ToV2() {
 	if b.Version != 1 {
 		return
@@ -164,6 +163,7 @@ func (b *Block) MigrateV1ToV2() {
 		// on append ce FilteredApplied à
 	}
 }
+
 type FilteringActionMatcher interface {
 	Matched(actionIndex uint32) bool
 }
@@ -180,7 +180,7 @@ type ActionMatcher func(actTrace *ActionTrace) bool
 
 func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace, requiredSystemActions ...ActionMatcher) FilteringActionMatcher {
 	if !b.FilteringApplied {
-		// If no filtering was ever applied, all action are assumed to be included
+		// If no filtering was ever applied, all action are assumed to be considered
 		return AlwaysIncludedFilteringActionMatcher
 	}
 

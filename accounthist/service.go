@@ -7,6 +7,7 @@ import (
 
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/logging"
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -21,19 +22,15 @@ func (ws *Service) StreamActions(
 ) error {
 	logger := logging.Logger(ctx, zlog)
 
-	queryShardNum := byte(255)
+	queryShardNum := byte(0x00)
 	querySeqNum := uint64(math.MaxUint64)
 	if cursor != nil {
-		// TODO: we could check that the Cursor.ShardNum doesn't go above 255
 		queryShardNum = byte(cursor.ShardNum)
-		querySeqNum = cursor.SequenceNumber - 1 // FIXME: CHECK BOUNDARIES, this is EXCLUSIVE, so do we -1, +1 ?
+		querySeqNum = cursor.SequenceNumber - 1
 	}
 
-	startKey := make([]byte, actionKeyLen)
-	encodeActionKey(startKey, account, queryShardNum, querySeqNum)
-
-	endKey := make([]byte, actionKeyLen)
-	encodeActionKey(endKey, account, 0, 0)
+	startKey := encodeActionKey(account, queryShardNum, querySeqNum)
+	endKey := store.Key(encodeActionPrefixKey(account)).PrefixNext()
 
 	if limit == 0 || limit > ws.maxEntriesPerAccount {
 		limit = ws.maxEntriesPerAccount

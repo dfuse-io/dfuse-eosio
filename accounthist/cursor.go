@@ -5,7 +5,7 @@ import pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist
 const CursorMagicValue = 4374
 
 func actionKeyToCursor(account uint64, key []byte) *pbaccounthist.Cursor {
-	shardNo, seqNum := decodeActionKeySeqNum(key)
+	_, shardNo, seqNum := decodeActionKeySeqNum(key)
 	return &pbaccounthist.Cursor{
 		Version:        0,
 		Magic:          CursorMagicValue,
@@ -16,7 +16,5 @@ func actionKeyToCursor(account uint64, key []byte) *pbaccounthist.Cursor {
 }
 
 func cursorToActionKey(cursor *pbaccounthist.Cursor) []byte {
-	key := make([]byte, actionKeyLen)
-	encodeActionKey(key, cursor.Account, byte(cursor.ShardNum), cursor.SequenceNumber)
-	return key
+	return encodeActionKey(cursor.Account, byte(cursor.ShardNum), cursor.SequenceNumber)
 }

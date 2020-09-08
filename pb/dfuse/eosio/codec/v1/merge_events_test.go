@@ -15,7 +15,6 @@
 package pbcodec
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -68,7 +67,6 @@ func TestMergeTransactionEvents(t *testing.T) {
 				{Id: "trx1", BlockId: "abc", Irreversible: true, Event: NewTestAddEvent(1)},
 			},
 			canonicalChain: func(t *testing.T, id string) bool {
-				fmt.Println("CHECKED", id)
 				return true
 			},
 			expect: &TransactionLifecycle{

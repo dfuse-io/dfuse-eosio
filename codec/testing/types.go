@@ -171,6 +171,14 @@ func ToBstreamBlock(t testing.T, block *pbcodec.Block) *bstream.Block {
 	return blk
 }
 
+func ToBstreamBlocks(t testing.T, blocks []*pbcodec.Block) (out []*bstream.Block) {
+	out = make([]*bstream.Block, len(blocks))
+	for i, block := range blocks {
+		out[i] = ToBstreamBlock(t, block)
+	}
+	return
+}
+
 func ToPbbstreamBlock(t testing.T, block *pbcodec.Block) *pbbstream.Block {
 	blk, err := ToBstreamBlock(t, block).ToProto()
 	require.NoError(t, err)
