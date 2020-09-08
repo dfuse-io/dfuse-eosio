@@ -221,6 +221,13 @@ func WSUnknownMessageError(ctx context.Context, messageType string) *derr.ErrorR
 	)
 }
 
+func WSUnavailableMessageError(ctx context.Context, messageType string) *derr.ErrorResponse {
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("ws_unavailable_message_error"),
+		"The received message type is no more available.",
+		"type", messageType,
+	)
+}
+
 func WSUnableToUpgradeConnectionError(ctx context.Context, status int, cause error) *derr.ErrorResponse {
 	return derr.HTTPErrorFromStatus(status, ctx, cause, derr.C("ws_upgrade_failed_error"),
 		"Unable to upgrade WebSocket connection correctly.",

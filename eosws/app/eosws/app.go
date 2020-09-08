@@ -82,6 +82,8 @@ type Config struct {
 
 	DataIntegrityProofSecret string
 	HealthzSecret            string
+
+	DisabledWsMessage map[string]interface{}
 }
 
 type Modules struct {
@@ -97,11 +99,13 @@ type App struct {
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
 func New(config *Config, modules *Modules) *App {
+	eosws.DisabledWsMessage = config.DisabledWsMessage
 	return &App{
 		Shutter: shutter.New(),
 		Config:  config,
 		Modules: modules,
 	}
+
 }
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql

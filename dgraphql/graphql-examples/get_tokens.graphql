@@ -1,0 +1,22 @@
+query {
+  tokens {
+    blockRef {
+      id
+      number
+    }
+    pageInfo {
+      startCursor
+      endCursor
+    }
+    edges {
+      cursor
+      node {
+        symbol
+        contract
+        holders
+        totalSupply
+
+      }
+    }
+  }
+}

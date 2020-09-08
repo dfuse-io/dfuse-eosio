@@ -35,6 +35,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var DisabledWsMessage map[string]interface{}
+
 // WSConn represents a single web socket connection.
 type WSConn struct {
 	*shutter.Shutter
@@ -193,6 +195,11 @@ func (ws *WSConn) handleMessage(rawMsg []byte) {
 	}
 
 	if inspect.Type == "pong" {
+		return
+	}
+
+	if _, disabled := DisabledWsMessage[inspect.Type]; disabled {
+		ws.EmitError(ctx, inspect.ReqID, WSUnavailableMessageError(ctx, inspect.Type))
 		return
 	}
 

@@ -20,7 +20,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
-	github.com/dfuse-io/dgraphql v0.0.2-0.20200702205930-77425a6665f8
+	github.com/dfuse-io/dgraphql v0.0.2-0.20200908131152-9fa5f76eb5db
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20200831181525-241a44ab80ff
+	github.com/dfuse-io/fluxdb v0.0.0-20200908132839-2ef87fea5288
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
 	github.com/dfuse-io/logging v0.0.0-20200819170935-85f72399491a

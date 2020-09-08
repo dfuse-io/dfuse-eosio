@@ -33,10 +33,20 @@ func init() {
 			cmd.Flags().String("eosws-data-integrity-proof-secret", "boo", "Data integrity secret for DIPP middleware")
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native superviser APIs with authentication")
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
+			cmd.Flags().StringSlice("eosws-disabled-messages", []string{}, "List off WS message that need to be disabled")
 			return nil
 		},
+
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			dfuseDataDir := runtime.AbsDataDir
+
+			disabledWsMessages := map[string]interface{}{}
+			disabled := struct{}{}
+
+			for _, msg := range viper.GetStringSlice("eosws-disabled-messages") {
+				disabledWsMessages[msg] = disabled
+			}
+
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
@@ -60,6 +70,7 @@ func init() {
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
 				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
 				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
+				DisabledWsMessage:           disabledWsMessages,
 			}, &eoswsApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil

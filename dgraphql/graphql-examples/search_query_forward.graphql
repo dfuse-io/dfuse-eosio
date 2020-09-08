@@ -1,0 +1,25 @@
+query ($query: String!, $cursor: String, $limit: Int64, $low: Int64, $high: Int64) {
+  searchTransactionsForward(query: $query, lowBlockNum: $low, highBlockNum: $high, limit: $limit, cursor: $cursor) {
+    results {
+      undo
+      cursor
+      trace {
+        block {
+          num
+          id
+          confirmed
+          timestamp
+          previous
+        }
+        id
+        matchingActions {
+          account
+          name
+          json
+          seq
+          receiver
+        }
+      }
+    }
+  }
+}

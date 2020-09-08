@@ -1,0 +1,21 @@
+query($contract: String!, $symbol:String!, $limit: Uint32, $opts: [ACCOUNT_BALANCE_OPTION!]) {
+  tokenBalances(contract: $contract, symbol: $symbol,limit: $limit, options: $opts) {
+    blockRef {
+      id
+      number
+    }
+    pageInfo {
+      startCursor
+      endCursor
+    }
+    edges {
+      node {
+        account
+        contract
+        symbol
+        precision
+        balance
+      }
+    }
+  }
+}
