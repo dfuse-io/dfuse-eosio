@@ -372,6 +372,16 @@ func (c *DefaultCache) setToken(token *pbtokenmeta.Token) error {
 	return nil
 }
 
+func (c *DefaultCache) setContract(contractName eos.AccountName) error {
+	_, found := c.TokensInContract[contractName]
+	if found {
+		return fmt.Errorf("cannot re-add a known contract: %s", contractName)
+	}
+
+	c.TokensInContract[contractName] = []*pbtokenmeta.Token{}
+	return nil
+}
+
 func (c *DefaultCache) Apply(mutationsBatch *MutationsBatch, processedBlock bstream.BlockRef) (errors []error) {
 	c.blocklevelLock.Lock()
 	defer c.blocklevelLock.Unlock()
@@ -399,6 +409,8 @@ func (c *DefaultCache) Apply(mutationsBatch *MutationsBatch, processedBlock bstr
 			err = c.setToken(mut.Args[0].(*pbtokenmeta.Token))
 		case SetStakeMutation:
 			err = c.setStake(mut.Args[0].(*EOSStakeEntry))
+		case SetContractMutation:
+			err = c.setContract(mut.Args[0].(eos.AccountName))
 		}
 		if err != nil {
 			errors = append(errors, err)

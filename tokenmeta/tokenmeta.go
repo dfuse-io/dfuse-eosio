@@ -1,10 +1,8 @@
 package tokenmeta
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 
@@ -73,45 +71,6 @@ func (i *TokenMeta) Launch() error {
 		return err
 	}
 
-	return nil
-}
-
-func (i *TokenMeta) addNewTokenContract(ctx context.Context, tokenContract eos.AccountName, block bstream.BlockRef) error {
-	for attempt := 1; true; attempt++ {
-		tokens, bals, err := processContract(ctx, tokenContract, uint32(block.Num()), i.stateClient)
-		if err != nil {
-			if !isRetryableStateDBError(err) {
-				zlog.Info("invalid token contract, unable to get symbols with non-retryable error",
-					zap.String("token_contract", string(tokenContract)),
-					zap.Error(err),
-				)
-				return fmt.Errorf("invalid token contract, unable to get symbols with non-retryable error: %w", err)
-			}
-
-			if attempt > maxStateDBRetry {
-				return fmt.Errorf("failing after 5 attempts to get symbols from token contract: %w", err)
-			}
-
-			zlog.Warn("unable to get symbols from token contract, retrying",
-				zap.String("token_contract", string(tokenContract)),
-				zap.Error(err),
-			)
-
-			time.Sleep(time.Duration(attempt) * time.Second)
-			continue
-		}
-
-		mutations := &cache.MutationsBatch{}
-		for _, token := range tokens {
-			mutations.SetToken(token)
-		}
-
-		for _, bal := range bals {
-			mutations.SetBalance(bal)
-		}
-		i.cache.Apply(mutations, block)
-		return nil
-	}
 	return nil
 }
 

@@ -1,7 +1,7 @@
 package tokenmeta
 
 import (
-	"context"
+	"encoding/hex"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -27,31 +27,55 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 			if !shouldProcessAction(actTrace, actionMatcher) {
 				continue
 			}
-			actionName := actTrace.Action.Name
-			account := eos.AccountName(actTrace.Account())
-			zlog.Debug("processing action trace",
-				zap.String("action", actionName),
-				zap.String("account", string(account)),
-			)
 
-			if actTrace.Action.Name == "setabi" {
-				rawABI := actTrace.Action.RawData
-				contractStats, err := getTokenContractStats(string(account), rawABI)
+			actionName := actTrace.Action.Name
+			if actionName == "setabi" {
+				account := actTrace.GetData("account").String()
+				hexABI := actTrace.GetData("abi")
+
+				if !hexABI.Exists() {
+					zlog.Warn("'setabi' action data payload not present",
+						zap.String("account", account),
+					)
+					continue
+				}
+
+				hexData := hexABI.String()
+				if hexData == "" {
+					zlog.Info("empty ABI in 'setabi' action",
+						zap.String("account", account))
+					continue
+				}
+
+				abiData, err := hex.DecodeString(hexData)
 				if err != nil {
-					zlog.Warn("failed decoding ABI in account",
-						zap.String("account", string(account)),
-						zap.String("raw_abi", string(rawABI)),
+					zlog.Info("failed to hex decode abi string",
+						zap.String("account", account),
 						zap.Error(err),
 					)
-					// TODO: what do we do here?
-					return false
+					continue
+				}
+
+				contractStats, err := getTokenContractStats(string(account), abiData, false)
+				if err != nil {
+					zlog.Info("failed to get token contract info",
+						zap.String("account", account),
+						zap.String("raw_abi", string(abiData)),
+						zap.Error(err),
+					)
+					continue
 				}
 
 				if contractStats.isTokenContract {
-					err = t.addNewTokenContract(context.Background(), account, blk)
-					zlog.Info("discovered new token contract",
-						zap.String("account", string(account)),
-					)
+					if t.cache.IsTokenContract(eos.AN(account)) {
+						zlog.Info("skipping already known token contract", zap.String("account", account))
+						continue
+					}
+
+					zlog.Info("adding new token contract", zap.String("account", account))
+					mutations := &cache.MutationsBatch{}
+					mutations.SetContract(eos.AccountName(account))
+					t.cache.Apply(mutations, blk)
 				}
 			}
 		}
@@ -147,7 +171,10 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 				var symbol *eos.Symbol
 				eosToken := t.cache.TokenContract(tokenContract, symbolCode)
 				if eosToken == nil {
-					zlogger.Debug("new token contract", zap.String("token_contract", string(tokenContract)), zap.String("symbol", symbolCode.String()))
+					zlogger.Debug("new token contract",
+						zap.String("token_contract", string(tokenContract)),
+						zap.String("symbol", symbolCode.String()),
+					)
 				} else {
 					symbol = TokenToEOSSymbol(eosToken)
 				}
@@ -166,6 +193,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 			}
 		}
 	}
+
 	errs := t.cache.Apply(muts, blk)
 	if len(errs) != 0 {
 		// TODO eventually catch fatal errors and break or ... what can we do ?

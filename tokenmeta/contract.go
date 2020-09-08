@@ -3,6 +3,7 @@ package tokenmeta
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
@@ -16,15 +17,17 @@ type contractStats struct {
 	isTokenContract  bool
 }
 
-func getTokenContractStats(account string, rawABI []byte) (*contractStats, error) {
+func getTokenContractStats(account string, rawABI []byte, isJsonEncoded bool) (*contractStats, error) {
 	var abi *eos.ABI
-	err := json.Unmarshal(rawABI, &abi)
+	var err error
+	if isJsonEncoded {
+		err = json.Unmarshal(rawABI, &abi)
+	} else {
+		err = eos.UnmarshalBinary(rawABI, &abi)
+	}
+
 	if err != nil {
-		zlog.Warn("failed decoding ABI in account",
-			zap.String("account", account),
-			zap.Error(err),
-		)
-		return nil, err
+		return nil, fmt.Errorf("failed decoding ABI in account %q: %w", account, err)
 	}
 
 	var hasStat, hasAccounts bool

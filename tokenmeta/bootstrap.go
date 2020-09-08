@@ -93,7 +93,7 @@ func parseContractFromABIs(cnt []byte) (out []eos.AccountName) {
 			return true
 		}
 
-		contractStats, err := getTokenContractStats(account, []byte(rawABI))
+		contractStats, err := getTokenContractStats(account, []byte(rawABI), true)
 		if err != nil {
 			zlog.Warn("failed decoding ABI in account",
 				zap.String("account", account),
