@@ -12,6 +12,7 @@ date.
 ### Added
 
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
+* `eosws-disabled-messages` a comma separated list of ws messages to disable. 
 
 ### Changed
 
