@@ -38,6 +38,10 @@ func AppBlockNumHigherThanLIBError(ctx context.Context, chosenBlockNum, lastWrit
 	)
 }
 
+func AppNotReadyError(ctx context.Context) *derr.ErrorResponse {
+	return derr.HTTPServiceUnavailableError(ctx, nil, derr.C("app_not_ready_error"), "The service is not ready to accept requests yet, retry later.")
+}
+
 // Data Errors
 
 func DataABINotFoundError(ctx context.Context, account string, blockNum uint64) *derr.ErrorResponse {

@@ -57,6 +57,11 @@ func (srv *EOSServer) prepareRead(
 	}
 
 	headBlock := srv.fetchHeadBlock(ctx, zlog)
+	if bstream.EqualsBlockRefs(headBlock, bstream.BlockRefEmpty) {
+		err = statedb.AppNotReadyError(ctx)
+		return
+	}
+
 	headBlockNum := headBlock.Num()
 	chosenBlockNum = blockNum
 	if chosenBlockNum == 0 {
