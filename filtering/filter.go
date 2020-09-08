@@ -80,11 +80,7 @@ type kv struct {
 type actorMap map[string]int
 
 func (m actorMap) add(actor string) {
-	if elem, ok := m[actor]; ok {
-		elem++
-		return
-	}
-	m[actor] = 1
+	m[actor] = m[actor] + 1
 }
 
 func getHeap(m map[string]int) *KVHeap {
