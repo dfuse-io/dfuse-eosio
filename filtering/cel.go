@@ -73,6 +73,7 @@ func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop
 			decls.NewIdent("notif", decls.Bool, nil),
 			decls.NewIdent("scheduled", decls.Bool, nil),
 			decls.NewIdent("trx_action_count", decls.Int, nil), // Amount of actions in the transaction in which this action is part of.
+			decls.NewIdent("top5_trx_actors", decls.NewListType(decls.String), nil),
 
 			// Those are not supported right now, so they are commented out for now to generate an error when using them
 			// decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
@@ -135,13 +136,16 @@ type actionTraceActivation struct {
 	trace      *pbcodec.ActionTrace
 	cachedData map[string]interface{}
 
-	trxScheduled   bool
-	trxActionCount int
+	trxTop5ActorsGetter func() []string
+	trxScheduled        bool
+	trxActionCount      int
 }
 
 func (a *actionTraceActivation) Parent() interpreter.Activation {
 	return nil
 }
+
+// exclude_filter: (trx_action_count > 200 && top5_trx_actors.exists(x in ['pizzapizza', 'eidosonecoin'])
 
 func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	if traceEnabled {
@@ -149,6 +153,8 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	}
 
 	switch name {
+	case "top5_trx_actors":
+		return a.trxTop5ActorsGetter(), true
 	case "trx_action_count":
 		return a.trxActionCount, true
 	case "receiver":
