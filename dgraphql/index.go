@@ -50,7 +50,7 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	dgraphqlBaseConfig := config.Config
 
 	return dgraphqlApp.New(&dgraphqlBaseConfig, &dgraphqlApp.Modules{
-		PredefinedGraphqlExamples: GraphqlExamples,
+		PredefinedGraphqlExamples: GraphqlExamples(),
 		SchemaFactory:             &SchemaFactory{config: config},
 	}), nil
 }
