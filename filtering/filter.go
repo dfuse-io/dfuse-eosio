@@ -1,6 +1,7 @@
 package filtering
 
 import (
+	"container/heap"
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
@@ -71,6 +72,65 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 
 }
 
+type kv struct {
+	Key   string
+	Value int
+}
+
+type actorMap map[string]int
+
+func (m actorMap) add(actor string) {
+	m[actor] = m[actor] + 1
+}
+
+func getHeap(m map[string]int) *KVHeap {
+	h := &KVHeap{}
+	heap.Init(h)
+	for k, v := range m {
+		heap.Push(h, kv{k, v})
+	}
+	return h
+}
+
+type KVHeap []kv
+
+func (h KVHeap) Len() int           { return len(h) }
+func (h KVHeap) Less(i, j int) bool { return h[i].Value > h[j].Value }
+func (h KVHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *KVHeap) Push(x interface{}) {
+	*h = append(*h, x.(kv))
+}
+
+func (h *KVHeap) Pop() interface{} {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+}
+
+func getTop5ActorsForTrx(trx *pbcodec.TransactionTrace) (topActors []string) {
+	var actors actorMap
+	actors = make(map[string]int)
+	for _, action := range trx.ActionTraces {
+		actors.add(action.Receiver)
+		actors.add(action.Account())
+		for _, auth := range action.Action.Authorization {
+			actors.add(auth.Actor)
+		}
+	}
+	kvHeap := getHeap(actors)
+	for i := 0; i < 5; i++ {
+		if kvHeap.Len() == 0 {
+			break
+		}
+		act := kvHeap.Pop()
+		topActors = append(topActors, act.(kv).Key)
+	}
+	return
+}
+
 func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteringApplied = true
 	block.FilteringIncludeFilterExpr = f.IncludeProgram.code
@@ -82,11 +142,20 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	filteredExecutedTotalActionCount := uint32(0)
 
 	excludedTransactionIds := map[string]bool{}
+
 	for _, trxTrace := range block.UnfilteredTransactionTraces {
 		trxTraceAddedToFiltered := false
 		trxTraceExcluded := true
+		var trxTop5Actors []string //per transaction
+		getTrxTop5Actors := func() []string {
+			if trxTop5Actors == nil {
+				trxTop5Actors = getTop5ActorsForTrx(trxTrace)
+			}
+			return trxTop5Actors
+		}
+
 		for _, actTrace := range trxTrace.ActionTraces {
-			passes, isSystem := f.shouldProcess(trxTrace, actTrace)
+			passes, isSystem := f.shouldProcess(trxTrace, actTrace, getTrxTop5Actors)
 			if !passes {
 				continue
 			}
@@ -106,8 +175,15 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 		}
 
 		if trxTrace.FailedDtrxTrace != nil {
+			trxTop5Actors = nil
+			getTrxTop5Actors = func() []string {
+				if trxTop5Actors == nil {
+					trxTop5Actors = getTop5ActorsForTrx(trxTrace.FailedDtrxTrace)
+				}
+				return trxTop5Actors
+			}
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				passes, isSystem := f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace)
+				passes, isSystem := f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors)
 				if !passes {
 					continue
 				}
@@ -176,8 +252,8 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
-func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace) (pass bool, isSystem bool) {
-	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces)}
+func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string) (pass bool, isSystem bool) {
+	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces), trxTop5ActorsGetter: trxTop5ActorsGetter}
 	// If the include program does not match, there is nothing more to do here
 	if !f.IncludeProgram.match(&activation) {
 		if f.SystemActionsIncludeProgram.match(&activation) {
