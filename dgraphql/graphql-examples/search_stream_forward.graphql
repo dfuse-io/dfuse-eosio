@@ -1,0 +1,23 @@
+subscription ($query: String!, $cursor: String, $limit: Int64) {
+  searchTransactionsForward(query: $query, limit: $limit, cursor: $cursor) {
+    undo
+    cursor
+    trace {
+      block {
+        num
+        id
+        confirmed
+        timestamp
+        previous
+      }
+      id
+      matchingActions {
+        account
+        name
+        json
+        seq
+        receiver
+      }
+    }
+  }
+}

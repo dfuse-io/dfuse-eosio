@@ -1,0 +1,22 @@
+subscription ($query: String!, $cursor: String, $limit: Int64, $low: Int64) {
+  searchTransactionsBackward(query: $query, lowBlockNum: $low, limit: $limit, cursor: $cursor) {
+    cursor
+    trace {
+      block {
+        num
+        id
+        confirmed
+        timestamp
+        previous
+      }
+      id
+      matchingActions {
+        account
+        name
+        json
+        seq
+        receiver
+      }
+    }
+  }
+}

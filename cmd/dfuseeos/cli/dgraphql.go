@@ -54,7 +54,7 @@ func init() {
 					OverrideTraceID: viper.GetBool("dgraphql-override-trace-id"),
 					Protocol:        viper.GetString("dgraphql-protocol"),
 					JwtIssuerURL:    viper.GetString("dgraphql-auth-url"),
-					ApiKey:          viper.GetString("dgraphql-api-key"),
+					APIKey:          viper.GetString("dgraphql-api-key"),
 				},
 			})
 		},

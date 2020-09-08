@@ -10,7 +10,6 @@ dashboard/client/.npmrc
 /bootstrapping/output.log
 /dfuse.yaml
 /dfuse-data
-*/rice-box.go
 /dist
 *SOURCE_ME.sh*
 /dfuseeos

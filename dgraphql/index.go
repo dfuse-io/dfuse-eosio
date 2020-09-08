@@ -34,6 +34,7 @@ import (
 
 type Config struct {
 	dgraphqlApp.Config
+
 	RatelimiterPlugin string
 	SearchAddr        string
 	ABICodecAddr      string
@@ -48,7 +49,10 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 
 	dgraphqlBaseConfig := config.Config
 
-	return dgraphqlApp.New(&dgraphqlBaseConfig, &SchemaFactory{config: config}), nil
+	return dgraphqlApp.New(&dgraphqlBaseConfig, &dgraphqlApp.Modules{
+		PredefinedGraphqlExamples: GraphqlExamples,
+		SchemaFactory:             &SchemaFactory{config: config},
+	}), nil
 }
 
 type SchemaFactory struct {

@@ -16,12 +16,13 @@ main() {
     esac
   done
   shift $((OPTIND-1))
+  [[ $1 = "--" ]] && shift
 
   if [[ $clean == "true" ]]; then
     rm -rf dfuse-data &> /dev/null || true
   fi
 
-  exec $dfuseeos -c $(basename $ROOT).yaml start
+  exec $dfuseeos -c $(basename $ROOT).yaml start "$@"
 }
 
 usage_error() {
