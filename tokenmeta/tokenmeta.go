@@ -1,8 +1,12 @@
 package tokenmeta
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 
 	"github.com/dfuse-io/bstream"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
@@ -18,6 +22,8 @@ const AccountsTable eos.TableName = eos.TableName("accounts")
 const StatTable eos.TableName = eos.TableName("stat")
 const EOSStakeTable eos.TableName = eos.TableName("delband")
 
+var maxStateDBRetry = 5
+
 type TokenMeta struct {
 	*shutter.Shutter
 
@@ -26,6 +32,18 @@ type TokenMeta struct {
 	abiCodecCli     pbabicodec.DecoderClient
 	abisCache       map[string]*abiItem
 	saveEveryNBlock uint32
+	stateClient     pbstatedb.StateClient
+}
+
+func NewTokenMeta(cache cache.Cache, abiCodecCli pbabicodec.DecoderClient, saveEveryNBlock uint32, stateClient pbstatedb.StateClient) *TokenMeta {
+	return &TokenMeta{
+		Shutter:         shutter.New(),
+		cache:           cache,
+		abisCache:       map[string]*abiItem{},
+		abiCodecCli:     abiCodecCli,
+		saveEveryNBlock: saveEveryNBlock,
+		stateClient:     stateClient,
+	}
 }
 
 func (t *TokenMeta) decodeDBOpToRow(data []byte, tableName eos.TableName, contract eos.AccountName, blocknum uint32) (json.RawMessage, error) {
@@ -35,146 +53,6 @@ func (t *TokenMeta) decodeDBOpToRow(data []byte, tableName eos.TableName, contra
 	}
 
 	return decodeTableRow(data, tableName, abi)
-}
-
-func NewTokenMeta(cache cache.Cache, abiCodecCli pbabicodec.DecoderClient, saveEveryNBlock uint32) *TokenMeta {
-	return &TokenMeta{
-		Shutter:         shutter.New(),
-		cache:           cache,
-		abisCache:       map[string]*abiItem{},
-		abiCodecCli:     abiCodecCli,
-		saveEveryNBlock: saveEveryNBlock,
-	}
-}
-
-func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
-	// forkable setup will only yield irreversible blocks
-	muts := &cache.MutationsBatch{}
-	blk := block.ToNative().(*pbcodec.Block)
-
-	if (blk.Number % 600) == 0 {
-		zlog.Info("process blk 1/600", zap.Stringer("block", block))
-	}
-
-	for _, trx := range blk.TransactionTraces() {
-		zlogger := zlog.With(zap.String("trx_id", trx.Id))
-		actionMatcher := blk.FilteringActionMatcher(trx)
-
-		for _, dbop := range trx.DbOps {
-			if !shouldProcessDbop(dbop, actionMatcher) {
-				continue
-			}
-			zlog.Debug("processing dbop", zap.String("contract", dbop.Code), zap.String("table", dbop.TableName), zap.String("scope", dbop.Scope), zap.String("primary_key", dbop.PrimaryKey))
-
-			isEOSStake := dbop.Code == "eosio" && dbop.TableName == string(EOSStakeTable)
-
-			tokenContract := eos.AccountName(dbop.Code)
-			if !t.cache.IsTokenContract(tokenContract) && !isEOSStake {
-				continue
-			}
-
-			symbolCode, err := eos.NameToSymbolCode(eos.Name(dbop.PrimaryKey))
-			if err != nil {
-				zlogger.Warn("unable to decode primary key to symbol",
-					zap.String("contract", string(tokenContract)),
-					zap.String("table", dbop.TableName),
-					zap.String("scope", dbop.Scope),
-					zap.String("primary_key", dbop.PrimaryKey),
-					zap.Error(err))
-				continue
-			}
-
-			rowData := dbop.NewData
-			if rowData == nil {
-				zlog.Info("using db row old data")
-				rowData = dbop.OldData
-			}
-			row, err := t.decodeDBOpToRow(rowData, eos.TableName(dbop.TableName), tokenContract, uint32(block.Number))
-			if err != nil {
-				zlogger.Error("cannot decode table row",
-					zap.String("contract", string(tokenContract)),
-					zap.String("table_name", dbop.TableName),
-					zap.String("transaction_id", trx.Id),
-					zap.Error(err))
-				continue
-			}
-
-			switch dbop.TableName {
-			case string(EOSStakeTable):
-				if !isEOSStake {
-					zlogger.Error("something terribly wrong happened: table eosio stake but not eosio stake",
-						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()))
-					continue
-				}
-				eosStakeEntry, err := getStakeEntryFromDBRow(tokenContract, dbop.Scope, row)
-				if err != nil {
-					zlogger.Error("cannot apply stake entry",
-						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()),
-						zap.Error(err))
-					continue
-				}
-				muts.SetStake(eosStakeEntry)
-			case string(AccountsTable):
-
-				eosToken := t.cache.TokenContract(tokenContract, symbolCode)
-				if eosToken == nil {
-					zlogger.Warn("unsupported token for contract",
-						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()))
-					continue
-				}
-
-				accountBalance, err := getAccountBalanceFromDBRow(tokenContract, TokenToEOSSymbol(eosToken), dbop.Scope, row)
-				if err != nil {
-					zlogger.Warn("could not create account balance from dbop row",
-						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()),
-						zap.String("scope", dbop.Scope),
-						zap.String("dbop_row", string(row)))
-					continue
-				}
-
-				if dbop.NewData == nil {
-					// if the db operation has no new data so it removed it
-					muts.RemoveBalance(accountBalance)
-				} else {
-					muts.SetBalance(accountBalance)
-				}
-			case string(StatTable):
-				var symbol *eos.Symbol
-				eosToken := t.cache.TokenContract(tokenContract, symbolCode)
-				if eosToken == nil {
-					zlogger.Debug("new token contract", zap.String("token_contract", string(tokenContract)), zap.String("symbol", symbolCode.String()))
-				} else {
-					symbol = TokenToEOSSymbol(eosToken)
-				}
-
-				token, err := getTokenFromDBRow(tokenContract, symbol, row)
-				if err != nil {
-					zlogger.Warn("could not create token from dbop row",
-						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()),
-						zap.String("scope", dbop.Scope),
-						zap.String("dbop_row", string(row)))
-					continue
-
-				}
-				muts.SetToken(token)
-			}
-		}
-	}
-	errs := t.cache.Apply(muts, blk)
-	if len(errs) != 0 {
-		// TODO eventually catch fatal errors and break or ... what can we do ?
-		zlog.Warn("errors applying block", zap.String("block_id", block.ID()), zap.Errors("errors", errs))
-	}
-	if t.saveEveryNBlock != 0 && blk.Number%t.saveEveryNBlock == 0 {
-		// TODO Should this be done async? if so we would need to add locks
-		t.cache.SaveToFile()
-	}
-	return nil
 }
 
 func (i *TokenMeta) Launch() error {
@@ -198,12 +76,62 @@ func (i *TokenMeta) Launch() error {
 	return nil
 }
 
+func (i *TokenMeta) addNewTokenContract(ctx context.Context, tokenContract eos.AccountName, block bstream.BlockRef) error {
+	for attempt := 1; true; attempt++ {
+		tokens, bals, err := processContract(ctx, tokenContract, uint32(block.Num()), i.stateClient)
+		if err != nil {
+			if !isRetryableStateDBError(err) {
+				zlog.Info("invalid token contract, unable to get symbols with non-retryable error",
+					zap.String("token_contract", string(tokenContract)),
+					zap.Error(err),
+				)
+				return fmt.Errorf("invalid token contract, unable to get symbols with non-retryable error: %w", err)
+			}
+
+			if attempt > maxStateDBRetry {
+				return fmt.Errorf("failing after 5 attempts to get symbols from token contract: %w", err)
+			}
+
+			zlog.Warn("unable to get symbols from token contract, retrying",
+				zap.String("token_contract", string(tokenContract)),
+				zap.Error(err),
+			)
+
+			time.Sleep(time.Duration(attempt) * time.Second)
+			continue
+		}
+
+		mutations := &cache.MutationsBatch{}
+		for _, token := range tokens {
+			mutations.SetToken(token)
+		}
+
+		for _, bal := range bals {
+			mutations.SetBalance(bal)
+		}
+		i.cache.Apply(mutations, block)
+		return nil
+	}
+	return nil
+}
+
 func shouldProcessDbop(dbop *pbcodec.DBOp, actionMatcher pbcodec.FilteringActionMatcher) bool {
 	if !actionMatcher.Matched(dbop.ActionIndex) {
 		return false
 	}
 
 	return dbop.TableName == string(AccountsTable) || dbop.TableName == string(StatTable)
+}
+
+func shouldProcessAction(actTrace *pbcodec.ActionTrace, actionMatcher pbcodec.FilteringActionMatcher) bool {
+	// TODO should I do this check? when does actionMatcher know if it is system action
+	if !actionMatcher.Matched(actTrace.ExecutionIndex) {
+		return false
+	}
+	if actTrace.Receiver != "eosio" || actTrace.Action.Account != "eosio" {
+		return false
+	}
+	return actTrace.Action.Name == "setabi"
 }
 
 func TokenToEOSSymbol(e *pbtokenmeta.Token) *eos.Symbol {
