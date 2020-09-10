@@ -15,55 +15,41 @@ import (
 func (ws *Service) SetupSource() error {
 	ctx := context.Background()
 
-	var startProcessingBlockNum uint64
-	gateType := bstream.GateInclusive
-
-	// Retrieved lastProcessedBlock must be in the shard's range, and that shouldn't
-	// change across invocations, or in the lifetime of the database.
-	checkpoint, err := ws.GetShardCheckpoint(ctx)
+	checkpoint, err := ws.resolveCheckpoint(ctx)
 	if err != nil {
-		return fmt.Errorf("fetching shard checkpoint: %w", err)
+		return fmt.Errorf("unable to resolve shard checkpoint: %w", err)
 	}
-
-	if checkpoint == nil || ws.shardNum != 0 {
-		startBlock := ws.startBlockNum
-		if startBlock <= bstream.GetProtocolFirstStreamableBlock {
-			startBlock = bstream.GetProtocolFirstStreamableBlock
-		}
-		zlog.Info("starting without checkpoint", zap.Int("shard_num", int(ws.shardNum)), zap.Uint64("block_num", startBlock))
-		checkpoint = &pbaccounthist.ShardCheckpoint{
-			InitialStartBlock: startBlock,
-		}
-		startProcessingBlockNum = startBlock
-	} else {
-		zlog.Info("starting from checkpoint", zap.Int("shard_num", int(ws.shardNum)), zap.String("block_id", checkpoint.LastWrittenBlockId), zap.Uint64("block_num", checkpoint.LastWrittenBlockNum))
-		startProcessingBlockNum = checkpoint.LastWrittenBlockNum
-		gateType = bstream.GateExclusive
-	}
-	checkpoint.TargetStopBlock = ws.stopBlockNum
 	ws.lastCheckpoint = checkpoint
 
-	// WARN: this is IRREVERSIBLE ONLY
+	startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType, err := ws.resolveStartBlock(ctx, checkpoint)
+	if err != nil {
+		return fmt.Errorf("unable to resolve start block: %w", err)
+	}
 
+	ws.setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType)
+
+	return nil
+}
+
+func (ws *Service) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType) {
+	zlog.Info("setting up pipeline",
+		zap.Uint64("start_processing_block_num", startProcessingBlockNum),
+		zap.Uint64("file_source_start_block_num", fileSourceStartBlockNum),
+		zap.String("file_source_start_block_id", fileSourceStartBlockId),
+		zap.String("gate_type", gateType.String()),
+	)
+
+	// WARN: this is IRREVERSIBLE ONLY
 	options := []forkable.Option{
 		forkable.WithLogger(zlog),
 		forkable.WithFilters(forkable.StepIrreversible),
 	}
 
-	var fileSourceStartBlockNum uint64
-	if checkpoint.LastWrittenBlockId != "" {
-		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(checkpoint.LastWrittenBlockId, checkpoint.LastWrittenBlockNum)))
-		fileSourceStartBlockNum = checkpoint.LastWrittenBlockNum
-	} else {
-		fsStartNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
-		if err != nil {
-			return err
-		}
-
-		if previousIrreversibleID != "" {
-			options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(previousIrreversibleID, fsStartNum)))
-		}
-		fileSourceStartBlockNum = fsStartNum
+	if fileSourceStartBlockId != "" {
+		zlog.Info("file source start block id defined, adding a with inclusive LIB option ",
+			zap.String("file_source_start_block_id", fileSourceStartBlockId),
+		)
+		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(fileSourceStartBlockId, fileSourceStartBlockNum)))
 	}
 
 	gate := bstream.NewBlockNumGate(startProcessingBlockNum, gateType, ws, bstream.GateOptionWithLogger(zlog))
@@ -79,8 +65,66 @@ func (ws *Service) SetupSource() error {
 	)
 
 	ws.source = fs
+}
 
-	return nil
+func (ws *Service) resolveCheckpoint(ctx context.Context) (*pbaccounthist.ShardCheckpoint, error) {
+	if ws.shardNum != 0 {
+		checkpoint := newShardCheckpoint(ws.startBlockNum)
+		zlog.Info("starting a none shard-0, thus ignoring checkout and starting at the beginning",
+			zap.Int("shard_num", int(ws.shardNum)),
+			zap.Reflect("checkpoint", checkpoint),
+		)
+		return checkpoint, nil
+	}
+
+	// Retrieved lastProcessedBlock must be in the shard's range, and that shouldn't
+	// change across invocations, or in the lifetime of the database.
+	checkpoint, err := ws.GetShardCheckpoint(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetching shard checkpoint: %w", err)
+	}
+
+	if checkpoint != nil {
+		zlog.Info("found checkpoint",
+			zap.Int("shard_num", int(ws.shardNum)),
+			zap.Reflect("checkpoint", checkpoint),
+		)
+		return checkpoint, nil
+	}
+
+	checkpoint = newShardCheckpoint(ws.startBlockNum)
+	zlog.Info("starting without checkpoint",
+		zap.Int("shard_num", int(ws.shardNum)),
+		zap.Reflect("checkpoint", checkpoint),
+	)
+	return checkpoint, nil
+}
+
+func (ws *Service) resolveStartBlock(ctx context.Context, checkpoint *pbaccounthist.ShardCheckpoint) (startProcessingBlockNum uint64, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType, err error) {
+	if checkpoint.LastWrittenBlockId != "" {
+		zlog.Info("resolving start blocks from checkpoint last written block",
+			zap.Reflect("checkpoint", checkpoint),
+		)
+		return checkpoint.LastWrittenBlockNum, checkpoint.LastWrittenBlockNum, checkpoint.LastWrittenBlockId, bstream.GateExclusive, nil
+	}
+
+	zlog.Info("checkpoint does not have a last written block, resolving start blocks with tracker",
+		zap.Reflect("checkpoint", checkpoint),
+	)
+
+	fsStartNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
+	if err != nil {
+		return 0, 0, "", 0, fmt.Errorf("unable to resolve start block with tracker: %w", err)
+	}
+
+	return checkpoint.InitialStartBlock, fsStartNum, previousIrreversibleID, bstream.GateExclusive, nil
+}
+
+func newShardCheckpoint(startBlock uint64) *pbaccounthist.ShardCheckpoint {
+	if startBlock <= bstream.GetProtocolFirstStreamableBlock {
+		startBlock = bstream.GetProtocolFirstStreamableBlock
+	}
+	return &pbaccounthist.ShardCheckpoint{InitialStartBlock: startBlock}
 }
 
 func preprocessingFunc(blockFilter func(blk *bstream.Block) error) bstream.PreprocessFunc {
