@@ -17,6 +17,8 @@ package filtering
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -34,20 +36,92 @@ type CELFilter struct {
 	valueWhenNoop bool
 }
 
+type blocknumBasedCELFilter map[uint64]*CELFilter
+
+func (bbcf blocknumBasedCELFilter) String() (out string) {
+	if len(bbcf) == 1 {
+		for _, v := range bbcf {
+			return v.code
+		}
+	}
+	var arr []uint64
+	for k := range bbcf {
+		arr = append(arr, k)
+	}
+	sort.Slice(arr, func(i int, j int) bool { return arr[i] < arr[j] })
+	for _, k := range arr {
+		out += fmt.Sprintf("#%d;%s", k, bbcf[k].code)
+	}
+	return
+}
+
+func (bbcf blocknumBasedCELFilter) choose(blknum uint64) (out *CELFilter) {
+	var highestMatchingKey uint64
+	for k, v := range bbcf {
+		if blknum >= k && k >= highestMatchingKey {
+			highestMatchingKey = k
+			out = v
+		}
+	}
+	return
+}
+
 func (f *CELFilter) IsNoop() bool {
 	return f.program == nil
 }
 
-func newCELFilterInclude(code string) (*CELFilter, error) {
-	return newCELFilter("inclusion", code, []string{"", "true", "*"}, true)
+func newCELFiltersInclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("inclusion", codes, []string{"", "true", "*"}, true)
 }
 
-func newCELFilterSystemActionsInclude(code string) (*CELFilter, error) {
-	return newCELFilter("system action inclusion", code, []string{"false", ""}, false)
+func newCELFiltersSystemActionsInclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("system action inclusion", codes, []string{"false", ""}, false)
 }
 
-func newCELFilterExclude(code string) (*CELFilter, error) {
-	return newCELFilter("exclusion", code, []string{"", "false"}, false)
+func newCELFiltersExclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("exclusion", codes, []string{"", "false"}, false)
+}
+
+func parseBlocknumBasedCode(code string) (out string, blocknum uint64, err error) {
+	parts := strings.SplitN(code, ";", 2)
+	if len(parts) == 1 {
+		return parts[0], 0, nil
+	}
+	if !strings.HasPrefix(parts[0], "#") {
+		return "", 0, fmt.Errorf("invalid block num part")
+	}
+	blocknum, err = strconv.ParseUint(strings.TrimLeft(parts[0], "#"), 10, 64)
+	out = strings.Trim(parts[1], " ")
+	return
+}
+
+func newCELFilters(name string, codes []string, noopPrograms []string, valueWhenNoop bool) (filtersMap blocknumBasedCELFilter, err error) {
+	filtersMap = make(map[uint64]*CELFilter)
+	for _, code := range codes {
+		parsedCode, blockNum, err := parseBlocknumBasedCode(code)
+		if err != nil {
+			return nil, err
+		}
+
+		filter, err := newCELFilter(name, parsedCode, noopPrograms, valueWhenNoop)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := filtersMap[blockNum]; ok {
+			return nil, fmt.Errorf("blocknum %d declared twice in filter", blockNum)
+		}
+
+		filtersMap[blockNum] = filter
+	}
+	if _, ok := filtersMap[0]; !ok { // create noop filtermap
+		filtersMap[0] = &CELFilter{
+			name:          name,
+			code:          "",
+			valueWhenNoop: valueWhenNoop,
+		}
+	}
+
+	return
 }
 
 func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop bool) (*CELFilter, error) {

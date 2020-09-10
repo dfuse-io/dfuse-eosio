@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strings"
+
 	mergedFilterApp "github.com/dfuse-io/dfuse-eosio/merged-filter/app/merged-filter"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -43,9 +45,9 @@ func init() {
 				BatchMode:                      viper.GetBool("merged-filter-batch-mode"),
 				BatchStartBlock:                viper.GetUint64("merged-filter-batch-start-block"),
 				BatchStopBlock:                 viper.GetUint64("merged-filter-batch-stop-block"),
-				IncludeFilterExpr:              viper.GetString("common-include-filter-expr"),
-				ExcludeFilterExpr:              viper.GetString("common-exclude-filter-expr"),
-				SystemActionsIncludeFilterExpr: viper.GetString("common-system-actions-include-filter-expr"),
+				IncludeFilterExpr:              strings.Split(viper.GetString("common-include-filter-expr"), ";;;"),
+				ExcludeFilterExpr:              strings.Split(viper.GetString("common-exclude-filter-expr"), ";;;"),
+				SystemActionsIncludeFilterExpr: strings.Split(viper.GetString("common-system-actions-include-filter-expr"), ";;;"),
 				BlockstreamAddr:                viper.GetString("common-blockstream-addr"),
 			}), nil
 		},
