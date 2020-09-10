@@ -10,23 +10,23 @@ import (
 )
 
 type BlockFilter struct {
-	IncludeProgram              *CELFilter
-	ExcludeProgram              *CELFilter
-	SystemActionsIncludeProgram *CELFilter
+	IncludeProgram              blocknumBasedCELFilter
+	ExcludeProgram              blocknumBasedCELFilter
+	SystemActionsIncludeProgram blocknumBasedCELFilter
 }
 
 func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsIncludeProgramCode string) (*BlockFilter, error) {
-	includeFilter, err := newCELFilterInclude(includeProgramCode)
+	includeFilter, err := newCELFiltersInclude(includeProgramCode)
 	if err != nil {
 		return nil, fmt.Errorf("include filter: %w", err)
 	}
 
-	excludeFilter, err := newCELFilterExclude(excludeProgramCode)
+	excludeFilter, err := newCELFiltersExclude(excludeProgramCode)
 	if err != nil {
 		return nil, fmt.Errorf("exclude filter: %w", err)
 	}
 
-	saIncludeFilter, err := newCELFilterSystemActionsInclude(systemActionsIncludeProgramCode)
+	saIncludeFilter, err := newCELFiltersSystemActionsInclude(systemActionsIncludeProgramCode)
 	if err != nil {
 		return nil, fmt.Errorf("system actions include filter: %w", err)
 	}
@@ -45,27 +45,33 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsInclude
 // *Important* This method expect that the caller will peform the transformation in lock step, there is no lock
 //             performed by this method. It's the caller responsibility to deal with concurrency issues.
 func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
+
+	include := f.IncludeProgram.choose(blk.Number)
+	exclude := f.ExcludeProgram.choose(blk.Number)
+
 	// Don't decode the bstream block at all so we save a costly unpacking when both filters are no-op filters
-	if f.IncludeProgram.IsNoop() && f.ExcludeProgram.IsNoop() {
+	if include.IsNoop() && exclude.IsNoop() {
 		return nil
 	}
+
+	systemActions := f.SystemActionsIncludeProgram.choose(blk.Number)
 
 	block := blk.ToNative().(*pbcodec.Block)
 	if !block.FilteringApplied {
-		f.transfromInPlace(block)
+		transfromInPlace(block, include, exclude, systemActions)
 		return nil
 	}
 
-	if block.FilteringIncludeFilterExpr != f.IncludeProgram.code ||
-		block.FilteringExcludeFilterExpr != f.ExcludeProgram.code ||
-		block.FilteringSystemActionsIncludeFilterExpr != f.SystemActionsIncludeProgram.code {
+	if block.FilteringIncludeFilterExpr != include.code ||
+		block.FilteringExcludeFilterExpr != exclude.code ||
+		block.FilteringSystemActionsIncludeFilterExpr != systemActions.code {
 		panic(fmt.Sprintf("different block filter already applied, include [applied %q, trying %q], exclude [applied %q, trying %q] and system include [applied %q, trying %q]",
 			block.FilteringIncludeFilterExpr,
-			f.IncludeProgram.code,
+			include.code,
 			block.FilteringExcludeFilterExpr,
-			f.ExcludeProgram.code,
+			exclude.code,
 			block.FilteringSystemActionsIncludeFilterExpr,
-			f.SystemActionsIncludeProgram.code,
+			systemActions.code,
 		))
 	}
 	return nil
@@ -131,11 +137,11 @@ func getTop5ActorsForTrx(trx *pbcodec.TransactionTrace) (topActors []string) {
 	return
 }
 
-func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
+func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CELFilter) {
 	block.FilteringApplied = true
-	block.FilteringIncludeFilterExpr = f.IncludeProgram.code
-	block.FilteringExcludeFilterExpr = f.ExcludeProgram.code
-	block.FilteringSystemActionsIncludeFilterExpr = f.SystemActionsIncludeProgram.code
+	block.FilteringIncludeFilterExpr = include.code
+	block.FilteringExcludeFilterExpr = exclude.code
+	block.FilteringSystemActionsIncludeFilterExpr = systemActions.code
 
 	var filteredTrxTrace []*pbcodec.TransactionTrace
 	filteredExecutedInputActionCount := uint32(0)
@@ -155,7 +161,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 		}
 
 		for _, actTrace := range trxTrace.ActionTraces {
-			passes, isSystem := f.shouldProcess(trxTrace, actTrace, getTrxTop5Actors)
+			passes, isSystem := shouldProcess(trxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
 			if !passes {
 				continue
 			}
@@ -183,7 +189,7 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 				return trxTop5Actors
 			}
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				passes, isSystem := f.shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors)
+				passes, isSystem := shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
 				if !passes {
 					continue
 				}
@@ -252,19 +258,19 @@ func (f *BlockFilter) transfromInPlace(block *pbcodec.Block) {
 	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
-func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string) (pass bool, isSystem bool) {
+func shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
 	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces), trxTop5ActorsGetter: trxTop5ActorsGetter}
 	// If the include program does not match, there is nothing more to do here
-	if !f.IncludeProgram.match(&activation) {
-		if f.SystemActionsIncludeProgram.match(&activation) {
+	if !include.match(&activation) {
+		if systemActions.match(&activation) {
 			return true, true
 		}
 		return false, false
 	}
 
 	// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
-	if f.ExcludeProgram.match(&activation) {
-		if f.SystemActionsIncludeProgram.match(&activation) {
+	if exclude.match(&activation) {
+		if systemActions.match(&activation) {
 			return true, true
 		}
 		return false, false
@@ -275,5 +281,5 @@ func (f *BlockFilter) shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace
 }
 
 func (f *BlockFilter) String() string {
-	return fmt.Sprintf("[include: %s, exclude: %s, system: %s]", f.IncludeProgram.code, f.ExcludeProgram.code, f.SystemActionsIncludeProgram.code)
+	return fmt.Sprintf("[include: %s, exclude: %s, system: %s]", f.IncludeProgram.String(), f.ExcludeProgram.String(), f.SystemActionsIncludeProgram.String())
 }

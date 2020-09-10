@@ -17,6 +17,7 @@ package filtering
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -34,20 +35,62 @@ type CELFilter struct {
 	valueWhenNoop bool
 }
 
+type blocknumBasedCELFilter map[uint64]*CELFilter
+
+func (bbcf blocknumBasedCELFilter) String() (out string) {
+	if len(bbcf) == 1 {
+		for _, v := range bbcf {
+			return v.code
+		}
+	}
+	var arr []uint64
+	for k := range bbcf {
+		arr = append(arr, k)
+	}
+	sort.Slice(arr, func(i int, j int) bool { return arr[i] < arr[j] })
+	for _, k := range arr {
+		out += fmt.Sprintf("#%d;%s", k, bbcf[k].code)
+	}
+	return
+}
+
+func (bbcf blocknumBasedCELFilter) choose(blknum uint64) *CELFilter {
+	var highestMatchingKey uint64
+	for k := range bbcf {
+		if blknum > k && k > highestMatchingKey {
+			highestMatchingKey = k
+		}
+	}
+	if v, ok := bbcf[highestMatchingKey]; ok {
+		return v
+	}
+	return nil
+}
+
 func (f *CELFilter) IsNoop() bool {
 	return f.program == nil
 }
 
-func newCELFilterInclude(code string) (*CELFilter, error) {
-	return newCELFilter("inclusion", code, []string{"", "true", "*"}, true)
+func newCELFiltersInclude(code string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("inclusion", code, []string{"", "true", "*"}, true)
 }
 
-func newCELFilterSystemActionsInclude(code string) (*CELFilter, error) {
-	return newCELFilter("system action inclusion", code, []string{"false", ""}, false)
+func newCELFiltersSystemActionsInclude(code string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("system action inclusion", code, []string{"false", ""}, false)
 }
 
-func newCELFilterExclude(code string) (*CELFilter, error) {
-	return newCELFilter("exclusion", code, []string{"", "false"}, false)
+func newCELFiltersExclude(code string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("exclusion", code, []string{"", "false"}, false)
+}
+
+func newCELFilters(name string, code string, noopPrograms []string, valueWhenNoop bool) (filtersMap blocknumBasedCELFilter, err error) {
+	filter, err := newCELFilter(name, code, noopPrograms, valueWhenNoop)
+	if err != nil {
+		return nil, err
+	}
+	filtersMap = make(map[uint64]*CELFilter)
+	filtersMap[0] = filter
+	return
 }
 
 func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop bool) (*CELFilter, error) {
