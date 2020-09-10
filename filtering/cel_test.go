@@ -173,18 +173,21 @@ func TestBlocknumBasedFilter(t *testing.T) {
 		},
 		{
 			"blocknum-bound filter",
-			[]string{"#2345;account == 'test'"},
+			[]string{"#0;account == 'test'"},
 			blocknumBasedCELFilter{
-				2345: &CELFilter{
+				0: &CELFilter{
 					code: "account == 'test'",
 				},
 			},
 			false,
 		},
 		{
-			"blocknum-bound filter",
+			"blocknum-bound filter adds 0",
 			[]string{"#2345;account == 'test'"},
 			blocknumBasedCELFilter{
+				0: &CELFilter{
+					code: "",
+				},
 				2345: &CELFilter{
 					code: "account == 'test'",
 				},

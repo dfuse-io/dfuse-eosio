@@ -55,17 +55,15 @@ func (bbcf blocknumBasedCELFilter) String() (out string) {
 	return
 }
 
-func (bbcf blocknumBasedCELFilter) choose(blknum uint64) *CELFilter {
+func (bbcf blocknumBasedCELFilter) choose(blknum uint64) (out *CELFilter) {
 	var highestMatchingKey uint64
-	for k := range bbcf {
-		if blknum >= k && k > highestMatchingKey {
+	for k, v := range bbcf {
+		if blknum >= k && k >= highestMatchingKey {
 			highestMatchingKey = k
+			out = v
 		}
 	}
-	if v, ok := bbcf[highestMatchingKey]; ok {
-		return v
-	}
-	return nil
+	return
 }
 
 func (f *CELFilter) IsNoop() bool {
@@ -115,6 +113,14 @@ func newCELFilters(name string, codes []string, noopPrograms []string, valueWhen
 
 		filtersMap[blockNum] = filter
 	}
+	if _, ok := filtersMap[0]; !ok { // create noop filtermap
+		filtersMap[0] = &CELFilter{
+			name:          name,
+			code:          "",
+			valueWhenNoop: valueWhenNoop,
+		}
+	}
+
 	return
 }
 
