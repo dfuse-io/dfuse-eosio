@@ -43,12 +43,19 @@ type Service struct {
 
 	lastCheckpoint *pbaccounthist.ShardCheckpoint
 
-	lastWrittenBlock *lastWrittenBlock
+	lastWrittenBlock    *lastWrittenBlock
+	currentBatchMetrics blockBatchMetrics
+}
 
-	batchStartTime             time.Time
-	processedBlockCount        uint64
-	cumulativeScanningDuration time.Duration
-	scanningCount              uint64
+type blockBatchMetrics struct {
+	batchStartTime            time.Time
+	blockCount                uint64
+	accountCacheMiss          uint64
+	accountCacheHit           uint64
+	totalReadSeqDuration      time.Duration
+	readSeqCallCount          uint64
+	totalReadMaxEntryDuration time.Duration
+	readMaxEntryCallCount     uint64
 }
 
 type lastWrittenBlock struct {
@@ -79,8 +86,10 @@ func NewService(
 		startBlockNum:        startBlockNum,
 		stopBlockNum:         stopBlockNum,
 		tracker:              tracker,
-
-		historySeqMap: make(map[uint64]SequenceData),
+		historySeqMap:        make(map[uint64]SequenceData),
+		currentBatchMetrics: blockBatchMetrics{
+			batchStartTime: time.Now(),
+		},
 	}
 }
 
@@ -149,13 +158,12 @@ func (ws *Service) processSequenceDataKeyValue(item store.KV) (SequenceData, err
 func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out SequenceData, err error) {
 	out, ok := ws.historySeqMap[account]
 	if ok {
+		ws.currentBatchMetrics.accountCacheHit++
 		return
 	}
+	ws.currentBatchMetrics.accountCacheMiss++
 
-	t0 := time.Now()
 	out, err = ws.shardNewestSequenceData(ctx, account, ws.shardNum, ws.processSequenceDataKeyValue)
-	ws.cumulativeScanningDuration += time.Since(t0)
-	ws.scanningCount += 1
 
 	if err == store.ErrNotFound {
 		zlog.Debug("account never seen before, initializing a new sequence data",
@@ -214,6 +222,12 @@ func (ws *Service) updateHistorySeq(account uint64, seqData SequenceData) {
 }
 
 func (ws *Service) readMaxEntries(ctx context.Context, account uint64) (maxEntries uint64, err error) {
+	t0 := time.Now()
+	defer func() {
+		ws.currentBatchMetrics.totalReadMaxEntryDuration += time.Since(t0)
+		ws.currentBatchMetrics.readMaxEntryCallCount++
+	}()
+
 	shardsToCheck := 2
 	nextShardNum := byte(0)
 	var seenActions uint64

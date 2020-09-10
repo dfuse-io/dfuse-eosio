@@ -104,21 +104,26 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		return fmt.Errorf("error while flushing: %w", err)
 	}
 
-	ws.processedBlockCount += 1
+	ws.currentBatchMetrics.blockCount++
 	if (blk.Number % 1000) == 0 {
 		zlog.Info("processed blk 1/1000",
 			zap.String("block_id", block.Id),
 			zap.Uint32("block_num", block.Number),
-			zap.Duration("cumulative_scanning_duration", ws.cumulativeScanningDuration),
-			zap.Duration("avg_scanning_duration", ws.cumulativeScanningDuration/time.Duration(ws.scanningCount)),
-			zap.Uint64("scanning_count", ws.scanningCount),
-			zap.Duration("processed_blocks_duration", time.Since(ws.batchStartTime)),
-			zap.Float64("block_rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
+			zap.Duration("processed_blocks_duration", time.Since(ws.currentBatchMetrics.batchStartTime)),
+			zap.Float64("block_rate", float64(ws.currentBatchMetrics.blockCount)/(float64(time.Since(ws.currentBatchMetrics.batchStartTime))/float64(time.Second))),
+			zap.Int("cache_size", len(ws.historySeqMap)),
+			zap.Uint64("cache_miss", ws.currentBatchMetrics.accountCacheMiss),
+			zap.Uint64("cache_hit", ws.currentBatchMetrics.accountCacheHit),
+			zap.Duration("total_read_seq_duration", ws.currentBatchMetrics.totalReadSeqDuration),
+			zap.Duration("avg_read_seq_duration", ws.currentBatchMetrics.totalReadSeqDuration/time.Duration(ws.currentBatchMetrics.readSeqCallCount)),
+			zap.Uint64("read_seq_call_count", ws.currentBatchMetrics.readSeqCallCount),
+			zap.Duration("total_max_entry_seq_duration", ws.currentBatchMetrics.totalReadMaxEntryDuration),
+			zap.Duration("avg_max_entry_duration", ws.currentBatchMetrics.totalReadMaxEntryDuration/time.Duration(ws.currentBatchMetrics.readMaxEntryCallCount)),
+			zap.Uint64("read_max_entry_count", ws.currentBatchMetrics.readMaxEntryCallCount),
 		)
-		ws.batchStartTime = time.Now()
-		ws.processedBlockCount = 0
-		ws.cumulativeScanningDuration = 0
-		ws.scanningCount = 0
+		ws.currentBatchMetrics = blockBatchMetrics{
+			batchStartTime: time.Now(),
+		}
 	}
 
 	return nil

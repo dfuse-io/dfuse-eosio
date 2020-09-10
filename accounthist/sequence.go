@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
@@ -38,6 +39,12 @@ func (ws *Service) shardNewestSequenceData(ctx context.Context, account uint64, 
 
 	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
 	defer cancel()
+
+	t0 := time.Now()
+	defer func() {
+		ws.currentBatchMetrics.totalReadSeqDuration += time.Since(t0)
+		ws.currentBatchMetrics.readSeqCallCount++
+	}()
 
 	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
 	hasNext := it.Next()
