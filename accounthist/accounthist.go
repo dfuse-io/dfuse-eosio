@@ -47,6 +47,7 @@ type Service struct {
 	batchStartTime             time.Time
 	processedBlockCount        uint64
 	cumulativeScanningDuration time.Duration
+	scanningCount              uint64
 }
 
 type lastWrittenBlock struct {
@@ -153,6 +154,7 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 	t0 := time.Now()
 	out, err = ws.shardNewestSequenceData(ctx, account, ws.shardNum, ws.processSequenceDataKeyValue)
 	ws.cumulativeScanningDuration += time.Since(t0)
+	ws.scanningCount += 1
 
 	if err == store.ErrNotFound {
 		zlog.Debug("account never seen before, initializing a new sequence data",

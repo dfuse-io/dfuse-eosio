@@ -120,12 +120,15 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 			zap.Uint32("block_num", block.Number),
 			zap.Duration("cumulative_scanning_time", ws.cumulativeScanningDuration),
 			zap.Duration("avg_scanning_time_per_block", ws.cumulativeScanningDuration/time.Duration(1000)),
+			zap.Uint64("scanning_count", ws.scanningCount),
 			zap.Uint64("processed_block_count", ws.processedBlockCount),
 			zap.Float64("block_rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
 		)
 		ws.batchStartTime = time.Now()
 		ws.processedBlockCount = 0
 		ws.cumulativeScanningDuration = 0
+		ws.scanningCount = 0
+
 	}
 
 	return nil
