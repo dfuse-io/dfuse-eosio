@@ -172,13 +172,14 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
 		return
 	}
-	maxEntriesForAccount, err := ws.readMaxEntries(ctx, account)
-	if err != nil {
-		err = fmt.Errorf("error fetching max entries: %w", err)
-		return
-	}
 
-	out.MaxEntries = maxEntriesForAccount
+	//maxEntriesForAccount, err := ws.readMaxEntries(ctx, account)
+	//if err != nil {
+	//	err = fmt.Errorf("error fetching max entries: %w", err)
+	//	return
+	//}
+
+	out.MaxEntries = ws.maxEntriesPerAccount
 	zlog.Debug("account sequence data setup",
 		zap.Int("shard_num", int(ws.shardNum)),
 		zap.Stringer("account", EOSName(account)),
