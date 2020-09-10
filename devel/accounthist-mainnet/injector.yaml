@@ -2,7 +2,7 @@ start:
   args:
   - accounthist
   flags:
-    #accounthist-dsn: "bigkv://dfuseio-global.dfuse-saas/eos-mainnet-accounthist-v3?createTable=true"
+    accounthist-dsn: "bigkv://dfuseio-global.dfuse-saas/eos-mainnet-accounthist-v3"
     common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-mainnet/v3
     accounthist-enable-injector-mode: true
     accounthist-enable-server-mode: false
