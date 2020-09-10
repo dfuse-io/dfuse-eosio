@@ -109,11 +109,10 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		zlog.Info("processed blk 1/1000",
 			zap.String("block_id", block.Id),
 			zap.Uint32("block_num", block.Number),
-			zap.Duration("cumulative_scanning_time", ws.cumulativeScanningDuration),
-			zap.Duration("avg_scanning_time_per_block", ws.cumulativeScanningDuration/time.Duration(1000)),
-			zap.Duration("avg_scanning_time", ws.cumulativeScanningDuration/time.Duration(ws.scanningCount)),
+			zap.Duration("cumulative_scanning_duration", ws.cumulativeScanningDuration),
+			zap.Duration("avg_scanning_duration", ws.cumulativeScanningDuration/time.Duration(ws.scanningCount)),
 			zap.Uint64("scanning_count", ws.scanningCount),
-			zap.Uint64("processed_block_count", ws.processedBlockCount),
+			zap.Duration("processed_blocks_duration", time.Since(ws.batchStartTime)),
 			zap.Float64("block_rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
 		)
 		ws.batchStartTime = time.Now()
