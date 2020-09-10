@@ -47,17 +47,6 @@ type Service struct {
 	currentBatchMetrics blockBatchMetrics
 }
 
-type blockBatchMetrics struct {
-	batchStartTime            time.Time
-	blockCount                uint64
-	accountCacheMiss          uint64
-	accountCacheHit           uint64
-	totalReadSeqDuration      time.Duration
-	readSeqCallCount          uint64
-	totalReadMaxEntryDuration time.Duration
-	readMaxEntryCallCount     uint64
-}
-
 type lastWrittenBlock struct {
 	blockNum  uint64
 	writtenAt time.Time
