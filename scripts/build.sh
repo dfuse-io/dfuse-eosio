@@ -60,7 +60,7 @@ build() {
     if [[ ! -d dlauncher/dashboard/dashboard-build || $force_build == true ]]; then
       pushd dlauncher/dashboard > /dev/null
         pushd client > /dev/null
-          echo "Buildind dashboard"
+          echo "Building dashboard"
           yarn install && yarn build
         popd > /dev/null
 

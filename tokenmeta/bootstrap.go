@@ -2,7 +2,6 @@ package tokenmeta
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -15,29 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func processContract(ctx context.Context, tokenContract eos.AccountName, startBlockNum uint32, stateClient pbstatedb.StateClient) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, err error) {
-	var symcodes []eos.SymbolCode
-	symcodes, err = getSymbolFromStateDB(ctx, stateClient, tokenContract, startBlockNum)
-	if err != nil {
-		return
-	}
-
-	if len(symcodes) == 0 {
-		// skip this contract no symbol was found
-		return
-	}
-
-	tokens, err = getTokensFromStateDB(ctx, stateClient, tokenContract, symcodes, startBlockNum)
-	if err != nil {
-		return
-	}
-
-	balances, err = getTokenBalancesFromStateDB(ctx, stateClient, tokenContract, symcodes, startBlockNum)
-	return
-}
-
 func Bootstrap(abisFileContent []byte, stateClient pbstatedb.StateClient, bootstrapblockOffset uint64) (tokens []*pbtokenmeta.Token, balances []*pbtokenmeta.AccountBalance, stakeds []*cache.EOSStakeEntry, startBlock bstream.BlockRef, err error) {
-
 	startBlock = bstream.NewBlockRef("", 0)
 	tokenContracts := parseContractFromABIs(abisFileContent)
 	abiStartBlock, err := parseCursorFromABIs(abisFileContent)
@@ -56,7 +33,11 @@ func Bootstrap(abisFileContent []byte, stateClient pbstatedb.StateClient, bootst
 	sta, err := getEOSStakedFromStateDB(ctx, stateClient, uint32(startBlock.Num()))
 	stakeds = append(stakeds, sta...)
 
-	zlog.Info("looping through valid contracts", zap.Uint64("start_block_num", startBlock.Num()), zap.String("start_block_id", startBlock.ID()), zap.Int("valid_contracts_count", len(tokenContracts)))
+	zlog.Info("looping through valid contracts",
+		zap.Uint64("start_block_num", startBlock.Num()),
+		zap.String("start_block_id", startBlock.ID()),
+		zap.Int("valid_contracts_count", len(tokenContracts)),
+	)
 
 	for _, tokenContract := range tokenContracts {
 		for attempt := 1; true; attempt++ {
@@ -93,7 +74,7 @@ func Bootstrap(abisFileContent []byte, stateClient pbstatedb.StateClient, bootst
 }
 
 func parseContractFromABIs(cnt []byte) (out []eos.AccountName) {
-	var accounts, withTableAccounts, withTableStat, fullBlown int
+	var accounts, withTableAccounts, withTableStat, tokenContracts int
 	gjson.GetBytes(cnt, "Abis").ForEach(func(k, v gjson.Result) bool {
 		accounts++
 		account := k.String()
@@ -104,61 +85,34 @@ func parseContractFromABIs(cnt []byte) (out []eos.AccountName) {
 			return true
 		})
 
-		var abi *eos.ABI
 		rawABI := lastABI.Get("ABI").Raw
 		if rawABI == "" {
-			zlog.Info("skipping missing ABI in account, probably normal", zap.String("account", account))
+			zlog.Info("skipping missing ABI in account, probably normal",
+				zap.String("account", account),
+			)
 			return true
 		}
-		err := json.Unmarshal([]byte(rawABI), &abi)
+
+		contractStats, err := getTokenContractStats(account, []byte(rawABI), true)
 		if err != nil {
-			zlog.Warn("failed decoding ABI in account", zap.String("account", account), zap.Error(err), zap.String("raw_abi", rawABI))
+			zlog.Warn("failed decoding ABI in account",
+				zap.String("account", account),
+				zap.String("raw_abi", rawABI),
+				zap.Error(err),
+			)
 			return false
 		}
 
-		var hasStat, hasAccounts bool
-		var statStruct, accountStruct string
-		for _, tbl := range abi.Tables {
-			if tbl.Name == "stat" {
-				statStruct = tbl.Type
-				hasStat = true
-			} else if tbl.Name == "accounts" {
-				accountStruct = tbl.Type
-				hasAccounts = true
-			}
-		}
-
-		if hasStat {
+		if contractStats.hasStatsTable {
 			withTableStat++
 		}
-		if hasAccounts {
+		if contractStats.hasAccountsTable {
 			withTableAccounts++
 		}
-		if !hasStat || !hasAccounts {
-			return true
-		}
 
-		var hasStatFields, hasAccountFields bool
-		for _, s := range abi.Structs {
-			if s.Name == accountStruct {
-				if len(s.Fields) != 0 && s.Fields[0].Type == "asset" {
-					hasAccountFields = true
-				}
-			}
-			if s.Name == statStruct && len(s.Fields) > 2 {
-				if s.Fields[0].Name == "supply" &&
-					s.Fields[1].Name == "max_supply" &&
-					s.Fields[2].Name == "issuer" {
-					hasStatFields = true
-				} else {
-					zlog.Debug("stat failed for", zap.String("account", account))
-				}
-			}
-		}
-
-		if hasStatFields && hasAccountFields {
+		if contractStats.isTokenContract {
 			out = append(out, eos.AccountName(account))
-			fullBlown++
+			tokenContracts++
 		}
 		return true
 	})
@@ -166,7 +120,8 @@ func parseContractFromABIs(cnt []byte) (out []eos.AccountName) {
 		zap.Int("accounts_count", accounts),
 		zap.Int("accounts_with_accounts_table", withTableAccounts),
 		zap.Int("accounts_with_stat_table", withTableStat),
-		zap.Int("accounts_with_stat_table_and_accounts_table", fullBlown))
+		zap.Int("accounts_with_stat_table_and_accounts_table", tokenContracts),
+	)
 	return
 }
 

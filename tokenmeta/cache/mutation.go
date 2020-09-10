@@ -2,6 +2,7 @@ package cache
 
 import (
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
+	"github.com/eoscanada/eos-go"
 )
 
 type MutationsBatch struct {
@@ -15,6 +16,7 @@ const (
 	RemoveBalanceMutation
 	SetTokenMutation
 	SetStakeMutation
+	SetContractMutation
 )
 
 func (m *MutationsBatch) Mutations() []*Mutation {
@@ -36,6 +38,16 @@ func (m *MutationsBatch) SetBalance(bal *pbtokenmeta.AccountBalance) {
 		Type: SetBalanceMutation,
 		Args: []interface{}{
 			bal,
+		},
+	}
+	m.mutations = append(m.mutations, mut)
+}
+
+func (m *MutationsBatch) SetContract(contractName eos.AccountName) {
+	mut := &Mutation{
+		Type: SetContractMutation,
+		Args: []interface{}{
+			contractName,
 		},
 	}
 	m.mutations = append(m.mutations, mut)

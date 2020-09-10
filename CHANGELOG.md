@@ -14,12 +14,17 @@ date.
 * Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
 * Flag `--mindreader-oneblock-suffix` that mindreaders can each write their own file per block without competing for writes. https://github.com/dfuse-io/dfuse-eosio/issues/140
-* Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable. 
+* Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable.
 
 ### Changed
 
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
+
+### Fixed
+* Fixed issue when reading ABI from StateDB where speculative writes were not handled correctly.
+* Fixed issue when reading Table Row from StateDB where speculative writes were not handled correctly.
+* Fixed a potential crash when reading ABI from StateDB and it does not exist in database.
 
 # [v0.1.0-beta5] 2020-08-24
 

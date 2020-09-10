@@ -132,7 +132,7 @@ func TestBlockFilter(t *testing.T) {
 			filter, err := NewBlockFilter(test.exprs.include, test.exprs.exclude, test.exprs.system)
 			require.NoError(t, err)
 
-			hasPass, isSystem := filter.shouldProcess(test.trace, test.trace.ActionTraces[0])
+			hasPass, isSystem := filter.shouldProcess(test.trace, test.trace.ActionTraces[0], func() []string { return nil })
 
 			if test.expectedPass {
 				assert.True(t, hasPass, "Expected action trace to match filter (%s) but it did not", test.exprs)

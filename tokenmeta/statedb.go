@@ -52,8 +52,11 @@ func getSymbolFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient
 
 var errDecodeAccountRow = errors.New("decode account row")
 
-func getTokenBalancesFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient, contract eos.AccountName, symbols []eos.SymbolCode, startBlockNum uint32) (out []*pbtokenmeta.AccountBalance, err error) {
-	zlog.Debug("getting token balances for a token account from statedb", zap.String("token_contract", string(contract)), zap.Uint32("start_block_num", startBlockNum))
+func getTokenBalancesFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient, contract eos.AccountName, startBlockNum uint32) (out []*pbtokenmeta.AccountBalance, err error) {
+	zlog.Debug("getting token balances for a token account from statedb",
+		zap.String("token_contract", string(contract)),
+		zap.Uint32("start_block_num", startBlockNum),
+	)
 	tableScopes, err := pbstatedb.FetchTableScopes(ctx, stateClient, uint64(startBlockNum), string(contract), "accounts")
 	if err != nil {
 		zlog.Info("cannot get table scope", zap.Error(err))

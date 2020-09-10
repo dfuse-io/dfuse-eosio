@@ -74,11 +74,18 @@ func New(config *Config, modules *Modules) *App {
 func (a *App) Run() error {
 	zlog.Info("running tokenmeta", zap.Reflect("config", a.config))
 	dmetrics.Register(tokenmeta.MetricsSet)
-
 	var err error
+
+	zlog.Info("initialize state db client")
+	stateConn, err := dgrpc.NewInternalClient(a.config.StateDBGRPCAddr)
+	if err != nil {
+		return fmt.Errorf("cannot create statedb connection: %w", err)
+	}
+
+	stateClient := pbstatedb.NewStateClient(stateConn)
+
 	var tokenCache *cache.DefaultCache
 	zlog.Info("setting up token cache")
-
 	if a.config.CacheFile != "" {
 		mkdirCacheFileParents(a.config.CacheFile)
 
@@ -91,7 +98,7 @@ func (a *App) Run() error {
 
 	if tokenCache == nil {
 		zlog.Info("tokenmeta cache was not setup generating it from abicodec and statedb")
-		tokenCache, err = a.createTokenMetaCacheFromAbi()
+		tokenCache, err = a.createTokenMetaCacheFromAbi(stateClient)
 		if err != nil {
 			if err == TokenmetaAppGeneratCacheFromAbiAborted {
 				return nil
@@ -114,7 +121,7 @@ func (a *App) Run() error {
 	abiCodecCli := pbabicodec.NewDecoderClient(abiCodecConn)
 
 	zlog.Info("setting tokenmeta and pipeline")
-	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock)
+	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock, stateClient)
 
 	tmeta.OnTerminated(a.Shutdown)
 	a.OnTerminating(tmeta.Shutdown)
@@ -138,7 +145,7 @@ func (a *App) Run() error {
 	return nil
 }
 
-func (a *App) createTokenMetaCacheFromAbi() (*cache.DefaultCache, error) {
+func (a *App) createTokenMetaCacheFromAbi(stateClient pbstatedb.StateClient) (*cache.DefaultCache, error) {
 	zlog.Info("tokenmeta cache not present loading cached abis",
 		zap.String("abis_base_url", a.config.ABICacheBaseURL),
 		zap.String("abis_file_name", a.config.ABICacheFileName),
@@ -158,14 +165,6 @@ func (a *App) createTokenMetaCacheFromAbi() (*cache.DefaultCache, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	zlog.Info("initialize state db client")
-	stateConn, err := dgrpc.NewInternalClient(a.config.StateDBGRPCAddr)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create statedb connection: %w", err)
-	}
-
-	stateClient := pbstatedb.NewStateClient(stateConn)
 
 	tokens, balances, stakedEntries, startBlock, err := tokenmeta.Bootstrap(cnt, stateClient, a.config.BootstrapBlockOffset)
 	if err != nil {
