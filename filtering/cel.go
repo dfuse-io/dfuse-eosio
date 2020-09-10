@@ -58,7 +58,7 @@ func (bbcf blocknumBasedCELFilter) String() (out string) {
 func (bbcf blocknumBasedCELFilter) choose(blknum uint64) *CELFilter {
 	var highestMatchingKey uint64
 	for k := range bbcf {
-		if blknum > k && k > highestMatchingKey {
+		if blknum >= k && k > highestMatchingKey {
 			highestMatchingKey = k
 		}
 	}

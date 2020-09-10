@@ -10,6 +10,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestBlocknumBasedChoose(t *testing.T) {
+	tests := []struct {
+		name                   string
+		blocknumBasedCELFilter blocknumBasedCELFilter
+		blocknum               uint64
+		expectCode             string
+	}{
+		{
+			"single filter applied every height",
+			blocknumBasedCELFilter{
+				0: simpleFilter("account=='test'"),
+			},
+			10,
+			"account=='test'",
+		},
+		{
+			"second filter applied",
+			blocknumBasedCELFilter{
+				0:  simpleFilter("account=='filter1'"),
+				50: simpleFilter("account=='filter2'"),
+			},
+			100,
+			"account=='filter2'",
+		},
+		{
+			"second filter not applied before",
+			blocknumBasedCELFilter{
+				0:  simpleFilter("account=='filter1'"),
+				50: simpleFilter("account=='filter2'"),
+			},
+			49,
+			"account=='filter1'",
+		},
+		{
+			"second filter applied on boundary inclusive",
+			blocknumBasedCELFilter{
+				0:    simpleFilter("account=='filter1'"),
+				50:   simpleFilter("account=='filter2'"),
+				1000: simpleFilter("account=='filter3'"),
+			},
+			50,
+			"account=='filter2'",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			chosen := test.blocknumBasedCELFilter.choose(test.blocknum)
+
+			assert.Equal(t, test.expectCode, chosen.code)
+		})
+	}
+
+}
+
+func simpleFilter(code string) *CELFilter {
+	return &CELFilter{
+		code: code,
+	}
+}
+
 func TestParseBlocknumBasedCode(t *testing.T) {
 
 	tests := []struct {
