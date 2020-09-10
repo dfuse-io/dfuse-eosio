@@ -167,7 +167,6 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 		zlog.Debug("account never seen before, initializing a new sequence data",
 			zap.Stringer("account", EOSName(account)),
 		)
-		out.MaxEntries = ws.maxEntriesPerAccount
 	} else if err != nil {
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
 		return
