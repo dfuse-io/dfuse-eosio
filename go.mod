@@ -17,7 +17,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
 	github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838
-	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
+	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
 	github.com/dfuse-io/dgraphql v0.0.2-0.20200908131152-9fa5f76eb5db
@@ -94,6 +94,8 @@ replace github.com/graph-gophers/graphql-go => github.com/dfuse-io/graphql-go v0
 replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
+
+replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20200910163222-23bed793c12c
 
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
