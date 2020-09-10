@@ -17,12 +17,14 @@ var accounthistCmd = &cobra.Command{Use: "accounthist", Short: "Read from accout
 var accountReadCmd = &cobra.Command{Use: "read", Short: "Read an account", RunE: accountReadE, Args: cobra.ExactArgs(1)}
 var accountScanCmd = &cobra.Command{Use: "scan", Short: "Scan accounts", RunE: accountScanE}
 var accountCheckpointCmd = &cobra.Command{Use: "checkpoint", Short: "Get a shard's checkpoint", RunE: accountsCheckpointE}
+var accountShardAnalysisCmd = &cobra.Command{Use: "shard-analysis", Short: "Analyze shard checkpoint", RunE: accountShardAnalysisE}
 
 func init() {
 	Cmd.AddCommand(accounthistCmd)
 	accounthistCmd.AddCommand(accountReadCmd)
 	accounthistCmd.AddCommand(accountScanCmd)
 	accounthistCmd.AddCommand(accountCheckpointCmd)
+	accounthistCmd.AddCommand(accountShardAnalysisCmd)
 
 	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
 	accountScanCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
@@ -150,4 +152,56 @@ func accountScanE(cmd *cobra.Command, args []string) (err error) {
 	}
 	return nil
 
+}
+
+func accountShardAnalysisE(cmd *cobra.Command, args []string) (err error) {
+	kvdb, err := store.New(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("failed to setup db: %w", err)
+	}
+
+	kvdb = accounthist.NewRWCache(kvdb)
+	service := accounthist.NewService(
+		kvdb,
+		nil,
+		nil,
+		0,
+		1000,
+		1,
+		0,
+		0,
+		nil,
+	)
+
+	out, err := service.ShardAnalysis(cmd.Context())
+	if err != nil {
+		return err
+	}
+
+	expectedShard := 0
+	hasSeenFirstShard := false
+	priorStartBlock := uint64(0)
+	fmt.Printf("Shard Summary:\n")
+	for _, shard := range out[1:] {
+		shardNum := int(shard.ShardNum)
+		if expectedShard != shardNum {
+			fmt.Printf("❌ expected shard-%d\n", expectedShard)
+			expectedShard = shardNum
+		}
+		shardValid := true
+		if hasSeenFirstShard {
+			shardValid = (shard.Checkpoint.LastWrittenBlockNum == priorStartBlock-1)
+		}
+
+		if shardValid {
+			fmt.Printf("✅ shard-%d %s\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		} else {
+			fmt.Printf("❌ shard-%d %s (uncontiguous shard)\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		}
+		expectedShard++
+		priorStartBlock = shard.Checkpoint.InitialStartBlock
+		hasSeenFirstShard = true
+
+	}
+	return nil
 }

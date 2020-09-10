@@ -50,3 +50,8 @@ func encodeLastProcessedBlockKey(shardNum byte) []byte {
 	key[1] = shardNum
 	return key
 }
+
+func decodeLastProcessedBlockKey(key []byte) byte {
+	_ = key[lastBlockKeyLen-1] //bounds check
+	return key[1]
+}
