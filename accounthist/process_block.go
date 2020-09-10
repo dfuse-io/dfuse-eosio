@@ -105,15 +105,6 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 	}
 
 	ws.processedBlockCount += 1
-	//if time.Since(ws.batchStartTime) > (1000 * time.Millisecond) {
-	//	zlog.Info("count",
-	//		zap.Uint64("block_count", ws.processedBlockCount),
-	//		zap.Float64("rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
-	//	)
-	//	ws.batchStartTime = time.Now()
-	//	ws.processedBlockCount = 0
-	//}
-
 	if (blk.Number % 1000) == 0 {
 		zlog.Info("processed blk 1/1000",
 			zap.String("block_id", block.Id),
@@ -128,7 +119,6 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		ws.processedBlockCount = 0
 		ws.cumulativeScanningDuration = 0
 		ws.scanningCount = 0
-
 	}
 
 	return nil
