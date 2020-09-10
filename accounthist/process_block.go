@@ -3,6 +3,7 @@ package accounthist
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
@@ -33,19 +34,13 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 		return nil
 	}
 
-	if (blk.Number % 1000) == 0 {
-		zlog.Info("processing blk 1/1000",
-			zap.String("block_id", block.Id),
-			zap.Uint32("block_num", block.Number),
-		)
-	}
-
 	for _, trxTrace := range block.TransactionTraces() {
 		if trxTrace.HasBeenReverted() {
 			continue
 		}
 
 		actionMatcher := block.FilteringActionMatcher(trxTrace)
+
 		for _, act := range trxTrace.ActionTraces {
 			if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
 				continue
@@ -107,6 +102,30 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 
 	if err := ws.flush(ctx, block, isLastInStreak); err != nil {
 		return fmt.Errorf("error while flushing: %w", err)
+	}
+
+	ws.processedBlockCount += 1
+	//if time.Since(ws.batchStartTime) > (1000 * time.Millisecond) {
+	//	zlog.Info("count",
+	//		zap.Uint64("block_count", ws.processedBlockCount),
+	//		zap.Float64("rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
+	//	)
+	//	ws.batchStartTime = time.Now()
+	//	ws.processedBlockCount = 0
+	//}
+
+	if (blk.Number % 1000) == 0 {
+		zlog.Info("processed blk 1/1000",
+			zap.String("block_id", block.Id),
+			zap.Uint32("block_num", block.Number),
+			zap.Duration("cumulative_scanning_time", ws.cumulativeScanningDuration),
+			zap.Duration("avg_scanning_time_per_block", ws.cumulativeScanningDuration/time.Duration(1000)),
+			zap.Uint64("processed_block_count", ws.processedBlockCount),
+			zap.Float64("block_rate", float64(ws.processedBlockCount)/(float64(time.Since(ws.batchStartTime))/float64(time.Second))),
+		)
+		ws.batchStartTime = time.Now()
+		ws.processedBlockCount = 0
+		ws.cumulativeScanningDuration = 0
 	}
 
 	return nil
