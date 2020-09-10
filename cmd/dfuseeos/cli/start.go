@@ -81,9 +81,9 @@ func Start(dataDir string, args []string) (err error) {
 	}
 
 	blockFilter, err := filtering.NewBlockFilter(
-		viper.GetStringSlice("common-include-filter-expr"),
-		viper.GetStringSlice("common-exclude-filter-expr"),
-		viper.GetStringSlice("common-system-actions-include-filter-expr"),
+		strings.Split(viper.GetString("common-include-filter-expr"), ";;;"),
+		strings.Split(viper.GetString("common-exclude-filter-expr"), ";;;"),
+		strings.Split(viper.GetString("common-system-actions-include-filter-expr"), ";;;"),
 	)
 	if err != nil {
 		return fmt.Errorf("unable to create block filter: %w", err)
