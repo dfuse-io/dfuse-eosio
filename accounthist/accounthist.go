@@ -152,13 +152,21 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 	}
 	ws.currentBatchMetrics.accountCacheMiss++
 
-	out, err = ws.shardNewestSequenceData(ctx, account, ws.shardNum, ws.processSequenceDataKeyValue)
+	if ws.shardNum != 0 {
+		zlog.Debug("skipping read data sequence for non shard 0",
+			zap.Stringer("account", EOSName(account)),
+			zap.Int("shard_num", int(ws.shardNum)),
+		)
+		out.MaxEntries = ws.maxEntriesPerAccount
+		ws.historySeqMap[account] = out
+		return
+	}
 
+	out, err = ws.shardNewestSequenceData(ctx, account, ws.shardNum, ws.processSequenceDataKeyValue)
 	if err == store.ErrNotFound {
 		zlog.Debug("account never seen before, initializing a new sequence data",
 			zap.Stringer("account", EOSName(account)),
 		)
-		out.CurrentOrdinal = 0
 		out.MaxEntries = ws.maxEntriesPerAccount
 	} else if err != nil {
 		err = fmt.Errorf("error while fetching sequence data: %w", err)
@@ -180,7 +188,6 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 		zap.Uint64("seq_data_last_global_sequence", out.LastGlobalSeq),
 	)
 	ws.historySeqMap[account] = out
-
 	return
 }
 

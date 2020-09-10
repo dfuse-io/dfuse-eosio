@@ -24,7 +24,8 @@ func (ws *Service) SetupSource() error {
 	if err != nil {
 		return fmt.Errorf("fetching shard checkpoint: %w", err)
 	}
-	if checkpoint == nil {
+
+	if checkpoint == nil || ws.shardNum != 0 {
 		startBlock := ws.startBlockNum
 		if startBlock <= bstream.GetProtocolFirstStreamableBlock {
 			startBlock = bstream.GetProtocolFirstStreamableBlock
