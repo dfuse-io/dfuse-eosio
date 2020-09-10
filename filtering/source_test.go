@@ -18,7 +18,7 @@ func TestFilteringPreprocessor(t *testing.T) {
 	}{
 		{
 			"standard",
-			filters{"*", `receiver == "spamcoint"`, ""},
+			getFilters("*", `receiver == "spamcoint"`, ""),
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -35,8 +35,8 @@ func TestFilteringPreprocessor(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			// We assign them manually in the expected block to keep them in sync with ther `include`, `exclude` test parameters
-			test.expected.FilteringIncludeFilterExpr = test.exprs.include
-			test.expected.FilteringExcludeFilterExpr = test.exprs.exclude
+			test.expected.FilteringIncludeFilterExpr = test.exprs.include[0]
+			test.expected.FilteringExcludeFilterExpr = test.exprs.exclude[0]
 
 			filter, err := NewBlockFilter(test.exprs.include, test.exprs.exclude, test.exprs.system)
 			require.NoError(t, err)
@@ -63,8 +63,8 @@ func TestFilteringTwice(t *testing.T) {
 	}{
 		{
 			"standard",
-			filters{"*", `receiver == "spamcoint"`, ""},
-			filters{"*", `receiver == "spamcoint"`, ""},
+			getFilters("*", `receiver == "spamcoint"`, ""),
+			getFilters("*", `receiver == "spamcoint"`, ""),
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -79,8 +79,8 @@ func TestFilteringTwice(t *testing.T) {
 		},
 		{
 			"panicky",
-			filters{"*", `receiver == "spamcoint"`, ""},
-			filters{"*", `receiver == "spamcoin"`, ""},
+			getFilters("*", `receiver == "spamcoint"`, ""),
+			getFilters("*", `receiver == "spamcoin"`, ""),
 			ct.Block(t, "00000001aa",
 				ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:newaccount")),
 				ct.TrxTrace(t, ct.ActionTrace(t, "spamcoint:spamcoint:transfer")),
@@ -100,8 +100,8 @@ func TestFilteringTwice(t *testing.T) {
 
 			defer func() { recover() }()
 			// We assign them manually in the expected block to keep them in sync with ther `include`, `exclude` test parameters
-			test.expected.FilteringIncludeFilterExpr = test.exprs1.include
-			test.expected.FilteringExcludeFilterExpr = test.exprs1.exclude
+			test.expected.FilteringIncludeFilterExpr = test.exprs1.include[0]
+			test.expected.FilteringExcludeFilterExpr = test.exprs1.exclude[0]
 
 			filter, err := NewBlockFilter(test.exprs1.include, test.exprs1.exclude, test.exprs1.system)
 			require.NoError(t, err)

@@ -43,9 +43,9 @@ func init() {
 				BatchMode:                      viper.GetBool("merged-filter-batch-mode"),
 				BatchStartBlock:                viper.GetUint64("merged-filter-batch-start-block"),
 				BatchStopBlock:                 viper.GetUint64("merged-filter-batch-stop-block"),
-				IncludeFilterExpr:              viper.GetString("common-include-filter-expr"),
-				ExcludeFilterExpr:              viper.GetString("common-exclude-filter-expr"),
-				SystemActionsIncludeFilterExpr: viper.GetString("common-system-actions-include-filter-expr"),
+				IncludeFilterExpr:              viper.GetStringSlice("common-include-filter-expr"),
+				ExcludeFilterExpr:              viper.GetStringSlice("common-exclude-filter-expr"),
+				SystemActionsIncludeFilterExpr: viper.GetStringSlice("common-system-actions-include-filter-expr"),
 				BlockstreamAddr:                viper.GetString("common-blockstream-addr"),
 			}), nil
 		},

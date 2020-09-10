@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -71,25 +72,49 @@ func (f *CELFilter) IsNoop() bool {
 	return f.program == nil
 }
 
-func newCELFiltersInclude(code string) (blocknumBasedCELFilter, error) {
-	return newCELFilters("inclusion", code, []string{"", "true", "*"}, true)
+func newCELFiltersInclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("inclusion", codes, []string{"", "true", "*"}, true)
 }
 
-func newCELFiltersSystemActionsInclude(code string) (blocknumBasedCELFilter, error) {
-	return newCELFilters("system action inclusion", code, []string{"false", ""}, false)
+func newCELFiltersSystemActionsInclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("system action inclusion", codes, []string{"false", ""}, false)
 }
 
-func newCELFiltersExclude(code string) (blocknumBasedCELFilter, error) {
-	return newCELFilters("exclusion", code, []string{"", "false"}, false)
+func newCELFiltersExclude(codes []string) (blocknumBasedCELFilter, error) {
+	return newCELFilters("exclusion", codes, []string{"", "false"}, false)
 }
 
-func newCELFilters(name string, code string, noopPrograms []string, valueWhenNoop bool) (filtersMap blocknumBasedCELFilter, err error) {
-	filter, err := newCELFilter(name, code, noopPrograms, valueWhenNoop)
-	if err != nil {
-		return nil, err
+func parseBlocknumBasedCode(code string) (out string, blocknum uint64, err error) {
+	parts := strings.SplitN(code, ";", 2)
+	if len(parts) == 1 {
+		return parts[0], 0, nil
 	}
+	if !strings.HasPrefix(parts[0], "#") {
+		return "", 0, fmt.Errorf("invalid block num part")
+	}
+	blocknum, err = strconv.ParseUint(strings.TrimLeft(parts[0], "#"), 10, 64)
+	out = strings.Trim(parts[1], " ")
+	return
+}
+
+func newCELFilters(name string, codes []string, noopPrograms []string, valueWhenNoop bool) (filtersMap blocknumBasedCELFilter, err error) {
 	filtersMap = make(map[uint64]*CELFilter)
-	filtersMap[0] = filter
+	for _, code := range codes {
+		parsedCode, blockNum, err := parseBlocknumBasedCode(code)
+		if err != nil {
+			return nil, err
+		}
+
+		filter, err := newCELFilter(name, parsedCode, noopPrograms, valueWhenNoop)
+		if err != nil {
+			return nil, err
+		}
+		if _, ok := filtersMap[blockNum]; ok {
+			return nil, fmt.Errorf("blocknum %d declared twice in filter", blockNum)
+		}
+
+		filtersMap[blockNum] = filter
+	}
 	return
 }
 

@@ -15,7 +15,7 @@ type BlockFilter struct {
 	SystemActionsIncludeProgram blocknumBasedCELFilter
 }
 
-func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsIncludeProgramCode string) (*BlockFilter, error) {
+func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsIncludeProgramCode []string) (*BlockFilter, error) {
 	includeFilter, err := newCELFiltersInclude(includeProgramCode)
 	if err != nil {
 		return nil, fmt.Errorf("include filter: %w", err)
