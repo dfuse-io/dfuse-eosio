@@ -100,6 +100,11 @@ type App struct {
 	Modules *Modules
 }
 
+func init() {
+	services := []string{"stream", "rest", "state"}
+	drateLimiter.RegisterServices(services)
+}
+
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
 func New(config *Config, modules *Modules) *App {
 	eosws.DisabledWsMessage = config.DisabledWsMessage
@@ -131,7 +136,6 @@ func (a *App) Run() error {
 	}
 	api := eos.New(apiURLStr)
 
-	drateLimiter.RegisterServices([]string{"stream", "rest", "state"})
 	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
