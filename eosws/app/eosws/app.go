@@ -131,6 +131,7 @@ func (a *App) Run() error {
 	}
 	api := eos.New(apiURLStr)
 
+	drateLimiter.RegisterServices([]string{"eosws"})
 	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
