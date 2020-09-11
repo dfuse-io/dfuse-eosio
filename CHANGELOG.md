@@ -26,6 +26,8 @@ date.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed a bug with `/state/tables/scopes` where the actual block num used to query the data was incorrect leading to invalid response results.
+* Fixed a bug with gRPC `dfuse.eosio.statedb.v1/State#StreamMultiScopesTableRows` where the actual block num used to query the data was incorrect leading to invalid response results.
 * Fixed issue when reading ABI from StateDB where speculative writes were not handled correctly.
 * Fixed issue when reading Table Row from StateDB where speculative writes were not handled correctly.
 * Fixed a potential crash when reading ABI from StateDB and it does not exist in database.
