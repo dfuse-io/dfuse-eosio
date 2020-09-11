@@ -131,7 +131,7 @@ func (a *App) Run() error {
 	}
 	api := eos.New(apiURLStr)
 
-	drateLimiter.RegisterServices([]string{"eosws"})
+	drateLimiter.RegisterServices([]string{"stream", "rest", "state"})
 	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
@@ -255,16 +255,7 @@ func (a *App) Run() error {
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosws.DfuseErrorHandler).Handler
 	corsMiddleware := eosws.NewCORSMiddleware()
 	compressionMiddleware := mux.MiddlewareFunc(eosws.CompressionMiddleware)
-	rateLimiterMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
-
-		// todo replace ith r.URL.Path to get more granular blocking possibilities
-		method := "eosws"
-		if !rateLimiter.Gate(credentials.GetUserID(), method) {
-			return eosws.RateLimitTooManyRequests(ctx)
-		}
-
-		return nil
-	}).Handler
+	rateLimiterMiddleware := eosws.NewRateLimiterMiddleware(rateLimiter).Handler
 	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
 		type authTier interface {
 			AuthenticatedTier() string
