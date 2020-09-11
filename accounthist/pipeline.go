@@ -12,10 +12,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func (ws *Service) SetupSource() error {
+func (ws *Service) SetupSource(ignoreCheckpointOnLaunch bool) error {
 	ctx := context.Background()
 
-	checkpoint, err := ws.resolveCheckpoint(ctx)
+	checkpoint, err := ws.resolveCheckpoint(ctx, ignoreCheckpointOnLaunch)
 	if err != nil {
 		return fmt.Errorf("unable to resolve shard checkpoint: %w", err)
 	}
@@ -67,10 +67,10 @@ func (ws *Service) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNu
 	ws.source = fs
 }
 
-func (ws *Service) resolveCheckpoint(ctx context.Context) (*pbaccounthist.ShardCheckpoint, error) {
-	if ws.shardNum != 0 {
+func (ws *Service) resolveCheckpoint(ctx context.Context, ignoreCheckpointOnLaunch bool) (*pbaccounthist.ShardCheckpoint, error) {
+	if ignoreCheckpointOnLaunch {
 		checkpoint := newShardCheckpoint(ws.startBlockNum)
-		zlog.Info("starting a none shard-0, thus ignoring checkout and starting at the beginning",
+		zlog.Info("ignoring checkpoint on launch starting without a checkpoint",
 			zap.Int("shard_num", int(ws.shardNum)),
 			zap.Reflect("checkpoint", checkpoint),
 		)
@@ -89,6 +89,7 @@ func (ws *Service) resolveCheckpoint(ctx context.Context) (*pbaccounthist.ShardC
 			zap.Int("shard_num", int(ws.shardNum)),
 			zap.Reflect("checkpoint", checkpoint),
 		)
+		ws.startedFromCheckpoint = true
 		return checkpoint, nil
 	}
 

@@ -41,6 +41,7 @@ func (ws *Service) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 
 		actionMatcher := block.FilteringActionMatcher(trxTrace)
 
+		ws.currentBatchMetrics.actionCount += len(trxTrace.ActionTraces)
 		for _, act := range trxTrace.ActionTraces {
 			if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
 				continue

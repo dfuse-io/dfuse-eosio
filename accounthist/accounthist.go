@@ -41,7 +41,8 @@ type Service struct {
 
 	tracker *bstream.Tracker
 
-	lastCheckpoint *pbaccounthist.ShardCheckpoint
+	startedFromCheckpoint bool
+	lastCheckpoint        *pbaccounthist.ShardCheckpoint
 
 	lastWrittenBlock    *lastWrittenBlock
 	currentBatchMetrics blockBatchMetrics
@@ -84,12 +85,12 @@ func NewService(
 
 func (ws *Service) Launch() {
 	ws.source.OnTerminating(func(err error) {
-		zlog.Info("block source shutted down, notifying service about its termination")
+		zlog.Info("block source is shutting down, notifying service about its termination")
 		ws.Shutdown(err)
 	})
 
 	ws.OnTerminating(func(_ error) {
-		zlog.Info("service shutted down, shutting down block source")
+		zlog.Info("accounthist service is shutting down down, shutting down block source")
 		ws.source.Shutdown(nil)
 	})
 
@@ -97,7 +98,7 @@ func (ws *Service) Launch() {
 }
 
 func (ws *Service) Shutdown(err error) {
-	zlog.Info("service shutting down, about to terminate child services")
+	zlog.Info("accounthist service has been shutdown, about to terminate child services")
 	ws.Shutter.Shutdown(err)
 }
 
@@ -152,8 +153,8 @@ func (ws *Service) getSequenceData(ctx context.Context, account uint64) (out Seq
 	}
 	ws.currentBatchMetrics.accountCacheMiss++
 
-	if ws.shardNum != 0 {
-		zlog.Debug("skipping read data sequence for non shard 0",
+	if !ws.startedFromCheckpoint {
+		zlog.Debug("skipping read data sequence accounthist service did not start from a checkpoint there is nothign to read",
 			zap.Stringer("account", EOSName(account)),
 			zap.Int("shard_num", int(ws.shardNum)),
 		)
@@ -285,6 +286,22 @@ func (ws *Service) writeAction(ctx context.Context, account uint64, acctSeqData 
 	}
 
 	return ws.kvStore.Put(ctx, key, rawTrace)
+}
+
+func (ws *Service) DeleteCheckpoint(ctx context.Context, shard byte) error {
+	key := encodeLastProcessedBlockKey(shard)
+
+	if traceEnabled {
+		zlog.Debug("deleting checkpoint",
+			zap.Int("shard_num", int(shard)),
+		)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
+	defer cancel()
+
+	ws.kvStore.BatchDelete(ctx, [][]byte{key})
+	return ws.kvStore.FlushPuts(ctx)
 }
 
 func (ws *Service) deleteAction(ctx context.Context, account uint64, sequenceNumber uint64) error {

@@ -17,18 +17,18 @@ type startFunc func()
 type stopFunc func(error)
 
 type Config struct {
-	KvdbDSN              string
-	GRPCListenAddr       string
-	BlocksStoreURL       string //FileSourceBaseURL
-	BlockstreamAddr      string // LiveSourceAddress
-	ShardNum             byte
-	MaxEntriesPerAccount uint64
-	FlushBlocksInterval  uint64
-	EnableInjector       bool
-	EnableServer         bool
-
-	StartBlockNum uint64
-	StopBlockNum  uint64
+	KvdbDSN                  string
+	GRPCListenAddr           string
+	BlocksStoreURL           string //FileSourceBaseURL
+	BlockstreamAddr          string // LiveSourceAddress
+	ShardNum                 byte
+	MaxEntriesPerAccount     uint64
+	FlushBlocksInterval      uint64
+	EnableInjector           bool
+	EnableServer             bool
+	IgnoreCheckpointOnLaunch bool
+	StartBlockNum            uint64
+	StopBlockNum             uint64
 }
 
 type Modules struct {
@@ -96,7 +96,7 @@ func (a *App) Run() error {
 	}
 
 	if a.config.EnableInjector {
-		if err = service.SetupSource(); err != nil {
+		if err = service.SetupSource(a.config.IgnoreCheckpointOnLaunch); err != nil {
 			return fmt.Errorf("error setting up source: %w", err)
 		}
 
