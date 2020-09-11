@@ -30,9 +30,9 @@ type Config struct {
 	TruncationEnabled bool
 	TruncationWindow  uint64
 
-	IncludeFilterExpr              string
-	ExcludeFilterExpr              string
-	SystemActionsIncludeFilterExpr string
+	IncludeFilterExpr              []string
+	ExcludeFilterExpr              []string
+	SystemActionsIncludeFilterExpr []string
 }
 
 func New(config *Config) *App {

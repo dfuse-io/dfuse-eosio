@@ -34,9 +34,9 @@ func init() {
 		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
 
 		// Filtering
-		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
-		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
-		cmd.Flags().String("common-system-actions-include-filter-expr", "receiver == 'eosio' && action in ['updateauth', 'deleteauth', 'linkauth', 'unlinkauth', 'newaccount', 'setabi']", "[COMMON] CEL program to determine which actions to keep regardless of the include or exclude filter expressions, those are actions required by dfuse system(s) to function properly, change it only if you known what you are doing, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
+		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes, can be prefixed with lowblocknum `#123;` and multiple values separated by three semi-colons `;;;`, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
+		cmd.Flags().String("common-exclude-filter-expr", "", "[COMMON] CEL program to determine if an included action should be excluded, can be prefixed with lowblocknum `#123;` and multiple values separated by three semi-colons `;;;`, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
+		cmd.Flags().String("common-system-actions-include-filter-expr", "receiver == 'eosio' && action in ['updateauth', 'deleteauth', 'linkauth', 'unlinkauth', 'newaccount', 'setabi']", "[COMMON] CEL program to determine which actions to keep regardless of the include or exclude filter expressions, those are actions required by dfuse system(s) to function properly, can be prefixed with lowblocknum `#123;` and multiple values separated by three semi-colons `;;;`, change it only if you known what you are doing, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
 
 		// Search flags
 		cmd.Flags().String("search-common-mesh-store-addr", "", "[COMMON] Address of the backing etcd cluster for mesh service discovery.")

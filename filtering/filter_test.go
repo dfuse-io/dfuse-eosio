@@ -1,7 +1,6 @@
 package filtering
 
 import (
-	"fmt"
 	"testing"
 
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
@@ -23,103 +22,103 @@ func TestBlockFilter(t *testing.T) {
 	}{
 		{
 			"filter nothing",
-			filters{"", "", ""},
+			getFilters("", "", ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "whatever:action")),
 			filterMatched, false,
 		},
 		{
 			"filter nothing, with default programs",
-			filters{"true", "false", ""},
+			getFilters("true", "false", ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "whatever:action")),
 			filterMatched, false,
 		},
 		{
 			"blacklist things FROM badguy",
-			filters{`true`, `account == "eosio.token" && data.from == "badguy"`, ""},
+			getFilters(`true`, `account == "eosio.token" && data.from == "badguy"`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio.token:transfer", ct.ActionData(`{"from":"goodguy","to":"badguy"}`))),
 			filterMatched, false,
 		},
 		{
 			"blacklist things TO badguy",
-			filters{`true`, "account == 'eosio.token' && data.to == 'badguy'", ""},
+			getFilters(`true`, "account == 'eosio.token' && data.to == 'badguy'", ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio.token:transfer", ct.ActionData(`{"from":"goodguy","to":"badguy"}`))),
 			filterDidNotMatch, false,
 		},
 		{
 			"blacklist transfers to eidosonecoin",
-			filters{
+			getFilters(
 				"*",
 				`account == 'eidosonecoin' || receiver == 'eidosonecoin' || (account == 'eosio.token' && (data.to == 'eidosonecoin' || data.from == 'eidosonecoin'))`,
 				"",
-			},
+			),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio.token:transfer", ct.ActionData(`{"from":"goodguy","to":"eidosonecoin"}`))),
 			filterDidNotMatch, false,
 		},
 		{
 			"non-matching identifier in exclude-filter program doesn't blacklist",
-			filters{"", `account == 'eosio.token' && data.from == 'broken'`, ""},
+			getFilters("", `account == 'eosio.token' && data.from == 'broken'`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio.token:issue", ct.ActionData(`{"to":"winner"}`))),
 			filterMatched, false,
 		},
 		{
 			"a key not found error in include-filter still includes transaction",
-			filters{`account == 'eosio.token' && data.bob == 'broken'`, "", ""},
+			getFilters(`account == 'eosio.token' && data.bob == 'broken'`, "", ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio.token:issue", ct.ActionData(`{"to":"winner"}`))),
 			filterMatched, false,
 		},
 		{
 			"both whitelist and blacklist fail",
-			filters{`data.bob == 'broken'`, `data.rita == 'rebroken'`, ""},
+			getFilters(`data.bob == 'broken'`, `data.rita == 'rebroken'`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "any:any", ct.ActionData(`{"denise":"winner"}`))),
 			filterMatched, false,
 		},
 		{
 			"whitelisted but blacklist cleans out",
-			filters{`data.bob == '1'`, `data.rita == '2'`, ""},
+			getFilters(`data.bob == '1'`, `data.rita == '2'`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "any:any", ct.ActionData(`{"bob":"1","rita":"2"}`))),
 			false, false,
 		},
 		{
 			"whitelisted but blacklist broken so doesn't clean out",
-			filters{`data.bob == '1'`, `data.broken == 'really'`, ""},
+			getFilters(`data.bob == '1'`, `data.broken == 'really'`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "any:any", ct.ActionData(`{"bob":"1"}`))),
 			filterMatched, false,
 		},
 
 		{
 			"block receiver",
-			filters{"", `receiver == "badguy"`, ""},
+			getFilters("", `receiver == "badguy"`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "badguy:any:any", ct.ActionData(`{}`))),
 			filterDidNotMatch, false,
 		},
 		{
 			"prevent a failure on evaluation, so matches because blacklist fails",
-			filters{"", `account == "badacct" && has(data.from) && data.from != "badguy"`, ""},
+			getFilters("", `account == "badacct" && has(data.from) && data.from != "badguy"`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "badrecv:badacct:any", ct.ActionData(`{}`))),
 			filterMatched, false,
 		},
 
 		{
 			"system action already included are not flagged as system",
-			filters{`action == "setabi"`, ``, `action == "setabi"`},
+			getFilters(`action == "setabi"`, ``, `action == "setabi"`),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:setabi", ct.ActionData(`{}`))),
 			filterMatched, false,
 		},
 		{
 			"system action are included even when not included",
-			filters{`action == "anythingelse"`, ``, `action == "setabi"`},
+			getFilters(`action == "anythingelse"`, ``, `action == "setabi"`),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:setabi", ct.ActionData(`{}`))),
 			filterMatched, true,
 		},
 		{
 			"system action are included even when excluded",
-			filters{"*", `action == "setabi"`, `action == "setabi"`},
+			getFilters("*", `action == "setabi"`, `action == "setabi"`),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:setabi", ct.ActionData(`{}`))),
 			filterMatched, true,
 		},
 		{
 			"system action are included even when excluded and not included",
-			filters{`action == "anythingelse"`, `action == "setabi"`, `action == "setabi"`},
+			getFilters(`action == "anythingelse"`, `action == "setabi"`, `action == "setabi"`),
 			ct.TrxTrace(t, ct.ActionTrace(t, "eosio:eosio:setabi", ct.ActionData(`{}`))),
 			filterMatched, true,
 		},
@@ -132,8 +131,14 @@ func TestBlockFilter(t *testing.T) {
 			filter, err := NewBlockFilter(test.exprs.include, test.exprs.exclude, test.exprs.system)
 			require.NoError(t, err)
 
-			hasPass, isSystem := filter.shouldProcess(test.trace, test.trace.ActionTraces[0], func() []string { return nil })
-
+			hasPass, isSystem := shouldProcess(
+				test.trace,
+				test.trace.ActionTraces[0],
+				func() []string { return nil },
+				filter.IncludeProgram.choose(0),
+				filter.ExcludeProgram.choose(0),
+				filter.SystemActionsIncludeProgram.choose(0),
+			)
 			if test.expectedPass {
 				assert.True(t, hasPass, "Expected action trace to match filter (%s) but it did not", test.exprs)
 			} else {
@@ -148,13 +153,16 @@ func TestBlockFilter(t *testing.T) {
 		})
 	}
 }
-
-type filters struct {
-	include string
-	exclude string
-	system  string
+func getFilters(a string, b string, c string) filters {
+	return filters{
+		[]string{a},
+		[]string{b},
+		[]string{c},
+	}
 }
 
-func (f *filters) String() string {
-	return fmt.Sprintf("include %s, exclude %s, system %s", f.include, f.exclude, f.system)
+type filters struct {
+	include []string
+	exclude []string
+	system  []string
 }
