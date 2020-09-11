@@ -75,7 +75,15 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 					zlog.Info("adding new token contract", zap.String("account", account))
 					mutations := &cache.MutationsBatch{}
 					mutations.SetContract(eos.AccountName(account))
-					t.cache.Apply(mutations, blk)
+					errs := t.cache.Apply(mutations, blk)
+					if len(errs) != 0 {
+						zlog.Warn("failed add new token contract",
+							zap.String("account", account),
+							zap.Errors("errors", errs),
+						)
+						continue
+					}
+
 				}
 			}
 		}
