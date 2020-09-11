@@ -60,6 +60,7 @@ func init() {
 				StateDBGRPCAddr:             viper.GetString("eosws-statedb-grpc-addr"),
 				AuthenticateNodeosAPI:       viper.GetBool("eosws-authenticate-nodeos-api"),
 				MeteringPlugin:              viper.GetString("common-metering-plugin"),
+				RatelimiterPlugin:           viper.GetString("common-ratelimiter-plugin"),
 				AuthPlugin:                  viper.GetString("common-auth-plugin"),
 				UseOpencensusStackdriver:    viper.GetBool("eosws-use-opencensus-stack-driver"),
 				FetchPrice:                  viper.GetBool("eosws-fetch-price"),

@@ -18,6 +18,8 @@ package eosws
 import (
 	"context"
 	"fmt"
+	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
+	"github.com/dfuse-io/derr"
 	"net/http"
 	"net/url"
 	"strings"
@@ -70,6 +72,7 @@ type Config struct {
 
 	MeteringPlugin           string
 	AuthPlugin               string
+	RatelimiterPlugin        string
 	UseOpencensusStackdriver bool
 
 	FetchPrice     bool
@@ -127,6 +130,10 @@ func (a *App) Run() error {
 		apiURLStr = "http://" + apiURLStr
 	}
 	api := eos.New(apiURLStr)
+
+	drateLimiter.RegisterServices([]string{"eosws"})
+	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
+	derr.Check("unable to initialize rate limiter", err)
 
 	kdb, err := trxdb.New(a.Config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
@@ -248,6 +255,16 @@ func (a *App) Run() error {
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosws.DfuseErrorHandler).Handler
 	corsMiddleware := eosws.NewCORSMiddleware()
 	compressionMiddleware := mux.MiddlewareFunc(eosws.CompressionMiddleware)
+	rateLimiterMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
+
+		// todo replace ith r.URL.Path to get more granular blocking possibilities
+		method := "eosws"
+		if !rateLimiter.Gate(credentials.GetUserID(), method) {
+			return eosws.RateLimitTooManyRequests(ctx)
+		}
+
+		return nil
+	}).Handler
 	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
 		type authTier interface {
 			AuthenticatedTier() string
@@ -386,11 +403,13 @@ func (a *App) Run() error {
 
 	/// WebSocket endpoints
 	wsRouter.Use(authMiddleware)
+	wsRouter.Use(rateLimiterMiddleware)
 	wsRouter.Path("/v1/stream").Handler(wsHandler)
 
 	/// Primary REST API endpoints
 	restRouter.Use(compressionMiddleware)
 	restRouter.Use(authMiddleware)
+	restRouter.Use(rateLimiterMiddleware)
 	restRouter.Use(eosws.RESTTrackingMiddleware)
 	restRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
@@ -412,6 +431,7 @@ func (a *App) Run() error {
 	// FluxDB (Chain State) REST API endpoints
 	statedbRestRouter.Use(compressionMiddleware)
 	statedbRestRouter.Use(authMiddleware)
+	statedbRestRouter.Use(rateLimiterMiddleware)
 	statedbRestRouter.Use(eosws.RESTTrackingMiddleware)
 	statedbRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
@@ -442,6 +462,7 @@ func (a *App) Run() error {
 	/// Rest routes (Eosq accessible only)
 	eosqRestRouter.Use(compressionMiddleware)
 	eosqRestRouter.Use(authMiddleware)
+	eosqRestRouter.Use(rateLimiterMiddleware)
 	eosqRestRouter.Use(hasEosqTierMiddleware)
 	eosqRestRouter.Use(eosws.RESTTrackingMiddleware)
 
