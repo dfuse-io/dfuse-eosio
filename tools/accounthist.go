@@ -63,14 +63,15 @@ func init() {
 	accounthistCmd.AddCommand(checkpointCmd)
 	checkpointCmd.AddCommand(readCheckpointCmd, deleteCheckpointCmd)
 
+	accounthistCmd.PersistentFlags().String("mode", "account", "accountgist mode one of 'account' or 'account-contract'")
 	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "kvStore DSN")
 	scanAccountCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
 }
 
 func readCheckpointE(cmd *cobra.Command, args []string) (err error) {
-	kvdb, err := store.New(viper.GetString("dsn"))
+	kvdb, mode, err := getKVDBAndMode()
 	if err != nil {
-		return fmt.Errorf("failed to setup db: %w", err)
+		return err
 	}
 
 	shardStr := args[0]
@@ -79,9 +80,14 @@ func readCheckpointE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("unable to determine shard value from: %s: %w", shardStr, err)
 	}
 
-	service := newService(kvdb, shard)
+	switch mode {
+	case accounthist.AccounthistModeAccount:
+		injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
+	case accounthist.AccounthistModeAccountContract:
+		injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
+	}
 
-	checkpoint, err := service.GetShardCheckpoint(cmd.Context())
+	checkpoint, err := newService(kvdb, shard).GetShardCheckpoint(cmd.Context())
 	if err != nil {
 		return err
 	}
@@ -100,9 +106,9 @@ func readCheckpointE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func deleteCheckpointE(cmd *cobra.Command, args []string) (err error) {
-	kvdb, err := store.New(viper.GetString("dsn"))
+	kvdb, mode, err := getKVDBAndMode()
 	if err != nil {
-		return fmt.Errorf("failed to setup db: %w", err)
+		return err
 	}
 
 	shardStr := args[0]
@@ -111,8 +117,14 @@ func deleteCheckpointE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("unable to determine shard value from: %s: %w", shardStr, err)
 	}
 
-	service := newService(kvdb, shard)
+	switch mode {
+	case accounthist.AccounthistModeAccount:
+		injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
+	case accounthist.AccounthistModeAccountContract:
+		injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
+	}
 
+	service := newService(kvdb, shard)
 	checkpoint, err := service.GetShardCheckpoint(cmd.Context())
 	if err != nil {
 		return err
@@ -153,13 +165,10 @@ func deleteCheckpointE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func readAccountE(cmd *cobra.Command, args []string) (err error) {
-	kvdb, err := store.New(viper.GetString("dsn"))
+	kvdb, mode, err := getKVDBAndMode()
 	if err != nil {
-		return fmt.Errorf("failed to setup db: %w", err)
+		return err
 	}
-	kvdb = injector.NewRWCache(kvdb)
-
-	service := newService(kvdb, 0)
 
 	account := args[0]
 	accountUint, err := eos.StringToName(account)
@@ -167,11 +176,18 @@ func readAccountE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("unable to encode string %s to eos name (utin64): %w", account, err)
 	}
 
+	switch mode {
+	case accounthist.AccounthistModeAccount:
+		injector.InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
+	case accounthist.AccounthistModeAccountContract:
+		injector.InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
+	}
+
 	zlog.Info("retrieving shard summary for account",
 		zap.String("account", account),
 	)
 
-	summary, err := service.KeySummary(cmd.Context(), accounthist.AccountKey(accountUint))
+	summary, err := newService(kvdb, 0).KeySummary(cmd.Context(), accounthist.AccountKey(accountUint))
 	if err != nil {
 		return fmt.Errorf("unable to retrieve account summary: %w", err)
 	}
@@ -190,15 +206,26 @@ func readAccountE(cmd *cobra.Command, args []string) (err error) {
 
 func scanAccountE(cmd *cobra.Command, args []string) (err error) {
 	scanLimit := viper.GetInt("limit")
-	kvdb, err := store.New(viper.GetString("dsn"))
+	kvdb, mode, err := getKVDBAndMode()
 	if err != nil {
-		return fmt.Errorf("failed to setup db: %w", err)
+		return err
 	}
 	kvdb = injector.NewRWCache(kvdb)
 
+	var prefix byte
+	var decoder accounthist.RowKeyDecoderFunc
+	switch mode {
+	case accounthist.AccounthistModeAccount:
+		prefix = keyer.PrefixAccount
+		decoder = accounthist.AccountKeyRowDecoder
+	case accounthist.AccounthistModeAccountContract:
+		prefix = keyer.PrefixAccountContract
+		decoder = accounthist.AccountContractKeyRowDecoder
+	}
+
 	fmt.Printf("Scanning accounts (limit: %d)\n", scanLimit)
 	count := 0
-	err = accounthist.ScanAccounts(cmd.Context(), kvdb, keyer.PrefixAccount, accounthist.AccountKeyRowDecoder, func(account uint64, shard byte, ordinalNum uint64) error {
+	err = accounthist.ScanAccounts(cmd.Context(), kvdb, prefix, decoder, func(account uint64, shard byte, ordinalNum uint64) error {
 		if count > scanLimit {
 			return fmt.Errorf("scan limit reached")
 		}
@@ -226,4 +253,21 @@ func newService(kvdb store.KVStore, shardNum uint64) *injector.Injector {
 		nil,
 	)
 
+}
+
+func getKVDBAndMode() (store.KVStore, accounthist.AccounthistMode, error) {
+	kvdb, err := store.New(viper.GetString("dsn"))
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to setup db: %w", err)
+	}
+
+	switch accounthist.AccounthistMode(viper.GetString("mode")) {
+	case accounthist.AccounthistModeAccount:
+		return kvdb, accounthist.AccounthistModeAccount, nil
+	case accounthist.AccounthistModeAccountContract:
+		return kvdb, accounthist.AccounthistModeAccountContract, nil
+	default:
+		return nil, "", fmt.Errorf("unknown acounthist mode: %s", viper.GetString("mode"))
+
+	}
 }

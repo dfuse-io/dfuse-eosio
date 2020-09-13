@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
+
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
@@ -34,9 +36,9 @@ var errStopWalk = errors.New("stop walk")
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
 
 var checkAccounthistShardsCmd = &cobra.Command{
-	Use:   "accounthist-shards {dsn}",
+	Use:   "accounthist-shards {accounthist-mode} {dsn}",
 	Short: "Checks to see if all Accounthist shard are contiguous",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(2),
 	RunE:  checkAccounthistShardE,
 }
 var checkMergedBlocksCmd = &cobra.Command{
@@ -564,7 +566,7 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 }
 
 func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
-	storeURL := args[0]
+	storeURL := args[1]
 	kvdb, err := store.New(storeURL)
 	if err != nil {
 		return fmt.Errorf("failed to setup db: %w", err)
@@ -572,7 +574,17 @@ func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
 	kvdb = injector.NewRWCache(kvdb)
 	service := newService(kvdb, 0)
 
-	out, err := service.ShardAnalysis(cmd.Context(), keyer.PrefixAccountCheckpoint)
+	var prefix byte
+	switch accounthist.AccounthistMode(args[0]) {
+	case accounthist.AccounthistModeAccount:
+		prefix = keyer.PrefixAccountCheckpoint
+	case accounthist.AccounthistModeAccountContract:
+		prefix = keyer.PrefixAccountContractCheckpoint
+	default:
+		return fmt.Errorf("invalid account hist more: %s", args[0])
+	}
+
+	out, err := service.ShardAnalysis(cmd.Context(), prefix)
 	if err != nil {
 		return err
 	}
@@ -581,6 +593,9 @@ func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
 	hasSeenFirstShard := false
 	priorStartBlock := uint64(0)
 	fmt.Printf("Account History Shard Summary:\n")
+	if len(out) == 0 {
+		fmt.Printf("No shards found\n")
+	}
 	for _, shard := range out {
 		shardNum := int(shard.ShardNum)
 		if expectedShard != shardNum {
