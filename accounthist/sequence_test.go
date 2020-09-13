@@ -5,49 +5,30 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/kvdb/store"
-	"github.com/stretchr/testify/require"
-
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/eoscanada/eos-go"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func Test_shardNewestSequenceData(t *testing.T) {
+func TestShardNewestSequenceData(t *testing.T) {
 	kvStore, cleanup := getKVTestFactory(t)
 	defer cleanup()
 	ctx := context.Background()
-	account := eos.MustStringToName("a")
+	accountUint := eos.MustStringToName("a")
+	accountKey := AccountKey(accountUint)
 
-	processSequenceDataKeyValue := func(item store.KV) (SequenceData, error) {
-		s := SequenceData{}
-		_, _, nextOrdinal := decodeActionKeySeqNum(item.Key)
-		s.CurrentOrdinal = nextOrdinal
-		return s, nil
-	}
+	kvStore.Put(ctx, accountKey.Row(0, 1), []byte{0x02})
+	kvStore.Put(ctx, accountKey.Row(2, 7), []byte{0x03})
+	kvStore.FlushPuts(ctx)
 
-	serviceZero := newTestService(kvStore, 0, 10)
-	serviceZero.writeAction(ctx, account, SequenceData{
-		CurrentOrdinal: 1,
-		LastGlobalSeq:  3,
-	}, &pbcodec.ActionTrace{}, []byte{})
-	serviceZero.forceFlush(ctx)
-
-	serviceTwo := newTestService(kvStore, 2, 10)
-	serviceTwo.writeAction(ctx, account, SequenceData{
-		CurrentOrdinal: 7,
-		LastGlobalSeq:  1,
-	}, &pbcodec.ActionTrace{}, []byte{})
-	serviceTwo.forceFlush(ctx)
-
-	seq, err := serviceZero.shardNewestSequenceData(ctx, account, 0, processSequenceDataKeyValue)
+	seq, err := ShardNewestSequenceData(ctx, kvStore, accountKey, 0, AccountKeyRowDecoder, false)
 	require.NoError(t, err)
 	assert.Equal(t, uint64(1), seq.CurrentOrdinal)
 
-	_, err = serviceZero.shardNewestSequenceData(ctx, account, 1, processSequenceDataKeyValue)
+	_, err = ShardNewestSequenceData(ctx, kvStore, accountKey, 1, AccountKeyRowDecoder, false)
 	require.Error(t, store.ErrNotFound)
 
-	seq, err = serviceZero.shardNewestSequenceData(ctx, account, 2, processSequenceDataKeyValue)
+	seq, err = ShardNewestSequenceData(ctx, kvStore, accountKey, 2, AccountKeyRowDecoder, false)
 	require.NoError(t, err)
 	assert.Equal(t, uint64(7), seq.CurrentOrdinal)
 

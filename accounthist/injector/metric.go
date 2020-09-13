@@ -1,10 +1,15 @@
-package accounthist
+package injector
 
 import (
 	"time"
 
 	"go.uber.org/zap"
 )
+
+type lastWrittenBlock struct {
+	blockNum  uint64
+	writtenAt time.Time
+}
 
 type blockBatchMetrics struct {
 	batchStartTime            time.Time

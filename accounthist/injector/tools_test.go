@@ -1,9 +1,10 @@
-package accounthist
+package injector
 
 import (
 	"context"
 	"testing"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ func Test_shardSummary(t *testing.T) {
 	defer cleanup()
 	maxEntries := uint64(10)
 
-	s := newTestService(kvStore, 0, 1000)
+	s := setupAccountInjector(NewRWCache(kvStore), 0, 1000)
 	runShard(t, 0, maxEntries, kvStore,
 		ct.Block(t, "00000002bb",
 			ct.TrxTrace(t, ct.ActionTrace(t, "a:some:cthing1", ct.GlobalSequence(3))),
@@ -33,11 +34,11 @@ func Test_shardSummary(t *testing.T) {
 		),
 	)
 
-	summary, err := s.ShardSummary(context.Background(), eos.MustStringToName("a"))
+	summary, err := s.KeySummary(context.Background(), accounthist.AccountKey(eos.MustStringToName("a")))
 	require.NoError(t, err)
-	assert.Equal(t, []*shardSummary{
-		{ShardNum: 0, SeqData: SequenceData{CurrentOrdinal: 5, LastGlobalSeq: 7}},
-		{ShardNum: 1, SeqData: SequenceData{CurrentOrdinal: 2, LastGlobalSeq: 2}},
+	assert.Equal(t, []*KeyShardSummary{
+		{ShardNum: 0, SeqData: accounthist.SequenceData{CurrentOrdinal: 5, LastGlobalSeq: 7}},
+		{ShardNum: 1, SeqData: accounthist.SequenceData{CurrentOrdinal: 2, LastGlobalSeq: 2}},
 	}, summary)
 
 }

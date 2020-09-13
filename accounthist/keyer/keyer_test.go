@@ -1,0 +1,123 @@
+package keyer
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/eoscanada/eos-go"
+)
+
+func Test_encodeTokenPrefixKey(t *testing.T) {
+	mamaUint, _ := eos.StringToName("mama")
+	contractUint, _ := eos.StringToName("battlefieldt")
+
+	key := EncodeAccountContractKey(mamaUint, contractUint, 1, uint64(1))
+	assert.Equal(t,
+		[]byte{
+			0x4,
+			0x91, 0xa4, 0x60, 0x0, 0x0, 0x0, 0x0, 0x0,
+			0x39, 0xb3, 0x98, 0xa9, 0x6e, 0x54, 0x53, 0x90,
+			0x01,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+		},
+		key,
+	)
+
+	papaUint, _ := eos.StringToName("papa")
+	contractBUint, _ := eos.StringToName("battlefield")
+
+	key = EncodeAccountContractKey(papaUint, contractBUint, 1, uint64(1))
+	assert.Equal(t,
+		[]byte{
+			0x4,
+			0xa9, 0xaa, 0x60, 0x0, 0x0, 0x0, 0x0, 0x0,
+			0x39, 0xb3, 0x98, 0xa9, 0x6e, 0x54, 0x52, 0x0,
+			0x1,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+		},
+		key,
+	)
+}
+
+func Test_encodeTokenKey(t *testing.T) {
+	account, contract, shardNum, ordinalNum := DecodeAccountContractKeySeqNum([]byte{
+		0x4,
+		0x91, 0xa4, 0x60, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x39, 0xb3, 0x98, 0xa9, 0x6e, 0x54, 0x53, 0x90,
+		0x01,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+	})
+	mamaUint, _ := eos.StringToName("mama")
+	contractUint, _ := eos.StringToName("battlefieldt")
+	assert.Equal(t, mamaUint, account)
+	assert.Equal(t, contractUint, contract)
+	assert.Equal(t, byte(1), shardNum)
+	assert.Equal(t, uint64(1), ordinalNum)
+}
+
+func Test_encodeAccountKey(t *testing.T) {
+	mamaUint, _ := eos.StringToName("mama")
+	key1Bytes := EncodeAccountKey(mamaUint, 1, uint64(1))
+	assert.Equal(t,
+		[]byte{
+			0x2,
+			0x91, 0xa4, 0x60, 0x0, 0x0, 0x0, 0x0, 0x0,
+			0x01,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+		},
+		key1Bytes,
+	)
+
+	b1Uint, _ := eos.StringToName("b1")
+	key1Bytes = EncodeAccountKey(b1Uint, 2, uint64(256))
+	assert.Equal(t,
+		[]byte{
+			0x2,
+			0x38, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+			0x02,
+			0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xff,
+		},
+		key1Bytes,
+	)
+}
+
+func Test_decodeAccountKeySeqNum(t *testing.T) {
+	account, shardNum, ordinalNum := DecodeAccountKeySeqNum([]byte{
+		0x2,
+		0x91, 0xa4, 0x60, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x01,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
+	})
+	mamaUint, _ := eos.StringToName("mama")
+	assert.Equal(t, mamaUint, account)
+	assert.Equal(t, byte(1), shardNum)
+	assert.Equal(t, uint64(1), ordinalNum)
+
+	account, shardNum, ordinalNum = DecodeAccountKeySeqNum([]byte{
+		0x2,
+		0x55, 0x30, 0x83, 0x4c, 0xc9, 0x32, 0x29, 0x20,
+		0x02,
+		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0xff,
+	})
+	eoscanadacomUint, _ := eos.StringToName("eoscanadacom")
+	assert.Equal(t, eoscanadacomUint, account)
+	assert.Equal(t, byte(2), shardNum)
+	assert.Equal(t, uint64(256), ordinalNum)
+}
+
+func Test_EncodeCheckpointKey(t *testing.T) {
+	shard := byte(5)
+	key1Bytes := EncodeAccountCheckpointKey(shard)
+	assert.Equal(t,
+		[]byte{0x3, 0x5},
+		key1Bytes,
+	)
+}
+
+func Test_DecodeCheckpointKey(t *testing.T) {
+	shard := DecodeCheckpointKey([]byte{
+		0x3, 0x5,
+	})
+	assert.Equal(t, byte(5), shard)
+}

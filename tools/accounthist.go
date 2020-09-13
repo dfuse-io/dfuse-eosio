@@ -5,44 +5,41 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
+
 	"github.com/manifoldco/promptui"
 	"go.uber.org/zap"
 
-	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var accounthistCmd = &cobra.Command{Use: "accounthist", Short: "Read from accout history"}
+var accounthistCmd = &cobra.Command{Use: "accounthist", Short: "Read from account history"}
+var accountCmd = &cobra.Command{Use: "account", Short: "Account interactions"}
+var checkpointCmd = &cobra.Command{Use: "checkpoint", Short: "Shard checkpoint interactions", Args: cobra.ExactArgs(1), RunE: readCheckpointE}
 
-var accountCmd = &cobra.Command{
-	Use:   "account",
-	Short: "Account interactions",
-	Args:  cobra.ExactArgs(1),
-	RunE:  readCheckpointE,
-}
-
+// dfuseeos tools accounthist account read {account} --dsn
 var readAccountCmd = &cobra.Command{
-	Use:   "read",
+	Use:   "read {account}",
 	Short: "Read an account",
 	Args:  cobra.ExactArgs(1),
 	RunE:  readAccountE,
 }
+
+// dfuseeos tools accounthist account scan --dsn
 var scanAccountCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan accounts",
 	RunE:  scanAccountE,
 }
 
-var checkpointCmd = &cobra.Command{
-	Use:   "checkpoint",
-	Short: "Shard checkpoint interactions",
-	Args:  cobra.ExactArgs(1),
-	RunE:  readCheckpointE,
-}
-
+// dfuseeos tools accounthist account scan --dsn
 var readCheckpointCmd = &cobra.Command{
 	Use:   "read",
 	Short: "Read a shard's checkpoint",
@@ -66,7 +63,7 @@ func init() {
 	accounthistCmd.AddCommand(checkpointCmd)
 	checkpointCmd.AddCommand(readCheckpointCmd, deleteCheckpointCmd)
 
-	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
+	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "kvStore DSN")
 	scanAccountCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
 }
 
@@ -160,7 +157,7 @@ func readAccountE(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
-	kvdb = accounthist.NewRWCache(kvdb)
+	kvdb = injector.NewRWCache(kvdb)
 
 	service := newService(kvdb, 0)
 
@@ -173,7 +170,8 @@ func readAccountE(cmd *cobra.Command, args []string) (err error) {
 	zlog.Info("retrieving shard summary for account",
 		zap.String("account", account),
 	)
-	summary, err := service.ShardSummary(cmd.Context(), accountUint)
+
+	summary, err := service.KeySummary(cmd.Context(), accounthist.AccountKey(accountUint))
 	if err != nil {
 		return fmt.Errorf("unable to retrieve account summary: %w", err)
 	}
@@ -196,13 +194,11 @@ func scanAccountE(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
-	kvdb = accounthist.NewRWCache(kvdb)
-
-	service := newService(kvdb, 0)
+	kvdb = injector.NewRWCache(kvdb)
 
 	fmt.Printf("Scanning accounts (limit: %d)\n", scanLimit)
 	count := 0
-	err = service.ScanAccounts(cmd.Context(), func(account uint64, shard byte, ordinalNum uint64) error {
+	err = accounthist.ScanAccounts(cmd.Context(), kvdb, keyer.PrefixAccount, accounthist.AccountKeyRowDecoder, func(account uint64, shard byte, ordinalNum uint64) error {
 		if count > scanLimit {
 			return fmt.Errorf("scan limit reached")
 		}
@@ -217,9 +213,9 @@ func scanAccountE(cmd *cobra.Command, args []string) (err error) {
 
 }
 
-func newService(kvdb store.KVStore, shardNum uint64) *accounthist.Service {
-	return accounthist.NewService(
-		accounthist.NewRWCache(kvdb),
+func newService(kvdb store.KVStore, shardNum uint64) *injector.Injector {
+	return injector.NewInjector(
+		injector.NewRWCache(kvdb),
 		nil,
 		nil,
 		byte(shardNum),

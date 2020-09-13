@@ -3,59 +3,49 @@ package accounthist
 import (
 	"context"
 	"fmt"
+	"math"
 
-	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/golang/protobuf/proto"
-
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/eoscanada/eos-go"
+	"go.uber.org/zap"
 )
 
-type shardSummary struct {
-	ShardNum byte
-	SeqData  SequenceData
-}
+func ScanAccounts(
+	ctx context.Context,
+	kvStore store.KVStore,
+	actionKeyPrefix byte,
+	decoder RowKeyDecoderFunc,
+	handleAccount func(account uint64, shard byte, ordinalNum uint64) error) error {
 
-func (s *Service) ShardSummary(ctx context.Context, account uint64) ([]*shardSummary, error) {
-	out := []*shardSummary{}
-	for i := 0; i < 5; i++ {
-		seqData, err := s.shardNewestSequenceData(ctx, account, byte(i), s.processSequenceDataKeyValue)
+	startKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, 0)
+	hasMoreAccounts := true
+	for hasMoreAccounts {
+		endKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, math.MaxUint64)
+		it := kvStore.Scan(ctx, startKey, endKey, 1)
+		hasNext := it.Next()
+		if !hasNext && it.Err() != nil {
+			return fmt.Errorf("scanning accounts last action: %w", it.Err())
+		}
 
-		if err == store.ErrNotFound {
+		if !hasNext {
+			hasMoreAccounts = false
 			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("error while fetching sequence data for account: %w", err)
+		}
+		actionKey, shardNum, ordinalNum := decoder(it.Item().Key)
+		zlog.Info("found account",
+			zap.Stringer("action_key", actionKey),
+			zap.Int("shard_num", int(shardNum)),
+			zap.Uint64("ordinal_num", ordinalNum),
+		)
+
+		err := handleAccount(actionKey.Account(), shardNum, ordinalNum)
+		if err != nil {
+			return fmt.Errorf("handle account failed for account %s at shard %d with ordinal number: %d: %w", eos.NameToString(actionKey.Account()), int(shardNum), ordinalNum, err)
 		}
 
-		out = append(out, &shardSummary{ShardNum: byte(i), SeqData: seqData})
+		startKey = store.Key(keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, actionKey.Account())).PrefixNext()
 	}
-	return out, nil
-}
 
-type shard struct {
-	ShardNum   byte
-	Checkpoint *pbaccounthist.ShardCheckpoint
-}
-
-func (s *Service) ShardAnalysis(ctx context.Context) (out []*shard, err error) {
-	startKey := []byte{prefixLastBlock}
-	endKey := store.Key(startKey).PrefixNext()
-
-	it := s.kvStore.Scan(ctx, startKey, endKey, 0)
-
-	for it.Next() {
-
-		shardByte := decodeLastProcessedBlockKey(it.Item().Key)
-		checkpoint := &pbaccounthist.ShardCheckpoint{}
-		if err := proto.Unmarshal(it.Item().Value, checkpoint); err != nil {
-			return nil, err
-		}
-		out = append(out, &shard{
-			ShardNum:   shardByte,
-			Checkpoint: checkpoint,
-		})
-	}
-	if err := it.Err(); err != nil {
-		return nil, fmt.Errorf("unable to scan shard: %w", it.Err())
-	}
-	return out, nil
+	return nil
 }

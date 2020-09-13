@@ -1,4 +1,4 @@
-package accounthist
+package injector
 
 import (
 	"context"
@@ -12,26 +12,26 @@ import (
 	"go.uber.org/zap"
 )
 
-func (ws *Service) SetupSource(ignoreCheckpointOnLaunch bool) error {
+func (i *Injector) SetupSource(ignoreCheckpointOnLaunch bool) error {
 	ctx := context.Background()
 
-	checkpoint, err := ws.resolveCheckpoint(ctx, ignoreCheckpointOnLaunch)
+	checkpoint, err := i.resolveCheckpoint(ctx, ignoreCheckpointOnLaunch)
 	if err != nil {
 		return fmt.Errorf("unable to resolve shard checkpoint: %w", err)
 	}
-	ws.lastCheckpoint = checkpoint
+	i.lastCheckpoint = checkpoint
 
-	startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType, err := ws.resolveStartBlock(ctx, checkpoint)
+	startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType, err := i.resolveStartBlock(ctx, checkpoint)
 	if err != nil {
 		return fmt.Errorf("unable to resolve start block: %w", err)
 	}
 
-	ws.setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType)
+	i.setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum, fileSourceStartBlockId, gateType)
 
 	return nil
 }
 
-func (ws *Service) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType) {
+func (i *Injector) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType) {
 	zlog.Info("setting up pipeline",
 		zap.Uint64("start_processing_block_num", startProcessingBlockNum),
 		zap.Uint64("file_source_start_block_num", fileSourceStartBlockNum),
@@ -52,26 +52,26 @@ func (ws *Service) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNu
 		options = append(options, forkable.WithInclusiveLIB(bstream.NewBlockRef(fileSourceStartBlockId, fileSourceStartBlockNum)))
 	}
 
-	gate := bstream.NewBlockNumGate(startProcessingBlockNum, gateType, ws, bstream.GateOptionWithLogger(zlog))
+	gate := bstream.NewBlockNumGate(startProcessingBlockNum, gateType, i, bstream.GateOptionWithLogger(zlog))
 	forkableHandler := forkable.New(gate, options...)
 
 	fs := bstream.NewFileSource(
-		ws.blocksStore,
+		i.blocksStore,
 		fileSourceStartBlockNum,
 		2,
-		preprocessingFunc(ws.blockFilter),
+		PreprocessingFunc(i.BlockFilter),
 		forkableHandler,
 		bstream.FileSourceWithLogger(zlog),
 	)
 
-	ws.source = fs
+	i.source = fs
 }
 
-func (ws *Service) resolveCheckpoint(ctx context.Context, ignoreCheckpointOnLaunch bool) (*pbaccounthist.ShardCheckpoint, error) {
+func (i *Injector) resolveCheckpoint(ctx context.Context, ignoreCheckpointOnLaunch bool) (*pbaccounthist.ShardCheckpoint, error) {
 	if ignoreCheckpointOnLaunch {
-		checkpoint := newShardCheckpoint(ws.startBlockNum)
+		checkpoint := newShardCheckpoint(i.startBlockNum)
 		zlog.Info("ignoring checkpoint on launch starting without a checkpoint",
-			zap.Int("shard_num", int(ws.shardNum)),
+			zap.Int("shard_num", int(i.ShardNum)),
 			zap.Reflect("checkpoint", checkpoint),
 		)
 		return checkpoint, nil
@@ -79,29 +79,29 @@ func (ws *Service) resolveCheckpoint(ctx context.Context, ignoreCheckpointOnLaun
 
 	// Retrieved lastProcessedBlock must be in the shard's range, and that shouldn't
 	// change across invocations, or in the lifetime of the database.
-	checkpoint, err := ws.GetShardCheckpoint(ctx)
+	checkpoint, err := i.GetShardCheckpoint(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("fetching shard checkpoint: %w", err)
 	}
 
 	if checkpoint != nil {
 		zlog.Info("found checkpoint",
-			zap.Int("shard_num", int(ws.shardNum)),
+			zap.Int("shard_num", int(i.ShardNum)),
 			zap.Reflect("checkpoint", checkpoint),
 		)
-		ws.startedFromCheckpoint = true
+		i.startedFromCheckpoint = true
 		return checkpoint, nil
 	}
 
-	checkpoint = newShardCheckpoint(ws.startBlockNum)
+	checkpoint = newShardCheckpoint(i.startBlockNum)
 	zlog.Info("starting without checkpoint",
-		zap.Int("shard_num", int(ws.shardNum)),
+		zap.Int("shard_num", int(i.ShardNum)),
 		zap.Reflect("checkpoint", checkpoint),
 	)
 	return checkpoint, nil
 }
 
-func (ws *Service) resolveStartBlock(ctx context.Context, checkpoint *pbaccounthist.ShardCheckpoint) (startProcessingBlockNum uint64, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType, err error) {
+func (i *Injector) resolveStartBlock(ctx context.Context, checkpoint *pbaccounthist.ShardCheckpoint) (startProcessingBlockNum uint64, fileSourceStartBlockNum uint64, fileSourceStartBlockId string, gateType bstream.GateType, err error) {
 	if checkpoint.LastWrittenBlockId != "" {
 		zlog.Info("resolving start blocks from checkpoint last written block",
 			zap.Reflect("checkpoint", checkpoint),
@@ -113,7 +113,7 @@ func (ws *Service) resolveStartBlock(ctx context.Context, checkpoint *pbaccounth
 		zap.Reflect("checkpoint", checkpoint),
 	)
 
-	fsStartNum, previousIrreversibleID, err := ws.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
+	fsStartNum, previousIrreversibleID, err := i.tracker.ResolveStartBlock(ctx, checkpoint.InitialStartBlock)
 	if err != nil {
 		return 0, 0, "", 0, fmt.Errorf("unable to resolve start block with tracker: %w", err)
 	}
@@ -128,7 +128,7 @@ func newShardCheckpoint(startBlock uint64) *pbaccounthist.ShardCheckpoint {
 	return &pbaccounthist.ShardCheckpoint{InitialStartBlock: startBlock}
 }
 
-func preprocessingFunc(blockFilter func(blk *bstream.Block) error) bstream.PreprocessFunc {
+func PreprocessingFunc(blockFilter func(blk *bstream.Block) error) bstream.PreprocessFunc {
 	return func(blk *bstream.Block) (interface{}, error) {
 		if blockFilter != nil {
 			if err := blockFilter(blk); err != nil {

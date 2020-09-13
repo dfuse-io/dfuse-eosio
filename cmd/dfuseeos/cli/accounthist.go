@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	accounthistApp "github.com/dfuse-io/dfuse-eosio/accounthist/app/accounthist"
+
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -44,17 +45,17 @@ func init() {
 			}
 
 			return accounthistApp.New(&accounthistApp.Config{
-				GRPCListenAddr:       viper.GetString("accounthist-grpc-listen-addr"),
-				KvdbDSN:              mustReplaceDataDir(dfuseDataDir, viper.GetString("accounthist-dsn")),
-				BlocksStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
-				BlockstreamAddr:      blockstreamAddr,
-				EnableInjector:       viper.GetBool("accounthist-enable-injector-mode"),
-				EnableServer:         viper.GetBool("accounthist-enable-server-mode"),
-				ShardNum:             byte(shardNum),
-				MaxEntriesPerAccount: viper.GetUint64("accounthist-max-entries-per-account"),
-				FlushBlocksInterval:  flushBlocksInterval,
-				StartBlockNum:        viper.GetUint64("accounthist-start-block-num"),
-				StopBlockNum:         viper.GetUint64("accounthist-stop-block-num"),
+				GRPCListenAddr:      viper.GetString("accounthist-grpc-listen-addr"),
+				KvdbDSN:             mustReplaceDataDir(dfuseDataDir, viper.GetString("accounthist-dsn")),
+				BlocksStoreURL:      mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				BlockstreamAddr:     blockstreamAddr,
+				EnableInjector:      viper.GetBool("accounthist-enable-injector-mode"),
+				EnableServer:        viper.GetBool("accounthist-enable-server-mode"),
+				ShardNum:            byte(shardNum),
+				MaxEntriesPerKey:    viper.GetUint64("accounthist-max-entries-per-account"),
+				FlushBlocksInterval: flushBlocksInterval,
+				StartBlockNum:       viper.GetUint64("accounthist-start-block-num"),
+				StopBlockNum:        viper.GetUint64("accounthist-stop-block-num"),
 			}, &accounthistApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
 				Tracker:     runtime.Tracker,

@@ -1,16 +1,31 @@
-package accounthist
+package purger
 
 import (
 	"context"
 	"fmt"
+
+	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
 
 	"go.uber.org/zap"
 
 	"github.com/dfuse-io/kvdb/store"
 )
 
-func (s *Service) purgeAccounts(ctx context.Context, maxEntriesPerAccount uint64) error {
-	return s.ScanAccounts(ctx, func(account uint64, shardNum byte, ordinalNum uint64) error {
+type Purger struct {
+	kvStore store.KVStore
+}
+
+var PurgerKeyEncoder accounthist.KeyEncoderFunc
+var PurgerActionKeyPrefix byte
+var PurgerRowKeyDecoder accounthist.RowKeyDecoderFunc
+
+func (p *Purger) PurgeAccounts(ctx context.Context, maxEntriesPerAccount uint64) error {
+	return accounthist.ScanAccounts(ctx, p.kvStore, PurgerActionKeyPrefix, PurgerRowKeyDecoder, func(account uint64, shardNum byte, ordinalNum uint64) error {
+		actionKey := PurgerKeyEncoder(&bstream.Block{}, &pbcodec.ActionTrace{}, account)
 		if ordinalNum >= maxEntriesPerAccount {
 			zlog.Info("account action count exceed max entries, no need to proceed further",
 				zap.Stringer("account", EOSName(account)),
@@ -18,7 +33,7 @@ func (s *Service) purgeAccounts(ctx context.Context, maxEntriesPerAccount uint64
 				zap.Int("ordinal_num", int(ordinalNum)),
 				zap.Int("shard_num", int(shardNum)),
 			)
-			s.purgeAccountAboveShard(ctx, account, shardNum)
+			p.purgeAccountAboveShard(ctx, account, shardNum)
 			return nil
 		}
 
@@ -29,12 +44,7 @@ func (s *Service) purgeAccounts(ctx context.Context, maxEntriesPerAccount uint64
 		nextShardNum := shardNum + 1
 		seenActions := ordinalNum
 		for {
-			seqData, err := s.shardNewestSequenceData(ctx, account, nextShardNum, func(item store.KV) (SequenceData, error) {
-				s := SequenceData{}
-				_, _, s.CurrentOrdinal = decodeActionKeySeqNum(item.Key)
-				return s, nil
-			})
-
+			seqData, err := accounthist.ShardNewestSequenceData(ctx, p.kvStore, actionKey, nextShardNum, PurgerRowKeyDecoder, false)
 			if err == store.ErrNotFound {
 				zlog.Info("account has not been maxed out", zap.String("account", EOSName(account).String()), zap.Uint64("action_count", seenActions), zap.Int("last_shard_num", int(shardNum-1)))
 				return nil
@@ -52,7 +62,7 @@ func (s *Service) purgeAccounts(ctx context.Context, maxEntriesPerAccount uint64
 					zap.Uint64("seen_actions", seenActions),
 					zap.Int("shard_num", int(nextShardNum)),
 				)
-				s.purgeAccountAboveShard(ctx, account, nextShardNum)
+				p.purgeAccountAboveShard(ctx, account, nextShardNum)
 				return nil
 			}
 			nextShardNum++
@@ -60,24 +70,26 @@ func (s *Service) purgeAccounts(ctx context.Context, maxEntriesPerAccount uint64
 	})
 }
 
-var batchDeleteKeys = func(ctx context.Context, kvStore store.KVStore, keys [][]byte) {
+var BatchDeleteKeys = func(ctx context.Context, kvStore store.KVStore, keys [][]byte) {
 	kvStore.BatchDelete(ctx, keys)
 }
 
-func (s *Service) purgeAccountAboveShard(ctx context.Context, account uint64, shardNum byte) error {
-	startKey := encodeActionKey(account, shardNum, 0)
-	endKey := store.Key(encodeActionPrefixKey(account)).PrefixNext()
-	it := s.kvStore.Scan(ctx, startKey, endKey, 0)
+func (p *Purger) purgeAccountAboveShard(ctx context.Context, account uint64, shardNum byte) error {
+	actionKey := PurgerKeyEncoder(&bstream.Block{}, &pbcodec.ActionTrace{}, account)
+	startKey := actionKey.Row(shardNum, 0)
+	endKey := store.Key(keyer.EncodeAccountWithPrefixKey(PurgerActionKeyPrefix, account)).PrefixNext()
+	it := p.kvStore.Scan(ctx, startKey, endKey, 0)
+
 	zlog.Info("purging account actions above a certain shard",
 		zap.Stringer("account", EOSName(account)),
 		zap.Int("shard_num", int(shardNum)),
-		zap.Stringer("start_key", Key(startKey)),
-		zap.Stringer("end_key", Key(endKey)),
+		zap.Stringer("start_key", startKey),
+		zap.Stringer("end_key", endKey),
 	)
 	count := uint64(0)
 	for it.Next() {
 		count++
-		batchDeleteKeys(ctx, s.kvStore, [][]byte{it.Item().Key})
+		BatchDeleteKeys(ctx, p.kvStore, [][]byte{it.Item().Key})
 	}
 	if it.Err() != nil {
 		return it.Err()
@@ -89,6 +101,6 @@ func (s *Service) purgeAccountAboveShard(ctx context.Context, account uint64, sh
 		zap.Uint64("deleted_keys_count", count),
 	)
 
-	s.kvStore.FlushPuts(ctx)
+	p.kvStore.FlushPuts(ctx)
 	return nil
 }

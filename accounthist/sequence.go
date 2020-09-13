@@ -2,16 +2,16 @@ package accounthist
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
-	"math"
-	"time"
+
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
+	"github.com/golang/protobuf/proto"
 
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
-
-const sequenceDataValueLength = 24
 
 type SequenceData struct {
 	CurrentOrdinal     uint64 // while in memory, this value is the last written shard ordinal number that was assisgned
@@ -26,27 +26,25 @@ func (sqd *SequenceData) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func (ws *Service) shardNewestSequenceData(ctx context.Context, account uint64, shardNum byte, process func(item store.KV) (SequenceData, error)) (SequenceData, error) {
-	startKey := encodeActionKey(account, shardNum, math.MaxUint64)
-	endKey := store.Key(encodeActionKey(account, shardNum, 0)).PrefixNext()
-
+func ShardNewestSequenceData(ctx context.Context, kvStore store.KVStore, key ActionKey, shardNum byte, decoder RowKeyDecoderFunc, unmarshalAction bool) (SequenceData, error) {
+	startKey, endKey := key.Range(shardNum)
 	zlog.Debug("reading last sequence data for current shard",
-		zap.Stringer("account", EOSName(account)),
+		zap.Stringer("key", key),
 		zap.Int("current_shard_num", int(shardNum)),
-		zap.Stringer("start_key", Key(startKey)),
-		zap.Stringer("end_key", Key(endKey)),
+		zap.String("start_key", hex.EncodeToString(startKey)),
+		zap.String("end_key", hex.EncodeToString(endKey)),
 	)
 
-	ctx, cancel := context.WithTimeout(ctx, databaseTimeout)
+	ctx, cancel := context.WithTimeout(ctx, DatabaseTimeout)
 	defer cancel()
 
-	t0 := time.Now()
-	defer func() {
-		ws.currentBatchMetrics.totalReadSeqDuration += time.Since(t0)
-		ws.currentBatchMetrics.readSeqCallCount++
-	}()
+	//t0 := time.Now()
+	//defer func() {
+	//	i.currentBatchMetrics.totalReadSeqDuration += time.Since(t0)
+	//	i.currentBatchMetrics.readSeqCallCount++
+	//}()
 
-	it := ws.kvStore.Scan(ctx, startKey, endKey, 1)
+	it := kvStore.Scan(ctx, startKey, endKey, 1)
 	hasNext := it.Next()
 	if !hasNext && it.Err() != nil {
 		return SequenceData{}, fmt.Errorf("scan last action: %w", it.Err())
@@ -56,5 +54,17 @@ func (ws *Service) shardNewestSequenceData(ctx context.Context, account uint64, 
 		return SequenceData{}, store.ErrNotFound
 	}
 
-	return process(it.Item())
+	seqData := SequenceData{}
+	_, _, currentOrdinal := decoder(it.Item().Key)
+	seqData.CurrentOrdinal = currentOrdinal
+
+	if unmarshalAction {
+		newact := &pbaccounthist.ActionRow{}
+		if err := proto.Unmarshal(it.Item().Value, newact); err != nil {
+			return SequenceData{}, err
+		}
+		seqData.LastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
+		seqData.LastDeletedOrdinal = newact.LastDeletedSeq
+	}
+	return seqData, nil
 }

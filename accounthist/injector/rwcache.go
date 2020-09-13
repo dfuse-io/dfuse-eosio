@@ -1,8 +1,10 @@
-package accounthist
+package injector
 
 import (
 	"context"
 	"time"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
@@ -24,7 +26,9 @@ func NewRWCache(backingStore store.KVStore) *RWCache {
 		orderedPuts: []string{},
 		deletes:     map[string]struct{}{},
 		KVStore:     backingStore,
-		isLastRow:   func(key []byte) bool { return key[0] == prefixLastBlock },
+		isLastRow: func(key []byte) bool {
+			return key[0] == keyer.PrefixAccountCheckpoint || key[0] == keyer.PrefixAccountContractCheckpoint
+		},
 	}
 }
 
