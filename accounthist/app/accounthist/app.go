@@ -56,7 +56,10 @@ func New(config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
-	zlog.Info("starting accounthist app", zap.Reflect("config", a.config))
+	zlog.Info("starting accounthist app",
+		zap.Reflect("config", a.config),
+	)
+
 	if err := a.config.validate(); err != nil {
 		return fmt.Errorf("invalid config: %w", err)
 	}
@@ -135,12 +138,14 @@ func (c *Config) validate() error {
 }
 
 func setupAccountContractMode() {
+	zlog.Info("setting up 'account-contract' mode")
 	injector.ActionKeyGenerator = accounthist.NewAccountContractKey
 	injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
 	injector.InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
 }
 
 func setupAccountMode() {
+	zlog.Info("setting up 'account' mode")
 	injector.ActionKeyGenerator = accounthist.NewAccountKey
 	injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
 	injector.InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
