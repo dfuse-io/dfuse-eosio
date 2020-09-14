@@ -68,6 +68,7 @@ func setupAccountInjector(kvStore store.KVStore, shardNum byte, maxEntries uint6
 	ActionKeyGenerator = accounthist.NewAccountKey
 	CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
 	InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
+	ActionGate = accounthist.AccountKeyActionGate
 	i := NewInjector(
 		NewRWCache(kvStore),
 		nil,
@@ -86,6 +87,7 @@ func setupAccountContractInjector(kvStore store.KVStore, shardNum byte, maxEntri
 	ActionKeyGenerator = accounthist.NewAccountContractKey
 	CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
 	InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
+	ActionGate = accounthist.AccountContractKeyActionGate
 	i := NewInjector(
 		NewRWCache(kvStore),
 		nil,

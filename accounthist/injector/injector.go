@@ -74,6 +74,7 @@ func NewInjector(
 var ActionKeyGenerator accounthist.KeyEncoderFunc
 var CheckpointKeyGenerator accounthist.CheckpointKeyEncoderFunc
 var InjectorRowKeyDecoder accounthist.RowKeyDecoderFunc
+var ActionGate accounthist.Actiongate
 
 func (i *Injector) Launch() {
 	i.source.OnTerminating(func(err error) {

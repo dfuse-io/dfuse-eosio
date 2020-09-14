@@ -13,6 +13,11 @@ import (
 
 type AccountKey uint64
 
+func AccountKeyActionGate(act *pbcodec.ActionTrace) bool {
+	// allow all actions to pass
+	return true
+}
+
 func NewAccountKey(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) ActionKey {
 	return AccountKey(account)
 }

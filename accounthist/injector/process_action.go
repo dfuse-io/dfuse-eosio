@@ -11,6 +11,11 @@ import (
 )
 
 func (i *Injector) processAction(ctx context.Context, blk *bstream.Block, act *pbcodec.ActionTrace, rawTraceMap map[uint64][]byte) error {
+
+	if !ActionGate(act) {
+		return nil
+	}
+
 	accts := map[string]bool{
 		act.Receiver: true,
 	}

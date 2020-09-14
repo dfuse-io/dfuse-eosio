@@ -22,6 +22,7 @@ const (
 type CheckpointKeyEncoderFunc func(shardNum byte) []byte
 type KeyEncoderFunc func(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) ActionKey
 type RowKeyDecoderFunc func(key []byte) (ActionKey, byte, uint64)
+type Actiongate func(act *pbcodec.ActionTrace) bool
 
 type ActionKey interface {
 	String() string

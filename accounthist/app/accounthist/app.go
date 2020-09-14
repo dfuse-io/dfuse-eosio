@@ -142,6 +142,7 @@ func setupAccountContractMode() {
 	injector.ActionKeyGenerator = accounthist.NewAccountContractKey
 	injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
 	injector.InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
+	injector.ActionGate = accounthist.AccountContractKeyActionGate
 }
 
 func setupAccountMode() {
@@ -149,4 +150,5 @@ func setupAccountMode() {
 	injector.ActionKeyGenerator = accounthist.NewAccountKey
 	injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
 	injector.InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
+	injector.ActionGate = accounthist.AccountKeyActionGate
 }

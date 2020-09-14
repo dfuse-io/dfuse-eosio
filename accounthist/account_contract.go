@@ -17,6 +17,11 @@ type AccountContractKey struct {
 	contract uint64
 }
 
+func AccountContractKeyActionGate(act *pbcodec.ActionTrace) bool {
+	// only allow transfers
+	return (act.Action.Name == "transfer")
+}
+
 func NewAccountContractKey(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) ActionKey {
 	contractUint := eos.MustStringToName(act.Action.Account)
 	return &AccountContractKey{
