@@ -1,4 +1,4 @@
-package accounthist
+package tokenhist
 
 import (
 	"errors"
@@ -7,6 +7,8 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
@@ -17,18 +19,19 @@ type startFunc func()
 type stopFunc func(error)
 
 type Config struct {
-	KvdbDSN              string
-	GRPCListenAddr       string
-	BlocksStoreURL       string //FileSourceBaseURL
-	BlockstreamAddr      string // LiveSourceAddress
-	ShardNum             byte
-	MaxEntriesPerAccount uint64
-	FlushBlocksInterval  uint64
-	EnableInjector       bool
-	EnableServer         bool
-
-	StartBlockNum uint64
-	StopBlockNum  uint64
+	KvdbDSN                  string
+	GRPCListenAddr           string
+	BlocksStoreURL           string //FileSourceBaseURL
+	BlockstreamAddr          string // LiveSourceAddress
+	ShardNum                 byte
+	MaxEntriesPerKey         uint64
+	FlushBlocksInterval      uint64
+	EnableInjector           bool
+	EnableServer             bool
+	IgnoreCheckpointOnLaunch bool
+	StartBlockNum            uint64
+	StopBlockNum             uint64
+	AccounthistMode          accounthist.AccounthistMode
 }
 
 type Modules struct {
@@ -40,8 +43,6 @@ type App struct {
 	*shutter.Shutter
 	config  *Config
 	modules *Modules
-
-	service *accounthist.Service
 }
 
 func New(config *Config, modules *Modules) *App {
@@ -55,7 +56,10 @@ func New(config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
-	zlog.Info("starting accounthist app", zap.Reflect("config", a.config))
+	zlog.Info("starting accounthist app",
+		zap.Reflect("config", a.config),
+	)
+
 	if err := a.config.validate(); err != nil {
 		return fmt.Errorf("invalid config: %w", err)
 	}
@@ -66,7 +70,7 @@ func (a *App) Run() error {
 	}
 
 	if true {
-		kvdb = accounthist.NewRWCache(kvdb)
+		kvdb = injector.NewRWCache(kvdb)
 	}
 
 	blocksStore, err := dstore.NewDBinStore(a.config.BlocksStoreURL)
@@ -74,36 +78,52 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	service := accounthist.NewService(
-		kvdb,
-		blocksStore,
-		a.modules.BlockFilter,
-		a.config.ShardNum,
-		a.config.MaxEntriesPerAccount,
-		a.config.FlushBlocksInterval,
-		a.config.StartBlockNum,
-		a.config.StopBlockNum,
-		a.modules.Tracker,
-	)
+	switch a.config.AccounthistMode {
+	case accounthist.AccounthistModeAccount:
+		setupAccountMode()
+	case accounthist.AccounthistModeAccountContract:
+		setupAccountContractMode()
+	default:
+		return fmt.Errorf("invalid accounthist mode: %q", a.config.AccounthistMode)
+	}
 
 	if a.config.EnableServer {
-		server := grpc.New(a.config.GRPCListenAddr, service)
+		server := grpc.New(a.config.GRPCListenAddr, a.config.MaxEntriesPerKey, kvdb)
 
 		a.OnTerminating(server.Terminate)
 		server.OnTerminated(a.Shutdown)
 
-		go server.Serve()
+		switch a.config.AccounthistMode {
+		case accounthist.AccounthistModeAccount:
+			go server.ServeAccountMode()
+		case accounthist.AccounthistModeAccountContract:
+			go server.ServeAccountContractMode()
+		default:
+			return fmt.Errorf("invalid accounthist mode: %q", a.config.AccounthistMode)
+		}
 	}
 
 	if a.config.EnableInjector {
-		if err = service.SetupSource(); err != nil {
+		injector := injector.NewInjector(
+			kvdb,
+			blocksStore,
+			a.modules.BlockFilter,
+			a.config.ShardNum,
+			a.config.MaxEntriesPerKey,
+			a.config.FlushBlocksInterval,
+			a.config.StartBlockNum,
+			a.config.StopBlockNum,
+			a.modules.Tracker,
+		)
+
+		if err = injector.SetupSource(a.config.IgnoreCheckpointOnLaunch); err != nil {
 			return fmt.Errorf("error setting up source: %w", err)
 		}
 
-		a.OnTerminating(service.Shutdown)
-		service.OnTerminated(a.Shutdown)
+		a.OnTerminating(injector.Shutdown)
+		injector.OnTerminated(a.Shutdown)
 
-		go service.Launch()
+		go injector.Launch()
 	}
 
 	return nil
@@ -115,4 +135,20 @@ func (c *Config) validate() error {
 	}
 
 	return nil
+}
+
+func setupAccountContractMode() {
+	zlog.Info("setting up 'account-contract' mode")
+	injector.ActionKeyGenerator = accounthist.NewAccountContractKey
+	injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
+	injector.InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
+	injector.ActionGate = accounthist.AccountContractKeyActionGate
+}
+
+func setupAccountMode() {
+	zlog.Info("setting up 'account' mode")
+	injector.ActionKeyGenerator = accounthist.NewAccountKey
+	injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
+	injector.InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
+	injector.ActionGate = accounthist.AccountKeyActionGate
 }

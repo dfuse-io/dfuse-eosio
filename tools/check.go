@@ -11,6 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
+
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
@@ -28,6 +34,13 @@ import (
 var errStopWalk = errors.New("stop walk")
 
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
+
+var checkAccounthistShardsCmd = &cobra.Command{
+	Use:   "accounthist-shards {accounthist-mode} {dsn}",
+	Short: "Checks to see if all Accounthist shard are contiguous",
+	Args:  cobra.ExactArgs(2),
+	RunE:  checkAccounthistShardE,
+}
 var checkMergedBlocksCmd = &cobra.Command{
 	// TODO: Not sure, it's now a required thing, but we could probably use the same logic as `start`
 	//       and avoid altogether passing the args. If this would also load the config and everything else,
@@ -43,14 +56,12 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE:  checkTrxdbBlocksE,
 }
-
 var checkStateDBReprocSharderCmd = &cobra.Command{
 	Use:   "statedb-reproc-sharder {store} {shard-count}",
 	Short: "Checks to see if all StateDB reprocessing shards are present in the store",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkStateDBReprocSharderE,
 }
-
 var checkStateDBReprocInjectorCmd = &cobra.Command{
 	Use:   "statedb-reproc-injector {dsn} {shard-count}",
 	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
@@ -64,6 +75,7 @@ func init() {
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
 	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
 	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
+	checkCmd.AddCommand(checkAccounthistShardsCmd)
 
 	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check")
 
@@ -550,5 +562,62 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 		fmt.Printf("🆗 No hole found\n")
 	}
 
+	return nil
+}
+
+func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
+	storeURL := args[1]
+	kvdb, err := store.New(storeURL)
+	if err != nil {
+		return fmt.Errorf("failed to setup db: %w", err)
+	}
+	kvdb = injector.NewRWCache(kvdb)
+	service := newService(kvdb, 0)
+
+	var prefix byte
+	switch accounthist.AccounthistMode(args[0]) {
+	case accounthist.AccounthistModeAccount:
+		prefix = keyer.PrefixAccountCheckpoint
+	case accounthist.AccounthistModeAccountContract:
+		prefix = keyer.PrefixAccountContractCheckpoint
+	default:
+		return fmt.Errorf("invalid account hist more: %s", args[0])
+	}
+
+	out, err := service.ShardAnalysis(cmd.Context(), prefix)
+	if err != nil {
+		return err
+	}
+
+	expectedShard := 0
+	hasSeenFirstShard := false
+	priorStartBlock := uint64(0)
+	fmt.Printf("Account History Shard Summary:\n")
+	if len(out) == 0 {
+		fmt.Printf("No shards found\n")
+	}
+	for _, shard := range out {
+		shardNum := int(shard.ShardNum)
+		if expectedShard != shardNum {
+			for i := 0; i < (shardNum - expectedShard); i++ {
+				fmt.Printf("❌ expected shard-%d\n", (expectedShard + i))
+			}
+			expectedShard = shardNum
+		}
+		shardValid := true
+		if hasSeenFirstShard {
+			shardValid = (shard.Checkpoint.LastWrittenBlockNum == priorStartBlock-1)
+		}
+
+		if shardValid {
+			fmt.Printf("✅ shard-%d %s\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		} else {
+			fmt.Printf("❌ shard-%d %s (uncontiguous shard)\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		}
+		expectedShard++
+		priorStartBlock = shard.Checkpoint.InitialStartBlock
+		hasSeenFirstShard = true
+
+	}
 	return nil
 }

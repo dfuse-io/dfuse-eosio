@@ -3,27 +3,49 @@ package accounthist
 import (
 	"context"
 	"fmt"
+	"math"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/eoscanada/eos-go"
+	"go.uber.org/zap"
 )
 
-type shardSummary struct {
-	ShardNum byte
-	SeqData  SequenceData
-}
+func ScanAccounts(
+	ctx context.Context,
+	kvStore store.KVStore,
+	actionKeyPrefix byte,
+	decoder RowKeyDecoderFunc,
+	handleAccount func(account uint64, shard byte, ordinalNum uint64) error) error {
 
-func (s *Service) ShardSummary(ctx context.Context, account uint64) ([]*shardSummary, error) {
-	out := []*shardSummary{}
-	for i := 0; i < 5; i++ {
-		seqData, err := s.shardNewestSequenceData(ctx, account, byte(i), s.processSequenceDataKeyValue)
-
-		if err == store.ErrNotFound {
-			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("error while fetching sequence data for account: %w", err)
+	startKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, 0)
+	hasMoreAccounts := true
+	for hasMoreAccounts {
+		endKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, math.MaxUint64)
+		it := kvStore.Scan(ctx, startKey, endKey, 1)
+		hasNext := it.Next()
+		if !hasNext && it.Err() != nil {
+			return fmt.Errorf("scanning accounts last action: %w", it.Err())
 		}
 
-		out = append(out, &shardSummary{ShardNum: byte(i), SeqData: seqData})
+		if !hasNext {
+			hasMoreAccounts = false
+			continue
+		}
+		actionKey, shardNum, ordinalNum := decoder(it.Item().Key)
+		zlog.Info("found account",
+			zap.Stringer("action_key", actionKey),
+			zap.Int("shard_num", int(shardNum)),
+			zap.Uint64("ordinal_num", ordinalNum),
+		)
+
+		err := handleAccount(actionKey.Account(), shardNum, ordinalNum)
+		if err != nil {
+			return fmt.Errorf("handle account failed for account %s at shard %d with ordinal number: %d: %w", eos.NameToString(actionKey.Account()), int(shardNum), ordinalNum, err)
+		}
+
+		startKey = store.Key(keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, actionKey.Account())).PrefixNext()
 	}
-	return out, nil
+
+	return nil
 }

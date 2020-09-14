@@ -1,4 +1,4 @@
-package accounthist
+package tokenhist
 
 import (
 	"github.com/dfuse-io/logging"

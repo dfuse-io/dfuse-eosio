@@ -1,0 +1,9 @@
+start:
+  args:
+  - accounthist
+  flags:
+    accounthist-dsn: "bigkv://dfuseio-global.dfuse-saas/eos-mainnet-accounthist-v3"
+    accounthist-mode: 'account-contract'
+    accounthist-enable-injector-mode: false
+    accounthist-enable-server-mode: true
+    accounthist-grpc-listen-addr: :9000

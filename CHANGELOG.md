@@ -12,7 +12,8 @@ date.
 ## System Administration Changes
 
 ### Added
-
+* Flag `--accounthist-mode` to specific the accounthist mode of operation
+* Added `tools check accounthist-shards` to 
 * Flag `--common-include-filter-expr`, `--common-exclude-filter-expr`, `--common-system-actions-include-filter-expr` can optionally specify multiple values, separated by `;;;` and prefixed by `#123;` where 123 is a block number at which we stat applying that filter
 * Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly

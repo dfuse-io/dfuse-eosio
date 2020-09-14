@@ -19,11 +19,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-var kvCmd = &cobra.Command{Use: "kv", Short: "Read from a KVStore"}
+var kvCmd = &cobra.Command{Use: "kv", Short: "Read from a kvStore"}
 
-var kvPrefixCmd = &cobra.Command{Use: "prefix {prefix}", Short: "prefix read from KVStore, prefix as hex", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
-var kvScanCmd = &cobra.Command{Use: "scan {start} {end}", Short: "scan read from KVStore, using hex keys", RunE: kvScan, Args: cobra.ExactArgs(2)}
-var kvGetCmd = &cobra.Command{Use: "get", Short: "get key from KVStore", RunE: kvGet, Args: cobra.ExactArgs(1)}
+var kvPrefixCmd = &cobra.Command{Use: "prefix {prefix}", Short: "prefix read from kvStore, prefix as hex", RunE: kvPrefix, Args: cobra.ExactArgs(1)}
+var kvScanCmd = &cobra.Command{Use: "scan {start} {end}", Short: "scan read from kvStore, using hex keys", RunE: kvScan, Args: cobra.ExactArgs(2)}
+var kvGetCmd = &cobra.Command{Use: "get", Short: "get key from kvStore", RunE: kvGet, Args: cobra.ExactArgs(1)}
 
 func init() {
 	Cmd.AddCommand(kvCmd)
@@ -37,7 +37,7 @@ func init() {
 		defaultBadger = "badger://" + cwd + "/dfuse-data/storage/statedb-v1"
 	}
 
-	kvCmd.PersistentFlags().String("dsn", defaultBadger, "KVStore DSN")
+	kvCmd.PersistentFlags().String("dsn", defaultBadger, "kvStore DSN")
 	kvCmd.PersistentFlags().Int("depth", 1, "Depth of decoding. 0 = top-level block, 1 = kind-specific blocks, 2 = future!")
 	kvScanCmd.Flags().Int("limit", 100, "limit the number of rows when doing scan")
 	kvPrefixCmd.Flags().Int("limit", 100, "limit the number of rows when doing prefix")

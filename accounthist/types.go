@@ -2,18 +2,37 @@ package accounthist
 
 import (
 	"encoding/hex"
+	"time"
 
-	"github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/bstream"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 
-type Key []byte
+const (
+	DatabaseTimeout = 10 * time.Minute
+)
 
-func (k Key) String() string {
-	return hex.EncodeToString(k)
+type AccounthistMode string
+
+const (
+	AccounthistModeAccount         AccounthistMode = "account"
+	AccounthistModeAccountContract AccounthistMode = "account-contract"
+)
+
+type CheckpointKeyEncoderFunc func(shardNum byte) []byte
+type KeyEncoderFunc func(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) ActionKey
+type RowKeyDecoderFunc func(key []byte) (ActionKey, byte, uint64)
+type Actiongate func(act *pbcodec.ActionTrace) bool
+
+type ActionKey interface {
+	String() string
+	Account() uint64
+	Row(shard byte, seqData uint64) RowKey
+	Range(shard byte) (startKey RowKey, endKey RowKey)
 }
 
-type EOSName uint64
+type RowKey []byte
 
-func (n EOSName) String() string {
-	return eos.NameToString(uint64(n))
+func (k RowKey) String() string {
+	return hex.EncodeToString(k)
 }
