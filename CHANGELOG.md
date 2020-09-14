@@ -8,8 +8,11 @@ project adheres to
 date.
 
 # Unreleased
-
+➜  account bigkv://dfuseio-global.dfuse-saas/eos-mainnet-accounthist-v3
 ### Added
+* Flag `--accounthist-mode` to specific the accounthist mode of operation
+* Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
+* Added `tools check accounthist-shards` 
 
 * Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
