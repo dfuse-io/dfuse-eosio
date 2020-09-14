@@ -32,16 +32,7 @@ main() {
 
   set -e
 
-  if [[ ! -d "dfuse-data" || -n $force_injection ]]; then
-    # We need to sleep more than really needed due to a "missing feature" in
-    # statedb. StateDB does not flush its accumulated write on exit of the application
-    # so writes are not flushed when not enough block has passed.
-    #
-    # The following call is blocking (due to usage of KILL_AFTER)
-    exec $dfuseeos -c injector.yaml start "$@"
-  fi
-
-#  exec $dfuseeos -c server.yaml start "$@"
+  exec $dfuseeos -c server.yaml start "$@"
 }
 
 usage_error() {
@@ -67,6 +58,11 @@ usage() {
   echo "    INFO=<app>     Turn info logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
   echo "    DEBUG=<app>    Turn debug logs for <app> (multiple separated by ','), accepts app name or regexp (.* for all)"
   echo ""
+  echo "Sample GRPC Curl command"
+  echo "    Last 100 transfers for account: 111111111145 on contract: eosio.token"
+  echo "    > grpcurl -plaintext -d '{"account": 595056260442245200, "contract": 6138663591592764928 }' @ localhost:9000 dfuse.eosio.accounthist.v1.AccountContractHistory.GetAccountContractActions"
+
+
 }
 
 main "$@"

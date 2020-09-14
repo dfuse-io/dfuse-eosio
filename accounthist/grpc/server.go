@@ -5,6 +5,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/dfuse-io/dgrpc"
+
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
@@ -27,6 +29,7 @@ func New(grpcAddr string, maxEntries uint64, kvStore store.KVStore) *Server {
 		grpcAddr:   grpcAddr,
 		MaxEntries: maxEntries,
 		KVStore:    kvStore,
+		server:     dgrpc.NewServer(dgrpc.WithLogger(zlog)),
 	}
 }
 
