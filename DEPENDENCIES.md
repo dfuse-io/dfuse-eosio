@@ -91,7 +91,7 @@ sudo apt remove eosio
 #### RPM Package Install
 
 ```sh
-wget curl -s https://api.github.com/repos/dfuse-io/eos/releases/latest|grep "browser_download_url.*.rpm"|cut -d : -f 2,3|tr -d \"|wget --show-progress -O ./eosio-dm-latest.rpm -qi -
+curl -s https://api.github.com/repos/dfuse-io/eos/releases/latest|grep "browser_download_url.*.rpm"|cut -d : -f 2,3|tr -d \"|wget --show-progress -O ./eosio-dm-latest.rpm -qi -
 sudo yum install ./eosio-dm-latest.rpm
 ```
 
