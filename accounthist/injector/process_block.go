@@ -38,14 +38,13 @@ func (i *Injector) ProcessBlock(blk *bstream.Block, obj interface{}) error {
 			continue
 		}
 
+		actionMatcher := block.FilteringActionMatcher(trxTrace)
+
 		i.currentBatchMetrics.actionCount += len(trxTrace.ActionTraces)
 		for _, act := range trxTrace.ActionTraces {
-			if block.FilteringApplied && !act.FilteringMatched {
+			if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
 				continue
 			}
-			//if !actionMatcher.Matched(act.ExecutionIndex) || act.Receipt == nil {
-			//	return nil
-			//}
 
 			err := i.processAction(ctx, blk, act, rawTraceMap)
 			if err != nil {
