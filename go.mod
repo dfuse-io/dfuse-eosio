@@ -37,7 +37,7 @@ require (
 	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
 	github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
-	github.com/dfuse-io/node-manager v0.0.2-0.20200908172129-ec891b8ba42f
+	github.com/dfuse-io/node-manager v0.0.2-0.20200916021027-2da84b2fc6ba
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
@@ -81,7 +81,6 @@ require (
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	google.golang.org/grpc v1.26.0
-	google.golang.org/protobuf v1.23.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
