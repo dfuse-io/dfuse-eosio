@@ -103,7 +103,7 @@ func GraphqlExamples() []*static.GraphqlExample {
 			Label:    "Get Account Balances (Alpha)",
 			Document: graphqlDocument(box, "get_account_balances.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
-				"generic": r(`{"account": "eosio.token", "opts": ["EOS_INCLUDE_STAKED"], "limit": 10}`),
+				"generic": r(`{"account": "eosio", "opts": ["EOS_INCLUDE_STAKED"], "limit": 10}`),
 			},
 		},
 	}
