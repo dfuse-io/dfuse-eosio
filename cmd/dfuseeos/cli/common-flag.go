@@ -47,6 +47,7 @@ func init() {
 		cmd.Flags().Bool("search-common-dfuse-events-unrestricted", false, "[COMMON] Flag to disable all restrictions of dfuse Events specialize indexing, for example for a private deployment")
 		cmd.Flags().String("search-common-indices-store-url", IndicesStoreURL, "[COMMON] Indices path to read or write index shards Used by: search-indexer, search-archiver.")
 		cmd.Flags().String("search-common-indexed-terms", eosSearch.DefaultIndexedTerms, "[COMMON] Comma separated list of terms available for indexing. These include: receiver, account, action, auth, scheduled, status, notif, input, event, ram.consumed, ram.released, db.table, db.key, data.[freeform]. Ex: 'data.from', 'data.to', they are those fields dynamically specified by smart contracts as part of their action invocations.")
+		cmd.Flags().Duration("common-system-shutdown-signal-delay", 0*time.Second, "[COMMON] Add a delay between receiving SIGTERM signal and shutting down apps. 'eosws' and 'dgraphql' will respond negatively to /healthz during this period")
 
 		return nil
 	}

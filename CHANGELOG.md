@@ -19,6 +19,7 @@ date.
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
 * Flag `--mindreader-oneblock-suffix` that mindreaders can each write their own file per block without competing for writes. https://github.com/dfuse-io/dfuse-eosio/issues/140
 * Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable.
+* Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
 ### Changed
 
