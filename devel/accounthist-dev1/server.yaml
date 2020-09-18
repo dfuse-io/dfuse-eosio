@@ -4,4 +4,5 @@ start:
   flags:
     accounthist-enable-injector-mode: false
     accounthist-enable-server-mode: true
+    accounthist-mode: account
     accounthist-grpc-listen-addr: :9000
