@@ -78,11 +78,14 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
+	var serviceName string
 	switch a.config.AccounthistMode {
 	case accounthist.AccounthistModeAccount:
 		setupAccountMode()
+		serviceName = "account"
 	case accounthist.AccounthistModeAccountContract:
 		setupAccountContractMode()
+		serviceName = "account-contract"
 	default:
 		return fmt.Errorf("invalid accounthist mode: %q", a.config.AccounthistMode)
 	}
@@ -123,6 +126,7 @@ func (a *App) Run() error {
 		a.OnTerminating(injector.Shutdown)
 		injector.OnTerminated(a.Shutdown)
 
+		injector.SetupMetrics(fmt.Sprintf("accounthist-%s", serviceName))
 		go injector.Launch()
 	}
 

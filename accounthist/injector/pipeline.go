@@ -42,7 +42,7 @@ func (i *Injector) setupPipeline(startProcessingBlockNum, fileSourceStartBlockNu
 	// WARN: this is IRREVERSIBLE ONLY
 	options := []forkable.Option{
 		forkable.WithLogger(zlog),
-		forkable.WithFilters(forkable.StepIrreversible),
+		forkable.WithFilters(forkable.StepNew | forkable.StepIrreversible),
 	}
 
 	if fileSourceStartBlockId != "" {

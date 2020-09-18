@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/accounthist/metrics"
+
+	"github.com/dfuse-io/dmetrics"
+
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 
 	"github.com/dfuse-io/bstream"
@@ -40,6 +44,8 @@ type Injector struct {
 
 	lastWrittenBlock    *lastWrittenBlock
 	currentBatchMetrics blockBatchMetrics
+	headBlockTimeDrift  *dmetrics.HeadTimeDrift
+	headBlockNumber     *dmetrics.HeadBlockNum
 }
 
 func NewInjector(
@@ -65,6 +71,7 @@ func NewInjector(
 		stopBlockNum:        stopBlockNum,
 		tracker:             tracker,
 		cacheSeqData:        make(map[string]accounthist.SequenceData),
+
 		currentBatchMetrics: blockBatchMetrics{
 			batchStartTime: time.Now(),
 		},
@@ -75,6 +82,11 @@ var ActionKeyGenerator accounthist.KeyEncoderFunc
 var CheckpointKeyGenerator accounthist.CheckpointKeyEncoderFunc
 var InjectorRowKeyDecoder accounthist.RowKeyDecoderFunc
 var ActionGate accounthist.Actiongate
+
+func (i *Injector) SetupMetrics(serviceName string) {
+	i.headBlockTimeDrift = metrics.NewHeadBlockTimeDrift(serviceName)
+	i.headBlockNumber = metrics.NewHeadBlockNumber(serviceName)
+}
 
 func (i *Injector) Launch() {
 	i.source.OnTerminating(func(err error) {
