@@ -107,16 +107,6 @@ func GraphqlExamples() []*static.GraphqlExample {
 			},
 		},
 		{
-			Label:    "Search Stream (Forward)",
-			Document: graphqlDocument(box, "search_stream_forward.graphql"),
-			Variables: static.GraphqlVariablesByNetwork{
-				"generic": r(`{"query": "receiver:eosio action:newaccount", "cursor": "", "limit": 10}`),
-				"mainnet": r(`{"query": "receiver:eosio.token action:transfer -data.quantity:'0.0001 EOS'", "cursor": "", "limit": 10}`),
-				"jungle":  r("mainnet"),
-				"kylin":   r("mainnet"),
-			},
-		},
-		{
 			Label:    "Get Account History By Account (Alpha)",
 			Document: graphqlDocument(box, "get_account_history_by_account.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
