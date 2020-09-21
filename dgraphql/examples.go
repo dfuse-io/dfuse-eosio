@@ -106,6 +106,40 @@ func GraphqlExamples() []*static.GraphqlExample {
 				"generic": r(`{"account": "eosio", "opts": ["EOS_INCLUDE_STAKED"], "limit": 10}`),
 			},
 		},
+		{
+			Label:    "Search Stream (Forward)",
+			Document: graphqlDocument(box, "search_stream_forward.graphql"),
+			Variables: static.GraphqlVariablesByNetwork{
+				"generic": r(`{"query": "receiver:eosio action:newaccount", "cursor": "", "limit": 10}`),
+				"mainnet": r(`{"query": "receiver:eosio.token action:transfer -data.quantity:'0.0001 EOS'", "cursor": "", "limit": 10}`),
+				"jungle":  r("mainnet"),
+				"kylin":   r("mainnet"),
+			},
+		},
+		{
+			Label:    "Get Account History By Account (Alpha)",
+			Document: graphqlDocument(box, "get_account_history_by_account.graphql"),
+			Variables: static.GraphqlVariablesByNetwork{
+				"generic": r(`{"account": "eosio","limit": 100}`),
+				"dev1":    r(`{"account": "battlefield1","limit": 100}`),
+				"mainnet": r(`{"account": "eosio","limit": 100}`),
+				"jungle":  r("mainnet"),
+				"kylin":   r("mainnet"),
+			},
+		},
+		{
+
+			/// get_acount_history_by_account.graphql
+			Label:    "Get Account History By Account & Contract (Alpha)",
+			Document: graphqlDocument(box, "get_account_history_by_account_contract.graphql"),
+			Variables: static.GraphqlVariablesByNetwork{
+				"generic": r(`{"account": "eosio","contract": "eosio.token","limit": 100}`),
+				"dev1":    r(`{"account": "battlefield1","contract": "eosio.token","limit": 100}`),
+				"mainnet": r(`{"account": "eosio","contract": "eosio.token","limit": 100}`),
+				"jungle":  r("mainnet"),
+				"kylin":   r("mainnet"),
+			},
+		},
 	}
 }
 
