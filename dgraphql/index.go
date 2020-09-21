@@ -35,13 +35,14 @@ import (
 type Config struct {
 	dgraphqlApp.Config
 
-	RatelimiterPlugin string
-	SearchAddr        string
-	ABICodecAddr      string
-	BlockMetaAddr     string
-	TokenmetaAddr     string
-	AccountHistAddr   string
-	KVDBDSN           string
+	RatelimiterPlugin              string
+	SearchAddr                     string
+	ABICodecAddr                   string
+	BlockMetaAddr                  string
+	TokenmetaAddr                  string
+	AccountHistAccountAddr         string
+	AccountHistAccountContractAddr string
+	KVDBDSN                        string
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
@@ -96,15 +97,33 @@ func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	rateLimiter, err := drateLimiter.New(f.config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
-	zlog.Info("creating accounthist grpc client", zap.String("accounthist_addr", f.config.AccountHistAddr))
-	accountHistConn, err := dgrpc.NewInternalClient(f.config.AccountHistAddr)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+	zlog.Info("creating accounthist grpc clients",
+		zap.String("accounthist_account_addr", f.config.AccountHistAccountAddr),
+		zap.String("accounthist_account_contract_addr", f.config.AccountHistAccountContractAddr),
+	)
+
+	accounthistClient := &eosResolver.AccounthistClient{}
+
+	if f.config.AccountHistAccountAddr != "" {
+		zlog.Info("setting up accounthist <account> client", zap.String("accounthist_account_addr", f.config.AccountHistAccountAddr))
+		accountHistAccConn, err := dgrpc.NewInternalClient(f.config.AccountHistAccountAddr)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+		}
+		accounthistClient.Account = pbaccounthist.NewAccountHistoryClient(accountHistAccConn)
 	}
-	accountHistClient := pbaccounthist.NewAccountHistoryClient(accountHistConn)
+
+	if f.config.AccountHistAccountContractAddr != "" {
+		zlog.Info("setting up accounthist <account-contract> client", zap.String("accounthist_account_contract_addr", f.config.AccountHistAccountContractAddr))
+		accountHistAccCtrConn, err := dgrpc.NewInternalClient(f.config.AccountHistAccountContractAddr)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+		}
+		accounthistClient.AccountContract = pbaccounthist.NewAccountContractHistoryClient(accountHistAccCtrConn)
+	}
 
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient, accountHistClient)
+	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient, accounthistClient)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

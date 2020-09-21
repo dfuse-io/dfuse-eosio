@@ -110,7 +110,7 @@ func streamBlocks(t *testing.T, s *Injector, blocks ...*pbcodec.Block) {
 		obj, err := preprocessor(blk)
 		require.NoError(t, err)
 
-		s.ProcessBlock(blk, &forkable.ForkableObject{Obj: obj})
+		s.ProcessBlock(blk, &forkable.ForkableObject{Obj: obj, Step: forkable.StepIrreversible})
 	}
 }
 

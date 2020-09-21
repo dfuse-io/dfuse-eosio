@@ -27,7 +27,8 @@ func init() {
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGRPCServingAddr, "Tokenmeta client endpoint url")
-			cmd.Flags().String("dgraphql-accounthist-addr", AccountHistGRPCServingAddr, "Account history client endpoint url")
+			cmd.Flags().String("dgraphql-accounthist-account-addr", AccountHistGRPCServingAddr, "Account history account indexed server client endpoint url")
+			cmd.Flags().String("dgraphql-accounthist-account-contract-addr", "", "Account history account-contract indexed server  client endpoint url")
 
 			return nil
 		},
@@ -36,13 +37,14 @@ func init() {
 
 			return dgraphqlEosio.NewApp(&dgraphqlEosio.Config{
 				// eos specifc configs
-				SearchAddr:        viper.GetString("common-search-addr"),
-				ABICodecAddr:      viper.GetString("dgraphql-abi-addr"),
-				BlockMetaAddr:     viper.GetString("common-blockmeta-addr"),
-				TokenmetaAddr:     viper.GetString("dgraphql-tokenmeta-addr"),
-				AccountHistAddr:   viper.GetString("dgraphql-accounthist-addr"),
-				KVDBDSN:           mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
-				RatelimiterPlugin: viper.GetString("common-ratelimiter-plugin"),
+				SearchAddr:                     viper.GetString("common-search-addr"),
+				ABICodecAddr:                   viper.GetString("dgraphql-abi-addr"),
+				BlockMetaAddr:                  viper.GetString("common-blockmeta-addr"),
+				TokenmetaAddr:                  viper.GetString("dgraphql-tokenmeta-addr"),
+				AccountHistAccountAddr:         viper.GetString("dgraphql-accounthist-account-addr"),
+				AccountHistAccountContractAddr: viper.GetString("dgraphql-accounthist-account-contract-addr"),
+				KVDBDSN:                        mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
+				RatelimiterPlugin:              viper.GetString("common-ratelimiter-plugin"),
 				Config: dgraphqlApp.Config{
 					// base dgraphql configs
 					// need to be passed this way because promoted fields

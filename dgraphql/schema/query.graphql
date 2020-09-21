@@ -16,6 +16,9 @@ type Query {
     "Account name to query for actions"
     account: String!
 
+    "Contract name to query for actions"
+    contract: String
+
     "Maximum number of actions returned in this page.  Max limit allowed for this call is 1000"
     limit: Int64 = 100
 

@@ -4,7 +4,6 @@ start:
   flags:
     #common-include-filter-expr: (receiver == "joshkauffman" || auth.exists(x, x == "joshkauffman"))
     common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-dev1/v4
-    accounthist-mode: account
     accounthist-enable-injector-mode: true
     accounthist-enable-server-mode: false
     accounthist-shard-num: 0
@@ -12,3 +11,5 @@ start:
     accounthist-flush-blocks-interval: 10000
     accounthist-start-block-num: 0
     accounthist-stop-block-num: 100000
+    #accounthist-mode: account
+    accounthist-mode: account-contract
