@@ -12,6 +12,7 @@ date.
 ## System Administration Changes
 
 ### Added
+* Env variable lMINDREADER_MAX_TOKEN_SIZEl can now be set to override bufio.Scanner() max token size (default 52428800) for EOSIO chains with huge transactions like jungle3
 * Flag `--accounthist-mode` to specific the accounthist mode of operation
 * Added `tools check accounthist-shards` to 
 * Flag `--common-include-filter-expr`, `--common-exclude-filter-expr`, `--common-system-actions-include-filter-expr` can optionally specify multiple values, separated by `;;;` and prefixed by `#123;` where 123 is a block number at which we stat applying that filter

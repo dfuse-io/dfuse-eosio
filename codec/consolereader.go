@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -60,7 +61,17 @@ func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
 }
 
 func (l *ConsoleReader) setupScanner() {
-	buf := make([]byte, 50*1024*1024)
+	maxTokenSize := uint64(50 * 1024 * 1024)
+	if maxBufferSize := os.Getenv("MINDREADER_MAX_TOKEN_SIZE"); maxBufferSize != "" {
+		bs, err := strconv.ParseUint(maxBufferSize, 10, 64)
+		if err != nil {
+			zlog.Error("MINDREADER_MAX_TOKEN_SIZE is set but invalid parse uint", zap.Error(err))
+		} else {
+			zlog.Info("setting max_token_size from environment variable MINDREADER_MAX_TOKEN_SIZE", zap.Uint64("max_token_size", bs))
+			maxTokenSize = bs
+		}
+	}
+	buf := make([]byte, maxTokenSize)
 	scanner := bufio.NewScanner(l.src)
 	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
