@@ -313,6 +313,8 @@ github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015 h1:U3g0fXe+Qzse
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20200917195337-c31e146645e5 h1:iM4A/qM41O/EOGJCljrvehoDaVPm9IV4iFKC7VvRglA=
 github.com/dfuse-io/search v0.0.2-0.20200917195337-c31e146645e5/go.mod h1:78aTCNiNVTmmYr1oSdkr6KEIChQBE6gollFeXvuIlOY=
+github.com/dfuse-io/search v0.0.2-0.20200922005124-47d94b3e00b3 h1:DYPZnu0LmtYphL2Cj0cgVTeoilEhvZwe8I48PqaZsnk=
+github.com/dfuse-io/search v0.0.2-0.20200922005124-47d94b3e00b3/go.mod h1:78aTCNiNVTmmYr1oSdkr6KEIChQBE6gollFeXvuIlOY=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2/go.mod h1:TY7lgsDrNonQ7nUtwGK4En08cuG7eRrV743DZozvehk=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
