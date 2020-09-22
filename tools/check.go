@@ -11,18 +11,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/accounthist"
-
-	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
-
-	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
-
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/fluxdb"
+	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
@@ -77,9 +75,10 @@ func init() {
 	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
 	checkCmd.AddCommand(checkAccounthistShardsCmd)
 
-	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check")
+	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check, format is of the form '<start>:<stop>' (i.e. '-r 1000:2000')")
 
 	checkMergedBlocksCmd.Flags().BoolP("print-stats", "s", false, "Natively decode each block in the segment and print statistics about it, ensuring it contains the required blocks")
+	checkMergedBlocksCmd.Flags().BoolP("print-full", "f", false, "Natively decode each block and print the full JSON representation of the block, should be used with a small range only if you don't want to be overwhelmed")
 }
 
 func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
@@ -263,6 +262,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	var baseNum32 uint32
 	holeFound := false
 	printIndividualSegmentStats := viper.GetBool("print-stats")
+	printFullBlock := viper.GetBool("print-full")
 
 	blockRange, err := getBlockRangeFromFlag()
 	if err != nil {
@@ -292,14 +292,15 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum < blockRange.Start {
+		if baseNum+uint64(fileBlockSize) < blockRange.Start {
+			zlog.Debug("base num lower then block range start, quitting")
 			return nil
 		}
 
 		baseNum32 = uint32(baseNum)
 
-		if printIndividualSegmentStats {
-			newSeenFilters := validateBlockSegment(blocksStore, filename, fileBlockSize, blockRange, printIndividualSegmentStats)
+		if printIndividualSegmentStats || printFullBlock {
+			newSeenFilters := validateBlockSegment(blocksStore, filename, fileBlockSize, blockRange, printIndividualSegmentStats, printFullBlock)
 			for key, filters := range newSeenFilters {
 				seenFilters[key] = filters
 			}
@@ -393,7 +394,14 @@ func roundToBundleEndBlock(block, fileBlockSize uint32) uint32 {
 	return block - (block % fileBlockSize) + (fileBlockSize - 1)
 }
 
-func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, blockRange BlockRange, printIndividualSegmentStats bool) (seenFilters map[string]FilteringFilters) {
+func validateBlockSegment(
+	store dstore.Store,
+	segment string,
+	fileBlockSize uint32,
+	blockRange BlockRange,
+	printIndividualSegmentStats bool,
+	printFullBlock bool,
+) (seenFilters map[string]FilteringFilters) {
 	reader, err := store.OpenObject(context.Background(), segment)
 	if err != nil {
 		fmt.Printf("❌ Unable to read blocks segment %s: %s\n", segment, err)
@@ -412,8 +420,14 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 	for {
 		block, err := readerFactory.Read()
 		if block != nil {
-			if !blockRange.Unbounded() && block.Number >= blockRange.Stop {
-				return
+			if !blockRange.Unbounded() {
+				if block.Number >= blockRange.Stop {
+					return
+				}
+
+				if block.Number < blockRange.Start {
+					continue
+				}
 			}
 
 			seenBlockCount++
@@ -456,6 +470,12 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 					eosBlock.FilteringSystemActionsIncludeFilterExpr,
 				}
 				seenFilters[filters.Key()] = filters
+			}
+
+			if printFullBlock {
+				eosBlock := block.ToNative().(*pbcodec.Block)
+
+				fmt.Printf(jsonpb.MarshalIndentToString(eosBlock, "  "))
 			}
 
 			continue
