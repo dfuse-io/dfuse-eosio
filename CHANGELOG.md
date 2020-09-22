@@ -12,9 +12,10 @@ date.
 ## System Administration Changes
 
 ### Added
-* Env variable lMINDREADER_MAX_TOKEN_SIZEl can now be set to override bufio.Scanner() max token size (default 52428800) for EOSIO chains with huge transactions like jungle3
+* Added `--mindreader-max-console-length-in-characters` which is the limit in characters that we allow action trace's console output to be before truncating them.
+* Environment variable `MINDREADER_MAX_TOKEN_SIZE` can now be set to override `bufio.Scanner()` max token size (default `52428800`, i.e. `50Mb`) for EOSIO chains with huge transactions
 * Flag `--accounthist-mode` to specific the accounthist mode of operation
-* Added `tools check accounthist-shards` to 
+* Added `tools check accounthist-shards` to
 * Flag `--common-include-filter-expr`, `--common-exclude-filter-expr`, `--common-system-actions-include-filter-expr` can optionally specify multiple values, separated by `;;;` and prefixed by `#123;` where 123 is a block number at which we stat applying that filter
 * Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
 * Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly

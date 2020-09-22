@@ -32,6 +32,27 @@ import (
 
 var supportedVersions = []string{"12", "13"}
 
+type ConsoleReaderOption interface {
+	apply(reader *ConsoleReader)
+}
+
+type consoleReaderOptionFunc func(reader *ConsoleReader)
+
+func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
+	f(reader)
+}
+
+// LimitConsoleLength ensure that `Console` field on `pbcodec.ActionTrace` are
+// never bigger than `maxCharacterCount` characters.
+//
+// This is sadly incomplete as failing deferred transaction can still log out of band
+// via the standard nodeos logging mecanism.
+func LimitConsoleLength(maxCharacterCount int) ConsoleReaderOption {
+	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
+		reader.ctx.maxConsoleLengthInCharacter = maxCharacterCount
+	})
+}
+
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
 type ConsoleReader struct {
@@ -49,13 +70,18 @@ type ConsoleReader struct {
 //       since the upstream caller is already doing this job it self. This way, we
 //       would have a single split job instead of two. Only the upstream would split
 //       the line and the console reader would simply process each line, one at a time.
-func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
+func NewConsoleReader(reader io.Reader, opts ...ConsoleReaderOption) (*ConsoleReader, error) {
 	l := &ConsoleReader{
 		src:   reader,
 		close: func() {},
 		ctx:   newParseCtx(),
 		done:  make(chan interface{}),
 	}
+
+	for _, opt := range opts {
+		opt.apply(l)
+	}
+
 	l.setupScanner()
 	return l, nil
 }
@@ -111,6 +137,8 @@ type parseCtx struct {
 
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
+
+	maxConsoleLengthInCharacter int
 }
 
 func newParseCtx() *parseCtx {
@@ -563,7 +591,12 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace))
+	var options []conversionOption
+	if ctx.maxConsoleLengthInCharacter > 0 {
+		options = append(options, limitConsoleLengthConversionOption(ctx.maxConsoleLengthInCharacter))
+	}
+
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, options...))
 }
 
 // Line formats:

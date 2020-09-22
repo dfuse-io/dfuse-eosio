@@ -28,7 +28,28 @@ import (
 	"github.com/eoscanada/eos-go/ecc"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"go.uber.org/zap"
 )
+
+type conversionOption interface{}
+
+type actionConversionOption interface {
+	apply(actionTrace *pbcodec.ActionTrace)
+}
+
+type actionConversionOptionFunc func(actionTrace *pbcodec.ActionTrace)
+
+func (f actionConversionOptionFunc) apply(actionTrace *pbcodec.ActionTrace) {
+	f(actionTrace)
+}
+
+func limitConsoleLengthConversionOption(maxCharacterCount int) conversionOption {
+	return actionConversionOptionFunc(func(actionTrace *pbcodec.ActionTrace) {
+		if len(actionTrace.Console) > maxCharacterCount {
+			actionTrace.Console = actionTrace.Console[0:maxCharacterCount]
+		}
+	})
+}
 
 func ActivatedProtocolFeaturesToDEOS(in *eos.ProtocolFeatureActivationSet) *pbcodec.ActivatedProtocolFeatures {
 	out := &pbcodec.ActivatedProtocolFeatures{}
@@ -373,7 +394,7 @@ func SignaturesToEOS(in []string) []ecc.Signature {
 	return out
 }
 
-func TransactionTraceToDEOS(in *eos.TransactionTrace) *pbcodec.TransactionTrace {
+func TransactionTraceToDEOS(in *eos.TransactionTrace, opts ...conversionOption) *pbcodec.TransactionTrace {
 	id := in.ID.String()
 
 	out := &pbcodec.TransactionTrace{
@@ -384,13 +405,18 @@ func TransactionTraceToDEOS(in *eos.TransactionTrace) *pbcodec.TransactionTrace 
 		Elapsed:         int64(in.Elapsed),
 		NetUsage:        uint64(in.NetUsage),
 		Scheduled:       in.Scheduled,
-		ActionTraces:    ActionTracesToDEOS(in.ActionTraces),
 		Exception:       ExceptionToDEOS(in.Except),
 		ErrorCode:       ErrorCodeToDEOS(in.ErrorCode),
 	}
 
+	var someConsoleTruncated bool
+	out.ActionTraces, someConsoleTruncated = ActionTracesToDEOS(in.ActionTraces, opts...)
+	if someConsoleTruncated {
+		zlog.Info("transaction had some of its action trace's console entries truncated", zap.String("id", id))
+	}
+
 	if in.FailedDtrxTrace != nil {
-		out.FailedDtrxTrace = TransactionTraceToDEOS(in.FailedDtrxTrace)
+		out.FailedDtrxTrace = TransactionTraceToDEOS(in.FailedDtrxTrace, opts...)
 	}
 	if in.Receipt != nil {
 		out.Receipt = TransactionReceiptHeaderToDEOS(in.Receipt)
@@ -676,9 +702,9 @@ func CreationTreeToDEOS(tree CreationFlatTree) []*pbcodec.CreationFlatNode {
 	return out
 }
 
-func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTrace) {
+func ActionTracesToDEOS(actionTraces []eos.ActionTrace, opts ...conversionOption) (out []*pbcodec.ActionTrace, someConsoleTruncated bool) {
 	if len(actionTraces) <= 0 {
-		return nil
+		return nil, false
 	}
 
 	sort.Slice(actionTraces, func(i, j int) bool {
@@ -700,8 +726,12 @@ func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTr
 	})
 
 	out = make([]*pbcodec.ActionTrace, len(actionTraces))
+	var consoleTruncated bool
 	for idx, actionTrace := range actionTraces {
-		out[idx] = ActionTraceToDEOS(actionTrace, uint32(idx))
+		out[idx], consoleTruncated = ActionTraceToDEOS(actionTrace, uint32(idx), opts...)
+		if consoleTruncated {
+			someConsoleTruncated = true
+		}
 	}
 
 	return
@@ -749,7 +779,7 @@ func AuthSequenceToEOS(in *pbcodec.AuthSequence) eos.TransactionTraceAuthSequenc
 	}
 }
 
-func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.ActionTrace) {
+func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32, opts ...conversionOption) (out *pbcodec.ActionTrace, consoleTruncated bool) {
 	out = &pbcodec.ActionTrace{
 		Receiver:             string(in.Receiver),
 		Action:               ActionToDEOS(in.Action),
@@ -791,7 +821,14 @@ func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.Actio
 		}
 	}
 
-	return out
+	initialConsoleLength := len(in.Console)
+	for _, opt := range opts {
+		if v, ok := opt.(actionConversionOption); ok {
+			v.apply(out)
+		}
+	}
+
+	return out, initialConsoleLength != len(out.Console)
 }
 
 func ErrorCodeToDEOS(in *eos.Uint64) uint64 {
