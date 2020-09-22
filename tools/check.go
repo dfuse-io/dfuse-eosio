@@ -592,10 +592,11 @@ func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
 	kvdb = injector.NewRWCache(kvdb)
-	service := newService(kvdb, 0)
+	mode := accounthist.AccounthistMode(args[0])
+	service := setupService(kvdb, 0, mode)
 
 	var prefix byte
-	switch accounthist.AccounthistMode(args[0]) {
+	switch mode {
 	case accounthist.AccounthistModeAccount:
 		prefix = keyer.PrefixAccountCheckpoint
 	case accounthist.AccounthistModeAccountContract:

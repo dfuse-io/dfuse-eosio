@@ -3,48 +3,48 @@ package accounthist
 import (
 	"context"
 	"fmt"
-	"math"
 
-	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
-func ScanAccounts(
+type FacetHandlerFunc func(facet Facet, shard byte, ordinalNum uint64) error
+
+func ScanFacets(
 	ctx context.Context,
 	kvStore store.KVStore,
-	actionKeyPrefix byte,
+	facetCollectionPrefix byte,
 	decoder RowKeyDecoderFunc,
-	handleAccount func(account uint64, shard byte, ordinalNum uint64) error) error {
-
-	startKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, 0)
-	hasMoreAccounts := true
-	for hasMoreAccounts {
-		endKey := keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, math.MaxUint64)
-		it := kvStore.Scan(ctx, startKey, endKey, 1)
+	facetFunc FacetHandlerFunc,
+) error {
+	currentKey := []byte{facetCollectionPrefix}
+	endKey := store.Key(currentKey).PrefixNext()
+	hasMoreFacet := true
+	for hasMoreFacet {
+		it := kvStore.Scan(ctx, currentKey, endKey, 1)
 		hasNext := it.Next()
 		if !hasNext && it.Err() != nil {
 			return fmt.Errorf("scanning accounts last action: %w", it.Err())
 		}
 
 		if !hasNext {
-			hasMoreAccounts = false
+			hasMoreFacet = false
 			continue
 		}
-		actionKey, shardNum, ordinalNum := decoder(it.Item().Key)
-		zlog.Info("found account",
-			zap.Stringer("action_key", actionKey),
+		facetKey, shardNum, ordinalNum := decoder(it.Item().Key)
+		zlog.Info("found facet",
+			zap.Stringer("facet_key", facetKey),
 			zap.Int("shard_num", int(shardNum)),
 			zap.Uint64("ordinal_num", ordinalNum),
 		)
 
-		err := handleAccount(actionKey.Account(), shardNum, ordinalNum)
+		err := facetFunc(facetKey, shardNum, ordinalNum)
 		if err != nil {
-			return fmt.Errorf("handle account failed for account %s at shard %d with ordinal number: %d: %w", eos.NameToString(actionKey.Account()), int(shardNum), ordinalNum, err)
+			return fmt.Errorf("handle facet failed for account %s at shard %d with ordinal number: %d: %w", eos.NameToString(facetKey.Account()), int(shardNum), ordinalNum, err)
 		}
 
-		startKey = store.Key(keyer.EncodeAccountWithPrefixKey(actionKeyPrefix, actionKey.Account())).PrefixNext()
+		currentKey = store.Key(facetKey.Bytes()).PrefixNext()
 	}
 
 	return nil

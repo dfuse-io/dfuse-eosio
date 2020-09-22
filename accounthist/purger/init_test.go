@@ -9,6 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dfuse-io/logging"
+
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
@@ -19,6 +21,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
+
+func init() {
+	logging.TestingOverride()
+}
 
 func getKVTestFactory(t *testing.T) (store.KVStore, func()) {
 	tmp, err := ioutil.TempDir("", "badger")
@@ -52,7 +58,7 @@ func getKVTestFactory(t *testing.T) (store.KVStore, func()) {
 }
 
 func setupAccountInjector(kvStore store.KVStore, shardNum byte, maxEntries uint64) *injector.Injector {
-	return injector.NewInjector(
+	i := injector.NewInjector(
 		injector.NewRWCache(kvStore),
 		nil,
 		nil,
@@ -62,6 +68,8 @@ func setupAccountInjector(kvStore store.KVStore, shardNum byte, maxEntries uint6
 		0,
 		0,
 		nil)
+	i.SetFacetFactory(&accounthist.AccountFactory{})
+	return i
 }
 
 func insertKeys(ctx context.Context, s *injector.Injector, account uint64, keyCount int, sequenceNumber uint64) [][]byte {
@@ -69,7 +77,7 @@ func insertKeys(ctx context.Context, s *injector.Injector, account uint64, keyCo
 	for i := 0; i < keyCount; i++ {
 		acctSeqData := accounthist.SequenceData{CurrentOrdinal: uint64(i + 1), LastGlobalSeq: (sequenceNumber + 1)}
 		revOrderInsertKeys[keyCount-1-i] = keyer.EncodeAccountKey(account, s.ShardNum, acctSeqData.CurrentOrdinal)
-		s.WriteAction(ctx, accounthist.AccountKey(account), acctSeqData, []byte{})
+		s.WriteAction(ctx, accounthist.AccountFacet(account), acctSeqData, []byte{})
 	}
 	s.ForceFlush(ctx)
 	return revOrderInsertKeys

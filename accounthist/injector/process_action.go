@@ -12,7 +12,7 @@ import (
 
 func (i *Injector) processAction(ctx context.Context, blk *bstream.Block, act *pbcodec.ActionTrace, rawTraceMap map[uint64][]byte) error {
 
-	if !ActionGate(act) {
+	if !i.facetFactory.ActionFilter(act) {
 		return nil
 	}
 
@@ -26,9 +26,9 @@ func (i *Injector) processAction(ctx context.Context, blk *bstream.Block, act *p
 	for acct := range accts {
 		acctUint := eos.MustStringToName(acct)
 
-		actionKey := ActionKeyGenerator(blk, act, acctUint)
+		facet := i.facetFactory.NewFacet(blk, act, acctUint)
 
-		acctSeqData, err := i.getSequenceData(ctx, actionKey)
+		acctSeqData, err := i.getSequenceData(ctx, facet)
 		if err != nil {
 			return fmt.Errorf("error while getting sequence data for account %v: %w", acct, err)
 		}
@@ -42,12 +42,12 @@ func (i *Injector) processAction(ctx context.Context, blk *bstream.Block, act *p
 		if act.Receipt.GlobalSequence <= acctSeqData.LastGlobalSeq {
 			zlog.Debug("this block has already been processed for this account",
 				zap.Stringer("block", blk),
-				zap.Stringer("key", actionKey),
+				zap.Stringer("facet", facet),
 			)
 			return nil
 		}
 
-		lastDeletedSeq, err := i.deleteStaleRows(ctx, actionKey, acctSeqData)
+		lastDeletedSeq, err := i.deleteStaleRows(ctx, facet, acctSeqData)
 		if err != nil {
 			return fmt.Errorf("unable to delete stale rows: %w", err)
 		}
@@ -58,13 +58,13 @@ func (i *Injector) processAction(ctx context.Context, blk *bstream.Block, act *p
 		// since the current ordinal is the last assgined order number we need to
 		// increment it before we write a new action
 		acctSeqData.CurrentOrdinal++
-		if err = i.WriteAction(ctx, actionKey, acctSeqData, rawTrace); err != nil {
+		if err = i.WriteAction(ctx, facet, acctSeqData, rawTrace); err != nil {
 			return fmt.Errorf("error while writing action to store: %w", err)
 		}
 
 		acctSeqData.LastGlobalSeq = act.Receipt.GlobalSequence
 
-		i.UpdateSeqData(actionKey, acctSeqData)
+		i.UpdateSeqData(facet, acctSeqData)
 	}
 	return nil
 }

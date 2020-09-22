@@ -26,15 +26,41 @@ func (sqd *SequenceData) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
 	return nil
 }
 
-func ShardNewestSequenceData(ctx context.Context, kvStore store.KVStore, key ActionKey, shardNum byte, decoder RowKeyDecoderFunc, unmarshalAction bool) (SequenceData, error) {
-	startKey, endKey := key.Range(shardNum)
-	zlog.Debug("reading last sequence data for current shard",
+// TODO: this should be under injector
+func LatestShardSeqDataPerFacet(ctx context.Context, kvStore store.KVStore, key Facet, shardNum byte, decoder RowKeyDecoderFunc, unmarshalAction bool) (SequenceData, byte, error) {
+	startKey, endKey := FacetRangeLowerBound(key, shardNum)
+	zlog.Debug("scanning sequence data for action key",
 		zap.Stringer("key", key),
 		zap.Int("current_shard_num", int(shardNum)),
 		zap.String("start_key", hex.EncodeToString(startKey)),
 		zap.String("end_key", hex.EncodeToString(endKey)),
 	)
 
+	return scanShardSeqDataPerFacet(ctx, kvStore, startKey, endKey, decoder, unmarshalAction)
+}
+
+// TODO: this should be under injector
+func ShardSeqDataPerFacet(ctx context.Context, kvStore store.KVStore, key Facet, shardNum byte, decoder RowKeyDecoderFunc, unmarshalAction bool) (SequenceData, error) {
+	startKey, endKey := facetShardRange(key, shardNum)
+	zlog.Debug("reading last sequence data for shard",
+		zap.Stringer("key", key),
+		zap.Int("current_shard_num", int(shardNum)),
+		zap.String("start_key", hex.EncodeToString(startKey)),
+		zap.String("end_key", hex.EncodeToString(endKey)),
+	)
+
+	seqData, _, err := scanShardSeqDataPerFacet(ctx, kvStore, startKey, endKey, decoder, unmarshalAction)
+	return seqData, err
+}
+
+func scanShardSeqDataPerFacet(
+	ctx context.Context,
+	kvStore store.KVStore,
+	startKey RowKey,
+	endKey RowKey,
+	decoder RowKeyDecoderFunc,
+	unmarshalAction bool,
+) (SequenceData, byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, DatabaseTimeout)
 	defer cancel()
 
@@ -47,24 +73,24 @@ func ShardNewestSequenceData(ctx context.Context, kvStore store.KVStore, key Act
 	it := kvStore.Scan(ctx, startKey, endKey, 1)
 	hasNext := it.Next()
 	if !hasNext && it.Err() != nil {
-		return SequenceData{}, fmt.Errorf("scan last action: %w", it.Err())
+		return SequenceData{}, 0, fmt.Errorf("scan last action: %w", it.Err())
 	}
 
 	if !hasNext {
-		return SequenceData{}, store.ErrNotFound
+		return SequenceData{}, 0, store.ErrNotFound
 	}
 
 	seqData := SequenceData{}
-	_, _, currentOrdinal := decoder(it.Item().Key)
+	_, shardNum, currentOrdinal := decoder(it.Item().Key)
 	seqData.CurrentOrdinal = currentOrdinal
 
 	if unmarshalAction {
 		newact := &pbaccounthist.ActionRow{}
 		if err := proto.Unmarshal(it.Item().Value, newact); err != nil {
-			return SequenceData{}, err
+			return SequenceData{}, 0, err
 		}
 		seqData.LastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
 		seqData.LastDeletedOrdinal = newact.LastDeletedSeq
 	}
-	return seqData, nil
+	return seqData, shardNum, nil
 }

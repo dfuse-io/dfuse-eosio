@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (i *Injector) getSequenceData(ctx context.Context, key accounthist.ActionKey) (out accounthist.SequenceData, err error) {
+func (i *Injector) getSequenceData(ctx context.Context, key accounthist.Facet) (out accounthist.SequenceData, err error) {
 	out, found := i.cacheSeqData[key.String()]
 	if found {
 		i.currentBatchMetrics.accountCacheHit++
@@ -26,7 +26,7 @@ func (i *Injector) getSequenceData(ctx context.Context, key accounthist.ActionKe
 		i.UpdateSeqData(key, out)
 		return
 	}
-	out, err = accounthist.ShardNewestSequenceData(ctx, i.KvStore, key, i.ShardNum, InjectorRowKeyDecoder, true)
+	out, err = accounthist.ShardSeqDataPerFacet(ctx, i.KvStore, key, i.ShardNum, i.facetFactory.DecodeRow, true)
 	if err == store.ErrNotFound {
 		zlog.Debug("account never seen before, initializing a new sequence data",
 			zap.Stringer("key", key),

@@ -48,19 +48,19 @@ type KeyShardSummary struct {
 	SeqData  accounthist.SequenceData
 }
 
-func (i *Injector) KeySummary(ctx context.Context, key accounthist.ActionKey) ([]*KeyShardSummary, error) {
+func (i *Injector) KeySummary(ctx context.Context, key accounthist.Facet) ([]*KeyShardSummary, error) {
 	out := []*KeyShardSummary{}
-	for j := 0; j < 5; j++ {
+	currentShardNum := byte(0)
+	for {
 		// TODO: fix contract
-		seqData, err := accounthist.ShardNewestSequenceData(ctx, i.KvStore, key, byte(j), InjectorRowKeyDecoder, true)
-
+		seqData, shardNum, err := accounthist.LatestShardSeqDataPerFacet(ctx, i.KvStore, key, currentShardNum, i.facetFactory.DecodeRow, true)
 		if err == store.ErrNotFound {
-			continue
+			return out, nil
 		} else if err != nil {
 			return nil, fmt.Errorf("error while fetching sequence data for account: %w", err)
 		}
-
-		out = append(out, &KeyShardSummary{ShardNum: byte(j), SeqData: seqData})
+		out = append(out, &KeyShardSummary{ShardNum: shardNum, SeqData: seqData})
+		currentShardNum = (shardNum + 1)
 	}
 	return out, nil
 }

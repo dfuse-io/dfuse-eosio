@@ -16,7 +16,7 @@ import (
 
 func (i *Injector) GetShardCheckpoint(ctx context.Context) (*pbaccounthist.ShardCheckpoint, error) {
 
-	key := CheckpointKeyGenerator(i.ShardNum)
+	key := i.facetFactory.NewCheckpointKey(i.ShardNum)
 
 	ctx, cancel := context.WithTimeout(ctx, accounthist.DatabaseTimeout)
 	defer cancel()
@@ -38,7 +38,7 @@ func (i *Injector) GetShardCheckpoint(ctx context.Context) (*pbaccounthist.Shard
 }
 
 func (i *Injector) DeleteCheckpoint(ctx context.Context, shard byte) error {
-	key := CheckpointKeyGenerator(shard)
+	key := i.facetFactory.NewCheckpointKey(shard)
 
 	if traceEnabled {
 		zlog.Debug("deleting checkpoint",
@@ -55,7 +55,7 @@ func (i *Injector) DeleteCheckpoint(ctx context.Context, shard byte) error {
 }
 
 func (i *Injector) writeCheckpoint(ctx context.Context, blk *pbcodec.Block) error {
-	key := CheckpointKeyGenerator(i.ShardNum)
+	key := i.facetFactory.NewCheckpointKey(i.ShardNum)
 
 	i.lastCheckpoint.LastWrittenBlockNum = blk.Num()
 	i.lastCheckpoint.LastWrittenBlockId = blk.ID()

@@ -42,6 +42,8 @@ type Injector struct {
 	startedFromCheckpoint bool
 	lastCheckpoint        *pbaccounthist.ShardCheckpoint
 
+	facetFactory accounthist.FacetFactory
+
 	lastWrittenBlock    *lastWrittenBlock
 	currentBatchMetrics blockBatchMetrics
 	headBlockTimeDrift  *dmetrics.HeadTimeDrift
@@ -71,18 +73,16 @@ func NewInjector(
 		stopBlockNum:        stopBlockNum,
 		tracker:             tracker,
 		cacheSeqData:        make(map[string]accounthist.SequenceData),
-
 		currentBatchMetrics: blockBatchMetrics{
 			batchStartTime: time.Now(),
 		},
 	}
 }
 
-var ActionKeyGenerator accounthist.KeyEncoderFunc
-var CheckpointKeyGenerator accounthist.CheckpointKeyEncoderFunc
-var InjectorRowKeyDecoder accounthist.RowKeyDecoderFunc
-var ActionGate accounthist.Actiongate
+func (i *Injector) SetFacetFactory(facetFactory accounthist.FacetFactory) {
+	i.facetFactory = facetFactory
 
+}
 func (i *Injector) SetupMetrics(serviceName string) {
 	i.headBlockTimeDrift = metrics.NewHeadBlockTimeDrift(serviceName)
 	i.headBlockNumber = metrics.NewHeadBlockNumber(serviceName)
@@ -107,7 +107,7 @@ func (i *Injector) Shutdown(err error) {
 	i.Shutter.Shutdown(err)
 }
 
-func (i *Injector) deleteStaleRows(ctx context.Context, key accounthist.ActionKey, acctSeqData accounthist.SequenceData) (lastDeletedSeq uint64, err error) {
+func (i *Injector) deleteStaleRows(ctx context.Context, key accounthist.Facet, acctSeqData accounthist.SequenceData) (lastDeletedSeq uint64, err error) {
 	// If the last current ordinal is bigger than the max allowed entries for this account,
 	// adjust our sliding window by deleting anything below least recent ordinal
 	if acctSeqData.CurrentOrdinal > acctSeqData.MaxEntries {
@@ -137,7 +137,7 @@ func (i *Injector) deleteStaleRows(ctx context.Context, key accounthist.ActionKe
 	return acctSeqData.LastDeletedOrdinal, nil
 }
 
-func (i *Injector) deleteAction(ctx context.Context, key accounthist.ActionKey, sequenceNumber uint64) error {
+func (i *Injector) deleteAction(ctx context.Context, key accounthist.Facet, sequenceNumber uint64) error {
 
 	rowKey := key.Row(i.ShardNum, sequenceNumber)
 
@@ -154,7 +154,7 @@ func (i *Injector) deleteAction(ctx context.Context, key accounthist.ActionKey, 
 	return i.KvStore.BatchDelete(ctx, [][]byte{rowKey})
 }
 
-func (i *Injector) WriteAction(ctx context.Context, key accounthist.ActionKey, acctSeqData accounthist.SequenceData, rawTrace []byte) error {
+func (i *Injector) WriteAction(ctx context.Context, key accounthist.Facet, acctSeqData accounthist.SequenceData, rawTrace []byte) error {
 	rowKey := key.Row(i.ShardNum, acctSeqData.CurrentOrdinal)
 
 	zlog.Debug("writing action", zap.Stringer("key", rowKey))

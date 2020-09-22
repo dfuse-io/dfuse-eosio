@@ -8,7 +8,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
-	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
@@ -78,18 +77,6 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
 
-	var serviceName string
-	switch a.config.AccounthistMode {
-	case accounthist.AccounthistModeAccount:
-		setupAccountMode()
-		serviceName = "account"
-	case accounthist.AccounthistModeAccountContract:
-		setupAccountContractMode()
-		serviceName = "account-contract"
-	default:
-		return fmt.Errorf("invalid accounthist mode: %q", a.config.AccounthistMode)
-	}
-
 	if a.config.EnableServer {
 		server := grpc.New(a.config.GRPCListenAddr, a.config.MaxEntriesPerKey, kvdb)
 
@@ -119,6 +106,19 @@ func (a *App) Run() error {
 			a.modules.Tracker,
 		)
 
+		switch a.config.AccounthistMode {
+		case accounthist.AccounthistModeAccount:
+			zlog.Info("setting up 'account' mode")
+			injector.SetFacetFactory(&accounthist.AccountFactory{})
+			injector.SetupMetrics("accounthist-account")
+		case accounthist.AccounthistModeAccountContract:
+			zlog.Info("setting up 'account-contract' mode")
+			injector.SetFacetFactory(&accounthist.AccountContractFactory{})
+			injector.SetupMetrics("accounthist-account-contract")
+		default:
+			return fmt.Errorf("invalid accounthist mode: %q", a.config.AccounthistMode)
+		}
+
 		if err = injector.SetupSource(a.config.IgnoreCheckpointOnLaunch); err != nil {
 			return fmt.Errorf("error setting up source: %w", err)
 		}
@@ -126,7 +126,6 @@ func (a *App) Run() error {
 		a.OnTerminating(injector.Shutdown)
 		injector.OnTerminated(a.Shutdown)
 
-		injector.SetupMetrics(fmt.Sprintf("accounthist-%s", serviceName))
 		go injector.Launch()
 	}
 
@@ -139,20 +138,4 @@ func (c *Config) validate() error {
 	}
 
 	return nil
-}
-
-func setupAccountContractMode() {
-	zlog.Info("setting up 'account-contract' mode")
-	injector.ActionKeyGenerator = accounthist.NewAccountContractKey
-	injector.CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
-	injector.InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
-	injector.ActionGate = accounthist.AccountContractKeyActionGate
-}
-
-func setupAccountMode() {
-	zlog.Info("setting up 'account' mode")
-	injector.ActionKeyGenerator = accounthist.NewAccountKey
-	injector.CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
-	injector.InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
-	injector.ActionGate = accounthist.AccountKeyActionGate
 }

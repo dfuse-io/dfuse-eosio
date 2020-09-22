@@ -4,8 +4,9 @@ import "encoding/binary"
 
 const (
 	//prefixSequenceNumber = byte(0x01) // unused now
-	PrefixAccount                   = byte(0x02)
-	PrefixAccountCheckpoint         = byte(0x03)
+	PrefixAccount           = byte(0x02)
+	PrefixAccountCheckpoint = byte(0x03)
+
 	PrefixAccountContract           = byte(0x04)
 	PrefixAccountContractCheckpoint = byte(0x05)
 

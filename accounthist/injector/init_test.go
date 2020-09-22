@@ -65,10 +65,6 @@ func assertEqualHex(t *testing.T, expected string, actual []byte, msgAndArgs ...
 }
 
 func setupAccountInjector(kvStore store.KVStore, shardNum byte, maxEntries uint64) *Injector {
-	ActionKeyGenerator = accounthist.NewAccountKey
-	CheckpointKeyGenerator = keyer.EncodeAccountCheckpointKey
-	InjectorRowKeyDecoder = accounthist.AccountKeyRowDecoder
-	ActionGate = accounthist.AccountKeyActionGate
 	i := NewInjector(
 		NewRWCache(kvStore),
 		nil,
@@ -80,14 +76,11 @@ func setupAccountInjector(kvStore store.KVStore, shardNum byte, maxEntries uint6
 		0,
 		nil)
 	i.lastCheckpoint = &pbaccounthist.ShardCheckpoint{}
+	i.SetFacetFactory(&accounthist.AccountFactory{})
 	return i
 }
 
 func setupAccountContractInjector(kvStore store.KVStore, shardNum byte, maxEntries uint64) *Injector {
-	ActionKeyGenerator = accounthist.NewAccountContractKey
-	CheckpointKeyGenerator = keyer.EncodeAccountContractCheckpointKey
-	InjectorRowKeyDecoder = accounthist.AccountContractKeyRowDecoder
-	ActionGate = accounthist.AccountContractKeyActionGate
 	i := NewInjector(
 		NewRWCache(kvStore),
 		nil,
@@ -99,6 +92,7 @@ func setupAccountContractInjector(kvStore store.KVStore, shardNum byte, maxEntri
 		0,
 		nil)
 	i.lastCheckpoint = &pbaccounthist.ShardCheckpoint{}
+	i.SetFacetFactory(&accounthist.AccountContractFactory{})
 	return i
 }
 
@@ -154,7 +148,7 @@ func insertKeys(ctx context.Context, s *Injector, account uint64, keyCount int, 
 	for i := 0; i < keyCount; i++ {
 		acctSeqData := accounthist.SequenceData{CurrentOrdinal: uint64(i + 1), LastGlobalSeq: (sequenceNumber + 1)}
 		revOrderInsertKeys[keyCount-1-i] = keyer.EncodeAccountKey(account, s.ShardNum, acctSeqData.CurrentOrdinal)
-		s.WriteAction(ctx, accounthist.AccountKey(account), acctSeqData, []byte{})
+		s.WriteAction(ctx, accounthist.AccountFacet(account), acctSeqData, []byte{})
 	}
 	s.ForceFlush(ctx)
 	return revOrderInsertKeys

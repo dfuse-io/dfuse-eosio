@@ -2,7 +2,10 @@ package accounthist
 
 import (
 	"encoding/hex"
+	"math"
 	"time"
+
+	"github.com/dfuse-io/kvdb/store"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -19,20 +22,41 @@ const (
 	AccounthistModeAccountContract AccounthistMode = "account-contract"
 )
 
-type CheckpointKeyEncoderFunc func(shardNum byte) []byte
-type KeyEncoderFunc func(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) ActionKey
-type RowKeyDecoderFunc func(key []byte) (ActionKey, byte, uint64)
-type Actiongate func(act *pbcodec.ActionTrace) bool
+type RowKeyDecoderFunc func(key []byte) (Facet, byte, uint64)
 
-type ActionKey interface {
+type KeyEncoderFunc func(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) Facet
+
+type FacetFactory interface {
+	Collection() byte
+	NewFacet(blk *bstream.Block, act *pbcodec.ActionTrace, account uint64) Facet
+	NewCheckpointKey(shardNum byte) []byte
+	DecodeRow(key []byte) (Facet, byte, uint64)
+	ActionFilter(act *pbcodec.ActionTrace) bool
+}
+
+// facet is the key prefix for virtual tables (i.e. 02:account or 03:account:contract)
+type Facet interface {
 	String() string
+	Bytes() []byte
 	Account() uint64
+	// TODO: should replace RowKey with store.Key
 	Row(shard byte, seqData uint64) RowKey
-	Range(shard byte) (startKey RowKey, endKey RowKey)
 }
 
 type RowKey []byte
 
 func (k RowKey) String() string {
 	return hex.EncodeToString(k)
+}
+
+func facetShardRange(facet Facet, shard byte) (RowKey, RowKey) {
+	startKey := facet.Row(shard, math.MaxUint64)
+	endKey := store.Key(facet.Row(shard, 0)).PrefixNext()
+	return startKey, RowKey(endKey)
+}
+
+func FacetRangeLowerBound(facet Facet, lowShardNum byte) (RowKey, RowKey) {
+	startKey := facet.Row(lowShardNum, math.MaxUint64)
+	endKey := store.Key(facet.Row(0xff, 0)).PrefixNext()
+	return startKey, RowKey(endKey)
 }

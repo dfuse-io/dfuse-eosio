@@ -20,25 +20,25 @@ func TestRWCache(t *testing.T) {
 	accountPapa := eos.MustStringToName("papa")
 	accountDada := eos.MustStringToName("dada")
 
-	rwCache.Put(ctx, accounthist.AccountKey(accountMama).Row(0, 0), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountMama).Row(0, 2), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountMama).Row(0, 1), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountPapa).Row(0, 24), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountPapa).Row(0, 23), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountDada).Row(0, 25), []byte{0xaa})
-	rwCache.Put(ctx, accounthist.AccountKey(accountPapa).Row(0, 25), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountMama).Row(0, 0), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountMama).Row(0, 2), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountMama).Row(0, 1), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountPapa).Row(0, 24), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountPapa).Row(0, 23), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountDada).Row(0, 25), []byte{0xaa})
+	rwCache.Put(ctx, accounthist.AccountFacet(accountPapa).Row(0, 25), []byte{0xaa})
 
 	rwCache.BatchDelete(ctx, [][]byte{
-		accounthist.AccountKey(accountMama).Row(0, 1),
-		accounthist.AccountKey(accountPapa).Row(0, 23),
+		accounthist.AccountFacet(accountMama).Row(0, 1),
+		accounthist.AccountFacet(accountPapa).Row(0, 23),
 	})
 
 	expectedKeys := [][]byte{
-		accounthist.AccountKey(accountMama).Row(0, 0),
-		accounthist.AccountKey(accountMama).Row(0, 2),
-		accounthist.AccountKey(accountPapa).Row(0, 24),
-		accounthist.AccountKey(accountDada).Row(0, 25),
-		accounthist.AccountKey(accountPapa).Row(0, 25),
+		accounthist.AccountFacet(accountMama).Row(0, 0),
+		accounthist.AccountFacet(accountMama).Row(0, 2),
+		accounthist.AccountFacet(accountPapa).Row(0, 24),
+		accounthist.AccountFacet(accountDada).Row(0, 25),
+		accounthist.AccountFacet(accountPapa).Row(0, 25),
 	}
 	i := 0
 	rwCache.OrderedPuts(func(sKey string, value []byte) error {
