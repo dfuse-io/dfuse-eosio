@@ -18,7 +18,7 @@ type ShardDetail struct {
 	Checkpoint *pbaccounthist.ShardCheckpoint
 }
 
-func (i *Injector) ShardAnalysis(ctx context.Context, checkpointPrefix byte) (out []*ShardDetail, err error) {
+func (i *Injector) ShardCheckpointAnalysis(ctx context.Context, checkpointPrefix byte) (out []*ShardDetail, err error) {
 
 	startKey := []byte{checkpointPrefix}
 	endKey := store.Key(startKey).PrefixNext()
@@ -43,13 +43,19 @@ func (i *Injector) ShardAnalysis(ctx context.Context, checkpointPrefix byte) (ou
 	return out, nil
 }
 
-type KeyShardSummary struct {
+type FacetShardDetail struct {
+	ShardNum      byte
+	LatestSeqData accounthist.SequenceData
+	RowKeyCount   uint64
+}
+
+type FacetShardSummary struct {
 	ShardNum byte
 	SeqData  accounthist.SequenceData
 }
 
-func (i *Injector) KeySummary(ctx context.Context, key accounthist.Facet) ([]*KeyShardSummary, error) {
-	out := []*KeyShardSummary{}
+func (i *Injector) FacetShardsSummary(ctx context.Context, key accounthist.Facet) ([]*FacetShardSummary, error) {
+	out := []*FacetShardSummary{}
 	currentShardNum := byte(0)
 	for {
 		// TODO: fix contract
@@ -59,8 +65,39 @@ func (i *Injector) KeySummary(ctx context.Context, key accounthist.Facet) ([]*Ke
 		} else if err != nil {
 			return nil, fmt.Errorf("error while fetching sequence data for account: %w", err)
 		}
-		out = append(out, &KeyShardSummary{ShardNum: shardNum, SeqData: seqData})
+		out = append(out, &FacetShardSummary{ShardNum: shardNum, SeqData: seqData})
 		currentShardNum = (shardNum + 1)
+	}
+	return out, nil
+}
+
+func (i *Injector) FacetShardSummary(ctx context.Context, facet accounthist.Facet, shardNum byte) (*FacetShardDetail, error) {
+	ctx, cancel := context.WithTimeout(ctx, accounthist.DatabaseTimeout)
+	defer cancel()
+	out := &FacetShardDetail{ShardNum: shardNum}
+
+	startKey, endKey := accounthist.FacetShardRange(facet, shardNum)
+	it := i.KvStore.Scan(ctx, startKey, endKey, 0)
+	hasSeenAction := false
+	for it.Next() {
+		if !hasSeenAction {
+			_, _, currentOrdinal := i.facetFactory.DecodeRow(it.Item().Key)
+			out.LatestSeqData = accounthist.SequenceData{
+				CurrentOrdinal: currentOrdinal,
+			}
+
+			newact := &pbaccounthist.ActionRow{}
+			if err := proto.Unmarshal(it.Item().Value, newact); err != nil {
+				return nil, fmt.Errorf("unable to decode row: %w", err)
+			}
+			out.LatestSeqData.LastGlobalSeq = newact.ActionTrace.Receipt.GlobalSequence
+			out.LatestSeqData.LastDeletedOrdinal = newact.LastDeletedSeq
+			hasSeenAction = true
+		}
+		out.RowKeyCount++
+	}
+	if it.Err() != nil {
+		return nil, fmt.Errorf("scan action: %w", it.Err())
 	}
 	return out, nil
 }

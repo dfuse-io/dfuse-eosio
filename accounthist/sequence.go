@@ -41,7 +41,7 @@ func LatestShardSeqDataPerFacet(ctx context.Context, kvStore store.KVStore, key 
 
 // TODO: this should be under injector
 func ShardSeqDataPerFacet(ctx context.Context, kvStore store.KVStore, key Facet, shardNum byte, decoder RowKeyDecoderFunc, unmarshalAction bool) (SequenceData, error) {
-	startKey, endKey := facetShardRange(key, shardNum)
+	startKey, endKey := FacetShardRange(key, shardNum)
 	zlog.Debug("reading last sequence data for shard",
 		zap.Stringer("key", key),
 		zap.Int("current_shard_num", int(shardNum)),

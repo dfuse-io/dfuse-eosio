@@ -49,7 +49,7 @@ func (k RowKey) String() string {
 	return hex.EncodeToString(k)
 }
 
-func facetShardRange(facet Facet, shard byte) (RowKey, RowKey) {
+func FacetShardRange(facet Facet, shard byte) (RowKey, RowKey) {
 	startKey := facet.Row(shard, math.MaxUint64)
 	endKey := store.Key(facet.Row(shard, 0)).PrefixNext()
 	return startKey, RowKey(endKey)

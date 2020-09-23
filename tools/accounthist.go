@@ -43,7 +43,7 @@ var purgeAccountCmd = &cobra.Command{
 }
 
 // dfuseeos tools accounthist account scan --dsn
-var scanAccountCmd = &cobra.Command{
+var scanAccountsCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Scan accounts",
 	RunE:  scanAccountE,
@@ -68,14 +68,15 @@ func init() {
 	Cmd.AddCommand(accounthistCmd)
 
 	accounthistCmd.AddCommand(accountCmd)
-	accountCmd.AddCommand(readAccountCmd, scanAccountCmd, purgeAccountCmd)
+	accountCmd.AddCommand(readAccountCmd, scanAccountsCmd, purgeAccountCmd)
 
 	accounthistCmd.AddCommand(checkpointCmd)
 	checkpointCmd.AddCommand(readCheckpointCmd, deleteCheckpointCmd)
 
 	accounthistCmd.PersistentFlags().String("mode", "account", "accountgist mode one of 'account' or 'account-contract'")
 	accounthistCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "kvStore DSN")
-	scanAccountCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
+	readAccountCmd.Flags().Int("shardNum", -1, "Analyze at a specific shard number")
+	scanAccountsCmd.Flags().Int("limit", 100, "limit the number of accounts when doing scan")
 
 	purgeAccountCmd.Flags().Bool("run", false, "Run purger in non-dyr run mode")
 }
@@ -103,10 +104,10 @@ func readCheckpointE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	fmt.Printf("Checkpoint for shard: %d\n", shard)
-	fmt.Printf("Initial Start Block for shard: %d\n", checkpoint.InitialStartBlock)
-	fmt.Printf("Target Stop Block for shard: %d\n", checkpoint.TargetStopBlock)
-	fmt.Printf("Last Written Block Num for shard: %d\n", checkpoint.LastWrittenBlockNum)
-	fmt.Printf("Last Written Block Id for shard: %s\n", checkpoint.LastWrittenBlockId)
+	fmt.Printf("  - Initial Start Block for shard: %d\n", checkpoint.InitialStartBlock)
+	fmt.Printf("  - Target Stop Block for shard: %d\n", checkpoint.TargetStopBlock)
+	fmt.Printf("  - Last Written Block Num for shard: %d\n", checkpoint.LastWrittenBlockNum)
+	fmt.Printf("  - Last Written Block Id for shard: %s\n", checkpoint.LastWrittenBlockId)
 
 	return nil
 }
@@ -182,7 +183,23 @@ func readAccountE(cmd *cobra.Command, args []string) (err error) {
 		zap.String("account", account),
 	)
 
-	summary, err := service.KeySummary(cmd.Context(), accounthist.AccountFacet(accountUint))
+	shardNum := viper.GetInt("shardNum")
+	if shardNum >= 0 {
+		summary, err := service.FacetShardSummary(cmd.Context(), accounthist.AccountFacet(accountUint), byte(shardNum))
+		if err != nil {
+			return fmt.Errorf("unable to retrieve account shard summary: %w", err)
+		}
+
+		fmt.Printf("Account %s summary at shard %d\n", account, shardNum)
+		fmt.Printf("Latest Seq Data:\n")
+		fmt.Printf("  - Current Ordinal Number: %d\n", summary.LatestSeqData.CurrentOrdinal)
+		fmt.Printf("  - Last Global Seq: %d\n", summary.LatestSeqData.LastGlobalSeq)
+		fmt.Printf("  - Last Deleted Ordinal shard: %d\n", summary.LatestSeqData.LastDeletedOrdinal)
+		fmt.Printf("Total Facet keys found in shard: %d:\n", summary.RowKeyCount)
+		return nil
+	}
+
+	summary, err := service.FacetShardsSummary(cmd.Context(), accounthist.AccountFacet(accountUint))
 	if err != nil {
 		return fmt.Errorf("unable to retrieve account summary: %w", err)
 	}

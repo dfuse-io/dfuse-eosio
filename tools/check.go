@@ -605,7 +605,7 @@ func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid account hist more: %s", args[0])
 	}
 
-	out, err := service.ShardAnalysis(cmd.Context(), prefix)
+	out, err := service.ShardCheckpointAnalysis(cmd.Context(), prefix)
 	if err != nil {
 		return err
 	}
