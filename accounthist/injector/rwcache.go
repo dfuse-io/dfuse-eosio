@@ -1,8 +1,10 @@
-package accounthist
+package injector
 
 import (
 	"context"
 	"time"
+
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 
 	"github.com/dfuse-io/kvdb/store"
 	"go.uber.org/zap"
@@ -11,23 +13,30 @@ import (
 type RWCache struct {
 	store.KVStore
 
-	puts    map[string][]byte
-	deletes map[string]struct{}
+	orderedPuts []string
+	puts        map[string][]byte
+	deletes     map[string]struct{}
 
 	isLastRow func(key []byte) bool
 }
 
 func NewRWCache(backingStore store.KVStore) *RWCache {
 	return &RWCache{
-		puts:      map[string][]byte{},
-		deletes:   map[string]struct{}{},
-		KVStore:   backingStore,
-		isLastRow: func(key []byte) bool { return key[0] == prefixLastBlock },
+		puts:        map[string][]byte{},
+		orderedPuts: []string{},
+		deletes:     map[string]struct{}{},
+		KVStore:     backingStore,
+		isLastRow: func(key []byte) bool {
+			return key[0] == keyer.PrefixAccountCheckpoint || key[0] == keyer.PrefixAccountContractCheckpoint
+		},
 	}
 }
 
 func (c *RWCache) Put(ctx context.Context, key, value []byte) error {
 	skey := string(key)
+	if _, found := c.puts[skey]; !found {
+		c.orderedPuts = append(c.orderedPuts, skey)
+	}
 	c.puts[skey] = value
 	delete(c.deletes, skey)
 	return nil
@@ -50,23 +59,20 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 
 	var countFirstKeys, countLastKeys int
 	lastKeys := map[string][]byte{}
-	// FIXME: this is RISKY, because keys are written out of order. If
-	// that's the case we might write, for a given account, some
-	// out-of-order actions and their seqNum.  When we reboot, we
-	// won't properly get the highest, and we won't know there are
-	// holes below, for this shard.
-	// SOLUTION: sort the keys first, in which order?
-	for k, v := range c.puts {
-		bkey := []byte(k)
+
+	c.OrderedPuts(func(sKey string, value []byte) error {
+		bkey := []byte(sKey)
 		if c.isLastRow != nil && c.isLastRow(bkey) {
-			lastKeys[k] = v
-			continue
+			lastKeys[sKey] = value
+			return nil
 		}
 		countFirstKeys++
-		if err := c.KVStore.Put(ctx, bkey, v); err != nil {
+		if err := c.KVStore.Put(ctx, bkey, value); err != nil {
 			return err
 		}
-	}
+		return nil
+	})
+
 	if err := c.KVStore.FlushPuts(ctx); err != nil {
 		return err
 	}
@@ -101,6 +107,17 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 
 	c.puts = map[string][]byte{}
 	c.deletes = map[string]struct{}{}
+	c.orderedPuts = []string{}
+	return nil
+}
 
+func (c *RWCache) OrderedPuts(f func(sKey string, value []byte) error) error {
+	for _, sKey := range c.orderedPuts {
+		if v, found := c.puts[sKey]; found {
+			if err := f(sKey, v); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

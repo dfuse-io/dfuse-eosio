@@ -5,9 +5,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/accounthist"
-	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/dfuse-io/dgrpc"
+
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
+	"github.com/dfuse-io/kvdb/store"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -16,24 +17,33 @@ import (
 type Server struct {
 	*shutter.Shutter
 
-	grpcAddr string
-	server   *grpc.Server
-	service  *accounthist.Service
+	grpcAddr   string
+	server     *grpc.Server
+	MaxEntries uint64
+	KVStore    store.KVStore
 }
 
-func New(grpcAddr string, service *accounthist.Service) *Server {
+func New(grpcAddr string, maxEntries uint64, kvStore store.KVStore) *Server {
 	return &Server{
-		Shutter: shutter.New(),
-
-		grpcAddr: grpcAddr,
-		service:  service,
+		Shutter:    shutter.New(),
+		grpcAddr:   grpcAddr,
+		MaxEntries: maxEntries,
+		KVStore:    kvStore,
+		server:     dgrpc.NewServer(dgrpc.WithLogger(zlog)),
 	}
 }
 
-func (s *Server) Serve() {
-	s.server = dgrpc.NewServer(dgrpc.WithLogger(zlog))
+func (s *Server) ServeAccountMode() {
 	pbaccounthist.RegisterAccountHistoryServer(s.server, s)
+	s.serve()
+}
 
+func (s *Server) ServeAccountContractMode() {
+	pbaccounthist.RegisterAccountContractHistoryServer(s.server, s)
+	s.serve()
+}
+
+func (s *Server) serve() {
 	zlog.Info("listening for accounthist", zap.String("addr", s.grpcAddr))
 	lis, err := net.Listen("tcp", s.grpcAddr)
 	if err != nil {

@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -76,20 +77,27 @@ func TestConsoleReaderPerformances(t *testing.T) {
 
 func TestParseFromFile(t *testing.T) {
 	tests := []struct {
-		deepMindFile string
+		name          string
+		deepMindFile  string
+		includeBlock  func(block *pbcodec.Block) bool
+		readerOptions []ConsoleReaderOption
 	}{
-		{"testdata/deep-mind.dmlog"},
+		{"full", "testdata/deep-mind.dmlog", nil, nil},
+		{"max-console-log", "testdata/deep-mind.dmlog", blockWithConsole, []ConsoleReaderOption{LimitConsoleLength(10)}},
 	}
 
 	for _, test := range tests {
-		t.Run(test.deepMindFile, func(t *testing.T) {
-			cr := testFileConsoleReader(t, test.deepMindFile)
+		t.Run(test.name, func(t *testing.T) {
+			cr := testFileConsoleReader(t, test.deepMindFile, test.readerOptions...)
 			buf := &bytes.Buffer{}
 
 			for {
 				out, err := cr.Read()
 				if out != nil && out.(*pbcodec.Block) != nil {
 					blk := out.(*pbcodec.Block)
+					if test.includeBlock != nil && !test.includeBlock(blk) {
+						continue
+					}
 
 					if len(buf.Bytes()) != 0 {
 						buf.Write([]byte("\n"))
@@ -105,7 +113,7 @@ func TestParseFromFile(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			goldenFile := test.deepMindFile + ".golden.json"
+			goldenFile := filepath.Join("testdata", test.name+".golden.json")
 			if os.Getenv("GOLDEN_UPDATE") == "true" {
 				ioutil.WriteFile(goldenFile, buf.Bytes(), os.ModePerm)
 			}
@@ -167,19 +175,19 @@ func TestGeneratePBBlocks(t *testing.T) {
 	}
 }
 
-func testFileConsoleReader(t *testing.T, filename string) *ConsoleReader {
+func testFileConsoleReader(t *testing.T, filename string, options ...ConsoleReaderOption) *ConsoleReader {
 	t.Helper()
 
 	fl, err := os.Open(filename)
 	require.NoError(t, err)
 
-	return testReaderConsoleReader(t, fl, func() { fl.Close() })
+	return testReaderConsoleReader(t, fl, func() { fl.Close() }, options...)
 }
 
-func testReaderConsoleReader(t *testing.T, reader io.Reader, closer func()) *ConsoleReader {
+func testReaderConsoleReader(t *testing.T, reader io.Reader, closer func(), options ...ConsoleReaderOption) *ConsoleReader {
 	t.Helper()
 
-	consoleReader, err := NewConsoleReader(reader)
+	consoleReader, err := NewConsoleReader(reader, options...)
 	require.NoError(t, err)
 
 	return consoleReader
@@ -633,4 +641,16 @@ func fileExists(path string) bool {
 	}
 
 	return !info.IsDir()
+}
+
+func blockWithConsole(block *pbcodec.Block) bool {
+	for _, trxTrace := range block.TransactionTraces() {
+		for _, actTrace := range trxTrace.ActionTraces {
+			if len(actTrace.Console) > 0 {
+				return true
+			}
+		}
+	}
+
+	return false
 }

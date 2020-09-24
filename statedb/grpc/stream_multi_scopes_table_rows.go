@@ -70,7 +70,7 @@ func (s *Server) StreamMultiScopesTableRows(request *pbstatedb.StreamMultiScopes
 		tablet := statedb.NewContractStateTablet(request.Contract, request.Table, scope)
 		tabletRows, err := s.db.ReadTabletAt(
 			ctx,
-			blockNum,
+			actualBlockNum,
 			tablet,
 			speculativeWrites,
 		)

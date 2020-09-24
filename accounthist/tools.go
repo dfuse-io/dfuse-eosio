@@ -5,25 +5,47 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/eoscanada/eos-go"
+	"go.uber.org/zap"
 )
 
-type shardSummary struct {
-	ShardNum byte
-	SeqData  SequenceData
-}
+type FacetHandlerFunc func(facet Facet, shard byte, ordinalNum uint64) error
 
-func (s *Service) ShardSummary(ctx context.Context, account uint64) ([]*shardSummary, error) {
-	out := []*shardSummary{}
-	for i := 0; i < 5; i++ {
-		seqData, err := s.shardNewestSequenceData(ctx, account, byte(i), s.processSequenceDataKeyValue)
-
-		if err == store.ErrNotFound {
-			continue
-		} else if err != nil {
-			return nil, fmt.Errorf("error while fetching sequence data for account: %w", err)
+func ScanFacets(
+	ctx context.Context,
+	kvStore store.KVStore,
+	facetCollectionPrefix byte,
+	decoder RowKeyDecoderFunc,
+	facetFunc FacetHandlerFunc,
+) error {
+	currentKey := []byte{facetCollectionPrefix}
+	endKey := store.Key(currentKey).PrefixNext()
+	hasMoreFacet := true
+	for hasMoreFacet {
+		it := kvStore.Scan(ctx, currentKey, endKey, 1)
+		hasNext := it.Next()
+		if !hasNext && it.Err() != nil {
+			return fmt.Errorf("scanning accounts last action: %w", it.Err())
 		}
 
-		out = append(out, &shardSummary{ShardNum: byte(i), SeqData: seqData})
+		if !hasNext {
+			hasMoreFacet = false
+			continue
+		}
+		facetKey, shardNum, ordinalNum := decoder(it.Item().Key)
+		zlog.Info("found facet",
+			zap.Stringer("facet_key", facetKey),
+			zap.Int("shard_num", int(shardNum)),
+			zap.Uint64("ordinal_num", ordinalNum),
+		)
+
+		err := facetFunc(facetKey, shardNum, ordinalNum)
+		if err != nil {
+			return fmt.Errorf("handle facet failed for account %s at shard %d with ordinal number: %d: %w", eos.NameToString(facetKey.Account()), int(shardNum), ordinalNum, err)
+		}
+
+		currentKey = store.Key(facetKey.Bytes()).PrefixNext()
 	}
-	return out, nil
+
+	return nil
 }

@@ -34,7 +34,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 				hexABI := actTrace.GetData("abi")
 
 				if !hexABI.Exists() {
-					zlog.Warn("'setabi' action data payload not present",
+					zlogger.Warn("'setabi' action data payload not present",
 						zap.String("account", account),
 					)
 					continue
@@ -42,14 +42,14 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 
 				hexData := hexABI.String()
 				if hexData == "" {
-					zlog.Info("empty ABI in 'setabi' action",
+					zlogger.Info("empty ABI in 'setabi' action",
 						zap.String("account", account))
 					continue
 				}
 
 				abiData, err := hex.DecodeString(hexData)
 				if err != nil {
-					zlog.Info("failed to hex decode abi string",
+					zlogger.Info("failed to hex decode abi string",
 						zap.String("account", account),
 						zap.Error(err),
 					)
@@ -58,7 +58,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 
 				contractStats, err := getTokenContractStats(string(account), abiData, false)
 				if err != nil {
-					zlog.Info("failed to get token contract info",
+					zlogger.Info("failed to get token contract info",
 						zap.String("account", account),
 						zap.String("raw_abi", string(abiData)),
 						zap.Error(err),
@@ -68,14 +68,22 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 
 				if contractStats.isTokenContract {
 					if t.cache.IsTokenContract(eos.AN(account)) {
-						zlog.Info("skipping already known token contract", zap.String("account", account))
+						zlogger.Info("skipping already known token contract", zap.String("account", account))
 						continue
 					}
 
-					zlog.Info("adding new token contract", zap.String("account", account))
+					zlogger.Info("adding new token contract", zap.String("account", account))
 					mutations := &cache.MutationsBatch{}
 					mutations.SetContract(eos.AccountName(account))
-					t.cache.Apply(mutations, blk)
+					errs := t.cache.Apply(mutations, blk)
+					if len(errs) != 0 {
+						zlogger.Warn("failed add new token contract",
+							zap.String("account", account),
+							zap.Errors("errors", errs),
+						)
+						continue
+					}
+
 				}
 			}
 		}
@@ -111,7 +119,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 
 			rowData := dbop.NewData
 			if rowData == nil {
-				zlog.Info("using db row old data")
+				zlogger.Debug("using db row old data")
 				rowData = dbop.OldData
 			}
 			row, err := t.decodeDBOpToRow(rowData, eos.TableName(dbop.TableName), tokenContract, uint32(block.Number))

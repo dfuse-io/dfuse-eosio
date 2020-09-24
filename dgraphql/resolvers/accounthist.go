@@ -18,9 +18,10 @@ import (
 )
 
 type GetAccountHistoryActionsArgs struct {
-	Account string
-	Limit   types.Int64
-	Cursor  *string
+	Account  string
+	Contract *string
+	Limit    types.Int64
+	Cursor   *string
 }
 
 type AccountHistoryActionsConnection struct {
@@ -34,8 +35,16 @@ type SimpleActionTraceEdge struct {
 }
 
 func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccountHistoryActionsArgs) (*AccountHistoryActionsConnection, error) {
+	zlogger := logging.Logger(ctx, zlog)
+
+	zlogger.Info("query account history actions", zap.Reflect("request", args))
+
 	// TODO: is that correct?
 	if err := r.RateLimit(ctx, "accounthist"); err != nil {
+		return nil, err
+	}
+
+	if err := r.CheckAccounthistServiceAvailability(args); err != nil {
 		return nil, err
 	}
 
@@ -61,7 +70,17 @@ func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccoun
 		}
 	}
 
-	res, err := r.getAccountHist(ctx, accountUint, int64(args.Limit), cursor)
+	var res *AccountHistoryActionsConnection
+	if args.Contract != nil {
+		contractUint, err := eos.StringToName(*args.Contract)
+		if err != nil {
+			return nil, err
+		}
+		res, err = r.getAccountHistContract(ctx, accountUint, contractUint, int64(args.Limit), cursor)
+	} else {
+		res, err = r.getAccountHist(ctx, accountUint, int64(args.Limit), cursor)
+
+	}
 	if err != nil {
 		return nil, fmt.Errorf("running query: %w", err)
 	}
@@ -87,12 +106,16 @@ func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccoun
 	return res, nil
 }
 
+type ActionReceiver interface {
+	Recv() (*pbaccounthist.ActionResponse, error)
+}
+
 func (r *Root) getAccountHist(ctx context.Context, account uint64, limit int64, cursor *pbaccounthist.Cursor) (*AccountHistoryActionsConnection, error) {
 	zlogger := logging.Logger(ctx, zlog)
 
 	// TODO: add a log line with what's going on here..
 
-	stream, err := r.accountHistClient.GetActions(ctx, &pbaccounthist.GetActionsRequest{
+	stream, err := r.accounthistClients.Account.GetActions(ctx, &pbaccounthist.GetActionsRequest{
 		Account: account,
 		Limit:   uint32(limit + 1),
 		Cursor:  cursor,
@@ -101,6 +124,53 @@ func (r *Root) getAccountHist(ctx context.Context, account uint64, limit int64, 
 		zlogger.Error("unable to get acount history", zap.Error(err))
 		return nil, dgraphql.Errorf(ctx, "accounthist backend error")
 	}
+
+	return r.handleActionStream(ctx, stream, limit, cursor)
+}
+
+func (r *Root) getAccountHistContract(ctx context.Context, account, contract uint64, limit int64, cursor *pbaccounthist.Cursor) (*AccountHistoryActionsConnection, error) {
+	zlogger := logging.Logger(ctx, zlog)
+
+	// TODO: add a log line with what's going on here..
+
+	stream, err := r.accounthistClients.AccountContract.GetAccountContractActions(ctx, &pbaccounthist.GetTokenActionsRequest{
+		Account:  account,
+		Contract: contract,
+		Limit:    uint32(limit + 1),
+		Cursor:   cursor,
+	})
+	if err != nil {
+		zlogger.Error("unable to get account history <account>", zap.Error(err))
+		return nil, dgraphql.Errorf(ctx, "accounthist backend error")
+	}
+
+	return r.handleActionStream(ctx, stream, limit, cursor)
+}
+
+func (r *Root) CheckAccounthistServiceAvailability(args GetAccountHistoryActionsArgs) error {
+	if r.accounthistClients.AccountContract == nil {
+		zlog.Info("accounthistClients.AccountContract does not exists")
+	} else {
+		zlog.Info("accounthistClients.AccountContract  exists")
+	}
+
+	if r.accounthistClients.Account == nil {
+		zlog.Info("accounthistClients.Account does not exists")
+	} else {
+		zlog.Info("accounthistClients.Account  exists")
+	}
+
+	if args.Account != "" && args.Contract != nil && r.accounthistClients.AccountContract == nil {
+		return fmt.Errorf("account history account,contract search not available")
+	}
+	if args.Account != "" && args.Contract == nil && r.accounthistClients.Account == nil {
+		return fmt.Errorf("account history account search not available")
+	}
+	return nil
+}
+
+func (r *Root) handleActionStream(ctx context.Context, stream ActionReceiver, limit int64, cursor *pbaccounthist.Cursor) (*AccountHistoryActionsConnection, error) {
+	zlogger := logging.Logger(ctx, zlog)
 
 	out := &AccountHistoryActionsConnection{
 		Edges: []*SimpleActionTraceEdge{},

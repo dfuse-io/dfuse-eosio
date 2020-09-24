@@ -37,7 +37,13 @@ func init() {
 			archiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-oneblock-store-url"))
 			mergeArchiveStoreURL := mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))
 
+			maxConsoleLengthInCharacter := viper.GetInt("mindreader-max-console-length-in-characters")
 			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
+				var options []codec.ConsoleReaderOption
+				if maxConsoleLengthInCharacter > 0 {
+					options = append(options, codec.LimitConsoleLength(maxConsoleLengthInCharacter))
+				}
+
 				return codec.NewConsoleReader(reader)
 			}
 

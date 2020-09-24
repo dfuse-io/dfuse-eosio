@@ -20,7 +20,7 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad
-	github.com/dfuse-io/dgraphql v0.0.2-0.20200908131152-9fa5f76eb5db
+	github.com/dfuse-io/dgraphql v0.0.2-0.20200918184142-467a56557271
 	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -32,16 +32,16 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20200909155414-024df74a17d1
+	github.com/dfuse-io/fluxdb v0.0.0-20200921160909-7bcdaed4abb3
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
 	github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
-	github.com/dfuse-io/node-manager v0.0.2-0.20200908172129-ec891b8ba42f
+	github.com/dfuse-io/node-manager v0.0.2-0.20200916021027-2da84b2fc6ba
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
-	github.com/dfuse-io/search v0.0.2-0.20200904194008-18293494d518
+	github.com/dfuse-io/search v0.0.2-0.20200922024737-a32195a6aee7
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a

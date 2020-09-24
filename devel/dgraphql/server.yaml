@@ -1,0 +1,7 @@
+start:
+  args:
+  - dgraphql
+  flags:
+    dgraphql-accounthist-account-contract-addr: localhost:9001
+    dgraphql-accounthist-account-addr:
+    dgraphql-http-addr: localhost:8080

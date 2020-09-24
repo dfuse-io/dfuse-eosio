@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
@@ -150,7 +149,7 @@ func Start(dataDir string, args []string) (err error) {
 
 	printWelcomeMessage(apps)
 
-	signalHandler := derr.SetupSignalHandler(0 * time.Second)
+	signalHandler := derr.SetupSignalHandler(viper.GetDuration("common-system-shutdown-signal-delay"))
 	select {
 	case <-signalHandler:
 		userLog.Printf("Received termination signal, quitting")

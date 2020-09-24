@@ -12,11 +12,15 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/dfuse-eosio/accounthist"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
+	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/fluxdb"
+	"github.com/dfuse-io/jsonpb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
@@ -28,6 +32,13 @@ import (
 var errStopWalk = errors.New("stop walk")
 
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
+
+var checkAccounthistShardsCmd = &cobra.Command{
+	Use:   "accounthist-shards {accounthist-mode} {dsn}",
+	Short: "Checks to see if all Accounthist shard are contiguous",
+	Args:  cobra.ExactArgs(2),
+	RunE:  checkAccounthistShardE,
+}
 var checkMergedBlocksCmd = &cobra.Command{
 	// TODO: Not sure, it's now a required thing, but we could probably use the same logic as `start`
 	//       and avoid altogether passing the args. If this would also load the config and everything else,
@@ -43,14 +54,12 @@ var checkTrxdbBlocksCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE:  checkTrxdbBlocksE,
 }
-
 var checkStateDBReprocSharderCmd = &cobra.Command{
 	Use:   "statedb-reproc-sharder {store} {shard-count}",
 	Short: "Checks to see if all StateDB reprocessing shards are present in the store",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkStateDBReprocSharderE,
 }
-
 var checkStateDBReprocInjectorCmd = &cobra.Command{
 	Use:   "statedb-reproc-injector {dsn} {shard-count}",
 	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
@@ -64,10 +73,12 @@ func init() {
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
 	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
 	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
+	checkCmd.AddCommand(checkAccounthistShardsCmd)
 
-	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check")
+	checkCmd.PersistentFlags().StringP("range", "r", "", "Block range to use for the check, format is of the form '<start>:<stop>' (i.e. '-r 1000:2000')")
 
 	checkMergedBlocksCmd.Flags().BoolP("print-stats", "s", false, "Natively decode each block in the segment and print statistics about it, ensuring it contains the required blocks")
+	checkMergedBlocksCmd.Flags().BoolP("print-full", "f", false, "Natively decode each block and print the full JSON representation of the block, should be used with a small range only if you don't want to be overwhelmed")
 }
 
 func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
@@ -251,6 +262,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 	var baseNum32 uint32
 	holeFound := false
 	printIndividualSegmentStats := viper.GetBool("print-stats")
+	printFullBlock := viper.GetBool("print-full")
 
 	blockRange, err := getBlockRangeFromFlag()
 	if err != nil {
@@ -280,14 +292,15 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum < blockRange.Start {
+		if baseNum+uint64(fileBlockSize) < blockRange.Start {
+			zlog.Debug("base num lower then block range start, quitting")
 			return nil
 		}
 
 		baseNum32 = uint32(baseNum)
 
-		if printIndividualSegmentStats {
-			newSeenFilters := validateBlockSegment(blocksStore, filename, fileBlockSize, blockRange, printIndividualSegmentStats)
+		if printIndividualSegmentStats || printFullBlock {
+			newSeenFilters := validateBlockSegment(blocksStore, filename, fileBlockSize, blockRange, printIndividualSegmentStats, printFullBlock)
 			for key, filters := range newSeenFilters {
 				seenFilters[key] = filters
 			}
@@ -381,7 +394,14 @@ func roundToBundleEndBlock(block, fileBlockSize uint32) uint32 {
 	return block - (block % fileBlockSize) + (fileBlockSize - 1)
 }
 
-func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint32, blockRange BlockRange, printIndividualSegmentStats bool) (seenFilters map[string]FilteringFilters) {
+func validateBlockSegment(
+	store dstore.Store,
+	segment string,
+	fileBlockSize uint32,
+	blockRange BlockRange,
+	printIndividualSegmentStats bool,
+	printFullBlock bool,
+) (seenFilters map[string]FilteringFilters) {
 	reader, err := store.OpenObject(context.Background(), segment)
 	if err != nil {
 		fmt.Printf("❌ Unable to read blocks segment %s: %s\n", segment, err)
@@ -400,8 +420,14 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 	for {
 		block, err := readerFactory.Read()
 		if block != nil {
-			if !blockRange.Unbounded() && block.Number >= blockRange.Stop {
-				return
+			if !blockRange.Unbounded() {
+				if block.Number >= blockRange.Stop {
+					return
+				}
+
+				if block.Number < blockRange.Start {
+					continue
+				}
 			}
 
 			seenBlockCount++
@@ -444,6 +470,12 @@ func validateBlockSegment(store dstore.Store, segment string, fileBlockSize uint
 					eosBlock.FilteringSystemActionsIncludeFilterExpr,
 				}
 				seenFilters[filters.Key()] = filters
+			}
+
+			if printFullBlock {
+				eosBlock := block.ToNative().(*pbcodec.Block)
+
+				fmt.Printf(jsonpb.MarshalIndentToString(eosBlock, "  "))
 			}
 
 			continue
@@ -550,5 +582,63 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 		fmt.Printf("🆗 No hole found\n")
 	}
 
+	return nil
+}
+
+func checkAccounthistShardE(cmd *cobra.Command, args []string) error {
+	storeURL := args[1]
+	kvdb, err := store.New(storeURL)
+	if err != nil {
+		return fmt.Errorf("failed to setup db: %w", err)
+	}
+	kvdb = injector.NewRWCache(kvdb)
+	mode := accounthist.AccounthistMode(args[0])
+	service := setupService(kvdb, 0, mode)
+
+	var prefix byte
+	switch mode {
+	case accounthist.AccounthistModeAccount:
+		prefix = keyer.PrefixAccountCheckpoint
+	case accounthist.AccounthistModeAccountContract:
+		prefix = keyer.PrefixAccountContractCheckpoint
+	default:
+		return fmt.Errorf("invalid account hist more: %s", args[0])
+	}
+
+	out, err := service.ShardCheckpointAnalysis(cmd.Context(), prefix)
+	if err != nil {
+		return err
+	}
+
+	expectedShard := 0
+	hasSeenFirstShard := false
+	priorStartBlock := uint64(0)
+	fmt.Printf("Account History Shard Summary:\n")
+	if len(out) == 0 {
+		fmt.Printf("No shards found\n")
+	}
+	for _, shard := range out {
+		shardNum := int(shard.ShardNum)
+		if expectedShard != shardNum {
+			for i := 0; i < (shardNum - expectedShard); i++ {
+				fmt.Printf("❌ expected shard-%d\n", (expectedShard + i))
+			}
+			expectedShard = shardNum
+		}
+		shardValid := true
+		if hasSeenFirstShard {
+			shardValid = (shard.Checkpoint.LastWrittenBlockNum == priorStartBlock-1)
+		}
+
+		if shardValid {
+			fmt.Printf("✅ shard-%d %s\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		} else {
+			fmt.Printf("❌ shard-%d %s (uncontiguous shard)\n", shardNum, BlockRange{shard.Checkpoint.InitialStartBlock, shard.Checkpoint.LastWrittenBlockNum})
+		}
+		expectedShard++
+		priorStartBlock = shard.Checkpoint.InitialStartBlock
+		hasSeenFirstShard = true
+
+	}
 	return nil
 }

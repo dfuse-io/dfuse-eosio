@@ -50,6 +50,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// Accounthistory Clients
+type AccounthistClient struct {
+	Account         pbaccounthist.AccountHistoryClient
+	AccountContract pbaccounthist.AccountContractHistoryClient
+}
+
+//accountHistAccClient pbaccounthist.AccountHistoryClient,
+//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient,
+
 // Root is the root resolver.
 type Root struct {
 	searchClient             pbsearch.RouterClient
@@ -60,13 +69,22 @@ type Root struct {
 	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
 	abiCodecClient           pbabicodec.DecoderClient
 	tokenmetaClient          pbtokenmeta.TokenMetaClient
-	accountHistClient        pbaccounthist.AccountHistoryClient
-
+	accounthistClients       *AccounthistClient
+	//accountHistAccClient    pbaccounthist.AccountHistoryClient
+	//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient
 	requestRateLimiter            rateLimiter.RateLimiter
 	requestRateLimiterLastLogTime time.Time
 }
 
-func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockMetaClient *pbblockmeta.Client, abiCodecClient pbabicodec.DecoderClient, requestRateLimiter rateLimiter.RateLimiter, tokenmetaClient pbtokenmeta.TokenMetaClient, accountHistClient pbaccounthist.AccountHistoryClient) (interface{}, error) {
+func NewRoot(
+	searchClient pbsearch.RouterClient,
+	dbReader trxdb.DBReader,
+	blockMetaClient *pbblockmeta.Client,
+	abiCodecClient pbabicodec.DecoderClient,
+	requestRateLimiter rateLimiter.RateLimiter,
+	tokenmetaClient pbtokenmeta.TokenMetaClient,
+	accounthistClients *AccounthistClient,
+) (interface{}, error) {
 	return &Root{
 		searchClient:       searchClient,
 		trxsReader:         dbReader,
@@ -76,7 +94,7 @@ func NewRoot(searchClient pbsearch.RouterClient, dbReader trxdb.DBReader, blockM
 		blockmetaClient:    blockMetaClient,
 		abiCodecClient:     abiCodecClient,
 		requestRateLimiter: requestRateLimiter,
-		accountHistClient:  accountHistClient,
+		accounthistClients: accounthistClients,
 	}, nil
 }
 

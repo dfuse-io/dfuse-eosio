@@ -77,7 +77,7 @@ func (srv *EOSServer) listTablesRowsForScopesHandler(w http.ResponseWriter, r *h
 		tablet := statedb.NewContractStateTablet(request.Account, request.Table, scope)
 		tabletRows, err := srv.db.ReadTabletAt(
 			ctx,
-			request.BlockNum,
+			actualBlockNum,
 			tablet,
 			speculativeWrites,
 		)

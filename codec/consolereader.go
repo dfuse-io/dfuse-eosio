@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,27 @@ import (
 )
 
 var supportedVersions = []string{"12", "13"}
+
+type ConsoleReaderOption interface {
+	apply(reader *ConsoleReader)
+}
+
+type consoleReaderOptionFunc func(reader *ConsoleReader)
+
+func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
+	f(reader)
+}
+
+// LimitConsoleLength ensure that `Console` field on `pbcodec.ActionTrace` are
+// never bigger than `maxCharacterCount` characters.
+//
+// This is sadly incomplete as failing deferred transaction can still log out of band
+// via the standard nodeos logging mecanism.
+func LimitConsoleLength(maxCharacterCount int) ConsoleReaderOption {
+	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
+		reader.ctx.maxConsoleLengthInCharacter = maxCharacterCount
+	})
+}
 
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
@@ -48,19 +70,34 @@ type ConsoleReader struct {
 //       since the upstream caller is already doing this job it self. This way, we
 //       would have a single split job instead of two. Only the upstream would split
 //       the line and the console reader would simply process each line, one at a time.
-func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
+func NewConsoleReader(reader io.Reader, opts ...ConsoleReaderOption) (*ConsoleReader, error) {
 	l := &ConsoleReader{
 		src:   reader,
 		close: func() {},
 		ctx:   newParseCtx(),
 		done:  make(chan interface{}),
 	}
+
+	for _, opt := range opts {
+		opt.apply(l)
+	}
+
 	l.setupScanner()
 	return l, nil
 }
 
 func (l *ConsoleReader) setupScanner() {
-	buf := make([]byte, 50*1024*1024)
+	maxTokenSize := uint64(50 * 1024 * 1024)
+	if maxBufferSize := os.Getenv("MINDREADER_MAX_TOKEN_SIZE"); maxBufferSize != "" {
+		bs, err := strconv.ParseUint(maxBufferSize, 10, 64)
+		if err != nil {
+			zlog.Error("MINDREADER_MAX_TOKEN_SIZE is set but invalid parse uint", zap.Error(err))
+		} else {
+			zlog.Info("setting max_token_size from environment variable MINDREADER_MAX_TOKEN_SIZE", zap.Uint64("max_token_size", bs))
+			maxTokenSize = bs
+		}
+	}
+	buf := make([]byte, maxTokenSize)
 	scanner := bufio.NewScanner(l.src)
 	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
@@ -100,6 +137,8 @@ type parseCtx struct {
 
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
+
+	maxConsoleLengthInCharacter int
 }
 
 func newParseCtx() *parseCtx {
@@ -552,7 +591,12 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace))
+	var options []conversionOption
+	if ctx.maxConsoleLengthInCharacter > 0 {
+		options = append(options, limitConsoleLengthConversionOption(ctx.maxConsoleLengthInCharacter))
+	}
+
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, options...))
 }
 
 // Line formats:

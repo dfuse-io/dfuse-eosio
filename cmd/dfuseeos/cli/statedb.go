@@ -22,7 +22,6 @@ func init() {
 			cmd.Flags().Bool("statedb-enable-inject-mode", true, "Enables StateDB inject mode, process new blocks writing state information into the database, if set to 'false', new state information will not be recorded!")
 			cmd.Flags().Bool("statedb-enable-reproc-sharder-mode", false, "[BATCH] Enables StateDB reprocessing sharder mode, exclusive option, cannot be set if either server, injector or reproc-injector mode is set")
 			cmd.Flags().Bool("statedb-enable-reproc-injector-mode", false, "[BATCH] Enables StateDB reprocessing injector mode, exclusive option, cannot be set if either server, injector or reproc-shard mode is set")
-			cmd.Flags().Bool("statedb-enable-pipeline", true, "Enables the blocks pipeline to keep up with live data (only set to false when testing locally)")
 			cmd.Flags().String("statedb-store-dsn", StateDBDSN, "KV database connection string for State database")
 			cmd.Flags().String("statedb-http-listen-addr", StateDBHTTPServingAddr, "Address to listen for incoming HTTP requests")
 			cmd.Flags().String("statedb-grpc-listen-addr", StateDBGRPCServingAddr, "Address to listen for incoming gRPC requests")
@@ -32,6 +31,8 @@ func init() {
 			cmd.Flags().Uint64("statedb-reproc-shard-start-block-num", 0, "[BATCH] Start processing blocks at this height, must be on a 100-blocks boundary")
 			cmd.Flags().Uint64("statedb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing blocks at this height, must be on a 100-blocks boundary, inclusive value")
 			cmd.Flags().Uint64("statedb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
+			cmd.Flags().Bool("statedb-disable-pipeline", false, "[DEV] Disables the blocks pipeline to keep up with live data (only set to true when testing locally)")
+			cmd.Flags().Bool("statedb-write-on-each-block", false, "[DEV] Forcefully flush block at each irreversible block step received, hinders write performance (only set to 'true' when testing locally)")
 			return nil
 		},
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
@@ -48,7 +49,6 @@ func init() {
 					EnableInjectMode:              viper.GetBool("statedb-enable-inject-mode"),
 					EnableReprocSharderMode:       viper.GetBool("statedb-enable-reproc-sharder-mode"),
 					EnableReprocInjectorMode:      viper.GetBool("statedb-enable-reproc-injector-mode"),
-					EnablePipeline:                viper.GetBool("statedb-enable-pipeline"),
 					StoreDSN:                      mustReplaceDataDir(dfuseDataDir, viper.GetString("statedb-store-dsn")),
 					BlockStreamAddr:               viper.GetString("common-blockstream-addr"),
 					BlockStoreURL:                 mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
@@ -58,6 +58,8 @@ func init() {
 					ReprocSharderStartBlockNum:    viper.GetUint64("statedb-reproc-shard-start-block-num"),
 					ReprocSharderStopBlockNum:     viper.GetUint64("statedb-reproc-shard-stop-block-num"),
 					ReprocInjectorShardIndex:      viper.GetUint64("statedb-reproc-injector-shard-index"),
+					DisablePipeline:               viper.GetBool("statedb-disable-pipeline"),
+					WriteOnEachBlock:              viper.GetBool("statedb-write-on-each-block"),
 				},
 
 				HTTPListenAddr: viper.GetString("statedb-http-listen-addr"),
