@@ -34,7 +34,7 @@ require (
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/fluxdb v0.0.0-20200921160909-7bcdaed4abb3
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20200902195841-641c10eec77b
+	github.com/dfuse-io/kvdb v0.0.2-0.20200925214821-8f04f464ed6c
 	github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
 	github.com/dfuse-io/node-manager v0.0.2-0.20200924205050-6a61062ea945
@@ -58,6 +58,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
+	github.com/klauspost/compress v1.10.2
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/lytics/lifecycle v0.0.0-20130117214539-7b4c4028d422 // indirect
@@ -98,3 +99,5 @@ replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
+
+replace github.com/dfuse-io/kvdb => /Users/maoueh/work/dfuse/kvdb
