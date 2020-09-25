@@ -44,7 +44,7 @@ func init() {
 					options = append(options, codec.LimitConsoleLength(maxConsoleLengthInCharacter))
 				}
 
-				return codec.NewConsoleReader(reader)
+				return codec.NewConsoleReader(reader, options...)
 			}
 
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {

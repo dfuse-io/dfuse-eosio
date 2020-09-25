@@ -91,7 +91,7 @@ func (l *ConsoleReader) setupScanner() {
 	if maxBufferSize := os.Getenv("MINDREADER_MAX_TOKEN_SIZE"); maxBufferSize != "" {
 		bs, err := strconv.ParseUint(maxBufferSize, 10, 64)
 		if err != nil {
-			zlog.Error("MINDREADER_MAX_TOKEN_SIZE is set but invalid parse uint", zap.Error(err))
+			zlog.Error("environment variable 'MINDREADER_MAX_TOKEN_SIZE' is set but invalid parse uint", zap.Error(err))
 		} else {
 			zlog.Info("setting max_token_size from environment variable MINDREADER_MAX_TOKEN_SIZE", zap.Uint64("max_token_size", bs))
 			maxTokenSize = bs

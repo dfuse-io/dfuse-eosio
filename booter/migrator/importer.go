@@ -78,7 +78,7 @@ func (i *importer) init() error {
 func (i *importer) inject() error {
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
 		if isNativeChainAccount(account) {
-			i.logger.Info("Skipping the creation of native account",
+			i.logger.Info("skipping the creation of native account",
 				zap.String("account", account.name),
 			)
 			return nil

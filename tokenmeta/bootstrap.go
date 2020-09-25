@@ -116,7 +116,7 @@ func parseContractFromABIs(cnt []byte) (out []eos.AccountName) {
 		}
 		return true
 	})
-	zlog.Info("ABIS content stats",
+	zlog.Info("abis content stats",
 		zap.Int("accounts_count", accounts),
 		zap.Int("accounts_with_accounts_table", withTableAccounts),
 		zap.Int("accounts_with_stat_table", withTableStat),
@@ -129,12 +129,12 @@ func parseCursorFromABIs(cnt []byte) (bstream.BlockRef, error) {
 	cursor := gjson.GetBytes(cnt, "cursor").String()
 	if cursor == "" {
 		return nil, fmt.Errorf("cursor expected in ABIs cached file")
-	} else {
-		blockNum, headBlockId, _, err := parseCursor(cursor)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse cursor %q in ABIs cached file: %w", cursor, err)
-		} else {
-			return bstream.NewBlockRef(headBlockId, blockNum), nil
-		}
 	}
+
+	blockNum, headBlockID, _, err := parseCursor(cursor)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse cursor %q in ABIs cached file: %w", cursor, err)
+	}
+
+	return bstream.NewBlockRef(headBlockID, blockNum), nil
 }
