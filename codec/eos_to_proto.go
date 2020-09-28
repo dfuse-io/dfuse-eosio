@@ -43,10 +43,12 @@ func (f actionConversionOptionFunc) apply(actionTrace *pbcodec.ActionTrace) {
 	f(actionTrace)
 }
 
-func limitConsoleLengthConversionOption(maxCharacterCount int) conversionOption {
+func limitConsoleLengthConversionOption(maxByteCount int) conversionOption {
 	return actionConversionOptionFunc(func(actionTrace *pbcodec.ActionTrace) {
-		if len(actionTrace.Console) > maxCharacterCount {
-			actionTrace.Console = actionTrace.Console[0:maxCharacterCount]
+		if len(actionTrace.Console) > maxByteCount {
+			// FIXME: We should fix only the last utf-8 character, all others are known to be valid
+			//        so there is no point to fix the full string.
+			actionTrace.Console = strings.ToValidUTF8(actionTrace.Console[0:maxByteCount], "")
 		}
 	})
 }

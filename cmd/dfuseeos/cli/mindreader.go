@@ -74,7 +74,7 @@ func init() {
 			cmd.Flags().Bool("mindreader-start-failure-handler", true, "Enables the startup function handler, that gets called if mindreader fails on startup")
 			cmd.Flags().Bool("mindreader-fail-on-non-contiguous-block", false, "Enables the Continuity Checker that stops (or refuses to start) the superviser if a block was missed. It has a significant performance cost on reprocessing large segments of blocks")
 			cmd.Flags().Duration("mindreader-wait-upload-complete-on-shutdown", 30*time.Second, "When the mindreader is shutting down, it will wait up to that amount of time for the archiver to finish uploading the blocks before leaving anyway")
-			cmd.Flags().Int("mindreader-max-console-length-in-characters", 0, "Limits maximal value that we allow from console log to make it's way to the our block, 0 means unlimited.")
+			cmd.Flags().Int("mindreader-max-console-length-in-bytes", 0, "Limits maximal amount of bytes that we allow from contract's console log to make it's way to the our block, 0 means unlimited.")
 
 			return nil
 		},
@@ -101,16 +101,16 @@ func init() {
 				}
 			}
 
-			maxConsoleLengthInCharacter := viper.GetInt("mindreader-max-console-length-in-characters")
+			maxConsoleLengthInBytes := viper.GetInt("mindreader-max-console-length-in-bytes")
 			consoleReaderFactory := func(reader io.Reader) (mindreader.ConsolerReader, error) {
 				var options []codec.ConsoleReaderOption
-				if maxConsoleLengthInCharacter > 0 {
-					options = append(options, codec.LimitConsoleLength(maxConsoleLengthInCharacter))
+				if maxConsoleLengthInBytes > 0 {
+					options = append(options, codec.LimitConsoleLength(maxConsoleLengthInBytes))
 				}
 
 				return codec.NewConsoleReader(reader, options...)
 			}
-			//
+
 			consoleReaderBlockTransformer := func(obj interface{}) (*bstream.Block, error) {
 				blk, ok := obj.(*pbcodec.Block)
 				if !ok {

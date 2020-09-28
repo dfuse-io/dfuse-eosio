@@ -18,8 +18,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"testing"
+	"unicode/utf8"
 
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -84,6 +87,29 @@ func TestActionToDEOS(t *testing.T) {
 			deosAction := ActionToDEOS(a)
 			require.Equal(t, c.expectedJSONData, deosAction.JsonData)
 			require.Equal(t, c.expectedRawData, hex.EncodeToString(deosAction.RawData))
+		})
+	}
+}
+func TestLimitConsoleLengthConversionOption(t *testing.T) {
+	tests := []struct {
+		name         string
+		in           string
+		maxByteCount int
+		expected     string
+	}{
+		{"on multi-byte character", "我们会在", 5, "我"},
+		{"flush on utf8 boundary", "我们会在", 6, "我们"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actTrace := &pbcodec.ActionTrace{Console: test.in}
+
+			option := limitConsoleLengthConversionOption(test.maxByteCount)
+			option.(actionConversionOption).apply(actTrace)
+
+			assert.Equal(t, test.expected, actTrace.Console)
+			assert.True(t, utf8.ValidString(actTrace.Console), "The truncated string is not a fully valid utf-8 sequence")
 		})
 	}
 }

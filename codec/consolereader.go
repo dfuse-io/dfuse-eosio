@@ -43,13 +43,15 @@ func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
 }
 
 // LimitConsoleLength ensure that `Console` field on `pbcodec.ActionTrace` are
-// never bigger than `maxCharacterCount` characters.
+// never bigger than `maxByteCount` bytes.
 //
 // This is sadly incomplete as failing deferred transaction can still log out of band
 // via the standard nodeos logging mecanism.
-func LimitConsoleLength(maxCharacterCount int) ConsoleReaderOption {
+func LimitConsoleLength(maxByteCount int) ConsoleReaderOption {
 	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
-		reader.ctx.maxConsoleLengthInCharacter = maxCharacterCount
+		if maxByteCount > 0 {
+			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, limitConsoleLengthConversionOption(maxByteCount))
+		}
 	})
 }
 
@@ -138,7 +140,7 @@ type parseCtx struct {
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
 
-	maxConsoleLengthInCharacter int
+	conversionOptions []conversionOption
 }
 
 func newParseCtx() *parseCtx {
@@ -591,12 +593,7 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
 	}
 
-	var options []conversionOption
-	if ctx.maxConsoleLengthInCharacter > 0 {
-		options = append(options, limitConsoleLengthConversionOption(ctx.maxConsoleLengthInCharacter))
-	}
-
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, options...))
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, ctx.conversionOptions...))
 }
 
 // Line formats:
