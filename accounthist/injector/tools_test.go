@@ -34,7 +34,7 @@ func Test_shardSummary(t *testing.T) {
 		),
 	)
 
-	summary, err := s.KeySummary(context.Background(), accounthist.AccountFacet(eos.MustStringToName("a")))
+	summary, err := s.FacetShardsSummary(context.Background(), accounthist.AccountFacet(eos.MustStringToName("a")))
 	require.NoError(t, err)
 	assert.Equal(t, []*FacetShardSummary{
 		{ShardNum: 0, SeqData: accounthist.SequenceData{CurrentOrdinal: 5, LastGlobalSeq: 7}},

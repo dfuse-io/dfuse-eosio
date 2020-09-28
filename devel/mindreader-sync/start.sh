@@ -25,6 +25,7 @@ main() {
     esac
   done
   shift $((OPTIND-1))
+  [[ $1 = "--" ]] && shift
 
   if [[ $network == "" || ! -d mindreader/$network ]]; then
     usage_error "Unknown network '$network', valid networks: `valid_networks`"

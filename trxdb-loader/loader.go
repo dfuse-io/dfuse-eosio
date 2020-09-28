@@ -241,7 +241,7 @@ func (l *TrxDBLoader) Launch() {
 	l.source.OnTerminating(func(err error) {
 		l.Shutdown(err)
 	})
-	l.source.OnTerminated(func(err error) {
+	l.source.OnTerminated(func(_ error) {
 		l.setUnhealthy()
 	})
 	l.OnTerminating(func(err error) {

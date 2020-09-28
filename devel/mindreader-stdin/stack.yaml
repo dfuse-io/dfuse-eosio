@@ -1,0 +1,21 @@
+start:
+  args:
+  - abicodec
+  - apiproxy
+  - blockmeta
+  - booter
+  - dashboard
+  - dgraphql
+  - eosq
+  - eosws
+  - statedb
+  - merger
+  - relayer
+  - search-archive
+  - search-forkresolver
+  - search-indexer
+  - search-live
+  - search-router
+  - trxdb-loader
+  flags:
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
