@@ -97,8 +97,21 @@ func TestLimitConsoleLengthConversionOption(t *testing.T) {
 		maxByteCount int
 		expected     string
 	}{
-		{"on multi-byte character", "我们会在", 5, "我"},
-		{"flush on utf8 boundary", "我们会在", 6, "我们"},
+		{"one extra requires truncation, unicode (1 byte)", "abc", 2, "ab"},
+		{"exact flush no truncation, unicode (1 byte)", "abc", 3, "abc"},
+
+		{"one extra requires truncation, unicode (multi-byte)", "我我我", 5, "我"},
+		{"exact flush no truncation, unicode (multi-byte)", "我我我", 6, "我我"},
+
+		{"truncate before valid multi-byte utf8, nothing before", "🚀", 4, "🚀"},
+		{"truncate at 3 before valid multi-byte utf8, nothing before", "🚀", 3, ""},
+		{"truncate at 2 before valid multi-byte utf8, nothing before", "🚀", 2, ""},
+		{"truncate at 1 before valid multi-byte utf8, nothing before", "🚀", 1, ""},
+
+		{"truncate before valid multi-byte utf8, something before", "我🚀", 7, "我🚀"},
+		{"truncate at 3 before valid multi-byte utf8, something before", "我🚀", 6, "我"},
+		{"truncate at 2 before valid multi-byte utf8, something before", "我🚀", 5, "我"},
+		{"truncate at 1 before valid multi-byte utf8, something before", "我🚀", 4, "我"},
 	}
 
 	for _, test := range tests {

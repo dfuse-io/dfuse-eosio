@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
@@ -44,11 +45,31 @@ func (f actionConversionOptionFunc) apply(actionTrace *pbcodec.ActionTrace) {
 }
 
 func limitConsoleLengthConversionOption(maxByteCount int) conversionOption {
-	return actionConversionOptionFunc(func(actionTrace *pbcodec.ActionTrace) {
-		if len(actionTrace.Console) > maxByteCount {
-			// FIXME: We should fix only the last utf-8 character, all others are known to be valid
-			//        so there is no point to fix the full string.
-			actionTrace.Console = strings.ToValidUTF8(actionTrace.Console[0:maxByteCount], "")
+	return actionConversionOptionFunc(func(in *pbcodec.ActionTrace) {
+		if maxByteCount == 0 {
+			return
+		}
+
+		if len(in.Console) > maxByteCount {
+			in.Console = in.Console[:maxByteCount]
+
+			// Prior truncation, the string had only valid UTF-8 charaters, so at worst, we will need
+			// 3 bytes (`utf8.UTFMax - 1`) to reach a valid UTF-8 sequence.
+			for i := 0; i < utf8.UTFMax-1; i++ {
+				lastRune, size := utf8.DecodeLastRuneInString(in.Console)
+				if lastRune != utf8.RuneError {
+					// Last element is a valid utf8 character, nothing more to do here
+					return
+				}
+
+				// We have an invalid UTF-8 sequence, size 0 means empty string, size 1 means invalid character
+				if size == 0 {
+					// The actual string was empty, nothing more to do here
+					return
+				}
+
+				in.Console = in.Console[:len(in.Console)-1]
+			}
 		}
 	})
 }
