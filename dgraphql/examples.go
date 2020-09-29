@@ -111,10 +111,9 @@ func GraphqlExamples() []*static.GraphqlExample {
 			Document: graphqlDocument(box, "get_account_history_by_account.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
 				"generic": r(`{"account": "eosio","limit": 100}`),
-				"dev1":    r(`{"account": "battlefield1","limit": 100}`),
-				"mainnet": r(`{"account": "eosio","limit": 100}`),
-				"jungle":  r("mainnet"),
+				"mainnet": r(`{"account": "eoscanadacom","limit": 100}`),
 				"kylin":   r("mainnet"),
+				"dev1":    r(`{"account": "battlefield1","limit": 100}`),
 			},
 		},
 		{
@@ -123,11 +122,10 @@ func GraphqlExamples() []*static.GraphqlExample {
 			Label:    "Get Account History By Account & Contract (Alpha)",
 			Document: graphqlDocument(box, "get_account_history_by_account_contract.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
-				"generic": r(`{"account": "eosio","contract": "eosio.token","limit": 100}`),
-				"dev1":    r(`{"account": "battlefield1","contract": "eosio.token","limit": 100}`),
-				"mainnet": r(`{"account": "eosio","contract": "eosio.token","limit": 100}`),
-				"jungle":  r("mainnet"),
+				"generic": r(`{"account": "eosio", "contract": "eosio.token", "limit": 100}`),
+				"mainnet": r(`{"account": "eoscanadacom", "contract": "eosio.token", "limit": 100}`),
 				"kylin":   r("mainnet"),
+				"dev1":    r(`{"account": "battlefield1", "contract": "eosio.token", "limit": 100}`),
 			},
 		},
 	}
