@@ -284,7 +284,7 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 				return nil, err
 			}
 
-			for idx, resp := range responses {
+			for _, resp := range responses {
 				if len(resp) != 0 {
 					list = append(list, resp)
 					//} else {return nil, fmt.Errorf("transaction not found: %q", fetchTransactions[idx]) // soft failing only
