@@ -509,8 +509,13 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 	// FIXME: Seems `./dfuse-data/...` something doesn't work but `dfuse-data/...` works
 	dsn := args[0]
 
-	startBlock := uint64(viper.GetUint64("start-block"))
-	endBlock := uint64(viper.GetUint64("end-block"))
+	blockRange, err := getBlockRangeFromFlag()
+	if err != nil {
+		return err
+	}
+
+	startBlock := blockRange.Start
+	endBlock := blockRange.Stop
 
 	fmt.Printf("Checking block holes in trxdb at %s, from %d to %d\n", dsn, startBlock, endBlock)
 

@@ -76,6 +76,9 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 			return nil
 		},
 		Transport: &ochttp.Transport{
+			Base: &http.Transport{
+				DisableKeepAlives: true,
+			},
 			Propagation: &stackdriverPropagation.HTTPFormat{},
 		},
 	}
