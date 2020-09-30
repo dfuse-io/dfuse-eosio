@@ -285,10 +285,11 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 			}
 
 			for idx, resp := range responses {
-				if len(resp) == 0 {
-					return nil, fmt.Errorf("transaction not found: %q", fetchTransactions[idx])
+				if len(resp) != 0 {
+					list = append(list, resp)
+					//} else {return nil, fmt.Errorf("transaction not found: %q", fetchTransactions[idx]) // soft failing only
 				}
-				list = append(list, resp)
+
 			}
 
 			nextBlockNum = eos.BlockNum(blk.Id) - 1
