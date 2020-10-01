@@ -53,8 +53,8 @@ func (s *Server) GetTableRow(ctx context.Context, request *pbstatedb.GetTableRow
 	}
 
 	return &pbstatedb.GetTableRowResponse{
-		UpToBlock:             &pbbstream.BlockRef{Num: upToBlock.Num(), Id: upToBlock.String()},
-		LastIrreversibleBlock: &pbbstream.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.String()},
+		UpToBlock:             &pbbstream.BlockRef{Num: upToBlock.Num(), Id: upToBlock.ID()},
+		LastIrreversibleBlock: &pbbstream.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.ID()},
 		Row:                   response,
 	}, nil
 }

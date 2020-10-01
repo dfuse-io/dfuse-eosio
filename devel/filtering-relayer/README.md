@@ -30,7 +30,6 @@ the blocks from the "global" namespace and a seconds that reads & writes the tra
 
 5 - We have enabled transaction truncation as well
 
-
 ## Running It
 
 To test trxdb switch db implementation, follow those steps:

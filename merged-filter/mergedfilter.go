@@ -22,11 +22,13 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
+	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 type MergedFilter struct {
@@ -78,7 +80,7 @@ func (f *MergedFilter) Launch() {
 	})
 
 	if f.batchMode {
-		f.Shutdown(f.process(ctx, f.startBlock))
+		f.Shutdown(f.run(ctx, f.startBlock))
 		return
 	}
 
@@ -88,7 +90,7 @@ func (f *MergedFilter) Launch() {
 		return
 	}
 
-	f.Shutdown(f.process(ctx, startBlock))
+	f.Shutdown(f.run(ctx, startBlock))
 }
 
 func (f *MergedFilter) findLiveStartBlock(ctx context.Context) (uint64, error) {
@@ -128,103 +130,42 @@ func (f *MergedFilter) findLiveStartBlock(ctx context.Context) (uint64, error) {
 	return headBase, nil
 }
 
-func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
+func (f *MergedFilter) run(ctx context.Context, startBase uint64) error {
 	currentBase := startBase
-	var lastPrinted string
+
+	logRateLimiter := rate.NewLimiter(2, 2)
 	for {
 		currentBaseFile := fmt.Sprintf("%010d", currentBase)
-
-		if lastPrinted != currentBaseFile {
-			zlog.Info("processing base file", zap.String("base_file", currentBaseFile))
-		}
-		lastPrinted = currentBaseFile
 
 		destExists, err := f.destStore.FileExists(ctx, currentBaseFile)
 		if err != nil {
 			return err
 		}
-
 		if !destExists {
 			srcExists, err := f.srcStore.FileExists(ctx, currentBaseFile)
 			if err != nil {
 				return err
 			}
 			if !srcExists {
-				zlog.Info("waiting for base file", zap.String("base_file", currentBaseFile))
+				if logRateLimiter.Allow() {
+					zlog.Info("waiting for base file", zap.String("base_file", currentBaseFile))
+				}
 				time.Sleep(5 * time.Second)
 				continue
 			}
-
-			var count int
-			err = func() error {
-				ctx, cancel := context.WithCancel(ctx)
-				defer cancel()
-
-				readCloser, err := f.srcStore.OpenObject(ctx, currentBaseFile)
-				if err != nil {
-					return err
-				}
-				defer readCloser.Close()
-
-				blkReader, err := codec.NewBlockReader(readCloser)
-				if err != nil {
-					return err
-				}
-
-				readPipe, writePipe, err := os.Pipe()
-				if err != nil {
-					return err
-				}
-				defer writePipe.Close()
-
-				writeObjectDone := make(chan error, 1)
-				go func() {
-					writeObjectDone <- f.destStore.WriteObject(ctx, currentBaseFile, readPipe)
-				}()
-
-				blkWriter, err := codec.NewBlockWriter(writePipe)
-				if err != nil {
-					return err
-				}
-
-				for {
-					blk, err := blkReader.Read()
-					if err == io.EOF {
-						break
-					}
-					if err != nil {
-						return err
-					}
-					count++
-
-					if err = f.blockFilter.TransformInPlace(blk); err != nil {
-						return err
-					}
-
-					if err = blkWriter.Write(blk); err != nil {
-						return err
-					}
-				}
-
-				err = writePipe.Close()
-				if err != nil {
-					return err
-				}
-
-				err = <-writeObjectDone
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}()
+			if logRateLimiter.Allow() {
+				zlog.Info("processing base file", zap.String("base_file", currentBaseFile))
+			}
+			err = derr.Retry(5, func(ctx context.Context) error {
+				return f.process(ctx, currentBaseFile)
+			})
 			if err != nil {
 				return err
 			}
-
-			zlog.Info("uploaded filtered file", zap.String("base_file", currentBaseFile), zap.Int("block_count", count))
 		} else {
-			zlog.Info("file already exists at destination", zap.String("base_file", currentBaseFile))
+			if logRateLimiter.Allow() {
+				zlog.Info("file already exists at destination", zap.String("base_file", currentBaseFile))
+			}
 		}
 
 		currentBase += 100
@@ -233,5 +174,71 @@ func (f *MergedFilter) process(ctx context.Context, startBase uint64) error {
 			break
 		}
 	}
+	return nil
+
+}
+
+func (f *MergedFilter) process(ctx context.Context, currentBaseFile string) error {
+	var count int
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	readCloser, err := f.srcStore.OpenObject(ctx, currentBaseFile)
+	if err != nil {
+		return err
+	}
+	defer readCloser.Close()
+
+	blkReader, err := codec.NewBlockReader(readCloser)
+	if err != nil {
+		return err
+	}
+
+	readPipe, writePipe, err := os.Pipe()
+	if err != nil {
+		return err
+	}
+	defer writePipe.Close()
+
+	writeObjectDone := make(chan error, 1)
+	go func() {
+		writeObjectDone <- f.destStore.WriteObject(ctx, currentBaseFile, readPipe)
+	}()
+
+	blkWriter, err := codec.NewBlockWriter(writePipe)
+	if err != nil {
+		return err
+	}
+
+	for {
+		blk, err := blkReader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		count++
+
+		if err = f.blockFilter.TransformInPlace(blk); err != nil {
+			return err
+		}
+
+		if err = blkWriter.Write(blk); err != nil {
+			return err
+		}
+	}
+
+	err = writePipe.Close()
+	if err != nil {
+		return err
+	}
+
+	err = <-writeObjectDone
+	if err != nil {
+		return err
+	}
+
+	zlog.Info("uploaded filtered file", zap.String("base_file", currentBaseFile), zap.Int("block_count", count))
 	return nil
 }
