@@ -37,8 +37,8 @@ func (s *Server) GetPermissionLinks(ctx context.Context, request *pbstatedb.GetP
 	}
 
 	resp := &pbstatedb.GetPermissionLinksResponse{
-		UpToBlock:             &pbbstream.BlockRef{Num: upToBlock.Num(), Id: upToBlock.String()},
-		LastIrreversibleBlock: &pbbstream.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.String()},
+		UpToBlock:             &pbbstream.BlockRef{Num: upToBlock.Num(), Id: upToBlock.ID()},
+		LastIrreversibleBlock: &pbbstream.BlockRef{Num: lastWrittenBlock.Num(), Id: lastWrittenBlock.ID()},
 		Permissions:           make([]*pbstatedb.LinkedPermission, len(tabletRows)),
 	}
 

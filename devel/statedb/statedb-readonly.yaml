@@ -1,0 +1,12 @@
+start:
+  args:
+  - statedb
+  flags:
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
+    statedb-disable-pipeline: true
+    statedb-enable-inject-mode: false
+    statedb-enable-server-mode: true
+    statedb-grpc-listen-addr: :9000
+    statedb-http-listen-addr: :8080
+    # Provide those one manually using the flag version (add `--` in front)
+    # --statedb-store-dsn="bigkv://<project>.<instance>/<table>"

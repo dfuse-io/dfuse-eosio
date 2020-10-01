@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20200921160909-7bcdaed4abb3
+	github.com/dfuse-io/fluxdb v0.0.0-20201001172217-a6b279748177
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20200930175503-dea8ae6e6d59
 	github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb

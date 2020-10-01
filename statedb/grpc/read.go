@@ -79,6 +79,9 @@ func (s *Server) prepareRead(
 			zap.Int("speculative_write_count", len(speculativeWrites)),
 			zap.Stringer("up_to_block", upToBlock),
 		)
+	} else {
+		zlog.Info("no speculative writes available, up to block cannot be determined, using empty value")
+		upToBlock = bstream.BlockRefEmpty
 	}
 
 	return

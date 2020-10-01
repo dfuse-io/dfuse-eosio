@@ -100,7 +100,7 @@ func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Last block", lastBlock.String())
+	fmt.Println("Last block", lastBlock)
 	return nil
 }
 

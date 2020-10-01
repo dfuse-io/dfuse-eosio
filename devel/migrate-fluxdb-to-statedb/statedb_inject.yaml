@@ -1,8 +1,0 @@
-start:
-  args:
-  - relayer
-  - statedb
-  flags:
-    statedb-enable-inject-mode: true
-    statedb-enable-server-mode: false
-    statedb-store-dsn: badger://{dfuse-data-dir}/storage/statedb-new
