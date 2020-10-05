@@ -17,6 +17,7 @@ const newDefaultConfig = () => {
     dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "null://",
     dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_1234567890abc",
     dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "localhost:8080",
+    secure: process.env.REACT_APP_DFUSE_API_NETWORK_SECURE,
     display_price: false,
     price_ticker_name: "EOS",
     version: 1,
