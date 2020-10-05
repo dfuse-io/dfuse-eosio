@@ -32,7 +32,6 @@ import (
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 type NodeosSuperviser struct {
@@ -143,13 +142,7 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlock
 	s.RegisterLogPlugin(logplugin.LogPluginFunc(s.analyzeLogLineForStateChange))
 
 	if options.LogToZap {
-		s.RegisterLogPlugin(logplugin.NewToZapLogPlugin(debugDeepMind, logger, logplugin.ToZapLogPluginAdjustLevels(map[string]zapcore.Level{
-			"net_plugin.cpp:.*Closing connection to:":                         zap.InfoLevel,
-			"wabt.hpp:.*misaligned reference":                                 logplugin.NoDisplay,
-			"controller.cpp:.*No existing chain state or fork database.":      zap.InfoLevel,
-			"controller.cpp:.*Initializing new blockchain with genesis state": zap.InfoLevel,
-			"platform_timer_accurac:.*Checktime timer":                        zap.InfoLevel,
-		})))
+		s.RegisterLogPlugin(newToZapLogPlugin(debugDeepMind, logger))
 	} else {
 		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, logger))
 	}

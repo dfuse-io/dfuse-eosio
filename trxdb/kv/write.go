@@ -84,13 +84,13 @@ func (db *DB) PutBlock(ctx context.Context, blk *pbcodec.Block) error {
 		if err != nil {
 			return err
 		}
+
 		return db.putBlock(ctx, blk)
-	} else {
-		db.logger.Debug("skipping block write")
 	}
 
 	// NOTE: what happens to the blockNum, for the IrrBlock rows?? Do we truncate it when it
 	// becomes irreversible?
+	db.logger.Debug("skipping block write")
 	return nil
 }
 
@@ -104,7 +104,7 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 
 		signedTransaction, err := codec.ExtractEOSSignedTransactionFromReceipt(trxReceipt)
 		if err != nil {
-			return fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %s", err)
+			return fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %w", err)
 		}
 
 		signedTrx := codec.SignedTransactionToDEOS(signedTransaction)
@@ -291,7 +291,6 @@ func (db *DB) putBlock(ctx context.Context, blk *pbcodec.Block) error {
 var oneByte = []byte{0x01}
 
 func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block) error {
-
 	if db.enableBlkWrite {
 		blockTime := blk.MustTime()
 		if err := db.writeStore.Put(ctx, Keys.PackTimelineKey(true, blockTime, blk.Id), oneByte); err != nil {
@@ -321,7 +320,6 @@ func (db *DB) UpdateNowIrreversibleBlock(ctx context.Context, blk *pbcodec.Block
 	}
 
 	if db.writeStore != nil {
-		// FIXME: to WHICH store are we writing this? Both `blk` and `trx` databases need that marker!
 		// We must do this operation regardless of the write only categories set since this is used
 		// as our last block marker. If this would not be writing, it would never be possible to start
 		// back where we left off.

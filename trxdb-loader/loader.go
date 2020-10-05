@@ -350,6 +350,7 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	zlog.Debug("flushing block", zap.Uint64("block_num", blockNum), zap.String("reason", reason))
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
+
 	err := l.db.Flush(ctx)
 	if err != nil {
 		randSource := rand.NewSource(time.Now().UnixNano())
@@ -371,6 +372,7 @@ func (l *TrxDBLoader) DoFlush(blockNum uint64, reason string) error {
 	} else {
 		l.retryCnt = 1
 	}
+
 	return nil
 }
 
@@ -394,6 +396,7 @@ func (l *TrxDBLoader) FlushIfNeeded(blockNum uint64, blockTime time.Time) error 
 		}
 		metrics.HeadBlockNumber.SetUint64(blockNum)
 	}
+
 	return nil
 }
 
