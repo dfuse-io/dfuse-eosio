@@ -35,9 +35,9 @@ require (
 	github.com/dfuse-io/fluxdb v0.0.0-20201001172217-a6b279748177
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20200930175503-dea8ae6e6d59
-	github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb
+	github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
-	github.com/dfuse-io/node-manager v0.0.2-0.20200924205050-6a61062ea945
+	github.com/dfuse-io/node-manager v0.0.2-0.20201005180822-b03e8501bd34
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
@@ -80,6 +80,7 @@ require (
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/grpc v1.26.0
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
