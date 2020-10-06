@@ -22,6 +22,7 @@ import (
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/dmetering"
 	"go.opencensus.io/plugin/ochttp"
+	"go.uber.org/zap"
 )
 
 var corsRequestHeaders = []string{
@@ -54,9 +55,26 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReversePr
 
 	return &httputil.ReverseProxy{
 		Director: director,
+		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
+			zlog.Info("REST error",
+				zap.String("path", r.URL.Path),
+				zap.String("method", r.Method),
+				zap.String("host", r.URL.Host),
+				zap.Error(err),
+			)
+			w.WriteHeader(http.StatusBadGateway)
+		},
+
 		ModifyResponse: func(response *http.Response) error {
 			ctx := response.Request.Context()
 
+			zlog.Info("REST response",
+				zap.String("path", response.Request.URL.Path),
+				zap.String("method", response.Request.Method),
+				zap.String("host", response.Request.URL.Host),
+				zap.Int("response_code", response.StatusCode),
+				zap.String("response_status", response.Status),
+			)
 			response.Header.Del("X-Trace-ID")
 
 			//////////////////////////////////////////////////////////////////////
