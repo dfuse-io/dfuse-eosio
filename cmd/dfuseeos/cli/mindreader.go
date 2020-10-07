@@ -135,6 +135,7 @@ func init() {
 				viper.GetBool("mindreader-debug-deep-mind"),
 				metricsAndReadinessManager.UpdateHeadBlock,
 				&superviser.SuperviserOptions{
+					NoBlocksLog:       viper.GetBool("mindreader-no-blocks-log"),
 					LocalNodeEndpoint: viper.GetString("mindreader-nodeos-api-addr"),
 					ConfigDir:         viper.GetString("mindreader-config-dir"),
 					BinPath:           viper.GetString("mindreader-nodeos-path"),

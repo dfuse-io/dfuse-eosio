@@ -17,3 +17,5 @@ dashboard/client/.npmrc
 /proj*
 /dashboard/client/node_modules
 /dashboard/dashboard-build
+/mindreader
+/producer
