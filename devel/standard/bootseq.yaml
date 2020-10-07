@@ -37,6 +37,9 @@ contents:
   - name: eosio.token.wasm
     url: https://github.com/dfuse-io/eosio.contracts/releases/download/v1.9.1/eosio.token-1.9.1.wasm
 
+  - name: dfuseiohooks.abi
+    url: https://github.com/dfuse-io/dfuseiohooks/releases/download/1.0.0/dfuseiohooks.abi
+
 ################################# BOOT SEQUENCE ###################################
 boot_sequence:
   # creating system accounts
@@ -227,6 +230,20 @@ boot_sequence:
         memo: "fund account eosio2"
       actor: eosio
       permission: active
+
+  - op: system.newaccount
+    label: Create account dfuseiohooks
+    data:
+      creator: eosio
+      new_account: dfuseiohooks
+      pubkey: boot
+      ram_bytes: 16384
+
+  - op: system.setabi
+    label: Setting ABI on dfuseiohooks
+    data:
+      account: dfuseiohooks
+      contract_name_ref: dfuseiohooks
 
   - op: system.resign_accounts
     label: Disabling authorization for system accounts, pointing `eosio` to the `eosio.prods` account.
