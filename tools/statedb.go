@@ -7,14 +7,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
+	"sort"
+	"strings"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/fluxdb"
-
-	// Let's register all known Singlet & Tablet
-	_ "github.com/dfuse-io/dfuse-eosio/statedb"
-
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,13 +23,17 @@ import (
 var showValue = false
 
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
-var statedbScanCmd = &cobra.Command{Use: "scan", Short: "scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
-var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "prefix read from StateDB store", RunE: prefixScanE, Args: cobra.ExactArgs(1)}
+var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
+var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.ExactArgs(1)}
+var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the latest effective index for a given StateDB tablet", RunE: statedbIndexE, Args: cobra.ExactArgs(1)}
+var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
 
 func init() {
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
+	statedbCmd.AddCommand(statedbIndexCmd)
+	statedbCmd.AddCommand(statedbReindexCmd)
 
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
 	cwd, err := os.Getwd()
@@ -77,7 +81,7 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func prefixScanE(cmd *cobra.Command, args []string) (err error) {
+func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 	kv, err := store.New(viper.GetString("dsn"))
 	if err != nil {
 		return err
@@ -95,6 +99,86 @@ func prefixScanE(cmd *cobra.Command, args []string) (err error) {
 
 	prefix := append(table, prefixKey...)
 	prefixScan(kv, prefix, viper.GetInt("limit"))
+	return nil
+}
+
+func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	index, err := fdb.ReadTabletIndexAt(context.Background(), tablet, math.MaxUint64)
+	if err != nil {
+		return fmt.Errorf("read tablet index: %w", err)
+	}
+
+	if index == nil {
+		fmt.Printf("No tablet %s index yet\n", tablet)
+		return nil
+	}
+
+	rows, err := index.Rows(tablet)
+	if err != nil {
+		return fmt.Errorf("index rows: %w", err)
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
+	})
+
+	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
+	for _, row := range rows {
+		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
+	}
+
+	return nil
+}
+
+func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	ctx := context.Background()
+
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	height, _, err := fdb.FetchLastWrittenCheckpoint(ctx)
+	if err != nil {
+		return fmt.Errorf("fetch last checkpoint: %w", err)
+	}
+
+	index, err := fdb.IndexTablet(ctx, tablet, height)
+	if err != nil {
+		return fmt.Errorf("reindex tablet %s: %w", tablet, err)
+	}
+
+	rows, err := index.Rows(tablet)
+	if err != nil {
+		return fmt.Errorf("index rows: %w", err)
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
+	})
+
+	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
+	for _, row := range rows {
+		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
+	}
+
 	return nil
 }
 
@@ -204,4 +288,37 @@ func formatRowsKey(key []byte) (string, error) {
 
 func formatCheckpointKey(key []byte) (string, error) {
 	return string(key[1:]), nil
+}
+
+// stringToTablet receives a string format containing human readable form
+// and turn it into the appropriate Tablet implementation. Highly manual for now.
+func stringToTablet(in string) (fluxdb.Tablet, error) {
+	parts := strings.Split(in, ":")
+	if len(parts) <= 1 {
+		return nil, fmt.Errorf("invalid format, expecting at least a table prefix like 'cst:...'")
+	}
+
+	mapper := partsToTabletMap[parts[0]]
+	if mapper == nil {
+		return nil, fmt.Errorf("unknown (or not yet handled) prefix %q", parts[0])
+	}
+
+	if len(parts)-1 != mapper.partCount {
+		return nil, fmt.Errorf("invalid format, expecting %d parts, got %d", mapper.partCount, len(parts)-1)
+	}
+
+	return mapper.factory(parts[1:]), nil
+}
+
+type partsToTablet struct {
+	partCount int
+	factory   func(parts []string) fluxdb.Tablet
+}
+
+var partsToTabletMap = map[string]*partsToTablet{
+	"cst": {
+		partCount: 3, factory: func(parts []string) fluxdb.Tablet {
+			return statedb.NewContractStateTablet(parts[0], parts[1], parts[2])
+		},
+	},
 }
