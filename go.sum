@@ -278,14 +278,10 @@ github.com/dfuse-io/dstore v0.1.1-0.20200924172801-712ea810c87b/go.mod h1:1dqWgm
 github.com/dfuse-io/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGYuyB5fpkLybwlzDRoOFOHfpQehyxNUw=
 github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
-github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b h1:kU8EhQuQ8Ee4J7NHBvQhs10+WhuxuUInqzfp7zCjcbY=
-github.com/dfuse-io/eosio-boot v0.0.0-20200729231436-7b35f1f9d87b/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2 h1:D6bUAFWeAylEGXdmW4h8NGtutkhVMsPWnT7aESy+s1o=
 github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
-github.com/dfuse-io/fluxdb v0.0.0-20201001172217-a6b279748177 h1:AdVus17m0RDyobjn74ymiIiQc06l/IQuEQqlZ+yOKk4=
-github.com/dfuse-io/fluxdb v0.0.0-20201001172217-a6b279748177/go.mod h1:M5j0thOna8wy5lGbMNajP2eSIwk80Td/je8RCWzKjmg=
 github.com/dfuse-io/fluxdb v0.0.0-20201006213026-3af74eb6a4e7 h1:h3xdMVLD4JOnUOdufGiRlKBwNcxDJP6UGVQzWUxA500=
 github.com/dfuse-io/fluxdb v0.0.0-20201006213026-3af74eb6a4e7/go.mod h1:GzSU0pkLB2F8QBsb+9yoa59K7fV//vy/jLy1zsJFV5c=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
@@ -296,8 +292,6 @@ github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQ
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360 h1:gBitu/N6GAQqMsBnENYOHwbhQvoy2wEPMccgj8D2OZI=
 github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360/go.mod h1:fmJCZtKh7k3/TtVPH72AaBw+DfNjqXGCorfT5PMLpgA=
-github.com/dfuse-io/kvdb v0.0.2-0.20200930175503-dea8ae6e6d59 h1:dZJDybrv4f41KOOY3lTTWkcdTs5Px7MT+bci0C7guAg=
-github.com/dfuse-io/kvdb v0.0.2-0.20200930175503-dea8ae6e6d59/go.mod h1:ILX9X4MmFTfBFid5kcURul/7Nn3yjYbEVdE7qFhhUwM=
 github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661 h1:9GBUfIiUIyvtRYzfTFGYxVm927GQrn9oOd+y16CuOMg=
 github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661/go.mod h1:ILX9X4MmFTfBFid5kcURul/7Nn3yjYbEVdE7qFhhUwM=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -309,8 +303,6 @@ github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56 h1:7ptHGb4YMSQGxA
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a h1:5ziuvuX79U7EdejhCVTCp+2Zi09MoTkVaR6QM5lUZJU=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
-github.com/dfuse-io/node-manager v0.0.2-0.20200924205050-6a61062ea945 h1:u7zEwTjFje6IAcjedOBuVSnfhYJYjocu6FXxKYn7jmM=
-github.com/dfuse-io/node-manager v0.0.2-0.20200924205050-6a61062ea945/go.mod h1:d0YuXfeFXZTyzWC03HG4bRlhWZpF4U2hCY1fq7XO2zc=
 github.com/dfuse-io/node-manager v0.0.2-0.20201005180822-b03e8501bd34 h1:7pFKFjhJ828mzveXo8lrgkSeglSn4C57SQ6LUcctQo8=
 github.com/dfuse-io/node-manager v0.0.2-0.20201005180822-b03e8501bd34/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
@@ -361,8 +353,8 @@ github.com/eoscanada/eos-go v0.9.1-0.20200227221642-1b19518201a1/go.mod h1:6RuJF
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82 h1:MHETOtdFMe0mLAq95Ftw5Cqa7pXQu8f15J9rMNKyiFs=
 github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20200729231232-b7325cffe680 h1:jA1T4NSVQBEmQTGw90rvoqu6xZtF35dHk6t+hKP9a44=
-github.com/eoscanada/eos-go v0.9.1-0.20200729231232-b7325cffe680/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
+github.com/eoscanada/eos-go v0.9.1-0.20201008012030-56698e25a3c7 h1:cpqvHNPUWi+j4gJ5FeFB4aLEEcVFm5m0NkE61dgfUmk=
+github.com/eoscanada/eos-go v0.9.1-0.20201008012030-56698e25a3c7/go.mod h1:lMh4FQAHfvhE0Ak1EhMJTeGOdhWDxnmATNjfheUapbA=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
 github.com/eoscanada/eosc v1.4.0/go.mod h1:0I+yYzRUTbIMgQsBjBYyNdE5idtbUMMkUQM4fN5A3P4=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39 h1:JQ7Gc43VO/HJb/mNc9otItimhUi5nGKH7ZvINbidcyg=
@@ -955,6 +947,7 @@ golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5/go.mod h1:yigFU9vqHzYiE8U
 golang.org/x/crypto v0.0.0-20191002192127-34f69633bfdc/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
+golang.org/x/crypto v0.0.0-20200406173513-056763e48d71/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37 h1:cg5LA/zNPRzIXIWSCxQW10Rvpy94aQh3LT/ShoCpkHw=
 golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/exp v0.0.0-20190121172915-509febef88a4/go.mod h1:CJ0aWSM057203Lf6IL+f9T1iT9GByDxfZKAQTCR3kQA=

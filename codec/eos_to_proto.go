@@ -198,41 +198,37 @@ func BlockHeaderToEOS(in *pbcodec.BlockHeader) *eos.BlockHeader {
 
 func BlockSigningAuthorityToDEOS(authority *eos.BlockSigningAuthority) *pbcodec.BlockSigningAuthority {
 	out := &pbcodec.BlockSigningAuthority{}
-	err := authority.DoFor(map[uint32]eos.OnVariant{
-		eos.BlockSigningAuthorityV0Type: func(impl interface{}) error {
-			v := impl.(*eos.BlockSigningAuthorityV0)
 
-			out.Variant = &pbcodec.BlockSigningAuthority_V0{
-				V0: &pbcodec.BlockSigningAuthorityV0{
-					Threshold: v.Threshold,
-					Keys:      KeyWeightsPToDEOS(v.Keys),
-				},
-			}
-
-			return nil
-		},
-	})
-
-	if err != nil {
-		panic(fmt.Errorf("unable to convert eos.BlockSigningAuthority to deos: %s", err))
+	switch v := authority.Impl.(type) {
+	case *eos.BlockSigningAuthorityV0:
+		out.Variant = &pbcodec.BlockSigningAuthority_V0{
+			V0: &pbcodec.BlockSigningAuthorityV0{
+				Threshold: v.Threshold,
+				Keys:      KeyWeightsPToDEOS(v.Keys),
+			},
+		}
+	default:
+		panic(fmt.Errorf("unable to convert eos.BlockSigningAuthority to deos: wrong type %T", authority.Impl))
 	}
 
 	return out
 }
 
 func BlockSigningAuthorityToEOS(in *pbcodec.BlockSigningAuthority) *eos.BlockSigningAuthority {
-	out := &eos.BlockSigningAuthority{}
 	switch v := in.Variant.(type) {
 	case *pbcodec.BlockSigningAuthority_V0:
-		out.TypeID = eos.BlockSigningAuthorityV0Type
-		out.Impl = &eos.BlockSigningAuthorityV0{
-			Threshold: v.V0.Threshold,
+		return &eos.BlockSigningAuthority{
+			BaseVariant: eos.BaseVariant{
+				TypeID: eos.BlockSigningAuthorityVariant.TypeID("block_signing_authority_v0"),
+				Impl: eos.BlockSigningAuthorityV0{
+					Threshold: v.V0.Threshold,
+					Keys:      KeyWeightsPToEOS(v.V0.Keys),
+				},
+			},
 		}
-
-		return out
+	default:
+		panic(fmt.Errorf("unknown block signing authority variant %t", in.Variant))
 	}
-
-	panic(fmt.Errorf("unknown block signing authority variant %t", in.Variant))
 }
 
 func ProducerScheduleToDEOS(e *eos.ProducerSchedule) *pbcodec.ProducerSchedule {
@@ -595,6 +591,22 @@ func KeyWeightsToEOS(keys []*pbcodec.KeyWeight) (out []eos.KeyWeight) {
 	out = make([]eos.KeyWeight, len(keys))
 	for i, o := range keys {
 		out[i] = eos.KeyWeight{
+			PublicKey: ecc.MustNewPublicKey(o.PublicKey),
+			Weight:    uint16(o.Weight),
+		}
+	}
+	return
+
+}
+
+func KeyWeightsPToEOS(keys []*pbcodec.KeyWeight) (out []*eos.KeyWeight) {
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]*eos.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = &eos.KeyWeight{
 			PublicKey: ecc.MustNewPublicKey(o.PublicKey),
 			Weight:    uint16(o.Weight),
 		}
