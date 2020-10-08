@@ -294,6 +294,8 @@ github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360 h1:gBitu/N6GAQqMsB
 github.com/dfuse-io/kvdb v0.0.2-0.20200710185837-6525655ea360/go.mod h1:fmJCZtKh7k3/TtVPH72AaBw+DfNjqXGCorfT5PMLpgA=
 github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661 h1:9GBUfIiUIyvtRYzfTFGYxVm927GQrn9oOd+y16CuOMg=
 github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661/go.mod h1:ILX9X4MmFTfBFid5kcURul/7Nn3yjYbEVdE7qFhhUwM=
+github.com/dfuse-io/kvdb v0.0.2-0.20201008214903-64669a1861e5 h1:4mP5DyM1GU66tU2bs1SKHKX+XUEtauNy8F/vUEo6x7E=
+github.com/dfuse-io/kvdb v0.0.2-0.20201008214903-64669a1861e5/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -853,6 +855,8 @@ github.com/tidwall/sjson v1.0.4 h1:UcdIRXff12Lpnu3OLtZvnc03g4vH2suXDXhBwBqmzYg=
 github.com/tidwall/sjson v1.0.4/go.mod h1:bURseu1nuBkFpIES5cz6zBtjmYeOQmEESshn7VpF15Y=
 github.com/tikv/client-go v0.0.0-20200110101306-a3ebdb020c83 h1:IfRSAmMavarPgSj0Rr4iUVJ+w6sxF1a6/cTUXZl5yZY=
 github.com/tikv/client-go v0.0.0-20200110101306-a3ebdb020c83/go.mod h1:K0NcdVNrXDq92YPLytsrAwRMyuXi7GZCO6dXNH7OzQc=
+github.com/tikv/client-go v0.0.0-20200824032810-95774393107b h1:VOG2GkM7RpRrT0St7HIIwCWrc3mVdf+DjcT8r2ucusI=
+github.com/tikv/client-go v0.0.0-20200824032810-95774393107b/go.mod h1:K0NcdVNrXDq92YPLytsrAwRMyuXi7GZCO6dXNH7OzQc=
 github.com/tinylib/msgp v1.1.0 h1:9fQd+ICuRIu/ue4vxJZu6/LzxN0HwMds2nq/0cFvxHU=
 github.com/tinylib/msgp v1.1.0/go.mod h1:+d+yLhGm8mzTaHzB+wgMYrodPfmZrzkirds8fDWklFE=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
