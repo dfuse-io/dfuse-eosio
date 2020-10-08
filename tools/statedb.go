@@ -13,12 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/fluxdb"
-
-	// Let's register all known Singlet & Tablet
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	_ "github.com/dfuse-io/dfuse-eosio/statedb"
-
+	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -30,12 +26,14 @@ var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
 var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.ExactArgs(1)}
 var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the latest effective index for a given StateDB tablet", RunE: statedbIndexE, Args: cobra.ExactArgs(1)}
+var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
 
 func init() {
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
 	statedbCmd.AddCommand(statedbIndexCmd)
+	statedbCmd.AddCommand(statedbReindexCmd)
 
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
 	cwd, err := os.Getwd()
@@ -116,17 +114,17 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
-	indexSinglet, err := fdb.ReadTabletIndexAt(context.Background(), tablet, math.MaxUint64)
+	index, err := fdb.ReadTabletIndexAt(context.Background(), tablet, math.MaxUint64)
 	if err != nil {
 		return fmt.Errorf("read tablet index: %w", err)
 	}
 
-	if indexSinglet == nil {
+	if index == nil {
 		fmt.Printf("No tablet %s index yet\n", tablet)
 		return nil
 	}
 
-	rows, err := indexSinglet.Rows(tablet)
+	rows, err := index.Rows(tablet)
 	if err != nil {
 		return fmt.Errorf("index rows: %w", err)
 	}
@@ -135,7 +133,48 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
 	})
 
-	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), indexSinglet.AtHeight)
+	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
+	for _, row := range rows {
+		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
+	}
+
+	return nil
+}
+
+func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	ctx := context.Background()
+
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	height, _, err := fdb.FetchLastWrittenCheckpoint(ctx)
+	if err != nil {
+		return fmt.Errorf("fetch last checkpoint: %w", err)
+	}
+
+	index, err := fdb.IndexTablet(ctx, tablet, height)
+	if err != nil {
+		return fmt.Errorf("reindex tablet %s: %w", tablet, err)
+	}
+
+	rows, err := index.Rows(tablet)
+	if err != nil {
+		return fmt.Errorf("index rows: %w", err)
+	}
+
+	sort.Slice(rows, func(i, j int) bool {
+		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
+	})
+
+	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
 	for _, row := range rows {
 		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
 	}
