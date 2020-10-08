@@ -282,8 +282,6 @@ github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2 h1:D6bUAFWeAyl
 github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
-github.com/dfuse-io/fluxdb v0.0.0-20201006213026-3af74eb6a4e7 h1:h3xdMVLD4JOnUOdufGiRlKBwNcxDJP6UGVQzWUxA500=
-github.com/dfuse-io/fluxdb v0.0.0-20201006213026-3af74eb6a4e7/go.mod h1:GzSU0pkLB2F8QBsb+9yoa59K7fV//vy/jLy1zsJFV5c=
 github.com/dfuse-io/fluxdb v0.0.0-20201008160332-2c14cd8cc12b h1:fjW0RPF2rtsxqV3/HASnQ5gEonqBgvVKmmQyTAI9EqM=
 github.com/dfuse-io/fluxdb v0.0.0-20201008160332-2c14cd8cc12b/go.mod h1:GzSU0pkLB2F8QBsb+9yoa59K7fV//vy/jLy1zsJFV5c=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
@@ -305,8 +303,8 @@ github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56 h1:7ptHGb4YMSQGxA
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a h1:5ziuvuX79U7EdejhCVTCp+2Zi09MoTkVaR6QM5lUZJU=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
-github.com/dfuse-io/node-manager v0.0.2-0.20201005180822-b03e8501bd34 h1:7pFKFjhJ828mzveXo8lrgkSeglSn4C57SQ6LUcctQo8=
-github.com/dfuse-io/node-manager v0.0.2-0.20201005180822-b03e8501bd34/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
+github.com/dfuse-io/node-manager v0.0.2-0.20201008184707-d4ad3d71c1c4 h1:GKmfG+jw9PYvI8eTUZYfSoEplM4QooOQITHnzsmGOA8=
+github.com/dfuse-io/node-manager v0.0.2-0.20201008184707-d4ad3d71c1c4/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
