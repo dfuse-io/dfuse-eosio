@@ -164,12 +164,14 @@ func (a *App) Run() error {
 		return src
 	})
 
+	zlog.Info("connecting to blockmeta", zap.String("addr", a.Config.BlockmetaAddr))
 	blockmetaConn, err := dgrpc.NewInternalClient(a.Config.BlockmetaAddr)
 	if err != nil {
 		return fmt.Errorf("failed getting blockmeta grpc client: %w", err)
 	}
 	headinfoCli := pbheadinfo.NewHeadInfoClient(blockmetaConn)
 
+	zlog.Info("retrieving head and lib info from blockmeta")
 	var head bstream.BlockRef
 	var lib bstream.BlockRef
 	for {
@@ -195,6 +197,7 @@ func (a *App) Run() error {
 		hubStartBlockNum = lib.Num() - halfBufferSize
 	}
 
+	zlog.Info("creating subscription hub", zap.Int("blocks_buffer_size", a.Config.BlocksBufferSize))
 	tailManager := bstream.NewSimpleTailManager(buffer, a.Config.BlocksBufferSize)
 	subscriptionHub, err := hub.NewSubscriptionHub(
 		hubStartBlockNum,
@@ -210,11 +213,14 @@ func (a *App) Run() error {
 	go subscriptionHub.Launch()
 	go tailManager.Launch()
 
+	zlog.Info("connecting to statedb", zap.String("addr", a.Config.StateDBGRPCAddr))
 	stateConn, err := dgrpc.NewInternalClient(a.Config.StateDBGRPCAddr)
 	if err != nil {
 		return fmt.Errorf("failed getting statedb grpc conn: %w", err)
 	}
 	stateClient := pbstatedb.NewStateClient(stateConn)
+
+	zlog.Info("creating web socket hubs")
 
 	voteTallyHub := eosws.NewVoteTallyHub(stateHelper.NewDefaultFluxHelper(stateClient))
 	if a.Config.FetchVoteTally {
@@ -233,6 +239,7 @@ func (a *App) Run() error {
 	abiGetter := eosws.NewDefaultABIGetter(stateClient)
 	accountGetter := eosws.NewApiAccountGetter(api)
 
+	zlog.Info("creating blockmeta client", zap.String("addr", a.Config.BlockmetaAddr))
 	blockmetaClient, err := pbblockmeta.NewClient(a.Config.BlockmetaAddr)
 	if err != nil {
 		return fmt.Errorf("blockmeta connection error: %w", err)
@@ -275,6 +282,7 @@ func (a *App) Run() error {
 
 	var searchRouterClient pbsearch.RouterClient
 
+	zlog.Info("connecting to search router", zap.String("addr", a.Config.SearchAddr))
 	searchConn, err := dgrpc.NewInternalClient(a.Config.SearchAddr)
 	if err != nil {
 		return fmt.Errorf("failed getting abi grpc client: %w", err)
@@ -282,7 +290,7 @@ func (a *App) Run() error {
 	searchClientV1 := pbsearch.NewRouterClient(searchConn)
 
 	if a.Config.SearchAddrSecondary != "" {
-		zlog.Info("setting up secondary search router")
+		zlog.Info("connecting to secondary search router", zap.String("addr", a.Config.SearchAddrSecondary))
 		searchConnv2, err := dgrpc.NewInternalClient(a.Config.SearchAddrSecondary)
 		if err != nil {
 			zlog.Warn("failed getting abi grpc client", zap.Error(err))
@@ -307,6 +315,7 @@ func (a *App) Run() error {
 	searchQueryHandler := eosws.NewSearchEngine(db, searchRouterClient)
 
 	// Order of router definitions is important, prefix:(/a/b) must be defined before /a
+	zlog.Info("configuring HTTP router")
 	router := mux.NewRouter()
 
 	// Root path to return 200, needed for transitioning load balancers to /healthz without downtime
