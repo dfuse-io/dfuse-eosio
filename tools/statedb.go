@@ -175,7 +175,7 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
-	index, err := fdb.IndexTablet(ctx, tablet, height)
+	index, err := fdb.IndexTablet(ctx, tablet, height, true)
 	if err != nil {
 		return fmt.Errorf("reindex tablet %s: %w", tablet, err)
 	}
