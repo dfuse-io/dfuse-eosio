@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strings"
@@ -29,12 +28,6 @@ var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the l
 var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
 
 func init() {
-	Cmd.AddCommand(statedbCmd)
-	statedbCmd.AddCommand(statedbScanCmd)
-	statedbCmd.AddCommand(statedbPrefixCmd)
-	statedbCmd.AddCommand(statedbIndexCmd)
-	statedbCmd.AddCommand(statedbReindexCmd)
-
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
 	cwd, err := os.Getwd()
 	if err == nil {
@@ -43,9 +36,17 @@ func init() {
 
 	statedbCmd.PersistentFlags().String("dsn", defaultBadger, "StateDB KV store DSN")
 	statedbCmd.PersistentFlags().StringP("table", "t", "00", "StateDB table id (single byte, hexadecimal encoded) to query from")
+	statedbCmd.PersistentFlags().Int("limit", 100, "Limit the number of rows when doing scan or prefix")
 
-	statedbScanCmd.Flags().Bool("unlimited", false, "scan will ignore the limit")
-	statedbCmd.PersistentFlags().Int("limit", 100, "limit the number of rows when doing scan or prefix")
+	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Scan will ignore the limit")
+	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
+	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
+
+	Cmd.AddCommand(statedbCmd)
+	statedbCmd.AddCommand(statedbScanCmd)
+	statedbCmd.AddCommand(statedbPrefixCmd)
+	statedbCmd.AddCommand(statedbIndexCmd)
+	statedbCmd.AddCommand(statedbReindexCmd)
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
@@ -113,8 +114,19 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("invalid argument %q: %w", args[0], err)
 	}
 
+	ctx := context.Background()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
-	index, err := fdb.ReadTabletIndexAt(context.Background(), tablet, math.MaxUint64)
+
+	height := viper.GetUint64("height")
+	fmt.Println("Got ", height)
+	if height == 0 {
+		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
+		if err != nil {
+			return fmt.Errorf("fetch last checkpoint: %w", err)
+		}
+	}
+
+	index, err := fdb.ReadTabletIndexAt(context.Background(), tablet, height)
 	if err != nil {
 		return fmt.Errorf("read tablet index: %w", err)
 	}
@@ -153,11 +165,14 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
-	height, _, err := fdb.FetchLastWrittenCheckpoint(ctx)
-	if err != nil {
-		return fmt.Errorf("fetch last checkpoint: %w", err)
+
+	height := viper.GetUint64("height")
+	if height == 0 {
+		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
+		if err != nil {
+			return fmt.Errorf("fetch last checkpoint: %w", err)
+		}
 	}
 
 	index, err := fdb.IndexTablet(ctx, tablet, height)

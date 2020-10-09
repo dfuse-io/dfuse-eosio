@@ -189,10 +189,7 @@ func init() {
 				viper.GetUint64("mindreader-stop-block-num"),
 				viper.GetInt("mindreader-blocks-chan-capacity"),
 				metricsAndReadinessManager.UpdateHeadBlock,
-				chainOperator.SetMaintenance,
-				func() {
-					chainOperator.Shutdown(nil)
-				},
+				chainOperator.Shutdown,
 				viper.GetBool("mindreader-fail-on-non-contiguous-block"),
 				viper.GetDuration("mindreader-wait-upload-complete-on-shutdown"),
 				viper.GetString("mindreader-oneblock-suffix"),
