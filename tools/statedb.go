@@ -41,6 +41,7 @@ func init() {
 	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Scan will ignore the limit")
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
 	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
+	statedbReindexCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
 
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
@@ -118,7 +119,6 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
 
 	height := viper.GetUint64("height")
-	fmt.Println("Got ", height)
 	if height == 0 {
 		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
 		if err != nil {
@@ -168,14 +168,9 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
 
 	height := viper.GetUint64("height")
-	if height == 0 {
-		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
-		if err != nil {
-			return fmt.Errorf("fetch last checkpoint: %w", err)
-		}
-	}
+	write := viper.GetBool("write")
 
-	index, err := fdb.IndexTablet(ctx, tablet, height)
+	index, written, err := fdb.ReindexTablet(ctx, tablet, height, write)
 	if err != nil {
 		return fmt.Errorf("reindex tablet %s: %w", tablet, err)
 	}
@@ -185,13 +180,17 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("index rows: %w", err)
 	}
 
-	sort.Slice(rows, func(i, j int) bool {
-		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
-	})
+	if written {
+		fmt.Printf("Tablet %s Index (%d rows at #%d) written back to storage\n", tablet, len(rows), index.AtHeight)
+	} else {
+		sort.Slice(rows, func(i, j int) bool {
+			return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
+		})
 
-	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
-	for _, row := range rows {
-		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
+		fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
+		for _, row := range rows {
+			fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
+		}
 	}
 
 	return nil
