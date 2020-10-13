@@ -1,0 +1,32 @@
+{
+	"permissions": [
+		{
+			"owner": "battlefield2",
+			"name": "owner",
+			"authority": {
+				"threshold": 1,
+				"keys": [
+					{
+						"key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "owner",
+			"owner": "battlefield2",
+			"name": "active",
+			"authority": {
+				"threshold": 1,
+				"keys": [
+					{
+						"key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+						"weight": 1
+					}
+				]
+			}
+		}
+	],
+	"link_auths": null
+}
