@@ -9,13 +9,16 @@ const onAccount = (account: Account): Account | undefined => {
     }
 
     // To modify an account, return the account with the desired changes
-    if (account.name === "battlefeld3") {
-        account.abi = "ABI 2.0/"
-        // account.limits = {
-        //   cpu: -1,
-        //   net: -1,
-        //   ram: -1,
-        // }
+    if (account.name === "battlefield3") {
+        account.data.permissions = account.data.permissions.map(perm => {
+            if (perm.name != "active") {
+                return perm
+            }
+            if (perm.authority.keys) {
+                perm.authority.keys[0].key = "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgwEP"
+            }
+            return perm
+        })
         return account
     }
 

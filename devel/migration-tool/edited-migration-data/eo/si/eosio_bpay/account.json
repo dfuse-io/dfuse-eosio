@@ -1,38 +1,38 @@
 {
-  "permissions": [
-    {
-      "owner": "eosio.bpay",
-      "name": "owner",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "eosio",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "owner",
-      "owner": "eosio.bpay",
-      "name": "active",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "eosio",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    }
-  ],
-  "link_auths": null
+	"permissions": [
+		{
+			"owner": "eosio.bpay",
+			"name": "owner",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "eosio",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "owner",
+			"owner": "eosio.bpay",
+			"name": "active",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "eosio",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		}
+	],
+	"link_auths": null
 }

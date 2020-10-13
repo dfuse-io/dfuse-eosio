@@ -1,63 +1,63 @@
 {
-  "permissions": [
-    {
-      "owner": "eosio.prods",
-      "name": "owner",
-      "authority": {
-        "threshold": 1
-      }
-    },
-    {
-      "parent": "owner",
-      "owner": "eosio.prods",
-      "name": "active",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "eosio3",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "active",
-      "owner": "eosio.prods",
-      "name": "prod.major",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "eosio3",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "prod.major",
-      "owner": "eosio.prods",
-      "name": "prod.minor",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "eosio3",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    }
-  ],
-  "link_auths": null
+	"permissions": [
+		{
+			"owner": "eosio.prods",
+			"name": "owner",
+			"authority": {
+				"threshold": 1
+			}
+		},
+		{
+			"parent": "owner",
+			"owner": "eosio.prods",
+			"name": "active",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "eosio3",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "active",
+			"owner": "eosio.prods",
+			"name": "prod.major",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "eosio3",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "prod.major",
+			"owner": "eosio.prods",
+			"name": "prod.minor",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "eosio3",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		}
+	],
+	"link_auths": null
 }

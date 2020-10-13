@@ -54,15 +54,16 @@ func NewExporter(snapshotPath, dataDir string, opts ...Option) (*exporter, error
 }
 
 func (e *exporter) Export() error {
-	reader, err := eossnapshot.NewReader(e.snapshotPath)
+	reader, err := eossnapshot.NewDefaultReader(e.snapshotPath)
 	if err != nil {
 		return fmt.Errorf("unable to create a snapshot reader: %w", err)
 	}
 	defer func() {
 		reader.Close()
 	}()
+
 	for {
-		section, err := reader.Next()
+		err := reader.NextSection()
 		if err == io.EOF {
 			break
 		}
@@ -74,39 +75,47 @@ func (e *exporter) Export() error {
 			return err
 		}
 
+		currentSection := reader.CurrentSection
 		if traceEnable {
 			e.logger.Debug("new section",
-				zap.String("section_name", string(section.Name)),
-				zap.Uint64("row_count", section.RowCount),
-				zap.Uint64("bytes_count", section.BufferSize),
-				zap.Uint64("bytes_count", section.Offset),
+				zap.String("section_name", string(currentSection.Name)),
+				zap.Uint64("row_count", currentSection.RowCount),
+				zap.Uint64("bytes_count", currentSection.BufferSize),
+				zap.Uint64("bytes_count", currentSection.Offset),
 			)
 		}
 
-		switch section.Name {
+		switch currentSection.Name {
 		case eossnapshot.SectionNameAccountObject:
 			e.logger.Info("reading snapshot account objects")
-			err = section.Process(e.processAccountObject)
+			err = reader.ProcessCurrentSection(e.processAccountObject)
 		case eossnapshot.SectionNameAccountMetadataObject:
 			e.logger.Info("reading snapshot account metadata objects")
-			section.Process(e.processAccountMetadataObject)
+			err = reader.ProcessCurrentSection(e.processAccountMetadataObject)
 		case eossnapshot.SectionNamePermissionObject:
 			e.logger.Info("reading snapshot permission objects")
-			section.Process(e.processPermissionObject)
+			err = reader.ProcessCurrentSection(e.processPermissionObject)
 		case eossnapshot.SectionNamePermissionLinkObject:
 			e.logger.Info("reading snapshot permission link objects")
-			section.Process(e.processPermissionLinkObject)
+			err = reader.ProcessCurrentSection(e.processPermissionLinkObject)
 		case eossnapshot.SectionNameCodeObject:
 			e.logger.Info("reading snapshot code objects")
-			section.Process(e.processCodeObject)
+			err = reader.ProcessCurrentSection(e.processCodeObject)
 		case eossnapshot.SectionNameContractTables:
 			e.logger.Info("reading snapshot contract tables")
-			section.Process(e.processContractTable)
+			err = reader.ProcessCurrentSection(e.processContractTable)
+		}
+
+		if err == eossnapshot.SectionHandlerNotFound {
+			e.logger.Warn("section handler not found",
+				zap.String("section_name", string(currentSection.Name)),
+			)
+			break
 		}
 
 		if err != nil {
 			e.logger.Error("failed processing snapshot section",
-				zap.String("section_name", string(section.Name)),
+				zap.String("section_name", string(currentSection.Name)),
 				zap.Error(err),
 			)
 			return err

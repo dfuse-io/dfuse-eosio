@@ -11,6 +11,10 @@ cd data-editor
 yarn run start
 ```
 
+3) Validate Chain data
+```shell script
+
+```
 3) Migrate the edited data to a new chain
 ```shell script
 ./start.sh -m import

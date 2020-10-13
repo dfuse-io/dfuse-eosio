@@ -9,7 +9,7 @@
     "start": "yarn run ts-node -O '{\"module\":\"commonjs\"}' run.ts"
   },
   "dependencies": {
-    "@dfuse/migrator-client": "^0.0.4",
+    "@dfuse/migrator-client": "^0.0.5",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
   },

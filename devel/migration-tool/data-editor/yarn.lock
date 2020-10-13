@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@dfuse/migrator-client@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@dfuse/migrator-client/-/migrator-client-0.0.4.tgz#fdcdfaa2de2603907e88c07bbb501b912df07698"
-  integrity sha512-wvgy/EXOqNy1Ia90tqdFjPu6yDOCgRreFBGz8eimDnJWGDEBBUIHC8QaXXWqN0wq8BlkvZs6bTp4pJf0ul4dfw==
+"@dfuse/migrator-client@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@dfuse/migrator-client/-/migrator-client-0.0.5.tgz#15e97c1d155ca0b5e45d297c0ace52989c8e932a"
+  integrity sha512-z90XdB1wD6VUXQS3IixppMNby1dvJY3R7ObC2IIQbEw05m8BZjbaOkwfoZdhedEDpczK7m2GZTtP/lSj9gAfuA==
   dependencies:
     "@types/debug" "^4.1.5"
     debug "^4.1.1"

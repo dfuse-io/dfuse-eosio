@@ -1,123 +1,123 @@
 {
-  "permissions": [
-    {
-      "owner": "battlefield5",
-      "name": "owner",
-      "authority": {
-        "threshold": 1,
-        "keys": [
-          {
-            "key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "owner",
-      "owner": "battlefield5",
-      "name": "active",
-      "authority": {
-        "threshold": 5,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "battlefield1",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "battlefield3",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "battlefield4",
-              "permission": "active"
-            },
-            "weight": 2
-          },
-          {
-            "permission": {
-              "actor": "zzzzzzzzzzzz",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ],
-        "waits": [
-          {
-            "wait_sec": 10800,
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "active",
-      "owner": "battlefield5",
-      "name": "claimer",
-      "authority": {
-        "threshold": 1,
-        "keys": [
-          {
-            "key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
-            "weight": 1
-          }
-        ]
-      }
-    },
-    {
-      "parent": "active",
-      "owner": "battlefield5",
-      "name": "day2day",
-      "authority": {
-        "threshold": 1,
-        "accounts": [
-          {
-            "permission": {
-              "actor": "battlefield1",
-              "permission": "active"
-            },
-            "weight": 1
-          },
-          {
-            "permission": {
-              "actor": "battlefield3",
-              "permission": "active"
-            },
-            "weight": 1
-          },
-          {
-            "permission": {
-              "actor": "battlefield4",
-              "permission": "active"
-            },
-            "weight": 1
-          }
-        ]
-      }
-    }
-  ],
-  "link_auths": [
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "regproducer"
-    },
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "unregprod"
-    },
-    {
-      "permission": "day2day",
-      "contract": "eosio",
-      "action": "claimrewards"
-    }
-  ]
+	"permissions": [
+		{
+			"owner": "battlefield5",
+			"name": "owner",
+			"authority": {
+				"threshold": 1,
+				"keys": [
+					{
+						"key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "owner",
+			"owner": "battlefield5",
+			"name": "active",
+			"authority": {
+				"threshold": 5,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "battlefield1",
+							"permission": "active"
+						},
+						"weight": 2
+					},
+					{
+						"permission": {
+							"actor": "battlefield3",
+							"permission": "active"
+						},
+						"weight": 2
+					},
+					{
+						"permission": {
+							"actor": "battlefield4",
+							"permission": "active"
+						},
+						"weight": 2
+					},
+					{
+						"permission": {
+							"actor": "zzzzzzzzzzzz",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				],
+				"waits": [
+					{
+						"wait_sec": 10800,
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "active",
+			"owner": "battlefield5",
+			"name": "claimer",
+			"authority": {
+				"threshold": 1,
+				"keys": [
+					{
+						"key": "EOS5MHPYyhjBjnQZejzZHqHewPWhGTfQWSVTWYEhDmJu4SXkzgweP",
+						"weight": 1
+					}
+				]
+			}
+		},
+		{
+			"parent": "active",
+			"owner": "battlefield5",
+			"name": "day2day",
+			"authority": {
+				"threshold": 1,
+				"accounts": [
+					{
+						"permission": {
+							"actor": "battlefield1",
+							"permission": "active"
+						},
+						"weight": 1
+					},
+					{
+						"permission": {
+							"actor": "battlefield3",
+							"permission": "active"
+						},
+						"weight": 1
+					},
+					{
+						"permission": {
+							"actor": "battlefield4",
+							"permission": "active"
+						},
+						"weight": 1
+					}
+				]
+			}
+		}
+	],
+	"link_auths": [
+		{
+			"permission": "day2day",
+			"contract": "eosio",
+			"action": "regproducer"
+		},
+		{
+			"permission": "day2day",
+			"contract": "eosio",
+			"action": "unregprod"
+		},
+		{
+			"permission": "day2day",
+			"contract": "eosio",
+			"action": "claimrewards"
+		}
+	]
 }
