@@ -45,6 +45,7 @@ type DB interface {
 	//GetBlocksByNum(ctx context.Context, num uint32) ([]*mdl.BlockRow, error)
 	//ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*mdl.BlockRow, error)
 	//ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*mdl.BlockRow, error)
+	GetTransactionWithExpectedBlockID(ctx context.Context, id string, expectedBlockID string) (*pbcodec.TransactionLifecycle, error)
 	GetTransaction(ctx context.Context, id string) (*pbcodec.TransactionLifecycle, error)
 	GetTransactions(ctx context.Context, ids []string) ([]*pbcodec.TransactionLifecycle, error)
 	ListTransactionsForBlockID(ctx context.Context, blockId string, startKey string, limit int) (*mdl.TransactionList, error)
@@ -71,6 +72,29 @@ func NewTRXDB(dbReader trxdb.DBReader) *TRXDB {
 			return true
 		},
 	}
+}
+
+func (db *TRXDB) GetTransactionWithExpectedBlockID(ctx context.Context, id string, expectedBlockID string) (out *pbcodec.TransactionLifecycle, err error) {
+	evs, err := db.GetTransactionEvents(ctx, id)
+	if err != nil && err != kvdb.ErrNotFound {
+		return nil, err
+	}
+	if len(evs) == 0 {
+		return nil, DBTrxNotFoundError(ctx, id)
+	}
+	seenBlockID := false
+	for _, ev := range evs {
+		if ev.BlockId == expectedBlockID {
+			seenBlockID = true
+			break
+		}
+	}
+	if !seenBlockID {
+		return nil, DBTrxNotFoundError(ctx, id)
+	}
+
+	out = pbcodec.MergeTransactionEvents(evs, db.chainDiscriminator)
+	return
 }
 
 func (db *TRXDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
@@ -388,6 +412,10 @@ func (db *MockDB) GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (ou
 
 func (db *MockDB) GetLastWrittenBlockID(ctx context.Context) (string, error) {
 	return "0123456700000000000000000000000000000000000000000000000000000000", nil
+}
+
+func (db *MockDB) GetTransactionWithExpectedBlockID(ctx context.Context, id string, _ string) (out *pbcodec.TransactionLifecycle, err error) {
+	return db.GetTransaction(ctx, id)
 }
 
 func (db *MockDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
