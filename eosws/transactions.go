@@ -113,8 +113,10 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 										pause()
 										continue
 									}
+									srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
+								} else {
+									srcTx, err = ws.db.GetTransactionWithExpectedBlockID(ctx, msg.Data.ID, blk.ID())
 								}
-								srcTx, err = ws.db.GetTransactionWithExpectedBlockID(ctx, msg.Data.ID, blk.ID())
 								if err != nil {
 									zlog.Debug("error getting transaction from DB", zap.String("id", blk.ID()), zap.Error(err))
 									pause()
