@@ -42,6 +42,7 @@ func init() {
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
 	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
 	statedbReindexCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
+	statedbReindexCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start re-indexing from, will skip any index for which the tablet is before this boundary")
 
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
@@ -159,18 +160,27 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("new kv store: %w", err)
 	}
 
-	tablet, err := stringToTablet(args[0])
-	if err != nil {
-		return fmt.Errorf("invalid argument %q: %w", args[0], err)
-	}
-
 	ctx := context.Background()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
 
 	height := viper.GetUint64("height")
 	write := viper.GetBool("write")
+	lowerBound := viper.GetString("lower-bound")
 
-	index, written, err := fdb.ReindexTablet(ctx, tablet, height, write)
+	if args[0] == "all" {
+		return statedbReindexAll(ctx, fdb, height, lowerBound, write)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	return statedbReindexTablet(ctx, fdb, height, tablet, write)
+}
+
+func statedbReindexTablet(ctx context.Context, fdb *fluxdb.FluxDB, height uint64, tablet fluxdb.Tablet, write bool) (err error) {
+	index, written, err := fdb.ReindexTablet(ctx, height, tablet, write)
 	if err != nil {
 		return fmt.Errorf("reindex tablet %s: %w", tablet, err)
 	}
@@ -191,6 +201,24 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 		for _, row := range rows {
 			fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
 		}
+	}
+
+	return nil
+}
+
+func statedbReindexAll(ctx context.Context, fdb *fluxdb.FluxDB, height uint64, lowerBound string, write bool) (err error) {
+	var lowerBoundTablet fluxdb.Tablet
+	if lowerBound != "" {
+		lowerBoundTablet, err = stringToTablet(lowerBound)
+		if err != nil {
+			return fmt.Errorf("invalid lower-bound argument %q: %w", lowerBound, err)
+		}
+	}
+
+	fmt.Printf("Re-indexing all tablets (dry run: %t)\n", !write)
+	tabletCount, indexCount, err := fdb.ReindexTablets(ctx, height, lowerBoundTablet, !write)
+	if !write {
+		fmt.Printf("Not re-writing indexes, would have affeted %d tablet and %d overall indexes\n", tabletCount, indexCount)
 	}
 
 	return nil

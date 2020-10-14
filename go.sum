@@ -288,6 +288,8 @@ github.com/dfuse-io/fluxdb v0.0.0-20201009155134-a33fc729767d h1:0XjVI4oCKuTOMXT
 github.com/dfuse-io/fluxdb v0.0.0-20201009155134-a33fc729767d/go.mod h1:GzSU0pkLB2F8QBsb+9yoa59K7fV//vy/jLy1zsJFV5c=
 github.com/dfuse-io/fluxdb v0.0.0-20201009210743-f9e0b6c8912d h1:ghl5huYE2LzcSXJy0CBaRhPQ3viYprT8SjvxzTY/EXQ=
 github.com/dfuse-io/fluxdb v0.0.0-20201009210743-f9e0b6c8912d/go.mod h1:GzSU0pkLB2F8QBsb+9yoa59K7fV//vy/jLy1zsJFV5c=
+github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4 h1:wNRL3vEIhf3frX23RS0wuIjNX0JQ7v46BajBRE/k8iY=
+github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
@@ -300,6 +302,8 @@ github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661 h1:9GBUfIiUIyvtRYz
 github.com/dfuse-io/kvdb v0.0.2-0.20201005212111-c86bdbbe6661/go.mod h1:ILX9X4MmFTfBFid5kcURul/7Nn3yjYbEVdE7qFhhUwM=
 github.com/dfuse-io/kvdb v0.0.2-0.20201008214903-64669a1861e5 h1:4mP5DyM1GU66tU2bs1SKHKX+XUEtauNy8F/vUEo6x7E=
 github.com/dfuse-io/kvdb v0.0.2-0.20201008214903-64669a1861e5/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
+github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 h1:z6nXNo1jBz/QZ+9/NkzKBTPxaUxrnE81Dmy/MO+uvMI=
+github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
