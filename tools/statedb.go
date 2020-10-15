@@ -24,8 +24,11 @@ var showValue = false
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
 var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.ExactArgs(1)}
+
+// Higher-level calls
 var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the latest effective index for a given StateDB tablet", RunE: statedbIndexE, Args: cobra.ExactArgs(1)}
 var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
+var statedbTabletCmd = &cobra.Command{Use: "tablet", Short: "Fetch & print StateDB tablet, optionally at given height", RunE: statedbTabletE, Args: cobra.ExactArgs(1)}
 
 func init() {
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
@@ -39,16 +42,21 @@ func init() {
 	statedbCmd.PersistentFlags().Int("limit", 100, "Limit the number of rows when doing scan or prefix")
 
 	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Scan will ignore the limit")
+
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
+
 	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
 	statedbReindexCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
 	statedbReindexCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start re-indexing from, will skip any index for which the tablet is before this boundary")
+
+	statedbTabletCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
 
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
 	statedbCmd.AddCommand(statedbIndexCmd)
 	statedbCmd.AddCommand(statedbReindexCmd)
+	statedbCmd.AddCommand(statedbTabletCmd)
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
@@ -219,6 +227,46 @@ func statedbReindexAll(ctx context.Context, fdb *fluxdb.FluxDB, height uint64, l
 	tabletCount, indexCount, err := fdb.ReindexTablets(ctx, height, lowerBoundTablet, !write)
 	if !write {
 		fmt.Printf("Not re-writing indexes, would have affeted %d tablet and %d overall indexes\n", tabletCount, indexCount)
+	}
+
+	return nil
+}
+
+func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	ctx := context.Background()
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+
+	height := viper.GetUint64("height")
+	if height == 0 {
+		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
+		if err != nil {
+			return fmt.Errorf("fetch last checkpoint: %w", err)
+		}
+	}
+
+	tabletRows, err := fdb.ReadTabletAt(context.Background(), height, tablet, nil)
+	if err != nil {
+		return fmt.Errorf("read tablet: %w", err)
+	}
+
+	if len(tabletRows) == 0 {
+		fmt.Printf("Tablet %s has no row\n", tablet)
+		return
+	}
+
+	fmt.Printf("Tablet %s (%d rows at #%d)\n", tablet, len(tabletRows), height)
+	for _, tabletRow := range tabletRows {
+		fmt.Printf("- %s (at #%d)\n", tabletRow.String(), tabletRow.Height())
 	}
 
 	return nil

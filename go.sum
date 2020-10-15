@@ -284,6 +284,8 @@ github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJ
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4 h1:wNRL3vEIhf3frX23RS0wuIjNX0JQ7v46BajBRE/k8iY=
 github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
+github.com/dfuse-io/fluxdb v0.0.0-20201015205253-5bdf3f97d0d4 h1:qDXTdYdE5IfnrW6EyThvOEn5304yofvnMWv5Bn3nzz8=
+github.com/dfuse-io/fluxdb v0.0.0-20201015205253-5bdf3f97d0d4/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
