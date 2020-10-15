@@ -32,9 +32,9 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20201009210743-f9e0b6c8912d
+	github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20201008214903-64669a1861e5
+	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69
 	github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
 	github.com/dfuse-io/node-manager v0.0.2-0.20201008184707-d4ad3d71c1c4
@@ -46,7 +46,7 @@ require (
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/eoscanada/eos-go v0.9.1-0.20201008012030-56698e25a3c7
+	github.com/eoscanada/eos-go v0.9.1-0.20201015025226-35bdf3fcae14
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13

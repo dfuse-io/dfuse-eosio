@@ -26,7 +26,12 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
+	"go.uber.org/zap"
 )
+
+func pause() {
+	time.Sleep(500 * time.Millisecond)
+}
 
 func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransaction) {
 	var srcTx *pbcodec.TransactionLifecycle
@@ -97,21 +102,25 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 								ws.EmitErrorReply(ctx, msg, DBTrxAppearanceTimeoutError(ctx, blk.ID(), wantedTrxID))
 								return
 							default:
-								b, err := ws.db.GetBlock(ctx, blk.ID())
-								if err != nil {
-									// FIXME: don't we want to distinguish system failures, and NotFound here?
-									time.Sleep(time.Second)
-									continue
+								if waitForIrreversible {
+									lastDBIrr, err := ws.db.GetLastWrittenIrreversibleBlockRef(ctx)
+									if err != nil {
+										zlog.Debug("error getting last irreversible blockref from DB", zap.String("id", blk.ID()), zap.Error(err))
+										pause()
+										continue
+									}
+									if lastDBIrr.Num() < blk.Num() {
+										pause()
+										continue
+									}
+									srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
+								} else {
+									srcTx, err = ws.db.GetTransactionWithExpectedBlockID(ctx, msg.Data.ID, blk.ID())
 								}
-
-								if waitForIrreversible && !b.Irreversible {
-									time.Sleep(time.Second)
-									continue
-								}
-
-								srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
 								if err != nil {
-									ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get transaction, internal error"))
+									zlog.Debug("error getting transaction from DB", zap.String("id", blk.ID()), zap.Error(err))
+									pause()
+									continue
 								} else {
 									tx, err := mdl.ToV1TransactionLifecycle(srcTx)
 									if err != nil {
