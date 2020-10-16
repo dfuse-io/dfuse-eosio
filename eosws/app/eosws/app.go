@@ -83,6 +83,8 @@ type Config struct {
 	DataIntegrityProofSecret string
 	HealthzSecret            string
 
+	MaxStreamCountPerConnection int
+
 	DisabledWsMessage map[string]interface{}
 }
 
@@ -245,7 +247,19 @@ func (a *App) Run() error {
 		return fmt.Errorf("blockmeta connection error: %w", err)
 	}
 
-	wsHandler := eosws.NewWebsocketHandler(abiGetter, accountGetter, db, subscriptionHub, stateClient, voteTallyHub, headInfoHub, priceHub, irrFinder, a.Config.FilesourceRateLimitPerBlock)
+	wsHandler := eosws.NewWebsocketHandler(
+		abiGetter,
+		accountGetter,
+		db,
+		subscriptionHub,
+		stateClient,
+		voteTallyHub,
+		headInfoHub,
+		priceHub,
+		irrFinder,
+		a.Config.FilesourceRateLimitPerBlock,
+		a.Config.MaxStreamCountPerConnection,
+	)
 
 	auth, err := authenticator.New(a.Config.AuthPlugin)
 	if err != nil {

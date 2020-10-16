@@ -81,6 +81,7 @@ func Test_onGetVoteTally(t *testing.T) {
 				nil,
 				NewTestIrreversibleFinder("00000002a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)

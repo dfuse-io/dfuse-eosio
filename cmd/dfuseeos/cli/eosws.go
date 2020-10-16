@@ -34,6 +34,8 @@ func init() {
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native superviser APIs with authentication")
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			cmd.Flags().StringSlice("eosws-disabled-messages", []string{}, "List off WS message that need to be disabled")
+			cmd.Flags().Int("eosws-max-stream-per-connection", 12, "Maximum number of stream active at the same time to allow per connection")
+
 			return nil
 		},
 
@@ -70,6 +72,7 @@ func init() {
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
 				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
 				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
+				MaxStreamCountPerConnection: viper.GetInt("eosws-max-stream-per-connection"),
 				DisabledWsMessage:           disabledWsMessages,
 			}, &eoswsApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
