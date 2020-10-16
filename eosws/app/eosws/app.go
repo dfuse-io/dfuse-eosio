@@ -398,7 +398,7 @@ func (a *App) Run() error {
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(
 		dmetering.NewMeteringMiddleware(
-			rest.NewTxPusher(api, subscriptionHub),
+			rest.NewTxPusher(api, subscriptionHub, headInfoHub),
 			meter,
 			"eosws", "Push Transaction",
 			true, true,
