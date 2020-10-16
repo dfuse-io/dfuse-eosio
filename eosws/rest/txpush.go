@@ -57,13 +57,16 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// fully control within `eosws` the actual CORS for the requests.
 	deleteCORSHeaders(r)
 
-	pushTransactionGuaranteeOption := r.Header.Get("X-Eos-Push-Guarantee")
-	if (r.URL.EscapedPath() != "/v1/chain/push_transaction" && r.URL.EscapedPath() != "/v1/chain/send_transaction") || pushTransactionGuaranteeOption == "" {
-		t.dumbAPIProxy.ServeHTTP(w, r)
-		return
+	switch r.URL.EscapedPath() {
+	case "/v1/chain/push_transaction", "/v1/chain/send_transaction":
+		if r.Header.Get("X-Eos-Push-Guarantee") != "" {
+			t.pushTransactionHandler.ServeHTTP(w, r)
+			return
+		}
+		//case "/v1/chain/get_info":
+		//return
 	}
-
-	t.pushTransactionHandler.ServeHTTP(w, r)
+	t.dumbAPIProxy.ServeHTTP(w, r)
 }
 
 ////// PUSHER
@@ -100,7 +103,7 @@ func (t *TxPusher) tryPush(ctx context.Context, tx *eos.PackedTransaction, useLe
 
 func isRetryable(err error) bool {
 	if apiErr, ok := err.(eos.APIError); ok {
-		if apiErr.ErrorStruct.Code < 3080000 {
+		if apiErr.ErrorStruct.Code < 3080000 || apiErr.ErrorStruct.Code == 308 {
 			return false
 		}
 		// in between those are resource-related errors, like cpu or deadline, we want to retry those
@@ -161,7 +164,6 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	normalizedGuarantee := guarantee
 	switch guarantee {
 	case "in-block":
-		zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
 		trxTraceFoundChan, shutdownFunc = awaitTransactionInBlock(ctx, trxID, liveSourceFactory)
 	case "handoff:1", "handoffs:1":
 		normalizedGuarantee = "handoffs:1"
@@ -189,8 +191,8 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
 	var pushResp json.RawMessage
-	maxAttempts := 3
-	for attempt := 0; ; attempt++ {
+	maxAttempts := 4
+	for attempt := 1; ; attempt++ {
 		pushResp, err = t.tryPush(ctx, tx, r.URL.EscapedPath() == "/v1/chain/push_transaction")
 		if err == nil {
 			break
@@ -198,7 +200,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		retryable := isRetryable(err)
 		if apiErr, ok := err.(eos.APIError); ok {
 			if apiErrCnt, err := json.Marshal(apiErr); err == nil {
-				zlog.Info("push transaction retryable API error",
+				zlog.Info("push transaction API error",
 					zap.String("name", apiErr.ErrorStruct.Name),
 					zap.Bool("retryable", retryable),
 					zap.Int("attempt", attempt),
@@ -209,7 +211,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					zap.Any("details", apiErr.ErrorStruct.Details),
 				)
 				if attempt < maxAttempts && retryable {
-					time.Sleep(500 * time.Millisecond)
+					time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
 					continue
 				}
 				w.WriteHeader(apiErr.Code)
@@ -224,7 +226,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			zap.Int("attempt", attempt),
 		)
 		if attempt < maxAttempts && retryable {
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(time.Duration(attempt) * 250 * time.Millisecond)
 			continue
 		}
 		checkHTTPError(err, fmt.Sprintf("cannot push transaction %q to Nodeos API.", trxID), eoserr.ErrUnhandledException, w)
@@ -237,6 +239,8 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		checkHTTPError(errors.New(msg), msg, eoserr.ErrUnhandledException, w)
 		return
 	}
+
+	zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()), zap.String("guarantee", guarantee))
 
 	// FIXME:
 	// if we return an error but we DID submit the transaction to the chain, ideally
