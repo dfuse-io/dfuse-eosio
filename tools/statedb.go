@@ -41,7 +41,11 @@ func init() {
 	statedbCmd.PersistentFlags().StringP("table", "t", "00", "StateDB table id (single byte, hexadecimal encoded) to query from")
 	statedbCmd.PersistentFlags().Int("limit", 100, "Limit the number of rows when doing scan or prefix")
 
-	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Scan will ignore the limit")
+	statedbPrefixCmd.PersistentFlags().Bool("key-only", false, "Only retrieve keys and not value when performing prefix search")
+	statedbPrefixCmd.PersistentFlags().Bool("unlimited", false, "Returns all results, ignore the limit value")
+
+	statedbScanCmd.PersistentFlags().Bool("key-only", false, "Only retrieve keys and not value when performing scan")
+	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Returns all results, ignore the limit value")
 
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
 
@@ -88,7 +92,7 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 	start := append(table, startKey...)
 	end := append(table, endKey...)
 
-	rangeScan(kv, start, end, limit)
+	rangeScan(kv, start, end, limit, viper.GetBool("key-only"))
 	return nil
 }
 
@@ -108,8 +112,13 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("prefix key: %w", err)
 	}
 
+	limit := viper.GetInt("limit")
+	if viper.GetBool("unlimited") {
+		limit = store.Unlimited
+	}
+
 	prefix := append(table, prefixKey...)
-	prefixScan(kv, prefix, viper.GetInt("limit"))
+	prefixScan(kv, prefix, limit, viper.GetBool("key-only"))
 	return nil
 }
 
@@ -272,19 +281,30 @@ func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func prefixScan(store store.KVStore, prefix []byte, limit int) error {
+func prefixScan(kvStore store.KVStore, prefix []byte, limit int, keyOnly bool) error {
 	prefixCtx, cancelScan := context.WithCancel(context.Background())
 	defer cancelScan()
 
-	return printIterator(store.Prefix(prefixCtx, prefix, limit))
+	var options []store.ReadOption
+	if keyOnly {
+		options = []store.ReadOption{store.KeyOnly()}
+	}
+
+	return printIterator(kvStore.Prefix(prefixCtx, prefix, limit, options...))
 }
 
-func rangeScan(store store.KVStore, keyStart, keyEnd []byte, limit int) error {
+func rangeScan(kvStore store.KVStore, keyStart, keyEnd []byte, limit int, keyOnly bool) error {
 	prefixCtx, cancelScan := context.WithCancel(context.Background())
 	defer cancelScan()
 
-	return printIterator(store.Scan(prefixCtx, keyStart, keyEnd, limit))
+	var options []store.ReadOption
+	if keyOnly {
+		options = []store.ReadOption{store.KeyOnly()}
+	}
+
+	return printIterator(kvStore.Scan(prefixCtx, keyStart, keyEnd, limit, options...))
 }
+
 func printIterator(it *store.Iterator) error {
 	count := 0
 	start := time.Now()
