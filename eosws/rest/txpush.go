@@ -179,6 +179,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			metrics.FailedPushTrxCount.Inc(normalizedGuarantee)
 		}
 		if apiErr, ok := err.(eos.APIError); ok {
+			zlog.Warn("push transaction API error", zap.String("name", apiErr.ErrorStruct.Name), zap.Int("code", apiErr.Code), zap.Int("errstruct_code", apiErr.ErrorStruct.Code), zap.String("message", apiErr.Message), zap.String("what", apiErr.ErrorStruct.What), zap.Any("details", apiErr.ErrorStruct.Details))
 			apiErrCnt, err := json.Marshal(apiErr)
 			if err == nil {
 				w.WriteHeader(apiErr.Code)
