@@ -74,6 +74,7 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 type TxPusher struct {
 	API             *eos.API
 	subscriptionHub *hub.SubscriptionHub
+	headInfoHub     *eosws.HeadInfoHub
 }
 
 type PushResponse struct {
@@ -83,10 +84,11 @@ type PushResponse struct {
 	Processed     *eos.TransactionTrace `json:"processed"`
 }
 
-func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub) *TxPusher {
+func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub *eosws.HeadInfoHub) *TxPusher {
 	return &TxPusher{
 		API:             API,
 		subscriptionHub: subscriptionHub,
+		headInfoHub:     headInfoHub,
 	}
 }
 
@@ -142,11 +144,6 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodeosInfo, err := t.API.GetInfo(r.Context())
-	if checkHTTPError(err, "cannot connect to API", eoserr.ErrUnhandledException, w) {
-		return
-	}
-
 	trxIDCheckSum, err := tx.ID()
 	if checkHTTPError(err, "cannot compute transaction ID", eoserr.ErrUnhandledException, w) {
 		return
@@ -159,7 +156,6 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var trxTraceFoundChan <-chan *pbcodec.TransactionTrace
 	var shutdownFunc func(error)
-	lib := nodeosInfo.LastIrreversibleBlockID.String()
 	expirationDelay := time.Minute * 2 //baseline for inblock inclusion
 	normalizedGuarantee := guarantee
 	switch guarantee {
@@ -168,15 +164,15 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "handoff:1", "handoffs:1":
 		normalizedGuarantee = "handoffs:1"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 1, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 1, t.subscriptionHub)
 	case "handoff:2", "handoffs:2":
 		normalizedGuarantee = "handoffs:2"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 2, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 2, t.subscriptionHub)
 	case "handoff:3", "handoffs:3":
 		normalizedGuarantee = "handoffs:3"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 3, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 3, t.subscriptionHub)
 	case "irreversible":
 		expirationDelay += 6 * time.Minute
 		trxTraceFoundChan, shutdownFunc = awaitTransactionIrreversible(ctx, trxID, liveSourceFactory)
