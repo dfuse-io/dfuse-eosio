@@ -87,6 +87,32 @@ func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub) *TxPusher {
 	}
 }
 
+func (t *TxPusher) tryPush(ctx context.Context, tx *eos.PackedTransaction, useLegacyPush bool) (pushResp json.RawMessage, err error) {
+	timedoutContext, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if useLegacyPush {
+		return t.API.PushTransactionRaw(timedoutContext, tx)
+	}
+	return t.API.SendTransactionRaw(timedoutContext, tx)
+
+}
+
+func isRetryable(err error) bool {
+	if apiErr, ok := err.(eos.APIError); ok {
+		if apiErr.ErrorStruct.Code < 3080000 {
+			return false
+		}
+		// in between those are resource-related errors, like cpu or deadline, we want to retry those
+		// see https://docs.google.com/spreadsheets/d/1uHeNDLnCVygqYK-V01CFANuxUwgRkNkrmeLm9MLqu9c/edit#gid=0
+		if apiErr.ErrorStruct.Code >= 3090000 {
+			return false
+		}
+	}
+	return true // any other error ? (including context deadline exceeded)
+
+}
+
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	guarantee := r.Header.Get("X-Eos-Push-Guarantee")
 
@@ -162,32 +188,45 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer metrics.CurrentListeners.Dec("push_transaction")
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
-	timedoutContext, cancel := context.WithTimeout(ctx, 1*time.Minute)
-
 	var pushResp json.RawMessage
-	if r.URL.EscapedPath() == "/v1/chain/push_transaction" {
-		pushResp, err = t.API.PushTransactionRaw(timedoutContext, tx)
-	} else {
-		pushResp, err = t.API.SendTransactionRaw(timedoutContext, tx)
-	}
-
-	cancel()
-	if err != nil {
-		if err.Error() == context.Canceled.Error() {
-			metrics.TimedOutPushingTrxCount.Inc(normalizedGuarantee)
-		} else {
-			metrics.FailedPushTrxCount.Inc(normalizedGuarantee)
+	maxAttempts := 3
+	for attempt := 0; ; attempt++ {
+		pushResp, err = t.tryPush(ctx, tx, r.URL.EscapedPath() == "/v1/chain/push_transaction")
+		if err == nil {
+			break
 		}
+		retryable := isRetryable(err)
 		if apiErr, ok := err.(eos.APIError); ok {
-			zlog.Warn("push transaction API error", zap.String("name", apiErr.ErrorStruct.Name), zap.Int("code", apiErr.Code), zap.Int("errstruct_code", apiErr.ErrorStruct.Code), zap.String("message", apiErr.Message), zap.String("what", apiErr.ErrorStruct.What), zap.Any("details", apiErr.ErrorStruct.Details))
-			apiErrCnt, err := json.Marshal(apiErr)
-			if err == nil {
+			if apiErrCnt, err := json.Marshal(apiErr); err == nil {
+				zlog.Info("push transaction retryable API error",
+					zap.String("name", apiErr.ErrorStruct.Name),
+					zap.Bool("retryable", retryable),
+					zap.Int("attempt", attempt),
+					zap.Int("code", apiErr.Code),
+					zap.Int("errstruct_code", apiErr.ErrorStruct.Code),
+					zap.String("error_message", apiErr.Message),
+					zap.String("what", apiErr.ErrorStruct.What),
+					zap.Any("details", apiErr.ErrorStruct.Details),
+				)
+				if attempt < maxAttempts && retryable {
+					time.Sleep(500 * time.Millisecond)
+					continue
+				}
 				w.WriteHeader(apiErr.Code)
 				w.Write(apiErrCnt)
 				return
 			}
 		}
-		zlog.Error("cannot push transaction to Nodeos API", zap.Error(err))
+
+		zlog.Info("cannot push transaction to Nodeos API",
+			zap.Error(err),
+			zap.Bool("retryable", retryable),
+			zap.Int("attempt", attempt),
+		)
+		if attempt < maxAttempts && retryable {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
 		checkHTTPError(err, fmt.Sprintf("cannot push transaction %q to Nodeos API.", trxID), eoserr.ErrUnhandledException, w)
 		return
 	}
@@ -196,6 +235,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if idCheck != trxID {
 		msg := fmt.Sprintf("pushed transaction ID %q mismatch transaction ID received from API %q", trxID, idCheck)
 		checkHTTPError(errors.New(msg), msg, eoserr.ErrUnhandledException, w)
+		return
 	}
 
 	// FIXME:
