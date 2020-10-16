@@ -97,7 +97,7 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 }
 
 func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("dsn"))
+	kv, err := store.New(viper.GetString("dsn"), store.WithEmptyValue())
 	if err != nil {
 		return err
 	}
@@ -332,11 +332,10 @@ func printIterator(it *store.Iterator) error {
 
 	fmt.Println()
 	if err := it.Err(); err != nil {
-		fmt.Printf("Iteration error: %s\n", err)
+		fmt.Printf("Iteration error: %s (in %s)\n", err, time.Since(start))
 	} else {
-		fmt.Printf("Found %d keys\n", count)
+		fmt.Printf("Found %d keys (in %s)\n", count, time.Since(start))
 	}
-	fmt.Printf("In %ss\n", time.Since(start))
 
 	return nil
 }
@@ -418,6 +417,19 @@ func stringToTablet(in string) (fluxdb.Tablet, error) {
 	}
 
 	return mapper.factory(parts[1:]), nil
+}
+
+type partsToSinglet struct {
+	partCount int
+	factory   func(parts []string) fluxdb.Singlet
+}
+
+var partsToSingletMap = map[string]*partsToTablet{
+	"idx": {
+		partCount: 3, factory: func(parts []string) fluxdb.Tablet {
+			return statedb.NewContractStateTablet(parts[0], parts[1], parts[2])
+		},
+	},
 }
 
 type partsToTablet struct {
