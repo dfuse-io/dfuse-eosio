@@ -75,6 +75,7 @@ type TxPusher struct {
 	API             *eos.API
 	subscriptionHub *hub.SubscriptionHub
 	headInfoHub     *eosws.HeadInfoHub
+	retries         int
 }
 
 type PushResponse struct {
@@ -84,11 +85,12 @@ type PushResponse struct {
 	Processed     *eos.TransactionTrace `json:"processed"`
 }
 
-func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub *eosws.HeadInfoHub) *TxPusher {
+func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub *eosws.HeadInfoHub, retries int) *TxPusher {
 	return &TxPusher{
 		API:             API,
 		subscriptionHub: subscriptionHub,
 		headInfoHub:     headInfoHub,
+		retries:         retries,
 	}
 }
 
@@ -187,7 +189,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
 	var pushResp json.RawMessage
-	maxAttempts := 4
+	maxAttempts := t.retries + 1
 	for attempt := 1; ; attempt++ {
 		pushResp, err = t.tryPush(ctx, tx, r.URL.EscapedPath() == "/v1/chain/push_transaction")
 		if err == nil {

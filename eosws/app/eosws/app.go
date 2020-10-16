@@ -66,6 +66,9 @@ type Config struct {
 	StateDBHTTPAddr     string
 	StateDBGRPCAddr     string
 
+	StateDBHTTPProxyRetries int
+	NodeosRPCProxyRetries   int
+
 	AuthenticateNodeosAPI bool
 
 	MeteringPlugin           string
@@ -292,7 +295,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
 	}
 
-	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false)
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -388,7 +391,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse api-addr: %w", err)
 	}
 
-	dumbAPIProxy := rest.NewReverseProxy(apiURL, true)
+	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries)
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,
@@ -398,7 +401,7 @@ func (a *App) Run() error {
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(
 		dmetering.NewMeteringMiddleware(
-			rest.NewTxPusher(api, subscriptionHub, headInfoHub),
+			rest.NewTxPusher(api, subscriptionHub, headInfoHub, a.Config.NodeosRPCProxyRetries),
 			meter,
 			"eosws", "Push Transaction",
 			true, true,

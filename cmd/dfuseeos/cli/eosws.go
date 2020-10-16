@@ -22,6 +22,8 @@ func init() {
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
+			cmd.Flags().Int("eosws-statedb-proxy-retries", 2, "Number of time to retry proxying statedb request (0 means no retry)")
+			cmd.Flags().Int("eosws-nodeos-rpc-proxy-retries", 2, "Number of time to retry proxying nodeos RPC request (0 means no retry)")
 			cmd.Flags().String("eosws-statedb-http-addr", StateDBHTTPServingAddr, "StateDB HTTP server address")
 			cmd.Flags().String("eosws-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
@@ -55,6 +57,8 @@ func init() {
 				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
 				KVDBDSN:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
+				StateDBHTTPProxyRetries:     viper.GetInt("eosws-statedb-proxy-retries"),
+				NodeosRPCProxyRetries:       viper.GetInt("eosws-nodeos-rpc-proxy-retries"),
 				SourceStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),

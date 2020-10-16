@@ -14,6 +14,8 @@ date.
 ### Added
 
 * Added `--eosws-max-stream-per-connection` to allow changing how many stream can be active at the same time for a given WebSocket connection, defaults to `12` which was the hard-coded value.
++ Added `--eosws-statedb-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
++ Added `--eosws-nodeos-rpc-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
 * Added `--mindreader-max-console-length-in-bytes` which is the limit in bytes that we allow action trace's console output to be before truncating them.
 * Environment variable `MINDREADER_MAX_TOKEN_SIZE` can now be set to override `bufio.Scanner()` max token size (default `52428800`, i.e. `50Mb`) for EOSIO chains with huge transactions
 * Flag `--accounthist-mode` to specific the accounthist mode of operation

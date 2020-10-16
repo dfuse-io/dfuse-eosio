@@ -15,9 +15,12 @@
 package rest
 
 import (
+	"bytes"
+	"context"
+	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
+	"time"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/dmetering"
@@ -37,67 +40,149 @@ func deleteCORSHeaders(r *http.Request) {
 	}
 }
 
-func NewReverseProxy(target *url.URL, stripQuerystring bool) *httputil.ReverseProxy {
-	director := func(req *http.Request) {
-		if stripQuerystring {
-			req.URL.RawQuery = ""
+type ReverseProxy struct {
+	retries          int
+	target           *url.URL
+	stripQuerystring bool
+	dmeteringKind    string
+}
+
+func (p *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	for attempt := 1; ; attempt++ {
+		if p.tryReq(w, r, attempt > p.retries) {
+			return
 		}
-		req.URL.Scheme = target.Scheme
-		req.URL.Host = target.Host
-		req.Host = target.Host
-		deleteCORSHeaders(req)
-		req.Header.Set("Host", target.Host)
-		if _, ok := req.Header["User-Agent"]; !ok {
-			// explicitly disable User-Agent so it's not set to default value
-			req.Header.Set("User-Agent", "")
-		}
+		time.Sleep(time.Duration(attempt) * 250 * time.Millisecond)
+	}
+}
+
+func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirectly bool) (written bool) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	req := r.Clone(ctx)
+	if p.stripQuerystring {
+		req.URL.RawQuery = ""
 	}
 
-	return &httputil.ReverseProxy{
-		Director: director,
-		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err error) {
-			zlog.Info("REST error",
-				zap.String("path", r.URL.Path),
-				zap.String("method", r.Method),
-				zap.String("host", r.URL.Host),
-				zap.Error(err),
-			)
-			w.WriteHeader(http.StatusBadGateway)
-		},
+	var b bytes.Buffer
+	b.ReadFrom(r.Body)
+	r.Body = ioutil.NopCloser(&b)
+	req.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
 
-		ModifyResponse: func(response *http.Response) error {
-			ctx := response.Request.Context()
+	req.RequestURI = ""
+	req.URL.Scheme = p.target.Scheme
+	req.URL.Host = p.target.Host
+	req.Host = p.target.Host
+	deleteCORSHeaders(req)
+	req.Header.Set("Host", p.target.Host)
+	if _, ok := req.Header["User-Agent"]; !ok {
+		// explicitly disable User-Agent so it's not set to default value
+		req.Header.Set("User-Agent", "")
+	}
 
-			zlog.Info("REST response",
-				zap.String("path", response.Request.URL.Path),
-				zap.String("method", response.Request.Method),
-				zap.String("host", response.Request.URL.Host),
-				zap.Int("response_code", response.StatusCode),
-				zap.String("response_status", response.Status),
-			)
-			response.Header.Del("X-Trace-ID")
-
-			//////////////////////////////////////////////////////////////////////
-			// Billable event on REST API endpoint
-			// WARNING: Ingress / Egress bytess is taken care by the middleware
-			//////////////////////////////////////////////////////////////////////
-			//TODO: WARNING - /v0/state (StateDB) bill one document even though they may be very large
-			dmetering.EmitWithContext(dmetering.Event{
-				Source:         "eosws",
-				Kind:           "REST API - Chain State",
-				Method:         response.Request.URL.Path,
-				RequestsCount:  1,
-				ResponsesCount: 1,
-			}, ctx)
-			//////////////////////////////////////////////////////////////////////
-
-			return nil
-		},
+	client := &http.Client{
 		Transport: &ochttp.Transport{
 			Base: &http.Transport{
 				DisableKeepAlives: true,
 			},
 			Propagation: &stackdriverPropagation.HTTPFormat{},
 		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		zlog.Info("REST error",
+			zap.String("path", r.URL.Path),
+			zap.String("method", r.Method),
+			zap.String("host", r.URL.Host),
+			zap.Bool("fail_directly", failDirectly),
+			zap.Error(err),
+		)
+		if failDirectly {
+			w.WriteHeader(http.StatusBadGateway)
+			return true
+		}
+		return false
+	}
+
+	body, bodyErr := ioutil.ReadAll(resp.Body)
+	if bodyErr != nil {
+		zlog.Info("REST error reading body",
+			zap.String("path", r.URL.Path),
+			zap.String("method", r.Method),
+			zap.String("host", r.URL.Host),
+			zap.Bool("fail_directly", failDirectly),
+			zap.Error(bodyErr),
+		)
+		if failDirectly {
+			w.WriteHeader(http.StatusBadGateway)
+			return true
+		}
+		return false
+	}
+
+	if resp.StatusCode >= 500 {
+		zlog.Info("REST error from backend",
+			zap.String("path", r.URL.Path),
+			zap.String("method", r.Method),
+			zap.String("host", r.URL.Host),
+			zap.Bool("fail_directly", failDirectly),
+			zap.Error(err),
+		)
+		if failDirectly {
+			w.WriteHeader(resp.StatusCode)
+			w.Write(body)
+			return true
+		}
+		return false
+	}
+	_, err = w.Write(body)
+	if err != nil {
+		zlog.Info("REST error writing to client",
+			zap.String("path", r.URL.Path),
+			zap.String("method", r.Method),
+			zap.String("host", r.URL.Host),
+			zap.Bool("fail_directly", failDirectly),
+			zap.Error(err),
+		)
+		return true
+	}
+
+	// on success
+	zlog.Info("REST response",
+		zap.String("path", r.URL.Path),
+		zap.String("method", r.Method),
+		zap.String("host", r.URL.Host),
+		zap.Int("response_code", resp.StatusCode),
+		zap.String("response_status", resp.Status),
+	)
+
+	resp.Header.Del("X-Trace-ID")
+
+	//////////////////////////////////////////////////////////////////////
+	// Billable event on REST API endpoint
+	// WARNING: Ingress / Egress bytess is taken care by the middleware
+	//////////////////////////////////////////////////////////////////////
+	//TODO: WARNING - /v0/state (StateDB) bill one document even though they may be very large
+	dmetering.EmitWithContext(dmetering.Event{
+		Source:         "eosws",
+		Kind:           p.dmeteringKind,
+		Method:         r.URL.Path,
+		RequestsCount:  1,
+		ResponsesCount: 1,
+	}, ctx)
+	//////////////////////////////////////////////////////////////////////
+
+	return true
+
+}
+
+func NewReverseProxy(target *url.URL, stripQuerystring bool, dmeteringKind string, retries int) http.Handler {
+	return &ReverseProxy{
+		retries:          retries,
+		target:           target,
+		stripQuerystring: stripQuerystring,
+		dmeteringKind:    dmeteringKind,
 	}
 }
