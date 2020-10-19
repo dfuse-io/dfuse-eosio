@@ -102,6 +102,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.Error(err),
 		)
 		if failDirectly {
+			copyHeader(w.Header(), resp.Header)
 			w.WriteHeader(http.StatusBadGateway)
 			return true
 		}
@@ -118,6 +119,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.Error(bodyErr),
 		)
 		if failDirectly {
+			copyHeader(w.Header(), resp.Header)
 			w.WriteHeader(http.StatusBadGateway)
 			return true
 		}
@@ -139,6 +141,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.Error(err),
 		)
 		if failDirectly || !retryable {
+			copyHeader(w.Header(), resp.Header)
 			w.WriteHeader(resp.StatusCode)
 			w.Write(body)
 			return true
@@ -146,6 +149,8 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		return false
 	}
 
+	resp.Header.Del("X-Trace-ID")
+	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
 	_, err = w.Write(body)
 	if err != nil {
@@ -167,8 +172,6 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		zap.Int("response_code", resp.StatusCode),
 		zap.String("response_status", resp.Status),
 	)
-
-	resp.Header.Del("X-Trace-ID")
 
 	//////////////////////////////////////////////////////////////////////
 	// Billable event on REST API endpoint
@@ -205,4 +208,12 @@ func decodeErrorBody(body []byte) (apiErr *eos.APIError) {
 		return nil
 	}
 	return
+}
+
+func copyHeader(dst, src http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Add(k, v)
+		}
+	}
 }
