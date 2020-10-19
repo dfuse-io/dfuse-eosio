@@ -17,6 +17,7 @@ package rest
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -24,6 +25,7 @@ import (
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/dfuse-io/dmetering"
+	"github.com/eoscanada/eos-go"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 )
@@ -123,20 +125,28 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 	}
 
 	if resp.StatusCode >= 500 {
+		retryable := true
+		if apiErr := decodeErrorBody(body); apiErr != nil {
+			retryable = isRetryable(*apiErr)
+		}
 		zlog.Info("REST error from backend",
 			zap.String("path", r.URL.Path),
 			zap.String("method", r.Method),
 			zap.String("host", r.URL.Host),
+			zap.Int("status_code", resp.StatusCode),
+			zap.String("status", resp.Status),
 			zap.Bool("fail_directly", failDirectly),
 			zap.Error(err),
 		)
-		if failDirectly {
+		if failDirectly || !retryable {
 			w.WriteHeader(resp.StatusCode)
 			w.Write(body)
 			return true
 		}
 		return false
 	}
+
+	w.WriteHeader(resp.StatusCode)
 	_, err = w.Write(body)
 	if err != nil {
 		zlog.Info("REST error writing to client",
@@ -185,4 +195,14 @@ func NewReverseProxy(target *url.URL, stripQuerystring bool, dmeteringKind strin
 		stripQuerystring: stripQuerystring,
 		dmeteringKind:    dmeteringKind,
 	}
+}
+
+func decodeErrorBody(body []byte) (apiErr *eos.APIError) {
+	if err := json.Unmarshal(body, &apiErr); err != nil {
+		return nil
+	}
+	if apiErr.Code == 0 {
+		return nil
+	}
+	return
 }

@@ -107,7 +107,7 @@ func (t *TxPusher) tryPush(ctx context.Context, tx *eos.PackedTransaction, useLe
 
 func isRetryable(err error) bool {
 	if apiErr, ok := err.(eos.APIError); ok {
-		if apiErr.ErrorStruct.Code < 3080000 || apiErr.ErrorStruct.Code == 308 {
+		if apiErr.ErrorStruct.Code < 3080000 || apiErr.ErrorStruct.Code == 3080001 {
 			return false
 		}
 		// in between those are resource-related errors, like cpu or deadline, we want to retry those
