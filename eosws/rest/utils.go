@@ -102,7 +102,6 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.Error(err),
 		)
 		if failDirectly {
-			copyHeader(w.Header(), resp.Header)
 			w.WriteHeader(http.StatusBadGateway)
 			return true
 		}

@@ -55,16 +55,17 @@ import (
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
 type Config struct {
-	HTTPListenAddr      string
-	NodeosRPCEndpoint   string
-	BlockmetaAddr       string
-	KVDBDSN             string
-	BlockStreamAddr     string
-	SourceStoreURL      string
-	SearchAddr          string
-	SearchAddrSecondary string
-	StateDBHTTPAddr     string
-	StateDBGRPCAddr     string
+	HTTPListenAddr              string
+	NodeosRPCEndpoint           string
+	NodeosRPCPushExtraEndpoints []string
+	BlockmetaAddr               string
+	KVDBDSN                     string
+	BlockStreamAddr             string
+	SourceStoreURL              string
+	SearchAddr                  string
+	SearchAddrSecondary         string
+	StateDBHTTPAddr             string
+	StateDBGRPCAddr             string
 
 	StateDBHTTPProxyRetries int
 	NodeosRPCProxyRetries   int
@@ -132,6 +133,14 @@ func (a *App) Run() error {
 		apiURLStr = "http://" + apiURLStr
 	}
 	api := eos.New(apiURLStr)
+
+	var extraAPIs []*eos.API
+	for _, extraAPIURL := range a.Config.NodeosRPCPushExtraEndpoints {
+		if !strings.HasPrefix(extraAPIURL, "http") {
+			extraAPIURL = "http://" + extraAPIURL
+		}
+		extraAPIs = append(extraAPIs, eos.New(extraAPIURL))
+	}
 
 	kdb, err := trxdb.New(a.Config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
@@ -401,7 +410,7 @@ func (a *App) Run() error {
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(
 		dmetering.NewMeteringMiddleware(
-			rest.NewTxPusher(api, subscriptionHub, headInfoHub, a.Config.NodeosRPCProxyRetries),
+			rest.NewTxPusher(api, subscriptionHub, headInfoHub, a.Config.NodeosRPCProxyRetries, extraAPIs),
 			meter,
 			"eosws", "Push Transaction",
 			true, true,

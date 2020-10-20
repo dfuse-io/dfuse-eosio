@@ -20,6 +20,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
+			cmd.Flags().StringSlice("eosws-nodeos-rpc-push-extra-addresses", nil, "List of API addresses available when retrying push-transaction that does not seem to appear")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
 			cmd.Flags().Int("eosws-statedb-proxy-retries", 2, "Number of time to retry proxying statedb request (0 means no retry)")
@@ -54,6 +55,7 @@ func init() {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
+				NodeosRPCPushExtraEndpoints: viper.GetStringSlice("eosws-nodeos-rpc-push-extra-addresses"),
 				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
 				KVDBDSN:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
