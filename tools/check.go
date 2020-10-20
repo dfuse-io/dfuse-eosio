@@ -94,7 +94,7 @@ func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{}, true)
 	fdb.SetSharding(0, int(shardsInt))
 	_, lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
 	if err != nil {

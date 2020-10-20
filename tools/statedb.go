@@ -157,7 +157,7 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	height := viper.GetUint64("height")
 	if height == 0 {
@@ -201,7 +201,7 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, false)
 
 	height := viper.GetUint64("height")
 	write := viper.GetBool("write")
@@ -276,7 +276,7 @@ func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	height := viper.GetUint64("height")
 	if height == 0 {

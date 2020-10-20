@@ -13,6 +13,7 @@ date.
 
 ### Added
 
+* Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
 * Added `--eosws-nodeos-rpc-push-extra-addresses` to allow providing a list of backup EOS addresses when push-transaction does not succeed in getting the transaction inside a block (with push_guarantee)
 * Added `--eosws-max-stream-per-connection` to allow changing how many stream can be active at the same time for a given WebSocket connection, defaults to `12` which was the hard-coded value.
 + Added `--eosws-statedb-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
