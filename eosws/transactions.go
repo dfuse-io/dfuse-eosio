@@ -26,7 +26,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/logging"
-	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 
@@ -62,11 +61,6 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 		if err != nil {
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get lib"))
 			return
-		}
-
-		exclusiveGateID := libRef.ID()
-		if srcTx != nil && srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libRef.Num() {
-			exclusiveGateID = srcTx.ExecutionTrace.ProducerBlockId
 		}
 
 		wantedTrxID := msg.Data.ID
@@ -162,11 +156,20 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			handler = NewProgressHandler(handler, ws, msg, ctx).ProcessBlock
 		}
 
-		gateHandler := bstream.NewBlockIDGate(exclusiveGateID, bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
-		forkableHandler := forkable.New(gateHandler, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(libRef))
+		nextBlockRef := libRef
+		effectiveHandler := bstream.Handler(handler)
+
+		// If we have seen the transaction in the database, we know at which block we must start, it's the block right
+		// after execution trace's block id, since we have now seen this block.
+		if srcTx != nil && srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libRef.Num() {
+			nextBlockRef = bstream.NewBlockRefFromID(srcTx.ExecutionTrace.ProducerBlockId)
+			effectiveHandler = bstream.NewBlockIDGate(nextBlockRef.ID(), bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+		}
+
+		forkableHandler := forkable.New(effectiveHandler, forkable.WithLogger(zlog), forkable.WithInclusiveLIB(libRef))
 		firstGate := bstream.NewBlockIDGate(libRef.ID(), bstream.GateInclusive, forkableHandler, bstream.GateOptionWithLogger(zlog))
 
-		zlogger.Debug("starting listen transaction handler", zap.Stringer("lib", libRef), zap.String("exclusive_gate_id", exclusiveGateID))
+		zlogger.Debug("starting listen transaction handler", zap.Stringer("lib", libRef), zap.Stringer("next_block", nextBlockRef))
 		metrics.IncListeners("get_transaction")
 		source := ws.subscriptionHub.NewSourceFromBlockRef(libRef, firstGate)
 		source.OnTerminating(func(_ error) {
@@ -184,7 +187,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			return
 		}
 
-		ws.EmitReply(ctx, msg, wsmsg.NewListening(eos.BlockNum(exclusiveGateID)))
+		ws.EmitReply(ctx, msg, wsmsg.NewListening(uint32(nextBlockRef.Num())))
 		go source.Run()
 
 	}
