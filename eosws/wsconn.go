@@ -91,8 +91,6 @@ func (ws *WSConn) handleHeartbeats() {
 	}
 }
 
-const maxStreamCount = 12
-
 func (ws *WSConn) RegisterListener(ctx context.Context, reqID string, canceler func() error) error {
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("registering listener", zap.String("req_id", reqID))
@@ -109,8 +107,8 @@ func (ws *WSConn) RegisterListener(ctx context.Context, reqID string, canceler f
 	}
 
 	streamCount := len(ws.listenerCancelers)
-	if streamCount > maxStreamCount {
-		return WSTooMuchStreamError(ws.Context, streamCount, maxStreamCount)
+	if streamCount > ws.maxStreamCount {
+		return WSTooMuchStreamError(ws.Context, streamCount, ws.maxStreamCount)
 	}
 
 	if ws.listenerCancelers[reqID] != nil {

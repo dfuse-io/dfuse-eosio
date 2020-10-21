@@ -28,12 +28,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gorilla/handlers"
-
-	"github.com/dfuse-io/derr"
-
 	rice "github.com/GeertJohan/go.rice"
+	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/shutter"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )

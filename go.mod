@@ -16,8 +16,8 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
-	github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838
-	github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2
+	github.com/dfuse-io/bstream v0.0.2-0.20201021143234-c259806cc70b
+	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgraphql v0.0.2-0.20200918184142-467a56557271
@@ -32,21 +32,21 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20201014205637-8ecb063bf0d4
+	github.com/dfuse-io/fluxdb v0.0.0-20201020190814-0a05c07d8040
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69
 	github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
-	github.com/dfuse-io/node-manager v0.0.2-0.20201008184707-d4ad3d71c1c4
+	github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d
+	github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
 	github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/eoscanada/eos-go v0.9.1-0.20201015025226-35bdf3fcae14
+	github.com/eoscanada/eos-go v0.9.1-0.20201015141248-bc309ddb2819
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13

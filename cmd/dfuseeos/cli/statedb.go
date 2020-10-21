@@ -31,6 +31,7 @@ func init() {
 			cmd.Flags().Uint64("statedb-reproc-shard-start-block-num", 0, "[BATCH] Start processing blocks at this height, must be on a 100-blocks boundary")
 			cmd.Flags().Uint64("statedb-reproc-shard-stop-block-num", 0, "[BATCH] Stop processing blocks at this height, must be on a 100-blocks boundary, inclusive value")
 			cmd.Flags().Uint64("statedb-reproc-injector-shard-index", 0, "[BATCH] Index of the shard to perform injection for, should be lower than shard-count")
+			cmd.Flags().Bool("statedb-disable-indexing", false, "[DEV] Do not perform any indexation of tablet when injecting data into storage engine, used to fix a broken instance only")
 			cmd.Flags().Bool("statedb-disable-pipeline", false, "[DEV] Disables the blocks pipeline to keep up with live data (only set to true when testing locally)")
 			cmd.Flags().Bool("statedb-write-on-each-block", false, "[DEV] Forcefully flush block at each irreversible block step received, hinders write performance (only set to 'true' when testing locally)")
 			return nil
@@ -58,6 +59,7 @@ func init() {
 					ReprocSharderStartBlockNum:    viper.GetUint64("statedb-reproc-shard-start-block-num"),
 					ReprocSharderStopBlockNum:     viper.GetUint64("statedb-reproc-shard-stop-block-num"),
 					ReprocInjectorShardIndex:      viper.GetUint64("statedb-reproc-injector-shard-index"),
+					NoIndexingOnWrite:             viper.GetBool("statedb-disable-indexing"),
 					DisablePipeline:               viper.GetBool("statedb-disable-pipeline"),
 					WriteOnEachBlock:              viper.GetBool("statedb-write-on-each-block"),
 				},

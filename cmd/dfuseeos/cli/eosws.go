@@ -20,8 +20,11 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("eosws-http-listen-addr", EoswsHTTPServingAddr, "Address to listen for incoming http requests")
 			cmd.Flags().String("eosws-nodeos-rpc-addr", NodeosAPIAddr, "RPC endpoint of the nodeos instance")
+			cmd.Flags().StringSlice("eosws-nodeos-rpc-push-extra-addresses", nil, "List of API addresses available when retrying push-transaction that does not seem to appear")
 			cmd.Flags().Duration("eosws-realtime-tolerance", 15*time.Second, "longest delay to consider this service as real-time(ready) on initialization")
 			cmd.Flags().Int("eosws-blocks-buffer-size", 10, "Number of blocks to keep in memory when initializing")
+			cmd.Flags().Int("eosws-statedb-proxy-retries", 2, "Number of time to retry proxying statedb request (0 means no retry)")
+			cmd.Flags().Int("eosws-nodeos-rpc-proxy-retries", 2, "Number of time to retry proxying nodeos RPC request (0 means no retry)")
 			cmd.Flags().String("eosws-statedb-http-addr", StateDBHTTPServingAddr, "StateDB HTTP server address")
 			cmd.Flags().String("eosws-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC server address")
 			cmd.Flags().Bool("eosws-fetch-price", false, "Enable regularly fetching token price from a known source")
@@ -34,6 +37,8 @@ func init() {
 			cmd.Flags().Bool("eosws-authenticate-nodeos-api", false, "Gate access to native superviser APIs with authentication")
 			cmd.Flags().Bool("eosws-use-opencensus-stack-driver", false, "Enables stack driver tracing")
 			cmd.Flags().StringSlice("eosws-disabled-messages", []string{}, "List off WS message that need to be disabled")
+			cmd.Flags().Int("eosws-max-stream-per-connection", 12, "Maximum number of stream active at the same time to allow per connection")
+
 			return nil
 		},
 
@@ -50,9 +55,12 @@ func init() {
 			return eoswsApp.New(&eoswsApp.Config{
 				HTTPListenAddr:              viper.GetString("eosws-http-listen-addr"),
 				NodeosRPCEndpoint:           viper.GetString("eosws-nodeos-rpc-addr"),
+				NodeosRPCPushExtraEndpoints: viper.GetStringSlice("eosws-nodeos-rpc-push-extra-addresses"),
 				BlockmetaAddr:               viper.GetString("common-blockmeta-addr"),
 				KVDBDSN:                     mustReplaceDataDir(dfuseDataDir, viper.GetString("common-trxdb-dsn")),
 				BlockStreamAddr:             viper.GetString("common-blockstream-addr"),
+				StateDBHTTPProxyRetries:     viper.GetInt("eosws-statedb-proxy-retries"),
+				NodeosRPCProxyRetries:       viper.GetInt("eosws-nodeos-rpc-proxy-retries"),
 				SourceStoreURL:              mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				SearchAddr:                  viper.GetString("common-search-addr"),
 				SearchAddrSecondary:         viper.GetString("eosws-search-addr-secondary"),
@@ -71,6 +79,7 @@ func init() {
 				RealtimeTolerance:           viper.GetDuration("eosws-realtime-tolerance"),
 				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
 				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
+				MaxStreamCountPerConnection: viper.GetInt("eosws-max-stream-per-connection"),
 				DisabledWsMessage:           disabledWsMessages,
 			}, &eoswsApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,

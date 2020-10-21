@@ -13,6 +13,11 @@ date.
 
 ### Added
 
+* Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
+* Added `--eosws-nodeos-rpc-push-extra-addresses` to allow providing a list of backup EOS addresses when push-transaction does not succeed in getting the transaction inside a block (with push_guarantee)
+* Added `--eosws-max-stream-per-connection` to allow changing how many stream can be active at the same time for a given WebSocket connection, defaults to `12` which was the hard-coded value.
++ Added `--eosws-statedb-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
++ Added `--eosws-nodeos-rpc-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
 * Added `--mindreader-max-console-length-in-bytes` which is the limit in bytes that we allow action trace's console output to be before truncating them.
 * Environment variable `MINDREADER_MAX_TOKEN_SIZE` can now be set to override `bufio.Scanner()` max token size (default `52428800`, i.e. `50Mb`) for EOSIO chains with huge transactions
 * Flag `--accounthist-mode` to specific the accounthist mode of operation
@@ -31,6 +36,7 @@ date.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
 * Fixed a bug with `/state/table/row` not correctly reading row when it was in the table index.
 * Fixed a bug with `/state/tables/scopes` where the actual block num used to query the data was incorrect leading to invalid response results.

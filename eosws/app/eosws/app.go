@@ -57,16 +57,20 @@ import (
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
 type Config struct {
-	HTTPListenAddr      string
-	NodeosRPCEndpoint   string
-	BlockmetaAddr       string
-	KVDBDSN             string
-	BlockStreamAddr     string
-	SourceStoreURL      string
-	SearchAddr          string
-	SearchAddrSecondary string
-	StateDBHTTPAddr     string
-	StateDBGRPCAddr     string
+	HTTPListenAddr              string
+	NodeosRPCEndpoint           string
+	NodeosRPCPushExtraEndpoints []string
+	BlockmetaAddr               string
+	KVDBDSN                     string
+	BlockStreamAddr             string
+	SourceStoreURL              string
+	SearchAddr                  string
+	SearchAddrSecondary         string
+	StateDBHTTPAddr             string
+	StateDBGRPCAddr             string
+
+	StateDBHTTPProxyRetries int
+	NodeosRPCProxyRetries   int
 
 	AuthenticateNodeosAPI bool
 
@@ -85,6 +89,8 @@ type Config struct {
 
 	DataIntegrityProofSecret string
 	HealthzSecret            string
+
+	MaxStreamCountPerConnection int
 
 	DisabledWsMessage map[string]interface{}
 }
@@ -138,6 +144,14 @@ func (a *App) Run() error {
 
 	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
+
+	var extraAPIs []*eos.API
+	for _, extraAPIURL := range a.Config.NodeosRPCPushExtraEndpoints {
+		if !strings.HasPrefix(extraAPIURL, "http") {
+			extraAPIURL = "http://" + extraAPIURL
+		}
+		extraAPIs = append(extraAPIs, eos.New(extraAPIURL))
+	}
 
 	kdb, err := trxdb.New(a.Config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
@@ -256,7 +270,19 @@ func (a *App) Run() error {
 		return fmt.Errorf("blockmeta connection error: %w", err)
 	}
 
-	wsHandler := eosws.NewWebsocketHandler(abiGetter, accountGetter, db, subscriptionHub, stateClient, voteTallyHub, headInfoHub, priceHub, irrFinder, a.Config.FilesourceRateLimitPerBlock)
+	wsHandler := eosws.NewWebsocketHandler(
+		abiGetter,
+		accountGetter,
+		db,
+		subscriptionHub,
+		stateClient,
+		voteTallyHub,
+		headInfoHub,
+		priceHub,
+		irrFinder,
+		a.Config.FilesourceRateLimitPerBlock,
+		a.Config.MaxStreamCountPerConnection,
+	)
 
 	auth, err := authenticator.New(a.Config.AuthPlugin)
 	if err != nil {
@@ -290,7 +316,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
 	}
 
-	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false)
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -386,7 +412,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse api-addr: %w", err)
 	}
 
-	dumbAPIProxy := rest.NewReverseProxy(apiURL, true)
+	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries)
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,
@@ -396,7 +422,7 @@ func (a *App) Run() error {
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(
 		dmetering.NewMeteringMiddleware(
-			rest.NewTxPusher(api, subscriptionHub),
+			rest.NewTxPusher(api, subscriptionHub, headInfoHub, a.Config.NodeosRPCProxyRetries, extraAPIs),
 			meter,
 			"eosws", "Push Transaction",
 			true, true,

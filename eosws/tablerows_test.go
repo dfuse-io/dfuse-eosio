@@ -106,6 +106,7 @@ func Test_onGetTableRows(t *testing.T) {
 				nil,
 				NewTestIrreversibleFinder("00000001a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)

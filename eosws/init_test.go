@@ -32,10 +32,7 @@ import (
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" {
-		zlog, _ = zap.NewDevelopment()
-		logging.Set(zlog)
-	}
+	logging.TestingOverride()
 }
 
 func testBlock(t *testing.T, id, previousID, producer string, libNum uint64, trxTraceJSONs ...string) *bstream.Block {

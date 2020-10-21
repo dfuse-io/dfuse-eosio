@@ -9,12 +9,15 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
+	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,10 +25,17 @@ import (
 var showValue = false
 
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
+
+// Lower-level (key) calls
 var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
-var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.ExactArgs(1)}
+var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.MinimumNArgs(1)}
+
+// Higher-level (model) calls
 var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the latest effective index for a given StateDB tablet", RunE: statedbIndexE, Args: cobra.ExactArgs(1)}
 var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
+var statedbTabletCmd = &cobra.Command{Use: "tablet", Short: "Fetch & print StateDB tablet, optionally at given height", RunE: statedbTabletE, Args: cobra.ExactArgs(1)}
+var statedbShardCmd = &cobra.Command{Use: "shard", Short: "Various operations related to sharding"}
+var statedbShardInspectCmd = &cobra.Command{Use: "inspect", Short: "Inspect given shard, printing write requests information stored in", RunE: statedbShardInspectE, Args: cobra.ExactArgs(1)}
 
 func init() {
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
@@ -38,17 +48,31 @@ func init() {
 	statedbCmd.PersistentFlags().StringP("table", "t", "00", "StateDB table id (single byte, hexadecimal encoded) to query from")
 	statedbCmd.PersistentFlags().Int("limit", 100, "Limit the number of rows when doing scan or prefix")
 
-	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Scan will ignore the limit")
+	statedbPrefixCmd.PersistentFlags().Bool("key-only", false, "Only retrieve keys and not value when performing prefix search")
+	statedbPrefixCmd.PersistentFlags().Bool("unlimited", false, "Returns all results, ignore the limit value")
+
+	statedbScanCmd.PersistentFlags().Bool("key-only", false, "Only retrieve keys and not value when performing scan")
+	statedbScanCmd.PersistentFlags().Bool("unlimited", false, "Returns all results, ignore the limit value")
+
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
+
 	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
 	statedbReindexCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
 	statedbReindexCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start re-indexing from, will skip any index for which the tablet is before this boundary")
+
+	statedbTabletCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
+
+	statedbShardInspectCmd.PersistentFlags().Uint64("height", 0, "Block height where to start inspection, 0 means everything")
 
 	Cmd.AddCommand(statedbCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
 	statedbCmd.AddCommand(statedbIndexCmd)
 	statedbCmd.AddCommand(statedbReindexCmd)
+	statedbCmd.AddCommand(statedbTabletCmd)
+	statedbCmd.AddCommand(statedbShardCmd)
+
+	statedbShardCmd.AddCommand(statedbShardInspectCmd)
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
@@ -67,12 +91,12 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("table: %w", err)
 	}
 
-	startKey, err := hex.DecodeString(args[0])
+	startKey, err := stringToKey(args[0])
 	if err != nil {
 		return fmt.Errorf("start key: %w", err)
 	}
 
-	endKey, err := hex.DecodeString(args[1])
+	endKey, err := stringToKey(args[1])
 	if err != nil {
 		return fmt.Errorf("end key: %w", err)
 	}
@@ -80,12 +104,12 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 	start := append(table, startKey...)
 	end := append(table, endKey...)
 
-	rangeScan(kv, start, end, limit)
+	rangeScan(kv, start, end, limit, viper.GetBool("key-only"))
 	return nil
 }
 
 func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
-	kv, err := store.New(viper.GetString("dsn"))
+	kv, err := store.New(viper.GetString("dsn"), store.WithEmptyValue())
 	if err != nil {
 		return err
 	}
@@ -95,13 +119,29 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("table: %w", err)
 	}
 
-	prefixKey, err := hex.DecodeString(args[0])
-	if err != nil {
-		return fmt.Errorf("prefix key: %w", err)
+	limit := viper.GetInt("limit")
+	if viper.GetBool("unlimited") {
+		limit = store.Unlimited
 	}
 
-	prefix := append(table, prefixKey...)
-	prefixScan(kv, prefix, viper.GetInt("limit"))
+	for i, arg := range args {
+		prefixKey, err := stringToKey(arg)
+		if err != nil {
+			return fmt.Errorf("prefix key: %w", err)
+		}
+
+		prefix := append(table, prefixKey...)
+
+		if i != 0 {
+			fmt.Println()
+		}
+
+		err = prefixScan(kv, prefix, limit, viper.GetBool("key-only"))
+		if err != nil {
+			return fmt.Errorf("prefix scan %x: %w", prefix, err)
+		}
+	}
+
 	return nil
 }
 
@@ -117,7 +157,7 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	height := viper.GetUint64("height")
 	if height == 0 {
@@ -161,7 +201,7 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	ctx := context.Background()
-	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, false)
 
 	height := viper.GetUint64("height")
 	write := viper.GetBool("write")
@@ -224,19 +264,104 @@ func statedbReindexAll(ctx context.Context, fdb *fluxdb.FluxDB, height uint64, l
 	return nil
 }
 
-func prefixScan(store store.KVStore, prefix []byte, limit int) error {
+func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	tablet, err := stringToTablet(args[0])
+	if err != nil {
+		return fmt.Errorf("invalid argument %q: %w", args[0], err)
+	}
+
+	ctx := context.Background()
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
+
+	height := viper.GetUint64("height")
+	if height == 0 {
+		height, _, err = fdb.FetchLastWrittenCheckpoint(ctx)
+		if err != nil {
+			return fmt.Errorf("fetch last checkpoint: %w", err)
+		}
+	}
+
+	tabletRows, err := fdb.ReadTabletAt(context.Background(), height, tablet, nil)
+	if err != nil {
+		return fmt.Errorf("read tablet: %w", err)
+	}
+
+	if len(tabletRows) == 0 {
+		fmt.Printf("Tablet %s has no row\n", tablet)
+		return
+	}
+
+	fmt.Printf("Tablet %s (%d rows at #%d)\n", tablet, len(tabletRows), height)
+	for _, tabletRow := range tabletRows {
+		fmt.Printf("- %s (at #%d)\n", tabletRow.String(), tabletRow.Height())
+	}
+
+	return nil
+}
+
+func statedbShardInspectE(cmd *cobra.Command, args []string) (err error) {
+	shardFile := args[0]
+	compression := dstore.Compression("none")
+	if strings.HasSuffix(shardFile, ".zst") {
+		compression = dstore.Compression("zstd")
+	}
+
+	reader, _, _, err := dstore.OpenObject(context.Background(), shardFile, compression)
+	if err != nil {
+		return fmt.Errorf("open shard file: %w", err)
+	}
+	defer reader.Close()
+
+	height := viper.GetUint64("height")
+	requests, err := fluxdb.ReadShard(reader, height)
+
+	fmt.Println("Singlets")
+	for _, request := range requests {
+		for _, singletEntry := range request.SingletEntries {
+			fmt.Printf("- %s (deletion?: %t)\n", singletEntry, singletEntry.IsDeletion())
+		}
+	}
+
+	fmt.Println()
+	fmt.Println("Tablets")
+	for _, request := range requests {
+		for _, tabletRow := range request.TabletRows {
+			fmt.Printf("- %s (deletion?: %t)\n", tabletRow, tabletRow.IsDeletion())
+		}
+	}
+
+	return nil
+}
+
+func prefixScan(kvStore store.KVStore, prefix []byte, limit int, keyOnly bool) error {
 	prefixCtx, cancelScan := context.WithCancel(context.Background())
 	defer cancelScan()
 
-	return printIterator(store.Prefix(prefixCtx, prefix, limit))
+	var options []store.ReadOption
+	if keyOnly {
+		options = []store.ReadOption{store.KeyOnly()}
+	}
+
+	return printIterator(kvStore.Prefix(prefixCtx, prefix, limit, options...))
 }
 
-func rangeScan(store store.KVStore, keyStart, keyEnd []byte, limit int) error {
+func rangeScan(kvStore store.KVStore, keyStart, keyEnd []byte, limit int, keyOnly bool) error {
 	prefixCtx, cancelScan := context.WithCancel(context.Background())
 	defer cancelScan()
 
-	return printIterator(store.Scan(prefixCtx, keyStart, keyEnd, limit))
+	var options []store.ReadOption
+	if keyOnly {
+		options = []store.ReadOption{store.KeyOnly()}
+	}
+
+	return printIterator(kvStore.Scan(prefixCtx, keyStart, keyEnd, limit, options...))
 }
+
 func printIterator(it *store.Iterator) error {
 	count := 0
 	start := time.Now()
@@ -262,13 +387,11 @@ func printIterator(it *store.Iterator) error {
 		}
 	}
 
-	fmt.Println()
 	if err := it.Err(); err != nil {
-		fmt.Printf("Iteration error: %s\n", err)
+		fmt.Printf("Iteration error: %s (in %s)\n", err, time.Since(start))
 	} else {
-		fmt.Printf("Found %d keys\n", count)
+		fmt.Printf("Found %d keys (in %s)\n", count, time.Since(start))
 	}
-	fmt.Printf("In %ss\n", time.Since(start))
 
 	return nil
 }
@@ -352,6 +475,30 @@ func stringToTablet(in string) (fluxdb.Tablet, error) {
 	return mapper.factory(parts[1:]), nil
 }
 
+func stringToKey(in string) ([]byte, error) {
+	// We assume it's a string key to convert
+	if strings.Contains(in, ":") {
+		parts := strings.Split(in, ":")
+		if len(parts) <= 1 {
+			return nil, fmt.Errorf("invalid format, expecting at least a prefix and subsequent element like 'cst:...'")
+		}
+
+		transformer := partsToKeyMap[parts[0]]
+		if transformer == nil {
+			return nil, fmt.Errorf("unknown (or not yet handled) prefix %q", parts[0])
+		}
+
+		return transformer(parts[1:])
+	}
+
+	key, err := hex.DecodeString(in)
+	if err != nil {
+		return nil, fmt.Errorf("invalid hex %q: %w", in, err)
+	}
+
+	return key, nil
+}
+
 type partsToTablet struct {
 	partCount int
 	factory   func(parts []string) fluxdb.Tablet
@@ -363,4 +510,54 @@ var partsToTabletMap = map[string]*partsToTablet{
 			return statedb.NewContractStateTablet(parts[0], parts[1], parts[2])
 		},
 	},
+}
+
+var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
+	"cst": func(parts []string) (out []byte, err error) {
+		out = []byte{0xb0, 0x00}
+		for i, part := range parts {
+			switch {
+			case i <= 2:
+				out = append(out, nameToBytes(part)...)
+			case i == 3:
+				bytes, err := heightToBytes(part)
+				if err != nil {
+					return nil, fmt.Errorf("invalid height %q: %w", part, err)
+				}
+
+				out = append(out, bytes...)
+			default:
+				out = append(out, nameToBytes(part)...)
+			}
+		}
+
+		return out, nil
+	},
+}
+
+func nameToBytes(names ...string) (out []byte) {
+	out = make([]byte, 8*len(names))
+	moving := out
+	for _, name := range names {
+		binary.BigEndian.PutUint64(moving, eos.MustStringToName(name))
+		moving = moving[8:]
+	}
+
+	return
+}
+
+func heightToBytes(heights ...string) (out []byte, err error) {
+	out = make([]byte, 8*len(heights))
+	moving := out
+	for _, height := range heights {
+		value, err := strconv.ParseUint(height, 16, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		binary.BigEndian.PutUint64(moving, value)
+		moving = moving[8:]
+	}
+
+	return
 }
