@@ -36,6 +36,7 @@ date.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
 * Fixed a bug with `/state/table/row` not correctly reading row when it was in the table index.
 * Fixed a bug with `/state/tables/scopes` where the actual block num used to query the data was incorrect leading to invalid response results.
