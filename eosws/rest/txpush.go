@@ -93,40 +93,54 @@ func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub
 		subscriptionHub: subscriptionHub,
 		headInfoHub:     headInfoHub,
 		retries:         retries,
-		extraAPIs:       extraAPIs,
+		extraAPIs:       append(extraAPIs, API), // always include the base API in here
 	}
 }
 
 func (t *TxPusher) randomAPI() *eos.API {
-	if len(t.extraAPIs) == 0 {
-		return t.API
-	}
 	return t.extraAPIs[rand.Intn(len(t.extraAPIs))]
 }
 
-func (t *TxPusher) tryPush(API *eos.API, ctx context.Context, tx *eos.PackedTransaction, useLegacyPush bool) (pushResp json.RawMessage, err error) {
+func (t *TxPusher) tryPush(API *eos.API, ctx context.Context, tx *eos.PackedTransaction, trxID string, useLegacyPush bool) (err error) {
 	timedoutContext, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	var pushResp json.RawMessage
+
 	if useLegacyPush {
-		return API.PushTransactionRaw(timedoutContext, tx)
+		pushResp, err = API.PushTransactionRaw(timedoutContext, tx)
+	} else {
+		pushResp, err = API.SendTransactionRaw(timedoutContext, tx)
 	}
-	return API.SendTransactionRaw(timedoutContext, tx)
+	if err != nil {
+		return
+	}
+
+	idCheck := gjson.GetBytes(pushResp, "transaction_id").String()
+	if idCheck != trxID {
+		return fmt.Errorf("pushed transaction ID %q mismatch transaction ID received from API %q", trxID, idCheck)
+	}
+	return nil
 }
 
-func isRetryable(err error) bool {
-	if apiErr, ok := err.(eos.APIError); ok {
-		if apiErr.ErrorStruct.Code < 3080000 || apiErr.ErrorStruct.Code == 3080001 {
-			return false
-		}
-		// in between those are resource-related errors, like cpu or deadline, we want to retry those
-		// see https://docs.google.com/spreadsheets/d/1uHeNDLnCVygqYK-V01CFANuxUwgRkNkrmeLm9MLqu9c/edit#gid=0
-		if apiErr.ErrorStruct.Code >= 3090000 {
-			return false
-		}
-	}
-	return true // any other error ? (including context deadline exceeded)
+func isExpiredError(err eos.APIError) bool {
+	return err.ErrorStruct.Code == 3040005
+}
 
+func isDuplicateError(err eos.APIError) bool {
+	return err.ErrorStruct.Code == 3040008 || err.ErrorStruct.Code == 3040009 // duplicate
+}
+
+func isRetryable(err eos.APIError) bool {
+	if err.ErrorStruct.Code < 3080000 || err.ErrorStruct.Code == 3080001 {
+		return false
+	}
+	// in between those are resource-related errors, like cpu or deadline, we want to retry those
+	// see https://docs.google.com/spreadsheets/d/1uHeNDLnCVygqYK-V01CFANuxUwgRkNkrmeLm9MLqu9c/edit#gid=0
+	if err.ErrorStruct.Code >= 3090000 {
+		return false
+	}
+	return true
 }
 
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -197,26 +211,25 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer metrics.CurrentListeners.Dec("push_transaction")
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
-	var pushResp json.RawMessage
 	maxAttempts := t.retries + 1
 	for attempt := 1; ; attempt++ {
-		pushResp, err = t.tryPush(t.API, ctx, tx, r.URL.EscapedPath() == "/v1/chain/push_transaction")
+		err = t.tryPush(t.API, ctx, tx, trxID, r.URL.EscapedPath() == "/v1/chain/push_transaction")
 		if err == nil {
 			break
 		}
-		retryable := isRetryable(err)
-		if apiErr, ok := err.(eos.APIError); ok {
+
+		if apiErr, ok := err.(eos.APIError); ok { // decoded nodeos API error
+			retryable := isRetryable(apiErr)
 			if apiErrCnt, err := json.Marshal(apiErr); err == nil {
-				zlog.Info("push transaction API error",
-					zap.String("name", apiErr.ErrorStruct.Name),
+				zapFields := append(
+					logFieldsFromAPIErr(apiErr),
 					zap.Bool("retryable", retryable),
 					zap.Int("attempt", attempt),
-					zap.Int("code", apiErr.Code),
-					zap.Int("errstruct_code", apiErr.ErrorStruct.Code),
-					zap.String("error_message", apiErr.Message),
-					zap.String("what", apiErr.ErrorStruct.What),
-					zap.Any("details", apiErr.ErrorStruct.Details),
+					zap.Int("max_attempts", maxAttempts),
 					zap.String("trx_id", trxID),
+				)
+				zlog.Info("push transaction API error",
+					zapFields...,
 				)
 				if attempt < maxAttempts && retryable {
 					time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
@@ -227,13 +240,13 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
-		zlog.Info("cannot push transaction to Nodeos API",
+		// other error, we couldn't reach nodeos...
+		zlog.Info("push transaction unknown error",
 			zap.Error(err),
-			zap.Bool("retryable", retryable),
 			zap.Int("attempt", attempt),
+			zap.Int("max_attempts", maxAttempts),
 		)
-		if attempt < maxAttempts && retryable {
+		if attempt < maxAttempts {
 			time.Sleep(time.Duration(attempt) * 250 * time.Millisecond)
 			continue
 		}
@@ -241,32 +254,56 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idCheck := gjson.GetBytes(pushResp, "transaction_id").String()
-	if idCheck != trxID {
-		msg := fmt.Sprintf("pushed transaction ID %q mismatch transaction ID received from API %q", trxID, idCheck)
-		checkHTTPError(errors.New(msg), msg, eoserr.ErrUnhandledException, w)
-		return
-	}
-
 	zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()), zap.String("guarantee", guarantee))
 
-	// FIXME:
-	// if we return an error but we DID submit the transaction to the chain, ideally
-	// we'd return something to that effect.. so the user can start tracking its transaction ID
-	// separately.. Maybe we can't do anything about it though...
-
 	resend := 0
+	trxExpired := false
 	expiration := time.After(expirationDelay)
 	for {
 		select {
-		case <-time.After(time.Second * 15): // retries every 15 second if we haven't seen the trx yet...
-			a := t.randomAPI()
-			zlog.Info("retrying send transaction to push API", zap.String("random_api", a.BaseURL))
-			_, err = t.tryPush(a, ctx, tx, r.URL.EscapedPath() == "/v1/chain/push_transaction") // sending transaction blindly
-			if err != nil {
-				zlog.Info("error retrying send transaction", zap.Error(err), zap.String("trx_id", trxID))
+		case <-time.After(time.Second * 8): // retries every 8 second if we haven't seen the trx yet, this means at 8, 16, 24 -- considering that most trxs have 30s deadline
+			if trxExpired {
+				continue // keep waiting for the transaction to appear in a block but we stop trying to push it
 			}
+			a := t.randomAPI()
+			err = t.tryPush(a, ctx, tx, trxID, r.URL.EscapedPath() == "/v1/chain/push_transaction")
+			zlog.Debug("retrying send transaction to push API", zap.String("random_api", a.BaseURL), zap.Error(err), zap.Int("resend", resend))
 			resend++
+			if err != nil {
+				if apiErr, ok := err.(eos.APIError); ok { // decoded nodeos API error
+					if isExpiredError(apiErr) {
+						trxExpired = true
+						zlog.Debug("trx expired error.", zap.String("trx_id", trxID))
+						continue
+					}
+					if isDuplicateError(apiErr) {
+						zlog.Debug("duplicate error.", zap.String("trx_id", trxID))
+						continue
+					}
+					if isRetryable(apiErr) {
+						zlog.Debug("retryable error", zap.String("trx_id", trxID))
+						continue
+					}
+
+					zapFields := append(
+						logFieldsFromAPIErr(apiErr),
+						zap.Int("resend", resend),
+						zap.String("trx_id", trxID),
+					)
+					zlog.Info("push transaction API error after earlier success",
+						zapFields...,
+					)
+
+					// if previously passing transaction now fails, we return it to the client.
+					if apiErrCnt, err := json.Marshal(apiErr); err == nil {
+						w.WriteHeader(apiErr.Code)
+						w.Write(apiErrCnt)
+					} else {
+						checkHTTPError(errors.New("unknown error"), "unknown error", eoserr.ErrUnhandledException, w)
+					}
+					return
+				}
+			}
 
 		case <-expiration:
 			metrics.TimedOutPushTrxCount.Inc(normalizedGuarantee)
@@ -463,4 +500,15 @@ func traceExecutedInBlock(trxID string, blk *pbcodec.Block) *pbcodec.Transaction
 	}
 
 	return nil
+}
+
+func logFieldsFromAPIErr(apiErr eos.APIError) []zap.Field {
+	return []zap.Field{
+		zap.String("name", apiErr.ErrorStruct.Name),
+		zap.Int("code", apiErr.Code),
+		zap.Int("errstruct_code", apiErr.ErrorStruct.Code),
+		zap.String("error_message", apiErr.Message),
+		zap.String("what", apiErr.ErrorStruct.What),
+		zap.Any("details", apiErr.ErrorStruct.Details),
+	}
 }
