@@ -79,6 +79,8 @@ github.com/ShinyTrinkets/meta-logger v0.2.0/go.mod h1:cY1KnpPfpLIopR+arZXHYVrVGO
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
+github.com/Sytten/logrus-zap-hook v0.1.0 h1:GPsDlO0b+rvfb6WohFNreI3Fe2I6MDyv1afoYPE2Kzk=
+github.com/Sytten/logrus-zap-hook v0.1.0/go.mod h1:J0ktevklw/xJNpI2FzfTdJssk4P0vq3K2qzwihJ2gWU=
 github.com/VictoriaMetrics/fastcache v1.5.3/go.mod h1:+jv9Ckb+za/P1ZRg/sulP5Ni1v49daAVERr0H3CuscE=
 github.com/abourget/llerrgroup v0.0.0-20161118145731-75f536392d17/go.mod h1:QukSa1Sim/0R4aRlWdiBdAy+0i1PBfOd1WHpfYM1ngA=
 github.com/abourget/llerrgroup v0.2.0 h1:2nPXy6Owo/KOKDQYvjMmS8rsjtitvuP2OEGrqgpj428=
@@ -306,6 +308,8 @@ github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 h1:z6nXNo1jBz/QZ+9
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/dfuse-io/kvdb v0.0.2-0.20201022174313-dab5d0e4089f h1:BGdCmfGyUCqAikXpJUJZQVfiSgZVFd5GuMDDtJMmCRw=
 github.com/dfuse-io/kvdb v0.0.2-0.20201022174313-dab5d0e4089f/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022195640-432794b117ad h1:MgnEhwDLN5r/RyYEg3e7w1R4Wi1gcxm9BUEK4LLE+zs=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022195640-432794b117ad/go.mod h1:6neMTvdA6aj+MvZTHb7X9Cd67wnMYuNZNfVey+K6T1w=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
