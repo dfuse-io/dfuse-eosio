@@ -1,5 +1,5 @@
-ARG EOSIO_TAG="v2.0.5-dm-12.0"
-ARG DEB_PKG="eosio_2.0.5-dm.12.0-1-ubuntu-18.04_amd64.deb"
+ARG EOSIO_TAG="v2.0.6-dm-12.0"
+ARG DEB_PKG="eosio_2.0.6-dm.12.0-1-ubuntu-18.04_amd64.deb"
 
 FROM ubuntu:18.04 AS base
 ARG EOSIO_TAG
@@ -10,14 +10,20 @@ RUN curl -sL -o/var/cache/apt/archives/eosio.deb "https://github.com/dfuse-io/eo
 RUN dpkg -i /var/cache/apt/archives/eosio.deb
 RUN rm -rf /var/cache/apt/*
 
-FROM node:10.14 AS eosq
+FROM node:12 AS dlauncher
+WORKDIR /work
+ADD go.mod /work
+RUN apt update && apt-get -y install git
+RUN cd /work && git clone https://github.com/dfuse-io/dlauncher.git dlauncher &&\
+	grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
+    cd dlauncher &&\
+    git checkout "$(cat ../dlauncher.hash)" &&\
+    cd dashboard/client &&\
+    yarn install && yarn build
+
+FROM node:12 AS eosq
 ADD eosq /work
 WORKDIR /work
-RUN yarn install && yarn build
-
-FROM node:10.14 AS dashboard
-ADD dashboard /work
-WORKDIR /work/client
 RUN yarn install && yarn build
 
 FROM golang:1.14 as dfuse
@@ -26,10 +32,13 @@ RUN mkdir -p /work/build
 ADD . /work
 WORKDIR /work
 COPY --from=eosq      /work/ /work/eosq
-COPY --from=dashboard /work/ /work/dashboard
-RUN cd /work/eosq/app/eosq  && go generate
+# The copy needs to be one level higher than work, the dashboard generates expects this file layout
+COPY --from=dlauncher /work/dlauncher /dlauncher
+RUN cd /dlauncher/dashboard && go generate
+RUN cd /work/eosq/app/eosq && go generate
 RUN cd /work/dashboard && go generate
-RUN CGO_ENABLED=1 go test ./...
+RUN cd /work/dgraphql && go generate
+RUN go test ./...
 RUN go build -v -o /work/build/dfuseeos ./cmd/dfuseeos
 
 FROM base

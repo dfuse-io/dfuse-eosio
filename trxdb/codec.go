@@ -17,7 +17,9 @@ package trxdb
 import (
 	"fmt"
 
+	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/golang/protobuf/proto"
+	"go.uber.org/zap"
 )
 
 type ProtoDecoder struct{}
@@ -48,9 +50,33 @@ func NewProtoEncoder() *ProtoEncoder {
 }
 
 func (e *ProtoEncoder) MustProto(obj proto.Message) (out []byte) {
-	bytes, err := proto.Marshal(obj)
+	data, err := proto.Marshal(obj)
 	if err != nil {
 		panic(fmt.Sprintf("proto encode failed: %s", err))
 	}
-	return bytes
+
+	if traceEnabled {
+		zlog.Debug("marshalled protobuf message to binary", zap.String("id", fmt.Sprintf("%s (%T)", messageIdentifier(obj), obj)), zap.Int("payload", len(data)))
+	}
+
+	return data
+}
+
+func messageIdentifier(obj proto.Message) string {
+	switch v := obj.(type) {
+	case *pbtrxdb.TrxRow:
+		return v.Receipt.Id
+	case *pbtrxdb.TrxTraceRow:
+		return v.TrxTrace.Id
+	case *pbtrxdb.BlockRow:
+		return v.Block.Id
+	case *pbtrxdb.AccountRow:
+		return v.Name
+	case *pbtrxdb.ImplicitTrxRow:
+		return v.Name
+	case *pbtrxdb.DtrxRow:
+		return "deferred"
+	}
+
+	return "<n/a>"
 }

@@ -89,7 +89,7 @@ func (db *DB) fillIrreversibilityData(ctx context.Context, events []*pbcodec.Tra
 		prefixes = append(prefixes, Keys.PackIrrBlocksKey(id))
 	}
 
-	it := db.store.BatchGet(ctx, prefixes)
+	it := db.trxReadStore.BatchGet(ctx, prefixes)
 	for it.Next() {
 		blockIDs[Keys.UnpackIrrBlocksKey(it.Item().Key)] = true
 	}
@@ -155,7 +155,7 @@ func (db *DB) getTransactionEvents(ctx context.Context, idPrefixes []string, eve
 
 	trxPrefToFull := newTrxPrefixToFull(idPrefixes)
 
-	it := db.store.BatchPrefix(ctx, keys, store.Unlimited)
+	it := db.trxReadStore.BatchPrefix(ctx, keys, store.Unlimited)
 	for it.Next() {
 		switch {
 		// Implicit Transaction Addition

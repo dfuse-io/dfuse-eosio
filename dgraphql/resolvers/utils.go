@@ -19,12 +19,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-
-	"github.com/golang/protobuf/ptypes/timestamp"
-
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/opaque"
+	eos "github.com/eoscanada/eos-go"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	graphql "github.com/graph-gophers/graphql-go"
 )
 
@@ -103,4 +101,11 @@ func validateBlockId(id string) bool {
 		return false
 	}
 	return true
+}
+
+func countMinOne(count int) int64 {
+	if count < 1 {
+		return 1
+	}
+	return int64(count)
 }

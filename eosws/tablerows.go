@@ -23,12 +23,11 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
@@ -59,19 +58,18 @@ func (ws *WSConn) onGetTableRows(ctx context.Context, msg *wsmsg.GetTableRows) {
 		return
 	}
 
-	fetchTableRows(ws, startBlockNum, msg, ws.abiGetter, ws, ws.fluxClient, ws.irreversibleFinder, ctx, ws.subscriptionHub)
+	fetchTableRows(ctx, ws, startBlockNum, msg, ws.abiGetter, ws, ws.stateClient, ws.irreversibleFinder)
 }
 
 func fetchTableRows(
+	ctx context.Context,
 	ws *WSConn,
 	startBlockNum uint32,
 	msg *wsmsg.GetTableRows,
 	abiGetter ABIGetter,
 	emitter Emitter,
-	fluxClient fluxdb.Client,
+	stateClient pbstatedb.StateClient,
 	irrFinder IrreversibleFinder,
-	ctx context.Context,
-	hub *hub.SubscriptionHub,
 ) {
 	zlogger := logging.Logger(ctx, zlog)
 
@@ -79,26 +77,33 @@ func fetchTableRows(
 	if msg.Fetch {
 		spanContext, fetchSpan := dtracing.StartSpan(ctx, "fetch table rows")
 		if msg.StartBlock == 0 {
-			zlogger.Info("user requested start block 0, let fluxdb turns into head block instead of us doing it to prevent race condition")
+			zlogger.Info("user requested start block 0, let statedb turns into head block instead of us doing it to prevent race condition")
 			startBlockNum = 0
 		}
 
-		request := fluxdb.NewGetTableRequest(msg.Data.Code, *msg.Data.Scope, msg.Data.TableName, "name")
-		zlogger.Info("requesting data from fluxdb", zap.Uint32("start_block_num", startBlockNum), zap.Any("request", request))
+		request := &pbstatedb.StreamTableRowsRequest{
+			BlockNum: uint64(startBlockNum),
+			Contract: string(msg.Data.Code),
+			Table:    string(msg.Data.TableName),
+			Scope:    string(*msg.Data.Scope),
+			ToJson:   true,
+		}
 
-		response, err := fluxClient.GetTable(spanContext, startBlockNum, request)
+		zlogger.Info("requesting data from statedb", zap.Any("request", request))
+		ref, snapshot, err := fetchStateTableRows(spanContext, stateClient, request)
 		if err != nil {
-			emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "fluxdb client request failed"))
+			emitter.EmitErrorReply(ctx, msg, fmt.Errorf("fetch table rows: %w", err))
 			fetchSpan.End()
 			return
 		}
-		metrics.DocumentResponseCounter.Inc()
-		emitter.EmitReply(ctx, msg, wsmsg.NewTableSnapshot(response.Rows))
 
-		if response.UpToBlockNum != 0 {
-			startBlockID = response.UpToBlockID
-			startBlockNum = eos.BlockNum(startBlockID)
-			zlogger.Info("Flux response", zap.Uint32("up_to_block_num", startBlockNum), zap.String("up_to_block_id", startBlockID))
+		metrics.DocumentResponseCounter.Inc()
+		emitter.EmitReply(spanContext, msg, snapshot)
+
+		if ref.UpToBlock != nil {
+			startBlockID = ref.UpToBlock.ID()
+			startBlockNum = uint32(ref.UpToBlock.Num())
+			zlogger.Info("state client response", zap.Stringer("up_to_block", ref.UpToBlock))
 		}
 		fetchSpan.End()
 	}
@@ -109,7 +114,7 @@ func fetchTableRows(
 		var err error
 
 		var abiChangeHandler *ABIChangeHandler
-		tableDeltaHandler := NewTableDeltaHandler(msg, emitter, ctx, zlog, func() *eos.ABI {
+		tableDeltaHandler := newTableDeltaHandler(ctx, msg, emitter, zlog, func() *eos.ABI {
 			return abiChangeHandler.CurrentABI()
 		})
 
@@ -133,23 +138,23 @@ func fetchTableRows(
 				emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to retrieve irreversibility"))
 				return
 			}
-			forkablePostGate = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler)
+			forkablePostGate = bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
 		} else {
 			irrID, err = irrFinder.IrreversibleIDAtBlockNum(ctx, startBlockNum)
 			if err != nil {
 				emitter.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to retrieve irreversibility"))
 				return
 			}
-			forkablePostGate = bstream.NewBlockNumGate(uint64(startBlockNum), bstream.GateInclusive, handler)
+			forkablePostGate = bstream.NewBlockNumGate(uint64(startBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 		}
 
-		forkableHandler := forkable.New(forkablePostGate, forkable.WithExclusiveLIB(bstream.BlockRefFromID(irrID)))
+		irrRef := bstream.NewBlockRefFromID(irrID)
+		forkableHandler := forkable.New(forkablePostGate, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
 
 		metrics.IncListeners("get_table_rows")
 
-		irrRef := bstream.BlockRefFromID(irrID)
 		source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), forkableHandler, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))
-		source.OnTerminating(func(e error) {
+		source.OnTerminating(func(_ error) {
 			metrics.CurrentListeners.Dec("get_table_rows")
 			listenSpan.End()
 		})
@@ -172,12 +177,18 @@ func fetchTableRows(
 }
 
 func tableDeltasFromBlock(block *bstream.Block, msg *wsmsg.GetTableRows, abi *eos.ABI, step forkable.StepType, zlog *zap.Logger) []*wsmsg.TableDelta {
-	zlog.Debug("about to stream table deltas from block", zap.Stringer("block", block), zap.String("step", step.String()))
+	zlog.Debug("about to stream table deltas from block", zap.Stringer("block", block), zap.Stringer("step", step))
 	var deltas []*wsmsg.TableDelta
 
 	blk := block.ToNative().(*pbcodec.Block)
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
+		actionMatcher := blk.FilteringActionMatcher(trxTrace)
+
 		for _, dbOp := range trxTrace.DbOps {
+			if !actionMatcher.Matched(dbOp.ActionIndex) {
+				continue
+			}
+
 			if dbOp.Code != string(msg.Data.Code) || dbOp.TableName != string(msg.Data.TableName) || dbOp.Scope != string(*msg.Data.Scope) {
 				continue
 			}
@@ -243,7 +254,17 @@ func newDBRow(data []byte, tableName eos.TableName, abi *eos.ABI, payer string, 
 	return row
 }
 
-type TableDeltaHandler struct {
+func fetchStateTableRows(ctx context.Context, stateClient pbstatedb.StateClient, request *pbstatedb.StreamTableRowsRequest) (ref *pbstatedb.StreamReference, out *wsmsg.TableSnapshot, err error) {
+	out = new(wsmsg.TableSnapshot)
+	ref, err = pbstatedb.ForEachTableRows(ctx, stateClient, request, func(row *pbstatedb.TableRowResponse) error {
+		out.Data.Rows = append(out.Data.Rows, []byte(row.Json))
+		return nil
+	})
+
+	return
+}
+
+type tableDeltaHandler struct {
 	msg        *wsmsg.GetTableRows
 	emitter    Emitter
 	ctx        context.Context
@@ -251,11 +272,11 @@ type TableDeltaHandler struct {
 	getABIFunc func() *eos.ABI
 }
 
-func NewTableDeltaHandler(msg *wsmsg.GetTableRows, emitter Emitter, ctx context.Context, zlog *zap.Logger, getABIFunc func() *eos.ABI) *TableDeltaHandler {
-	return &TableDeltaHandler{msg: msg, emitter: emitter, ctx: ctx, zlog: zlog, getABIFunc: getABIFunc}
+func newTableDeltaHandler(ctx context.Context, msg *wsmsg.GetTableRows, emitter Emitter, zlog *zap.Logger, getABIFunc func() *eos.ABI) *tableDeltaHandler {
+	return &tableDeltaHandler{msg: msg, emitter: emitter, ctx: ctx, zlog: zlog, getABIFunc: getABIFunc}
 }
 
-func (h *TableDeltaHandler) ProcessBlock(block *bstream.Block, obj interface{}) error {
+func (h *tableDeltaHandler) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	fObj := obj.(*forkable.ForkableObject)
 
 	if fObj.Step == forkable.StepNew || fObj.Step == forkable.StepUndo || fObj.Step == forkable.StepRedo {

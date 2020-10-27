@@ -22,7 +22,8 @@ import (
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" {
-		logging.Override(logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel)))
+	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") == "true" {
+		logger, _ := zap.NewDevelopment()
+		logging.Override(logger)
 	}
 }

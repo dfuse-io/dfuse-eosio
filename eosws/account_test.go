@@ -17,14 +17,14 @@ package eosws
 import (
 	"fmt"
 	"testing"
+	"time"
 
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 )
 
 func Test_onGetAccount(t *testing.T) {
-
 	subscriptionHub := newTestSubscriptionHub(t, 0, nil)
-	fluxClient := fluxdb.NewTestFluxClient()
+	stateClient := pbstatedb.NewMockStateClient()
 
 	cases := []struct {
 		name           string
@@ -63,12 +63,13 @@ func Test_onGetAccount(t *testing.T) {
 				testAccountGetter,
 				NewMockDB(""), // FIXME: this THING is NOT needed for those tests.. they are too all-encompassing.. better tests are needed.
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,
 				NewTestIrreversibleFinder("00000002a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)
@@ -76,7 +77,7 @@ func Test_onGetAccount(t *testing.T) {
 
 			conn.WriteMessage(1, []byte(c.msg))
 
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 		})
 	}
 }

@@ -18,25 +18,15 @@ import (
 	"context"
 	"testing"
 
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var dbWritterTests = []struct {
-	name string
-	test func(t *testing.T, driverFactory DriverFactory)
-}{
-	{"TestPutBlock", TestPutBlock},
-	{"TestUpdateNowIrreversibleBlock", TestUpdateNowIrreversibleBlock},
-}
-
-func TestAllDbWriter(t *testing.T, driverName string, driverFactory DriverFactory) {
-	for _, rt := range dbWritterTests {
-		t.Run(driverName+"/"+rt.name, func(t *testing.T) {
-			rt.test(t, driverFactory)
-		})
-	}
+var dbWritterTests = []DriverTestFunc{
+	TestPutBlock,
+	TestUpdateNowIrreversibleBlock,
 }
 
 func TestPutBlock(t *testing.T, driverFactory DriverFactory) {
@@ -44,12 +34,12 @@ func TestPutBlock(t *testing.T, driverFactory DriverFactory) {
 		name          string
 		block         *pbcodec.Block
 		expectErr     bool
-		expectBlockId string
+		expectBlockID string
 	}{
 		{
 			name:          "golden path",
-			block:         TestBlock(t, "00000002aa", "00000001aa"),
-			expectBlockId: "00000002aa",
+			block:         ct.Block(t, "00000002aa"),
+			expectBlockID: "00000002aa",
 		},
 	}
 	for _, test := range tests {
@@ -73,12 +63,12 @@ func TestUpdateNowIrreversibleBlock(t *testing.T, driverFactory DriverFactory) {
 		name          string
 		block         *pbcodec.Block
 		expectErr     bool
-		expectBlockId string
+		expectBlockID string
 	}{
 		{
 			name:          "golden path",
-			block:         TestBlock(t, "00000002aa", "00000001aa"),
-			expectBlockId: "00000002aa",
+			block:         ct.Block(t, "00000002aa"),
+			expectBlockID: "00000002aa",
 		},
 	}
 

@@ -1,0 +1,10 @@
+query ($start: Time!, $end: Time!) {
+  low: blockIDByTime(time: $start) {
+    num
+    id
+  }
+  high: blockIDByTime(time: $end) {
+    num
+    id
+  }
+}

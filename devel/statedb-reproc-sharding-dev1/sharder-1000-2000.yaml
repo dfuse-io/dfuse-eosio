@@ -1,0 +1,17 @@
+start:
+  args:
+  - statedb
+  flags:
+    common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-dev1/v4
+    statedb-enable-inject-mode: false
+    statedb-enable-server-mode: false
+    statedb-enable-reproc-sharder-mode: true
+    statedb-reproc-shard-count: 3
+    statedb-reproc-shard-start-block-num: 1000
+    statedb-reproc-shard-stop-block-num: 1999
+    statedb-reproc-shard-store-url: "file://{dfuse-data-dir}/storage/statedb-shards"
+    # By default, sharder keeps everything in RAM for faster reprocessing, but if you chain segment
+    # is heavy, this can starts to cost a lot of RAM. By using a scratch directory, you instruct the
+    # sharder to accumulate on disk its partial state instead of in RAM. This is a trade-off betwen
+    # being more I/O bound over RAM bound.
+    #statedb-reproc-shard-scratch-directory: "file://{dfuse-data-dir}/storage/statedb-shards-scratch"

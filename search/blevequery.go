@@ -5,25 +5,20 @@ import (
 	"strings"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/search"
+	search "github.com/dfuse-io/search"
 	"google.golang.org/grpc/codes"
 )
 
-type EOSBleveQueryValidator struct{}
+type BleveQueryValidator struct {
+	indexedTerms *IndexedTerms
+}
 
-func (v *EOSBleveQueryValidator) Validate(q *search.BleveQuery) error {
-	indexedFieldsMap := GetEOSIndexedFieldsMap()
-
+func (v *BleveQueryValidator) Validate(q *search.BleveQuery) error {
 	var unknownFields []string
 	for _, fieldName := range q.FieldNames {
-		if strings.HasPrefix(fieldName, "data.") {
-			fieldName = strings.Join(strings.Split(fieldName, ".")[:2], ".")
+		if !v.indexedTerms.IsIndexed(fieldName) {
+			unknownFields = append(unknownFields, fieldName)
 		}
-
-		if indexedFieldsMap[fieldName] != nil || strings.HasPrefix(fieldName, "event.") || strings.HasPrefix(fieldName, "parent.") /* we could list the optional fields for `parent.*` */ {
-			continue
-		}
-		unknownFields = append(unknownFields, fieldName)
 	}
 
 	if len(unknownFields) <= 0 {

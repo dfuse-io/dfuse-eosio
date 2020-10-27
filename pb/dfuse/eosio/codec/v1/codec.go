@@ -63,12 +63,36 @@ func (b *Block) LIBNum() uint64 {
 }
 
 func (b *Block) AsRef() bstream.BlockRef {
-	return bstream.BlockRefFromID(b.Id)
+	return bstream.NewBlockRef(b.Id, uint64(b.Number))
+}
+
+func (b *Block) Transactions() []*TransactionReceipt {
+	if b.FilteringApplied {
+		return b.FilteredTransactions
+	}
+
+	return b.UnfilteredTransactions
+}
+
+func (b *Block) TransactionTraces() []*TransactionTrace {
+	if b.FilteringApplied {
+		return b.FilteredTransactionTraces
+	}
+
+	return b.UnfilteredTransactionTraces
+}
+
+func (b *Block) ImplicitTransactionOps() []*TrxOp {
+	if b.FilteringApplied {
+		return b.FilteredImplicitTransactionOps
+	}
+
+	return b.UnfilteredImplicitTransactionOps
 }
 
 func (b *Block) CanceledDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCancelOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -84,7 +108,7 @@ func (b *Block) CanceledDTrxIDs() (out []string) {
 
 func (b *Block) CreatedDTrxIDs() (out []string) {
 	seen := make(map[string]bool)
-	for _, trx := range b.TransactionTraces {
+	for _, trx := range b.TransactionTraces() {
 		for _, dtrxOp := range trx.DtrxOps {
 			if dtrxOp.IsCreateOperation() {
 				if !seen[dtrxOp.TransactionId] {
@@ -98,36 +122,99 @@ func (b *Block) CreatedDTrxIDs() (out []string) {
 	return
 }
 
-// PopulateActionAndTransactionCount will compute block stats
+// MigrateV0ToV1 will compute block stats
 // for the total number of transaction, transacation trace,
 // input action and execute action.
-//
-// This is a copy of the logic in `codecs/deos/consolereader.go`
-// duplicated here. We do not re-use a shared function between
-// both because the console reader already loop through the
-// `TransactionTraces` slice, which would make it more inefficent
-// since we need a standalone loop here because call after the
-// fact.
 //
 // This is actual used on in `pbcodec.Block.ToNative` function to
 // re-hydrate the value after decompression until we do a full
 // reprocessing. at which time this will not be needed anymore.
-func (b *Block) PopulateActionAndTransactionCount() {
-	b.TransactionCount = uint32(len(b.Transactions))
-	b.TransactionTraceCount = uint32(len(b.TransactionTraces))
+func (b *Block) MigrateV0ToV1() {
 
-	for _, t := range b.TransactionTraces {
+	if b.Version != 0 {
+		return
+	}
+	b.Version = 1
+
+	b.UnfilteredTransactionCount = uint32(len(b.UnfilteredTransactions))
+	b.UnfilteredTransactionTraceCount = uint32(len(b.UnfilteredTransactionTraces))
+	b.UnfilteredExecutedInputActionCount = 0
+	b.UnfilteredExecutedTotalActionCount = 0
+
+	for _, t := range b.UnfilteredTransactionTraces {
 		for _, actionTrace := range t.ActionTraces {
-			b.ExecutedTotalActionCount++
+			b.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				b.ExecuteInputActionCount++
+				b.UnfilteredExecutedInputActionCount++
 			}
 		}
 	}
 }
 
+func (b *Block) MigrateV1ToV2() {
+	if b.Version != 1 {
+		return
+	}
+	b.Version = 2
+
+	if b.FilteringApplied {
+		// prendre filtering_include_filter_expr -> mettre dans un pbcodec.FilteringFilters{}
+		// hasher ceux qui sont trop gros? tous? pour tous les blocks où blockNum%100 != 0
+		// on append ce FilteredApplied à
+	}
+}
+
+type FilteringActionMatcher interface {
+	Matched(actionIndex uint32) bool
+}
+
+var AlwaysIncludedFilteringActionMatcher = filteringActionMatcherFunc(func(_ uint32) bool { return true })
+
+type filteringActionMatcherFunc func(actionIndex uint32) bool
+
+func (f filteringActionMatcherFunc) Matched(actionIndex uint32) bool {
+	return f(actionIndex)
+}
+
+type ActionMatcher func(actTrace *ActionTrace) bool
+
+func (b *Block) FilteringActionMatcher(trxTrace *TransactionTrace, requiredSystemActions ...ActionMatcher) FilteringActionMatcher {
+	if !b.FilteringApplied {
+		// If no filtering was ever applied, all action are assumed to be considered
+		return AlwaysIncludedFilteringActionMatcher
+	}
+
+	matchingActionIndices := make(map[uint32]bool)
+	for _, actTrace := range trxTrace.ActionTraces {
+		if actTrace.FilteringMatched {
+			shouldInclude := true
+			if actTrace.FilteringMatchedSystemActionFilter && !isRequiredSystemAction(actTrace, requiredSystemActions) {
+				shouldInclude = false
+			}
+
+			if shouldInclude {
+				matchingActionIndices[actTrace.ExecutionIndex] = true
+			}
+		}
+	}
+
+	return filteringActionMatcherFunc(func(actionIndex uint32) bool {
+		return matchingActionIndices[actionIndex]
+	})
+}
+
+func isRequiredSystemAction(actTrace *ActionTrace, requiredSystemActions []ActionMatcher) bool {
+	for _, matcher := range requiredSystemActions {
+		if matcher(actTrace) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (t *TransactionTrace) HasBeenReverted() bool {
-	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if no present to play safe
+	// This is an abnormal case, `Receipt` should always be present, but let's assume it's been reverted if not present to play safe
 	if t.Receipt == nil {
 		return true
 	}
@@ -256,6 +343,16 @@ func (a *Action) SimpleName() string {
 	return a.Account + ":" + a.Name
 }
 
+// HasJSONDecodedData returns wheter we were able in an upstream step top ABI decode
+// this action binary data `RawData` into a valid JSON string. If `false`, it means the
+// action `RawData` is ill-formed agaisnt the contract's ABI and as such, it was not
+// decoded at all.
+//
+// If `true`, it means a valid JSON representation of the action is available.
+func (a *Action) HasJSONDecodedData() bool {
+	return len(a.JsonData) > 0
+}
+
 func (a *Action) UnmarshalData(into interface{}) error {
 	return json.Unmarshal([]byte(a.JsonData), into)
 }
@@ -355,4 +452,14 @@ func (r *RlimitOp) IsLocalKind() bool {
 	_, isAccountUsage := r.Kind.(*RlimitOp_AccountUsage)
 	_, isAccountLimits := r.Kind.(*RlimitOp_AccountLimits)
 	return isAccountUsage || isAccountLimits
+}
+
+//
+/// PermissionLevel
+//
+
+// Authorization returns the concatenation of `Actor`@`Permission` which is
+// the standard way to print permission level in string format in EOSIO world.
+func (l *PermissionLevel) Authorization() string {
+	return l.Actor + "@" + l.Permission
 }

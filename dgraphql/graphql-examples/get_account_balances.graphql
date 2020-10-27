@@ -1,0 +1,21 @@
+query($account: String!, $limit: Uint32, $opts: [ACCOUNT_BALANCE_OPTION!]) {
+  accountBalances(account: $account,limit: $limit, options: $opts) {
+    blockRef {
+      id
+      number
+    }
+    pageInfo {
+      startCursor
+      endCursor
+    }
+    edges {
+      node {
+        account
+        contract
+        symbol
+        precision
+        balance
+      }
+    }
+  }
+}

@@ -4,7 +4,6 @@
     "data": {
       "account": "eosio",
       "action": "transfer",
-      "auth": null,
       "block_num": 1,
       "data": {
         "auth": {

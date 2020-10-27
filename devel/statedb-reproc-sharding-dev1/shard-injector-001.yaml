@@ -1,0 +1,11 @@
+start:
+  args:
+  - statedb
+  flags:
+    common-blocks-store-url: gs://dfuseio-global-blocks-us/eos-dev1/v4
+    statedb-enable-inject-mode: false
+    statedb-enable-server-mode: false
+    statedb-enable-reproc-injector-mode: true
+    statedb-reproc-injector-shard-index: 1
+    statedb-reproc-shard-count: 3
+    statedb-reproc-shard-store-url: "file://{dfuse-data-dir}/storage/statedb-shards"

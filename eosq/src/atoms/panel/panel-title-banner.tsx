@@ -5,11 +5,9 @@ import { Text } from "../text/text.component"
 
 const Container: React.ComponentType<any> = styled(Cell)`
   background-color: ${(props) => props.theme.colors.banner};
-  margin-bottom: 1px;
-  // border-left: 1px solid ${(props) => props.theme.colors.bleu6}
-  // border-right: 1px solid ${(props) => props.theme.colors.bleu6}
-  border-style:solid;
+  border-style: solid;
   border-color: ${(props) => props.theme.colors.bleu6};
+  margin-bottom: 1px;
 `
 
 export interface BannerContainerProps {
@@ -19,7 +17,7 @@ export interface BannerContainerProps {
   rest?: any
 }
 
-export const PannelTitleBanner: React.SFC<BannerContainerProps> = ({
+export const PanelTitleBanner: React.SFC<BannerContainerProps> = ({
   title,
   content,
   children,
@@ -28,11 +26,12 @@ export const PannelTitleBanner: React.SFC<BannerContainerProps> = ({
   <Container
     borderTop={["0px"]}
     borderBottom={["0px"]}
-    borderLeft={["0px", "1px", "1 px"]}
+    borderLeft={["0px", "1px", "1px"]}
     borderRight={["0px", "1px", "1px"]}
     px={[3, 4]}
     pt={[2, 3]}
     pb={[2, 3]}
+    fontSize={[2]}
     {...(rest || {})}
   >
     <Grid gridTemplateColumns={["auto 6fr 100px"]}>

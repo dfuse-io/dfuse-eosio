@@ -22,13 +22,57 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/ecc"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"go.uber.org/zap"
 )
+
+type conversionOption interface{}
+
+type actionConversionOption interface {
+	apply(actionTrace *pbcodec.ActionTrace)
+}
+
+type actionConversionOptionFunc func(actionTrace *pbcodec.ActionTrace)
+
+func (f actionConversionOptionFunc) apply(actionTrace *pbcodec.ActionTrace) {
+	f(actionTrace)
+}
+
+func limitConsoleLengthConversionOption(maxByteCount int) conversionOption {
+	return actionConversionOptionFunc(func(in *pbcodec.ActionTrace) {
+		if maxByteCount == 0 {
+			return
+		}
+
+		if len(in.Console) > maxByteCount {
+			in.Console = in.Console[:maxByteCount]
+
+			// Prior truncation, the string had only valid UTF-8 charaters, so at worst, we will need
+			// 3 bytes (`utf8.UTFMax - 1`) to reach a valid UTF-8 sequence.
+			for i := 0; i < utf8.UTFMax-1; i++ {
+				lastRune, size := utf8.DecodeLastRuneInString(in.Console)
+				if lastRune != utf8.RuneError {
+					// Last element is a valid utf8 character, nothing more to do here
+					return
+				}
+
+				// We have an invalid UTF-8 sequence, size 0 means empty string, size 1 means invalid character
+				if size == 0 {
+					// The actual string was empty, nothing more to do here
+					return
+				}
+
+				in.Console = in.Console[:len(in.Console)-1]
+			}
+		}
+	})
+}
 
 func ActivatedProtocolFeaturesToDEOS(in *eos.ProtocolFeatureActivationSet) *pbcodec.ActivatedProtocolFeatures {
 	out := &pbcodec.ActivatedProtocolFeatures{}
@@ -154,41 +198,37 @@ func BlockHeaderToEOS(in *pbcodec.BlockHeader) *eos.BlockHeader {
 
 func BlockSigningAuthorityToDEOS(authority *eos.BlockSigningAuthority) *pbcodec.BlockSigningAuthority {
 	out := &pbcodec.BlockSigningAuthority{}
-	err := authority.DoFor(map[uint32]eos.OnVariant{
-		eos.BlockSigningAuthorityV0Type: func(impl interface{}) error {
-			v := impl.(*eos.BlockSigningAuthorityV0)
 
-			out.Variant = &pbcodec.BlockSigningAuthority_V0{
-				V0: &pbcodec.BlockSigningAuthorityV0{
-					Threshold: v.Threshold,
-					Keys:      KeyWeightsPToDEOS(v.Keys),
-				},
-			}
-
-			return nil
-		},
-	})
-
-	if err != nil {
-		panic(fmt.Errorf("unable to convert eos.BlockSigningAuthority to deos: %s", err))
+	switch v := authority.Impl.(type) {
+	case *eos.BlockSigningAuthorityV0:
+		out.Variant = &pbcodec.BlockSigningAuthority_V0{
+			V0: &pbcodec.BlockSigningAuthorityV0{
+				Threshold: v.Threshold,
+				Keys:      KeyWeightsPToDEOS(v.Keys),
+			},
+		}
+	default:
+		panic(fmt.Errorf("unable to convert eos.BlockSigningAuthority to deos: wrong type %T", authority.Impl))
 	}
 
 	return out
 }
 
 func BlockSigningAuthorityToEOS(in *pbcodec.BlockSigningAuthority) *eos.BlockSigningAuthority {
-	out := &eos.BlockSigningAuthority{}
 	switch v := in.Variant.(type) {
 	case *pbcodec.BlockSigningAuthority_V0:
-		out.TypeID = eos.BlockSigningAuthorityV0Type
-		out.Impl = &eos.BlockSigningAuthorityV0{
-			Threshold: v.V0.Threshold,
+		return &eos.BlockSigningAuthority{
+			BaseVariant: eos.BaseVariant{
+				TypeID: eos.BlockSigningAuthorityVariant.TypeID("block_signing_authority_v0"),
+				Impl: eos.BlockSigningAuthorityV0{
+					Threshold: v.V0.Threshold,
+					Keys:      KeyWeightsPToEOS(v.V0.Keys),
+				},
+			},
 		}
-
-		return out
+	default:
+		panic(fmt.Errorf("unknown block signing authority variant %t", in.Variant))
 	}
-
-	panic(fmt.Errorf("unknown block signing authority variant %t", in.Variant))
 }
 
 func ProducerScheduleToDEOS(e *eos.ProducerSchedule) *pbcodec.ProducerSchedule {
@@ -373,7 +413,7 @@ func SignaturesToEOS(in []string) []ecc.Signature {
 	return out
 }
 
-func TransactionTraceToDEOS(in *eos.TransactionTrace) *pbcodec.TransactionTrace {
+func TransactionTraceToDEOS(in *eos.TransactionTrace, opts ...conversionOption) *pbcodec.TransactionTrace {
 	id := in.ID.String()
 
 	out := &pbcodec.TransactionTrace{
@@ -384,13 +424,18 @@ func TransactionTraceToDEOS(in *eos.TransactionTrace) *pbcodec.TransactionTrace 
 		Elapsed:         int64(in.Elapsed),
 		NetUsage:        uint64(in.NetUsage),
 		Scheduled:       in.Scheduled,
-		ActionTraces:    ActionTracesToDEOS(in.ActionTraces),
 		Exception:       ExceptionToDEOS(in.Except),
 		ErrorCode:       ErrorCodeToDEOS(in.ErrorCode),
 	}
 
+	var someConsoleTruncated bool
+	out.ActionTraces, someConsoleTruncated = ActionTracesToDEOS(in.ActionTraces, opts...)
+	if someConsoleTruncated {
+		zlog.Info("transaction had some of its action trace's console entries truncated", zap.String("id", id))
+	}
+
 	if in.FailedDtrxTrace != nil {
-		out.FailedDtrxTrace = TransactionTraceToDEOS(in.FailedDtrxTrace)
+		out.FailedDtrxTrace = TransactionTraceToDEOS(in.FailedDtrxTrace, opts...)
 	}
 	if in.Receipt != nil {
 		out.Receipt = TransactionReceiptHeaderToDEOS(in.Receipt)
@@ -440,6 +485,15 @@ func AuthoritiesToDEOS(authority *eos.Authority) *pbcodec.Authority {
 	}
 }
 
+func AuthoritiesToEOS(authority *pbcodec.Authority) eos.Authority {
+	return eos.Authority{
+		Threshold: authority.Threshold,
+		Keys:      KeyWeightsToEOS(authority.Keys),
+		Accounts:  PermissionLevelWeightsToEOS(authority.Accounts),
+		Waits:     WaitWeightsToEOS(authority.Waits),
+	}
+}
+
 func WaitWeightsToDEOS(waits []eos.WaitWeight) (out []*pbcodec.WaitWeight) {
 	if len(waits) <= 0 {
 		return nil
@@ -452,7 +506,22 @@ func WaitWeightsToDEOS(waits []eos.WaitWeight) (out []*pbcodec.WaitWeight) {
 			Weight:  uint32(o.Weight),
 		}
 	}
-	return
+	return out
+}
+
+func WaitWeightsToEOS(waits []*pbcodec.WaitWeight) (out []eos.WaitWeight) {
+	if len(waits) <= 0 {
+		return nil
+	}
+
+	out = make([]eos.WaitWeight, len(waits))
+	for i, o := range waits {
+		out[i] = eos.WaitWeight{
+			WaitSec: o.WaitSec,
+			Weight:  uint16(o.Weight),
+		}
+	}
+	return out
 }
 
 func PermissionLevelWeightsToDEOS(weights []eos.PermissionLevelWeight) (out []*pbcodec.PermissionLevelWeight) {
@@ -512,6 +581,38 @@ func KeyWeightsToDEOS(keys []eos.KeyWeight) (out []*pbcodec.KeyWeight) {
 		}
 	}
 	return
+}
+
+func KeyWeightsToEOS(keys []*pbcodec.KeyWeight) (out []eos.KeyWeight) {
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]eos.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = eos.KeyWeight{
+			PublicKey: ecc.MustNewPublicKey(o.PublicKey),
+			Weight:    uint16(o.Weight),
+		}
+	}
+	return
+
+}
+
+func KeyWeightsPToEOS(keys []*pbcodec.KeyWeight) (out []*eos.KeyWeight) {
+	if len(keys) <= 0 {
+		return nil
+	}
+
+	out = make([]*eos.KeyWeight, len(keys))
+	for i, o := range keys {
+		out[i] = &eos.KeyWeight{
+			PublicKey: ecc.MustNewPublicKey(o.PublicKey),
+			Weight:    uint16(o.Weight),
+		}
+	}
+	return
+
 }
 
 func KeyWeightsPToDEOS(keys []*eos.KeyWeight) (out []*pbcodec.KeyWeight) {
@@ -636,9 +737,9 @@ func CreationTreeToDEOS(tree CreationFlatTree) []*pbcodec.CreationFlatNode {
 	return out
 }
 
-func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTrace) {
+func ActionTracesToDEOS(actionTraces []eos.ActionTrace, opts ...conversionOption) (out []*pbcodec.ActionTrace, someConsoleTruncated bool) {
 	if len(actionTraces) <= 0 {
-		return nil
+		return nil, false
 	}
 
 	sort.Slice(actionTraces, func(i, j int) bool {
@@ -660,8 +761,12 @@ func ActionTracesToDEOS(actionTraces []eos.ActionTrace) (out []*pbcodec.ActionTr
 	})
 
 	out = make([]*pbcodec.ActionTrace, len(actionTraces))
+	var consoleTruncated bool
 	for idx, actionTrace := range actionTraces {
-		out[idx] = ActionTraceToDEOS(actionTrace, uint32(idx))
+		out[idx], consoleTruncated = ActionTraceToDEOS(actionTrace, uint32(idx), opts...)
+		if consoleTruncated {
+			someConsoleTruncated = true
+		}
 	}
 
 	return
@@ -709,7 +814,7 @@ func AuthSequenceToEOS(in *pbcodec.AuthSequence) eos.TransactionTraceAuthSequenc
 	}
 }
 
-func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.ActionTrace) {
+func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32, opts ...conversionOption) (out *pbcodec.ActionTrace, consoleTruncated bool) {
 	out = &pbcodec.ActionTrace{
 		Receiver:             string(in.Receiver),
 		Action:               ActionToDEOS(in.Action),
@@ -751,7 +856,14 @@ func ActionTraceToDEOS(in eos.ActionTrace, execIndex uint32) (out *pbcodec.Actio
 		}
 	}
 
-	return out
+	initialConsoleLength := len(in.Console)
+	for _, opt := range opts {
+		if v, ok := opt.(actionConversionOption); ok {
+			v.apply(out)
+		}
+	}
+
+	return out, initialConsoleLength != len(out.Console)
 }
 
 func ErrorCodeToDEOS(in *eos.Uint64) uint64 {

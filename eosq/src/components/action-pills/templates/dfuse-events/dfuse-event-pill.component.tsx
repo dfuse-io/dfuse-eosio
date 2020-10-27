@@ -1,10 +1,10 @@
 import * as React from "react"
+import { Box, Pill, PillLogoProps, CellValue, PillClickable, MonospaceText } from "@dfuse/explorer"
+import { theme } from "../../../../theme"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import Box from "../../../../atoms/ui-box/ui-box.component"
 import { getDfuseEventLevel1Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
-import { Pill, PillLogoProps } from "../../../../atoms/pills/pill"
-import { CellValue } from "../../../../atoms/pills/detail-line"
+
 import { Cell, Grid } from "../../../../atoms/ui-grid/ui-grid.component"
 import { Text } from "../../../../atoms/text/text.component"
 import { t } from "../../../../i18n"
@@ -111,15 +111,37 @@ export class DfuseEventPillComponent extends GenericPillComponent {
     )
   }
 
+  renderPill2 = () => {
+    if (!this.props.headerAndTitleOptions.title) {
+      return (
+        <Box px="2px" bg={this.props.pill2Color || theme.colors.bleu11}>
+          &nbsp;
+        </Box>
+      )
+    }
+
+    const WrapperComponent = this.props.disabled ? Box : PillClickable
+
+    return (
+      <WrapperComponent bg={this.props.pill2Color || theme.colors.bleu11}>
+        <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
+          {this.props.headerAndTitleOptions.title}
+        </MonospaceText>
+      </WrapperComponent>
+    )
+  }
+
   render(): JSX.Element {
     return (
       <Pill
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerHoverTitle="dfuseiohooks"
         disabled={this.props.disabled}
-        colorVariant="bleu11"
-        colorVariantHeader="bleu11"
         headerText="event"
         renderExpandedContent={this.renderExpandedContent}
         content={this.croppedData ? this.renderContent() : <span />}

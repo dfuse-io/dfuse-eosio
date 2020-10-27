@@ -1,0 +1,24 @@
+start:
+  args:
+  - abicodec
+  - apiproxy
+  - blockmeta
+  - booter
+  - dashboard
+  - dgraphql
+  - eosq
+  - eosws
+  - statedb
+  - merger
+  - mindreader
+  - node-manager
+  - relayer
+  - search-archive
+  - search-indexer
+  - search-live
+  - search-router
+  - tokenmeta
+  - trxdb-loader
+  flags:
+    common-exclude-filter-expr: (receiver == "eosio" && action == "onblock")
+    search-common-dfuse-events-action-name: dfuseiohooks:event

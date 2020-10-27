@@ -1,7 +1,0 @@
-{
-  "kind": "eosc-vault-wallet",
-  "version": 1,
-  "comment": "Development vault, password is empty (like in no characters.. hit ENTER, sort of empty)",
-  "secretbox_wrap": "passphrase",
-  "secretbox_ciphertext": "D6M+61otm3MrsSohV+L9Wo/ASMcUcsW5TcJxML0otHzMX475ZsJcQ74wrtXZ77P0cgWoZrh5HTnakg+ifcqDq1/bCPL/UR6LwSPvl2bcekcT5MnlSR2+aa9tLh3iIdrau3mmQ7X9m2QDE6pjAhHjq9LkeDxLwOL2"
-}

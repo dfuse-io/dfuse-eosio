@@ -1,0 +1,15 @@
+start:
+  args:
+  - accounthist
+  - dgraphql
+  flags:
+    accounthist-enable-injector-mode: false
+    accounthist-enable-server-mode: true
+    accounthist-grpc-listen-addr: :9000
+    #accounthist-mode: account
+    #dgraphql-accounthist-account-addr: localhost:9000
+    #dgraphql-accounthist-account-contract-addr:
+    accounthist-mode: account-contract
+    dgraphql-accounthist-account-contract-addr: localhost:9000
+    dgraphql-accounthist-account-addr:
+    dgraphql-http-addr: localhost:8080

@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb"
 	"github.com/eoscanada/eos-go"
@@ -28,20 +29,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var accountsReaderTest = []struct {
-	name string
-	test func(t *testing.T, driverFactory DriverFactory)
-}{
-	{"TestGetAccount", TestGetAccount},
-	{"TestListAccountNames", TestListAccountNames},
-}
-
-func TestAllAccountsReader(t *testing.T, driverName string, driverFactory DriverFactory) {
-	for _, rt := range accountsReaderTest {
-		t.Run(driverName+"/"+rt.name, func(t *testing.T) {
-			rt.test(t, driverFactory)
-		})
-	}
+var accountsReaderTest = []DriverTestFunc{
+	TestGetAccount,
+	TestListAccountNames,
 }
 
 func TestGetAccount(t *testing.T, driverFactory DriverFactory) {
@@ -143,42 +133,46 @@ func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 	}
 }
 
-func putAccount(t *testing.T, creator, account string, db trxdb.Driver) {
-	actions := []string{`{"id":"a1","action_traces": [{"receiver":"eosio","action": {"account":"eosio","name":"newaccount"}}]}`}
-	blk := TestBlock(t, "00000002aa", "00000001aa", actions...)
-	blk.TransactionTraces[0].ActionTraces[0].Action.JsonData = fmt.Sprintf(`
-		{
-		   "active": {
-			  "accounts": [],
-			  "keys": [
-				 {
-					"key": "EOS5UQzjPekK6g3y1LEdkBY8Seia1iqUhLHAPr55yPPguCN594UfU",
-					"weight": 1
-				 }
-			  ],
-			  "threshold": 1,
-			  "waits": []
-		   },
-		   "creator": "%s",
-		   "name": "%s",
-		   "owner": {
-			  "accounts": [],
-			  "keys": [
-				 {
-					"key": "EOS5UQzjPekK6g3y1LEdkBY8Seia1iqUhLHAPr55yPPguCN594UfU",
-					"weight": 1
-				 }
-			  ],
-			  "threshold": 1,
-			  "waits": []
-		   }
-		}
-	`, creator, account)
+func putAccount(t *testing.T, creator, account string, db trxdb.DB) {
+	blk := ct.Block(t, "00000002aa",
+		ct.TrxTrace(t, ct.TrxID("a1"),
+			ct.ActionTrace(t, "eosio:eosio:newaccount", ct.ActionData(fmt.Sprintf(`
+				{
+					"active": {
+						"accounts": [],
+						"keys": [
+							{
+								"key": "EOS5UQzjPekK6g3y1LEdkBY8Seia1iqUhLHAPr55yPPguCN594UfU",
+								"weight": 1
+							}
+						],
+						"threshold": 1,
+						"waits": []
+					},
+					"creator": "%s",
+					"name": "%s",
+					"owner": {
+						"accounts": [],
+						"keys": [
+							{
+								"key": "EOS5UQzjPekK6g3y1LEdkBY8Seia1iqUhLHAPr55yPPguCN594UfU",
+								"weight": 1
+							}
+						],
+						"threshold": 1,
+						"waits": []
+					}
+				}
+				`, creator, account)),
+			)),
+	)
+
 	var newAccount *system.NewAccount
-	require.NoError(t, json.Unmarshal([]byte(blk.TransactionTraces[0].ActionTraces[0].Action.JsonData), &newAccount))
+	require.NoError(t, json.Unmarshal([]byte(blk.TransactionTraces()[0].ActionTraces[0].Action.JsonData), &newAccount))
 	data, err := eos.MarshalBinary(newAccount)
 	require.NoError(t, err)
-	blk.TransactionTraces[0].ActionTraces[0].Action.RawData = data
+	blk.TransactionTraces()[0].ActionTraces[0].Action.RawData = data
+
 	ctx := context.Background()
 	require.NoError(t, db.PutBlock(ctx, blk))
 	require.NoError(t, db.UpdateNowIrreversibleBlock(ctx, blk))

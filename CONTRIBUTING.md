@@ -11,7 +11,7 @@ Interested in contributing? That's awesome! Here are some guidelines to get star
   - [Branching Conventions](#branching-conventions)
   - [Submitting Pull Requests](#submitting-pull-requests)
   - [Testing and Quality Assurance](#testing-and-quality-assurance)
-- [Conduct](#conduct)
+- [Code of Conduct](#code-of-conduct)
 - [Contributor License & Acknowledgments](#contributor-license--acknowledgments)
 - [References](#references)
 
@@ -95,7 +95,7 @@ Never underestimate just how useful quality assurance is. If you're looking to g
 
 Essentially, [check out the latest develop branch](#working-on-dfuse), take it for a spin, and if you find anything odd, please follow the [bug report guidelines](#bug-reports) and let us know!
 
-## Conduct
+## Code of Conduct
 
 While contributing, please be respectful and constructive, so that participation in our project is a positive experience for everyone.
 

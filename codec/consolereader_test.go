@@ -16,12 +16,14 @@ package codec
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -75,28 +77,27 @@ func TestConsoleReaderPerformances(t *testing.T) {
 
 func TestParseFromFile(t *testing.T) {
 	tests := []struct {
-		deepMindFile string
+		name          string
+		deepMindFile  string
+		includeBlock  func(block *pbcodec.Block) bool
+		readerOptions []ConsoleReaderOption
 	}{
-		// FIXME: Once we are satisfied with changes to deep mind format, the `offchain` version should be put
-		//        in file `testdata/deep-mind.dmlog` directly and be removed. For the other tests, it's a pain
-		//        to convert them ... not sure what to do for those sadly.
-		// {"testdata/deep-mind.dmlog"},
-		{"testdata/deep-mind-offchain-abi-decoding.dmlog"},
-		// {"testdata/dtrx-hard-fail.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-not-present.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-failed.dmlog"},
-		// {"testdata/dtrx-soft-fail-onerror-succeed.dmlog"},
+		{"full", "testdata/deep-mind.dmlog", nil, nil},
+		{"max-console-log", "testdata/deep-mind.dmlog", blockWithConsole, []ConsoleReaderOption{LimitConsoleLength(10)}},
 	}
 
 	for _, test := range tests {
-		t.Run(test.deepMindFile, func(t *testing.T) {
-			cr := testFileConsoleReader(t, test.deepMindFile)
+		t.Run(test.name, func(t *testing.T) {
+			cr := testFileConsoleReader(t, test.deepMindFile, test.readerOptions...)
 			buf := &bytes.Buffer{}
 
 			for {
 				out, err := cr.Read()
 				if out != nil && out.(*pbcodec.Block) != nil {
 					blk := out.(*pbcodec.Block)
+					if test.includeBlock != nil && !test.includeBlock(blk) {
+						continue
+					}
 
 					if len(buf.Bytes()) != 0 {
 						buf.Write([]byte("\n"))
@@ -112,7 +113,7 @@ func TestParseFromFile(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			goldenFile := test.deepMindFile + ".golden.json"
+			goldenFile := filepath.Join("testdata", test.name+".golden.json")
 			if os.Getenv("GOLDEN_UPDATE") == "true" {
 				ioutil.WriteFile(goldenFile, buf.Bytes(), os.ModePerm)
 			}
@@ -143,7 +144,11 @@ func unifiedDiff(t *testing.T, cnt1, cnt2 []byte) string {
 }
 
 func TestGeneratePBBlocks(t *testing.T) {
-	cr := testFileConsoleReader(t, "testdata/deep-mind-offchain-abi-decoding.dmlog")
+	cr := testFileConsoleReader(t, "testdata/deep-mind.dmlog")
+
+	// Create the folder, it might not exists in some contexts
+	err := os.MkdirAll("testdata/pbblocks", os.ModePerm)
+	require.NoError(t, err)
 
 	for {
 		out, err := cr.Read()
@@ -170,19 +175,19 @@ func TestGeneratePBBlocks(t *testing.T) {
 	}
 }
 
-func testFileConsoleReader(t *testing.T, filename string) *ConsoleReader {
+func testFileConsoleReader(t *testing.T, filename string, options ...ConsoleReaderOption) *ConsoleReader {
 	t.Helper()
 
 	fl, err := os.Open(filename)
 	require.NoError(t, err)
 
-	return testReaderConsoleReader(t, fl, func() { fl.Close() })
+	return testReaderConsoleReader(t, fl, func() { fl.Close() }, options...)
 }
 
-func testReaderConsoleReader(t *testing.T, reader io.Reader, closer func()) *ConsoleReader {
+func testReaderConsoleReader(t *testing.T, reader io.Reader, closer func(), options ...ConsoleReaderOption) *ConsoleReader {
 	t.Helper()
 
-	consoleReader, err := NewConsoleReader(reader)
+	consoleReader, err := NewConsoleReader(reader, options...)
 	require.NoError(t, err)
 
 	return consoleReader
@@ -358,12 +363,13 @@ func Test_readPermOp(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			`PERM_OP INS 0 {"owner":"eosio.ins","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
+			`PERM_OP INS 0 {"parent":1,"owner":"eosio.ins","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
 			&pbcodec.PermOp{
 				Operation:   pbcodec.PermOp_OPERATION_INSERT,
 				ActionIndex: 0,
 				OldPerm:     nil,
 				NewPerm: &pbcodec.PermissionObject{
+					ParentId:    1,
 					Owner:       "eosio.ins",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
@@ -373,17 +379,19 @@ func Test_readPermOp(t *testing.T) {
 			nil,
 		},
 		{
-			`PERM_OP UPD 0 {"old":{"owner":"eosio.old","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}},"new":{"owner":"eosio.new","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}}`,
+			`PERM_OP UPD 0 {"old":{"parent":2,"owner":"eosio.old","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}},"new":{"parent":3,"owner":"eosio.new","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}}`,
 			&pbcodec.PermOp{
 				Operation:   pbcodec.PermOp_OPERATION_UPDATE,
 				ActionIndex: 0,
 				OldPerm: &pbcodec.PermissionObject{
+					ParentId:    2,
 					Owner:       "eosio.old",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
 					Authority:   auth,
 				},
 				NewPerm: &pbcodec.PermissionObject{
+					ParentId:    3,
 					Owner:       "eosio.new",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
@@ -393,11 +401,72 @@ func Test_readPermOp(t *testing.T) {
 			nil,
 		},
 		{
-			`PERM_OP REM 0 {"owner":"eosio.rem","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
+			`PERM_OP REM 0 {"parent":4,"owner":"eosio.rem","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
 			&pbcodec.PermOp{
 				Operation:   pbcodec.PermOp_OPERATION_REMOVE,
 				ActionIndex: 0,
 				OldPerm: &pbcodec.PermissionObject{
+					ParentId:    4,
+					Owner:       "eosio.rem",
+					Name:        "prod.major",
+					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
+					Authority:   auth,
+				},
+				NewPerm: nil,
+			},
+			nil,
+		},
+
+		// New format
+		{
+			`PERM_OP INS 0 2 {"parent":1,"owner":"eosio.ins","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
+			&pbcodec.PermOp{
+				Operation:   pbcodec.PermOp_OPERATION_INSERT,
+				ActionIndex: 0,
+				OldPerm:     nil,
+				NewPerm: &pbcodec.PermissionObject{
+					Id:          2,
+					ParentId:    1,
+					Owner:       "eosio.ins",
+					Name:        "prod.major",
+					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
+					Authority:   auth,
+				},
+			},
+			nil,
+		},
+		{
+			`PERM_OP UPD 0 4 {"old":{"parent":2,"owner":"eosio.old","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}},"new":{"parent":3,"owner":"eosio.new","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}}`,
+			&pbcodec.PermOp{
+				Operation:   pbcodec.PermOp_OPERATION_UPDATE,
+				ActionIndex: 0,
+				OldPerm: &pbcodec.PermissionObject{
+					Id:          4,
+					ParentId:    2,
+					Owner:       "eosio.old",
+					Name:        "prod.major",
+					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
+					Authority:   auth,
+				},
+				NewPerm: &pbcodec.PermissionObject{
+					Id:          4,
+					ParentId:    3,
+					Owner:       "eosio.new",
+					Name:        "prod.major",
+					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
+					Authority:   auth,
+				},
+			},
+			nil,
+		},
+		{
+			`PERM_OP REM 0 3 {"parent":4,"owner":"eosio.rem","name":"prod.major","last_updated":"2018-06-08T08:08:08.888","auth":{"threshold":1,"keys":[],"accounts":[{"permission":{"actor":"eosio","permission":"active"},"weight":1}],"waits":[]}}`,
+			&pbcodec.PermOp{
+				Operation:   pbcodec.PermOp_OPERATION_REMOVE,
+				ActionIndex: 0,
+				OldPerm: &pbcodec.PermissionObject{
+					Id:          3,
+					ParentId:    4,
 					Owner:       "eosio.rem",
 					Name:        "prod.major",
 					LastUpdated: mustProtoTimestamp(mustTimeParse("2018-06-08T08:08:08.888")),
@@ -423,6 +492,115 @@ func Test_readPermOp(t *testing.T) {
 				actual := protoJSONMarshalIndent(t, ctx.trx.PermOps[0])
 
 				assert.JSONEq(t, expected, actual, diff.LineDiff(expected, actual))
+			}
+		})
+	}
+}
+
+func Test_readABIDump_Start(t *testing.T) {
+	tests := []struct {
+		name        string
+		line        string
+		expectedErr error
+	}{
+		{
+			"version 12",
+			`ABIDUMP START`,
+			nil,
+		},
+		{
+			"version 13",
+			`ABIDUMP START 44 500`,
+			nil,
+		},
+		{
+			"version 13, invalid block num",
+			`ABIDUMP START s44 500`,
+			errors.New(`block_num is not a valid number, got: "s44"`),
+		},
+		{
+			"version 13, invalid global sequence num",
+			`ABIDUMP START 44 s500`,
+			errors.New(`global_sequence_num is not a valid number, got: "s500"`),
+		},
+		{
+			"invalid number of field",
+			`ABIDUMP START 44`,
+			errors.New(`expected to have either 2 or 4 fields, got 3`),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := newParseCtx()
+			err := ctx.readABIStart(test.line)
+
+			require.Equal(t, test.expectedErr, err)
+		})
+	}
+}
+
+func Test_readDeepMindVersion(t *testing.T) {
+	tests := []struct {
+		name        string
+		line        string
+		expectedErr error
+	}{
+		{
+			"version 12",
+			`DEEP_MIND_VERSION 12`,
+			nil,
+		},
+		{
+			"version 13",
+			`DEEP_MIND_VERSION 13 0`,
+			nil,
+		},
+		{
+			"version 13, unsupported",
+			`DEEP_MIND_VERSION 14 0`,
+			errors.New("deep mind reported version 14, but this reader supports only 12, 13"),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := newParseCtx()
+			err := ctx.readDeepmindVersion(test.line)
+
+			require.Equal(t, test.expectedErr, err)
+		})
+	}
+}
+
+func Test_readABIDump_ABI(t *testing.T) {
+	tests := []struct {
+		name        string
+		line        string
+		expectedErr error
+	}{
+		{
+			"version 12",
+			`ABIDUMP ABI 44 eosio AAAAAAAAAAAA`,
+			nil,
+		},
+		{
+			"version 13",
+			`ABIDUMP ABI eosio AAAAAAAAAAAA`,
+			nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := newParseCtx()
+			err := ctx.readABIDump(test.line)
+
+			require.Equal(t, test.expectedErr, err)
+
+			if test.expectedErr == nil {
+				contractABI := ctx.abiDecoder.cache.findABI("eosio", 0)
+				assert.NotNil(t, contractABI)
 			}
 		})
 	}
@@ -463,4 +641,16 @@ func fileExists(path string) bool {
 	}
 
 	return !info.IsDir()
+}
+
+func blockWithConsole(block *pbcodec.Block) bool {
+	for _, trxTrace := range block.TransactionTraces() {
+		for _, actTrace := range trxTrace.ActionTraces {
+			if len(actTrace.Console) > 0 {
+				return true
+			}
+		}
+	}
+
+	return false
 }

@@ -1,6 +1,7 @@
 import { searchStore } from "../stores"
 import { SearchTransactionsResponse } from "@dfuse/client"
-import { getDfuseClient } from "../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 export function performStructuredSearch(cursor: string) {
   if (!searchStore.loadingTransactions) {

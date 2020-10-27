@@ -1,10 +1,17 @@
 import * as React from "react"
-import { Pill, PillLogoProps } from "../../../atoms/pills/pill"
-import { explodeJson } from "../../../helpers/formatters"
+import {
+  Box,
+  explodeJson,
+  DetailLineAuto,
+  Pill,
+  PillLogoProps,
+  PillClickable,
+  MonospaceText
+} from "@dfuse/explorer"
+
 import { Cell } from "../../../atoms/ui-grid/ui-grid.component"
-import { DetailLineAuto } from "../../../atoms/pills/detail-line"
+
 import { KeyValueFormatEllipsis, Text } from "../../../atoms/text/text.component"
-import Box from "../../../atoms/ui-box/ui-box.component"
 import { theme } from "../../../theme"
 import { t } from "i18next"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -59,7 +66,7 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
     if (logoParams) {
       return {
         path: logoParams.path,
-        website: logoParams.website,
+        website: logoParams.website
       }
     }
 
@@ -141,6 +148,26 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
     return null
   }
 
+  renderPill2 = () => {
+    if (!this.props.headerAndTitleOptions.title) {
+      return (
+        <Box px="2px" bg={this.props.pill2Color || theme.colors.traceActionGenericBackground}>
+          &nbsp;
+        </Box>
+      )
+    }
+
+    const WrapperComponent = this.props.disabled ? Box : PillClickable
+
+    return (
+      <WrapperComponent bg={this.props.pill2Color || theme.colors.traceActionGenericBackground}>
+        <MonospaceText alignSelf="center" px={[2]} color="text" fontSize={[1]}>
+          {this.props.headerAndTitleOptions.title}
+        </MonospaceText>
+      </WrapperComponent>
+    )
+  }
+
   renderExpandedContent = (): JSX.Element => {
     const displayFullContentButton = !this.state.fullContent && this.hasCroppedData
     return (
@@ -202,17 +229,18 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
   render(): JSX.Element {
     return (
       <Pill
+        pill2={this.renderPill2()}
         logo={this.logo}
         highlighted={this.props.highlighted}
         headerHoverTitle={this.props.headerAndTitleOptions.header.hoverTitle}
         disabled={this.props.disabled}
-        colorVariant="traceActionGenericBackground"
-        colorVariantHeader={this.props.headerAndTitleOptions.header.color}
+        headerBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonBgColor={theme.colors.traceAccountGenericBackground}
+        expandButtonColor={theme.colors.traceAccountText}
         headerText={this.renderHeaderText()}
         renderExpandedContent={this.renderExpandedContent}
         content={this.croppedData ? this.renderContent() : <span />}
         renderInfo={this.renderLevel2Template}
-        title={this.props.headerAndTitleOptions.title}
       />
     )
   }

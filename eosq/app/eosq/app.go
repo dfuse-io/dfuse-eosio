@@ -20,7 +20,7 @@ import (
 
 type Config struct {
 	HTTPListenAddr string
-	Environement   string // i.e: production
+	Environment    string // i.e: production
 	// EOSQ configruation payload
 	APIEndpointURL    string // i.e: https://dev1.api.dfuse.dev
 	ApiKey            string // i.e: web_XXXXXXXXXXXXXXXXXXXXXX
@@ -30,8 +30,6 @@ type Config struct {
 	DefaultNetwork    string // The default network that is displayed, should correspond to an id in the avaiable networks
 	DisplayPrice      bool   // Should eosq display prices
 	PriceTickerName   string // the Price ticker name i.e. EOS
-	OnDemand          bool   // If this instance of eoqs is for an on-demand network
-	DisableTokenmeta  bool   // Disables tokenmeta calls from eosq
 }
 
 type App struct {

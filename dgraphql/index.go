@@ -17,78 +17,113 @@ package dgraphql
 import (
 	"fmt"
 
-	"go.uber.org/zap"
-
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
+	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
+	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	dgraphqlApp "github.com/dfuse-io/dgraphql/app/dgraphql"
 	"github.com/dfuse-io/dgrpc"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"go.uber.org/zap"
 )
 
 type Config struct {
 	dgraphqlApp.Config
-	RatelimiterPlugin string
-	SearchAddr        string
-	ABICodecAddr      string
-	BlockMetaAddr     string
-	KVDBDSN           string
+
+	RatelimiterPlugin              string
+	SearchAddr                     string
+	ABICodecAddr                   string
+	BlockMetaAddr                  string
+	TokenmetaAddr                  string
+	AccountHistAccountAddr         string
+	AccountHistAccountContractAddr string
+	KVDBDSN                        string
 }
 
 func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	zlog.Info("new dgraphql eosio app", zap.Reflect("config", config))
 
-	schemas, err := SetupSchemas(config)
-	if err != nil {
-		return nil, err
-	}
-
 	dgraphqlBaseConfig := config.Config
-	dgraphqlBaseConfig.Schemas = schemas
 
-	return dgraphqlApp.New(&dgraphqlBaseConfig), nil
+	return dgraphqlApp.New(&dgraphqlBaseConfig, &dgraphqlApp.Modules{
+		PredefinedGraphqlExamples: GraphqlExamples(),
+		SchemaFactory:             &SchemaFactory{config: config},
+	}), nil
 }
 
-var RootResolverFactory = eosResolver.NewRoot
+type SchemaFactory struct {
+	config *Config
+}
 
-func SetupSchemas(config *Config) (*dgraphql.Schemas, error) {
+func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 	zlog.Info("creating db reader")
-	dbReader, err := trxdb.New(config.KVDBDSN)
+	dbReader, err := trxdb.New(f.config.KVDBDSN, trxdb.WithLogger(zlog))
 	if err != nil {
 		return nil, fmt.Errorf("invalid trxdb connection info provided: %w", err)
 	}
 
-	zlog.Info("creating abicodec grpc client")
-	abiConn, err := dgrpc.NewInternalClient(config.ABICodecAddr)
+	zlog.Info("creating abicodec grpc client", zap.String("abicodec_addr", f.config.ABICodecAddr))
+	abiConn, err := dgrpc.NewInternalClient(f.config.ABICodecAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting abi grpc client: %w", err)
 	}
 	abiClient := pbabicodec.NewDecoderClient(abiConn)
 
-	zlog.Info("creating blockmeta grpc client")
-	blockMetaClient, err := pbblockmeta.NewClient(config.BlockMetaAddr)
+	zlog.Info("creating blockmeta grpc client", zap.String("blockmeta_addr", f.config.BlockMetaAddr))
+	blockMetaClient, err := pbblockmeta.NewClient(f.config.BlockMetaAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating blockmeta client: %w", err)
 	}
 
-	zlog.Info("creating search grpc client")
-
-	searchConn, err := dgrpc.NewInternalClient(config.SearchAddr)
+	zlog.Info("creating search grpc client", zap.String("search_addr", f.config.SearchAddr))
+	searchConn, err := dgrpc.NewInternalClient(f.config.SearchAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed getting search grpc client: %w", err)
 	}
 	searchRouterClient := pbsearch.NewRouterClient(searchConn)
 
-	rateLimiter, err := drateLimiter.New(config.RatelimiterPlugin)
+	zlog.Info("creating tokenmeta grpc client", zap.String("tokenmeta_addr", f.config.TokenmetaAddr))
+	tokenmetaConn, err := dgrpc.NewInternalClient(f.config.TokenmetaAddr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+	}
+	tokenmetaClient := pbtokenmeta.NewTokenMetaClient(tokenmetaConn)
+
+	rateLimiter, err := drateLimiter.New(f.config.RatelimiterPlugin)
 	derr.Check("unable to initialize rate limiter", err)
 
+	zlog.Info("creating accounthist grpc clients",
+		zap.String("accounthist_account_addr", f.config.AccountHistAccountAddr),
+		zap.String("accounthist_account_contract_addr", f.config.AccountHistAccountContractAddr),
+	)
+
+	accounthistClient := &eosResolver.AccounthistClient{}
+
+	if f.config.AccountHistAccountAddr != "" {
+		zlog.Info("setting up accounthist <account> client", zap.String("accounthist_account_addr", f.config.AccountHistAccountAddr))
+		accountHistAccConn, err := dgrpc.NewInternalClient(f.config.AccountHistAccountAddr)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+		}
+		accounthistClient.Account = pbaccounthist.NewAccountHistoryClient(accountHistAccConn)
+	}
+
+	if f.config.AccountHistAccountContractAddr != "" {
+		zlog.Info("setting up accounthist <account-contract> client", zap.String("accounthist_account_contract_addr", f.config.AccountHistAccountContractAddr))
+		accountHistAccCtrConn, err := dgrpc.NewInternalClient(f.config.AccountHistAccountContractAddr)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
+		}
+		accounthistClient.AccountContract = pbaccounthist.NewAccountContractHistoryClient(accountHistAccCtrConn)
+	}
+
 	zlog.Info("configuring resolver and parsing schemas")
-	resolver, err := RootResolverFactory(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter)
+	resolver, err := eosResolver.NewRoot(searchRouterClient, dbReader, blockMetaClient, abiClient, rateLimiter, tokenmetaClient, accounthistClient)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create root resolver: %w", err)
 	}

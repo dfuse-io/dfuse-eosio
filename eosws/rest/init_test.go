@@ -15,15 +15,9 @@
 package rest
 
 import (
-	"os"
-
 	"github.com/dfuse-io/logging"
-	"go.uber.org/zap"
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" {
-		zlog, _ = zap.NewDevelopment()
-		logging.Set(zlog)
-	}
+	logging.TestingOverride()
 }

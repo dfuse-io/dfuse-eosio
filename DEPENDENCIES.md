@@ -7,6 +7,8 @@ You will also want to build both the `dashboard` and the `eosq` apps
 
 ## Building web apps
 
+* **NOTE: Building web apps is done as part of the ./build.sh script**
+
 Building `eosq`:
 
 ```
@@ -15,12 +17,20 @@ yarn install
 yarn build
 ```
 
-and building the `dashboard`:
+and building the `dashboard` from dlauncher, copying the ricebox to this repo:
 
 ```
-cd dashboard/client
-yarn install
-yarn build
+pushd ..
+  git clone git@github.com/dfuse-io/dlauncher
+  pushd dashboard
+    pushd client
+      yarn install
+      yarn build
+	popd
+    go generate
+  popd
+popd
+go generate ./dashboard # copies the ../dlauncher/dashboard/rice-box.go file to ./dashboard
 ```
 
 ## dfuse Instrumented EOSIO Prebuilt Binaries
@@ -59,15 +69,15 @@ brew remove eosio
 #### Ubuntu 18.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio_2.0.5-dm.12.0-1-ubuntu-18.04_amd64.deb
-sudo apt install ./eosio_2.0.5-dm.12.0-1-ubuntu-18.04_amd64.deb
+curl -s https://api.github.com/repos/dfuse-io/eos/releases/latest | grep "browser_download_url.*18.04_amd64.deb" | cut -d : -f 2,3 | tr -d \" | wget --show-progress -O ./eosio-dm-latest-18.04.deb -qi -
+sudo apt install ./eosio-dm-latest-18.04.deb
 ```
 
 #### Ubuntu 16.04 Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio_2.0.5-dm.12.0-1-ubuntu-16.04_amd64.deb
-sudo apt install ./eosio_2.0.5-dm.12.0-1-ubuntu-16.04_amd64.deb
+curl -s https://api.github.com/repos/dfuse-io/eos/releases/latest | grep "browser_download_url.*16.04_amd64.deb" | cut -d : -f 2,3 | tr -d \" | wget --show-progress -O ./eosio-dm-latest-16.04.deb -qi -
+sudo apt install ./eosio-dm-latest-16.04.deb
 ```
 
 #### Ubuntu Package Uninstall
@@ -81,8 +91,8 @@ sudo apt remove eosio
 #### RPM Package Install
 
 ```sh
-wget https://github.com/dfuse-io/eos/releases/download/v2.0.5-dm-12.0/eosio-2.0.5-dm.12.0-1.el7.x86_64.rpm
-sudo yum install ./eosio-2.0.5-dm.12.0-1.el7.x86_64.rpm
+curl -s https://api.github.com/repos/dfuse-io/eos/releases/latest | grep "browser_download_url.*.rpm" | cut -d : -f 2,3 | tr -d \" | wget --show-progress -O ./eosio-dm-latest.rpm -qi -
+sudo yum install ./eosio-dm-latest.rpm
 ```
 
 #### RPM Package Uninstall

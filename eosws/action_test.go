@@ -16,7 +16,6 @@ package eosws
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -29,13 +28,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
-	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
@@ -58,7 +55,7 @@ func TestOnGetActionsTraces(t *testing.T) {
 	}
 
 	actionTraceRespWithBlock := func(blockID string, reqID string, index int, trace string) string {
-		ref := bstream.BlockRefFromID(blockID)
+		ref := bstream.NewBlockRefFromID(blockID)
 
 		out := fmt.Sprintf(`{"type":"action_trace","req_id":%q,"data":{"block_num":%d,"block_id":"%s","block_time":"0001-01-01T00:00:00Z","trx_id":"trx.1","idx":%d,"trace":%s}`, reqID, ref.Num(), blockID, index, trace)
 		out, _ = sjson.SetRaw(out, "data.trace.closest_unnotified_ancestor_action_ordinal", "0")
@@ -204,18 +201,19 @@ func TestOnGetActionsTraces(t *testing.T) {
 			archiveStore := dstore.NewMockStore(nil)
 
 			subscriptionHub := newTestSubscriptionHub(t, 0, archiveStore)
-			fluxClient := fluxdb.NewTestFluxClient()
+			stateClient := pbstatedb.NewMockStateClient()
 			handler := NewWebsocketHandler(
 				nil,
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,
 				NewTestIrreversibleFinder("00000001a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler, &testCredentials{startBlock: 2})
@@ -236,29 +234,9 @@ func TestOnGetActionsTraces(t *testing.T) {
 			require.NoError(t, err)
 			go subscriptionHub.Launch()
 
-			validateOutput(t, reqID, test.expectedMsgFactory(reqID), conn)
+			validateOutput(t, reqID, test.expectedMsgFactory(reqID), conn, 5*time.Second)
 		})
 	}
-}
-
-type TestPipelineInitiator struct {
-	pipeline bstream.Pipeline
-}
-
-func (m *TestPipelineInitiator) NewPipeline(
-	ctx context.Context,
-	startBlockID string,
-	startBlockNum uint32,
-	emissionStartBlock uint32,
-	originMsg wsmsg.IncomingMessager,
-	pipeline bstream.Pipeline,
-	onClose func(),
-) {
-	m.pipeline = pipeline
-}
-
-func (m *TestPipelineInitiator) pushBlock(block *bstream.Block, obj *forkable.ForkableObject) {
-	m.pipeline.ProcessBlock(block, obj)
 }
 
 type archiveFiles struct {
@@ -324,9 +302,9 @@ func newTestConnection(t *testing.T, handler http.Handler, options ...interface{
 	}
 }
 
-func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *websocket.Conn) {
+func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *websocket.Conn, timeout time.Duration) {
 	for _, expected := range expectedOutput {
-		output := nextMessage(t, reqID, conn)
+		output := nextMessage(t, reqID, conn, timeout)
 
 		// Let's not check content of message that are ignored
 		//fmt.Println("expected: ", expected)
@@ -336,10 +314,19 @@ func validateOutput(t *testing.T, reqID string, expectedOutput []string, conn *w
 	}
 }
 
-func nextMessage(t *testing.T, reqID string, conn *websocket.Conn) string {
+func nextMessage(t *testing.T, reqID string, conn *websocket.Conn, timeout time.Duration) string {
 	message := ""
 	for {
+		conn.SetReadDeadline(time.Now().Add(timeout))
 		_, r, err := conn.NextReader()
+		if err != nil {
+			if strings.HasSuffix(err.Error(), "i/o timeout") {
+				require.Fail(t, "timeout error", "We never received the expected WebSocket message in time (timeout of %s)", timeout)
+			} else {
+				require.NoError(t, err)
+			}
+		}
+
 		rawOutput, err := ioutil.ReadAll(r)
 		require.NoError(t, err)
 
@@ -364,7 +351,7 @@ func newTestSubscriptionHub(t *testing.T, startBlock uint32, archiveStore dstore
 		return bstream.NewTestSource(h)
 	})
 
-	buf := bstream.NewBuffer("pubsubbuf")
+	buf := bstream.NewBuffer("pubsubbuf", zlog)
 	tailManager := bstream.NewSimpleTailManager(buf, 10)
 	subscriptionHub, err := hub.NewSubscriptionHub(uint64(startBlock), buf, tailManager.TailLock, fileSourceFactory, liveSourceFactory)
 	require.NoError(t, err)
@@ -398,7 +385,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 
 	stamp, _ := ptypes.TimestampProto(time.Time{})
 
-	ref := bstream.BlockRefFromID(blockID)
+	ref := bstream.NewBlockRefFromID(blockID)
 	blk := &pbcodec.Block{
 		Id:     blockID,
 		Number: uint32(ref.Num()),
@@ -406,7 +393,7 @@ func acceptedBlockWithActions(t *testing.T, blockID string, status pbcodec.Trans
 			Previous:  fmt.Sprintf("%08d", ref.Num()-1) + ref.ID()[8:],
 			Timestamp: stamp,
 		},
-		TransactionTraces: []*pbcodec.TransactionTrace{
+		UnfilteredTransactionTraces: []*pbcodec.TransactionTrace{
 			{
 				Id: "trx.1",
 				Receipt: &pbcodec.TransactionReceiptHeader{

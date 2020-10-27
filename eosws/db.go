@@ -32,6 +32,7 @@ import (
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
+	"github.com/dfuse-io/opaque"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
@@ -44,6 +45,7 @@ type DB interface {
 	//GetBlocksByNum(ctx context.Context, num uint32) ([]*mdl.BlockRow, error)
 	//ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*mdl.BlockRow, error)
 	//ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*mdl.BlockRow, error)
+	GetTransactionWithExpectedBlockID(ctx context.Context, id string, expectedBlockID string) (*pbcodec.TransactionLifecycle, error)
 	GetTransaction(ctx context.Context, id string) (*pbcodec.TransactionLifecycle, error)
 	GetTransactions(ctx context.Context, ids []string) ([]*pbcodec.TransactionLifecycle, error)
 	ListTransactionsForBlockID(ctx context.Context, blockId string, startKey string, limit int) (*mdl.TransactionList, error)
@@ -70,6 +72,29 @@ func NewTRXDB(dbReader trxdb.DBReader) *TRXDB {
 			return true
 		},
 	}
+}
+
+func (db *TRXDB) GetTransactionWithExpectedBlockID(ctx context.Context, id string, expectedBlockID string) (out *pbcodec.TransactionLifecycle, err error) {
+	evs, err := db.GetTransactionEvents(ctx, id)
+	if err != nil && err != kvdb.ErrNotFound {
+		return nil, err
+	}
+	if len(evs) == 0 {
+		return nil, DBTrxNotFoundError(ctx, id)
+	}
+	seenBlockID := false
+	for _, ev := range evs {
+		if ev.BlockId == expectedBlockID {
+			seenBlockID = true
+			break
+		}
+	}
+	if !seenBlockID {
+		return nil, DBTrxNotFoundError(ctx, id)
+	}
+
+	out = pbcodec.MergeTransactionEvents(evs, db.chainDiscriminator)
+	return
 }
 
 func (db *TRXDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
@@ -107,7 +132,7 @@ func (db *TRXDB) GetTransactions(ctx context.Context, ids []string) (out []*pbco
 func (db *TRXDB) ListTransactionsForBlockID(ctx context.Context, blockID string, startKey string, limit int) (*mdl.TransactionList, error) {
 	if limit < 1 {
 		return &mdl.TransactionList{
-			Cursor: startKey,
+			Cursor: opaqueCursor(startKey),
 		}, nil
 	}
 
@@ -170,7 +195,7 @@ func (db *TRXDB) ListTransactionsForBlockID(ctx context.Context, blockID string,
 	}
 
 	return &mdl.TransactionList{
-		Cursor:       kvdb.HexUint16(nextTrxIndex),
+		Cursor:       opaqueCursor(kvdb.HexUint16(nextTrxIndex)),
 		Transactions: lifecycles[0:upperBound],
 	}, nil
 }
@@ -178,7 +203,7 @@ func (db *TRXDB) ListTransactionsForBlockID(ctx context.Context, blockID string,
 func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string, limit int) (*mdl.TransactionList, error) {
 	if limit < 1 {
 		return &mdl.TransactionList{
-			Cursor: startKey,
+			Cursor: opaqueCursor(startKey),
 		}, nil
 	}
 
@@ -212,7 +237,6 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 			return nil, err
 		}
 		nextBlockNum = eos.BlockNum(blockID)
-		//nextPrefix = kvdb.ReversedBlockID(blockID)
 		startBlockID = blockID
 		startTrxIndex = trxIndex
 	}
@@ -241,21 +265,12 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 			return nil, fmt.Errorf("list blocks: %s", err)
 		}
 
-		// rowRange := bigtable.InfiniteRange(nextPrefix)
-		// filter := bigtable.RowFilter(bigtable.FamilyFilter("trxs")) // we only want `trxs:executed-ids` and block ID (from the key)
-		// // FIXME: THIS WILL FAIL BECAUSE WE DON'T HAVE A WRITTEN FIELD AGAIN
-		// blocks, err := b.Blocks.ReadRows(ctx, rowRange, filter, latestCellFilter, bigtable.LimitRows(int64(limit)))
-		// if err != nil {
-		// 	return nil, fmt.Errorf("list transactions: %s", err)
-		// }
-
 		for _, blk := range blks {
 			if len(list) > limit+1 {
 				break
 			}
 
 			if seenBlock[blk.Id] {
-				// in case `nextPrefix` was not properly increased
 				break
 			}
 
@@ -293,11 +308,12 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 				return nil, err
 			}
 
-			for idx, resp := range responses {
-				if len(resp) == 0 {
-					return nil, fmt.Errorf("transaction not found: %q", fetchTransactions[idx])
+			for _, resp := range responses {
+				if len(resp) != 0 {
+					list = append(list, resp)
+					//} else {return nil, fmt.Errorf("transaction not found: %q", fetchTransactions[idx]) // soft failing only
 				}
-				list = append(list, resp)
+
 			}
 
 			nextBlockNum = eos.BlockNum(blk.Id) - 1
@@ -319,7 +335,8 @@ func (db *TRXDB) ListMostRecentTransactions(ctx context.Context, startKey string
 		if seenData == nil {
 			return nil, fmt.Errorf("hmm, we haven't seen this but we added it? %s", trxRowAtBoundary[0].Id)
 		}
-		out.Cursor = seenData.blockID + ":" + kvdb.HexUint16(seenData.transactionIndex)
+
+		out.Cursor = opaqueCursor(seenData.blockID + ":" + kvdb.HexUint16(seenData.transactionIndex))
 	}
 
 	var keep [][]*pbcodec.TransactionEvent
@@ -397,6 +414,10 @@ func (db *MockDB) GetLastWrittenBlockID(ctx context.Context) (string, error) {
 	return "0123456700000000000000000000000000000000000000000000000000000000", nil
 }
 
+func (db *MockDB) GetTransactionWithExpectedBlockID(ctx context.Context, id string, _ string) (out *pbcodec.TransactionLifecycle, err error) {
+	return db.GetTransaction(ctx, id)
+}
+
 func (db *MockDB) GetTransaction(ctx context.Context, id string) (out *pbcodec.TransactionLifecycle, err error) {
 	filename := filepath.Join(db.path, "transactions", fmt.Sprintf("%s.json", id))
 	err = readFromFile(filename, out)
@@ -463,4 +484,15 @@ func readFromFile(filename string, out interface{}) (err error) {
 	}
 
 	return
+}
+
+func opaqueCursor(key string) string {
+	// The implementation always returns nil! So it's ok to panic here, if it changes and there is an error,
+	// change the code throughtout.
+	out, err := opaque.ToOpaque(key)
+	if err != nil {
+		panic(fmt.Errorf("unable to transform key %q to opaque cursor: %w", key, err))
+	}
+
+	return out
 }

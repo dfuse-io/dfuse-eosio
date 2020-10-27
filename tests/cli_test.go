@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/acarl005/stripansi"
-	dashboard "github.com/dfuse-io/dfuse-eosio/dashboard/pb"
-	"github.com/dfuse-io/dfuse-eosio/launcher/cli"
+	"github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos/cli"
 	"github.com/dfuse-io/dgrpc"
+	dashboard "github.com/dfuse-io/dlauncher/dashboard/pb"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -78,7 +78,7 @@ func TestCli(t *testing.T) {
 }
 
 func waitForAllAppsToBeReady(t *testing.T, timeout time.Duration) (notReadyApps []string) {
-	conn, err := dgrpc.NewInternalClient("localhost" + cli.DashboardGrpcServingAddr)
+	conn, err := dgrpc.NewInternalClient("localhost" + cli.DashboardGRPCServingAddr)
 	require.NoError(t, err)
 
 	// FIXME: Connect this context here to the test context so that if the test process is killed,

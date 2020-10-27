@@ -3,11 +3,10 @@ import TableHead from "@material-ui/core/TableHead"
 import TableRow from "@material-ui/core/TableRow"
 import Table from "@material-ui/core/Table"
 import TableBody from "@material-ui/core/TableBody"
-import { style } from "styled-system"
-import { theme, styled } from "../../theme"
+import { system, Scale } from "styled-system"
+import { Box, Cell } from "@dfuse/explorer"
+import { theme, styled, resolveValue } from "../../theme"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import Box from "../ui-box/ui-box.component"
-import { Cell } from "../ui-grid/ui-grid.component"
 import * as React from "react"
 
 type TableCaptionItemProps = {
@@ -70,32 +69,19 @@ export const UiTableRowAlternated: React.ComponentType<any> = styled(TableRow)`
   }
 `
 
-const fontSize = style({
-  // React prop name
-  prop: "fontSize",
-  // The corresponding CSS property (defaults to prop argument)
-  cssProperty: "fontSize",
-  // key for theme values
-  key: "fontSizes",
-  // accessor function for transforming the value
-  transformValue: (n: string | number) => {
-    return `${n}px !important;`
+const fontSize = system({
+  fontSize: {
+    property: "fontSize",
+    scale: "fontSizes",
+    transform: (n: string | number, scale?: Scale) => `${resolveValue(n, scale)}px !important;`
   }
-  // add a fallback scale object or array, if theme is not present
 })
 
-const textAlign = style({
-  // React prop name
-  prop: "textAlign",
-  // The corresponding CSS property (defaults to prop argument)
-  cssProperty: "textAlign",
-  // key for theme values
-  key: "textAlign",
-  // accessor function for transforming the value
-  transformValue: (n: string | number) => {
-    return `${n} !important;`
+const textAlign = system({
+  textAlign: {
+    property: "textAlign",
+    transform: (n: string | number) => `${n} !important;`
   }
-  // add a fallback scale object or array, if theme is not present
 })
 
 export const UiTableCell: React.ComponentType<any> = styled(TableCell)`

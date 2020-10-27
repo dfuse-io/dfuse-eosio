@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
@@ -35,7 +36,6 @@ import (
 )
 
 func Test_onGetTableRows(t *testing.T) {
-
 	archiveStore := dstore.NewMockStore(nil)
 
 	abiGetter := NewTestABIGetter()
@@ -44,7 +44,7 @@ func Test_onGetTableRows(t *testing.T) {
 		name              string
 		lib               uint32
 		archiveFiles      []archiveFiles
-		fluxDBResponse    string
+		stateDBResponse   string
 		abiForAccountName *ABIAccountName
 		msg               string
 		expectedOutput    []string
@@ -59,7 +59,7 @@ func Test_onGetTableRows(t *testing.T) {
     },
     "id": "00000002a",
     "number": 2,
-    "transaction_traces": [
+    "unfiltered_transaction_traces": [
         {
             "db_ops": [
                 {
@@ -79,10 +79,10 @@ func Test_onGetTableRows(t *testing.T) {
     ]
 }
 `))}},
-			fluxDBResponse:    `{"last_irreversible_block_id":"00000001a","last_irreversible_block_num":1,"up_to_block_id":"00000001a","up_to_block_num":1,"rows":{"foo":"bar"}}`,
+			stateDBResponse:   `{"last_irreversible_block_id":"00000001a","last_irreversible_block_num":1,"up_to_block_id":"00000001a","up_to_block_num":1,"rows":[{"key":"a","payer":"eosio","json":"{\"foo\":\"bar\"}"}]}`,
 			abiForAccountName: &ABIAccountName{accountName: eos.AccountName("account.1"), abiString: `{"version":"eosio::abi/1.0","structs":[{"name":"struct_name_1","fields":[{"name":"struct_1_field_1","type":"string"}]}],"tables":[{"name":"table_name_1","index_type":"i64","key_names":["key_name_1"],"key_types":["string"],"type":"struct_name_1"}]}`},
 			msg:               `{"type":"get_table_rows","req_id":"abc","listen":false,"fetch":true,"data":{"code":"account.1","scope":"scope.1","table":"table.name.1","json":true}}`,
-			expectedOutput:    []string{`{"type":"table_snapshot","req_id":"abc","data":{"rows":{"foo":"bar"}}}`},
+			expectedOutput:    []string{`{"type":"table_snapshot","req_id":"abc","data":{"rows":[{"foo":"bar"}]}}`},
 		},
 	}
 
@@ -93,31 +93,35 @@ func Test_onGetTableRows(t *testing.T) {
 				archiveStore.SetFile(f.name, f.content)
 			}
 			subscriptionHub := newTestSubscriptionHub(t, c.lib, archiveStore)
-			fluxClient := fluxdb.NewTestFluxClient()
+			stateClient := pbstatedb.NewMockStateClient()
 
 			handler := NewWebsocketHandler(
 				abiGetter,
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				nil,
 				nil,
 				NewTestIrreversibleFinder("00000001a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)
 			defer closer()
 
-			fluxClient.SetGetTableResponse(c.fluxDBResponse, nil)
+			mockRows := new(pbstatedb.MockStreamTableRows)
+			json.Unmarshal([]byte(c.stateDBResponse), mockRows)
+
+			stateClient.SetStreamTableRows(mockRows)
 
 			abiGetter.SetABIForAccount(c.abiForAccountName.abiString, c.abiForAccountName.accountName)
 
 			err := conn.WriteMessage(1, []byte(c.msg))
 			require.NoError(t, err)
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 		})
 	}
 }
@@ -189,7 +193,7 @@ func TestTableDeltaHandler_ProcessBlock(t *testing.T) {
 
 			require.NoError(t, err)
 			emitter := NewTestEmitter(context.Background(), nil)
-			handler := NewTableDeltaHandler(msg, emitter, context.Background(), zlog, func() *eos.ABI {
+			handler := newTableDeltaHandler(context.Background(), msg, emitter, zlog, func() *eos.ABI {
 				return abi
 			})
 			err = handler.ProcessBlock(c.block, fobj)

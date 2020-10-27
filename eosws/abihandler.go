@@ -103,9 +103,10 @@ func (s ABIStack) Peek() *eos.ABI {
 }
 
 func abiFromBlock(blk *pbcodec.Block, code eos.AccountName) (*eos.ABI, error) {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		for _, actionTrace := range trxTrace.ActionTraces {
-			if actionTrace.FullName() == "eosio:eosio:setabi" {
+			// We process action trace regardless of the block filtering applied
+			if actionTrace.Receiver == "eosio" && actionTrace.Action.Account == "eosio" && actionTrace.Action.Name == "setabi" {
 				candidateCode := eos.AccountName(actionTrace.GetData("account").String())
 				if code != candidateCode {
 					continue

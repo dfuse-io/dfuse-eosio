@@ -1,5 +1,6 @@
 import { observer } from "mobx-react"
 import * as React from "react"
+import { Button } from "@material-ui/core"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
 import { HoverableTextNoHighlight, Text } from "../../atoms/text/text.component"
 import { theme, styled } from "../../theme"
@@ -7,14 +8,13 @@ import { UiInput } from "../../atoms/ui-text-field/ui-text-field"
 import { searchStore } from "../../stores"
 import { FilterSection, FilterTypes, RangeOptions } from "../../models/search-filters"
 import { t } from "i18next"
-import Button from "@material-ui/core/Button/Button"
 import { RouteComponentProps } from "react-router"
 import queryString from "query-string"
 import { performStructuredSearch } from "../../services/search"
-import Box from "../../atoms/ui-box/ui-box.component"
+import { Box, formatNumber } from "@dfuse/explorer"
 import { UiDropDown } from "../../atoms/ui-dropdown/ui-dropdown.component"
 import Checkbox from "@material-ui/core/Checkbox/Checkbox"
-import { formatNumber } from "../../helpers/formatters"
+
 import { UiSwitch } from "../../atoms/ui-switch/switch"
 
 interface Props extends RouteComponentProps<any> {
@@ -234,7 +234,7 @@ export class SearchFilters extends React.Component<Props> {
 
   renderSections() {
     return searchStore.filterSections.map((section: FilterSection) => {
-      let content = null
+      let content: JSX.Element
       switch (section.type) {
         case FilterTypes.BLOCK_RANGE:
           content = this.displayBlockRange(section)

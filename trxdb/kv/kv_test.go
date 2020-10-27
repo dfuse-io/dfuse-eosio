@@ -2,6 +2,7 @@ package kv
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -15,48 +16,32 @@ import (
 )
 
 func init() {
-	if os.Getenv("TEST_LOG") != "" {
-		zlog = logging.MustCreateLoggerWithLevel("test", zap.NewAtomicLevelAt(zap.DebugLevel))
-		logging.Set(zlog)
+	if os.Getenv("DEBUG") != "" || os.Getenv("TRACE") == "true" {
+		logger, _ := zap.NewDevelopment()
+		logging.Override(logger)
 	}
 }
 
-const testBadgerTestDBFilePath = "/tmp/dfuse-test-badger"
-
 func TestAll(t *testing.T) {
-
-	factory := newTestDBFactory(t, testBadgerTestDBFilePath)
+	factory := newTestDBFactory(t)
 	trxdbtest.TestAll(t, "kv", factory)
-
-	//trxdbtest.TestAllTimelineExplorer(t, "kv", factory)
-	//trxdbtest.TestAllAccountsReader(t, "kv", factory)
-	//trxdbtest.TestAllTransactionsReader(t, "kv", factory)
-	//trxdbtest.TestGetLastWrittenBlockID(t, factory)
-	//trxdbtest.TestGetBlock(t, factory)
-	//trxdbtest.TestGetBlockByNum(t, factory)
-	//trxdbtest.TestGetClosestIrreversibleIDAtBlockNum(t, factory)
-	//trxdbtest.TestGetIrreversibleIDAtBlockID(t, factory)
-	//trxdbtest.TestListSiblingBlocks(t, factory)
-	//trxdbtest.TestGetTransactionTraces(t, factory)
-	//trxdbtest.TestGetTransactionEvents(t, factory)
 }
 
-func newTestDBFactory(t *testing.T, testDbFilename string) trxdbtest.DriverFactory {
-	return func() (trxdb.Driver, trxdbtest.DriverCleanupFunc) {
-		return func(t *testing.T, testDbFilename string) trxdb.Driver {
-				dsn := fmt.Sprintf("badger://%s", testDbFilename)
-				rawdb, err := New(dsn)
-				require.NoError(t, err)
+func newTestDBFactory(t *testing.T) trxdbtest.DriverFactory {
+	return func() (trxdb.DB, trxdbtest.DriverCleanupFunc) {
+		dir, err := ioutil.TempDir("", "dfuse-trxdb-kv")
+		require.NoError(t, err)
 
-				return rawdb
-			}(t, testDbFilename), func() {
-				err := os.RemoveAll(testDbFilename)
-				if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
-					require.NoError(t, err)
-				}
-				zlog.Debug("delete database", zap.String("", testDbFilename))
-				dbCachePool = make(map[string]trxdb.Driver)
-				zlog.Debug("db cache cleared")
+		db, err := New([]string{fmt.Sprintf("badger://%s", dir)})
+		require.NoError(t, err)
+
+		db.logger = zlog
+
+		return db, func() {
+			err := os.RemoveAll(dir)
+			if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
+				require.NoError(t, err)
 			}
+		}
 	}
 }

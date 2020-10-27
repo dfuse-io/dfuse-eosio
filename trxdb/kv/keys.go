@@ -18,6 +18,7 @@ const (
 	TblPrefixDtrxs     = 0x04
 	TblPrefixTrxTraces = 0x05
 	TblPrefixAccts     = 0x06
+	TblTTL             = 0x10
 
 	idxPrefixTimelineFwd = 0x80
 	idxPrefixTimelineBck = 0x81
@@ -38,7 +39,7 @@ func (Keyer) PackBlocksKey(blockID string) []byte {
 	// deal directly with bytes.
 	id, err := hex.DecodeString(kvdb.ReversedBlockID(blockID))
 	if err != nil {
-		panic(fmt.Sprintf("invalid block ID %q: %s", blockID, err))
+		panic(fmt.Errorf("invalid block ID %q: %w", blockID, err))
 	}
 	return append([]byte{TblPrefixBlocks}, id...)
 }
@@ -50,7 +51,7 @@ func (Keyer) UnpackBlocksKey(key []byte) (blockID string) {
 func (Keyer) PackBlockNumPrefix(blockNum uint32) []byte {
 	hexBlockNum, err := hex.DecodeString(kvdb.HexRevBlockNum(blockNum))
 	if err != nil {
-		panic(fmt.Sprintf("invalid block num %d: %s", blockNum, err))
+		panic(fmt.Errorf("invalid block num %d: %w", blockNum, err))
 	}
 	return append([]byte{TblPrefixBlocks}, hexBlockNum...)
 }
@@ -63,7 +64,7 @@ func (Keyer) EndOfBlocksTable() []byte   { return []byte{TblPrefixBlocks + 1} }
 func (Keyer) PackIrrBlocksKey(blockID string) []byte {
 	id, err := hex.DecodeString(kvdb.ReversedBlockID(blockID))
 	if err != nil {
-		panic(fmt.Sprintf("invalid irr block ID %q: %s", blockID, err))
+		panic(fmt.Errorf("invalid irr block ID %q: %w", blockID, err))
 	}
 	return append([]byte{TblPrefixIrrBlks}, id...)
 }
@@ -75,7 +76,7 @@ func (Keyer) UnpackIrrBlocksKey(key []byte) (blockID string) {
 func (Keyer) PackIrrBlockNumPrefix(blockNum uint32) []byte {
 	hexBlockNum, err := hex.DecodeString(kvdb.HexRevBlockNum(blockNum))
 	if err != nil {
-		panic(fmt.Sprintf("invalid block num %d: %s", blockNum, err))
+		panic(fmt.Errorf("invalid block num %d: %w", blockNum, err))
 	}
 	return append([]byte{TblPrefixIrrBlks}, hexBlockNum...)
 }
@@ -149,7 +150,7 @@ func (k Keyer) PackDtrxsKeyCancelled(trxID, blockID string) []byte {
 func (k Keyer) packDtrxsKey(trxID, blockID string, dtrxSuffix byte) []byte {
 	id, err := hex.DecodeString(trxID + blockID)
 	if err != nil {
-		panic(fmt.Sprintf("invalid trx ID %q or block ID %q: %s", trxID, blockID, err))
+		panic(fmt.Errorf("invalid trx ID %q or block ID %q: %w", trxID, blockID, err))
 	}
 	key := append([]byte{TblPrefixDtrxs}, id...)
 	return append(key, []byte{dtrxSuffix}...)
@@ -174,7 +175,7 @@ func (Keyer) EndOfDtrxsTable() []byte   { return []byte{TblPrefixDtrxs + 1} }
 func (Keyer) PackAccountKey(accountName string) []byte {
 	name, err := eos.StringToName(accountName)
 	if err != nil {
-		panic(fmt.Sprintf("invalid account name %q: %s", accountName, err))
+		panic(fmt.Errorf("invalid account name %q: %w", accountName, err))
 	}
 	b := make([]byte, 9)
 	b[0] = TblPrefixAccts
@@ -195,7 +196,7 @@ func (Keyer) EndOfAccountTable() []byte   { return []byte{TblPrefixAccts + 1} }
 func (Keyer) PackTimelineKey(fwd bool, blockTime time.Time, blockID string) []byte {
 	bKey, err := hex.DecodeString(blockID)
 	if err != nil {
-		panic(fmt.Sprintf("failed to decode block ID %q: %s", blockID, err))
+		panic(fmt.Errorf("failed to decode block ID %q: %w", blockID, err))
 	}
 
 	tKey := make([]byte, 9)
@@ -246,14 +247,14 @@ func (Keyer) EndOfTimelineIndex(fwd bool) []byte {
 func (Keyer) packTrxBlockIDKey(prefix byte, trxID, blockID string) []byte {
 	id, err := hex.DecodeString(trxID + blockID)
 	if err != nil {
-		panic(fmt.Sprintf("invalid trx ID %q or block ID %q: %s", trxID, blockID, err))
+		panic(fmt.Errorf("invalid trx ID %q or block ID %q: %w", trxID, blockID, err))
 	}
 	return append([]byte{prefix}, id...)
 }
 
 func (Keyer) unpackTrxBlockIDKey(key []byte) (trxID, blockID string) {
 	if len(key) != 65 {
-		panic("invalid key length")
+		panic(fmt.Errorf("invalid key %q length, expected length 65 got %d", string(key), len(key)))
 	}
 	return hex.EncodeToString(key[1:33]), hex.EncodeToString(key[33:65])
 }
@@ -261,7 +262,7 @@ func (Keyer) unpackTrxBlockIDKey(key []byte) (trxID, blockID string) {
 func (Keyer) packTrxPrefix(prefix byte, trxIDPrefix string) []byte {
 	id, err := hex.DecodeString(trxIDPrefix) // trxIDPrefix needs to be an even number'd chars, sanitize before calling
 	if err != nil {
-		panic(fmt.Sprintf("invalid trx ID hex prefix %q: %s", trxIDPrefix, err))
+		panic(fmt.Errorf("invalid trx ID hex prefix %q: %w", trxIDPrefix, err))
 	}
 	return append([]byte{prefix}, id...)
 }

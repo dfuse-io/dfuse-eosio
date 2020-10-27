@@ -20,15 +20,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/dauth/authenticator"
-	fluxdb "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
-
-	"github.com/dfuse-io/logging"
-
-	"github.com/dfuse-io/derr"
-
 	"github.com/dfuse-io/bstream/hub"
+	"github.com/dfuse-io/dauth/authenticator"
+	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
+	"github.com/dfuse-io/logging"
 	"github.com/gorilla/websocket"
 	"github.com/teris-io/shortid"
 	"go.uber.org/zap"
@@ -43,12 +40,13 @@ type WebsocketHandler struct {
 	voteTallyHub    *VoteTallyHub
 	priceHub        *PriceHub
 	headInfoHub     *HeadInfoHub
-	fluxAddr        string
 
 	connections        int
 	connectionsLock    sync.Mutex
-	fluxClient         fluxdb.Client
+	stateClient        pbstatedb.StateClient
 	irreversibleFinder IrreversibleFinder
+
+	maxStreamCount int
 }
 
 var hostname string
@@ -59,7 +57,19 @@ func init() {
 	shortIDGenerator = shortid.MustNew(1, shortid.DefaultABC, uint64(time.Now().UnixNano()))
 }
 
-func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB, subscriptionHub *hub.SubscriptionHub, fluxClient fluxdb.Client, voteTallyHub *VoteTallyHub, headInfoHub *HeadInfoHub, priceHub *PriceHub, irrFinder IrreversibleFinder, filesourceBlockRateLimit time.Duration) *WebsocketHandler {
+func NewWebsocketHandler(
+	abiGetter ABIGetter,
+	accountGetter AccountGetter,
+	db DB,
+	subscriptionHub *hub.SubscriptionHub,
+	stateClient pbstatedb.StateClient,
+	voteTallyHub *VoteTallyHub,
+	headInfoHub *HeadInfoHub,
+	priceHub *PriceHub,
+	irrFinder IrreversibleFinder,
+	filesourceBlockRateLimit time.Duration,
+	maxStreamCount int,
+) *WebsocketHandler {
 	originChecker := func(r *http.Request) bool {
 		if r.Header.Get("Origin") == "" {
 			// For now, we do not check the origin. This is easier for our user using Node.js
@@ -89,10 +99,11 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 		db:                 db,
 		priceHub:           priceHub,
 		subscriptionHub:    subscriptionHub,
-		fluxClient:         fluxClient,
+		stateClient:        stateClient,
 		voteTallyHub:       voteTallyHub,
 		headInfoHub:        headInfoHub,
 		irreversibleFinder: irrFinder,
+		maxStreamCount:     maxStreamCount,
 	}
 
 	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -122,10 +133,8 @@ func NewWebsocketHandler(abiGetter ABIGetter, accountGetter AccountGetter, db DB
 
 		TrackUserEvent(childCtx, "ws_conn_start", "connection_count", s.connections)
 
-		conn := NewWSConn(s, c, db, credentials, filesourceBlockRateLimit, childCtx)
+		conn := NewWSConn(s, c, credentials, filesourceBlockRateLimit, childCtx)
 		go conn.handleWSIncoming()
-		//conn.handleHeartbeats()
-		//_ = conn.conn.Close()
 
 		go conn.handleHeartbeats()
 		select {

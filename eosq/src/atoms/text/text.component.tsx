@@ -5,35 +5,41 @@ import {
   color,
   display,
   fontFamily,
-  fontSize as _fontSize,
+  fontSize,
   fontWeight,
   justifySelf,
   lineHeight,
   space,
-  textAlign as _textAlign,
+  textAlign,
   borders,
-  width
+  width,
+  compose
 } from "styled-system"
 import { styled } from "../../theme"
+
+const textStyle = compose(
+  alignSelf,
+  borders,
+  color,
+  display,
+  fontFamily,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  justifySelf,
+  space,
+  textAlign,
+  width
+)
 
 export const Text: React.ComponentType<any> = styled.div`
   position: relative;
   text-transform: ${(props: any) => props.textTransform};
-  ${display};
-  ${_fontSize};
-  ${space};
-  ${color};
-  ${fontWeight};
-  ${_textAlign};
-  ${fontFamily};
-  ${alignSelf};
   text-overflow: ${(props: any) => props.textOverflow};
-  ${justifySelf};
-  ${lineHeight};
-  ${borders};
-  ${width};
   white-space: ${(props: any) => props.whiteSpace};
   word-break: ${(props: any) => props.wordBreak};
+
+  ${textStyle}
 `
 
 export const HoverableText: React.ComponentType<any> = styled(Text)`
@@ -61,37 +67,15 @@ export const CondensedBold: React.ComponentType<any> = styled.b`
 `
 
 export const BigTitle: React.ComponentType<any> = styled.h1`
-  ${_fontSize};
-  ${space};
-  ${color};
-  ${fontWeight};
-  ${_textAlign};
-  ${fontFamily};
-  ${alignSelf};
-  ${justifySelf};
+  ${textStyle}
 `
 
 export const Title: React.ComponentType<any> = styled.h2`
-  ${_fontSize};
-  ${space};
-  ${color};
-  ${fontWeight};
-  ${_textAlign};
-  ${fontFamily};
-  ${alignSelf};
-  ${justifySelf};
+  ${textStyle}
 `
 
 export const SubTitle: React.ComponentType<any> = styled.h3`
-  ${display};
-  ${_fontSize};
-  ${space};
-  ${color};
-  ${fontWeight};
-  ${_textAlign};
-  ${fontFamily};
-  ${alignSelf};
-  ${justifySelf};
+  ${textStyle}
 `
 
 Text.defaultProps = {
@@ -136,21 +120,11 @@ export interface TextLinkProps {
 
 export const LinkStyledText: React.ComponentType<any> = styled(HoverableText)`
   display: inline;
-  ${_textAlign};
-  ${space};
-  ${color};
-  ${fontWeight};
-  ${_fontSize};
-  ${fontFamily};
-  ${alignSelf};
-  ${justifySelf};
-  ${lineHeight};
-  ${borders};
-  ${width};
+  ${textStyle}
 `
 
 export const StyledLink: React.ComponentType<any> = styled(Link)`
-  ${_fontSize};
+  ${fontSize};
 `
 
 export const TextLinkLight: React.SFC<TextLinkProps> = ({ to, children, ...rest }) => {
@@ -176,7 +150,7 @@ export const TextLink: React.SFC<TextLinkProps> = ({ to, children, ...rest }) =>
 export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, children, ...rest }) => {
   if (download) {
     return (
-      <a href={to} target="_blank" download={download}>
+      <a href={to} target="_blank" rel="noopener noreferrer" download={download}>
         <LinkStyledText color="link" {...rest}>
           {children}
         </LinkStyledText>
@@ -184,7 +158,7 @@ export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, child
     )
   }
   return (
-    <a href={to} target="_blank" {...download}>
+    <a href={to} target="_blank" rel="noopener noreferrer" {...download}>
       <LinkStyledText color="link" {...rest}>
         {children}
       </LinkStyledText>
@@ -194,7 +168,7 @@ export const ExternalTextLink: React.SFC<TextLinkProps> = ({ to, download, child
 
 export const ExternalTextLinkLight: React.SFC<TextLinkProps> = ({ to, children, ...rest }) => {
   return (
-    <a href={to} target="_blank">
+    <a href={to} target="_blank" rel="noopener noreferrer">
       <LinkStyledText color="link2" {...rest}>
         {children}
       </LinkStyledText>

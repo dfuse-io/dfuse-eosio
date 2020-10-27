@@ -54,17 +54,23 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	}
 	targetActions := mapString(msg.Data.ActionNames)
 
-	handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+	handler := bstream.HandlerFunc(func(block *bstream.Block, _ interface{}) error {
 		blk := block.ToNative().(*pbcodec.Block)
 
-		for _, trx := range blk.TransactionTraces {
+		for _, trx := range blk.TransactionTraces() {
 			if trx.Receipt == nil || trx.Receipt.Status != pbcodec.TransactionStatus_TRANSACTIONSTATUS_EXECUTED {
 				// We do **not** stream transaction for that are not properly executed
 				continue
 			}
 
+			actionMatcher := blk.FilteringActionMatcher(trx)
+
 			allActions := trx.ActionTraces
 			for actIdx, act := range allActions {
+				if !actionMatcher.Matched(act.ExecutionIndex) {
+					continue
+				}
+
 				if !targetReceivers[string(act.Receiver)] {
 					continue
 				}
@@ -131,13 +137,13 @@ func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTra
 	}
 
 	if msg.IrreversibleOnly {
-		forkableHandler := forkable.New(handler, forkable.WithFilters(forkable.StepIrreversible))
+		forkableHandler := forkable.New(handler, forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 		handler = forkableHandler.ProcessBlock
 	}
 
-	blocknumGate := bstream.NewBlockNumGate(uint64(authReq.StartBlockNum), bstream.GateInclusive, handler)
+	blocknumGate := bstream.NewBlockNumGate(uint64(authReq.StartBlockNum), bstream.GateInclusive, handler, bstream.GateOptionWithLogger(zlog))
 	metrics.IncListeners("get_action_traces")
-	irrRef := bstream.BlockRefFromID(irrID)
+	irrRef := bstream.NewBlockRefFromID(irrID)
 	source := ws.subscriptionHub.NewSourceFromBlockNumWithOpts(irrRef.Num(), blocknumGate, bstream.JoiningSourceTargetBlockID(irrRef.ID()), bstream.JoiningSourceRateLimit(300, ws.filesourceBlockRateLimit))
 
 	source.OnTerminating(func(_ error) {

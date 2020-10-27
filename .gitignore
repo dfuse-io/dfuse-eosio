@@ -10,11 +10,12 @@ dashboard/client/.npmrc
 /bootstrapping/output.log
 /dfuse.yaml
 /dfuse-data
-/eosq/app/eosq/rice-box.go
 /dist
 *SOURCE_ME.sh*
-dfuseeos
-/producer
-/mindreader
+/dfuseeos
 *dbin*
 /proj*
+/dashboard/client/node_modules
+/dashboard/dashboard-build
+/mindreader
+/producer

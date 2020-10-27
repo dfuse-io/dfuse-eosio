@@ -2,9 +2,9 @@ import { observer } from "mobx-react"
 import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"
 import * as React from "react"
 import { Account } from "../../../../models/account"
-import { DetailLine } from "../../../../atoms/pills/detail-line"
+import { DetailLine, formatTransactionID } from "@dfuse/explorer"
 import { t } from "i18next"
-import { formatTransactionID } from "../../../../helpers/formatters"
+
 import { Text, TextLink, ExternalTextLink } from "../../../../atoms/text/text.component"
 import { MonospaceTextLink } from "../../../../atoms/text-elements/misc"
 import { Links } from "../../../../routes"
@@ -56,17 +56,17 @@ export class ProducerWidget extends React.Component<Props, any> {
             </Text>
           </SearchShortcut>
         </TitleHeader>
-        <DetailLine compact={false} label={t("account.summary.creation_date")}>
+        <DetailLine variant="auto" label={t("account.summary.creation_date")}>
           <Text>{formatDateFromString(account.created, false)}</Text>
         </DetailLine>
         {account.creator
           ? [
-              <DetailLine key="0" compact={false} label={t("account.summary.created_by")}>
+              <DetailLine key="0" variant="auto" label={t("account.summary.created_by")}>
                 <MonospaceTextLink to={Links.viewAccount({ id: account.creator.creator })}>
                   {account.creator.creator}
                 </MonospaceTextLink>
               </DetailLine>,
-              <DetailLine compact={false} key="1" label={t("account.summary.creation_trx_id")}>
+              <DetailLine variant="auto" key="1" label={t("account.summary.creation_trx_id")}>
                 <TextLink to={Links.viewTransaction({ id: account.creator.trx_id })}>
                   {formatTransactionID(account.creator.trx_id)}
                 </TextLink>
@@ -74,17 +74,17 @@ export class ProducerWidget extends React.Component<Props, any> {
             ]
           : null}
         <UiHrSpaced />
-        <DetailLine compact={false} label={t("account.summary.website")}>
+        <DetailLine variant="auto" label={t("account.summary.website")}>
           <ExternalTextLink to={account.block_producer_info!.org.website}>
             {account.block_producer_info!.org.website}
           </ExternalTextLink>
         </DetailLine>
-        <DetailLine compact={false} label={t("account.summary.email")}>
+        <DetailLine variant="auto" label={t("account.summary.email")}>
           <ExternalTextLink to={`emailto:${account.block_producer_info!.org.email}`}>
             {account.block_producer_info!.org.email}
           </ExternalTextLink>
         </DetailLine>
-        <DetailLine mb={2} compact={false} label={t("account.summary.location")}>
+        <DetailLine mb={2} variant="auto" label={t("account.summary.location")}>
           {account.block_producer_info!.org.location.name},{" "}
           {account.block_producer_info!.org.location.country}
         </DetailLine>

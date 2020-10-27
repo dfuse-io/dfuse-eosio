@@ -18,36 +18,42 @@ import {
   fontSize,
   minWidth,
   maxWidth,
-  minHeight
+  minHeight,
+  compose
 } from "styled-system"
 import { styled } from "../../theme"
 import * as React from "react"
+
+const boxStyle = compose(
+  fontSize,
+  display,
+  width,
+  minWidth,
+  maxWidth,
+  minHeight,
+  space,
+  flexDirection,
+  alignSelf,
+  justifySelf,
+  justifyContent,
+  alignItems,
+  flex,
+  color,
+  flexWrap,
+  textAlign,
+  height,
+  borders,
+  borderRadius,
+  borderColor
+)
 
 const Box: React.ComponentType<any> = styled.div`
   white-space: ${(props) => (props.whiteSpace ? props.whiteSpace : "")};
   word-break: ${(props) => (props.wordBreak ? props.wordBreak : "")};
   display: flex;
   position: relative;
-  ${fontSize}
-  ${display};
-  ${width};
-  ${minWidth}
-  ${maxWidth}
-  ${minHeight}
-  ${space};
-  ${flexDirection};
-  ${alignSelf};
-  ${justifySelf};
-  ${justifyContent};
-  ${alignItems};
-  ${flex};
-  ${color};
-  ${flexWrap};
-  ${textAlign};
-  ${height};
-  ${borders};
-  ${borderRadius}
-  ${borderColor}
+  ${boxStyle}
+
   b {
     ${fontSize}
   }

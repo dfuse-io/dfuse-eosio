@@ -1,113 +1,191 @@
 # Change log
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
- 
+The format is based on
+[Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
+project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html). See
+[MAINTAINERS.md](./MAINTAINERS.md) for instructions to keep up to
+date.
 
-## Unreleased
-* Added `search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
+# Unreleased
 
-### Changed
-* In general: `eosdb` was renamed to `trxdb`, which shouldn't change much externally.
-  * Specifically: the `healthz` endpoint's `eosdb` field is now
-    `trxdb`, so you might need to adjust your monitoring.
-* [Breaking] `search` flag `--search-common-dfuse-hooks-action-name` changed to `--search-common-dfuse-events-action-name`
-* [Breaking] `eosws` transaction lifecycle field `creation_irreversible` changed to `dtrx_creation_irreversible`
-* [Breaking] `eosws` transaction lifecycle field `cancelation_irreversible` changed to `dtrx_cancelation_irreversible`
-* [Breaking] `abicodec` app default value for `abicodec-cache-base-url` and `abicodec-export-cache-url` flags was changed to `{dfuse-data-dir}/storage/abicache` (fixing a typo in `abicahe`). To remain compatible, simply do a rename manually on disk before starting the update version (`mv dfuse-data/storage/abicahe {dfuse-data-dir}/storage/abicache`).
-* [Breaking] `fluxdb` Removed `fluxdb-enable-dev-mode` flag, use `fluxdb-enable-live-pipeline=false` to get the same behavior as before.
-* `mindreader` ContinuityChecker is not enabled by default anymore
-* `dfuseeos tools check blocks` was renamed to `dfuseeos tools check merged-blocks`
-
-### Removed
-* Removed `search-indexer-num-blocks-before-start` flag from `search-indexer`, search-indexer automatically resolved its start block
+## System Administration Changes
 
 ### Added
-* Added `booter` application with its flags.
-* Flag: `--node-manager-auto-backup-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
-* Flag: `--node-manager-auto-snapshot-hostname-match` If non-empty, auto-backups will only trigger if os.Hostname() return this value
-* Flags `--mindreader-auto-backup-hostname-match` and `--node-manager-auto-snapshot-hostname-match` (identical to node-manager flags above)
-* Flag: `--mindreader-fail-on-non-contiguous-block` (default:false) to enable the ContinuityChecker
-* Flag: `--log-level-switcher-listen-addr` (default:1065) to change log level on a running instance (see DEBUG.md)
-* Flag: `--common-ratelimiter-plugin` (default: null://) to enable a rate limiter plugin
-* Flag: `--pprof-listen-addr` (default: 6060)
-* Flag: `--search-common-dfuse-events-unrestricted` to lift all restrictions for search dfuse Events (max field count, max key length, max value length)
-* Command `kv` to `tools` with sub command `get`, `scan`, `prefix`, `account`, `blk`, `blkirr`, `trx`, `trxtrace` to retrieve data from trxdb
-* Command `db` to `tools` with sub command `blk`, `trx` to retrieve data from trxdb
-* Command `check trxdb-blocks` to `tools`, to ensure linearity of irreversible blocks in storage.  This is useful to know if you've missed some block ranges when doing parallel insertions into your `trxdb` storage.
-* `trxdb` deduper now reduces storage by removing identical action data and calls the "reduper" to add this data back.
+
+* Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
+* Added `--eosws-nodeos-rpc-push-extra-addresses` to allow providing a list of backup EOS addresses when push-transaction does not succeed in getting the transaction inside a block (with push_guarantee)
+* Added `--eosws-max-stream-per-connection` to allow changing how many stream can be active at the same time for a given WebSocket connection, defaults to `12` which was the hard-coded value.
++ Added `--eosws-statedb-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
++ Added `--eosws-nodeos-rpc-proxy-retries`, Number of time to retry proxying a request to statedb before failing (default 2)
+* Added `--mindreader-max-console-length-in-bytes` which is the limit in bytes that we allow action trace's console output to be before truncating them.
+* Environment variable `MINDREADER_MAX_TOKEN_SIZE` can now be set to override `bufio.Scanner()` max token size (default `52428800`, i.e. `50Mb`) for EOSIO chains with huge transactions
+* Flag `--accounthist-mode` to specific the accounthist mode of operation
+* Added `tools check accounthist-shards` to
+* Flag `--common-include-filter-expr`, `--common-exclude-filter-expr`, `--common-system-actions-include-filter-expr` can optionally specify multiple values, separated by `;;;` and prefixed by `#123;` where 123 is a block number at which we stat applying that filter
+* Added `accounthist` tools allows you to scan and read accounts `dfuseeos tools accounthist read ...` `dfuseeos tools accounthist scan ...`
+* Flag `--search-router-truncation-low-block-num` to make the router aware of lower-block-truncation and serve requests accordingly
+* Flag `--mindreader-oneblock-suffix` that mindreaders can each write their own file per block without competing for writes. https://github.com/dfuse-io/dfuse-eosio/issues/140
+* Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable.
+* Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
+
+### Changed
+
+* Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
+* **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
+* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
+* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
+
+### Fixed
+* Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
+* Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
+* Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
+* Fixed a bug with `/state/table/row` not correctly reading row when it was in the table index.
+* Fixed a bug with `/state/tables/scopes` where the actual block num used to query the data was incorrect leading to invalid response results.
+* Fixed a bug with gRPC `dfuse.eosio.statedb.v1/State#StreamMultiScopesTableRows` where the actual block num used to query the data was incorrect leading to invalid response results.
+* Fixed issue when reading ABI from StateDB where speculative writes were not handled correctly.
+* Fixed issue when reading Table Row from StateDB where speculative writes were not handled correctly.
+* Fixed a potential crash when reading ABI from StateDB and it does not exist in database.
+
+# [v0.1.0-beta5] 2020-08-24
+
+## PUBLIC API Changes
+
+### Added
+* Added `tokens`, `accountBalances`, `tokenBalances` calls to dgraphql (based on tokenmeta)
+
+## System Administration Changes
+
+### Changed
+* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
+* **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
+* `merger` startblock behavior changed, now relies on state-file, see https://github.com/dfuse-io/merger/issues/1
+* Changed `merger-seen-blocks-file` flag to `merger-state-file` to reflect this change.
+* `merger` now properly handles storage backend errors when looking for where to start
+* `mindreader` now automatically produces "merged blocks" instead of "one-block-files" when catching up (based on blocktime or if a blockmeta is reachable at `--common-blockmeta-addr`)
+* `mindreader` now sets optimal EOS VM settings automatically if the platform supports it them when doing `dfuseeos init`.
+* Changed `--abicodec-export-cache-url` flag to `abicodec-export-abis-base-url` and will contain only the URL of the where to export the ABIs in JSON.
+* Changed `--abicodec-export-cache` flag to `abicodec-export-abis-enabled`.
+
+### Added
+* Added `tokenmeta` app, with its flags
+* Added support for **filtered** *blocks*, *search indices* and *trxdb*, with `--common-include-filter-expr` and `--common-include-filter-expr`.
+* Added `merged-filter` app (not running by default), that generates filtered merged blocks files from regular merged blocks files.
+* Added truncation handling to `trxdb-loader`, which will only keep a _moving window of data_ in `trxdb`, and delete preceding transactions. Enabling that feature requires reprocessing trxdb.
+  * `--trxdb-loader-truncation-enabled`
+  * `--trxdb-loader-truncation-window`
+  * `--trxdb-loader-truncation-purge-interval`
+* Added `--statedb-reproc-shard-scratch-directory` to run StateDB reprocessing sharder using scratch directory to reduce RAM usage
+* Added `--merger-one-block-deletion-threads` (default:10) to allow control over one-block-files deletion parallelism
++ Added `--merger-max-one-block-operations-batch-size` to allow control over one-block-files batches that are looked up on storage,
+* Added `--eosws-with-completion` (default: true) to allow control over that feature
+* Added `--mindreader-merge-threshold-block-age` when processing blocks with a blocktime older than this threshold, they will be automatically merged: (default 12h)
+* Added `--mindreader-batch-mode` to force always merging blocks (like --mindreader-merge-and-store-directly did) AND overwriting existing files in destination.
+* Added `--mindreader-wait-upload-complete-on-shutdown` flag to control how mindreader waits on upload completion when shutting down (previously waited indefinitely)
+* Added `--search-live-hub-channel-size` flag to specific the size of the search live hub channel capacity
+* Added `--search-live-preprocessor-concurrent-threads`: number of thread used to run file source preprocessor function
+* Added `--abicodec-export-abis-file-name`, contains the URL where to export the ABIs in JSON
+* Added `--metrics-listen-addr` to control on which address to server the metrics API (Prometheus), setting this value to an empty string disable metrics serving.
+* Added `--dashboard-metrics-api-addr` to specify a different API address where to retrieve metrics for the dashboard.
+* Added **Experimental** support for kvdb backend `netkv://`, an extremely simple network layer over `badger` to allow running dfuse components in separate instances.
+
+### Removed
+* The `--merger-delete-blocks-before` flag is now removed and is the only behavior for merger.
+* The `--mindreader-merge-and-store-directly` flag was removed. That behavior is now activated by default when encountering 'old blocks'. Also see new flag mindreader-batch-mode.
+* The `--mindreader-discard-after-stop-num` flag was removed, its implementation was too complex and it had no case where it was really useful.
+* The `--mindreader-producer-hostname` flag was removed, this option made no sense in the context of `mindreader` app.
+* The `--eosq-disable-tokenmeta` flag was removed, token meta is now included, so this flag is now obsolete.
+* The `--eosq-on-demand` flag was removed, this was unused in the codebase.
+
+### Fixed
+* Fixed issue where `blockmeta` was not serving on GRPC at all because it couldn't figure out where to start on the stream
+* Fixed issue with `merger` with a possible panic when reading a one-block-file that is empty, for example on a non-atomic storage backend
+* Fixed issue with `mindreader` not stopping correctly (and showing any error) if the bootstrap phase (ex: restore-from-snapshot) failed.
+* Fixed issue with `pitreos` not taking a backup at all when sparse-file extents checks failed.
+* Fixed issue with `dfuseeos tools check merged-blocks` (start/end block, false valid ranges when the first segment is not 0, etc.)
+* Improved performance by using value for `bstream.BlockRef` instead of pointers and ensuring we use the cached version.
+* `mindreader` and `node-manager` improved `nodeos` log handling
+
+#### FluxDB to StateDB Migration
+
+FluxDB required an architecture re-design to fit with our vision about the tool and make it chain agnostic (so
+it is easier to re-use on our other supported chain).
+
+The code that was previously found here has been extracted to its own library (https://github.com/dfuse-io/fluxdb).
+There is now a new app named StateDB (`statedb` is the app identifier) in dfuse for EOSIO that uses FluxDB to
+support all previous API endpoints served by the FluxDB app as well as now offering a gRPC interface.
+
+While doing this, we had to change how keys and data were written to the underlying engine. This means that all
+your previous data stored cannot be read anymore by the new StateDB and that new data written by StateDB will
+not be compatible on a previous instance.
+
+What that means exactly is that StateDB will require to re-index all the current merged blocks up to live blocks
+before being able to serve requests. This is the main reason why we decided to rename the app, so you are forced
+to peform this step.
+
+Here the steps required to migrate to the new `statedb` app:
+
+- In your `dfuse.yaml` config, under replace the `fluxdb` app by `statedb` and all flags prefixed with
+  `fluxdb-` must now be prefixed with `statedb-`.
+
+  From:
+
+  ```yaml
+  start:
+  args:
+  - ...
+  - fluxdb
+  - ...
+  flags:
+    ...
+    fluxdb-http-listen-addr: :9090
+    ...
+  ```
+
+  To:
+
+  ```yaml
+  start:
+  args:
+  - ...
+  - statedb
+  - ...
+  flags:
+    ...
+    statedb-http-listen-addr: :9090
+    ...
+  ```
+
+- If you had a customization for `fluxdb-statedb-dsn`, you must first renamed it `statedb-store-dsn`
+  to `statedb-store-dsn`. **Important** You must use a new fresh database, so update your argument
+  so it points to a new database, ensuring we don't overwrite data over old now incompatible data.
+  If you did not customize the flag, continue reading, the default value has changed to point to a
+  fresh storage folder.
+
+  If you had a customization for `eosws-flux-addr`, rename to `eosws-statedb-grpc-addr` and ensure it
+  points to the StateDB GRPC address (and not the HTTP address), its value must be the same as the flag
+  `statedb-grpc-listen-addr`.
+
+- If you have a custom `fluxdb-max-threads` flag, removed it, customizing this value is not supported
+  anymore.
+
+- From an operator standpoint, what we suggest is to craft a `dfuse.yaml` config that starts StateDB
+  only in inject mode only. You let this instance run until StateDB reaches the live block of your
+  network.
+
+  Once you have reached this point, you can now perform a switch to the new StateDB database. Stop
+  the injecting instance. Stop your production instance, renaming old app id `fluxdb` to `statedb`
+  (and all flags) then reconfigure it so the `statedb-store-dsn` points to the database populated
+  by the injecting instance. At this point, you can restart your production node and continue
+  normally using the new `statedb` app.
+
+# [v0.1.0-beta4] 2020-06-23
+
+See [release notes](https://github.com/dfuse-io/dfuse-eosio/releases/tag/v0.1.0-beta4).
 
 ## [v0.1.0-beta3] 2020-05-13
 
-### Added
-* Added `--eosq-available-networks` json string to configure the network section of eosq.
-``` [
-     {
-       "id": "id.1",
-       "name": "Network Name",
-       "is_test": false,
-       "logo": "/images/network-logo.png",
-       "url": "https://www.example.com/"
-     },
-   ]
-```
-* Added `--eosq-default-network` string to configure the default network eosq
-* Added `--eosq-disable-analytics` bool to configure eosq analytics
-* Added `--eosq-display-price` bool to configure if eosq displays prices
-* Added `--eosq-price-ticker` string to configure if eosq price ticker
-* Added `--eosq-on-demand` bool to configure if eosq serves an on-demand network
-* Added `--eosq-disable-tokenmeta` bool to configure if eosq disables tokenmenta
-
-* [Breaking] To improve dfuse instrumented `nodeos` binary processing speed, we had to make incompatible changes to data exchange format going out of `nodeos`. This requires you to upgrade your dfuse instrumented `nodeos` binary to latest version (https://github.com/dfuse-io/eos/releases/tag/v2.0.5-dm-12.0). Follow instructions in at https://github.com/dfuse-io/dfuse-eosio/blob/develop/DEPENDENCIES.md#dfuse-instrumented-eosio-prebuilt-binaries to install the latest version for your platform.
-* [Breaking] `--mindreader-working-dir` default value is now `{dfuse-data-dir}/mindreader/work` instead of `{dfuse-data-dir}/mindreader` this is to prevent mindreader from walking files into the working dir and trying to upload and delete nodes system files like `fork_db.dat`
-* Added `--eosq-environment` environment where eosq will run (local, dev, production)
-* Added `--apiproxy-autocert-domains`, `--apiproxy-autocert-cache-dir` and `--apiproxy-https-listen-addr` to serve SSL directly from proxy.
-* Added `--node-manager-number-of-snapshots-to-keep` and `--mindreader-number-of-snapshots-to-keep` to allow keeping a few (default:5) snapshots only in the store
-
-### Removed
-* Removed the `--merger-store-timeout` flag.  Not needed anymore, as some sensible timeouts have been put here and there, using the latest `dstore@v0.1.0` that is context-aware.
-
-### Changed
-
-* [Breaking] flag `--node-manager-auto-restore` (bool) replaced with `--node-manager-auto-restore-source` (string)
-* [Breaking] flag `--mindreader-auto-restore` (bool) replaced with `--mindreader-auto-restore-source` (string)
-* Mindreader now has "producer" plugin enabled to allow taking snapshots
-* Mindreader now runs with "NoBlocksLog" option (deleting blocks.log on restart)
-* Node-manager and Mindreader now make dfuseeos shutdown when nodeos crashes.
-* Node-manager and Mindreader now try to restore from snapshot if they crash within 10 seconds of starting (ex: dirty state)
-* fixes dmetrics duplicate registration error (race condition)
-* We improve by 4x times the performance of dfuse instrumented `nodeos` binary on heavy EOS Mainnet blocks. This required changes to `nodeos` data exchange format, so you will need to upgrade it, see the `Breaking` change entry at top of this section.
-* Fixed behavior of `--eosq-api-endpoint-url` to allow specifying protocol (ex: https://api.mydomain.com)
-* The `kvdb-loader` application was renamed `trxdb-loader`. In general what was (confusingly) named `kvdb` is now `trxdb`, so that `kvdb` can now take on its full meaning of a lean key-value storage abstraction (which is also used by FluxDB).
-   * All `--kvdb-loader` flags have been renamed to `--trxdb-loader`.
-   * Metrics ID for `kvdb-loader` has been changed to `trxdb-loader` (check your dashboards)
-* The `--mindreader-merge-and-upload-directly` was renamed to `--mindreader-merge-and-store-directly`.
-* `--common-blocks-store-url` now replaces all of these flags:
-    * `--mindreader-merged-blocks-store-url`, `--relayer-blocks-store`, `--fluxdb-blocks-store`, `--kvdb-loader-blocks-store`, `--blockmeta-blocks-store`, `--search-indexer-blocks-store`, `--search-live-blocks-store`, `--search-forkresolver-blocks-store`, `--eosws-blocks-store`
-* `--common-oneblock-store-url` now replaces these flags:
-    *  `--mindreader-oneblock-store-url`, `--merger-one-block-path`
-* `--common-backup-store-url` now replaces these flags:
-    * `--node-manager-backup-store-url`, `--mindreader-backup-store-url`
-* `--search-common-indices-store-url` now replaces these flags:
-    * `--search-indexer-indices-store`, `--search-archive-indices-store`
-* `--common-blockstream-addr` now replaces these flags:
-    * `--fluxdb-block-stream-addr`, `--kvdb-loader-block-stream-addr`, `--blockmeta-block-stream-addr`, `--search-indexer-block-stream-addr`, `--search-live-block-stream-addr`, `--eosws-block-stream-addr`
-* `--common-blockmeta-addr` now replaces these flags:
-    * `--search-indexer-blockmeta-addr`, `--search-router-blockmeta-addr`, `--search-live-blockmeta-addr`, `--eosws-block-meta-addr`, `--dgraphql-block-meta-addr`
-* `--common-network-id` now replaces this flag: `--dgraphql-network-id`
-* `--common-auth-plugin` now replaces these flags:
-    * `--dgraphql-auth-plugin`, `--eosws-auth-plugin`
-* `--fluxdb-statedb-dsn` replaces `--fluxdb-kvdb-store-dsn` (to avoid confusion between what's actually stored in `kvdb` and how FluxDB is using it (as a simple kv store).
-* `--trxdb-loader-parallel-file-download-count` replaces `--kvdb-parallel-file-download-count`
-* `--common-trxdb-dsn` replaces these flags:
-    * `--blockmeta-kvdb-dsn`, `--abicodec-kvdb-dsn`, `--eosws-kvdb-dsn`, `--dgraphql-kvdb-dsn`, `--kvdb-loader-kvdb-dsn`
-
-* Changed default value for storage URL for `fluxdb` and `kvbd` (now named `trxdb`)
-
-### Fixed
-
-* `--kvdb-loader-chain-id` not being taken into account. This affected the decoding of public keys during the `kvdb` loading process.
-
+See [release notes](https://github.com/dfuse-io/dfuse-eosio/releases/tag/v0.1.0-beta3).
 
 ## [v0.1.0-beta2] 2020-04-27
 

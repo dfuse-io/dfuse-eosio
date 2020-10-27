@@ -38,7 +38,7 @@ type Cache interface {
 	SaveState() error
 	SetCursor(cursor string)
 	GetCursor() string
-	Upload(url string) error
+	Export(baseURL string, filename string) error
 }
 
 type DefaultCache struct {
@@ -73,11 +73,10 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	}
 
 	r, err := store.OpenObject(ctx, cacheName)
-	defer r.Close()
-
 	if err != nil {
 		return nil, fmt.Errorf("openning cache file %s: %s", cacheName, err)
 	}
+	defer r.Close()
 
 	var cache *DefaultCache
 	decoder := gob.NewDecoder(r)
@@ -90,7 +89,7 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	cache.store = store
 	cache.cacheName = cacheName
 
-	zlog.Info("Cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache loaded", zap.String("cache_name", cacheName), zap.Duration("in", time.Since(start)))
 	return cache, nil
 
 }
@@ -192,7 +191,7 @@ func (c *DefaultCache) SaveState() error {
 
 	c.dirty = false
 
-	zlog.Info("Cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
+	zlog.Info("cache save", zap.String("cache_name", c.cacheName), zap.Duration("in", time.Since(start)))
 	return nil
 }
 
@@ -221,14 +220,14 @@ func (c *DefaultCache) Load(workerID string) (string, error) {
 	return c.Cursor, nil
 }
 
-func (c *DefaultCache) Upload(storeUrl string) error {
+func (c *DefaultCache) Export(baseURL, filename string) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	baseURL, filename, err := getStoreInfo(storeUrl)
-	if err != nil {
-		return fmt.Errorf("cannot pause upload url: %s", storeUrl)
-	}
+	zlog.Debug("exporting ABIs",
+		zap.String("base_url", baseURL),
+		zap.String("filename", filename),
+	)
 
 	store, err := dstore.NewStore(baseURL, "", "zstd", true)
 	if err != nil {

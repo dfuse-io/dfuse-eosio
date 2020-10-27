@@ -17,8 +17,9 @@ package eosws
 import (
 	"context"
 	"testing"
+	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dstore"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,8 +27,7 @@ import (
 func Test_onGetHeadInfo(t *testing.T) {
 	t.Skip("get from somewhere")
 
-	fluxClient := fluxdb.NewTestFluxClient()
-
+	stateClient := pbstatedb.NewMockStateClient()
 	blockStore, err := dstore.NewDBinStore("gs://example/blocks")
 	assert.NoError(t, err)
 
@@ -57,12 +57,13 @@ func Test_onGetHeadInfo(t *testing.T) {
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				nil,
 				headInfoHub,
 				nil,
 				NewTestIrreversibleFinder("00000002a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)
@@ -70,7 +71,7 @@ func Test_onGetHeadInfo(t *testing.T) {
 
 			conn.WriteMessage(1, []byte(c.msg))
 
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 
 		})
 	}

@@ -16,18 +16,44 @@ package codec
 
 import (
 	"bufio"
-	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
+	"go.uber.org/zap"
 )
+
+var supportedVersions = []string{"12", "13"}
+
+type ConsoleReaderOption interface {
+	apply(reader *ConsoleReader)
+}
+
+type consoleReaderOptionFunc func(reader *ConsoleReader)
+
+func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
+	f(reader)
+}
+
+// LimitConsoleLength ensure that `Console` field on `pbcodec.ActionTrace` are
+// never bigger than `maxByteCount` bytes.
+//
+// This is sadly incomplete as failing deferred transaction can still log out of band
+// via the standard nodeos logging mecanism.
+func LimitConsoleLength(maxByteCount int) ConsoleReaderOption {
+	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
+		if maxByteCount > 0 {
+			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, limitConsoleLengthConversionOption(maxByteCount))
+		}
+	})
+}
 
 // ConsoleReader is what reads the `nodeos` output directly. It builds
 // up some LogEntry objects. See `LogReader to read those entries .
@@ -46,23 +72,38 @@ type ConsoleReader struct {
 //       since the upstream caller is already doing this job it self. This way, we
 //       would have a single split job instead of two. Only the upstream would split
 //       the line and the console reader would simply process each line, one at a time.
-func NewConsoleReader(reader io.Reader) (*ConsoleReader, error) {
+func NewConsoleReader(reader io.Reader, opts ...ConsoleReaderOption) (*ConsoleReader, error) {
 	l := &ConsoleReader{
 		src:   reader,
 		close: func() {},
 		ctx:   newParseCtx(),
 		done:  make(chan interface{}),
 	}
+
+	for _, opt := range opts {
+		opt.apply(l)
+	}
+
 	l.setupScanner()
 	return l, nil
 }
 
 func (l *ConsoleReader) setupScanner() {
-	buf := make([]byte, 50*1024*1024)
+	maxTokenSize := uint64(50 * 1024 * 1024)
+	if maxBufferSize := os.Getenv("MINDREADER_MAX_TOKEN_SIZE"); maxBufferSize != "" {
+		bs, err := strconv.ParseUint(maxBufferSize, 10, 64)
+		if err != nil {
+			zlog.Error("environment variable 'MINDREADER_MAX_TOKEN_SIZE' is set but invalid parse uint", zap.Error(err))
+		} else {
+			zlog.Info("setting max_token_size from environment variable MINDREADER_MAX_TOKEN_SIZE", zap.Uint64("max_token_size", bs))
+			maxTokenSize = bs
+		}
+	}
+	buf := make([]byte, maxTokenSize)
 	scanner := bufio.NewScanner(l.src)
 	scanner.Buffer(buf, len(buf))
 	l.scanner = scanner
-	l.readBuffer = make(chan string, 10)
+	l.readBuffer = make(chan string, 2000)
 
 	go func() {
 		for l.scanner.Scan() {
@@ -72,10 +113,15 @@ func (l *ConsoleReader) setupScanner() {
 			}
 			l.readBuffer <- line
 		}
+
+		err := l.scanner.Err()
+		if err != nil && err != io.EOF {
+			zlog.Error("console read line scanner encountered an error", zap.Error(err))
+		}
+
 		close(l.readBuffer)
 		close(l.done)
 	}()
-
 }
 
 func (l *ConsoleReader) Done() <-chan interface{} {
@@ -93,6 +139,8 @@ type parseCtx struct {
 
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
+
+	conversionOptions []conversionOption
 }
 
 func newParseCtx() *parseCtx {
@@ -108,6 +156,10 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 	for line := range l.readBuffer {
 		line = line[6:]
+
+		if traceEnabled {
+			zlog.Debug("extracing deep mind data from line", zap.String("line", line))
+		}
 
 		// Order of conditions is based (approximately) on those that will appear more often
 		switch {
@@ -174,11 +226,11 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readFeatureOpPreActivate(line)
 
 		case strings.HasPrefix(line, "SWITCH_FORK"):
-			zlog.Info("Fork signal, restarting state accumulation from beginning")
+			zlog.Info("fork signal, restarting state accumulation from beginning")
 			ctx.resetBlock()
 
 		case strings.HasPrefix(line, "ABIDUMP START"):
-			err = ctx.readABIStart()
+			err = ctx.readABIStart(line)
 		case strings.HasPrefix(line, "ABIDUMP ABI"):
 			err = ctx.readABIDump(line)
 		case strings.HasPrefix(line, "ABIDUMP END"):
@@ -188,7 +240,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			err = ctx.readDeepmindVersion(line)
 
 		default:
-			return nil, fmt.Errorf("unsupported log line: %q", line)
+			zlog.Info("unknown log line", zap.String("line", line))
 		}
 
 		if err != nil {
@@ -274,7 +326,7 @@ func (ctx *parseCtx) recordTableOp(operation *pbcodec.TableOp) {
 }
 
 func (ctx *parseCtx) recordTrxOp(operation *pbcodec.TrxOp) {
-	ctx.block.ImplicitTransactionOps = append(ctx.block.ImplicitTransactionOps, operation)
+	ctx.block.UnfilteredImplicitTransactionOps = append(ctx.block.UnfilteredImplicitTransactionOps, operation)
 }
 
 func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
@@ -299,7 +351,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		// We add the failed deferred trace first, before the "real" trace (the `onerror` handler)
 		// since it was ultimetaly ran first. There is no ops possible on the trace expect the
 		// transferred RAM op, so it's all good to attach it directly.
-		ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, failedTrace)
+		ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, failedTrace)
 
 		if err := ctx.abiDecoder.processTransaction(failedTrace); err != nil {
 			return fmt.Errorf("abi decoding failed trace: %w", err)
@@ -331,7 +383,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.RlimitOps = ctx.trx.RlimitOps
 	trace.TableOps = ctx.trx.TableOps
 
-	ctx.block.TransactionTraces = append(ctx.block.TransactionTraces, trace)
+	ctx.block.UnfilteredTransactionTraces = append(ctx.block.UnfilteredTransactionTraces, trace)
 
 	if err := ctx.abiDecoder.processTransaction(trace); err != nil {
 		return fmt.Errorf("abi decoding trace: %w", err)
@@ -389,8 +441,7 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 	ctx.resetBlock()
 	ctx.activeBlockNum = blockNum
 
-	// FIXME: Connect to caller somehow, probably the one doing the `Read` call on the top-level reader
-	if err := ctx.abiDecoder.startBlock(context.Background(), uint64(blockNum)); err != nil {
+	if err := ctx.abiDecoder.startBlock(uint64(blockNum)); err != nil {
 		return fmt.Errorf("abi decoder: %w", err)
 	}
 
@@ -429,6 +480,9 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	ctx.block.Id = blockState.BlockID.String()
 	ctx.block.Number = blockState.BlockNum
+	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
+	// TransactionCount, TransactionTraceCount)
+	ctx.block.Version = 1
 	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
 	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
 	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
@@ -475,37 +529,38 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 
 	// End (versions)
 
-	ctx.block.TransactionCount = uint32(len(signedBlock.Transactions))
+	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
 	for idx, transaction := range signedBlock.Transactions {
 		deosTransaction := TransactionReceiptToDEOS(&transaction)
 		deosTransaction.Index = uint64(idx)
 
-		ctx.block.Transactions = append(ctx.block.Transactions, deosTransaction)
+		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
 	}
 
-	ctx.block.TransactionTraceCount = uint32(len(ctx.block.TransactionTraces))
-	for idx, t := range ctx.block.TransactionTraces {
+	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
+	for idx, t := range ctx.block.UnfilteredTransactionTraces {
 		t.Index = uint64(idx)
 		t.BlockTime = ctx.block.Header.Timestamp
 		t.ProducerBlockId = ctx.block.Id
 		t.BlockNum = uint64(ctx.block.Number)
 
 		for _, actionTrace := range t.ActionTraces {
-			ctx.block.ExecutedTotalActionCount++
+			ctx.block.UnfilteredExecutedTotalActionCount++
 			if actionTrace.IsInput() {
-				ctx.block.ExecuteInputActionCount++
+				ctx.block.UnfilteredExecutedInputActionCount++
 			}
 		}
 	}
 
 	block := ctx.block
 
-	// This calls block until all transaction has been decoded inside the block
+	zlog.Debug("blocking until abi decoder has decoded every transaction pushed to it")
 	err = ctx.abiDecoder.endBlock(ctx.block)
 	if err != nil {
 		return nil, fmt.Errorf("abi decoding post-process failed: %w", err)
 	}
 
+	zlog.Debug("abi decoder terminated all decoding operations, resetting block")
 	ctx.resetBlock()
 	return block, nil
 }
@@ -538,7 +593,7 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace))
+	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, ctx.conversionOptions...))
 }
 
 // Line formats:
@@ -793,14 +848,14 @@ func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 	return nil
 }
 
-// Line formats:
-//   PERM_OP INS ${action_id} ${data}
-//   PERM_OP UPD ${action_id} ${data}
-//   PERM_OP REM ${action_id} ${data} <-- {"old": <old>, "new": <new>}
+// Line formats: (the `[...]` represents optional fields)
+//   PERM_OP INS ${action_id} [${permission_id}] ${data}
+//   PERM_OP UPD ${action_id} [${permission_id}] ${data}
+//   PERM_OP REM ${action_id} [${permission_id}] ${data} <-- {"old": <old>, "new": <new>}
 func (ctx *parseCtx) readPermOp(line string) error {
-	chunks := strings.SplitN(line, " ", 4)
-	if len(chunks) != 4 {
-		return fmt.Errorf("expected 4 fields, got %d", len(chunks))
+	chunks, err := splitNToM(line, 4, 5)
+	if err != nil {
+		return err
 	}
 
 	actionIndex, err := strconv.Atoi(chunks[2])
@@ -809,6 +864,17 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	}
 
 	opString := chunks[1]
+	dataChunk := chunks[3]
+	var permissionID uint64
+
+	// A `PERM_OP` with 5 fields have ["permission_id"] field in index #3 set and data chunk is actually index #4
+	if len(chunks) == 5 {
+		permissionID, err = strconv.ParseUint(chunks[3], 10, 64)
+		if err != nil {
+			return fmt.Errorf("permission_id is not a valid number, got: %q", chunks[3])
+		}
+		dataChunk = chunks[4]
+	}
 
 	op := pbcodec.PermOp_OPERATION_UNKNOWN
 	var oldData, newData []byte
@@ -816,19 +882,19 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	switch opString {
 	case "INS":
 		op = pbcodec.PermOp_OPERATION_INSERT
-		newData = []byte(chunks[3])
+		newData = []byte(dataChunk)
 
 	case "UPD":
 		op = pbcodec.PermOp_OPERATION_UPDATE
 
-		oldJSONResult := gjson.Get(chunks[3], "old")
+		oldJSONResult := gjson.Get(dataChunk, "old")
 		if !oldJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'old' field, found none in: %q", dataChunk)
 		}
 
-		newJSONResult := gjson.Get(chunks[3], "new")
+		newJSONResult := gjson.Get(dataChunk, "new")
 		if !newJSONResult.Exists() {
-			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", chunks[3])
+			return fmt.Errorf("a PERM_OP UPD should JSON data should have an 'new' field, found none in: %q", dataChunk)
 		}
 
 		oldData = []byte(oldJSONResult.Raw)
@@ -837,7 +903,7 @@ func (ctx *parseCtx) readPermOp(line string) error {
 	case "REM":
 		op = pbcodec.PermOp_OPERATION_REMOVE
 
-		oldData = []byte(chunks[3])
+		oldData = []byte(dataChunk)
 
 	default:
 		return fmt.Errorf("unknown PERM_OP op: %q", opString)
@@ -852,21 +918,25 @@ func (ctx *parseCtx) readPermOp(line string) error {
 		newPerm := &permissionObject{}
 		err = json.Unmarshal(newData, &newPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall new perm data: %s", err)
+			return fmt.Errorf("unmashal new perm data: %s", err)
 		}
+
 		permOp.NewPerm = newPerm.ToProto()
+		permOp.NewPerm.Id = permissionID
 	}
 
 	if len(oldData) > 0 {
 		oldPerm := &permissionObject{}
 		err = json.Unmarshal(oldData, &oldPerm)
 		if err != nil {
-			return fmt.Errorf("unmashall old perm data: %s", err)
+			return fmt.Errorf("unmashal old perm data: %s", err)
 		}
+
 		permOp.OldPerm = oldPerm.ToProto()
+		permOp.OldPerm.Id = permissionID
+
 	}
 
-	// TODO: fix this, make sure permissionObject is in DEOS mode already..
 	ctx.recordPermOp(permOp)
 
 	return nil
@@ -927,47 +997,97 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 }
 
 // Line format:
-//   DEEP_MIND_VERSION ${version}
+//  Version 12
+//    DEEP_MIND_VERSION ${major_version}
+//
+//  Version 13
+//    DEEP_MIND_VERSION ${major_version} ${minor_version}
 func (ctx *parseCtx) readDeepmindVersion(line string) error {
-	chunks := strings.SplitN(line, " ", 2)
-	if len(chunks) != 2 {
-		return fmt.Errorf("expected 2 fields, got %d", len(chunks))
-	}
-
-	version, err := strconv.Atoi(chunks[1])
+	chunks, err := splitNToM(line, 2, 3)
 	if err != nil {
-		return fmt.Errorf("version is not a valid number, got: %q", chunks[1])
+		return err
 	}
 
-	// FIXME: The version 1 was used before official release, this has been used by developers internal to dfuse
-	//        only. We should remove the special case once everyone moved to release that outputs 12 by default.
-	if version != 1 && version != 12 {
-		return fmt.Errorf("deep-mind reports version %d, but this reader supports only version %d", version, 12)
+	majorVersion := chunks[1]
+	if !inSupportedVersion(majorVersion) {
+		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
 	}
+
+	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
 
 	return nil
 }
 
-func (ctx *parseCtx) readABIStart() error {
+func inSupportedVersion(majorVersion string) bool {
+	for _, supportedVersion := range supportedVersions {
+		if majorVersion == supportedVersion {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Line format:
+//  Version 12
+//    ABIDUMP START
+//
+//  Version 13
+//    ABIDUMP START ${block_num} ${global_sequence_num}
+func (ctx *parseCtx) readABIStart(line string) error {
+	chunks := strings.SplitN(line, " ", -1)
+
+	var logFields []zap.Field
+	switch len(chunks) {
+	case 2: // Version 12
+		break
+	case 4: // Version 13
+		blockNum, err := strconv.Atoi(chunks[2])
+		if err != nil {
+			return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
+		}
+
+		globalSequence, err := strconv.Atoi(chunks[3])
+		if err != nil {
+			return fmt.Errorf("global_sequence_num is not a valid number, got: %q", chunks[3])
+		}
+
+		logFields = append(logFields, zap.Int("block_num", blockNum), zap.Int("global_sequence", globalSequence))
+	default:
+		return fmt.Errorf("expected to have either %d or %d fields, got %d", 2, 4, len(chunks))
+	}
+
+	zlog.Info("read ABI start marker", logFields...)
 	ctx.abiDecoder.resetCache()
 	return nil
 }
 
 // Line format:
-//   ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//  Version 12
+//    ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//
+//  Version 13
+//    ABIDUMP ABI ${contract} ${base64_abi}
 func (ctx *parseCtx) readABIDump(line string) error {
-	chunks := strings.SplitN(line, " ", 5)
-	if len(chunks) != 5 {
-		return fmt.Errorf("expected 5 fields, got %d", len(chunks))
-	}
-
-	_, err := strconv.Atoi(chunks[2])
+	chunks, err := splitNToM(line, 4, 5)
 	if err != nil {
-		return fmt.Errorf("block_num is not a valid number, got: %q", chunks[2])
+		return err
 	}
 
-	contract := chunks[3]
-	rawABI := chunks[4]
+	var contract, rawABI string
+	switch len(chunks) {
+	case 5: // Version 12
+		contract = chunks[3]
+		rawABI = chunks[4]
+
+	case 4: // Version 13
+		contract = chunks[2]
+		rawABI = chunks[3]
+	}
+
+	if traceEnabled {
+		zlog.Debug("read initial ABI for contract", zap.String("contract", contract))
+	}
 
 	return ctx.abiDecoder.addInitialABI(contract, rawABI)
 }
@@ -1157,4 +1277,13 @@ func unmarshalBinary(data []byte, v interface{}) error {
 	decoder.DecodeP2PMessage(false)
 
 	return decoder.Decode(v)
+}
+
+func splitNToM(line string, min, max int) ([]string, error) {
+	chunks := strings.SplitN(line, " ", -1)
+	if len(chunks) < min || len(chunks) > max {
+		return nil, fmt.Errorf("expected between %d to %d fields (inclusively), got %d", min, max, len(chunks))
+	}
+
+	return chunks, nil
 }

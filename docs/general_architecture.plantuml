@@ -1,0 +1,76 @@
+@startuml
+
+title General placement of dfuse for EOSIO components
+
+frame mindreaders {
+  node "mindreader 1 + nodeos" as mindreader1
+  node "mindreader 2 + nodeos" as mindreader2
+}
+
+frame relayers {
+  node relayer1
+  node relayer2
+}
+
+node eosq
+node eosws
+node dgraphql
+
+node merger
+note left of merger
+  reads one-block files
+  produces 100-blocks files,
+  including all perceived forks
+end note
+
+node search
+
+node "trxdb-loader" as trxdbLoader
+node statedb
+
+database "Key/Value Store" as kvstore
+note right of kvstore
+  Bigtable (GCP hosted)
+  TiKV (on prem) or
+  Badger (in-process)
+end note
+
+mindreader1 <-- relayer1
+mindreader1 <-- relayer2 : gRPC
+mindreader2 <-- relayer1
+mindreader2 <-- relayer2
+
+mindreader1 .> merger : one-block files
+mindreader2 .> merger
+
+database "Object Store" as s3
+merger --> s3
+note left of s3
+  Through **dstore** package
+  * AWS S3
+  * Google Storage
+  * Azure Blob File Storage
+  * Local disk
+end note
+
+
+dgraphql <-- eosq
+relayer1 <-- eosws
+eosws -> search : gRPC
+relayer1 <-- search : gRPC
+search <-- dgraphql
+dgraphql -> kvstore
+
+relayer1 <-- statedb
+relayer1 <-- trxdbLoader
+
+statedb --> kvstore
+trxdbLoader --> kvstore
+
+actor user
+
+eosws <-- user
+eosq <-- user
+dgraphql <-- user
+
+@enduml

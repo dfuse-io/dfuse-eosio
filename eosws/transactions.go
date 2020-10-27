@@ -25,18 +25,19 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	eos "github.com/eoscanada/eos-go"
+	"github.com/dfuse-io/logging"
+	"go.uber.org/zap"
 )
 
+func pause() {
+	time.Sleep(500 * time.Millisecond)
+}
+
 func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransaction) {
+	zlogger := logging.Logger(ctx, zlog)
+
 	var srcTx *pbcodec.TransactionLifecycle
 	var err error
-
-	startBlockID, err := ws.db.GetLastWrittenBlockID(ctx)
-	if err != nil {
-		ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get last written block"))
-		return
-	}
 
 	srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
 	if err != nil {
@@ -44,6 +45,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get transaction"))
 		}
 	} else {
+		zlogger.Debug("found transaction in database, about to send it to client")
 		lc, err := mdl.ToV1TransactionLifecycle(srcTx)
 		if err != nil {
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to convert transaction"))
@@ -55,19 +57,27 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 	}
 
 	if msg.Listen {
-		libID, err := ws.db.GetIrreversibleIDAtBlockID(ctx, startBlockID)
+		libRef, err := ws.db.GetLastWrittenIrreversibleBlockRef(ctx)
 		if err != nil {
 			ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get lib"))
 			return
 		}
 
 		wantedTrxID := msg.Data.ID
+
+		first := false
 		resendNextNewBlock := false
 		handler := bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+			if !first {
+				zlogger.Debug("transaction listen handler first block", zap.Stringer("block", block))
+				first = true
+			}
+
 			// un an undo or redo notice, we wait for the next "normal" block
 			// then we resend the transaction lifecycle
 			fObj := obj.(*forkable.ForkableObject)
 			if fObj.Step == forkable.StepUndo || fObj.Step == forkable.StepRedo {
+				zlogger.Debug("transaction handler received undo or redo step, resend next new block")
 				resendNextNewBlock = true
 				return nil
 			}
@@ -80,13 +90,20 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 
 			blk := block.ToNative().(*pbcodec.Block)
 
-			transactionIds := make([]string, len(blk.TransactionTraces))
-			for i, transaction := range blk.TransactionTraces {
+			transactionIds := make([]string, len(blk.TransactionTraces()))
+			for i, transaction := range blk.TransactionTraces() {
 				transactionIds[i] = transaction.Id
 			}
 
 			for _, id := range append(transactionIds, append(blk.CreatedDTrxIDs(), blk.CanceledDTrxIDs()...)...) {
 				if wantedTrxID == id || resendNextNewBlock {
+					zlogger.Debug("found block with transaction in it (or resend next new block)",
+						zap.Stringer("block", block),
+						zap.Bool("found_trx", wantedTrxID == id),
+						zap.Bool("resend_next_new_block", resendNextNewBlock),
+						zap.Bool("wait_for_irreversible", waitForIrreversible),
+					)
+
 					resendNextNewBlock = false
 					go func() {
 						timeout := time.After(300 * time.Second) //this timeout is only for that particular attempt to notify the user about this block
@@ -96,21 +113,25 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 								ws.EmitErrorReply(ctx, msg, DBTrxAppearanceTimeoutError(ctx, blk.ID(), wantedTrxID))
 								return
 							default:
-								b, err := ws.db.GetBlock(ctx, blk.ID())
-								if err != nil {
-									// FIXME: don't we want to distinguish system failures, and NotFound here?
-									time.Sleep(time.Second)
-									continue
+								if waitForIrreversible {
+									lastDBIrr, err := ws.db.GetLastWrittenIrreversibleBlockRef(ctx)
+									if err != nil {
+										zlogger.Debug("error getting last irreversible blockref from DB", zap.Stringer("block", block), zap.Error(err))
+										pause()
+										continue
+									}
+									if lastDBIrr.Num() < blk.Num() {
+										pause()
+										continue
+									}
+									srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
+								} else {
+									srcTx, err = ws.db.GetTransactionWithExpectedBlockID(ctx, msg.Data.ID, blk.ID())
 								}
-
-								if waitForIrreversible && !b.Irreversible {
-									time.Sleep(time.Second)
-									continue
-								}
-
-								srcTx, err = ws.db.GetTransaction(ctx, msg.Data.ID)
 								if err != nil {
-									ws.EmitErrorReply(ctx, msg, derr.Wrap(err, "unable to get transaction, internal error"))
+									zlogger.Debug("error getting transaction from DB", zap.Stringer("block", block), zap.Error(err))
+									pause()
+									continue
 								} else {
 									tx, err := mdl.ToV1TransactionLifecycle(srcTx)
 									if err != nil {
@@ -135,12 +156,22 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			handler = NewProgressHandler(handler, ws, msg, ctx).ProcessBlock
 		}
 
-		gateHandler := bstream.NewBlockIDGate(startBlockID, bstream.GateExclusive, handler)
-		forkableHandler := forkable.New(gateHandler, forkable.WithExclusiveLIB(libID))
-		firstGate := bstream.NewBlockIDGate(libID.ID(), bstream.GateInclusive, forkableHandler)
+		nextBlockRef := libRef
+		effectiveHandler := bstream.Handler(handler)
 
+		// If we have seen the transaction in the database, we know at which block we must start, it's the block right
+		// after execution trace's block id, since we have now seen this block.
+		if srcTx != nil && srcTx.ExecutionTrace != nil && srcTx.ExecutionTrace.BlockNum > libRef.Num() {
+			nextBlockRef = bstream.NewBlockRefFromID(srcTx.ExecutionTrace.ProducerBlockId)
+			effectiveHandler = bstream.NewBlockIDGate(nextBlockRef.ID(), bstream.GateExclusive, handler, bstream.GateOptionWithLogger(zlog))
+		}
+
+		forkableHandler := forkable.New(effectiveHandler, forkable.WithLogger(zlog), forkable.WithInclusiveLIB(libRef))
+		firstGate := bstream.NewBlockIDGate(libRef.ID(), bstream.GateInclusive, forkableHandler, bstream.GateOptionWithLogger(zlog))
+
+		zlogger.Debug("starting listen transaction handler", zap.Stringer("lib", libRef), zap.Stringer("next_block", nextBlockRef))
 		metrics.IncListeners("get_transaction")
-		source := ws.subscriptionHub.NewSourceFromBlockRef(libID, firstGate)
+		source := ws.subscriptionHub.NewSourceFromBlockRef(libRef, firstGate)
 		source.OnTerminating(func(_ error) {
 			metrics.CurrentListeners.Dec("get_transaction")
 		})
@@ -156,7 +187,7 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 			return
 		}
 
-		ws.EmitReply(ctx, msg, wsmsg.NewListening(eos.BlockNum(startBlockID)))
+		ws.EmitReply(ctx, msg, wsmsg.NewListening(uint32(nextBlockRef.Num())))
 		go source.Run()
 
 	}

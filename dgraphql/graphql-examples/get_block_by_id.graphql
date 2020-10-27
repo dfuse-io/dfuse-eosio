@@ -1,0 +1,35 @@
+query ($blockId: String!) {
+  block(id: $blockId) {
+    id
+    num
+    dposLIBNum
+    executedTransactionCount
+    irreversible
+    header {
+      id
+      num
+      timestamp
+      producer
+      previous
+    }
+    transactionTraces(first: 5) {
+      pageInfo {
+        startCursor
+        endCursor
+      }
+      edges {
+        cursor
+        node {
+          id
+          status
+          topLevelActions {
+            account
+            name
+            receiver
+            json
+          }
+        }
+      }
+    }
+  }
+}

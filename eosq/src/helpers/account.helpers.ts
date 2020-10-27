@@ -1,6 +1,6 @@
+import { extractValueWithUnits } from "@dfuse/explorer"
 import { Account, Permission } from "../models/account"
 import { Vote } from "../models/vote"
-import { extractValueWithUnits } from "./formatters"
 import { DonutData } from "../atoms/pie-chart/donut-chart"
 import { t } from "i18next"
 import { theme } from "../theme"
@@ -124,7 +124,7 @@ export function getRankInfo(
 }
 
 export function getWebsiteInfo(account: Account, votes: Vote[]) {
-  let link = null
+  let link: string
   let verified = false
 
   if (!account.account_verifications) {

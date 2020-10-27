@@ -1,0 +1,9 @@
+start:
+  args:
+  - statedb
+  flags:
+    statedb-enable-inject-mode: false
+    statedb-enable-server-mode: true
+    statedb-disable-pipeline: true
+    statedb-http-listen-addr: :9090
+    statedb-grpc-listen-addr: :9000

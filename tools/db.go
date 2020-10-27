@@ -3,11 +3,11 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/kvdb"
-
-	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
@@ -28,26 +28,39 @@ func init() {
 	dbCmd.AddCommand(dbBlkCmd)
 	dbCmd.AddCommand(dbTrxCmd)
 
-	dbCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "KVStore DSN")
+	dbCmd.PersistentFlags().String("dsn", "badger:///dfuse-data/kvdb/kvdb_badger.db", "kvStore DSN")
 }
 
 func dbReadBlockE(cmd *cobra.Command, args []string) (err error) {
-	db, err := trxdb.New(viper.GetString("dsn"))
+	db, err := trxdb.New(viper.GetString("dsn"), trxdb.WithLogger(zlog))
 	if err != nil {
 		return fmt.Errorf("failed to setup db: %w", err)
 	}
 
-	dbBlock, err := db.GetBlock(cmd.Context(), args[0])
-	if err != nil {
-		return fmt.Errorf("failed to get block: %w", err)
+	blocks := []*pbcodec.BlockWithRefs{}
+
+	if blockNum, err := strconv.ParseUint(args[0], 10, 32); err == nil {
+		dbBlocks, err := db.GetBlockByNum(cmd.Context(), uint32(blockNum))
+		if err != nil {
+			return fmt.Errorf("failed to get block: %w", err)
+		}
+		blocks = append(blocks, dbBlocks...)
+	} else {
+		dbBlock, err := db.GetBlock(cmd.Context(), args[0])
+		if err != nil {
+			return fmt.Errorf("failed to get block: %w", err)
+		}
+		blocks = append(blocks, dbBlock)
 	}
 
-	printEntity(dbBlock)
+	for _, blk := range blocks {
+		printEntity(blk)
+	}
 	return nil
 }
 
 func dbReadTrxE(cmd *cobra.Command, args []string) (err error) {
-	db, err := trxdb.New(viper.GetString("dsn"))
+	db, err := trxdb.New(viper.GetString("dsn"), trxdb.WithLogger(zlog))
 	if err != nil {
 		return err
 	}

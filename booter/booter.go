@@ -1,4 +1,4 @@
-package boot
+package booter
 
 import (
 	"context"
@@ -10,9 +10,10 @@ import (
 	"path/filepath"
 	"time"
 
+	_ "github.com/dfuse-io/dfuse-eosio/booter/migrator"
+	eosboot "github.com/dfuse-io/eosio-boot"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
-	eosboot "github.com/eoscanada/eos-go/boot"
 	"go.uber.org/zap"
 )
 
@@ -65,8 +66,9 @@ func (b *booter) Launch() {
 	booter, err := eosboot.New(
 		b.config.BootSeqFile,
 		b.nodeos,
+		filepath.Join(b.config.Datadir, "cache"),
 		eosboot.WithKeyBag(keybag),
-		eosboot.WithCachePath(filepath.Join(b.config.Datadir, "cache")),
+		eosboot.WithLogger(zlog),
 	)
 	if err != nil {
 		zlog.Error("failed to initialize booter", zap.Error(err))
@@ -74,7 +76,7 @@ func (b *booter) Launch() {
 		return
 	}
 
-	if booterState != nil && booter.BootseqChecksum() == booterState.Revision {
+	if booterState != nil && booter.Revision() == booterState.Revision {
 		zlog.Info("chain has already been booted",
 			zap.String("boot_sequence_revision", booterState.Revision),
 			zap.Time("booted_at", booterState.BootedAt),

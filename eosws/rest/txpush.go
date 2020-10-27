@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -57,20 +58,26 @@ func (t *TxPushRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// fully control within `eosws` the actual CORS for the requests.
 	deleteCORSHeaders(r)
 
-	pushTransactionGuaranteeOption := r.Header.Get("X-Eos-Push-Guarantee")
-	if (r.URL.EscapedPath() != "/v1/chain/push_transaction" && r.URL.EscapedPath() != "/v1/chain/send_transaction") || pushTransactionGuaranteeOption == "" {
-		t.dumbAPIProxy.ServeHTTP(w, r)
-		return
+	switch r.URL.EscapedPath() {
+	case "/v1/chain/push_transaction", "/v1/chain/send_transaction":
+		if r.Header.Get("X-Eos-Push-Guarantee") != "" {
+			t.pushTransactionHandler.ServeHTTP(w, r)
+			return
+		}
+		//case "/v1/chain/get_info":
+		//return
 	}
-
-	t.pushTransactionHandler.ServeHTTP(w, r)
+	t.dumbAPIProxy.ServeHTTP(w, r)
 }
 
 ////// PUSHER
 
 type TxPusher struct {
 	API             *eos.API
+	extraAPIs       []*eos.API
 	subscriptionHub *hub.SubscriptionHub
+	headInfoHub     *eosws.HeadInfoHub
+	retries         int
 }
 
 type PushResponse struct {
@@ -80,11 +87,60 @@ type PushResponse struct {
 	Processed     *eos.TransactionTrace `json:"processed"`
 }
 
-func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub) *TxPusher {
+func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub *eosws.HeadInfoHub, retries int, extraAPIs []*eos.API) *TxPusher {
 	return &TxPusher{
 		API:             API,
 		subscriptionHub: subscriptionHub,
+		headInfoHub:     headInfoHub,
+		retries:         retries,
+		extraAPIs:       append(extraAPIs, API), // always include the base API in here
 	}
+}
+
+func (t *TxPusher) randomAPI() *eos.API {
+	return t.extraAPIs[rand.Intn(len(t.extraAPIs))]
+}
+
+func (t *TxPusher) tryPush(API *eos.API, ctx context.Context, tx *eos.PackedTransaction, trxID string, useLegacyPush bool) (err error) {
+	timedoutContext, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	var pushResp json.RawMessage
+
+	if useLegacyPush {
+		pushResp, err = API.PushTransactionRaw(timedoutContext, tx)
+	} else {
+		pushResp, err = API.SendTransactionRaw(timedoutContext, tx)
+	}
+	if err != nil {
+		return
+	}
+
+	idCheck := gjson.GetBytes(pushResp, "transaction_id").String()
+	if idCheck != trxID {
+		return fmt.Errorf("pushed transaction ID %q mismatch transaction ID received from API %q", trxID, idCheck)
+	}
+	return nil
+}
+
+func isExpiredError(err eos.APIError) bool {
+	return err.ErrorStruct.Code == 3040005
+}
+
+func isDuplicateError(err eos.APIError) bool {
+	return err.ErrorStruct.Code == 3040008 || err.ErrorStruct.Code == 3040009 // duplicate
+}
+
+func isRetryable(err eos.APIError) bool {
+	if err.ErrorStruct.Code < 3080000 || err.ErrorStruct.Code == 3080001 {
+		return false
+	}
+	// in between those are resource-related errors, like cpu or deadline, we want to retry those
+	// see https://docs.google.com/spreadsheets/d/1uHeNDLnCVygqYK-V01CFANuxUwgRkNkrmeLm9MLqu9c/edit#gid=0
+	if err.ErrorStruct.Code >= 3090000 {
+		return false
+	}
+	return true
 }
 
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -113,11 +169,6 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodeosInfo, err := t.API.GetInfo(r.Context())
-	if checkHTTPError(err, "cannot connect to API", eoserr.ErrUnhandledException, w) {
-		return
-	}
-
 	trxIDCheckSum, err := tx.ID()
 	if checkHTTPError(err, "cannot compute transaction ID", eoserr.ErrUnhandledException, w) {
 		return
@@ -130,25 +181,23 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var trxTraceFoundChan <-chan *pbcodec.TransactionTrace
 	var shutdownFunc func(error)
-	lib := nodeosInfo.LastIrreversibleBlockID.String()
 	expirationDelay := time.Minute * 2 //baseline for inblock inclusion
 	normalizedGuarantee := guarantee
 	switch guarantee {
 	case "in-block":
-		zlog.Debug("Waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()))
 		trxTraceFoundChan, shutdownFunc = awaitTransactionInBlock(ctx, trxID, liveSourceFactory)
 	case "handoff:1", "handoffs:1":
 		normalizedGuarantee = "handoffs:1"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 1, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 1, t.subscriptionHub)
 	case "handoff:2", "handoffs:2":
 		normalizedGuarantee = "handoffs:2"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 2, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 2, t.subscriptionHub)
 	case "handoff:3", "handoffs:3":
 		normalizedGuarantee = "handoffs:3"
 		expirationDelay += 1 * time.Minute
-		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, lib, trxID, 3, t.subscriptionHub)
+		trxTraceFoundChan, shutdownFunc = awaitTransactionPassedHandoffs(ctx, t.headInfoHub.LibID(), trxID, 3, t.subscriptionHub)
 	case "irreversible":
 		expirationDelay += 6 * time.Minute
 		trxTraceFoundChan, shutdownFunc = awaitTransactionIrreversible(ctx, trxID, liveSourceFactory)
@@ -162,73 +211,128 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer metrics.CurrentListeners.Dec("push_transaction")
 	defer shutdownFunc(nil) // closing the "awaitTransaction" pipelines...
 
-	timedoutContext, cancel := context.WithTimeout(ctx, 1*time.Minute)
-
-	var pushResp json.RawMessage
-	if r.URL.EscapedPath() == "/v1/chain/push_transaction" {
-		pushResp, err = t.API.PushTransactionRaw(timedoutContext, tx)
-	} else {
-		pushResp, err = t.API.SendTransactionRaw(timedoutContext, tx)
-	}
-
-	cancel()
-	if err != nil {
-		if err.Error() == context.Canceled.Error() {
-			metrics.TimedOutPushingTrxCount.Inc(normalizedGuarantee)
-		} else {
-			metrics.FailedPushTrxCount.Inc(normalizedGuarantee)
+	maxAttempts := t.retries + 1
+	for attempt := 1; ; attempt++ {
+		err = t.tryPush(t.API, ctx, tx, trxID, r.URL.EscapedPath() == "/v1/chain/push_transaction")
+		if err == nil {
+			break
 		}
-		if apiErr, ok := err.(eos.APIError); ok {
-			apiErrCnt, err := json.Marshal(apiErr)
-			if err == nil {
+
+		if apiErr, ok := err.(eos.APIError); ok { // decoded nodeos API error
+			retryable := isRetryable(apiErr)
+			if apiErrCnt, err := json.Marshal(apiErr); err == nil {
+				zapFields := append(
+					logFieldsFromAPIErr(apiErr),
+					zap.Bool("retryable", retryable),
+					zap.Int("attempt", attempt),
+					zap.Int("max_attempts", maxAttempts),
+					zap.String("trx_id", trxID),
+				)
+				zlog.Info("push transaction API error",
+					zapFields...,
+				)
+				if attempt < maxAttempts && retryable {
+					time.Sleep(time.Duration(attempt) * 500 * time.Millisecond)
+					continue
+				}
 				w.WriteHeader(apiErr.Code)
 				w.Write(apiErrCnt)
 				return
 			}
 		}
-		zlog.Error("cannot push transaction to Nodeos API", zap.Error(err))
+		// other error, we couldn't reach nodeos...
+		zlog.Info("push transaction unknown error",
+			zap.Error(err),
+			zap.Int("attempt", attempt),
+			zap.Int("max_attempts", maxAttempts),
+		)
+		if attempt < maxAttempts {
+			time.Sleep(time.Duration(attempt) * 250 * time.Millisecond)
+			continue
+		}
 		checkHTTPError(err, fmt.Sprintf("cannot push transaction %q to Nodeos API.", trxID), eoserr.ErrUnhandledException, w)
 		return
 	}
 
-	idCheck := gjson.GetBytes(pushResp, "transaction_id").String()
-	if idCheck != trxID {
-		msg := fmt.Sprintf("pushed transaction ID %q mismatch transaction ID received from API %q", trxID, idCheck)
-		checkHTTPError(errors.New(msg), msg, eoserr.ErrUnhandledException, w)
-	}
+	zlog.Debug("waiting for trx to appear in a block", zap.String("hexTrxID", trxID), zap.Float64("minutes", expirationDelay.Minutes()), zap.String("guarantee", guarantee))
 
-	// FIXME:
-	// if we return an error but we DID submit the transaction to the chain, ideally
-	// we'd return something to that effect.. so the user can start tracking its transaction ID
-	// separately.. Maybe we can't do anything about it though...
+	resend := 0
+	trxExpired := false
+	expiration := time.After(expirationDelay)
+	for {
+		select {
+		case <-time.After(time.Second * 8): // retries every 8 second if we haven't seen the trx yet, this means at 8, 16, 24 -- considering that most trxs have 30s deadline
+			if trxExpired {
+				continue // keep waiting for the transaction to appear in a block but we stop trying to push it
+			}
+			a := t.randomAPI()
+			err = t.tryPush(a, ctx, tx, trxID, r.URL.EscapedPath() == "/v1/chain/push_transaction")
+			zlog.Debug("retrying send transaction to push API", zap.String("random_api", a.BaseURL), zap.Error(err), zap.Int("resend", resend))
+			resend++
+			if err != nil {
+				if apiErr, ok := err.(eos.APIError); ok { // decoded nodeos API error
+					if isExpiredError(apiErr) {
+						trxExpired = true
+						zlog.Debug("trx expired error.", zap.String("trx_id", trxID))
+						continue
+					}
+					if isDuplicateError(apiErr) {
+						zlog.Debug("duplicate error.", zap.String("trx_id", trxID))
+						continue
+					}
+					if isRetryable(apiErr) {
+						zlog.Debug("retryable error", zap.String("trx_id", trxID))
+						continue
+					}
 
-	select {
-	case <-time.After(expirationDelay):
-		metrics.TimedOutPushTrxCount.Inc(normalizedGuarantee)
-		msg := fmt.Sprintf("too long waiting for inclusion of %q into a block", trxID)
-		checkHTTPError(errors.New(msg), msg, eoserr.ErrTimeoutException, w)
-		return
+					zapFields := append(
+						logFieldsFromAPIErr(apiErr),
+						zap.Int("resend", resend),
+						zap.String("trx_id", trxID),
+					)
+					zlog.Info("push transaction API error after earlier success",
+						zapFields...,
+					)
 
-	case trxTrace := <-trxTraceFoundChan:
-		blockID := trxTrace.ProducerBlockId
+					// if previously passing transaction now fails, we return it to the client.
+					if apiErrCnt, err := json.Marshal(apiErr); err == nil {
+						w.WriteHeader(apiErr.Code)
+						w.Write(apiErrCnt)
+					} else {
+						checkHTTPError(errors.New("unknown error"), "unknown error", eoserr.ErrUnhandledException, w)
+					}
+					return
+				}
+			}
 
-		eosTrace := codec.TransactionTraceToEOS(trxTrace)
+		case <-expiration:
+			metrics.TimedOutPushTrxCount.Inc(normalizedGuarantee)
+			msg := fmt.Sprintf("too long waiting for inclusion of %q into a block (after %d retries)", trxID, resend)
+			checkHTTPError(errors.New(msg), msg, eoserr.ErrTimeoutException, w)
+			return
 
-		resp := &PushResponse{
-			BlockID:       blockID,
-			BlockNum:      eos.BlockNum(blockID),
-			Processed:     eosTrace,
-			TransactionID: trxID,
-		}
+		case trxTrace := <-trxTraceFoundChan:
+			blockID := trxTrace.ProducerBlockId
 
-		out, err := json.Marshal(resp)
-		if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
+			eosTrace := codec.TransactionTraceToEOS(trxTrace)
+
+			resp := &PushResponse{
+				BlockID:       blockID,
+				BlockNum:      eos.BlockNum(blockID),
+				Processed:     eosTrace,
+				TransactionID: trxID,
+			}
+
+			out, err := json.Marshal(resp)
+			if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
+				return
+			}
+
+			metrics.SucceededPushTrxCount.Inc(normalizedGuarantee)
+			w.Header().Set("content-length", fmt.Sprintf("%d", len(out)))
+			w.Write([]byte(out))
 			return
 		}
-
-		metrics.SucceededPushTrxCount.Inc(normalizedGuarantee)
-		w.Header().Set("content-length", fmt.Sprintf("%d", len(out)))
-		w.Write([]byte(out))
 	}
 }
 
@@ -255,18 +359,6 @@ func checkHTTPError(err error, msg string, errorCode eoserr.Error, w http.Respon
 		return true
 	}
 	return false
-}
-
-var corsRequestHeaders = []string{
-	"Origin",
-	"Access-Control-Request-Method",
-	"Access-Control-Request-Headers",
-}
-
-func deleteCORSHeaders(r *http.Request) {
-	for _, corsRequestHeader := range corsRequestHeaders {
-		r.Header.Del(corsRequestHeader)
-	}
 }
 
 func countUniqueElem(elements []string) int {
@@ -335,10 +427,11 @@ func awaitTransactionPassedHandoffs(ctx context.Context, libID string, trxID str
 		return nil
 	})
 
-	forkHandler := forkable.New(handle, forkable.WithExclusiveLIB(bstream.BlockRefFromID(libID)))
-	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler)
+	irrRef := bstream.NewBlockRefFromID(libID)
+	forkHandler := forkable.New(handle, forkable.WithLogger(zlog), forkable.WithExclusiveLIB(irrRef))
+	forkablePostGate := bstream.NewBlockIDGate(libID, bstream.GateInclusive, forkHandler, bstream.GateOptionWithLogger(zlog))
 
-	source := subscriptionHub.NewSourceFromBlockRef(bstream.BlockRefFromID(libID), forkablePostGate)
+	source := subscriptionHub.NewSourceFromBlockRef(irrRef, forkablePostGate)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningPushInHandoffs, -1)
 	})
@@ -373,7 +466,7 @@ func awaitTransactionIrreversible(ctx context.Context, trxID string, sourceFacto
 
 	trxTraceFoundChan := make(chan *pbcodec.TransactionTrace)
 
-	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithFilters(forkable.StepIrreversible))
+	irrForkableHandler := forkable.New(getTransactionCatcher(ctx, trxID, trxTraceFoundChan), forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible))
 	source := sourceFactory(irrForkableHandler)
 	source.OnTerminating(func(e error) {
 		atomic.AddInt64(&runningIrreversible, -1)
@@ -400,11 +493,22 @@ func getTransactionCatcher(ctx context.Context, trxID string, trxTraceFoundChan 
 }
 
 func traceExecutedInBlock(trxID string, blk *pbcodec.Block) *pbcodec.TransactionTrace {
-	for _, trxTrace := range blk.TransactionTraces {
+	for _, trxTrace := range blk.TransactionTraces() {
 		if trxTrace.Id == trxID {
 			return trxTrace
 		}
 	}
 
 	return nil
+}
+
+func logFieldsFromAPIErr(apiErr eos.APIError) []zap.Field {
+	return []zap.Field{
+		zap.String("name", apiErr.ErrorStruct.Name),
+		zap.Int("code", apiErr.Code),
+		zap.Int("errstruct_code", apiErr.ErrorStruct.Code),
+		zap.String("error_message", apiErr.Message),
+		zap.String("what", apiErr.ErrorStruct.What),
+		zap.Any("details", apiErr.ErrorStruct.Details),
+	}
 }

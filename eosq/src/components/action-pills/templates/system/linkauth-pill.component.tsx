@@ -1,6 +1,6 @@
 import * as React from "react"
 import { GenericPillComponent, PillRenderingContext } from "../generic-pill.component"
-import Box from "../../../../atoms/ui-box/ui-box.component"
+import { Box } from "@dfuse/explorer"
 import { FormattedText } from "../../../formatted-text/formatted-text"
 import { getLinkAuthLevel1Fields, getLinkAuthLevel2Fields } from "../pill-template.helpers"
 

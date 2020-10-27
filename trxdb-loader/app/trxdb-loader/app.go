@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
@@ -31,7 +32,7 @@ import (
 )
 
 type Config struct {
-	ChainId                   string // Chain ID
+	ChainID                   string // Chain ID
 	ProcessingType            string // The actual processing type to perform, either `live`, `batch` or `patch`
 	BlockStoreURL             string // GS path to read batch files from
 	BlockStreamAddr           string // [LIVE] Address of grpc endpoint
@@ -43,54 +44,63 @@ type Config struct {
 	ParallelFileDownloadCount int    // Number of threads of parallel file download
 	AllowLiveOnEmptyTable     bool   // [LIVE] force pipeline creation if live request and table is empty
 	HTTPListenAddr            string //  http listen address for /healthz endpoint
+	EnableTruncationMarker    bool   // Enables the storage of truncation markers
+	TruncationWindow          uint64 // Truncate date within this duration
+	PurgerInterval            uint64 // Purger at every X block
 }
 
 type App struct {
 	*shutter.Shutter
-	Config *Config
+	config  *Config
+	modules *Modules
 }
 
-func New(config *Config) *App {
+type Modules struct {
+	BlockFilter func(blk *bstream.Block) error
+}
+
+func New(config *Config, modules *Modules) *App {
 	return &App{
 		Shutter: shutter.New(),
-		Config:  config,
+		config:  config,
+		modules: modules,
 	}
 }
 
 func (a *App) Run() error {
-	zlog.Info("launching kvdb loader", zap.Reflect("config", a.Config))
+	zlog.Info("launching trxdb loader", zap.Reflect("config", a.config))
 
 	dmetrics.Register(metrics.Metricset)
 
-	switch a.Config.ProcessingType {
+	switch a.config.ProcessingType {
 	case "live", "batch", "patch":
 	default:
-		return fmt.Errorf("unknown processing-type value %q", a.Config.ProcessingType)
+		return fmt.Errorf("unknown processing-type value %q", a.config.ProcessingType)
 	}
 
-	blocksStore, err := dstore.NewDBinStore(a.Config.BlockStoreURL)
+	blocksStore, err := dstore.NewDBinStore(a.config.BlockStoreURL)
 	if err != nil {
 		return fmt.Errorf("setting up archive store: %w", err)
 	}
-	var loader trxdbloader.Loader
 
-	chainID, err := hex.DecodeString(a.Config.ChainId)
+	chainID, err := hex.DecodeString(a.config.ChainID)
 	if err != nil {
 		return fmt.Errorf("decoding chain_id from command line argument: %w", err)
 	}
 
-	db, err := trxdb.New(a.Config.KvdbDsn)
+	trxdbOption := []trxdb.Option{trxdb.WithLogger(zlog)}
+	if a.config.EnableTruncationMarker {
+		trxdbOption = append(trxdbOption, trxdb.WithPurgeableStoreOption(a.config.TruncationWindow, a.config.PurgerInterval))
+	}
+
+	db, err := trxdb.New(a.config.KvdbDsn, trxdbOption...)
 	if err != nil {
 		return fmt.Errorf("unable to create trxdb: %w", err)
 	}
-	// FIXME: make sure we call CLOSE() at the end!
-	//defer db.Close()
 
 	db.SetWriterChainID(chainID)
 
-	l := trxdbloader.NewBigtableLoader(a.Config.BlockStreamAddr, blocksStore, a.Config.BatchSize, db, a.Config.ParallelFileDownloadCount)
-
-	loader = l
+	loader := trxdbloader.NewTrxDBLoader(a.config.BlockStreamAddr, blocksStore, a.config.BatchSize, db, a.config.ParallelFileDownloadCount, a.modules.BlockFilter, a.config.TruncationWindow)
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {
@@ -101,31 +111,42 @@ func (a *App) Run() error {
 		w.Write([]byte("ready\n"))
 	})
 
-	httpSrv := &http.Server{
-		Addr:         a.Config.HTTPListenAddr,
-		Handler:      healthzHandler,
-		ReadTimeout:  10 * time.Millisecond,
-		WriteTimeout: 10 * time.Millisecond,
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create error logger: %w", err)
 	}
-	zlog.Info("starting webserver", zap.String("http_addr", a.Config.HTTPListenAddr))
+
+	httpSrv := &http.Server{
+		Addr:     a.config.HTTPListenAddr,
+		Handler:  healthzHandler,
+		ErrorLog: errorLogger,
+	}
+	zlog.Info("starting webserver", zap.String("http_addr", a.config.HTTPListenAddr))
 	go httpSrv.ListenAndServe()
 
-	switch a.Config.ProcessingType {
+	switch a.config.ProcessingType {
 	case "live":
-		err := loader.BuildPipelineLive(a.Config.AllowLiveOnEmptyTable)
+		err := loader.BuildPipelineLive(a.config.AllowLiveOnEmptyTable)
 		if err != nil {
 			return err
 		}
 	case "batch":
-		loader.StopBeforeBlock(uint64(a.Config.StopBlockNum))
-		loader.BuildPipelineBatch(uint64(a.Config.StartBlockNum), uint64(a.Config.NumBlocksBeforeStart))
+		loader.StopBeforeBlock(uint64(a.config.StopBlockNum))
+		loader.BuildPipelineBatch(uint64(a.config.StartBlockNum), uint64(a.config.NumBlocksBeforeStart))
 	case "patch":
-		loader.StopBeforeBlock(uint64(a.Config.StopBlockNum))
-		loader.BuildPipelinePatch(uint64(a.Config.StartBlockNum), uint64(a.Config.NumBlocksBeforeStart))
+		loader.StopBeforeBlock(uint64(a.config.StopBlockNum))
+		loader.BuildPipelinePatch(uint64(a.config.StartBlockNum), uint64(a.config.NumBlocksBeforeStart))
 	}
 
-	a.OnTerminating(loader.Shutdown)
-	loader.OnTerminated(a.Shutdown)
+	a.OnTerminating(func(err error) {
+		loader.Shutdown(err)
+		db.Close()
+	})
+
+	loader.OnTerminated(func(err error) {
+		db.Close()
+		a.Shutdown(err)
+	})
 
 	go loader.Launch()
 	return nil
@@ -134,16 +155,16 @@ func (a *App) Run() error {
 func (a *App) IsReady() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	url := fmt.Sprintf("http://%s/healthz", a.Config.HTTPListenAddr)
+	url := fmt.Sprintf("http://%s/healthz", a.config.HTTPListenAddr)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		zlog.Warn("IsReady request building error", zap.Error(err))
+		zlog.Warn("is ready request building error", zap.Error(err))
 		return false
 	}
 	client := http.DefaultClient
 	res, err := client.Do(req)
 	if err != nil {
-		zlog.Debug("IsReady request execution error", zap.Error(err))
+		zlog.Debug("is ready request execution error", zap.Error(err))
 		return false
 	}
 

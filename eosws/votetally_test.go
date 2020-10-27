@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/eosws/fluxdb"
-	fluxcli "github.com/dfuse-io/dfuse-eosio/fluxdb-client"
+	"github.com/dfuse-io/dfuse-eosio/eosws/statedb"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,15 +30,15 @@ import (
 func Test_onGetVoteTally(t *testing.T) {
 
 	subscriptionHub := newTestSubscriptionHub(t, 0, nil)
-	fluxClient := fluxcli.NewTestFluxClient()
-	fluxHelper := fluxdb.NewTestFluxHelper()
+	stateClient := pbstatedb.NewMockStateClient()
+	stateDBHelper := statedb.NewTestStateHelper()
 
 	cases := []struct {
 		name                   string
 		msg                    string
 		totalActivatedStake    float64
 		totalActivatedStakeErr error
-		producers              []fluxdb.Producer
+		producers              []statedb.Producer
 		producersTotalVotes    float64
 		producersErr           error
 		expectedOutput         []string
@@ -49,7 +49,7 @@ func Test_onGetVoteTally(t *testing.T) {
 			msg:                 `{"type":"get_vote_tally","req_id":"abc","listen":true,"fetch":true}`,
 			expectedOutput:      []string{`{"type":"vote_tally","req_id":"abc","data":{"vote_tally":{"total_activated_stake":999,"total_votes":777,"decay_weight":5.213924440732366e-89,"producers":[{"owner":"","total_votes":123,"producer_key":"producer.key","is_active":false,"url":"","unpaid_blocks":0,"location":0}]}}}`},
 			totalActivatedStake: 999,
-			producers: []fluxdb.Producer{
+			producers: []statedb.Producer{
 				{TotalVotes: 123, ProducerKey: "producer.key"},
 			},
 			producersTotalVotes: 777,
@@ -59,16 +59,15 @@ func Test_onGetVoteTally(t *testing.T) {
 	for _, c := range cases {
 
 		t.Run(c.name, func(t *testing.T) {
-			fluxHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
-			fluxHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
+			stateDBHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
+			stateDBHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
 
 			NowFunc = func() time.Time {
 				t := time.Time{}
-				fmt.Println("time : ", t)
 				return t
 			}
 
-			voteTallyHub := NewVoteTallyHub(fluxHelper)
+			voteTallyHub := NewVoteTallyHub(stateDBHelper)
 			go voteTallyHub.Launch(context.Background())
 
 			handler := NewWebsocketHandler(
@@ -76,12 +75,13 @@ func Test_onGetVoteTally(t *testing.T) {
 				nil,
 				nil,
 				subscriptionHub,
-				fluxClient,
+				stateClient,
 				voteTallyHub,
 				nil,
 				nil,
 				NewTestIrreversibleFinder("00000002a", nil),
 				0,
+				12,
 			)
 
 			conn, closer := newTestConnection(t, handler)
@@ -89,7 +89,7 @@ func Test_onGetVoteTally(t *testing.T) {
 
 			conn.WriteMessage(1, []byte(c.msg))
 
-			validateOutput(t, "", c.expectedOutput, conn)
+			validateOutput(t, "", c.expectedOutput, conn, 5*time.Second)
 
 		})
 	}
@@ -100,7 +100,7 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 		name                   string
 		totalActivatedStake    float64
 		totalActivatedStakeErr error
-		producers              []fluxdb.Producer
+		producers              []statedb.Producer
 		producersTotalVotes    float64
 		producersErr           error
 		expectedTallyJSON      string
@@ -110,7 +110,7 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 			name:                "sunny path",
 			expectedTallyJSON:   `{"total_activated_stake":999,"total_votes":777,"decay_weight":5.213924440732366e-89,"producers":[{"owner":"","total_votes":123,"producer_key":"producer.key","is_active":false,"url":"","unpaid_blocks":0,"location":0}]}`,
 			totalActivatedStake: 999,
-			producers: []fluxdb.Producer{
+			producers: []statedb.Producer{
 				{TotalVotes: 123, ProducerKey: "producer.key"},
 			},
 			producersTotalVotes: 777,
@@ -130,11 +130,11 @@ func TestVoteTallyHub_FetchVoteTallyData(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 
-			fluxHelper := fluxdb.NewTestFluxHelper()
-			fluxHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
-			fluxHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
+			stateHelper := statedb.NewTestStateHelper()
+			stateHelper.SetTotalActivatedStakeResponse(c.totalActivatedStake, c.totalActivatedStakeErr)
+			stateHelper.SetProducersResponse(c.producers, c.producersTotalVotes, c.producersErr)
 
-			hub := NewVoteTallyHub(fluxHelper)
+			hub := NewVoteTallyHub(stateHelper)
 			NowFunc = func() time.Time {
 				t := time.Time{}
 				fmt.Println("time : ", t)

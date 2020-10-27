@@ -14,7 +14,7 @@ describe("executionTrace", () => {
 
 describe("blockNum", () => {
   it("should get the block num from the transaction", () => {
-    let lifeCycle = getTransactionLifeCycleMock()
+    const lifeCycle = getTransactionLifeCycleMock()
 
     lifeCycle.execution_trace = undefined!
 
@@ -23,7 +23,7 @@ describe("blockNum", () => {
   })
 
   it("should get it from the traces if no transaction", () => {
-    let lifeCycle = getTransactionLifeCycleMock()
+    const lifeCycle = getTransactionLifeCycleMock()
     const lifecycleWrap = new TransactionLifecycleWrap(lifeCycle)
 
     expect(lifecycleWrap.blockNum).toEqual(lifeCycle.execution_trace!.block_num)
@@ -39,7 +39,7 @@ describe("blockId", () => {
     )
   })
   it("should get it from the traces if no transaction", () => {
-    let lifeCycle = getTransactionLifeCycleMock()
+    const lifeCycle = getTransactionLifeCycleMock()
     lifeCycle.execution_trace = undefined!
     const lifecycleWrap = new TransactionLifecycleWrap(lifeCycle)
 

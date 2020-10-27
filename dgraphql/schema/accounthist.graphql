@@ -1,0 +1,106 @@
+#
+#  Responses for Query
+#
+
+type AccountHistoryActionsConnection {
+  edges: [SimpleActionTraceEdge!]!
+  pageInfo: PageInfo!
+# Next step in GraphQL-land:
+#  nodes: [SimpleActionTrace!]!
+}
+
+type SimpleActionTraceEdge {
+  cursor: String!
+  node: SimpleActionTrace!
+}
+
+"""
+SimpleActionTrace holds the traces of execution of a single action within a transaction, but contains less contextual information from the transaction than an ActionTrace.
+
+This object is used with the `getActions` Query.
+"""
+type SimpleActionTrace {
+  #
+  # Block context
+  #
+
+  "Block number in which this action was processed"
+  blockNum: Uint64!
+
+  "Block ID in which this action was processed."
+  blockID: String!
+
+  "Time at which the block was produced, according to the block producer"
+  blockTime: Time!
+
+  #
+  # Transaction context
+  #
+
+  "Transaction ID originally holding this action"
+  trxID: String!
+
+  #
+  # Action data
+  #
+
+  """Global sequence ID for this action in this chain (shorthand for receipt.global_sequence)."""
+  seq: Uint64!
+
+  """Zero-based index of this action within the transaction, in _execution_ order."""
+  executionIndex: Uint32!
+
+  """Action receipt (which differs from the Transaction receipt).
+
+  The receipt will be null when failures occur. Verify the `status`
+  field on the TransactionTrace object.
+
+  """
+  receipt: ActionReceipt
+
+  """
+  Account which code was executed to produce this execution trace.
+
+  Shorthand for receipt.receiver
+  """
+  receiver: String!
+
+  """Target method's account name.  This does *not* correspond to the contract code being executed, that is what `receiver` means.  This value namespaces your actions.
+
+  Shorthand for act.account in `nodeos` traces"""
+  account: String!
+
+  """Target method's action name. This value, combined with the `account`, determines which code path will be executed in the `receiver` contract code.
+
+  Shorthand for act.name in `nodeos` traces."""
+  name: String!
+
+  """Signatories required to execute this action.
+
+  Shorthand for `act.authorization` in `nodeos` traces."""
+  authorization: [PermissionLevel!]!
+
+  """Data payload. Might be a string or a JSON object, depending on whether it was possible to unpack it using an ABI.
+
+  Shorthand for `act.data` in `nodeos` traces."""
+  data: JSON
+
+  """JSON Object representing the action parameters, decoded through the ABI. Will be `null` if it wasn't possible to decode it.
+
+  Shorthand for action.json"""
+  json: JSON
+
+  """Hex-encoded string representing the raw data for the action.
+
+  Shorthand for `act.hex_data` in `nodeos` traces."""
+  hexData: String!
+
+  """Output of the action's `print()` statements from within the smart contract."""
+  console: String!
+
+  """Whether this action is a context-free action."""
+  contextFree: Boolean!
+
+  "Whether this action is a notification, meaning that it was triggered as a side effect rom another contract, and copied the exact same payload from the original transaction.  This happens when you call the `require_notify` method from the EOSIO intrinsics (from within a smart-contract)."
+  isNotify: Boolean!
+}

@@ -35,6 +35,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var DisabledWsMessage map[string]interface{}
+
 // WSConn represents a single web socket connection.
 type WSConn struct {
 	*shutter.Shutter
@@ -53,7 +55,7 @@ type WSConn struct {
 	filesourceBlockRateLimit time.Duration
 }
 
-func NewWSConn(wshand *WebsocketHandler, conn *websocket.Conn, db DB, creds authenticator.Credentials, filesourceBlockRateLimit time.Duration, ctx context.Context) *WSConn {
+func NewWSConn(wshand *WebsocketHandler, conn *websocket.Conn, creds authenticator.Credentials, filesourceBlockRateLimit time.Duration, ctx context.Context) *WSConn {
 	// Each WS conn will have its own SubscribablePipeline ? Hooked into the main pipeline
 	// of the process, let's, for now, simply create a Joiner per socket
 	ws := &WSConn{
@@ -89,8 +91,6 @@ func (ws *WSConn) handleHeartbeats() {
 	}
 }
 
-const maxStreamCount = 12
-
 func (ws *WSConn) RegisterListener(ctx context.Context, reqID string, canceler func() error) error {
 	zlogger := logging.Logger(ctx, zlog)
 	zlogger.Debug("registering listener", zap.String("req_id", reqID))
@@ -107,8 +107,8 @@ func (ws *WSConn) RegisterListener(ctx context.Context, reqID string, canceler f
 	}
 
 	streamCount := len(ws.listenerCancelers)
-	if streamCount > maxStreamCount {
-		return WSTooMuchStreamError(ws.Context, streamCount, maxStreamCount)
+	if streamCount > ws.maxStreamCount {
+		return WSTooMuchStreamError(ws.Context, streamCount, ws.maxStreamCount)
 	}
 
 	if ws.listenerCancelers[reqID] != nil {
@@ -193,6 +193,11 @@ func (ws *WSConn) handleMessage(rawMsg []byte) {
 	}
 
 	if inspect.Type == "pong" {
+		return
+	}
+
+	if _, disabled := DisabledWsMessage[inspect.Type]; disabled {
+		ws.EmitError(ctx, inspect.ReqID, WSUnavailableMessageError(ctx, inspect.Type))
 		return
 	}
 

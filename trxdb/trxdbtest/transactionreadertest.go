@@ -19,29 +19,19 @@ import (
 	"fmt"
 	"testing"
 
+	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var transactionReaderTests = []struct {
-	name string
-	test func(t *testing.T, driverFactory DriverFactory)
-}{
-	{"TestGetTransactionTraces", TestGetTransactionTraces},
-	{"TestGetTransactionTracesBatch", TestGetTransactionTracesBatch},
-	{"TestGetTransactionEvents", TestGetTransactionEvents},
-	{"TestGetTransactionEventsBatch", TestGetTransactionEventsBatch},
-	{"TestReadTransactions", TestReadTransactions},
-}
-
-func TestAllTransactionsReader(t *testing.T, driverName string, driverFactory DriverFactory) {
-	for _, rt := range transactionReaderTests {
-		t.Run(driverName+"/"+rt.name, func(t *testing.T) {
-			rt.test(t, driverFactory)
-		})
-	}
+var transactionReaderTests = []DriverTestFunc{
+	TestGetTransactionTraces,
+	TestGetTransactionTracesBatch,
+	TestGetTransactionEvents,
+	TestGetTransactionEventsBatch,
+	TestReadTransactions,
 }
 
 func TestReadTransactions(t *testing.T, driverFactory DriverFactory) {
@@ -294,31 +284,20 @@ func TestGetTransactionEventsBatch(t *testing.T, driverFactory DriverFactory) {
 	}
 }
 
-func putTransaction(t *testing.T, db trxdb.Driver, trxID string) {
-	//it is important to use full length id for transaction
-	blk := TestBlock(t, "06bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a", "06bc5790ef36d5779e2a0a849a11c09c999b5dc564afce6920e20b07af1f4b6a")
-	// FIXME: when we create transaction, this code only creates *one
-	// type* of transactions, where a lot of the `GetTransaction*`
-	// code fetch some transactions of different type: deferred (like
-	// this one), but also implicit, normal transactions and
-	// transaction traces.
-	blk.TransactionTraces = append(blk.TransactionTraces, &pbcodec.TransactionTrace{
-		Id:       trxID,
-		BlockNum: 2,
-		DtrxOps: []*pbcodec.DTrxOp{
-			{
-				TransactionId: trxID, // FIXME: a dtrx that is created actually has a *different* transaction ID from the one creating it.
-				Operation:     pbcodec.DTrxOp_OPERATION_CREATE,
-				ActionIndex:   0,
-				Payer:         "eoscanada1",
-				Transaction: &pbcodec.SignedTransaction{
-					Transaction:     nil,
-					Signatures:      []string{"signature"},
-					ContextFreeData: nil,
-				},
-			},
-		},
-	})
+func putTransaction(t *testing.T, db trxdb.DB, trxID string) {
+	// Need to use a full block id string (64 characters, 32 bytes) because keys transaction trace key unpacking
+	// expects a full length block id, you get `invalid key length` errors if not long enough
+	blk := ct.Block(t, "00000002aa000000000000000000000000000000000000000000000000000000",
+		ct.TrxTrace(t, ct.TrxID(trxID),
+			// FIXME: a dtrx that is created actually has a *different* transaction ID from the one creating it.
+			ct.DtrxOp(t, "create", trxID, ct.DtrxOpPayer("eoscanada1"), &pbcodec.SignedTransaction{
+				Transaction:     nil,
+				Signatures:      []string{"signature"},
+				ContextFreeData: nil,
+			}),
+		),
+	)
+
 	ctx := context.Background()
 	require.NoError(t, db.PutBlock(ctx, blk))
 	require.NoError(t, db.UpdateNowIrreversibleBlock(ctx, blk))

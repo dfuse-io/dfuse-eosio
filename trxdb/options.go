@@ -14,14 +14,32 @@
 
 package trxdb
 
-import "google.golang.org/grpc"
+import "go.uber.org/zap"
 
-type Option interface {
-	option()
+type Option func(db DB) error
+
+func WithLogger(logger *zap.Logger) Option {
+	type loggeableStore interface {
+		SetLogger(*zap.Logger) error
+	}
+
+	return func(db DB) error {
+		if d, ok := db.(loggeableStore); ok {
+			return d.SetLogger(logger)
+		}
+		return nil
+	}
 }
 
-func WithGRPCConn(conn *grpc.ClientConn) Option { return &GRPCConn{conn} }
+func WithPurgeableStoreOption(ttl, purgeInterval uint64) Option {
+	type purgeableStore interface {
+		SetPurgeableStore(ttl, purgeInterval uint64) error
+	}
 
-type GRPCConn struct{ ClientConn *grpc.ClientConn }
-
-func (GRPCConn) option() {}
+	return func(db DB) error {
+		if d, ok := db.(purgeableStore); ok {
+			return d.SetPurgeableStore(ttl, purgeInterval)
+		}
+		return nil
+	}
+}

@@ -7,9 +7,11 @@ import { Vote } from "../../models/vote"
 import { metricsStore, voteStore } from "../../stores"
 import { PageContainer } from "../../components/page-container/page-container"
 import { registerVoteTallyStream } from "../../streams/vote-listener"
-import { DataError } from "../../atoms/data-error/data-error.component"
+
+// temp ignore for dev
+
+import { DataError, Box } from "@dfuse/explorer"
 import { Stream, ErrorData } from "@dfuse/client"
-import Box from "../../atoms/ui-box"
 
 interface State {
   fetchError: boolean

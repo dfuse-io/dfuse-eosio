@@ -1,7 +1,8 @@
 import { decodedResponseToDBOps, groupDBOpHex } from "../helpers/dbop.helpers"
 import { DbOp } from "@dfuse/client"
 import { legacyHandleDfuseApiError } from "../clients/rest/api"
-import { getDfuseClient } from "../data/dfuse"
+
+import { getDfuseClient } from "@dfuse/explorer"
 
 export function decodeDBOps(dbops: DbOp[], blockNum: number, callback: (dbops: DbOp[]) => any) {
   const groupedDBOps = groupDBOpHex(dbops)

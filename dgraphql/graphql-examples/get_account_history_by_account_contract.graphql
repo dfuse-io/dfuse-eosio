@@ -1,0 +1,23 @@
+query($account: String!,$contract: String, $cursor: String, $limit: Int64) {
+  getAccountHistoryActions(account: $account,contract: $contract,cursor: $cursor, limit: $limit ) {
+    edges {
+      cursor
+      node {
+        blockID
+        blockNum
+        blockTime
+        receiver
+        account
+        name
+        authorization {
+          actor
+        }
+      }
+    }
+    pageInfo {
+      startCursor
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
