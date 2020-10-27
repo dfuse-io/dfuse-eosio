@@ -79,6 +79,8 @@ github.com/ShinyTrinkets/meta-logger v0.2.0/go.mod h1:cY1KnpPfpLIopR+arZXHYVrVGO
 github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWXgklEdEo=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
+github.com/Sytten/logrus-zap-hook v0.1.0 h1:GPsDlO0b+rvfb6WohFNreI3Fe2I6MDyv1afoYPE2Kzk=
+github.com/Sytten/logrus-zap-hook v0.1.0/go.mod h1:J0ktevklw/xJNpI2FzfTdJssk4P0vq3K2qzwihJ2gWU=
 github.com/VictoriaMetrics/fastcache v1.5.3/go.mod h1:+jv9Ckb+za/P1ZRg/sulP5Ni1v49daAVERr0H3CuscE=
 github.com/abourget/llerrgroup v0.0.0-20161118145731-75f536392d17/go.mod h1:QukSa1Sim/0R4aRlWdiBdAy+0i1PBfOd1WHpfYM1ngA=
 github.com/abourget/llerrgroup v0.2.0 h1:2nPXy6Owo/KOKDQYvjMmS8rsjtitvuP2OEGrqgpj428=
@@ -292,6 +294,10 @@ github.com/dfuse-io/fluxdb v0.0.0-20201019180123-fbbfc72f032b h1:7D5xZ+twknQmT60
 github.com/dfuse-io/fluxdb v0.0.0-20201019180123-fbbfc72f032b/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
 github.com/dfuse-io/fluxdb v0.0.0-20201020190814-0a05c07d8040 h1:PdEF/jq8bgYJsqgz0NUXaATDKsz+NrNko05+oXzNa3I=
 github.com/dfuse-io/fluxdb v0.0.0-20201020190814-0a05c07d8040/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
+github.com/dfuse-io/fluxdb v0.0.0-20201022174508-709d4a3d59c1 h1:/+2dSpgmyPUMUGu6VtEMGZM5LGkUaJyzzSwDO9cSEyI=
+github.com/dfuse-io/fluxdb v0.0.0-20201022174508-709d4a3d59c1/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
+github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef h1:jZ2JA557dvv9bMXHoqWcMecvPHGmcuU0/A38jWGQ1lE=
+github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
@@ -300,6 +306,12 @@ github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQ
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 h1:z6nXNo1jBz/QZ+9/NkzKBTPxaUxrnE81Dmy/MO+uvMI=
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022174313-dab5d0e4089f h1:BGdCmfGyUCqAikXpJUJZQVfiSgZVFd5GuMDDtJMmCRw=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022174313-dab5d0e4089f/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022195640-432794b117ad h1:MgnEhwDLN5r/RyYEg3e7w1R4Wi1gcxm9BUEK4LLE+zs=
+github.com/dfuse-io/kvdb v0.0.2-0.20201022195640-432794b117ad/go.mod h1:6neMTvdA6aj+MvZTHb7X9Cd67wnMYuNZNfVey+K6T1w=
+github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc h1:3WOr0tnvXk7uNnnyJqzwLXr900vHDIA0AJjaskukdNU=
+github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc/go.mod h1:G22wfzPUb0FrEkqnKx2HM2VpSVNAHtZJD5I4V9+Vrg8=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -307,6 +319,8 @@ github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb h1:Aos+vL/3wnyPzx
 github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56 h1:7ptHGb4YMSQGxAEiMmoVSvkWNbPi3Bjtx2gYjykeq84=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
+github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc h1:w3SL2sM5CM8F4bxS7Ny8WKFavUujbBEL/eo8bzh2tV4=
+github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a h1:5ziuvuX79U7EdejhCVTCp+2Zi09MoTkVaR6QM5lUZJU=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57 h1:ZApNz+QKS0cpWrdrWybT6a7bII6a4ED76e3cC2x1U5g=

@@ -31,11 +31,13 @@ date.
 
 ### Changed
 
+* Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
 * Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
 * Fixed a bug with `/state/table/row` not correctly reading row when it was in the table index.

@@ -27,7 +27,7 @@ var showValue = false
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
 
 // Lower-level (key) calls
-var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.ExactArgs(2)}
+var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.MaximumNArgs(2)}
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.MinimumNArgs(1)}
 
 // Higher-level (model) calls
@@ -36,6 +36,8 @@ var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given 
 var statedbTabletCmd = &cobra.Command{Use: "tablet", Short: "Fetch & print StateDB tablet, optionally at given height", RunE: statedbTabletE, Args: cobra.ExactArgs(1)}
 var statedbShardCmd = &cobra.Command{Use: "shard", Short: "Various operations related to sharding"}
 var statedbShardInspectCmd = &cobra.Command{Use: "inspect", Short: "Inspect given shard, printing write requests information stored in", RunE: statedbShardInspectE, Args: cobra.ExactArgs(1)}
+var statedbShardCleanCmd = &cobra.Command{Use: "clean", Short: "Various operations related to shard cleaning"}
+var statedbShardCleanCheckpointsCmd = &cobra.Command{Use: "checkpoints", Short: "Delete all existing shard checkpoint(s) that can exist", RunE: statedbShardCleanCheckpointsE, Args: cobra.ExactArgs((0))}
 
 func init() {
 	defaultBadger := "badger://dfuse-data/storage/statedb-v1"
@@ -72,7 +74,10 @@ func init() {
 	statedbCmd.AddCommand(statedbTabletCmd)
 	statedbCmd.AddCommand(statedbShardCmd)
 
+	statedbShardCmd.AddCommand(statedbShardCleanCmd)
 	statedbShardCmd.AddCommand(statedbShardInspectCmd)
+
+	statedbShardCleanCmd.AddCommand(statedbShardCleanCheckpointsCmd)
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
@@ -96,9 +101,12 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("start key: %w", err)
 	}
 
-	endKey, err := stringToKey(args[1])
-	if err != nil {
-		return fmt.Errorf("end key: %w", err)
+	var endKey []byte
+	if len(args) > 1 {
+		endKey, err = stringToKey(args[1])
+		if err != nil {
+			return fmt.Errorf("end key: %w", err)
+		}
 	}
 
 	start := append(table, startKey...)
@@ -335,6 +343,24 @@ func statedbShardInspectE(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
+	return nil
+}
+
+func statedbShardCleanCheckpointsE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	ctx := context.Background()
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
+
+	err = fdb.DeleteAllShardCheckpoints(ctx)
+	if err != nil {
+		return fmt.Errorf("delete shard checkpoints: %w", err)
+	}
+
+	fmt.Println("Completed deletion of all existing shard checkpoints")
 	return nil
 }
 

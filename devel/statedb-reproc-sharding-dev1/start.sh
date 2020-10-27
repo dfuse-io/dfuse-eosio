@@ -4,6 +4,7 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 dfuseeos="$ROOT/../dfuseeos"
 clean=
+force_injection=
 active_pid=
 
 finish() {
@@ -14,10 +15,11 @@ main() {
   trap "finish" EXIT
   pushd "$ROOT" &> /dev/null
 
-  while getopts "hc" opt; do
+  while getopts "hcf" opt; do
     case $opt in
       h) usage && exit 0;;
       c) clean=true;;
+      f) force_injection=true;;
       \?) usage_error "Invalid option: -$OPTARG";;
     esac
   done
@@ -28,9 +30,11 @@ main() {
     rm -rf dfuse-data 1> /dev/null
   fi
 
+  isEmpty=$([ ! -d "dfuse-data" ] && echo "true" || echo "false")
+
   set -e
 
-  if [[ ! -d "dfuse-data" ]]; then
+  if [[ $isEmpty == "true" ]]; then
     # Each sharder generate all shards for a given range, this can be parallelize heavily as it depends only on `merged-blocks`
     echo "Generating statedb shards"
     $dfuseeos -c sharder-0-1000.yaml start "$@"
@@ -41,7 +45,9 @@ main() {
     echo "Sharder is done"
     $dfuseeos tools check statedb-reproc-sharder dfuse-data/storage/statedb-shards 3
     echo ""
+  fi
 
+  if [[ $isEmpty == "true" || $force_injection == true ]]; then
     # Injecting can be parallelize up to N where N is the number of generated shards (3 in this example)
     # Each injection instance runs sequentially for a given shard, but all shards can be injected in parallel.
     #
@@ -81,6 +87,7 @@ usage() {
   echo "Start $(basename $ROOT) environment."
   echo ""
   echo "Options"
+  echo "    -i             Force injection even if data is present"
   echo "    -c             Clean actual data directory first"
   echo ""
   echo "Environment"
