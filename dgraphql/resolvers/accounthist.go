@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"time"
 
+	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/dfuse-io/dgraphql"
@@ -36,7 +38,6 @@ type SimpleActionTraceEdge struct {
 
 func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccountHistoryActionsArgs) (*AccountHistoryActionsConnection, error) {
 	zlogger := logging.Logger(ctx, zlog)
-
 	zlogger.Info("query account history actions", zap.Reflect("request", args))
 
 	// TODO: is that correct?
@@ -44,7 +45,7 @@ func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccoun
 		return nil, err
 	}
 
-	if err := r.CheckAccounthistServiceAvailability(args); err != nil {
+	if err := r.checkAccounthistServiceAvailability(zlogger, args); err != nil {
 		return nil, err
 	}
 
@@ -70,19 +71,28 @@ func (r *Root) QueryGetAccountHistoryActions(ctx context.Context, args GetAccoun
 		}
 	}
 
+	timeout := 30 * time.Second
+	queryCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	var res *AccountHistoryActionsConnection
 	if args.Contract != nil {
 		contractUint, err := eos.StringToName(*args.Contract)
 		if err != nil {
 			return nil, err
 		}
-		res, err = r.getAccountHistContract(ctx, accountUint, contractUint, int64(args.Limit), cursor)
+		res, err = r.getAccountHistContract(queryCtx, accountUint, contractUint, int64(args.Limit), cursor)
 	} else {
-		res, err = r.getAccountHist(ctx, accountUint, int64(args.Limit), cursor)
-
+		res, err = r.getAccountHist(queryCtx, accountUint, int64(args.Limit), cursor)
 	}
+
 	if err != nil {
-		return nil, fmt.Errorf("running query: %w", err)
+		zlogger.Error("unable to complete query", zap.Error(err))
+		if derr.Find(err, dgraphql.IsDeadlineExceededError) != nil {
+			return nil, dgraphql.Errorf(ctx, "timeout of %s exceeded before completing the request", timeout)
+		}
+
+		return nil, dgraphql.Errorf(ctx, "backend error")
 	}
 
 	/////////////////////////////////////////////////////////////////////////
@@ -111,28 +121,19 @@ type ActionReceiver interface {
 }
 
 func (r *Root) getAccountHist(ctx context.Context, account uint64, limit int64, cursor *pbaccounthist.Cursor) (*AccountHistoryActionsConnection, error) {
-	zlogger := logging.Logger(ctx, zlog)
-
-	// TODO: add a log line with what's going on here..
-
 	stream, err := r.accounthistClients.Account.GetActions(ctx, &pbaccounthist.GetActionsRequest{
 		Account: account,
 		Limit:   uint32(limit + 1),
 		Cursor:  cursor,
 	})
 	if err != nil {
-		zlogger.Error("unable to get acount history", zap.Error(err))
-		return nil, dgraphql.Errorf(ctx, "accounthist backend error")
+		return nil, fmt.Errorf("accounthist stream: %w", err)
 	}
 
 	return r.handleActionStream(ctx, stream, limit, cursor)
 }
 
 func (r *Root) getAccountHistContract(ctx context.Context, account, contract uint64, limit int64, cursor *pbaccounthist.Cursor) (*AccountHistoryActionsConnection, error) {
-	zlogger := logging.Logger(ctx, zlog)
-
-	// TODO: add a log line with what's going on here..
-
 	stream, err := r.accounthistClients.AccountContract.GetAccountContractActions(ctx, &pbaccounthist.GetTokenActionsRequest{
 		Account:  account,
 		Contract: contract,
@@ -140,31 +141,30 @@ func (r *Root) getAccountHistContract(ctx context.Context, account, contract uin
 		Cursor:   cursor,
 	})
 	if err != nil {
-		zlogger.Error("unable to get account history <account>", zap.Error(err))
-		return nil, dgraphql.Errorf(ctx, "accounthist backend error")
+		return nil, fmt.Errorf("accounthist by contract stream: %w", err)
 	}
 
 	return r.handleActionStream(ctx, stream, limit, cursor)
 }
 
-func (r *Root) CheckAccounthistServiceAvailability(args GetAccountHistoryActionsArgs) error {
+func (r *Root) checkAccounthistServiceAvailability(logger *zap.Logger, args GetAccountHistoryActionsArgs) error {
 	if r.accounthistClients.AccountContract == nil {
-		zlog.Info("accounthistClients.AccountContract does not exists")
+		logger.Info("accounthistClients.AccountContract does not exists")
 	} else {
-		zlog.Info("accounthistClients.AccountContract  exists")
+		logger.Info("accounthistClients.AccountContract  exists")
 	}
 
 	if r.accounthistClients.Account == nil {
-		zlog.Info("accounthistClients.Account does not exists")
+		logger.Info("accounthistClients.Account does not exists")
 	} else {
-		zlog.Info("accounthistClients.Account  exists")
+		logger.Info("accounthistClients.Account  exists")
 	}
 
 	if args.Account != "" && args.Contract != nil && r.accounthistClients.AccountContract == nil {
-		return fmt.Errorf("account history account,contract search not available")
+		return fmt.Errorf("account history by contract not available")
 	}
 	if args.Account != "" && args.Contract == nil && r.accounthistClients.Account == nil {
-		return fmt.Errorf("account history account search not available")
+		return fmt.Errorf("account history not available")
 	}
 	return nil
 }

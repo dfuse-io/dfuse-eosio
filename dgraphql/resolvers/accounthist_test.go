@@ -8,9 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func s(str string) *string {
-	return &str
-}
 func TestRoot_CheckAccounthistServiceAvailability(t *testing.T) {
 	conn, err := dgrpc.NewInternalClient(":9000")
 	require.NoError(t, err)
@@ -122,7 +119,7 @@ func TestRoot_CheckAccounthistServiceAvailability(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.resolver.CheckAccounthistServiceAvailability(test.request)
+			err := test.resolver.checkAccounthistServiceAvailability(zlog, test.request)
 			if test.expectError {
 				require.Error(t, err)
 			} else {
@@ -130,5 +127,8 @@ func TestRoot_CheckAccounthistServiceAvailability(t *testing.T) {
 			}
 		})
 	}
+}
 
+func s(str string) *string {
+	return &str
 }

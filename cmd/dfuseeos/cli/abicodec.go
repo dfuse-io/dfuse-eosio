@@ -16,7 +16,7 @@ func init() {
 		MetricsID:   "abicodec",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/abicodec.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("abicodec-grpc-listen-addr", AbiServingAddr, "Address to listen for incoming gRPC requests")
+			cmd.Flags().String("abicodec-grpc-listen-addr", ABICodecServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("abicodec-cache-base-url", "{dfuse-data-dir}/storage/abicache", "path where the cache store is state")
 			cmd.Flags().String("abicodec-cache-file-name", "abicodec_cache.bin", "path where the cache store is state")
 			cmd.Flags().Bool("abicodec-export-abis-enabled", true, "Enable abis JSON export")

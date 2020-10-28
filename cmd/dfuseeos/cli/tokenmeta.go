@@ -17,7 +17,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("tokenmeta-grpc-listen-addr", ":14001", "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("tokenmeta-statedb-grpc-addr", StateDBGRPCServingAddr, "StateDB GRPC address")
-			cmd.Flags().String("tokenmeta-abi-codec-addr", AbiServingAddr, "ABI Codec URL")
+			cmd.Flags().String("tokenmeta-abi-codec-addr", ABICodecServingAddr, "ABI Codec URL")
 			cmd.Flags().String("tokenmeta-abis-base-url", "{dfuse-data-dir}/storage/abicache", "cached ABIS base URL")
 			cmd.Flags().String("tokenmeta-abis-file-name", "abi-cache.json.zst", "cached ABIS filename")
 			cmd.Flags().String("tokenmeta-cache-file", "{dfuse-data-dir}/tokenmeta/token-cache.gob", "Path to GOB file containing tokenmeta cache. will try to Load and Save to that cache file")

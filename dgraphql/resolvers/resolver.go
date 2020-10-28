@@ -50,28 +50,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// Accounthistory Clients
 type AccounthistClient struct {
 	Account         pbaccounthist.AccountHistoryClient
 	AccountContract pbaccounthist.AccountContractHistoryClient
 }
 
-//accountHistAccClient pbaccounthist.AccountHistoryClient,
-//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient,
-
 // Root is the root resolver.
 type Root struct {
-	searchClient             pbsearch.RouterClient
-	trxsReader               trxdb.TransactionsReader
-	blocksReader             trxdb.BlocksReader
-	accountsReader           trxdb.AccountsReader
-	blockmetaClient          *pbblockmeta.Client
-	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
-	abiCodecClient           pbabicodec.DecoderClient
-	tokenmetaClient          pbtokenmeta.TokenMetaClient
-	accounthistClients       *AccounthistClient
-	//accountHistAccClient    pbaccounthist.AccountHistoryClient
-	//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient
+	searchClient                  pbsearch.RouterClient
+	trxsReader                    trxdb.TransactionsReader
+	blocksReader                  trxdb.BlocksReader
+	accountsReader                trxdb.AccountsReader
+	blockmetaClient               *pbblockmeta.Client
+	chainDiscriminatorClient      *pbblockmeta.ChainDiscriminatorClient
+	abiCodecClient                pbabicodec.DecoderClient
+	tokenmetaClient               pbtokenmeta.TokenMetaClient
+	accounthistClients            *AccounthistClient
 	requestRateLimiter            rateLimiter.RateLimiter
 	requestRateLimiterLastLogTime time.Time
 }

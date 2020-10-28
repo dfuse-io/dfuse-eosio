@@ -13,10 +13,9 @@ import (
 
 // GraphqlExamples returns the ordered list of predefined GraphQL examples that should be
 // displayed inside GraphiQL interface.
-func GraphqlExamples() []*static.GraphqlExample {
+func GraphqlExamples(config *Config) []*static.GraphqlExample {
 	box := rice.MustFindBox("graphql-examples")
-
-	return []*static.GraphqlExample{
+	examples := []*static.GraphqlExample{
 		{
 			Label:    "Search Stream (Forward)",
 			Document: graphqlDocument(box, "search_stream_forward.graphql"),
@@ -106,8 +105,11 @@ func GraphqlExamples() []*static.GraphqlExample {
 				"generic": r(`{"account": "eosio", "opts": ["EOS_INCLUDE_STAKED"], "limit": 10}`),
 			},
 		},
-		{
-			Label:    "Get Account History By Account (Alpha)",
+	}
+
+	if config.AccountHistAccountAddr != "" {
+		examples = append(examples, &static.GraphqlExample{
+			Label:    "Get Account History (Alpha)",
 			Document: graphqlDocument(box, "get_account_history_by_account.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
 				"generic": r(`{"account": "eosio","limit": 100}`),
@@ -115,11 +117,12 @@ func GraphqlExamples() []*static.GraphqlExample {
 				"kylin":   r("mainnet"),
 				"dev1":    r(`{"account": "battlefield1","limit": 100}`),
 			},
-		},
-		{
+		})
+	}
 
-			/// get_acount_history_by_account.graphql
-			Label:    "Get Account History By Account & Contract (Alpha)",
+	if config.AccountHistAccountContractAddr != "" {
+		examples = append(examples, &static.GraphqlExample{
+			Label:    "Get Account History by Contract (Alpha)",
 			Document: graphqlDocument(box, "get_account_history_by_account_contract.graphql"),
 			Variables: static.GraphqlVariablesByNetwork{
 				"generic": r(`{"account": "eosio", "contract": "eosio.token", "limit": 100}`),
@@ -127,8 +130,10 @@ func GraphqlExamples() []*static.GraphqlExample {
 				"kylin":   r("mainnet"),
 				"dev1":    r(`{"account": "battlefield1", "contract": "eosio.token", "limit": 100}`),
 			},
-		},
+		})
 	}
+
+	return examples
 }
 
 func graphqlDocument(box *rice.Box, name string) static.GraphqlDocument {
