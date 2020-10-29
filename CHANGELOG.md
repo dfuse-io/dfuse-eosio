@@ -30,8 +30,13 @@ date.
 * Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable.
 * Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
+### Removed
+* Removed `relayer-max-drift` (now dependent on a new condition of presence of a "block hole", and no new block sent for 5 seconds)
+* Removed `relayer-init-time` (no need for it with this new condition ^)
+
 ### Changed
 
+* Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.

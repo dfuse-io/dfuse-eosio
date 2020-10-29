@@ -228,6 +228,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200831174806-3a465dd49cb4/go.mod h1:DD1RD
 github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20201028203138-f15ef248bd51 h1:PVtOWblhBFs3mFOeBtQ93WrKoDweav9ZmlcVQhPRTwU=
 github.com/dfuse-io/bstream v0.0.2-0.20201028203138-f15ef248bd51/go.mod h1:8PSMs0lPFIPoCK1eP7r0d03cY61oOCaRaFaRhiolLrk=
+github.com/dfuse-io/bstream v0.0.2-0.20201029141809-4288cd7a0cf8 h1:Qhc8KjnkC0ILPEqtDBPjlo+2wHt6Ik+8Z/tnGoE9h84=
+github.com/dfuse-io/bstream v0.0.2-0.20201029141809-4288cd7a0cf8/go.mod h1:8PSMs0lPFIPoCK1eP7r0d03cY61oOCaRaFaRhiolLrk=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
@@ -306,6 +308,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff h1:F5NWhDjlXAlRddI
 github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/relayer v0.0.2-0.20201027201151-2efb73fa189b h1:UyjN3UFCTVrh/xPrBVbadEnp1bl5ns6wPSePYMDz1uY=
 github.com/dfuse-io/relayer v0.0.2-0.20201027201151-2efb73fa189b/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
+github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7 h1:YkmUBTK1z/oafnjr6b4MW5irpDAmhuSavJGUG+a4u7Y=
+github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4 h1:br3G/sobkJVUH2vdNw0Ix4aJ/PcBsdPe/1m4q/avMy8=
 github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4/go.mod h1:pfWlxS/Y4ohay7ecmh52GwJjoevl5H1cyfkPLDjJo3U=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
