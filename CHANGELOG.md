@@ -30,8 +30,13 @@ date.
 * Flag `--eosws-disabled-messages` a comma separated list of ws messages to disable.
 * Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
+### Removed
+* Removed `relayer-max-drift` (now dependent on a new condition of presence of a "block hole", and no new block sent for 5 seconds)
+* Removed `relayer-init-time` (no need for it with this new condition ^)
+
 ### Changed
 
+* Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.
@@ -126,6 +131,15 @@ to peform this step.
 
 Here the steps required to migrate to the new `statedb` app:
 
+1. We strongly recommend that you take a full backup of your data directory (while the app is shut down)
+2. Launch a stand-alone stateDB instance in 'inject-mode' that reads from your block files and writes to a new location (see '--statedb-store-dsn')
+3. Let it complete the "catch up" until it is very close to the HEAD of your network, then stop that instance.
+4. Stop your previous instance (that uses fluxdb), 
+5. Copy the content of your statedb database to a location accessible from there (that you will define in '--statedb-store-dsn')
+6. Launch the new version of the code, with the modified flags, over your previous data, including the new statedb database content (see below for the necessary flag and config modifications)
+
+Here are the flags and config modifications required for switching to `fluxdb` to `statedb`, once the new data has been generated.
+
 - In your `dfuse.yaml` config, under replace the `fluxdb` app by `statedb` and all flags prefixed with
   `fluxdb-` must now be prefixed with `statedb-`.
 
@@ -169,16 +183,6 @@ Here the steps required to migrate to the new `statedb` app:
 
 - If you have a custom `fluxdb-max-threads` flag, removed it, customizing this value is not supported
   anymore.
-
-- From an operator standpoint, what we suggest is to craft a `dfuse.yaml` config that starts StateDB
-  only in inject mode only. You let this instance run until StateDB reaches the live block of your
-  network.
-
-  Once you have reached this point, you can now perform a switch to the new StateDB database. Stop
-  the injecting instance. Stop your production instance, renaming old app id `fluxdb` to `statedb`
-  (and all flags) then reconfigure it so the `statedb-store-dsn` points to the database populated
-  by the injecting instance. At this point, you can restart your production node and continue
-  normally using the new `statedb` app.
 
 # [v0.1.0-beta4] 2020-06-23
 

@@ -21,5 +21,3 @@ Node manager commands (eos-... <tab> to show all):
 
  - Stop Nodeos instance               eos-maintenance
  - Start or restart Nodeos instance   eos-resume
-
-**Important** If you see this, it's because the image was not built with lastest workflow!
