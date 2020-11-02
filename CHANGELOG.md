@@ -36,6 +36,7 @@ date.
 
 ### Changed
 
+* Default `trxdb-loader-batch-size` changed to 100, Safe to do so because it does not batch when close to head.
 * Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
