@@ -16,11 +16,11 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
-	github.com/dfuse-io/bstream v0.0.2-0.20201030141821-10bcefc618aa
+	github.com/dfuse-io/bstream v0.0.2-0.20201102183507-dafb4c658b88
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
-	github.com/dfuse-io/dgraphql v0.0.2-0.20201028155310-f11741d633d9
+	github.com/dfuse-io/dgraphql v0.0.2-0.20201102183718-ede45aa75f38
 	github.com/dfuse-io/dgrpc v0.0.0-20201030202312-c111faa41800
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4

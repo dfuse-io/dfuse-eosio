@@ -296,11 +296,11 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 				return resp.Irreversible
 			})
 
-			if lifecycle.ExecutionTrace == nil {
+			if lifecycle == nil || lifecycle.ExecutionTrace == nil {
 				// INCREASE THE STATEOS saying there's inconsistencies between kvdb
 				// and search, return an error to users, "Internal server error"
 				// or whatever.
-				return nil, dgraphql.Errorf(ctx, "internal inconsistencies, failing instead of reporting non-irreversible data as irreversible")
+				return nil, dgraphql.Errorf(ctx, "cannot find requested transaction: database may not be in sync. try again later")
 			}
 
 			out.blockHeader = lifecycle.ExecutionBlockHeader
