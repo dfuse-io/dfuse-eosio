@@ -51,14 +51,16 @@ func (t *TokenMeta) SetupPipeline(startBlock bstream.BlockRef, blockFilter func(
 		return js
 	})
 
-	forkOptions := []forkable.Option{forkable.WithLogger(zlog), forkable.WithFilters(forkable.StepIrreversible)}
+	forkOptions := []forkable.Option{
+		forkable.WithLogger(zlog),
+		forkable.WithFilters(forkable.StepIrreversible),
+	}
 	if startBlock.ID() != "" {
 		forkOptions = append(forkOptions, forkable.WithExclusiveLIB(startBlock))
 	}
 
 	forkableHandler := forkable.New(t, forkOptions...)
-
-	t.source = bstream.NewEternalSource(sf, forkableHandler, bstream.EternalSourceWithLogger(zlog))
+	t.source = bstream.NewEternalSource(sf, bstream.WithHeadMetrics(forkableHandler, HeadBlockNum, HeadTimeDrift), bstream.EternalSourceWithLogger(zlog))
 
 	t.OnTerminating(func(e error) {
 		t.source.Shutdown(e)

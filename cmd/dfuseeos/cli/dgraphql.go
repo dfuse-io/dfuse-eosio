@@ -20,7 +20,6 @@ func init() {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
 			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGRPCServingAddr, "TCP Listener addr for gRPC")
 			cmd.Flags().String("dgraphql-abi-addr", ABICodecServingAddr, "Base URL for abicodec service")
-			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
