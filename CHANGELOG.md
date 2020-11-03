@@ -31,6 +31,7 @@ date.
 * Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
 ### Removed
+* Removed `dgraphql-graceful-shutdown-delay`, it was a left-over, unused. Must use `--common-system-shutdown-signal-delay` now
 * Removed `relayer-max-drift` (now dependent on a new condition of presence of a "block hole", and no new block sent for 5 seconds)
 * Removed `relayer-init-time` (no need for it with this new condition ^)
 
@@ -44,6 +45,7 @@ date.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully 
 * Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
 * Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
