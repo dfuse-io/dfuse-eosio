@@ -226,8 +226,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200724152201-64aae5bc532f/go.mod h1:DD1RD
 github.com/dfuse-io/bstream v0.0.2-0.20200724164826-46514ddda736/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20200831174806-3a465dd49cb4/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
-github.com/dfuse-io/bstream v0.0.2-0.20201102183507-dafb4c658b88 h1:RmbVGGBEMoWf+n4DjFAHJ3jtNpzSXOutnsxy55RRux8=
-github.com/dfuse-io/bstream v0.0.2-0.20201102183507-dafb4c658b88/go.mod h1:8PSMs0lPFIPoCK1eP7r0d03cY61oOCaRaFaRhiolLrk=
+github.com/dfuse-io/bstream v0.0.2-0.20201103201932-db329a7519bc h1:HTXFDzeBMKCYe4kZGG9Jn3sqXiv+MBHLA7jtdJiC39s=
+github.com/dfuse-io/bstream v0.0.2-0.20201103201932-db329a7519bc/go.mod h1:8PSMs0lPFIPoCK1eP7r0d03cY61oOCaRaFaRhiolLrk=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
