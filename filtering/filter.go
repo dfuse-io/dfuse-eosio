@@ -268,6 +268,12 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 }
 
 func combineFilters(prev, next string, op string) string {
+	if prev == "*" {
+		prev = ""
+	}
+	if next == "*" {
+		next = ""
+	}
 	if prev == "" && next == "" {
 		return ""
 	}

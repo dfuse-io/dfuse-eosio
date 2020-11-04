@@ -231,6 +231,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200831174806-3a465dd49cb4 h1:cWm34c/MyRZd
 github.com/dfuse-io/bstream v0.0.2-0.20200831174806-3a465dd49cb4/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838 h1:f22gLc8GfaRz3Xyf6pKb68ZPR4tQApJsSVLZGs+o7+k=
 github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
+github.com/dfuse-io/bstream v0.0.2-0.20201104050004-03997afed973 h1:zSBle3morxMO/Gh+b0i4a+dg9/u2yTESXSf6p0xAL1Q=
+github.com/dfuse-io/bstream v0.0.2-0.20201104050004-03997afed973/go.mod h1:2b+FH73WmsmCcnpgncgvaw2i34G+fRSZpMV5yJK+K7I=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
@@ -313,6 +315,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3 h1:WPl4jzZH6z5RvCU
 github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d h1:SYL6cJUbLCmRWusJ2c5pqEwZaMwWenxqMZR+IQloy8Y=
 github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
+github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a h1:b3ERr1xFtPhDMstf6yPq9YO0862ZlT8rEvehmmTcPDw=
+github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015 h1:U3g0fXe+Qzse7pw+/6QxKr24dqxdGla3hXGMIooZMj4=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4 h1:br3G/sobkJVUH2vdNw0Ix4aJ/PcBsdPe/1m4q/avMy8=
