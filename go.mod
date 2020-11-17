@@ -21,11 +21,11 @@ require (
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98
-	github.com/dfuse-io/dgrpc v0.0.0-20201030202312-c111faa41800
+	github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20200831184019-abc72820952f
-	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
+	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20200924172801-712ea810c87b
@@ -76,12 +76,12 @@ require (
 	github.com/tidwall/gjson v1.5.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0 // indirect
-	go.opencensus.io v0.22.3
+	go.opencensus.io v0.22.4
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.26.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible
