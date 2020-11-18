@@ -233,6 +233,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838 h1:f22gLc8GfaRz
 github.com/dfuse-io/bstream v0.0.2-0.20200831213306-bcaf5598d838/go.mod h1:DD1RDqq50aBHDXZLfSv/rNv/35VI+8F7doB8qFecAeM=
 github.com/dfuse-io/bstream v0.0.2-0.20201104050004-03997afed973 h1:zSBle3morxMO/Gh+b0i4a+dg9/u2yTESXSf6p0xAL1Q=
 github.com/dfuse-io/bstream v0.0.2-0.20201104050004-03997afed973/go.mod h1:2b+FH73WmsmCcnpgncgvaw2i34G+fRSZpMV5yJK+K7I=
+github.com/dfuse-io/bstream v0.0.2-0.20201118191855-3c3b8b87518e h1:V2lE2LjLHac5DKpvV3OEec0ztluiwAzbbbEcppw/1zc=
+github.com/dfuse-io/bstream v0.0.2-0.20201118191855-3c3b8b87518e/go.mod h1:6ut64Krpzx5bmOAYr17joofrth6Xk7Cy3WD+DVc9Zd8=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
@@ -303,6 +305,8 @@ github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb h1:Aos+vL/3wnyPzx
 github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56 h1:7ptHGb4YMSQGxAEiMmoVSvkWNbPi3Bjtx2gYjykeq84=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
+github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79 h1:+HRtcJejUYA/2rnyTMbOaZ4g7f4aVuFduTV/03dbpLY=
+github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a h1:5ziuvuX79U7EdejhCVTCp+2Zi09MoTkVaR6QM5lUZJU=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57 h1:ZApNz+QKS0cpWrdrWybT6a7bII6a4ED76e3cC2x1U5g=
@@ -317,6 +321,8 @@ github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d h1:SYL6cJUbLCmRWus
 github.com/dfuse-io/pbgo v0.0.6-0.20200819050623-1bfd94a6868d/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a h1:b3ERr1xFtPhDMstf6yPq9YO0862ZlT8rEvehmmTcPDw=
 github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
+github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff h1:F5NWhDjlXAlRddIZVhcFmSH0zmEbvFDViunpYs5od4c=
+github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015 h1:U3g0fXe+Qzse7pw+/6QxKr24dqxdGla3hXGMIooZMj4=
 github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4 h1:br3G/sobkJVUH2vdNw0Ix4aJ/PcBsdPe/1m4q/avMy8=

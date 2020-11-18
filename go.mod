@@ -16,7 +16,7 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
-	github.com/dfuse-io/bstream v0.0.2-0.20201104050004-03997afed973
+	github.com/dfuse-io/bstream v0.0.2-0.20201118191855-3c3b8b87518e
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
@@ -35,11 +35,11 @@ require (
 	github.com/dfuse-io/fluxdb v0.0.0-20201019180123-fbbfc72f032b
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69
-	github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56
+	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
 	github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
-	github.com/dfuse-io/pbgo v0.0.6-0.20201013171459-5946b1c8ed7a
+	github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff
 	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
 	github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2

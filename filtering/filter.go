@@ -3,6 +3,7 @@ package filtering
 import (
 	"container/heap"
 	"fmt"
+	"strings"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -57,6 +58,20 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 	systemActions := f.SystemActionsIncludeProgram.choose(blk.Number)
 
 	block := blk.ToNative().(*pbcodec.Block)
+
+	if filterExprContains(block.FilteringIncludeFilterExpr, include.code) {
+		include.program = nil // set to Noop
+	}
+	if filterExprContains(block.FilteringExcludeFilterExpr, exclude.code) {
+		exclude.program = nil // set to Noop
+	}
+	if include.IsNoop() && exclude.IsNoop() {
+		return nil
+	}
+
+	if filterExprContains(block.FilteringSystemActionsIncludeFilterExpr, systemActions.code) {
+		systemActions.program = nil
+	}
 	transformInPlaceV2(block, include, exclude, systemActions)
 	return nil
 }
@@ -125,15 +140,10 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 
 	block.FilteringApplied = true
 
-	// TODO: accumulate all the filters applied, see issue
-	// https://github.com/dfuse-io/dfuse-eosio/issues/133
-	//
-	// WARN: This is a quick hack that will not stack very well, and
-	// the "&&" / "||" patterns here were not tested to be idempotent..
-	// Although, they're there just for ref and provenance purposes, so no big deal.
-	block.FilteringIncludeFilterExpr = combineFilters(block.FilteringIncludeFilterExpr, include.code, "&&")
-	block.FilteringExcludeFilterExpr = combineFilters(block.FilteringExcludeFilterExpr, exclude.code, "||")
-	block.FilteringSystemActionsIncludeFilterExpr = combineFilters(block.FilteringSystemActionsIncludeFilterExpr, systemActions.code, "||")
+	// more explanation here https://github.com/dfuse-io/dfuse-eosio/issues/133
+	block.FilteringIncludeFilterExpr = combineFilters(block.FilteringIncludeFilterExpr, include)
+	block.FilteringExcludeFilterExpr = combineFilters(block.FilteringExcludeFilterExpr, exclude)
+	block.FilteringSystemActionsIncludeFilterExpr = combineFilters(block.FilteringSystemActionsIncludeFilterExpr, systemActions)
 
 	var filteredTrxTrace []*pbcodec.TransactionTrace
 	filteredExecutedInputActionCount := uint32(0)
@@ -267,23 +277,27 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
-func combineFilters(prev, next string, op string) string {
-	if prev == "*" {
-		prev = ""
+func filterExprContains(appliedFilters, newFilter string) bool {
+	if newFilter == "" {
+		return true
 	}
-	if next == "*" {
-		next = ""
+	applied := strings.Split(appliedFilters, ";;;")
+	for _, x := range applied {
+		if newFilter == x {
+			return true
+		}
 	}
-	if prev == "" && next == "" {
-		return ""
+	return false
+}
+
+func combineFilters(prev string, next *CELFilter) string {
+	if prev == "" {
+		return next.code
 	}
-	if prev != "" && next == "" {
+	if next.IsNoop() {
 		return prev
 	}
-	if prev == "" && next != "" {
-		return next
-	}
-	return "(" + prev + ") " + op + " (" + next + ")"
+	return fmt.Sprintf("%s;;;%s", prev, next.code)
 }
 
 func shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
