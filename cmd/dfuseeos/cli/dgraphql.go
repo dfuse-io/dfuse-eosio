@@ -18,17 +18,16 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dgraphql.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("dgraphql-http-addr", DgraphqlHTTPServingAddr, "TCP Listener addr for http")
-			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGrpcServingAddr, "TCP Listener addr for gRPC")
-			cmd.Flags().String("dgraphql-abi-addr", AbiServingAddr, "Base URL for abicodec service")
-			cmd.Flags().Duration("dgraphql-graceful-shutdown-delay", 0, "delay before shutting down, after the health endpoint returns unhealthy")
+			cmd.Flags().String("dgraphql-grpc-addr", DgraphqlGRPCServingAddr, "TCP Listener addr for gRPC")
+			cmd.Flags().String("dgraphql-abi-addr", ABICodecServingAddr, "Base URL for abicodec service")
 			cmd.Flags().Bool("dgraphql-disable-authentication", false, "disable authentication for both grpc and http services")
 			cmd.Flags().Bool("dgraphql-override-trace-id", false, "flag to override trace id or not")
 			cmd.Flags().String("dgraphql-protocol", "eos", "name of the protocol")
 			cmd.Flags().String("dgraphql-auth-url", JWTIssuerURL, "Auth URL used to configure the dfuse js client")
 			cmd.Flags().String("dgraphql-api-key", DgraphqlAPIKey, "API key used in graphiql")
 			cmd.Flags().String("dgraphql-tokenmeta-addr", TokenmetaGRPCServingAddr, "Tokenmeta client endpoint url")
-			cmd.Flags().String("dgraphql-accounthist-account-addr", AccountHistGRPCServingAddr, "Account history account indexed server client endpoint url")
-			cmd.Flags().String("dgraphql-accounthist-account-contract-addr", "", "Account history account-contract indexed server  client endpoint url")
+			cmd.Flags().String("dgraphql-accounthist-account-addr", AccountHistGRPCServingAddr, "Account history account indexed server client endpoint url, empty string disables the operation")
+			cmd.Flags().String("dgraphql-accounthist-account-contract-addr", "", "Account history account-contract indexed server client endpoint url, empty string disables the operation")
 
 			return nil
 		},

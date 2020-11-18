@@ -23,7 +23,7 @@ func (i *Injector) flush(ctx context.Context, blk *pbcodec.Block, lastInStreak b
 			timeDelta := time.Since(i.lastWrittenBlock.writtenAt)
 			deltaInSeconds := float64(timeDelta) / float64(time.Second)
 			blocksPerSec := float64(blocks) / deltaInSeconds
-			zlog.Info("block throughput",
+			zlog.Debug("block throughput",
 				zap.Float64("blocks_per_secs", blocksPerSec),
 				zap.Uint64("last_written_block_num", i.lastWrittenBlock.blockNum),
 				zap.Uint64("current_block_num", blk.Num()),
@@ -34,7 +34,7 @@ func (i *Injector) flush(ctx context.Context, blk *pbcodec.Block, lastInStreak b
 			blockNum:  blk.Num(),
 			writtenAt: time.Now(),
 		}
-		zlog.Info("starting force flush", zap.Uint64("block_num", blk.Num()))
+		zlog.Debug("starting force flush", zap.Uint64("block_num", blk.Num()))
 		return i.ForceFlush(ctx)
 	}
 	return nil

@@ -57,16 +57,21 @@ type TransactionsReader interface {
 
 	// GetTransactionTraces retrieves only the execution traces event, ignoring deferred lifecycle events.
 	// It can return a nil list of TransactionEvent with no error, if nothing was found.
+	// It will return an error if the idPrefix matches multiple transactions (e.g. is too short)
 	GetTransactionTraces(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error)
 	// GetTransactionTracesBatch returns only the execution traces (ignoring deferred licycle events), for each id prefix specified.
 	// If some ids are not found, the corresponding index will have a nil list of TransactionEvent.
+	// It will return an error if one of the the idPrefixes matches multiple transactions (e.g. is too short)
 	GetTransactionTracesBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error)
 
 	// GetTransactionEvents retrieves all the events related to the lifecycle of a transaction, including transaction introduction, deferred creations, cancellations, and traces of execution.
 	// It can return a nil list of TransactionEvent with no error, if nothing was found.
+	// It will return an error if the idPrefix matches multiple transactions (e.g. is too short)
 	GetTransactionEvents(ctx context.Context, idPrefix string) ([]*pbcodec.TransactionEvent, error)
+
 	// GetTransactionEventsBatch returns a list of all events for each transaction id prefix.
 	// If some ids are not found, the corresponding index will have a nil list of TransactionEvent.
+	// It will return an error if one of the the idPrefixes matches multiple transactions (e.g. is too short)
 	GetTransactionEventsBatch(ctx context.Context, idPrefixes []string) ([][]*pbcodec.TransactionEvent, error)
 }
 

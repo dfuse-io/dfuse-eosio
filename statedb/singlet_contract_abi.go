@@ -27,7 +27,7 @@ func init() {
 type ContractABISinglet []byte
 
 func NewContractABISinglet(contract string) ContractABISinglet {
-	return ContractABISinglet(nameToBytes(contract))
+	return ContractABISinglet(standardNameToBytes(contract))
 }
 
 func (s ContractABISinglet) Collection() uint16 {

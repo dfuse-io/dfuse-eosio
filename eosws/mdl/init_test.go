@@ -18,16 +18,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 
-	"go.uber.org/zap"
+	"github.com/dfuse-io/logging"
 )
 
 func init() {
-	if os.Getenv("DEBUG") != "" {
-		zlog, _ = zap.NewDevelopment()
-	}
+	logging.TestingOverride()
 }
 
 func unmarshalFromFixture(filename string, target interface{}) {

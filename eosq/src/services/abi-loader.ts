@@ -8,7 +8,7 @@ export class AbiLoader {
   }
 
   get tables(): AbiTable[] {
-    return this.abi.tables
+    return this.abi.tables || []
   }
 
   get tableNames(): string[] {

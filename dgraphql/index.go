@@ -51,7 +51,7 @@ func NewApp(config *Config) (*dgraphqlApp.App, error) {
 	dgraphqlBaseConfig := config.Config
 
 	return dgraphqlApp.New(&dgraphqlBaseConfig, &dgraphqlApp.Modules{
-		PredefinedGraphqlExamples: GraphqlExamples(),
+		PredefinedGraphqlExamples: GraphqlExamples(config),
 		SchemaFactory:             &SchemaFactory{config: config},
 	}), nil
 }
@@ -110,6 +110,7 @@ func (f *SchemaFactory) Schemas() (*dgraphql.Schemas, error) {
 		if err != nil {
 			return nil, fmt.Errorf("unable to create tokenmeta client connection: %w", err)
 		}
+
 		accounthistClient.Account = pbaccounthist.NewAccountHistoryClient(accountHistAccConn)
 	}
 

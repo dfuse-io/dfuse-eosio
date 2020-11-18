@@ -24,7 +24,7 @@ func init() {
 }
 
 func NewContractTableScopeTablet(contract, table string) ContractTableScopeTablet {
-	return ContractTableScopeTablet(nameToBytes(contract, table))
+	return ContractTableScopeTablet(standardNameToBytes(contract, table))
 }
 
 type ContractTableScopeTablet []byte
@@ -64,7 +64,7 @@ func NewContractTableScopeRow(blockNum uint64, op *pbcodec.TableOp) (row *Contra
 	}
 
 	tablet := NewContractTableScopeTablet(op.Code, op.TableName)
-	return &ContractTableScopeRow{baseRow(tablet, blockNum, nameToBytes(op.Scope), value)}, nil
+	return &ContractTableScopeRow{baseRow(tablet, blockNum, standardNameToBytes(op.Scope), value)}, nil
 }
 
 func (r *ContractTableScopeRow) Scope() string {

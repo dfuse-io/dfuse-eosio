@@ -73,11 +73,10 @@ func NewABICache(store dstore.Store, cacheName string) (*DefaultCache, error) {
 	}
 
 	r, err := store.OpenObject(ctx, cacheName)
-	defer r.Close()
-
 	if err != nil {
 		return nil, fmt.Errorf("openning cache file %s: %s", cacheName, err)
 	}
+	defer r.Close()
 
 	var cache *DefaultCache
 	decoder := gob.NewDecoder(r)

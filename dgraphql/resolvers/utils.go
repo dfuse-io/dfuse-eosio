@@ -24,6 +24,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	graphql "github.com/graph-gophers/graphql-go"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func S(in string) *string {
@@ -108,4 +110,21 @@ func countMinOne(count int) int64 {
 		return 1
 	}
 	return int64(count)
+}
+
+// Move the stuff from here and below into the dgraphql base package directly, it's chain agnostic
+type grpcStatus interface {
+	GRPCStatus() *status.Status
+}
+
+func isRPCContextDeadlineError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if status, ok := err.(grpcStatus); ok {
+		return status.GRPCStatus().Code() == codes.DeadlineExceeded
+	}
+
+	return false
 }

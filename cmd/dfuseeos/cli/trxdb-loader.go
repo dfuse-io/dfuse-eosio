@@ -18,7 +18,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/(trxdb|trxdb-loader).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("trxdb-loader-processing-type", "live", "The actual processing type to perform, either `live`, `batch` or `patch`")
-			cmd.Flags().Uint64("trxdb-loader-batch-size", 1, "Number of blocks batched together for database write")
+			cmd.Flags().Uint64("trxdb-loader-batch-size", 100, "Max number of blocks batched together for database write. Blocks are not batched when close (<25sec) to head.")
 			cmd.Flags().Uint64("trxdb-loader-start-block-num", 0, "[BATCH] Block number where we start processing")
 			cmd.Flags().Uint64("trxdb-loader-stop-block-num", math.MaxUint32, "[BATCH] Block number where we stop processing")
 			cmd.Flags().Uint64("trxdb-loader-num-blocks-before-start", 300, "[BATCH] Number of blocks to fetch before start block")

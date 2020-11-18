@@ -98,7 +98,7 @@ func (c *RWCache) FlushPuts(ctx context.Context) error {
 	}
 
 	d0 := time.Since(t0)
-	zlog.Info("flushed keys to storage",
+	zlog.Debug("flushed keys to storage",
 		zap.Int("put_first_keys", countFirstKeys),
 		zap.Int("put_last_keys", countLastKeys),
 		zap.Int("deleted_keys", len(keys)),

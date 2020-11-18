@@ -164,7 +164,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 	}
 
 	// on success
-	zlog.Info("REST response",
+	zlog.Debug("REST response",
 		zap.String("path", r.URL.Path),
 		zap.String("method", r.Method),
 		zap.String("host", r.URL.Host),

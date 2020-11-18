@@ -20,27 +20,27 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
-	github.com/dfuse-io/dgraphql v0.0.2-0.20200918184142-467a56557271
-	github.com/dfuse-io/dgrpc v0.0.0-20200710191139-bcb9296ceb80
+	github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98
+	github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20200831184019-abc72820952f
-	github.com/dfuse-io/dmesh v0.0.0-20200602201926-d79e48fdac7c
+	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20200924172801-712ea810c87b
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20201019180123-fbbfc72f032b
+	github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69
+	github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc
 	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
 	github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
 	github.com/dfuse-io/pbgo v0.0.6-0.20201021183128-ec7a7f2c6bff
-	github.com/dfuse-io/relayer v0.0.2-0.20200715192729-55c75a9e8015
+	github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7
 	github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
@@ -76,12 +76,12 @@ require (
 	github.com/tidwall/gjson v1.5.0
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0 // indirect
-	go.opencensus.io v0.22.3
+	go.opencensus.io v0.22.4
 	go.uber.org/atomic v1.6.0
 	go.uber.org/zap v1.15.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.26.0
+	google.golang.org/grpc v1.29.1
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible

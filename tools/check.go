@@ -94,14 +94,40 @@ func checkStateDBReprocInjectorE(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unable to create store: %w", err)
 	}
 
-	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{})
+	fdb := fluxdb.New(kvStore, nil, &statedb.BlockMapper{}, true)
 	fdb.SetSharding(0, int(shardsInt))
-	_, lastBlock, err := fdb.VerifyAllShardsWritten(context.Background())
-	if err != nil {
-		return err
+	stats, err := fdb.VerifyAllShardsWritten(context.Background())
+	if stats != nil {
+		for shardIndex, shardBlock := range stats.BlockRefByShard {
+			fmt.Printf("Shard #%03d - At %s\n", shardIndex, shardBlock)
+		}
+
+		fmt.Println()
+		fmt.Printf("Reference Block - %s\n", stats.ReferenceBlockRef)
+
+		fmt.Println()
+		if len(stats.MissingShards) > 0 {
+			fmt.Printf("❌  Missing (%d) %s\n", len(stats.MissingShards), strings.Join(shardIndiciesToString(stats.MissingShards), ", "))
+		}
+
+		if len(stats.FaultyShards) > 0 {
+			fmt.Printf("❌  Faulty (%d) %s\n", len(stats.FaultyShards), strings.Join(shardIndiciesToString(stats.FaultyShards), ", "))
+		}
+
+		if stats.HighestHeight > 0 && len(stats.FaultyShards) == 0 && len(stats.MissingShards) == 0 && stats.ReferenceBlockRef != bstream.BlockRefEmpty {
+			fmt.Println("✅  All shards completed")
+		}
 	}
-	fmt.Println("Last block", lastBlock)
-	return nil
+
+	return err
+}
+
+func shardIndiciesToString(shardIndicies []int) (out []string) {
+	out = make([]string, len(shardIndicies))
+	for i, index := range shardIndicies {
+		out[i] = fmt.Sprintf("Shard #%03d", index)
+	}
+	return
 }
 
 type blockNum uint64

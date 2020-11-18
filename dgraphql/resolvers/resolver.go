@@ -50,28 +50,22 @@ import (
 	"go.uber.org/zap"
 )
 
-// Accounthistory Clients
 type AccounthistClient struct {
 	Account         pbaccounthist.AccountHistoryClient
 	AccountContract pbaccounthist.AccountContractHistoryClient
 }
 
-//accountHistAccClient pbaccounthist.AccountHistoryClient,
-//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient,
-
 // Root is the root resolver.
 type Root struct {
-	searchClient             pbsearch.RouterClient
-	trxsReader               trxdb.TransactionsReader
-	blocksReader             trxdb.BlocksReader
-	accountsReader           trxdb.AccountsReader
-	blockmetaClient          *pbblockmeta.Client
-	chainDiscriminatorClient *pbblockmeta.ChainDiscriminatorClient
-	abiCodecClient           pbabicodec.DecoderClient
-	tokenmetaClient          pbtokenmeta.TokenMetaClient
-	accounthistClients       *AccounthistClient
-	//accountHistAccClient    pbaccounthist.AccountHistoryClient
-	//accountHistAccCtrClient pbaccounthist.AccountContractHistoryClient
+	searchClient                  pbsearch.RouterClient
+	trxsReader                    trxdb.TransactionsReader
+	blocksReader                  trxdb.BlocksReader
+	accountsReader                trxdb.AccountsReader
+	blockmetaClient               *pbblockmeta.Client
+	chainDiscriminatorClient      *pbblockmeta.ChainDiscriminatorClient
+	abiCodecClient                pbabicodec.DecoderClient
+	tokenmetaClient               pbtokenmeta.TokenMetaClient
+	accounthistClients            *AccounthistClient
 	requestRateLimiter            rateLimiter.RateLimiter
 	requestRateLimiterLastLogTime time.Time
 }
@@ -302,11 +296,11 @@ func (r *Root) querySearchTransactionsBoth(ctx context.Context, forward bool, ar
 				return resp.Irreversible
 			})
 
-			if lifecycle.ExecutionTrace == nil {
+			if lifecycle == nil || lifecycle.ExecutionTrace == nil {
 				// INCREASE THE STATEOS saying there's inconsistencies between kvdb
 				// and search, return an error to users, "Internal server error"
 				// or whatever.
-				return nil, dgraphql.Errorf(ctx, "internal inconsistencies, failing instead of reporting non-irreversible data as irreversible")
+				return nil, dgraphql.Errorf(ctx, "cannot find requested transaction: database may not be in sync. try again later")
 			}
 
 			out.blockHeader = lifecycle.ExecutionBlockHeader
