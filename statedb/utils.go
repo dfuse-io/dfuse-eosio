@@ -39,11 +39,22 @@ func bytesToJoinedName3(bytes []byte) string {
 		":" + eos.NameToString(bigEndian.Uint64(bytes[16:]))
 }
 
-func nameToBytes(names ...string) (out []byte) {
+var standardNameConverter = eos.MustStringToName
+var extendedNameConverter = mustExtendedStringToName
+
+func standardNameToBytes(names ...string) (out []byte) {
+	return nameToBytes(standardNameConverter, names)
+}
+
+func extendedNameToBytes(names ...string) (out []byte) {
+	return nameToBytes(extendedNameConverter, names)
+}
+
+func nameToBytes(converter func(name string) uint64, names []string) (out []byte) {
 	out = make([]byte, 8*len(names))
 	moving := out
 	for _, name := range names {
-		bigEndian.PutUint64(moving, eos.MustStringToName(name))
+		bigEndian.PutUint64(moving, converter(name))
 		moving = moving[8:]
 	}
 
@@ -60,4 +71,13 @@ func namenToBytes(name eos.Name) (out []byte) {
 	out = make([]byte, 8)
 	bigEndian.PutUint64(out, eos.MustStringToName(string(name)))
 	return
+}
+
+func mustExtendedStringToName(name string) uint64 {
+	val, err := eos.ExtendedStringToName(name)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
 }

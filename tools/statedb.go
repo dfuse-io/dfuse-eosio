@@ -544,7 +544,7 @@ var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
 		for i, part := range parts {
 			switch {
 			case i <= 2:
-				out = append(out, nameToBytes(part)...)
+				out = append(out, nameToBytes(mustExtendedStringToName, part)...)
 			case i == 3:
 				bytes, err := heightToBytes(part)
 				if err != nil {
@@ -553,7 +553,7 @@ var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
 
 				out = append(out, bytes...)
 			default:
-				out = append(out, nameToBytes(part)...)
+				out = append(out, nameToBytes(mustExtendedStringToName, part)...)
 			}
 		}
 
@@ -561,11 +561,11 @@ var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
 	},
 }
 
-func nameToBytes(names ...string) (out []byte) {
+func nameToBytes(converter func(in string) uint64, names ...string) (out []byte) {
 	out = make([]byte, 8*len(names))
 	moving := out
 	for _, name := range names {
-		binary.BigEndian.PutUint64(moving, eos.MustStringToName(name))
+		binary.BigEndian.PutUint64(moving, converter(name))
 		moving = moving[8:]
 	}
 
@@ -586,4 +586,13 @@ func heightToBytes(heights ...string) (out []byte, err error) {
 	}
 
 	return
+}
+
+func mustExtendedStringToName(name string) uint64 {
+	val, err := eos.ExtendedStringToName(name)
+	if err != nil {
+		panic(err)
+	}
+
+	return val
 }

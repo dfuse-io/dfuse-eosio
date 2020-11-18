@@ -86,7 +86,7 @@ func NewKeyAccountRow(blockNum uint64, publicKey, account, permission string, is
 	}
 
 	tablet := NewKeyAccountTablet(publicKey)
-	return &KeyAccountRow{baseRow(tablet, blockNum, nameToBytes(account, permission), value)}, nil
+	return &KeyAccountRow{baseRow(tablet, blockNum, standardNameToBytes(account, permission), value)}, nil
 }
 
 func (r *KeyAccountRow) Scope() string {
