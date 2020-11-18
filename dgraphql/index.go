@@ -17,6 +17,8 @@ package dgraphql
 import (
 	"fmt"
 
+	_ "github.com/dfuse-io/dauth/authenticator/redis"
+	_ "github.com/dfuse-io/dauth/metering/redis"
 	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"

@@ -64,8 +64,6 @@ require (
 	github.com/lytics/ordpool v0.0.0-20130426221837-8d833f097fe7
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/go-testing-interface v1.14.1
-	github.com/onsi/ginkgo v1.11.0 // indirect
-	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
@@ -83,7 +81,7 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/grpc v1.29.1
 	gopkg.in/olivere/elastic.v3 v3.0.75
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools v2.2.0+incompatible
 )
 
@@ -96,7 +94,7 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 
 replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f
 
-replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20200910204359-7ce5037d17d3
+replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20201116161103-9f322115186c
 
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
