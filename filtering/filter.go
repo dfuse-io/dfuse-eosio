@@ -39,6 +39,27 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsInclude
 	}, nil
 }
 
+var includeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "include",
+	valueWhenNoop: true,
+}
+
+var excludeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "exclude",
+	valueWhenNoop: false,
+}
+
+var systemIncludeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "system include",
+	valueWhenNoop: false,
+}
+
 // TransformInPlace received a `bstream.Block` pointer, unpack it's native counterpart, a `pbcodec.Block` pointer
 // in our case and transforms it in place, modifiying the pointed object. This means that future `ToNative()` calls
 // on the bstream block will return a filtered version of this block.
@@ -60,18 +81,19 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 	block := blk.ToNative().(*pbcodec.Block)
 
 	if filterExprContains(block.FilteringIncludeFilterExpr, include.code) {
-		include.program = nil // set to Noop
+		include = includeNOOP
 	}
 	if filterExprContains(block.FilteringExcludeFilterExpr, exclude.code) {
-		exclude.program = nil // set to Noop
+		exclude = excludeNOOP
 	}
 	if include.IsNoop() && exclude.IsNoop() {
 		return nil
 	}
 
 	if filterExprContains(block.FilteringSystemActionsIncludeFilterExpr, systemActions.code) {
-		systemActions.program = nil
+		systemActions = systemIncludeNOOP
 	}
+
 	transformInPlaceV2(block, include, exclude, systemActions)
 	return nil
 }
