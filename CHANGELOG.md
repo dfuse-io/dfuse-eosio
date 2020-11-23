@@ -37,6 +37,7 @@ date.
 
 ### Changed
 
+* Applying a block filter over previously-filtered-blocks does not panic anymore, it applies the new filter on top of it, only if that specific filter has never been applied before. Applied filters definitions are concatenated in the block metadata, separated by `;;;`
 * Default `trxdb-loader-batch-size` changed to 100, Safe to do so because it does not batch when close to head.
 * Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
@@ -45,7 +46,8 @@ date.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
-* Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully 
+* Fixed a bug on StateDB server not accepting symbol and symbol code as `scope` parameter value.
+* Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully.
 * Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
 * Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
@@ -137,7 +139,7 @@ Here the steps required to migrate to the new `statedb` app:
 1. We strongly recommend that you take a full backup of your data directory (while the app is shut down)
 2. Launch a stand-alone stateDB instance in 'inject-mode' that reads from your block files and writes to a new location (see '--statedb-store-dsn')
 3. Let it complete the "catch up" until it is very close to the HEAD of your network, then stop that instance.
-4. Stop your previous instance (that uses fluxdb), 
+4. Stop your previous instance (that uses fluxdb),
 5. Copy the content of your statedb database to a location accessible from there (that you will define in '--statedb-store-dsn')
 6. Launch the new version of the code, with the modified flags, over your previous data, including the new statedb database content (see below for the necessary flag and config modifications)
 

@@ -153,6 +153,7 @@ func TestBlockFilter(t *testing.T) {
 		})
 	}
 }
+
 func getFilters(a string, b string, c string) filters {
 	return filters{
 		[]string{a},
