@@ -298,6 +298,8 @@ github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhb
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc h1:3WOr0tnvXk7uNnnyJqzwLXr900vHDIA0AJjaskukdNU=
 github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc/go.mod h1:G22wfzPUb0FrEkqnKx2HM2VpSVNAHtZJD5I4V9+Vrg8=
+github.com/dfuse-io/kvdb v0.0.2-0.20201125183650-bdb2020a21f5 h1:ENpy3NcW06T0OuoownqQUZuKD5thdN62FfvKAPmy7R8=
+github.com/dfuse-io/kvdb v0.0.2-0.20201125183650-bdb2020a21f5/go.mod h1:X3CqnReRyUXsj/0qhX98RiMisJOD1C3G58dW0h+4gX0=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -305,8 +307,9 @@ github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb/go.mod h1:80YyilH
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc h1:w3SL2sM5CM8F4bxS7Ny8WKFavUujbBEL/eo8bzh2tV4=
 github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
-github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79 h1:+HRtcJejUYA/2rnyTMbOaZ4g7f4aVuFduTV/03dbpLY=
 github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
+github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42 h1:WGgtwEYdpKdgsrabHF1FcjhfPehjgAzB8NGEUK3jhfE=
+github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42/go.mod h1:n0Np6Dr/Yv56l8Rq2wgDZpv4vfjT8qlvY34pb3dcI0k=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a h1:5ziuvuX79U7EdejhCVTCp+2Zi09MoTkVaR6QM5lUZJU=
 github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57 h1:ZApNz+QKS0cpWrdrWybT6a7bII6a4ED76e3cC2x1U5g=
@@ -853,6 +856,7 @@ github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c h1:g+WoO5jjkqGAzH
 github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
 github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf h1:Z2X3Os7oRzpdJ75iPqWZc0HeJWFYNCvKsfpQwFpRNTA=
 github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf/go.mod h1:M8agBzgqHIhgj7wEn9/0hJUZcrvt9VY+Ln+S1I5Mha0=
+github.com/test-go/testify v1.1.4/go.mod h1:rH7cfJo/47vWGdi4GPj16x3/t1xGOj2YxzmNQzk2ghU=
 github.com/thedevsaddam/govalidator v1.9.6/go.mod h1:Ilx8u7cg5g3LXbSS943cx5kczyNuUn7LH/cK5MYuE90=
 github.com/thedevsaddam/govalidator v1.9.9 h1:Vn50EjNtf8qOL+awcXtv2qzvbUfCzyD/R5LYTOG+L00=
 github.com/thedevsaddam/govalidator v1.9.9/go.mod h1:Ilx8u7cg5g3LXbSS943cx5kczyNuUn7LH/cK5MYuE90=
