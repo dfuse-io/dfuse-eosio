@@ -35,7 +35,7 @@ type TokenMeta struct {
 
 func NewTokenMeta(cache cache.Cache, abiCodecCli pbabicodec.DecoderClient, saveEveryNBlock uint32, stateClient pbstatedb.StateClient) *TokenMeta {
 	if blkTime := cache.GetHeadBlockTime(); !blkTime.IsZero() {
-		cache.SetHeadBlockTime(blkTime)
+		HeadTimeDrift.SetBlockTime(blkTime)
 	}
 	return &TokenMeta{
 		Shutter:         shutter.New(),
