@@ -13,6 +13,7 @@ date.
 
 ### Added
 
+* Added `--tokenmeta-readiness-max-latency` with default=5m, now tokenmeta will show as "NotServing" through grpc healthcheck if last processed block (HEAD) is older than this. Value of 0 disables that feature.
 * Added `--relayer-source-request-burst` with default=90 to allow a relayer connecting to another relayer to request a 'burst'
 * Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
 * Added `--eosws-nodeos-rpc-push-extra-addresses` to allow providing a list of backup EOS addresses when push-transaction does not succeed in getting the transaction inside a block (with push_guarantee)

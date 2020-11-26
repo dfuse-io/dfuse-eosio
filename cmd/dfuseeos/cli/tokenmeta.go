@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"time"
+
 	tokenmetaApp "github.com/dfuse-io/dfuse-eosio/tokenmeta/app/tokenmeta"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
@@ -23,6 +25,7 @@ func init() {
 			cmd.Flags().String("tokenmeta-cache-file", "{dfuse-data-dir}/tokenmeta/token-cache.gob", "Path to GOB file containing tokenmeta cache. will try to Load and Save to that cache file")
 			cmd.Flags().Uint32("tokenmeta-save-every-n-block", 900, "Save the cache after N blocks processed")
 			cmd.Flags().Uint64("tokenmeta-bootstrap-block-offset", 20, "Block offset to ensure that we are not bootstrapping from statedb on a reversible fork")
+			cmd.Flags().Duration("tokenmeta-readiness-max-latency", 5*time.Minute, "Healthcheck will return NotServing until last processed block time (HEAD) is within that duration to now (0 to disable)")
 			return nil
 		},
 		FactoryFunc: func(runtime *launcher.Runtime) (app launcher.App, e error) {
@@ -39,6 +42,7 @@ func init() {
 				SaveEveryNBlock:      viper.GetUint32("tokenmeta-save-every-n-block"),
 				BlocksStoreURL:       mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 				BootstrapBlockOffset: viper.GetUint64("tokenmeta-bootstrap-block-offset"),
+				ReadinessMaxLatency:  viper.GetDuration("tokenmeta-readiness-max-latency"),
 			}, &tokenmetaApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
 			}), nil
