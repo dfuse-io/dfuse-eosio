@@ -15,12 +15,6 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 	muts := &cache.MutationsBatch{}
 	blk := block.ToNative().(*pbcodec.Block)
 
-	if blkTime, err := blk.Time(); err == nil {
-		t.cache.SetHeadBlockTime(blkTime)
-	} else {
-		zlog.Warn("cannot get block time", zap.Error(err))
-	}
-
 	if (blk.Number % 600) == 0 {
 		zlog.Info("process blk 1/600", zap.Stringer("block", block))
 	}

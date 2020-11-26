@@ -60,7 +60,14 @@ func (t *TokenMeta) SetupPipeline(startBlock bstream.BlockRef, blockFilter func(
 	}
 
 	forkableHandler := forkable.New(t, forkOptions...)
-	t.source = bstream.NewEternalSource(sf, bstream.WithHeadMetrics(forkableHandler, HeadBlockNum, HeadTimeDrift), bstream.EternalSourceWithLogger(zlog))
+
+	// EternalSource -> (headBlockHandler -> forkableHandler) wrapped in bstream.WithHeadMetrics handler
+	headBlockHandler := bstream.HandlerFunc(func(blk *bstream.Block, obj interface{}) error {
+		t.cache.SetHeadBlockTime(blk.Timestamp)
+		return forkableHandler.ProcessBlock(blk, obj)
+	})
+
+	t.source = bstream.NewEternalSource(sf, bstream.WithHeadMetrics(headBlockHandler, HeadBlockNum, HeadTimeDrift), bstream.EternalSourceWithLogger(zlog))
 
 	t.OnTerminating(func(e error) {
 		t.source.Shutdown(e)
