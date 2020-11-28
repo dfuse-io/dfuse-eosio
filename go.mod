@@ -32,7 +32,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20201127204428-214682caf5de
+	github.com/dfuse-io/fluxdb v0.0.0-20201127214412-974e06ef71eb
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
 	github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42
@@ -58,6 +58,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
+	github.com/klauspost/compress v1.10.2
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/lytics/lifecycle v0.0.0-20130117214539-7b4c4028d422 // indirect
