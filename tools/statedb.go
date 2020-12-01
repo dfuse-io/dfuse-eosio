@@ -17,7 +17,9 @@ import (
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/kvdb/store"
+	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
+	"github.com/klauspost/compress/zstd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -27,6 +29,7 @@ var showValue = false
 var statedbCmd = &cobra.Command{Use: "state", Short: "Read from StateDB"}
 
 // Lower-level (key) calls
+var statedbKeyCmd = &cobra.Command{Use: "key", Short: "Various operations on key", RunE: statedbKeyE, Args: cobra.MinimumNArgs(1)}
 var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB store", RunE: statedbScanE, Args: cobra.MaximumNArgs(2)}
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.MinimumNArgs(1)}
 
@@ -67,6 +70,7 @@ func init() {
 	statedbShardInspectCmd.PersistentFlags().Uint64("height", 0, "Block height where to start inspection, 0 means everything")
 
 	Cmd.AddCommand(statedbCmd)
+	statedbCmd.AddCommand(statedbKeyCmd)
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
 	statedbCmd.AddCommand(statedbIndexCmd)
@@ -78,6 +82,29 @@ func init() {
 	statedbShardCmd.AddCommand(statedbShardInspectCmd)
 
 	statedbShardCleanCmd.AddCommand(statedbShardCleanCheckpointsCmd)
+}
+
+func statedbKeyE(cmd *cobra.Command, args []string) (err error) {
+	for _, arg := range args {
+		keyBytes, err := hex.DecodeString(arg)
+		if err != nil {
+			return fmt.Errorf("invalid key: %w", err)
+		}
+
+		row, err := fluxdb.NewTabletRowFromStorage(keyBytes, nil)
+		if err == nil {
+			fmt.Println(row.String())
+		} else {
+			entry, err := fluxdb.NewSingletEntryFromStorage(keyBytes, nil)
+			if err == nil {
+				fmt.Println(entry.String())
+			} else {
+				fmt.Printf("Key %x is neither a Singlet Entry nor a Tablet Row\n", keyBytes)
+			}
+		}
+	}
+
+	return nil
 }
 
 func statedbScanE(cmd *cobra.Command, args []string) (err error) {
@@ -132,6 +159,7 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 		limit = store.Unlimited
 	}
 
+	ctx := cmd.Context()
 	for i, arg := range args {
 		prefixKey, err := stringToKey(arg)
 		if err != nil {
@@ -144,7 +172,7 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 			fmt.Println()
 		}
 
-		err = prefixScan(kv, prefix, limit, viper.GetBool("key-only"))
+		err = prefixScan(ctx, kv, prefix, limit, viper.GetBool("key-only"))
 		if err != nil {
 			return fmt.Errorf("prefix scan %x: %w", prefix, err)
 		}
@@ -164,7 +192,7 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("invalid argument %q: %w", args[0], err)
 	}
 
-	ctx := context.Background()
+	ctx := cmd.Context()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	height := viper.GetUint64("height")
@@ -175,7 +203,7 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
-	index, err := fdb.ReadTabletIndexAt(context.Background(), tablet, height)
+	index, err := fdb.ReadTabletIndexAt(ctx, tablet, height)
 	if err != nil {
 		return fmt.Errorf("read tablet index: %w", err)
 	}
@@ -194,7 +222,12 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 		return bytes.Compare([]byte(rows[i].PrimaryKey()), []byte(rows[j].PrimaryKey())) < 0
 	})
 
-	fmt.Printf("Tablet %s Index (%d rows at #%d)\n", tablet, len(rows), index.AtHeight)
+	indexBytes, err := index.MarshalValue()
+	if err != nil {
+		return fmt.Errorf("marshal index: %w", err)
+	}
+
+	fmt.Printf("Tablet %s Index (%d rows at #%d, %s [%s compressed])\n", tablet, len(rows), index.AtHeight, byteCount(indexBytes), byteCount(compressBytes(indexBytes)))
 	for _, row := range rows {
 		fmt.Printf("- %s (at #%d)\n", row.String(), row.Height())
 	}
@@ -208,7 +241,7 @@ func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("new kv store: %w", err)
 	}
 
-	ctx := context.Background()
+	ctx := cmd.Context()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, false)
 
 	height := viper.GetUint64("height")
@@ -283,7 +316,7 @@ func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("invalid argument %q: %w", args[0], err)
 	}
 
-	ctx := context.Background()
+	ctx := cmd.Context()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	height := viper.GetUint64("height")
@@ -294,7 +327,7 @@ func statedbTabletE(cmd *cobra.Command, args []string) (err error) {
 		}
 	}
 
-	tabletRows, err := fdb.ReadTabletAt(context.Background(), height, tablet, nil)
+	tabletRows, err := fdb.ReadTabletAt(ctx, height, tablet, nil)
 	if err != nil {
 		return fmt.Errorf("read tablet: %w", err)
 	}
@@ -319,7 +352,7 @@ func statedbShardInspectE(cmd *cobra.Command, args []string) (err error) {
 		compression = dstore.Compression("zstd")
 	}
 
-	reader, _, _, err := dstore.OpenObject(context.Background(), shardFile, compression)
+	reader, _, _, err := dstore.OpenObject(cmd.Context(), shardFile, compression)
 	if err != nil {
 		return fmt.Errorf("open shard file: %w", err)
 	}
@@ -352,7 +385,7 @@ func statedbShardCleanCheckpointsE(cmd *cobra.Command, args []string) (err error
 		return fmt.Errorf("new kv store: %w", err)
 	}
 
-	ctx := context.Background()
+	ctx := cmd.Context()
 	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, true)
 
 	err = fdb.DeleteAllShardCheckpoints(ctx)
@@ -364,8 +397,8 @@ func statedbShardCleanCheckpointsE(cmd *cobra.Command, args []string) (err error
 	return nil
 }
 
-func prefixScan(kvStore store.KVStore, prefix []byte, limit int, keyOnly bool) error {
-	prefixCtx, cancelScan := context.WithCancel(context.Background())
+func prefixScan(ctx context.Context, kvStore store.KVStore, prefix []byte, limit int, keyOnly bool) error {
+	prefixCtx, cancelScan := context.WithCancel(ctx)
 	defer cancelScan()
 
 	var options []store.ReadOption
@@ -536,6 +569,11 @@ var partsToTabletMap = map[string]*partsToTablet{
 			return statedb.NewContractStateTablet(parts[0], parts[1], parts[2])
 		},
 	},
+	"ctscp": {
+		partCount: 2, factory: func(parts []string) fluxdb.Tablet {
+			return statedb.NewContractTableScopeTablet(parts[0], parts[1])
+		},
+	},
 }
 
 var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
@@ -546,6 +584,26 @@ var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
 			case i <= 2:
 				out = append(out, nameToBytes(mustExtendedStringToName, part)...)
 			case i == 3:
+				bytes, err := heightToBytes(part)
+				if err != nil {
+					return nil, fmt.Errorf("invalid height %q: %w", part, err)
+				}
+
+				out = append(out, bytes...)
+			default:
+				out = append(out, nameToBytes(mustExtendedStringToName, part)...)
+			}
+		}
+
+		return out, nil
+	},
+	"ctscp": func(parts []string) (out []byte, err error) {
+		out = []byte{0xb2, 0x00}
+		for i, part := range parts {
+			switch {
+			case i <= 1:
+				out = append(out, nameToBytes(mustExtendedStringToName, part)...)
+			case i == 2:
 				bytes, err := heightToBytes(part)
 				if err != nil {
 					return nil, fmt.Errorf("invalid height %q: %w", part, err)
@@ -595,4 +653,14 @@ func mustExtendedStringToName(name string) uint64 {
 	}
 
 	return val
+}
+
+var enc, _ = zstd.NewWriter(nil)
+
+func compressBytes(in []byte) (out []byte) {
+	return enc.EncodeAll(in, out)
+}
+
+func byteCount(in []byte) string {
+	return humanize.Bytes(uint64(len(in)))
 }

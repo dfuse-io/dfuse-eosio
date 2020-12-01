@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
@@ -18,15 +19,17 @@ import (
 type Server struct {
 	*shutter.Shutter
 
-	grpcServer *grpc.Server
-	cache      cache.Cache
+	grpcServer          *grpc.Server
+	cache               cache.Cache
+	readinessMaxLatency time.Duration
 }
 
-func NewServer(cache cache.Cache) *Server {
+func NewServer(cache cache.Cache, readinessMaxLatency time.Duration) *Server {
 	s := &Server{
-		Shutter:    shutter.New(),
-		cache:      cache,
-		grpcServer: dgrpc.NewServer(dgrpc.WithLogger(zlog)),
+		readinessMaxLatency: readinessMaxLatency,
+		Shutter:             shutter.New(),
+		cache:               cache,
+		grpcServer:          dgrpc.NewServer(dgrpc.WithLogger(zlog)),
 	}
 
 	pbtokenmeta.RegisterTokenMetaServer(s.grpcServer, s)
@@ -36,9 +39,16 @@ func NewServer(cache cache.Cache) *Server {
 }
 
 func (s *Server) Check(ctx context.Context, in *pbhealth.HealthCheckRequest) (*pbhealth.HealthCheckResponse, error) {
-	status := pbhealth.HealthCheckResponse_NOT_SERVING
-	if !s.IsTerminating() {
-		status = pbhealth.HealthCheckResponse_SERVING
+	status := pbhealth.HealthCheckResponse_SERVING
+
+	if s.IsTerminating() {
+		status = pbhealth.HealthCheckResponse_NOT_SERVING
+	}
+	if s.readinessMaxLatency > 0 {
+		headBlkTime := s.cache.GetHeadBlockTime()
+		if headBlkTime.IsZero() || time.Since(headBlkTime) > s.readinessMaxLatency {
+			status = pbhealth.HealthCheckResponse_NOT_SERVING
+		}
 	}
 
 	return &pbhealth.HealthCheckResponse{

@@ -24,7 +24,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20200831184019-abc72820952f
+	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
 	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
 	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
@@ -32,10 +32,10 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
-	github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef
+	github.com/dfuse-io/fluxdb v0.0.0-20201201183227-e0a624c4c8c0
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
-	github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc
-	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79
+	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
+	github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42
 	github.com/dfuse-io/merger v0.0.3-0.20200903134352-cc8471c82c4a
 	github.com/dfuse-io/node-manager v0.0.2-0.20201016134428-f788962cbc57
 	github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71
@@ -58,6 +58,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
+	github.com/klauspost/compress v1.10.2
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v0.0.0-20200102142835-e9ef32dff381
 	github.com/lytics/lifecycle v0.0.0-20130117214539-7b4c4028d422 // indirect

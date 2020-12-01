@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
@@ -23,6 +24,7 @@ type DefaultCache struct {
 	blocklevelLock sync.RWMutex
 	cacheFilePath  string
 	EOSStake       map[eos.AccountName]*EOSStake `json:"eos_stake"`
+	HeadBlockTime  time.Time
 }
 
 type Block struct {
@@ -85,6 +87,18 @@ func LoadDefaultCacheFromFile(filename string) (*DefaultCache, error) {
 	}
 	c.cacheFilePath = filename
 	return c, nil
+}
+
+func (c *DefaultCache) SetHeadBlockTime(t time.Time) {
+	c.blocklevelLock.Lock()
+	defer c.blocklevelLock.Unlock()
+	c.HeadBlockTime = t
+}
+
+func (c *DefaultCache) GetHeadBlockTime() time.Time {
+	c.blocklevelLock.RLock()
+	defer c.blocklevelLock.RUnlock()
+	return c.HeadBlockTime
 }
 
 func (c *DefaultCache) SaveToFile() error {
