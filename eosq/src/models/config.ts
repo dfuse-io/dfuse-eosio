@@ -25,21 +25,18 @@ const newDefaultConfig = () => {
       {
         id: "local",
         is_test: true,
-        logo: "/images/eos-mainnet.png",
         name: "Local Network",
         url: "http://localhost:8080"
       },
       {
         id: "eos-kylin",
         is_test: true,
-        logo: "/images/eos-kylin.png",
         name: "Kylin Testnet",
         url: "https://kylin.eosq.app"
       },
       {
         id: "wax-mainnet",
-        is_test: true,
-        logo: "/images/wax-mainnet.png",
+        is_test: false,
         name: "WAX Mainnet",
         url: "https://wax.eosq.app"
       }
@@ -72,9 +69,9 @@ if (!windowTS.TopLevelConfig) {
 export interface EosqNetwork {
   id: string
   name: string
-  is_test: false
-  logo: string
   url: string
+  is_test?: boolean
+  logo?: string
 }
 
 interface EosqConfig {
@@ -104,3 +101,7 @@ export const Config = {
   chain_core_symbol_code: windowTS.TopLevelConfig.chain_core_symbol.split(",")[1],
   isLocalhost
 } as EosqConfig
+
+export const getActiveNetworkConfig = (): EosqNetwork | undefined => {
+  return Config.available_networks.find((network) => network.id === Config.current_network)
+}

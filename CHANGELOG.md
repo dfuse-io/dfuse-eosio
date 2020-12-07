@@ -41,6 +41,7 @@ date.
 
 ### Changed
 
+* **Breaking Change** Changes to `--eosq-available-networks` config might be required around the `logo` field each network. You must now remove the `logo` field if it's not pointing to an existing image otherwise, the logo will not be rendered correctly.
 * Applying a block filter over previously-filtered-blocks does not panic anymore, it applies the new filter on top of it, only if that specific filter has never been applied before. Applied filters definitions are concatenated in the block metadata, separated by `;;;`
 * Default `trxdb-loader-batch-size` changed to 100, Safe to do so because it does not batch when close to head.
 * Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
