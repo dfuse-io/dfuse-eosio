@@ -1,8 +1,10 @@
 import * as React from "react"
 import { t } from "i18next"
 import { observer } from "mobx-react"
-import { styled } from "../../../theme"
+import { Button } from "@material-ui/core"
+import { theme, styled } from "../../../theme"
 import { Cell, Grid } from "../../../atoms/ui-grid/ui-grid.component"
+import { Text } from "../../../atoms/text/text.component"
 import { Account } from "../../../models/account"
 import { ListTransactions } from "../../../components/list-transactions/list-transactions.component"
 import { transactionSearchResultsToTransactionInfo } from "../../../helpers/legacy.helpers"
@@ -13,7 +15,18 @@ import { ListContentLoaderComponent } from "../../../components/list-content-loa
 import { RouteComponentProps } from "react-router"
 import { searchStore } from "../../../stores"
 import { performStructuredSearch } from "../../../services/search"
-import { RangeOptions } from "../../../models/search-filters"
+import { FilterTypes, RangeOptions } from "../../../models/search-filters"
+import { BLOCK_NUM_5M } from "../../../models/block"
+
+const StyledButton: React.ComponentType<any> = styled(Button)`
+  padding: 12px 30px !important;
+  background-color: ${(props) => props.theme.colors.ternary} !important;
+  border: none !important;
+  font-weight: bold !important;
+  border-radius: 0px !important;
+  min-height: 35px !important;
+  color: ${(props) => props.theme.colors.primary} !important;
+`
 
 const PanelContentWrapper: React.ComponentType<any> = styled(Cell)`
   width: 100%;
@@ -106,7 +119,34 @@ export class AccountTransactions extends ListContentLoaderComponent<Props> {
       </Cell>
     )
   }
+  extendSearch() {
+    const lastBlocks = searchStore.parseField(
+      "lastBlocks",
+      searchStore.blockRange.lastBlocks!
+    ) as number
+    searchStore.updateFilter(FilterTypes.BLOCK_RANGE, "lastBlocks", lastBlocks + BLOCK_NUM_5M)
+    performStructuredSearch(this.cursorCache.currentCursor || "")
+    this.props.history.push(this.cursoredUrl(this.cursorCache.currentCursor || ""))
+  }
 
+  renderNoResultsExtendSearchBox() {
+    if (searchStore.blockRange.option === RangeOptions.LAST_BLOCKS) {
+      return (
+          <Cell textAlign="center" p={[3]}>
+            <Text color={theme.colors.green5} fontSize={[5]} mb="20px">
+              {t("transaction.list.noResultsExtend", {
+                lastBlocks: searchStore.blockRange.lastBlocks
+              })}
+            </Text>
+            <br />
+            <StyledButton onClick={() => this.extendSearch()}>
+              {t("transaction.list.extendSearch")}
+            </StyledButton>
+          </Cell>
+      )
+    }
+    return null
+  }
   render() {
     let content
 
@@ -116,8 +156,8 @@ export class AccountTransactions extends ListContentLoaderComponent<Props> {
       content = this.renderSearchResults()
     } else {
       content = (
-        <Cell p={[3]} px={[6]}>
-          {this.renderError({ name: "not_found", message: "Nothing found" })}
+        <Cell p={[4]}>
+          {this.renderNoResultsExtendSearchBox()}
         </Cell>
       )
     }
