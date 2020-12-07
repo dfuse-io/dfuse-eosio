@@ -3,7 +3,6 @@ import { GenericPillComponent, PillRenderingContext } from "../generic-pill.comp
 import { Box } from "@dfuse/explorer"
 import { getClaimRewardsLevel1Fields, getClaimRewardsLevel2Fields } from "../pill-template.helpers"
 import { FormattedText } from "../../../formatted-text/formatted-text"
-import { Config } from "../../../../models/config"
 
 export class ClaimRewardsPillComponent extends GenericPillComponent {
   static requireFields: string[] = ["owner"]
@@ -54,7 +53,7 @@ export class ClaimRewardsPillComponent extends GenericPillComponent {
 
   renderLevel2Template = () => {
     const { action } = this.props
-    if (this.hasInlineTraces() && Config.chain_core_symbol_code === "EOS") {
+    if (this.hasInlineTraces()) {
       return (
         <Box fontSize={[1]} mx={[2]} minWidth="10px" minHeight="26px" alignItems="center">
           <FormattedText
