@@ -76,9 +76,10 @@ type Config struct {
 	AuthPlugin               string
 	UseOpencensusStackdriver bool
 
-	FetchPrice     bool
-	FetchVoteTally bool
-	WithCompletion bool
+	ChainCoreSymbol string
+	FetchPrice      bool
+	FetchVoteTally  bool
+	WithCompletion  bool
 
 	FilesourceRateLimitPerBlock time.Duration
 	BlocksBufferSize            int
@@ -249,9 +250,11 @@ func (a *App) Run() error {
 	}
 
 	irrFinder := eosws.NewDBReaderBaseIrrFinder(db)
-
 	abiGetter := eosws.NewDefaultABIGetter(stateClient)
-	accountGetter := eosws.NewApiAccountGetter(api)
+	coreSymbol := eos.MustStringToSymbol(a.Config.ChainCoreSymbol)
+
+	zlog.Info("creating api account getter", zap.Stringer("core_symbol", coreSymbol))
+	accountGetter := eosws.NewApiAccountGetter(api, coreSymbol)
 
 	zlog.Info("creating blockmeta client", zap.String("addr", a.Config.BlockmetaAddr))
 	blockmetaClient, err := pbblockmeta.NewClient(a.Config.BlockmetaAddr)

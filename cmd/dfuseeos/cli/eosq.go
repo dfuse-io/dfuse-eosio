@@ -43,7 +43,7 @@ func init() {
 				DisableAnalytics:  viper.GetBool("eosq-disable-analytics"),
 				DefaultNetwork:    viper.GetString("eosq-default-network"),
 				DisplayPrice:      viper.GetBool("eosq-display-price"),
-				PriceTickerName:   viper.GetString("eosq-price-ticker-name"),
+				ChainCoreSymbol:   viper.GetString("common-chain-core-symbol"),
 			}), nil
 		},
 	})

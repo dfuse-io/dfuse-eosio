@@ -13,6 +13,7 @@ date.
 
 ### Added
 
+* Added `--common-chain-core-symbol` flag to define actual chain core symbol in the form `<precision>,<symbol code>` defaults to `4,EOS` by default.
 * Added `--tokenmeta-readiness-max-latency` with default=5m, now tokenmeta will show as "NotServing" through grpc healthcheck if last processed block (HEAD) is older than this. Value of 0 disables that feature.
 * Added `--relayer-source-request-burst` with default=90 to allow a relayer connecting to another relayer to request a 'burst'
 * Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
@@ -32,6 +33,8 @@ date.
 * Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
 ### Removed
+
+* **Breaking Change** Removed `--eosq-price-ticker-name` flag, if you were using this flag, please use `--common-chain-core-symbol` instead to define it.
 * Removed `dgraphql-graceful-shutdown-delay`, it was a left-over, unused. Must use `--common-system-shutdown-signal-delay` now
 * Removed `relayer-max-drift` (now dependent on a new condition of presence of a "block hole", and no new block sent for 5 seconds)
 * Removed `relayer-init-time` (no need for it with this new condition ^)

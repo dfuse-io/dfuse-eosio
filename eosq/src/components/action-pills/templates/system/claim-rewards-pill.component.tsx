@@ -54,7 +54,7 @@ export class ClaimRewardsPillComponent extends GenericPillComponent {
 
   renderLevel2Template = () => {
     const { action } = this.props
-    if (this.hasInlineTraces() && Config.price_ticker_name === "EOS") {
+    if (this.hasInlineTraces() && Config.chain_core_symbol_code === "EOS") {
       return (
         <Box fontSize={[1]} mx={[2]} minWidth="10px" minHeight="26px" alignItems="center">
           <FormattedText

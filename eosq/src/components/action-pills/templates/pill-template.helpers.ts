@@ -25,7 +25,7 @@ export function getClaimAmounts(traceInfo?: TraceInfo) {
     return trace.act.data.from === "eosio.ppay"
   })
 
-  const unit = Config.price_ticker_name
+  const unit = Config.chain_core_symbol_code
 
   const vpay = vpayAction ? getAmount(vpayAction.act.data.quantity) : 0
 
@@ -274,12 +274,12 @@ export function getClaimRewardsLevel2Fields(action: Action<any>, traceInfo?: Tra
     },
     {
       name: "amountbEOS",
-      value: `${getClaimAmounts(traceInfo)[1]} ${Config.price_ticker_name}`,
+      value: `${getClaimAmounts(traceInfo)[1]} ${Config.chain_core_symbol_code}`,
       type: "bold"
     },
     {
       name: "amountvEOS",
-      value: `${getClaimAmounts(traceInfo)[2]} ${Config.price_ticker_name}`,
+      value: `${getClaimAmounts(traceInfo)[2]} ${Config.chain_core_symbol_code}`,
       type: "bold"
     }
   ]

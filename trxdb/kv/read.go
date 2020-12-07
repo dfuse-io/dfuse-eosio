@@ -292,12 +292,8 @@ func (db *DB) GetAccount(ctx context.Context, accountName string) (*pbcodec.Acco
 	}, nil
 }
 
-func (db *DB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) (out []string, err error) {
-	if concurrentReadCount == 0 {
-		return nil, fmt.Errorf("invalid concurrent read")
-	}
-
-	it := db.blkReadStore.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), 0)
+func (db *DB) ListAccountNames(ctx context.Context) (out []string, err error) {
+	it := db.blkReadStore.Scan(ctx, Keys.StartOfAccountTable(), Keys.EndOfAccountTable(), store.Unlimited)
 	for it.Next() {
 		acctRow := &pbtrxdb.AccountRow{}
 		db.dec.MustInto(it.Item().Value, acctRow)

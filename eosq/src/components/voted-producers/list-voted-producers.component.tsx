@@ -99,7 +99,7 @@ export class ListVotedProducers extends React.Component<Props, State> {
         </UiTableCellAccount>
         <UiTableCell fontSize={[2]}>{vote.votePercent.toFixed(3)} %</UiTableCell>
         <UiTableCell fontSize={[2]}>
-          {formatNumber(vote.decayedVote)} {Config.price_ticker_name}
+          {formatNumber(vote.decayedVote)} {Config.chain_core_symbol_code}
         </UiTableCell>
       </UiTableRowAlternated>
     )
