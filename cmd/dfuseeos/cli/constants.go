@@ -46,6 +46,7 @@ const (
 	DashboardGRPCServingAddr    string = ":13031"
 	FilteringRelayerServingAddr string = ":13032"
 	AccountHistGRPCServingAddr  string = ":13034"
+	FirehoseGRPCServingAddr     string = ":13035"
 	TokenmetaGRPCServingAddr    string = ":14001"
 	DashboardHTTPListenAddr     string = ":8081"
 	APIProxyHTTPListenAddr      string = ":8080"
