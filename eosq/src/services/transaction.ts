@@ -1,5 +1,5 @@
 import { task } from "mobx-task"
-import { log } from "./logger"
+import { debugLog } from "./logger"
 import { listTransactions } from "../clients/websocket/eosws"
 import { transactionListStore } from "../stores"
 
@@ -14,7 +14,7 @@ export const getTransactions = task(
   async (cursor: string, perPage: number) => {
     const response = await listTransactions(cursor, perPage)
     if (!response || response.transactions.length === 0) {
-      log.info("No account found for query [%s] via API.")
+      debugLog("No account found for query [%s] via API.")
       return null
     }
     transactionListStore.results = response.transactions

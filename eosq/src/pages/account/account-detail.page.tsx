@@ -3,13 +3,9 @@ import * as React from "react"
 import { Redirect, RouteComponentProps } from "react-router-dom"
 import { Account } from "../../models/account"
 import { Links } from "../../routes"
-
 import { ContentLoaderComponent } from "../../components/content-loader/content-loader.component"
 import { PageContainer } from "../../components/page-container/page-container"
 import { ErrorData, Stream } from "@dfuse/client"
-
-// temp ignore for dev
-
 import { DataLoading, BULLET } from "@dfuse/explorer"
 import { CustomTitleBanner } from "../../atoms/panel/custom-title-banner"
 import { AccountSummary } from "./summary/account-summary"

@@ -1,5 +1,5 @@
 import { task } from "mobx-task"
-import { log } from "./logger"
+import { debugLog } from "./logger"
 import { requestProducerSchedule } from "../clients/rest/account"
 
 export const fetchProducerSchedule = task(
@@ -7,14 +7,14 @@ export const fetchProducerSchedule = task(
     const producerScheduleResponse = await requestProducerSchedule()
 
     if (producerScheduleResponse) {
-      log.info(
+      debugLog(
         "Found schedule version [%s] via search API.",
         producerScheduleResponse.active.version,
         producerScheduleResponse
       )
       return producerScheduleResponse.active.producers
     }
-    log.info("Schedule not found anywhere.")
+    debugLog("Schedule not found anywhere.")
     return []
   },
   { swallow: true }

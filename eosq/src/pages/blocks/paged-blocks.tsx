@@ -1,9 +1,6 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-
-// temp ignore for dev
-
 import { DataEmpty } from "@dfuse/explorer"
 import { Panel } from "../../atoms/panel/panel.component"
 import { fetchBlockList } from "../../services/block"
@@ -31,8 +28,8 @@ export class PagedBlocks extends ContentLoaderComponent<Props> {
   }
 
   componentDidMount() {
-    if (this.parsed.lastBlockNum && this.parsed.lastBlockNum.length > 0) {
-      this.lastBlockNum = this.parsed.lastBlockNum
+    if (typeof this.parsed.lastBlockNum === "string" && this.parsed.lastBlockNum && this.parsed.lastBlockNum.match(/^[0-9]+$/)) {
+      this.lastBlockNum = parseInt(this.parsed.lastBlockNum)
     }
 
     fetchBlockList(this.lastBlockNum)

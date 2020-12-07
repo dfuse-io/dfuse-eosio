@@ -3,7 +3,11 @@
     "rootDir": "src",
     "outDir": "build/dist",
     "target": "es6",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
@@ -11,7 +15,7 @@
     "noEmit": true,
     "sourceMap": true,
     "allowJs": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -19,15 +23,20 @@
     "noImplicitReturns": false,
     "noImplicitThis": false,
     "noImplicitAny": false,
-    // Too agressive, causes build to fail, let's remove it and hope ESLint reports it
     "noUnusedLocals": false,
     "importHelpers": true,
     "strict": true,
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
-
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "./types/"],
-  "exclude": ["./coverage", "./server"]
+  "include": [
+    "src",
+    "./types/"
+  ],
+  "exclude": [
+    "./coverage",
+    "./server"
+  ]
 }

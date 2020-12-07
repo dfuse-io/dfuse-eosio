@@ -21,10 +21,15 @@ const BoldText: React.ComponentType<any> = styled.span`
 export class SearchResultPage extends React.Component<Props, any> {
   renderTitle() {
     const parsed = queryString.parse(this.props.location.search)
+    let query: string = ""
+    if (typeof parsed.query === "string") {
+      query = parsed.query
+    }
+
     return (
       <Text fontSize={[5]}>
         {t("search.result.noResultFoundFor")}{" "}
-        <BoldText fontSize={[5]}>{decodeURIComponent(parsed.query)}</BoldText>
+        <BoldText fontSize={[5]}>{decodeURIComponent(query)}</BoldText>
       </Text>
     )
   }

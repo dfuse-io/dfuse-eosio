@@ -17,9 +17,6 @@ import {
   PieChartParams,
   StakeDetail
 } from "../../../helpers/account.helpers"
-
-// temp ignore for dev
-
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
 import { UiToolTip } from "../../../atoms/ui-tooltip/ui-tooltip"

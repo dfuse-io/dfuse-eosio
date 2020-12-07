@@ -79,6 +79,7 @@ func init() {
 				DataIntegrityProofSecret:    viper.GetString("eosws-data-integrity-proof-secret"),
 				HealthzSecret:               viper.GetString("eosws-healthz-secret"),
 				MaxStreamCountPerConnection: viper.GetInt("eosws-max-stream-per-connection"),
+				ChainCoreSymbol:             viper.GetString("common-chain-core-symbol"),
 				DisabledWsMessage:           disabledWsMessages,
 			}, &eoswsApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,

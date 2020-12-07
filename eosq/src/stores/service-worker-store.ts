@@ -1,4 +1,5 @@
 import { observable } from "mobx"
+import { debugLog } from '../services/logger'
 
 export enum ServiceWorkerStates {
   DEFAULT = "default",
@@ -16,7 +17,7 @@ export class ServiceWorkerStore {
   }
 
   changeToState(newState: ServiceWorkerStates) {
-    console.log("Updating serviceworker state to %s at time %s", newState, Date.now())
+    debugLog("Updating serviceworker state to %s at time %s", newState, Date.now())
     this.state = newState
   }
 }
