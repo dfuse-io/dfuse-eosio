@@ -34,6 +34,7 @@ import (
 	dmeshClient "github.com/dfuse-io/dmesh/client"
 	_ "github.com/dfuse-io/kvdb/store/badger"
 	_ "github.com/dfuse-io/kvdb/store/bigkv"
+	_ "github.com/dfuse-io/kvdb/store/netkv"
 	_ "github.com/dfuse-io/kvdb/store/tikv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

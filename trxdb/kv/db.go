@@ -60,6 +60,7 @@ func init() {
 	trxdb.Register("badger", testFactory)
 	trxdb.Register("tikv", testFactory)
 	trxdb.Register("bigkv", testFactory)
+	trxdb.Register("netkv", testFactory)
 	trxdb.Register("cznickv", testFactory)
 }
 
