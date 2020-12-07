@@ -131,7 +131,7 @@ func queryGraphql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "query.graphql", size: 3740, mode: os.FileMode(436), modTime: time.Unix(1587588369, 0)}
+	info := bindataFileInfo{name: "query.graphql", size: 3740, mode: os.FileMode(436), modTime: time.Unix(1607383116, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -151,7 +151,7 @@ func query_alphaGraphql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "query_alpha.graphql", size: 3509, mode: os.FileMode(436), modTime: time.Unix(1598470104, 0)}
+	info := bindataFileInfo{name: "query_alpha.graphql", size: 3509, mode: os.FileMode(436), modTime: time.Unix(1603825625, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -231,7 +231,7 @@ func tokenmetaGraphql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "tokenmeta.graphql", size: 2848, mode: os.FileMode(436), modTime: time.Unix(1598470104, 0)}
+	info := bindataFileInfo{name: "tokenmeta.graphql", size: 2848, mode: os.FileMode(436), modTime: time.Unix(1603825625, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
