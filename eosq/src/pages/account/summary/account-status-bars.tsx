@@ -98,7 +98,7 @@ export class AccountStatusBars extends React.Component<Props> {
               {t("account.summary.tooltip.other")}
             </Cell>
             <Cell alignSelf="right" justifySelf="right">
-              {numeral(other).format("0,0.0000")} {Config.chain_core_symbol_code}
+              {numeral(other).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
             </Cell>
           </Grid>
         )}
@@ -107,7 +107,7 @@ export class AccountStatusBars extends React.Component<Props> {
             {title}
           </Cell>
           <Cell fontWeight={["700"]} alignSelf="right" justifySelf="right">
-            {numeral(total).format("0,0.0000")} {Config.chain_core_symbol_code}
+            {numeral(total).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
           </Cell>
         </Grid>
       </Grid>

@@ -92,6 +92,7 @@ interface EosqConfig {
   chain_core_symbol: string
   chain_core_symbol_code: string
   chain_core_symbol_precision: number
+  chain_core_asset_format: string
 
   display_price: boolean
   disable_segments: boolean
@@ -99,10 +100,15 @@ interface EosqConfig {
 }
 
 const newConfig = () => {
+  const coreSymbolParts = windowTS.TopLevelConfig.chain_core_symbol.split(",")
+  const coreSymbolPrecision = parseInt(coreSymbolParts[0])
+  const coreSymbolCode = coreSymbolParts[1]
+
   const config = {
     ...windowTS.TopLevelConfig,
-    chain_core_symbol_precision: parseInt(windowTS.TopLevelConfig.chain_core_symbol.split(",")[0]),
-    chain_core_symbol_code: windowTS.TopLevelConfig.chain_core_symbol.split(",")[1],
+    chain_core_symbol_precision: coreSymbolPrecision,
+    chain_core_symbol_code: coreSymbolCode,
+    chain_core_asset_format: "0,0." + "0".repeat(coreSymbolPrecision),
     isLocalhost,
   } as EosqConfig
 
