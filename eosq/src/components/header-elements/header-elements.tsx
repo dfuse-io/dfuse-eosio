@@ -4,7 +4,9 @@ import { Link } from "react-router-dom"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
 import { Links } from "../../routes"
 import { t } from "i18next"
-import { theme, styled } from "../../theme"
+import { styled } from "../../theme"
+import { getActiveNetworkConfig } from '../../models/config'
+import { Box } from '@dfuse/explorer'
 
 export const LogoElement: React.ComponentType<any> = styled.div`
   font-family: "Lato", sans-serif;
@@ -38,18 +40,11 @@ interface Props {
 }
 
 export const HeaderLogo: React.FC<Props> = ({ variant }) => {
-  const protocolLogoColor = variant === "light" ? "#ffffff" : theme.colors.bleu10
-
   return (
     <Grid gridTemplateColumns={["auto 1fr"]} gridRow={["1"]} gridColumn={["1"]}>
       <Cell py={[0, 0]} alignSelf="center">
         <LogoLink to={Links.home()}>
-          <LogoElement px={[0]} color={protocolLogoColor} fontSize={["40px", "56px", "56px"]}>
-            eos
-          </LogoElement>
-          <LogoElement px={[0]} color={theme.colors.logo2} fontSize={["40px", "56px"]}>
-            q
-          </LogoElement>
+          <Logo variant={variant} />
         </LogoLink>
       </Cell>
       <Cell pl={[0, 1, 3]} alignSelf="center" justifySelf="left">
@@ -65,3 +60,29 @@ export const HeaderLogo: React.FC<Props> = ({ variant }) => {
     </Grid>
   )
 }
+
+const Logo: React.FC<Props> = ({ variant }) => {
+  const networkConfig = getActiveNetworkConfig()
+  if (networkConfig && networkConfig.logo) {
+    return <LogoImage image={networkConfig.logo} />
+  }
+
+  return <LogoText variant={variant} />
+}
+
+const LogoText: React.FC<Props> = ({ variant }) => (
+  <>
+    <LogoElement px={[0]} color={variant === "light" ? "#ffffff" : "bleu10"} fontSize={["40px", "56px", "56px"]}>
+      eos
+    </LogoElement>
+    <LogoElement px={[0]} color="logo2" fontSize={["40px", "56px"]}>
+      q
+    </LogoElement>
+  </>
+)
+
+const LogoImage: React.FC<{image: string}> = ({ image }) => (
+  <Box px={[0]}>
+    <img src={image} alt="Logo"></img>
+  </Box>
+)

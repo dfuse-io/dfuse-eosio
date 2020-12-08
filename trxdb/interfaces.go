@@ -46,8 +46,7 @@ type BlocksTransactionsReader interface {
 
 type AccountsReader interface {
 	GetAccount(ctx context.Context, accountName string) (*pbcodec.AccountCreationRef, error)
-	//TODO: concurrentReadCount is that a property only for Bigtable? should it be configured when creating the driver
-	ListAccountNames(ctx context.Context, concurrentReadCount uint32) ([]string, error)
+	ListAccountNames(ctx context.Context) ([]string, error)
 }
 
 type TransactionsReader interface {

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -46,7 +45,7 @@ type Completion interface {
 
 func New(ctx context.Context, db eosws.DB) (Completion, error) {
 	zlog.Debug("fetching initial account names")
-	accountNames, err := db.ListAccountNames(ctx, uint32(runtime.NumCPU()*2))
+	accountNames, err := db.ListAccountNames(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("new completion: %s", err)
 	}

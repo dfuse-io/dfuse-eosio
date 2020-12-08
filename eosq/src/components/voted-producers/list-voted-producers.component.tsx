@@ -1,9 +1,8 @@
 import { t } from "i18next"
 import * as React from "react"
-import { formatNumber, Box, Spinner } from "@dfuse/explorer"
+import { formatNumber, Box } from "@dfuse/explorer"
 import { Vote } from "../../models/vote"
 import { Text } from "../../atoms/text/text.component"
-
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
@@ -22,8 +21,8 @@ import {
 } from "../../atoms/ui-table/ui-table.component"
 import { Panel } from "../../atoms/panel/panel.component"
 import { getRankBgColor } from "../../helpers/account.helpers"
-
 import { Config } from "../../models/config"
+import { LoadingOutlined } from "@ant-design/icons"
 
 const UiTableCellRank: React.ComponentType<any> = styled(UiTableCell)`
   color: white !important;
@@ -43,7 +42,7 @@ const UiTableCellRankHeader: React.ComponentType<any> = styled(UiTableCell)`
   padding: 4px 14px 4px 14px !important;
 `
 
-const ProducerSpinner: React.ComponentType<any> = styled(Spinner)`
+const ProducerSpinner: React.ComponentType<any> = styled(LoadingOutlined)`
   transform: scale(0.3) translateY(14px);
   position: absolute;
   top: 5px;
@@ -99,7 +98,7 @@ export class ListVotedProducers extends React.Component<Props, State> {
         </UiTableCellAccount>
         <UiTableCell fontSize={[2]}>{vote.votePercent.toFixed(3)} %</UiTableCell>
         <UiTableCell fontSize={[2]}>
-          {formatNumber(vote.decayedVote)} {Config.price_ticker_name}
+          {formatNumber(vote.decayedVote)} {Config.chain_core_symbol_code}
         </UiTableCell>
       </UiTableRowAlternated>
     )

@@ -56,10 +56,7 @@ describe("getResolveBetAmounts", () => {
 describe("getBlobUrlFromPayload", () => {
   it("should call revoke and create if old url provided", () => {
     URL.revokeObjectURL = jest.fn()
-    URL.createObjectURL = jest.fn()
-
-    spyOn(URL, "revokeObjectURL")
-    spyOn(URL, "createObjectURL").and.returnValue("test.url")
+    URL.createObjectURL = jest.fn(() => "test.url")
 
     expect(getBlobUrlFromPayload("abc", "old.url")).toEqual([
       "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",

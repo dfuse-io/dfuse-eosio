@@ -1,5 +1,4 @@
 export class MockStorage implements Storage {
-  [name: string]: any
   length = 0
 
   clearMock = jest.fn()

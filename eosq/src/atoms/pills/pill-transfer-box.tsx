@@ -5,6 +5,7 @@ import { ArrowTo, MonospaceTextLink } from "../text-elements/misc"
 import { faArrowRight } from "@fortawesome/free-solid-svg-icons"
 import { Links } from "../../routes"
 import { EllipsisText, Text } from "../text/text.component"
+import { debugLog } from '../../services/logger'
 
 export interface TransferProps {
   from: string
@@ -72,9 +73,7 @@ export const TransferBox: React.SFC<TransferProps> = ({
   }
 
   if (!from || !to) {
-    console.warn("Transfer pill cannot be display, empty content:")
-    console.log("from:", from)
-    console.log("to:", to)
+    debugLog("Transfer pill cannot be display, empty content, from %s -> to %s", from, to)
     return <div />
   }
 

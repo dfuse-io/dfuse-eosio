@@ -73,9 +73,10 @@ export class AccountTableSearch extends React.Component<Props> {
     })
 
     const parsed = queryString.parse(this.props.location.search)
-    let selectedTableName = parsed.tableName
-    if (!selectedTableName && this.props.abiLoader.tableNames.length > 0) {
-      // eslint-disable-next-line prefer-destructuring
+    let selectedTableName: string | undefined
+    if (typeof parsed.tableName === "string" && parsed.tableName) {
+      selectedTableName = parsed.tableName
+    } else if (this.props.abiLoader.tableNames.length > 0) {
       selectedTableName = this.props.abiLoader.tableNames[0]
     }
 

@@ -26,10 +26,10 @@ type Config struct {
 	ApiKey            string // i.e: web_XXXXXXXXXXXXXXXXXXXXXX
 	AuthEndpointURL   string // i.e: https://auth.dfuse.io
 	AvailableNetworks string // this is a JSON string ie: '[{"id": "eos-mainnet", "is_test": false, "logo": "/images/eos-mainnet.png", "name": "EOS Mainnet", "url": "https://eosq.app"}]'
+	ChainCoreSymbol   string // The chain's core symbol to use in the config, should be in the form <precision>,<symbol code> like 4,EOS.
 	DisableAnalytics  bool   // Disables sentry and segment
 	DefaultNetwork    string // The default network that is displayed, should correspond to an id in the avaiable networks
 	DisplayPrice      bool   // Should eosq display prices
-	PriceTickerName   string // the Price ticker name i.e. EOS
 }
 
 type App struct {

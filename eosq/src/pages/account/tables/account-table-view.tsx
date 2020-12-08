@@ -44,8 +44,10 @@ export class AccountTableView extends ContentLoaderComponent<Props, State> {
     super(props)
 
     const parsed = queryString.parse(this.props.location.search)
+    if (typeof parsed.offset === "string" && parsed.offset) {
+      contractTableStore.offset = this.extractOffset(parsed.offset)
+    }
 
-    contractTableStore.offset = this.extractOffset(parsed.offset)
     this.state = {
       formatted: true
     }

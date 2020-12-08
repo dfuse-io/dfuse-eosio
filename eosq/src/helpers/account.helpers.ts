@@ -207,7 +207,6 @@ export interface AccountResources {
   pendingRefund: number
   totalOwnerShip: number
   stakes: StakeDetail[]
-  unit: string
 }
 
 export function getAccountResources(account: Account, stakes: StakeDetail[]): AccountResources {
@@ -216,13 +215,13 @@ export function getAccountResources(account: Account, stakes: StakeDetail[]): Ac
   const refundRequest = account.refund_request
   const rexTokens = account.rex_balance
     ? account.rex_balance.vote_stake
-    : `0.0000 ${Config.price_ticker_name}`
+    : `0.0000 ${Config.chain_core_symbol_code}`
   const rexFunds = account.rex_funds
     ? account.rex_funds.balance
-    : `0.0000 ${Config.price_ticker_name}`
+    : `0.0000 ${Config.chain_core_symbol_code}`
   const rexCpuLoans = account.cpu_loans ? account.cpu_loans : 0
   const rexNetLoans = account.net_loans ? account.net_loans : 0
-  const unit = extractValueWithUnits(totalResources.cpu_weight)[1] || ` ${Config.price_ticker_name}`
+
   let stakedCpu = parseFloat(extractValueWithUnits(totalResources.cpu_weight)[0])
   const availableFunds = parseFloat(extractValueWithUnits(account.core_liquid_balance)[0])
   const selfStakedCpu = parseFloat(extractValueWithUnits(selfDelegated.cpu_weight)[0])
@@ -278,7 +277,6 @@ export function getAccountResources(account: Account, stakes: StakeDetail[]): Ac
     pendingRefund,
     totalOwnerShip,
     stakes: stakes.filter((stake: StakeDetail) => stake.to !== account.account_name),
-    unit
   }
 }
 
@@ -338,7 +336,7 @@ export function getPieChartParams(
 
   const pieChartCenter =
     // eslint-disable-next-line prefer-template
-    numeral(accountResources.totalOwnerShip).format("0,0") + " " + accountResources.unit
+    numeral(accountResources.totalOwnerShip).format("0,0") + " " + Config.chain_core_symbol_code
 
   let pieChartDataForPie = pieChartData
   let pieChartColorsForPie = pieChartColors

@@ -4,7 +4,7 @@ import { theme, ThemeInterface } from "../theme"
 
 const ThemeProvider: React.FC<ThemeProviderProps<ThemeInterface>> = EmotionThemeProvider as any
 
-export default (ComposedComponent: any) => {
+const WithTheme = (ComposedComponent: any) => {
   return class WrapperComponent extends React.PureComponent {
     state = {
       currentTheme: localStorage.getItem("@theme:current")
@@ -34,3 +34,5 @@ export default (ComposedComponent: any) => {
     }
   }
 }
+
+export default WithTheme

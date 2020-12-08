@@ -3,7 +3,7 @@ import Sentry from "@sentry/browser"
 import { serviceWorkerStore } from "../../stores"
 import { ServiceWorkerStates } from "../../stores/service-worker-store"
 import { styled } from "../../theme"
-import { log } from "../../services/logger"
+import { debugLog } from "../../services/logger"
 
 interface State {
   error: any
@@ -106,7 +106,7 @@ export class AppErrorBoundary extends React.Component<any, State> {
           scope.setExtra(key, errorInfo[key])
         })
 
-        log.error("Captured an error", error)
+        debugLog("Captured an error", error)
         Sentry.captureException(error)
       })
     }

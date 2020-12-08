@@ -2,11 +2,10 @@
 
 exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -18,8 +17,9 @@ exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`]
           2,
         ]
       }
+      position="relative"
     >
-      <ForwardRef(render)
+      <Styled(div)
         fontSize={
           Array [
             1,
@@ -29,7 +29,7 @@ exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`]
         <Trans
           components={
             Array [
-              <ForwardRef(render)
+              <Styled(div)
                 color="text"
                 display="inline-block"
                 fontSize={
@@ -45,7 +45,7 @@ exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`]
                 }
               >
                 Message:
-              </ForwardRef(render)>,
+              </Styled(div)>,
             ]
           }
           i18nKey="pillTemplates.tweet.summary"
@@ -55,24 +55,49 @@ exports[`Templates BaseDecenTwitterTweetPillComponent should render properly 1`]
             }
           }
         />
-      </ForwardRef(render)>
-    </ForwardRef(render)>
+      </Styled(div)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BaseForumPostPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -84,27 +109,53 @@ exports[`Templates BaseForumPostPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="certify: certify content: content json_metadata: {} post_uuid: uuid poster: poster reply_to_post_uuid: uuid reply_to_poster: poster"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BaseForumProposePillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -116,27 +167,53 @@ exports[`Templates BaseForumProposePillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="expires_at: 2018/20/01 proposal_json: {} proposal_name: testing proposer: eoscanadacom title: title"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BaseResolveBetPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -148,27 +225,53 @@ exports[`Templates BaseResolveBetPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="bet_id: bet_id sig: sig"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BaseSetcodePillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -180,8 +283,9 @@ exports[`Templates BaseSetcodePillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
-      <ForwardRef(render)
+      <Styled(div)
         fontSize={
           Array [
             1,
@@ -204,24 +308,49 @@ exports[`Templates BaseSetcodePillComponent should render properly 1`] = `
         >
           account
         </MonospaceTextLink>
-      </ForwardRef(render)>
-    </ForwardRef(render)>
+      </Styled(div)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BetReceiptPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -233,6 +362,7 @@ exports[`Templates BetReceiptPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -261,23 +391,48 @@ exports[`Templates BetReceiptPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.betReceipt.summaryWon"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BuyRamBytesPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -290,6 +445,7 @@ exports[`Templates BuyRamBytesPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -318,23 +474,48 @@ exports[`Templates BuyRamBytesPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.buyrambytes.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates BuyRamPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -347,6 +528,7 @@ exports[`Templates BuyRamPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -375,23 +557,48 @@ exports[`Templates BuyRamPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.buyram.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates ClaimRewardsPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -403,27 +610,53 @@ exports[`Templates ClaimRewardsPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="owner: owner"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates DelegateBandwidthPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -436,6 +669,7 @@ exports[`Templates DelegateBandwidthPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -469,23 +703,48 @@ exports[`Templates DelegateBandwidthPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.delegatebw.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates GenericPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -497,27 +756,53 @@ exports[`Templates GenericPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="random_field: random_field other_field: other_field"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates GenericPillComponent should render properly when no data and no hex data present 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -529,27 +814,53 @@ exports[`Templates GenericPillComponent should render properly when no data and 
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content=""
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates GenericPillComponent should render properly when no data but hex data present 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -561,24 +872,49 @@ exports[`Templates GenericPillComponent should render properly when no data but 
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="hex_data"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates IssuePillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
     <TransferBox
       amount="10.0000 EOS"
@@ -586,21 +922,46 @@ exports[`Templates IssuePillComponent should render properly 1`] = `
       to="eoscanadacom"
     />
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates LinkAuthPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -613,6 +974,7 @@ exports[`Templates LinkAuthPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -646,23 +1008,48 @@ exports[`Templates LinkAuthPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.linkauth.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates NewAccountPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -675,6 +1062,7 @@ exports[`Templates NewAccountPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -698,23 +1086,48 @@ exports[`Templates NewAccountPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.newaccount.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates RefundPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -726,27 +1139,53 @@ exports[`Templates RefundPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <KeyValueFormatEllipsis
         content="owner: newaccount"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates RegProxyPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -758,6 +1197,7 @@ exports[`Templates RegProxyPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -776,20 +1216,44 @@ exports[`Templates RegProxyPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.regProxy.summaryUnreg"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates TransferPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionSendBackground"
-  colorVariantHeader="#33333"
   content={
     <TransferBox
       amount="2.000 EOS"
@@ -797,21 +1261,46 @@ exports[`Templates TransferPillComponent should render properly 1`] = `
       to="to"
     />
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="traceActionSendBackground"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates UnDelegateBandwidthPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -824,6 +1313,7 @@ exports[`Templates UnDelegateBandwidthPillComponent should render properly 1`] =
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -852,23 +1342,48 @@ exports[`Templates UnDelegateBandwidthPillComponent should render properly 1`] =
         }
         i18nKey="pillTemplates.undelegatebw.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates UpdateAuthPillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -881,6 +1396,7 @@ exports[`Templates UpdateAuthPillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -904,23 +1420,48 @@ exports[`Templates UpdateAuthPillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.updateauth.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;
 
 exports[`Templates VotePillComponent should render properly 1`] = `
 <Pill
-  colorVariant="traceActionGenericBackground"
-  colorVariantHeader="#33333"
   content={
-    <ForwardRef(render)
+    <Styled(div)
       alignItems="center"
+      display="flex"
       fontSize={
         Array [
           1,
@@ -933,6 +1474,7 @@ exports[`Templates VotePillComponent should render properly 1`] = `
           2,
         ]
       }
+      position="relative"
     >
       <Translate(BaseFormattedText)
         fields={
@@ -951,12 +1493,38 @@ exports[`Templates VotePillComponent should render properly 1`] = `
         }
         i18nKey="pillTemplates.voteForBp.summary"
       />
-    </ForwardRef(render)>
+    </Styled(div)>
   }
+  expandButtonBgColor="#8d939a"
+  expandButtonColor="#fff"
+  headerBgColor="#8d939a"
   headerHoverTitle="hovetTitle"
   headerText="text"
+  pill2={
+    <Styled(div)
+      bg="#eaeff5"
+      display="flex"
+      position="relative"
+    >
+      <Styled(div)
+        alignSelf="center"
+        color="text"
+        fontSize={
+          Array [
+            1,
+          ]
+        }
+        px={
+          Array [
+            2,
+          ]
+        }
+      >
+        title
+      </Styled(div)>
+    </Styled(div)>
+  }
   renderExpandedContent={[Function]}
   renderInfo={[Function]}
-  title="title"
 />
 `;

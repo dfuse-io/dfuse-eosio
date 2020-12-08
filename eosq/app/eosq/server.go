@@ -200,8 +200,8 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		"available_networks":  an,
 		"secure":              secure,
 		"current_network":     config.DefaultNetwork,
+		"chain_core_symbol":   config.ChainCoreSymbol,
 		"display_price":       config.DisplayPrice,
-		"price_ticker_name":   config.PriceTickerName,
 		"disable_segments":    config.DisableAnalytics,
 		"disable_sentry":      config.DisableAnalytics,
 	}

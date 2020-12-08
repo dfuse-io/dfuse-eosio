@@ -19,11 +19,11 @@ import (
 	"time"
 
 	"github.com/dfuse-io/derr"
-	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"github.com/dfuse-io/kvdb"
+	eos "github.com/eoscanada/eos-go"
 )
 
 var AccountGetterInstance AccountGetter
@@ -33,11 +33,21 @@ type AccountGetter interface {
 }
 
 type APIAccountGetter struct {
-	api *eos.API
+	api        *eos.API
+	coreSymbol eos.Symbol
 }
 
 func (g *APIAccountGetter) GetAccount(ctx context.Context, name string) (out *eos.AccountResp, err error) {
-	out, err = g.api.GetAccount(ctx, eos.AccountName(name))
+	var options []eos.GetAccountOption
+
+	// For now, we pass the option only if different than the "default". But the default makes sense only in regards
+	// to the chain. So ideally, we would pass the parameter always. The parameter is however not totally documented
+	// so we play on the safe side and simulate the behavior when core symbol was not available.
+	if g.coreSymbol.Precision != 4 || g.coreSymbol.Symbol != "EOS" {
+		options = []eos.GetAccountOption{eos.WithCoreSymbol(g.coreSymbol)}
+	}
+
+	out, err = g.api.GetAccount(ctx, eos.AccountName(name), options...)
 	if err == eos.ErrNotFound {
 		return nil, DBAccountNotFoundError(ctx, name)
 	}
@@ -45,9 +55,10 @@ func (g *APIAccountGetter) GetAccount(ctx context.Context, name string) (out *eo
 	return
 }
 
-func NewApiAccountGetter(api *eos.API) *APIAccountGetter {
+func NewApiAccountGetter(api *eos.API, coreSymbol eos.Symbol) *APIAccountGetter {
 	return &APIAccountGetter{
-		api: api,
+		api:        api,
+		coreSymbol: coreSymbol,
 	}
 }
 

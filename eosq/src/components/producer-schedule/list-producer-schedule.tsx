@@ -11,17 +11,16 @@ import {
   UiTableRow
 } from "../../atoms/ui-table/ui-table.component"
 import { Text } from "../../atoms/text/text.component"
-import { Box, Spinner } from "@dfuse/explorer"
+import { Box, } from "@dfuse/explorer"
 import { Links } from "../../routes"
 import { MonospaceTextLink } from "../../atoms/text-elements/misc"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
-
 import { observer } from "mobx-react"
 import { ReactNode } from "react"
 import { ContentLoaderComponent } from "../content-loader/content-loader.component"
 import { fetchProducerSchedule } from "../../services/producer-schedule"
-
 import { ProducerScheduleItem } from "../../clients/websocket/eosws"
+import { LoadingOutlined } from "@ant-design/icons"
 
 const UiTableCellRankHeader: React.ComponentType<any> = styled(UiTableCell)`
   text-align: center !important;
@@ -37,7 +36,7 @@ const UiTableCellRank: React.ComponentType<any> = styled(UiTableCell)`
   padding: 16px 14px 4px 14px !important;
 `
 
-const ProducerSpinner: React.ComponentType<any> = styled(Spinner)`
+const ProducerSpinner: React.ComponentType<any> = styled(LoadingOutlined)`
   transform: scale(0.3) translateY(14px);
   position: absolute;
   top: 5px;

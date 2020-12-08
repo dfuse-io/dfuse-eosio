@@ -53,7 +53,7 @@ func (db *EOSBlockmetaDB) GetIrreversibleIDAtBlockID(ctx context.Context, id str
 }
 
 func (db *EOSBlockmetaDB) GetForkPreviousBlocks(ctx context.Context, forkTop bstream.BlockRef) ([]bstream.BlockRef, error) {
-	var blocks []bstream.BlockRef
+	blocks := []bstream.BlockRef{forkTop} // forkTop always included
 	next := forkTop
 	window := 10
 
