@@ -41,6 +41,8 @@ date.
 
 ### Changed
 
+* The `--eosq-available-networks` `logo` field each network now has a maximum height of `70px`.
+* The `--eosq-available-networks` config of each network now accepts a `logo_text` that when present, is displayed alongside the `logo` field. This field is taken into consideration only when `logo` is defined. In this mode, the logo is fixed to `48px x 48px`. If the `logo_text` value is `eosq`, this is rendered like the standard `eosq` logo.
 * **Breaking Change** Changes to `--eosq-available-networks` config might be required around the `logo` field each network. You must now remove the `logo` field if it's not pointing to an existing image otherwise, the logo will not be rendered correctly.
 * Applying a block filter over previously-filtered-blocks does not panic anymore, it applies the new filter on top of it, only if that specific filter has never been applied before. Applied filters definitions are concatenated in the block metadata, separated by `;;;`
 * Default `trxdb-loader-batch-size` changed to 100, Safe to do so because it does not batch when close to head.

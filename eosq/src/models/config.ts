@@ -1,3 +1,5 @@
+import { debugLog } from "../services/logger"
+
 const windowTS = window as any
 
 // Extracted from React register service worker part to detect localhost
@@ -26,21 +28,21 @@ const newDefaultConfig = () => {
         id: "local",
         is_test: true,
         name: "Local Network",
-        url: "http://localhost:8080"
+        url: "http://localhost:8080",
       },
       {
         id: "eos-kylin",
         is_test: true,
         name: "Kylin Testnet",
-        url: "https://kylin.eosq.app"
+        url: "https://kylin.eosq.app",
       },
       {
         id: "wax-mainnet",
         is_test: false,
         name: "WAX Mainnet",
-        url: "https://wax.eosq.app"
-      }
-    ]
+        url: "https://wax.eosq.app",
+      },
+    ],
   }
 
   if (isEnvSet(process.env.REACT_APP_EOSQ_CHAIN_CORE_SYMBOL)) {
@@ -72,6 +74,7 @@ export interface EosqNetwork {
   url: string
   is_test?: boolean
   logo?: string
+  logo_text?: string
 }
 
 interface EosqConfig {
@@ -95,12 +98,19 @@ interface EosqConfig {
   disable_sentry: boolean
 }
 
-export const Config = {
-  ...windowTS.TopLevelConfig,
-  chain_core_symbol_precision: parseInt(windowTS.TopLevelConfig.chain_core_symbol.split(",")[0]),
-  chain_core_symbol_code: windowTS.TopLevelConfig.chain_core_symbol.split(",")[1],
-  isLocalhost
-} as EosqConfig
+const newConfig = () => {
+  const config = {
+    ...windowTS.TopLevelConfig,
+    chain_core_symbol_precision: parseInt(windowTS.TopLevelConfig.chain_core_symbol.split(",")[0]),
+    chain_core_symbol_code: windowTS.TopLevelConfig.chain_core_symbol.split(",")[1],
+    isLocalhost,
+  } as EosqConfig
+
+  debugLog("Loaded config %O", config)
+  return config
+}
+
+export const Config = newConfig()
 
 export const getActiveNetworkConfig = (): EosqNetwork | undefined => {
   return Config.available_networks.find((network) => network.id === Config.current_network)
