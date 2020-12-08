@@ -11,6 +11,13 @@ date.
 
 ### Changed
 
+# [v0.1.0-beta8] 2020-08-08
+* fix **experimental** netkv implementation for statedb
+
+# [v0.1.0-beta7] 2020-12-07
+* fix **experimental** netkv implementation for trxdb
+
+# [v0.1.0-beta6] 2020-08-27
 * When using filtering capabilities, only absolutely required system actions will be indexed/processed.
 * Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
