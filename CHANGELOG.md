@@ -47,10 +47,9 @@ date.
 * Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
-* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
-* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
+* Fixed a bug making search-forkresolver useless, because ignored by search-router
 * Fixed a bug on StateDB server not accepting symbol and symbol code as `scope` parameter value.
 * Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully.
 * Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
@@ -62,6 +61,16 @@ date.
 * Fixed issue when reading ABI from StateDB where speculative writes were not handled correctly.
 * Fixed issue when reading Table Row from StateDB where speculative writes were not handled correctly.
 * Fixed a potential crash when reading ABI from StateDB and it does not exist in database.
+
+# [v0.1.0-beta8] 2020-08-08
+* fix **experimental** netkv implementation for statedb
+
+# [v0.1.0-beta7] 2020-12-07
+* fix **experimental** netkv implementation for trxdb
+
+# [v0.1.0-beta6] 2020-08-27
+* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
+* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 # [v0.1.0-beta5] 2020-08-24
 

@@ -263,8 +263,6 @@ github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulV
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSutKgJwa328F/bJ23rpWC8clt5LhCiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
-github.com/dfuse-io/dlauncher v0.0.0-20200831184019-abc72820952f h1:mOJ3JcgtkCF/Wl6JUf7CztJq3h/iyJiuYXU/3fFSVYs=
-github.com/dfuse-io/dlauncher v0.0.0-20200831184019-abc72820952f/go.mod h1:AfUE2njp7F5hXASr10ux3dmBbq4iCjFBmz0enYJRrBk=
 github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971 h1:uv+z/fIYGzMD/NYm3O4NC/auPSdahftPhSYmXDMA4sA=
 github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971/go.mod h1:AfUE2njp7F5hXASr10ux3dmBbq4iCjFBmz0enYJRrBk=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
@@ -289,14 +287,8 @@ github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2 h1:D6bUAFWeAyl
 github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf h1:XEWiDcCvhRqkJaOFW9vg6hzxQ0QAq2onLMpKVvDY2gA=
 github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
-github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef h1:jZ2JA557dvv9bMXHoqWcMecvPHGmcuU0/A38jWGQ1lE=
-github.com/dfuse-io/fluxdb v0.0.0-20201022190049-5b85a7ac04ef/go.mod h1:fCQz11zzQiEQZhTxvCzxCLxFbfkWhfsqibyMJkJe8sA=
-github.com/dfuse-io/fluxdb v0.0.0-20201127204428-214682caf5de h1:ZPONVk25HjPqs29N3ybkHnVQ1T1lr09rzJSVAj8uuVE=
-github.com/dfuse-io/fluxdb v0.0.0-20201127204428-214682caf5de/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
-github.com/dfuse-io/fluxdb v0.0.0-20201127214412-974e06ef71eb h1:1XmWel2FKKphGcccp0rcGXlRJ+8b2/bwJYLUFfLi4X4=
-github.com/dfuse-io/fluxdb v0.0.0-20201127214412-974e06ef71eb/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
-github.com/dfuse-io/fluxdb v0.0.0-20201201183227-e0a624c4c8c0 h1:g1atibNxOK3dEgL8o87xIoL7F1hnkiNmJ3w1rKVTIkc=
-github.com/dfuse-io/fluxdb v0.0.0-20201201183227-e0a624c4c8c0/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
+github.com/dfuse-io/fluxdb v0.0.0-20201208174920-2ae27a02a8fd h1:a9duy/P3KkzyZSjLcxkk0K/YkBgwnNxWE+f9lZlq6dQ=
+github.com/dfuse-io/fluxdb v0.0.0-20201208174920-2ae27a02a8fd/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
@@ -305,10 +297,6 @@ github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf
 github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
-github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc h1:3WOr0tnvXk7uNnnyJqzwLXr900vHDIA0AJjaskukdNU=
-github.com/dfuse-io/kvdb v0.0.2-0.20201023175743-8a5ea05fcbbc/go.mod h1:G22wfzPUb0FrEkqnKx2HM2VpSVNAHtZJD5I4V9+Vrg8=
-github.com/dfuse-io/kvdb v0.0.2-0.20201125183650-bdb2020a21f5 h1:ENpy3NcW06T0OuoownqQUZuKD5thdN62FfvKAPmy7R8=
-github.com/dfuse-io/kvdb v0.0.2-0.20201125183650-bdb2020a21f5/go.mod h1:X3CqnReRyUXsj/0qhX98RiMisJOD1C3G58dW0h+4gX0=
 github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e h1:m8gvEKunk9hGq2gG2MebWflSKWcILzFc6Hob44m9+8E=
 github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e/go.mod h1:X3CqnReRyUXsj/0qhX98RiMisJOD1C3G58dW0h+4gX0=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
@@ -316,8 +304,6 @@ github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilH
 github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
-github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc h1:w3SL2sM5CM8F4bxS7Ny8WKFavUujbBEL/eo8bzh2tV4=
-github.com/dfuse-io/logging v0.0.0-20201023175426-d0173f8508dc/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42 h1:WGgtwEYdpKdgsrabHF1FcjhfPehjgAzB8NGEUK3jhfE=
 github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42/go.mod h1:n0Np6Dr/Yv56l8Rq2wgDZpv4vfjT8qlvY34pb3dcI0k=
@@ -337,8 +323,6 @@ github.com/dfuse-io/pbgo v0.0.6-0.20201104041703-31f8aa2b8af2 h1:K5fpbuwp/8Um1H+
 github.com/dfuse-io/pbgo v0.0.6-0.20201104041703-31f8aa2b8af2/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7 h1:YkmUBTK1z/oafnjr6b4MW5irpDAmhuSavJGUG+a4u7Y=
 github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
-github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4 h1:br3G/sobkJVUH2vdNw0Ix4aJ/PcBsdPe/1m4q/avMy8=
-github.com/dfuse-io/search v0.0.2-0.20201001203701-3f237aa025c4/go.mod h1:pfWlxS/Y4ohay7ecmh52GwJjoevl5H1cyfkPLDjJo3U=
 github.com/dfuse-io/search v0.0.2-0.20201208141141-584c997e5937 h1:jNqMPYWAgupooDym+HkP3yPQNiRFpxPd3Yev1/ihaAI=
 github.com/dfuse-io/search v0.0.2-0.20201208141141-584c997e5937/go.mod h1:pfWlxS/Y4ohay7ecmh52GwJjoevl5H1cyfkPLDjJo3U=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
@@ -378,10 +362,6 @@ github.com/eoscanada/eos-go v0.8.10-0.20190329223853-84b552870f2a/go.mod h1:RKrm
 github.com/eoscanada/eos-go v0.9.1-0.20200227221642-1b19518201a1/go.mod h1:6RuJFiRU1figWZ39M33o2cERU2MdL6VllElYLHTZNeo=
 github.com/eoscanada/eos-go v0.9.1-0.20200506160036-5e090ae689ef/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
 github.com/eoscanada/eos-go v0.9.1-0.20200723180508-f68c7571db82/go.mod h1:exxz2Fyjqx23FIYF1QlhhhggYZxcbZMGp2H/4h7I34Y=
-github.com/eoscanada/eos-go v0.9.1-0.20201015141248-bc309ddb2819 h1:kt5AuNj6IA0ZBEIR9rJdilOTkdA0DEMIA/OuyiL3LNY=
-github.com/eoscanada/eos-go v0.9.1-0.20201015141248-bc309ddb2819/go.mod h1:lMh4FQAHfvhE0Ak1EhMJTeGOdhWDxnmATNjfheUapbA=
-github.com/eoscanada/eos-go v0.9.1-0.20201207184526-97d6c108554d h1:DLjcsW5K9kIVPML28eUZUwhCCzxOyP5A3KO0FijyVJc=
-github.com/eoscanada/eos-go v0.9.1-0.20201207184526-97d6c108554d/go.mod h1:6rqBwgLY59dZN1xqoA8SoHDal0gpNvh1L1Qa3ib8QsY=
 github.com/eoscanada/eos-go v0.9.1-0.20201207210541-96d4aeb4bab1 h1:WC1m1FLKX5416UfCU0cs5mRFbr22d9CKrKYOSvBU+t8=
 github.com/eoscanada/eos-go v0.9.1-0.20201207210541-96d4aeb4bab1/go.mod h1:6rqBwgLY59dZN1xqoA8SoHDal0gpNvh1L1Qa3ib8QsY=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
@@ -875,6 +855,7 @@ github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c h1:g+WoO5jjkqGAzH
 github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c/go.mod h1:ahpPrc7HpcfEWDQRZEmnXMzHY03mLDYMCxeDzy46i+8=
 github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf h1:Z2X3Os7oRzpdJ75iPqWZc0HeJWFYNCvKsfpQwFpRNTA=
 github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf/go.mod h1:M8agBzgqHIhgj7wEn9/0hJUZcrvt9VY+Ln+S1I5Mha0=
+github.com/test-go/testify v1.1.4 h1:Tf9lntrKUMHiXQ07qBScBTSA0dhYQlu83hswqelv1iE=
 github.com/test-go/testify v1.1.4/go.mod h1:rH7cfJo/47vWGdi4GPj16x3/t1xGOj2YxzmNQzk2ghU=
 github.com/thedevsaddam/govalidator v1.9.6/go.mod h1:Ilx8u7cg5g3LXbSS943cx5kczyNuUn7LH/cK5MYuE90=
 github.com/thedevsaddam/govalidator v1.9.9 h1:Vn50EjNtf8qOL+awcXtv2qzvbUfCzyD/R5LYTOG+L00=
