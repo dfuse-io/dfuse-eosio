@@ -131,7 +131,7 @@ func queryGraphql() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "query.graphql", size: 3740, mode: os.FileMode(436), modTime: time.Unix(1607383116, 0)}
+	info := bindataFileInfo{name: "query.graphql", size: 3740, mode: os.FileMode(436), modTime: time.Unix(1607439429, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
