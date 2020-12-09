@@ -199,7 +199,7 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		"dfuse_auth_endpoint": config.AuthEndpointURL,
 		"available_networks":  an,
 		"secure":              secure,
-		"current_network":     config.DefaultNetwork,
+		"network_id":          config.DefaultNetwork,
 		"chain_core_symbol":   config.ChainCoreSymbol,
 		"display_price":       config.DisplayPrice,
 		"disable_segments":    config.DisableAnalytics,

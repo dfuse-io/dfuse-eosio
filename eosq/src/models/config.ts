@@ -1,6 +1,38 @@
 import { debugLog } from "../services/logger"
 
-const windowTS = window as any
+export interface EosqNetwork {
+  id: string
+  name: string
+  url: string
+  is_test?: boolean
+  logo?: string
+  logo_text?: string
+  page_title?: string
+  favicon_template?: string
+}
+
+interface EosqConfig {
+  version: number
+  isLocalhost: boolean
+
+  dfuse_io_endpoint: string
+  dfuse_io_api_key: string
+  dfuse_auth_endpoint: string
+  secure: boolean
+
+  network_id: string
+  network?: EosqNetwork
+  available_networks: EosqNetwork[]
+
+  chain_core_symbol: string
+  chain_core_symbol_code: string
+  chain_core_symbol_precision: number
+  chain_core_asset_format: string
+
+  display_price: boolean
+  disable_segments: boolean
+  disable_sentry: boolean
+}
 
 // Extracted from React register service worker part to detect localhost
 const isLocalhost = Boolean(
@@ -68,61 +100,20 @@ const newDefaultConfig = () => {
   return core
 }
 
-if (!windowTS.TopLevelConfig) {
-  windowTS.TopLevelConfig = newDefaultConfig()
-} else {
-  // Config loaded from the server, to avoid having to refactor server config, we simply make a migration pass. If the
-  // new `network_id` is not set but the old `current_network` variable exist and its a string type, use it.
-  if (
-    !typeof windowTS.TopLevelConfig.network_id &&
-    typeof windowTS.TopLevelConfig.current_network === "string"
-  ) {
-    windowTS.TopLevelConfig.network_id = windowTS.TopLevelConfig.current_network
-    delete windowTS.TopLevelConfig.current_network
-  }
-}
-
-export interface EosqNetwork {
-  id: string
-  name: string
-  url: string
-  is_test?: boolean
-  logo?: string
-  logo_text?: string
-  page_title?: string
-  favicon_template?: string
-}
-
-interface EosqConfig {
-  version: number
-  isLocalhost: boolean
-
-  dfuse_io_endpoint: string
-  dfuse_io_api_key: string
-  dfuse_auth_endpoint: string
-  secure: boolean
-
-  network_id: string
-  network?: EosqNetwork
-  available_networks: EosqNetwork[]
-
-  chain_core_symbol: string
-  chain_core_symbol_code: string
-  chain_core_symbol_precision: number
-  chain_core_asset_format: string
-
-  display_price: boolean
-  disable_segments: boolean
-  disable_sentry: boolean
-}
-
 function newConfig() {
-  const coreSymbolParts = windowTS.TopLevelConfig.chain_core_symbol.split(",")
+  let baseConfig = (window as any).TopLevelConfig
+  if (!baseConfig) {
+    baseConfig = newDefaultConfig()
+  } else {
+    debugLog("Migrating config received from server", baseConfig)
+  }
+
+  const coreSymbolParts = baseConfig.chain_core_symbol.split(",")
   const coreSymbolPrecision = parseInt(coreSymbolParts[0])
   const coreSymbolCode = coreSymbolParts[1]
 
   const config = {
-    ...windowTS.TopLevelConfig,
+    ...baseConfig,
     chain_core_symbol_precision: coreSymbolPrecision,
     chain_core_symbol_code: coreSymbolCode,
     chain_core_asset_format: "0,0." + "0".repeat(coreSymbolPrecision),
