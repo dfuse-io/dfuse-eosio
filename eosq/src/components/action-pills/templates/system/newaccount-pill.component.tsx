@@ -10,7 +10,7 @@ import { Config } from "../../../../models/config"
 
 export class NewAccountPillComponent extends GenericPillComponent {
   get logoParams(): PillLogoProps | undefined {
-    const availableCreators = ACCOUNT_CREATORS[Config.current_network] || []
+    const availableCreators = ACCOUNT_CREATORS[Config.network_id] || []
 
     const creatorData = availableCreators.find((creator: any) => {
       return creator.contract === this.props.action.data.creator
@@ -19,7 +19,7 @@ export class NewAccountPillComponent extends GenericPillComponent {
     if (creatorData) {
       return {
         path: creatorData.path,
-        website: creatorData.website
+        website: creatorData.website,
       }
     }
 
@@ -31,7 +31,7 @@ export class NewAccountPillComponent extends GenericPillComponent {
   static contextForRendering = (): PillRenderingContext => {
     return {
       networks: ["all"],
-      validActions: [{ contract: "eosio", action: "newaccount" }]
+      validActions: [{ contract: "eosio", action: "newaccount" }],
     }
   }
 
@@ -43,8 +43,8 @@ export class NewAccountPillComponent extends GenericPillComponent {
           detailAccount:
             "<1>{{account}}</1>@<2>{{accountPermission}}</2> created for @<0>{{permission}}</0>",
           detailKey: "<1>{{key}}</1> created for @<0>{{permission}}</0>",
-          detailWait: "<1>{{wait}}</1> created for @<0>{{permission}}</0>"
-        }
+          detailWait: "<1>{{wait}}</1> created for @<0>{{permission}}</0>",
+        },
       },
       zh: {
         newaccount: {
@@ -52,9 +52,9 @@ export class NewAccountPillComponent extends GenericPillComponent {
           detailAccount:
             "<1>{{account}}</1>@<2>{{accountPermission}}</2> 已创建在 @<0>{{permission}}</0> 上",
           detailKey: "<1>{{key}}</1> 已创建在 @<0>{{permission}}</0> 上",
-          detailWait: "<1>{{wait}}</1> 已创建在 @<0>{{permission}}</0> 上"
-        }
-      }
+          detailWait: "<1>{{wait}}</1> 已创建在 @<0>{{permission}}</0> 上",
+        },
+      },
     }
   }
 
@@ -123,7 +123,7 @@ export class NewAccountPillComponent extends GenericPillComponent {
     const templateMethods = {
       accounts: this.renderTemplateItemAccount,
       keys: this.renderTemplateItemKey,
-      waits: this.renderTemplateItemWait
+      waits: this.renderTemplateItemWait,
     }
 
     return (data[parent][type] || []).map((permission: any, index: number) => {

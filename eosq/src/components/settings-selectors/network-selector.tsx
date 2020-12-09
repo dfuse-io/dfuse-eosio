@@ -19,7 +19,7 @@ class NetworkSelectorContainer extends React.Component<Props, State> {
   )
   constructor(props: Props) {
     super(props)
-    this.state = { network: Config.current_network }
+    this.state = { network: Config.network_id }
   }
 
   onSelectNetwork = (value: string) => {
@@ -37,16 +37,16 @@ class NetworkSelectorContainer extends React.Component<Props, State> {
     const networks = this.availableNetworks.map((network: EosqNetwork) => {
       return {
         label: t(`core.networkOptions.${network.id.replace("-", "_")}`, {
-          defaultValue: network.name
+          defaultValue: network.name,
         }),
-        value: network.id
+        value: network.id,
       }
     })
 
     return (
       <SettingsSelector
         options={networks}
-        currentOption={Config.current_network}
+        currentOption={Config.network_id}
         onSelect={this.onSelectNetwork}
         variant={this.props.variant}
       />

@@ -5,7 +5,7 @@ import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
 import { Links } from "../../routes"
 import { t } from "i18next"
 import { styled } from "../../theme"
-import { getActiveNetworkConfig } from "../../models/config"
+import { Config } from "../../models/config"
 import { Box, Text } from "@dfuse/explorer"
 import { Img } from "../../atoms/img"
 
@@ -64,13 +64,13 @@ export const HeaderLogo: React.FC<Props> = () => {
 }
 
 const Logo: React.FC = () => {
-  const networkConfig = getActiveNetworkConfig()
-  if (networkConfig && networkConfig.logo && networkConfig.logo_text) {
-    return <LogoImageAndText image={networkConfig.logo} text={networkConfig.logo_text} />
-  }
+  const { network } = Config
+  if (network?.logo) {
+    if (network.logo_text) {
+      return <LogoImageAndText image={network.logo} text={network.logo_text} />
+    }
 
-  if (networkConfig && networkConfig.logo) {
-    return <LogoImage image={networkConfig.logo} />
+    return <LogoImage image={network.logo} />
   }
 
   return <LogoDefault />

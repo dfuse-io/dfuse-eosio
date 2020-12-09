@@ -131,7 +131,7 @@ class AppContainer extends React.Component<Props, State> {
   priceStream?: Stream
 
   state: State = {
-    height: 167
+    height: 167,
   }
 
   focusListener = () => {
@@ -253,7 +253,7 @@ class AppContainer extends React.Component<Props, State> {
 
   renderTestNetWarning() {
     const network = Config.available_networks.find(
-      (ref: EosqNetwork) => ref.id === Config.current_network
+      (ref: EosqNetwork) => ref.id === Config.network_id
     )
 
     if (!network) {
@@ -288,8 +288,8 @@ class AppContainer extends React.Component<Props, State> {
               display="inline-block"
               fontWeight="bold"
             >
-              {t(`core.networkOptions.${Config.current_network.replace("-", "_")}`, {
-                defaultValue: network ? network.name : Config.current_network
+              {t(`core.networkOptions.${Config.network_id.replace("-", "_")}`, {
+                defaultValue: network ? network.name : Config.network_id,
               })}
             </Text>
           </SkewedCell>

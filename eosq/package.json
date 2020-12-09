@@ -60,6 +60,7 @@
     "react": "~16",
     "react-collapsible": "^2.2.0",
     "react-dom": "~16",
+    "react-helmet": "^6.1.0",
     "react-i18next": "^7.12.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",

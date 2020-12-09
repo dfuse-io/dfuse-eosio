@@ -1,7 +1,7 @@
 import { Config } from "../models/config"
 import {
   GenericPillComponent,
-  PillComponentClass
+  PillComponentClass,
 } from "../components/action-pills/templates/generic-pill.component"
 import { translate } from "react-i18next"
 import { i18n } from "../i18n"
@@ -13,7 +13,7 @@ export class TemplateStore {
   constructor(networkPills: PillComponentClass[]) {
     this.registry = networkPills.filter(
       (networkPill: PillComponentClass) =>
-        networkPill.contextForRendering().networks.includes(Config.current_network) ||
+        networkPill.contextForRendering().networks.includes(Config.network_id) ||
         networkPill.contextForRendering().networks.includes("all")
     )
 

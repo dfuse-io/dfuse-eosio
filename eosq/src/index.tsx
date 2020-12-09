@@ -1,12 +1,11 @@
 import { createBrowserHistory } from "history"
 import { Provider } from "mobx-react"
 import { RouterStore, syncHistoryWithStore } from "mobx-react-router"
-import * as React from "react"
 import { render } from "react-dom"
 import { Router } from "react-router"
 import { initializeDfuseClientFromConfig } from "./clients/dfuse"
 import "sanitize.css/sanitize.css"
-import App from "./App"
+import { App } from "./App"
 import "./i18n"
 import "./index.css"
 
@@ -16,7 +15,7 @@ const routingStore = new RouterStore()
 const history = syncHistoryWithStore(browserHistory, routingStore)
 
 const stores = {
-  routing: routingStore
+  routing: routingStore,
 }
 
 const renderApp = (NextApp: any) =>
@@ -28,18 +27,6 @@ const renderApp = (NextApp: any) =>
     </Provider>,
     document.querySelector("#root")
   )
-
-// @ts-ignore
-const hotModule = module.hot
-
-/* Hot module reload enabled (if available through `module.hot`) */
-if (hotModule) {
-  hotModule.accept("./App", () => {
-    // eslint-disable-next-line global-require
-    const NextApp = require("./App").default
-    renderApp(NextApp)
-  })
-}
 
 initializeDfuseClientFromConfig()
 
