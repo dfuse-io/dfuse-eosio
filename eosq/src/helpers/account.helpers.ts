@@ -62,7 +62,7 @@ export function buildTopLevelHierarchyEntry(permissions: Permission[]) {
     parentDepths: [],
     permission: permissions.find((permission: Permission) => !permission.parent),
     depth: 0,
-    hasChilds: false
+    hasChilds: false,
   } as HierarchyData
   hierarchyDataEntry.hasChilds = getChilds(permissions, hierarchyDataEntry.permission).length > 0
   return hierarchyDataEntry
@@ -85,7 +85,7 @@ export function buildHierarchyEntry(
     parentDepths: [],
     permission,
     depth: parentHierarchy.depth + 1,
-    hasChilds: false
+    hasChilds: false,
   } as HierarchyData
   hierarchyEntry.parentDepths = getParentDepths(parentHierarchy, hierarchyEntry)
   hierarchyEntry.hasChilds = getChilds(permissions, hierarchyEntry.permission).length > 0
@@ -263,13 +263,13 @@ export function getAccountResources(account: Account, stakes: StakeDetail[]): Ac
       stakedTotal: stakedNetwork,
       stakedFromOthers: stakedNetworkFromOthers,
       selfStaked: selfStakedNet,
-      stakedToOthers: stakedNetwork - selfStakedNet - stakedNetworkFromOthers
+      stakedToOthers: stakedNetwork - selfStakedNet - stakedNetworkFromOthers,
     },
     cpu: {
       stakedTotal: stakedCpu,
       stakedFromOthers: stakedCpuFromOthers,
       selfStaked: selfStakedCpu,
-      stakedToOthers: stakedCpu - selfStakedCpu - stakedCpuFromOthers
+      stakedToOthers: stakedCpu - selfStakedCpu - stakedCpuFromOthers,
     },
     rexLiquid: rexStake,
     rexFunds: rexNetLoans + rexCpuLoans + rexFundsAmount,
@@ -296,33 +296,33 @@ export function getPieChartParams(
     {
       label: t("account.pie_chart.labels.staked_cpu"),
       value: accountResources.cpu.stakedTotal,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "cpu", value)
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "cpu", value),
     },
     {
       label: t("account.pie_chart.labels.staked_network"),
       value: accountResources.net.stakedTotal,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "net", value)
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "net", value),
     },
     {
       label: t("account.pie_chart.labels.rex"),
       value: accountResources.rexLiquid,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX", value)
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX", value),
     },
     {
       label: t("account.pie_chart.labels.rex_funds"),
       value: accountResources.rexFunds,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX_FUNDS", value)
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX_FUNDS", value),
     },
     {
       label: t("account.pie_chart.labels.pending_refund"),
       value: accountResources.pendingRefund,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "refund", value)
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "refund", value),
     },
     {
       label: t("account.pie_chart.labels.available_funds"),
       value: accountResources.availableFunds,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "available_funds", value)
-    }
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "available_funds", value),
+    },
   ]
 
   const pieChartColors = [
@@ -331,7 +331,7 @@ export function getPieChartParams(
     theme.colors.stakeREX,
     theme.colors.stakeREXFunds,
     theme.colors.secondHighlight,
-    theme.colors.ternary
+    theme.colors.ternary,
   ]
 
   const pieChartCenter =
@@ -350,6 +350,6 @@ export function getPieChartParams(
     pieChartCenter,
     pieChartColors,
     pieChartColorsForPie,
-    pieChartDataForPie
+    pieChartDataForPie,
   }
 }

@@ -15,14 +15,15 @@ import {
   getAccountResources,
   getPieChartParams,
   PieChartParams,
-  StakeDetail
+  StakeDetail,
 } from "../../../helpers/account.helpers"
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
 import { UiToolTip } from "../../../atoms/ui-tooltip/ui-tooltip"
-import { Config } from '../../../models/config'
+import { Config } from "../../../models/config"
 
-const zeroCoreAsset = "0." + "0".repeat(Config.chain_core_symbol_precision) + " " + Config.chain_core_symbol_code
+const zeroCoreAsset =
+  "0." + "0".repeat(Config.chain_core_symbol_precision) + " " + Config.chain_core_symbol_code
 
 interface Props {
   account: Account
@@ -59,7 +60,7 @@ export class AccountPieChart extends React.Component<Props, State> {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         stakeDetails: [],
-        stakeLoaded: false
+        stakeLoaded: false,
       })
 
       this.fetchDelband()
@@ -73,12 +74,12 @@ export class AccountPieChart extends React.Component<Props, State> {
       limit: -1,
       scope: this.props.account.account_name,
       table: "delband",
-      table_key: ""
+      table_key: "",
     }).then((output: any) => {
       output = output as { more: boolean; rows: StakeDetail[] }
       this.setState({
         stakeDetails: output && output.rows ? output.rows.map((row: any) => row.json) : [],
-        stakeLoaded: true
+        stakeLoaded: true,
       })
     })
   }
@@ -92,7 +93,7 @@ export class AccountPieChart extends React.Component<Props, State> {
             centerContent={pieChartParams.pieChartCenter}
             params={{
               data: pieChartParams.pieChartDataForPie,
-              colors: pieChartParams.pieChartColorsForPie
+              colors: pieChartParams.pieChartColorsForPie,
             }}
           />
         </HidableContainer>
@@ -104,17 +105,23 @@ export class AccountPieChart extends React.Component<Props, State> {
     return (
       <Cell p={[3]} width="100%">
         <Cell pb={[1]}>
-          Self Staked: {accountResources[type].selfStaked.toFixed(4)}
-          {NBSP}{Config.chain_core_symbol_code}
+          Self Staked:{" "}
+          {accountResources[type].selfStaked.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
         <Cell pb={[1]}>
-          Staked From Others: {accountResources[type].stakedFromOthers.toFixed(4)}
-          {NBSP}{Config.chain_core_symbol_code}
+          Staked From Others:{" "}
+          {accountResources[type].stakedFromOthers.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
 
         <Cell pb={[1]}>
-          Staked To Others: {accountResources[type].stakedToOthers.toFixed(4)}
-          {NBSP}{Config.chain_core_symbol_code}
+          Staked To Others:{" "}
+          {accountResources[type].stakedToOthers.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
         <ToolTipUl>
           {accountResources.stakes
@@ -155,7 +162,8 @@ export class AccountPieChart extends React.Component<Props, State> {
               lineHeight="20px"
               fontWeight="bold"
             >
-              {numeral(value).format("0,0.0000")} {Config.chain_core_symbol_code}
+              {numeral(value).format(Config.chain_core_asset_format)}{" "}
+              {Config.chain_core_symbol_code}
             </Text>
           </Cell>
           {toolTip}
@@ -164,7 +172,7 @@ export class AccountPieChart extends React.Component<Props, State> {
     }
     return (
       <Text fontSize={[3, 2]} alignSelf="center" lineHeight="20px" fontWeight="bold">
-        {numeral(value).format("0,0.0000")} {Config.chain_core_symbol_code}
+        {numeral(value).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
       </Text>
     )
   }
@@ -183,17 +191,11 @@ export class AccountPieChart extends React.Component<Props, State> {
     const accountName = this.props.account.account_name
     switch (type) {
       case "cpu":
-        contents = this.renderTooltipWrapper(
-          value,
-          this.renderToolTip(accountResources, type)
-        )
+        contents = this.renderTooltipWrapper(value, this.renderToolTip(accountResources, type))
         query = `(action:delegatebw OR action:undelegatebw) receiver:eosio data.receiver:${accountName}`
         return this.renderSearchShortcutWrapper(contents, query)
       case "net":
-        contents = this.renderTooltipWrapper(
-          value,
-          this.renderToolTip(accountResources, type)
-        )
+        contents = this.renderTooltipWrapper(value, this.renderToolTip(accountResources, type))
         query = `(action:delegatebw OR action:undelegatebw) receiver:eosio data.receiver:${accountName}`
         return this.renderSearchShortcutWrapper(contents, query)
       case "refund":
@@ -248,7 +250,8 @@ export class AccountPieChart extends React.Component<Props, State> {
             justifySelf={["left", "right"]}
           >
             <Text fontSize={[4, 4]}>
-              {numeral(accountResources.totalOwnerShip).format("0,0.0000")} {Config.chain_core_symbol_code}
+              {numeral(accountResources.totalOwnerShip).format(Config.chain_core_asset_format)}{" "}
+              {Config.chain_core_symbol_code}
             </Text>
           </Cell>
         </Grid>
