@@ -32,17 +32,17 @@ const DocumentMeta: React.FC = () => {
   }
 
   const baseURL = new URL("", document.baseURI).href.replace(/\/+$/, "")
-  const faviconURL = `${baseURL}${network.faviconTemplate}.png`
+  const faviconURL = `${baseURL}${network.favicon_template}.png`
 
   return (
     <Helmet>
-      {/* The meta tags must always use full-url */}
-      {network?.faviconTemplate ? <meta property="og:image" content={faviconURL} /> : null}
-      {network?.faviconTemplate ? <meta name="twitter:image" content={faviconURL} /> : null}
+      {network?.page_title ? <title>{network?.page_title}</title> : null}
 
-      {network?.pageTitle ? <title>{network?.pageTitle}</title> : null}
-      {network?.faviconTemplate ? (
-        <link rel="shortcut icon" href={`${network.faviconTemplate}.png`} />
+      {/* The meta tags must always use full-url */}
+      {network?.favicon_template ? <meta property="og:image" content={faviconURL} /> : null}
+      {network?.favicon_template ? <meta name="twitter:image" content={faviconURL} /> : null}
+      {network?.favicon_template ? (
+        <link rel="shortcut icon" href={`${network.favicon_template}.png`} />
       ) : null}
     </Helmet>
   )

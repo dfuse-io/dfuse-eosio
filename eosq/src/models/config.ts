@@ -89,8 +89,8 @@ export interface EosqNetwork {
   is_test?: boolean
   logo?: string
   logo_text?: string
-  pageTitle?: string
-  faviconTemplate?: string
+  page_title?: string
+  favicon_template?: string
 }
 
 interface EosqConfig {
@@ -136,29 +136,3 @@ function newConfig() {
 }
 
 export const Config = newConfig()
-// ;(function init() {
-//   debugLog("Performing init phase of config")
-//   const { network } = Config
-//   if (network?.pageTitle) {
-//     document.title = network.pageTitle
-//   }
-
-//   if (network?.faviconTemplate) {
-//     changeFavicon(network.faviconTemplate)
-//   }
-// })()
-
-// function changeFavicon(src: string) {
-//   const link = document.createElement("link")
-//   link.rel = "shortcut icon"
-//   link.href = src
-
-//   const oldLinks = document.querySelectorAll('link[rel="shortcut icon"]')
-//   debugLog("Removing all old favicon links (%s)", oldLinks.length)
-//   oldLinks.forEach((element) => {
-//     document.head.removeChild(element)
-//   })
-
-//   debugLog("Appending new favicon link to browser", link)
-//   document.head.appendChild(link)
-// }
