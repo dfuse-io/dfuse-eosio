@@ -57,7 +57,6 @@ func newServer(config *Config) *Server {
 }
 
 func (s *Server) Launch() error {
-
 	zlog.Info("launching eosq")
 	router := mux.NewRouter()
 

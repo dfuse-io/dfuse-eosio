@@ -98,7 +98,7 @@ const LogoText = styled(Text)`
 
 const LogoImageAndText: React.FC<{ image: string; text?: string }> = ({ image, text }) => (
   <Box pa={[0]} alignItems="center" justifyContent="center" minWidth="150px" flexWrap="wrap">
-    <Img src={image} alt="Logo" title={text} width="48px" height="48px"></Img>
+    <Img src={image} alt="Logo" title={text} maxWidth="48px" maxHeight="48px"></Img>
     {text ? (
       text === "eosq" ? (
         <Box mx={[2]}>
