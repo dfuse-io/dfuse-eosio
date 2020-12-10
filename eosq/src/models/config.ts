@@ -1,6 +1,38 @@
 import { debugLog } from "../services/logger"
 
-const windowTS = window as any
+export interface EosqNetwork {
+  id: string
+  name: string
+  url: string
+  is_test?: boolean
+  logo?: string
+  logo_text?: string
+  page_title?: string
+  favicon_template?: string
+}
+
+interface EosqConfig {
+  version: number
+  isLocalhost: boolean
+
+  dfuse_io_endpoint: string
+  dfuse_io_api_key: string
+  dfuse_auth_endpoint: string
+  secure: boolean
+
+  network_id: string
+  network?: EosqNetwork
+  available_networks: EosqNetwork[]
+
+  chain_core_symbol: string
+  chain_core_symbol_code: string
+  chain_core_symbol_precision: number
+  chain_core_asset_format: string
+
+  display_price: boolean
+  disable_segments: boolean
+  disable_sentry: boolean
+}
 
 // Extracted from React register service worker part to detect localhost
 const isLocalhost = Boolean(
@@ -16,13 +48,17 @@ const isEnvSet = (value: string | undefined): boolean => value != null && value 
 const newDefaultConfig = () => {
   const core = {
     version: 1,
-    current_network: process.env.REACT_APP_EOSQ_CURRENT_NETWORK || "local",
+    network_id:
+      process.env.REACT_APP_EOSQ_NETWORK_ID ||
+      process.env.REACT_APP_EOSQ_CURRENT_NETWORK ||
+      "local",
     chain_core_symbol: "4,EOS",
     dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "null://",
     dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_1234567890abc",
     dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "localhost:8080",
     secure: process.env.REACT_APP_DFUSE_API_NETWORK_SECURE === "true",
     display_price: false,
+
     available_networks: [
       {
         id: "local",
@@ -64,60 +100,30 @@ const newDefaultConfig = () => {
   return core
 }
 
-if (!windowTS.TopLevelConfig) {
-  windowTS.TopLevelConfig = newDefaultConfig()
-}
+function newConfig() {
+  let baseConfig = (window as any).TopLevelConfig
+  if (!baseConfig) {
+    baseConfig = newDefaultConfig()
+  } else {
+    debugLog("Migrating config received from server", baseConfig)
+  }
 
-export interface EosqNetwork {
-  id: string
-  name: string
-  url: string
-  is_test?: boolean
-  logo?: string
-  logo_text?: string
-}
-
-interface EosqConfig {
-  version: number
-  isLocalhost: boolean
-
-  dfuse_io_endpoint: string
-  dfuse_io_api_key: string
-  dfuse_auth_endpoint: string
-  secure: boolean
-
-  available_networks: EosqNetwork[]
-  current_network: string
-
-  chain_core_symbol: string
-  chain_core_symbol_code: string
-  chain_core_symbol_precision: number
-  chain_core_asset_format: string
-
-  display_price: boolean
-  disable_segments: boolean
-  disable_sentry: boolean
-}
-
-const newConfig = () => {
-  const coreSymbolParts = windowTS.TopLevelConfig.chain_core_symbol.split(",")
+  const coreSymbolParts = baseConfig.chain_core_symbol.split(",")
   const coreSymbolPrecision = parseInt(coreSymbolParts[0])
   const coreSymbolCode = coreSymbolParts[1]
 
   const config = {
-    ...windowTS.TopLevelConfig,
+    ...baseConfig,
     chain_core_symbol_precision: coreSymbolPrecision,
     chain_core_symbol_code: coreSymbolCode,
     chain_core_asset_format: "0,0." + "0".repeat(coreSymbolPrecision),
     isLocalhost,
   } as EosqConfig
 
+  config.network = config.available_networks.find((network) => network.id === config.network_id)
+
   debugLog("Loaded config %O", config)
   return config
 }
 
 export const Config = newConfig()
-
-export const getActiveNetworkConfig = (): EosqNetwork | undefined => {
-  return Config.available_networks.find((network) => network.id === Config.current_network)
-}
