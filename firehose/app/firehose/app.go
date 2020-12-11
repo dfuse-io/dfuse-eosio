@@ -13,6 +13,7 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
+	"github.com/dfuse-io/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/dfuse-io/dgraphql/insecure"
@@ -63,7 +64,8 @@ func (a *App) Run() error {
 
 	ctx := context.Background()
 	var start uint64
-	if a.config.UpstreamBlockStreamAddr != "" {
+	withLive := a.config.UpstreamBlockStreamAddr != ""
+	if withLive {
 		zlog.Info("starting with support for live blocks")
 		for retries := 0; ; retries++ {
 			lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
@@ -118,13 +120,9 @@ func (a *App) Run() error {
 		return fmt.Errorf("setting up subscription hub: %w", err)
 	}
 
-	go subscriptionHub.Launch()
-	//	subscriptionHub.WaitReady()
-
 	bsv2Tracker := a.modules.Tracker.Clone()
 
 	zlog.Info("setting up blockstream V2 server")
-
 	s := blockstreamv2.NewServer(bsv2Tracker, blocksStore, a.config.GRPCListenAddr, subscriptionHub)
 	s.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
@@ -136,8 +134,15 @@ func (a *App) Run() error {
 	})
 
 	a.isReady = s.IsReady
-	// Move this to where it fits
-	a.ReadyFunc()
+	go func() {
+		subscriptionHub.Launch()
+		if withLive {
+			subscriptionHub.WaitReady()
+		}
+		zlog.Info("blockstream is now ready")
+		s.SetReady()
+		a.ReadyFunc()
+	}()
 
 	go func() {
 		insecure := strings.Contains(a.config.GRPCListenAddr, "*")
@@ -214,10 +219,15 @@ func newGRPCServer(s *blockstreamv2.Server, overrideTraceID bool) http.Server {
 	//reflection.Register(gs)
 
 	grpcRouter := mux.NewRouter()
-	grpcRouter.Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// To satisfy GCP's load balancers
+	healthHandler := func(w http.ResponseWriter, r *http.Request) {
+		if derr.IsShuttingDown() || !s.IsReady() {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 		w.Write([]byte("ok"))
-	})
+	}
+	grpcRouter.Path("/").HandlerFunc(healthHandler)
+	grpcRouter.Path("/healthz").HandlerFunc(healthHandler)
 	grpcRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gs.ServeHTTP(w, r)
 	})
