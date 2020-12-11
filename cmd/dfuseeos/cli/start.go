@@ -102,7 +102,7 @@ func Start(dataDir string, args []string) (err error) {
 			userLog.Warn("cannot get grpc connection to blockmeta, some services will not leverage it, expect rough edges", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 		} else {
 			blockMeta = pbblockmeta.NewBlockIDClient(conn)
-			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockMeta)))
+			tracker.AddResolver(pbblockmeta.StartBlockResolver(blockMeta))
 		}
 	}
 

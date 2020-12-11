@@ -30,7 +30,6 @@ type Config struct {
 	BlocksStoreURL          string
 	UpstreamBlockStreamAddr string
 	GRPCListenAddr          string
-	BlockmetaAddr           string
 }
 
 type Modules struct {
@@ -63,30 +62,22 @@ func (a *App) Run() error {
 	}
 
 	ctx := context.Background()
-	start := uint64(0)
+	var start uint64
 	if a.config.UpstreamBlockStreamAddr != "" {
 		zlog.Info("starting with support for live blocks")
-		zlog.Debug("getting relative block", zap.Int("relative_to", -200))
 		for retries := 0; ; retries++ {
-			almostLastBlock, err := a.modules.Tracker.GetRelativeBlock(ctx, -200, bstream.BlockStreamHeadTarget)
+			lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
 			if err != nil {
 				if retries%5 == 4 {
-					zlog.Warn("cannot get 'almostLastBlock', retrying", zap.Int("retries", retries), zap.Error(err))
-					time.Sleep(time.Second)
+					zlog.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
 				}
+				time.Sleep(time.Second)
 				continue
 			}
-			zlog.Info("get almost last block", zap.Uint64("block_num", almostLastBlock))
-			start, _, err = a.modules.Tracker.ResolveStartBlock(ctx, almostLastBlock)
-			if err != nil {
-				if retries%5 == 4 {
-					zlog.Warn("cannot resolve start block 'almostLastBlock'", zap.Int("retries", retries), zap.Error(err))
-					time.Sleep(time.Second)
-				}
-				continue
-			}
+			start = lib.Num()
 			break
 		}
+
 	}
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
@@ -112,7 +103,7 @@ func (a *App) Run() error {
 
 	buffer := bstream.NewBuffer("hub-buffer", zlog.Named("hub"))
 	tailManager := bstream.NewSimpleTailManager(buffer, 350)
-	tailManager.Launch()
+	go tailManager.Launch()
 	subscriptionHub, err := hub.NewSubscriptionHub(
 		start,
 		buffer,
