@@ -62,16 +62,31 @@ func (a *App) Run() error {
 		return fmt.Errorf("failed setting up blocks store: %w", err)
 	}
 
+	ctx := context.Background()
 	start := uint64(0)
 	if a.config.UpstreamBlockStreamAddr != "" {
 		zlog.Info("starting with support for live blocks")
 		zlog.Debug("getting relative block", zap.Int("relative_to", -200))
-		almostLastBlock, err := a.modules.Tracker.GetRelativeBlock(context.Background(), -200, bstream.BlockStreamHeadTarget)
-		if err != nil {
-			return err
+		for retries := 0; ; retries++ {
+			almostLastBlock, err := a.modules.Tracker.GetRelativeBlock(ctx, -200, bstream.BlockStreamHeadTarget)
+			if err != nil {
+				if retries%5 == 4 {
+					zlog.Warn("cannot get 'almostLastBlock', retrying", zap.Int("retries", retries), zap.Error(err))
+					time.Sleep(time.Second)
+				}
+				continue
+			}
+			zlog.Info("get almost last block", zap.Uint64("block_num", almostLastBlock))
+			start, _, err = a.modules.Tracker.ResolveStartBlock(ctx, almostLastBlock)
+			if err != nil {
+				if retries%5 == 4 {
+					zlog.Warn("cannot resolve start block 'almostLastBlock'", zap.Int("retries", retries), zap.Error(err))
+					time.Sleep(time.Second)
+				}
+				continue
+			}
+			break
 		}
-		zlog.Info("get almost last block", zap.Uint64("block_num", almostLastBlock))
-		start, _, err = a.modules.Tracker.ResolveStartBlock(context.Background(), almostLastBlock)
 	}
 
 	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
