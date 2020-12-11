@@ -21,32 +21,12 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("firehose-blocks-store-url", MergedBlocksStoreURL, "Object Store from where we will read blocks. Blocks can be pre-filtered for performance.")
 			cmd.Flags().String("firehose-blockstream-addr", RelayerServingAddr, "Address from which we pull real-time blocks. Can be relayer or filtered relayer")
-			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr, "Address from which we pull real-time blocks. Can be relayer or filtered relayer")
+			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr, "Address on which the firehose will listen")
 			return nil
 		},
 
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			dfuseDataDir := runtime.AbsDataDir
-
-			//		&Config{
-			//			BlocksStoreURL:          "gs://dfuseio-global-blocks-us/eos-mainnet/nospam-v3",
-			//			UpstreamBlockStreamAddr: "relayer-filtered-v3.eos-mainnet.svc.cluster.local:9000",
-			//			GRPCListenAddr:          ":9000",
-			//			GRPCInsecure:            false,
-			//			blockmetaAddr: "blockmeta-v3.eos-mainnet.svc.cluster.local:9000",
-
-			//	a := New(conf, &Modules{
-			//		Tracker: newTracker(conf.blockmetaAddr),
-			//	})
-			//
-			//	if err := a.Run(); err != nil {
-			//		zlog.Error("app failed", zap.Error(err))
-			//	}
-			//
-			//	<-a.Terminated()
-			//
-			//	zlog.Info("terminated", zap.Error(a.Err()))
-			//	zlog.Sync()
 			blockmetaAddr := viper.GetString("common-blockmeta-addr")
 			blockstreamAddr := viper.GetString("firehose-blockstream-addr")
 			tracker := newTracker(blockmetaAddr, blockstreamAddr)
