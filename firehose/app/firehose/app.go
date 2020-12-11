@@ -97,6 +97,7 @@ func (a *App) Run() error {
 
 	buffer := bstream.NewBuffer("hub-buffer", zlog.Named("hub"))
 	tailManager := bstream.NewSimpleTailManager(buffer, 350)
+	tailManager.Launch()
 	subscriptionHub, err := hub.NewSubscriptionHub(
 		start,
 		buffer,
