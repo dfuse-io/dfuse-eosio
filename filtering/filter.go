@@ -194,8 +194,11 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 		}
 
 		for _, actTrace := range trxTrace.ActionTraces {
-			if wasFiltered && !actTrace.FilteringMatched {
-				continue
+			if wasFiltered {
+				if !actTrace.FilteringMatched { // skip previously excluded
+					continue
+				}
+				actTrace.FilteringMatched = false // expected default to be false
 			}
 
 			passes, isSystem := shouldProcess(trxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
@@ -226,8 +229,11 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 				return trxTop5Actors
 			}
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				if wasFiltered && !actTrace.FilteringMatched {
-					continue
+				if wasFiltered {
+					if !actTrace.FilteringMatched { // skip previously excluded
+						continue
+					}
+					actTrace.FilteringMatched = false // expected default to be false
 				}
 
 				passes, isSystem := shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
