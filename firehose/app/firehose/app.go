@@ -134,23 +134,25 @@ func (a *App) Run() error {
 	})
 
 	a.isReady = s.IsReady
+
+	insecure := strings.Contains(a.config.GRPCListenAddr, "*")
+	addr := strings.Replace(a.config.GRPCListenAddr, "*", "", -1)
+
 	go func() {
-		subscriptionHub.Launch()
+		if err := startGRPCServer(s, insecure, addr); err != nil {
+			a.Shutdown(err)
+		}
+	}()
+
+	go subscriptionHub.Launch()
+
+	go func() {
 		if withLive {
 			subscriptionHub.WaitReady()
 		}
 		zlog.Info("blockstream is now ready")
 		s.SetReady()
 		a.ReadyFunc()
-	}()
-
-	go func() {
-		insecure := strings.Contains(a.config.GRPCListenAddr, "*")
-		addr := strings.Replace(a.config.GRPCListenAddr, "*", "", -1)
-
-		if err := startGRPCServer(s, insecure, addr); err != nil {
-			a.Shutdown(err)
-		}
 	}()
 
 	return nil
