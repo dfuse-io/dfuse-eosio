@@ -295,7 +295,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	expected = uint32(blockRange.Start)
+	expected = roundToBundleStartBlock(uint32(blockRange.Start), fileBlockSize)
 	currentStartBlk := uint32(blockRange.Start)
 	seenFilters := map[string]FilteringFilters{}
 
@@ -318,7 +318,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum+uint64(fileBlockSize) < blockRange.Start {
+		if baseNum+uint64(fileBlockSize)-1 < blockRange.Start {
 			zlog.Debug("base num lower then block range start, quitting")
 			return nil
 		}
