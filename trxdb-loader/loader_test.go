@@ -56,8 +56,6 @@ func newLoader(t *testing.T, options ...interface{}) (*TrxDBLoader, trxdb.DB, fu
 		}
 	}
 
-	l.InitLIB("0000000000000000000000000000000000000000000000000000000000000000")
-
 	if chainID != "" {
 		hexChainID, err := hex.DecodeString(chainID)
 		require.NoError(t, err)
@@ -79,7 +77,6 @@ func TestBigtableLoader(t *testing.T) {
 	ctx := context.Background()
 	blockID := "00000002aa"
 	previousRef := bstream.NewBlockRefFromID("00000001aa")
-	loader.forkDB.InitLIB(previousRef)
 	block := testBlock(t, "00000002aa")
 	block.Header.Previous = previousRef.ID()
 
@@ -105,7 +102,6 @@ func TestBigtableLoader_Timeline(t *testing.T) {
 	ctx := context.Background()
 	blockID := "00000002aa"
 	previousRef := bstream.NewBlockRefFromID("00000001aa")
-	loader.forkDB.InitLIB(previousRef)
 	block := testBlock(t, "00000002aa")
 	block.Header.Previous = previousRef.ID()
 
