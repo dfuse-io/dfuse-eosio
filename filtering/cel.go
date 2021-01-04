@@ -124,6 +124,35 @@ func newCELFilters(name string, codes []string, noopPrograms []string, valueWhen
 	return
 }
 
+var ActionTraceDeclarations = cel.Declarations(
+	decls.NewIdent("receiver", decls.String, nil), // eosio.account_name::receiver
+	decls.NewIdent("account", decls.String, nil),  // eosio.account_name::account
+	decls.NewIdent("action", decls.String, nil),   // eosio.name::action
+
+	decls.NewIdent("block_num", decls.Uint, nil),    // uint32 block number
+	decls.NewIdent("block_id", decls.String, nil),   // string block id (hash)
+	decls.NewIdent("block_time", decls.String, nil), // string timestamp
+
+	decls.NewIdent("step", decls.String, nil),            // one of: Irreversible, New, Undo, Redo, Unknown
+	decls.NewIdent("transaction_id", decls.String, nil),  // string transaction id (hash)
+	decls.NewIdent("transaction_index", decls.Uint, nil), // uint transaction position inside the block
+	decls.NewIdent("global_seq", decls.Uint, nil),        // uint
+	decls.NewIdent("execution_index", decls.Uint, nil),   // uint action position inside the transaction
+
+	decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
+	decls.NewIdent("auth", decls.NewListType(decls.String), nil),
+	decls.NewIdent("input", decls.Bool, nil),
+	decls.NewIdent("notif", decls.Bool, nil),
+	decls.NewIdent("scheduled", decls.Bool, nil),
+
+	decls.NewIdent("trx_action_count", decls.Int, nil), // Number of actions in the transaction in which this action is part of.
+	decls.NewIdent("top5_trx_actors", decls.NewListType(decls.String), nil),
+
+	// Those are not supported right now, so they are commented out for now to generate an error when using them
+	// decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
+	// decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
+)
+
 func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop bool) (*CELFilter, error) {
 	stripped := strings.TrimSpace(code)
 	for _, noopProgram := range noopPrograms {
@@ -136,24 +165,7 @@ func newCELFilter(name string, code string, noopPrograms []string, valueWhenNoop
 		}
 	}
 
-	env, err := cel.NewEnv(
-		cel.Declarations(
-			decls.NewIdent("receiver", decls.String, nil),
-			decls.NewIdent("account", decls.String, nil),
-			decls.NewIdent("action", decls.String, nil),
-			decls.NewIdent("data", decls.NewMapType(decls.String, decls.Any), nil),
-			decls.NewIdent("auth", decls.NewListType(decls.String), nil),
-			decls.NewIdent("input", decls.Bool, nil),
-			decls.NewIdent("notif", decls.Bool, nil),
-			decls.NewIdent("scheduled", decls.Bool, nil),
-			decls.NewIdent("trx_action_count", decls.Int, nil), // Amount of actions in the transaction in which this action is part of.
-			decls.NewIdent("top5_trx_actors", decls.NewListType(decls.String), nil),
-
-			// Those are not supported right now, so they are commented out for now to generate an error when using them
-			// decls.NewIdent("db", decls.NewMapType(decls.String, decls.String), nil),
-			// decls.NewIdent("ram", decls.NewMapType(decls.String, decls.String), nil),
-		),
-	)
+	env, err := cel.NewEnv(ActionTraceDeclarations)
 	if err != nil {
 		return nil, fmt.Errorf("new env: %w", err)
 	}
@@ -206,57 +218,106 @@ func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
 	return bool(retval)
 }
 
-type actionTraceActivation struct {
-	trace      *pbcodec.ActionTrace
-	cachedData map[string]interface{}
-
-	trxTop5ActorsGetter func() []string
-	trxScheduled        bool
-	trxActionCount      int
+func NewActionTraceActivation(
+	actionTrace *pbcodec.ActionTrace,
+	trxTrace MemoizableTrxTrace,
+	stepName string,
+) *ActionTraceActivation {
+	activation := &ActionTraceActivation{
+		Trace:    actionTrace,
+		TrxTrace: trxTrace,
+		StepName: shortStepName(stepName),
+	}
+	return activation
 }
 
-func (a *actionTraceActivation) Parent() interpreter.Activation {
+type MemoizableTrxTrace struct {
+	TrxTrace   *pbcodec.TransactionTrace
+	top5Actors []string
+}
+
+func (t MemoizableTrxTrace) getTop5Actors() []string {
+	if t.top5Actors == nil {
+		t.top5Actors = getTop5ActorsForTrx(t.TrxTrace)
+	}
+	return t.top5Actors
+}
+
+type ActionTraceActivation struct {
+	Trace      *pbcodec.ActionTrace
+	TrxTrace   MemoizableTrxTrace
+	StepName   string
+	cachedData map[string]interface{}
+}
+
+func shortStepName(in string) string {
+	if in == "" {
+		return "Unknown"
+	}
+	return strings.ToTitle(strings.TrimPrefix(in, "STEP_"))
+}
+
+func (a *ActionTraceActivation) Parent() interpreter.Activation {
 	return nil
 }
 
 // exclude_filter: (trx_action_count > 200 && top5_trx_actors.exists(x in ['pizzapizza', 'eidosonecoin'])
 
-func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
+func (a *ActionTraceActivation) ResolveName(name string) (interface{}, bool) {
 	if traceEnabled {
 		zlog.Debug("trying to resolve activation name", zap.String("name", name))
 	}
 
 	switch name {
+	case "block_num":
+		return a.TrxTrace.TrxTrace.BlockNum, true
+	case "block_id":
+		return a.TrxTrace.TrxTrace.ProducerBlockId, true
+	case "block_time":
+		return a.TrxTrace.TrxTrace.BlockTime.AsTime().Format("2006-01-02T15:04:05.0Z07:00"), true
+	case "transaction_id":
+		return a.TrxTrace.TrxTrace.Id, true
+	case "transaction_index":
+		return a.TrxTrace.TrxTrace.Index, true
+	case "step":
+		return a.StepName, true
+
+	case "global_seq":
+		return a.Trace.Receipt.GlobalSequence, true
+	case "execution_index":
+		return a.Trace.ExecutionIndex, true
+
 	case "top5_trx_actors":
-		return a.trxTop5ActorsGetter(), true
+		return a.TrxTrace.getTop5Actors(), true
 	case "trx_action_count":
-		return a.trxActionCount, true
+		return len(a.TrxTrace.TrxTrace.ActionTraces), true
+
 	case "receiver":
-		if a.trace.Receipt != nil {
-			return a.trace.Receipt.Receiver, true
+		if a.Trace.Receipt != nil {
+			return a.Trace.Receipt.Receiver, true
 		}
-		return a.trace.Receiver, true
+		return a.Trace.Receiver, true
 	case "account":
-		return a.trace.Account(), true
+		return a.Trace.Account(), true
 	case "action":
-		return a.trace.Name(), true
+		return a.Trace.Name(), true
 	case "auth":
-		return tokenizeEOSAuthority(a.trace.Action.Authorization), true
+		return tokenizeEOSAuthority(a.Trace.Action.Authorization), true
 	case "data":
 		if a.cachedData != nil {
 			return a.cachedData, true
 		}
 
-		jsonData := a.trace.Action.JsonData
+		jsonData := a.Trace.Action.JsonData
 		if len(jsonData) == 0 || strings.IndexByte(jsonData, '{') == -1 {
 			return nil, false
 		}
 
 		var out map[string]interface{}
-		err := json.Unmarshal([]byte(a.trace.Action.JsonData), &out)
+		err := json.Unmarshal([]byte(a.Trace.Action.JsonData), &out)
 		if err != nil {
 			if traceEnabled {
-				zlog.Warn("invalid json data", zap.Error(err), zap.String("json", a.trace.Action.JsonData))
+				zlog.Warn("invalid json data", zap.Error(err), zap.String("json", a.Trace.Action.JsonData))
 			}
 
 			return nil, false
@@ -268,15 +329,15 @@ func (a *actionTraceActivation) ResolveName(name string) (interface{}, bool) {
 
 		return out, true
 	case "notif":
-		receiver := a.trace.Receiver
-		if a.trace.Receipt != nil {
-			receiver = a.trace.Receipt.Receiver
+		receiver := a.Trace.Receiver
+		if a.Trace.Receipt != nil {
+			receiver = a.Trace.Receipt.Receiver
 		}
-		return a.trace.Account() != receiver, true
+		return a.Trace.Account() != receiver, true
 	case "scheduled":
-		return a.trxScheduled, true
+		return a.TrxTrace.TrxTrace.Scheduled, true
 	case "input":
-		return a.trace.IsInput(), true
+		return a.Trace.IsInput(), true
 
 	// Those are actually commented out from the valid list of names that is possible to use in our CEL program,
 	// so it's not a big deal to have them currently panicking here as it no code path can reach this point.

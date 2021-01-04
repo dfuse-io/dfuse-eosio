@@ -329,18 +329,18 @@ func combineFilters(prev string, next *CELFilter) string {
 }
 
 func shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
-	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces), trxTop5ActorsGetter: trxTop5ActorsGetter}
+	activation := NewActionTraceActivation(actTrace, MemoizableTrxTrace{TrxTrace: trxTrace}, "")
 	// If the include program does not match, there is nothing more to do here
-	if !include.match(&activation) {
-		if systemActions.match(&activation) {
+	if !include.match(activation) {
+		if systemActions.match(activation) {
 			return true, true
 		}
 		return false, false
 	}
 
 	// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
-	if exclude.match(&activation) {
-		if systemActions.match(&activation) {
+	if exclude.match(activation) {
+		if systemActions.match(activation) {
 			return true, true
 		}
 		return false, false
