@@ -27,6 +27,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
@@ -57,6 +58,7 @@ type App struct {
 
 type Modules struct {
 	BlockFilter func(blk *bstream.Block) error
+	BlockMeta   pbblockmeta.BlockIDClient
 }
 
 func New(config *Config, modules *Modules) *App {
@@ -100,7 +102,16 @@ func (a *App) Run() error {
 
 	db.SetWriterChainID(chainID)
 
-	loader := trxdbloader.NewTrxDBLoader(a.config.BlockStreamAddr, blocksStore, a.config.BatchSize, db, a.config.ParallelFileDownloadCount, a.modules.BlockFilter, a.config.TruncationWindow)
+	loader := trxdbloader.NewTrxDBLoader(
+		a.config.BlockStreamAddr,
+		blocksStore,
+		a.config.BatchSize,
+		db,
+		a.config.ParallelFileDownloadCount,
+		a.modules.BlockFilter,
+		a.config.TruncationWindow,
+		a.modules.BlockMeta,
+	)
 
 	healthzHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !loader.Healthy() {
