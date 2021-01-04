@@ -92,6 +92,24 @@ func TestBlockFilter(t *testing.T) {
 			filterDidNotMatch, false,
 		},
 		{
+			"block spam",
+			getFilters("", `(trx_action_count > 20 && top5_trx_actors.exists(x, x in ['badguy','worstguy']))`, ""),
+			ct.TrxTrace(t, multiActionTraces(t, "badguy:any:any", 30, ct.ActionData(`{}`))...),
+			filterDidNotMatch, false,
+		},
+		{
+			"block only spam",
+			getFilters("", `(trx_action_count > 20 && top5_trx_actors.exists(x, x in ['badguy','worstguy']))`, ""),
+			ct.TrxTrace(t, multiActionTraces(t, "badguy:any:any", 10, ct.ActionData(`{}`))...),
+			filterMatched, false,
+		},
+		{
+			"block only specific",
+			getFilters("", `(trx_action_count > 20 && top5_trx_actors.exists(x, x in ['badguy','worstguy']))`, ""),
+			ct.TrxTrace(t, multiActionTraces(t, "goodguy:any:any", 30, ct.ActionData(`{}`))...),
+			filterMatched, false,
+		},
+		{
 			"prevent a failure on evaluation, so matches because blacklist fails",
 			getFilters("", `account == "badacct" && has(data.from) && data.from != "badguy"`, ""),
 			ct.TrxTrace(t, ct.ActionTrace(t, "badrecv:badacct:any", ct.ActionData(`{}`))),
@@ -126,7 +144,7 @@ func TestBlockFilter(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.Len(t, test.trace.ActionTraces, 1, "This test accepts a single action trace per transaction trace currently")
+			require.GreaterOrEqual(t, len(test.trace.ActionTraces), 1, "This test requires action traces in trxTraces")
 
 			filter, err := NewBlockFilter(test.exprs.include, test.exprs.exclude, test.exprs.system)
 			require.NoError(t, err)
@@ -166,4 +184,11 @@ type filters struct {
 	include []string
 	exclude []string
 	system  []string
+}
+
+func multiActionTraces(t *testing.T, receiverAccountActionNameTriplet string, repeats int, components ...interface{}) (out []interface{}) {
+	for i := 0; i < repeats; i++ {
+		out = append(out, ct.ActionTrace(t, receiverAccountActionNameTriplet, components...))
+	}
+	return
 }
