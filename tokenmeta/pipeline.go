@@ -2,6 +2,7 @@ package tokenmeta
 
 import (
 	"context"
+	"time"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
@@ -56,7 +57,14 @@ func (t *TokenMeta) SetupPipeline(startBlock bstream.BlockRef, blockFilter func(
 		forkable.WithFilters(forkable.StepIrreversible),
 	}
 	if startBlock.ID() != "" {
+		zlog.Info("setting exclusive LIB on forkable", zap.Stringer("start_block", startBlock))
 		forkOptions = append(forkOptions, forkable.WithExclusiveLIB(startBlock))
+	} else {
+		zlog.Warn("wtf startblock empty blah blah", zap.Stringer("start_block", startBlock))
+	}
+	if t.blockmeta != nil {
+		zlog.Info("setting irreversibility checker on forkable")
+		forkOptions = append(forkOptions, forkable.WithIrreversibilityChecker(t.blockmeta, 2*time.Second))
 	}
 
 	forkableHandler := forkable.New(t, forkOptions...)

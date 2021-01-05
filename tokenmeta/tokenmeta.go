@@ -11,6 +11,7 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
@@ -31,9 +32,16 @@ type TokenMeta struct {
 	abisCache       map[string]*abiItem
 	saveEveryNBlock uint32
 	stateClient     pbstatedb.StateClient
+	blockmeta       pbblockmeta.BlockIDClient
 }
 
-func NewTokenMeta(cache cache.Cache, abiCodecCli pbabicodec.DecoderClient, saveEveryNBlock uint32, stateClient pbstatedb.StateClient) *TokenMeta {
+func NewTokenMeta(
+	cache cache.Cache,
+	abiCodecCli pbabicodec.DecoderClient,
+	saveEveryNBlock uint32,
+	stateClient pbstatedb.StateClient,
+	blockmeta pbblockmeta.BlockIDClient,
+) *TokenMeta {
 	if blkTime := cache.GetHeadBlockTime(); !blkTime.IsZero() {
 		HeadTimeDrift.SetBlockTime(blkTime)
 	}
@@ -44,6 +52,7 @@ func NewTokenMeta(cache cache.Cache, abiCodecCli pbabicodec.DecoderClient, saveE
 		abiCodecCli:     abiCodecCli,
 		saveEveryNBlock: saveEveryNBlock,
 		stateClient:     stateClient,
+		blockmeta:       blockmeta,
 	}
 }
 
