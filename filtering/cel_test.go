@@ -311,7 +311,7 @@ func TestCELActivation(t *testing.T) {
 
 		activation := ActionTraceActivation{
 			Trace: test.activation.actTrace,
-			TrxTrace: MemoizableTrxTrace{
+			TrxTrace: &MemoizableTrxTrace{
 				TrxTrace: &pbcodec.TransactionTrace{
 					Scheduled:    test.activation.isScheduled,
 					ActionTraces: multiAction(test.activation.trxActionCount),

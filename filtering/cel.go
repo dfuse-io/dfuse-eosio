@@ -220,7 +220,7 @@ func (f *CELFilter) match(activation interpreter.Activation) (matched bool) {
 
 func NewActionTraceActivation(
 	actionTrace *pbcodec.ActionTrace,
-	trxTrace MemoizableTrxTrace,
+	trxTrace *MemoizableTrxTrace,
 	stepName string,
 ) *ActionTraceActivation {
 	activation := &ActionTraceActivation{
@@ -236,7 +236,7 @@ type MemoizableTrxTrace struct {
 	top5Actors []string
 }
 
-func (t MemoizableTrxTrace) getTop5Actors() []string {
+func (t *MemoizableTrxTrace) getTop5Actors() []string {
 	if t.top5Actors == nil {
 		t.top5Actors = getTop5ActorsForTrx(t.TrxTrace)
 	}
@@ -245,7 +245,7 @@ func (t MemoizableTrxTrace) getTop5Actors() []string {
 
 type ActionTraceActivation struct {
 	Trace      *pbcodec.ActionTrace
-	TrxTrace   MemoizableTrxTrace
+	TrxTrace   *MemoizableTrxTrace
 	StepName   string
 	cachedData map[string]interface{}
 }

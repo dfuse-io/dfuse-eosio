@@ -150,9 +150,8 @@ func TestBlockFilter(t *testing.T) {
 			require.NoError(t, err)
 
 			hasPass, isSystem := shouldProcess(
-				test.trace,
+				&MemoizableTrxTrace{TrxTrace: test.trace},
 				test.trace.ActionTraces[0],
-				func() []string { return nil },
 				filter.IncludeProgram.choose(0),
 				filter.ExcludeProgram.choose(0),
 				filter.SystemActionsIncludeProgram.choose(0),

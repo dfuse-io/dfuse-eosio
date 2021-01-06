@@ -185,13 +185,8 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 	for _, trxTrace := range trxTraces {
 		trxTraceAddedToFiltered := false
 		trxTraceExcluded := true
-		var trxTop5Actors []string // per transaction
-		getTrxTop5Actors := func() []string {
-			if trxTop5Actors == nil {
-				trxTop5Actors = getTop5ActorsForTrx(trxTrace)
-			}
-			return trxTop5Actors
-		}
+
+		memoizableTrxTrace := &MemoizableTrxTrace{TrxTrace: trxTrace}
 
 		for _, actTrace := range trxTrace.ActionTraces {
 			if wasFiltered {
@@ -201,7 +196,7 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 				actTrace.FilteringMatched = false // expected default to be false
 			}
 
-			passes, isSystem := shouldProcess(trxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
+			passes, isSystem := shouldProcess(memoizableTrxTrace, actTrace, include, exclude, systemActions)
 			if !passes {
 				continue
 			}
@@ -221,13 +216,7 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 		}
 
 		if trxTrace.FailedDtrxTrace != nil {
-			trxTop5Actors = nil
-			getTrxTop5Actors = func() []string {
-				if trxTop5Actors == nil {
-					trxTop5Actors = getTop5ActorsForTrx(trxTrace.FailedDtrxTrace)
-				}
-				return trxTop5Actors
-			}
+			memoizableFailedDTrxTrace := &MemoizableTrxTrace{TrxTrace: trxTrace.FailedDtrxTrace}
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
 				if wasFiltered {
 					if !actTrace.FilteringMatched { // skip previously excluded
@@ -236,7 +225,7 @@ func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *C
 					actTrace.FilteringMatched = false // expected default to be false
 				}
 
-				passes, isSystem := shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
+				passes, isSystem := shouldProcess(memoizableFailedDTrxTrace, actTrace, include, exclude, systemActions)
 				if !passes {
 					continue
 				}
@@ -328,8 +317,8 @@ func combineFilters(prev string, next *CELFilter) string {
 	return fmt.Sprintf("%s;;;%s", prev, next.code)
 }
 
-func shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
-	activation := NewActionTraceActivation(actTrace, MemoizableTrxTrace{TrxTrace: trxTrace}, "")
+func shouldProcess(trxTrace *MemoizableTrxTrace, actTrace *pbcodec.ActionTrace, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
+	activation := NewActionTraceActivation(actTrace, trxTrace, "")
 	// If the include program does not match, there is nothing more to do here
 	if !include.match(activation) {
 		if systemActions.match(activation) {
