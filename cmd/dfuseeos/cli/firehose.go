@@ -17,6 +17,7 @@ func init() {
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/firehose.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr, "Address on which the firehose will listen")
+			cmd.Flags().StringSlice("firehose-blocks-store-urls", nil, "If non-empty, overrides common-blocks-store-url with a list of blocks stores")
 			return nil
 		},
 
@@ -26,8 +27,16 @@ func init() {
 			blockstreamAddr := viper.GetString("common-blockstream-addr")
 			tracker.AddGetter(bstream.BlockStreamLIBTarget, bstream.StreamLIBBlockRefGetter(blockstreamAddr))
 
+			firehoseBlocksStoreURLs := viper.GetStringSlice("firehose-blocks-store-urls")
+			if len(firehoseBlocksStoreURLs) == 0 {
+				firehoseBlocksStoreURLs = []string{viper.GetString("common-blocks-store-url")}
+			}
+			for _, url := range firehoseBlocksStoreURLs {
+				url = mustReplaceDataDir(dfuseDataDir, url)
+			}
+
 			return firehoseApp.New(&firehoseApp.Config{
-				BlocksStoreURL:          mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
+				BlocksStoreURLs:         firehoseBlocksStoreURLs,
 				UpstreamBlockStreamAddr: blockstreamAddr,
 				GRPCListenAddr:          viper.GetString("firehose-grpc-listen-addr"),
 			}, &firehoseApp.Modules{

@@ -28,7 +28,7 @@ import (
 )
 
 type Config struct {
-	BlocksStoreURL          string
+	BlocksStoreURLs         []string
 	UpstreamBlockStreamAddr string
 	GRPCListenAddr          string
 }
@@ -56,10 +56,19 @@ func New(config *Config, modules *Modules) *App {
 
 func (a *App) Run() error {
 	dmetrics.Register(metrics.MetricSet)
+
 	zlog.Info("running block stream", zap.Reflect("config", a.config))
-	blocksStore, err := dstore.NewDBinStore(a.config.BlocksStoreURL)
-	if err != nil {
-		return fmt.Errorf("failed setting up blocks store: %w", err)
+
+	var blocksStores []dstore.Store
+	for _, bsu := range a.config.BlocksStoreURLs {
+		bs, err := dstore.NewDBinStore(bsu)
+		if err != nil {
+			return fmt.Errorf("failed setting up blocks store: %w", err)
+		}
+		blocksStores = append(blocksStores, bs)
+	}
+	if len(blocksStores) == 0 {
+		return fmt.Errorf("no blocks store set up")
 	}
 
 	ctx := context.Background()
@@ -97,7 +106,12 @@ func (a *App) Run() error {
 
 	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
 		zlog.Info("creating file source", zap.Uint64("start_block_num", startBlockNum))
-		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, nil, h)
+		var options []bstream.FileSourceOption
+		if len(blocksStores) > 1 {
+			options = append(options, bstream.FileSourceWithSecondaryBlocksStores(blocksStores[1:]))
+		}
+
+		src := bstream.NewFileSource(blocksStores[0], startBlockNum, 1, nil, h, options...)
 		return src
 	})
 
@@ -123,7 +137,7 @@ func (a *App) Run() error {
 	bsv2Tracker := a.modules.Tracker.Clone()
 
 	zlog.Info("setting up blockstream V2 server")
-	s := blockstreamv2.NewServer(bsv2Tracker, blocksStore, a.config.GRPCListenAddr, subscriptionHub)
+	s := blockstreamv2.NewServer(zlog, bsv2Tracker, blocksStores, a.config.GRPCListenAddr, subscriptionHub)
 	s.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
 		if err != nil {
