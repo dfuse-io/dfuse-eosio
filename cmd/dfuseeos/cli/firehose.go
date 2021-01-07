@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/dfuse-io/bstream"
 	firehoseApp "github.com/dfuse-io/dfuse-eosio/firehose/app/firehose"
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -30,7 +32,11 @@ func init() {
 			firehoseBlocksStoreURLs := viper.GetStringSlice("firehose-blocks-store-urls")
 			if len(firehoseBlocksStoreURLs) == 0 {
 				firehoseBlocksStoreURLs = []string{viper.GetString("common-blocks-store-url")}
+			} else if len(firehoseBlocksStoreURLs) == 1 && strings.Contains(firehoseBlocksStoreURLs[0], ",") {
+				// Providing multiple elements from config doesn't work with `viper.GetStringSlice`, so let's also handle the case where a single element has separator
+				firehoseBlocksStoreURLs = strings.Split(firehoseBlocksStoreURLs[0], ",")
 			}
+
 			for _, url := range firehoseBlocksStoreURLs {
 				url = mustReplaceDataDir(dfuseDataDir, url)
 			}

@@ -360,7 +360,7 @@ func (db *TRXDB) GetBlock(ctx context.Context, id string) (out *pbcodec.BlockWit
 func (db *TRXDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlockByNum(ctx, num)
 	if err == kvdb.ErrNotFound {
-		return nil, DBBlockNotFoundError(ctx, string(num))
+		return nil, DBBlockNotFoundError(ctx, strconv.FormatUint(uint64(num), 10))
 	}
 	if err != nil {
 		logging.Logger(ctx, zlog).Error("cannot get blocks by number", zap.Uint32("block_num", num), zap.Error(err))

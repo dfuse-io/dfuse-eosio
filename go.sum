@@ -242,6 +242,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20210105170217-db7e8fd1e9ed h1:a6qLcPzyTOdT
 github.com/dfuse-io/bstream v0.0.2-0.20210105170217-db7e8fd1e9ed/go.mod h1:6ut64Krpzx5bmOAYr17joofrth6Xk7Cy3WD+DVc9Zd8=
 github.com/dfuse-io/bstream v0.0.2-0.20210107213940-7c5d9ccfac34 h1:8ZIEpM/VkWEQhmgvXkbJ/SxyFm0kwrb5zdX4si6LzV0=
 github.com/dfuse-io/bstream v0.0.2-0.20210107213940-7c5d9ccfac34/go.mod h1:6ut64Krpzx5bmOAYr17joofrth6Xk7Cy3WD+DVc9Zd8=
+github.com/dfuse-io/bstream v0.0.2-0.20210107230202-ad92de8ae7e4 h1:EX1/V72woNJECYQL13X2UAUFnvAJTLaK+RNwjiKoPKg=
+github.com/dfuse-io/bstream v0.0.2-0.20210107230202-ad92de8ae7e4/go.mod h1:6ut64Krpzx5bmOAYr17joofrth6Xk7Cy3WD+DVc9Zd8=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
