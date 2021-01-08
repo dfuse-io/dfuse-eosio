@@ -14,8 +14,8 @@ import (
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/derr"
-	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgraphql/insecure"
 	"github.com/dfuse-io/dgraphql/metrics"
 	"github.com/dfuse-io/dgrpc"
@@ -138,7 +138,7 @@ func (a *App) Run() error {
 	}
 
 	zlog.Info("setting up blockstream V2 server")
-	s := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, a.config.GRPCListenAddr, subscriptionHub)
+	s := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, a.config.GRPCListenAddr, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
 	s.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
 		if err != nil {
@@ -252,4 +252,91 @@ func newGRPCServer(s *blockstreamv2.Server, overrideTraceID bool) http.Server {
 	return http.Server{
 		Handler: grpcRouter,
 	}
+}
+
+func trimBlock(blk interface{}, details pbbstream.BlockDetails) interface{} {
+	if details == pbbstream.BlockDetails_BLOCK_DETAILS_FULL {
+		return blk
+	}
+
+	// We need to create a new instance because this block could be in the live segment
+	// which is shared across all streams that requires live block. As such, we cannot modify
+	// them in-place, so we require to create a new instance.
+	//
+	// The copy is mostly shallow since we copy over pointers element but some part are deep
+	// copied like ActionTrace which requires trimming.
+	fullBlock := blk.(*pbcodec.Block)
+	block := &pbcodec.Block{
+		Id:                       fullBlock.Id,
+		Number:                   fullBlock.Number,
+		DposIrreversibleBlocknum: fullBlock.DposIrreversibleBlocknum,
+		Header: &pbcodec.BlockHeader{
+			Timestamp: fullBlock.Header.Timestamp,
+			Producer:  fullBlock.Header.Producer,
+		},
+	}
+
+	var newTrace func(fullTrxTrace *pbcodec.TransactionTrace) (trxTrace *pbcodec.TransactionTrace)
+	newTrace = func(fullTrxTrace *pbcodec.TransactionTrace) (trxTrace *pbcodec.TransactionTrace) {
+		trxTrace = &pbcodec.TransactionTrace{
+			Id:        fullTrxTrace.Id,
+			Receipt:   fullTrxTrace.Receipt,
+			Scheduled: fullTrxTrace.Scheduled,
+			Exception: fullTrxTrace.Exception,
+		}
+
+		if fullTrxTrace.FailedDtrxTrace != nil {
+			trxTrace.FailedDtrxTrace = newTrace(fullTrxTrace.FailedDtrxTrace)
+		}
+
+		trxTrace.ActionTraces = make([]*pbcodec.ActionTrace, len(fullTrxTrace.ActionTraces))
+		for i, fullActTrace := range fullTrxTrace.ActionTraces {
+			actTrace := &pbcodec.ActionTrace{
+				Receiver:                               fullActTrace.Receiver,
+				ContextFree:                            fullActTrace.ContextFree,
+				Exception:                              fullActTrace.Exception,
+				ErrorCode:                              fullActTrace.ErrorCode,
+				ActionOrdinal:                          fullActTrace.ActionOrdinal,
+				CreatorActionOrdinal:                   fullActTrace.CreatorActionOrdinal,
+				ClosestUnnotifiedAncestorActionOrdinal: fullActTrace.ClosestUnnotifiedAncestorActionOrdinal,
+				ExecutionIndex:                         fullActTrace.ExecutionIndex,
+			}
+
+			if fullActTrace.Action != nil {
+				actTrace.Action = &pbcodec.Action{
+					Account:       fullActTrace.Action.Account,
+					Name:          fullActTrace.Action.Name,
+					Authorization: fullActTrace.Action.Authorization,
+					JsonData:      fullActTrace.Action.JsonData,
+				}
+
+				if fullActTrace.Action.JsonData == "" {
+					actTrace.Action.RawData = fullActTrace.Action.RawData
+				}
+			}
+
+			if fullActTrace.Receipt != nil {
+				actTrace.Receipt = &pbcodec.ActionReceipt{
+					GlobalSequence: fullActTrace.Receipt.GlobalSequence,
+				}
+			}
+
+			trxTrace.ActionTraces[i] = actTrace
+		}
+
+		return trxTrace
+	}
+
+	traces := make([]*pbcodec.TransactionTrace, len(fullBlock.TransactionTraces()))
+	for i, fullTrxTrace := range fullBlock.TransactionTraces() {
+		traces[i] = newTrace(fullTrxTrace)
+	}
+
+	if fullBlock.FilteringApplied {
+		block.FilteredTransactionTraces = traces
+	} else {
+		block.UnfilteredTransactionTraces = traces
+	}
+
+	return block
 }
