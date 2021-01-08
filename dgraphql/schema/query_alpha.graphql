@@ -6,7 +6,7 @@ type Query {
     ): Block
 
     """
-    ALPHA Get a list of contract tokens
+    ALPHA Get a list of contract tokens (at Last Irreversible Block height (LIB) only)
     """
     tokens(
         """
@@ -41,7 +41,7 @@ type Query {
     ): TokenConnection!
 
     """
-    ALPHA Get a list of token balances for a specific account
+    ALPHA Get a list of token balances for a specific account (at Last Irreversible Block height (LIB) only)
     """
     accountBalances(
         """
@@ -83,7 +83,7 @@ type Query {
     ): AccountBalanceConnection!
 
     """
-    ALPHA Get a list of token balances for a specific contract & symbol
+    ALPHA Get a list of token balances for a specific contract & symbol (at Last Irreversible Block height (LIB) only)
     """
     tokenBalances(
         """
