@@ -30,6 +30,7 @@ cloud.google.com/go/datastore v1.1.0/go.mod h1:umbIZjpQpHh4hmRpGhH4tLFup+FVzqBi1
 cloud.google.com/go/pubsub v1.0.1/go.mod h1:R0Gpsv3s54REJCy4fxDixWD93lHJMoZTyQ2kNxGRt3I=
 cloud.google.com/go/pubsub v1.1.0/go.mod h1:EwwdRX2sKPjnvnqCa270oGRyludottCI76h+R3AArQw=
 cloud.google.com/go/pubsub v1.2.0/go.mod h1:jhfEVHT8odbXTkndysNHCcx0awwzvfOlguIAii9o8iA=
+cloud.google.com/go/pubsub v1.3.1 h1:ukjixP1wl0LpnZ6LWtZJ0mX5tBmjp1f8Sqer8Z2OMUU=
 cloud.google.com/go/pubsub v1.3.1/go.mod h1:i+ucay31+CNRpDW4Lu78I4xXG+O1r/MAHgjpRVR+TSU=
 cloud.google.com/go/storage v1.0.0/go.mod h1:IhtSnM/ZTZV8YYJWCY8RULGVqBDmpoyjwiyrjsg+URw=
 cloud.google.com/go/storage v1.4.0/go.mod h1:ZusYJWlOshgSBGbt6K3GnB3MT3H1xs2id9+TCl4fDBA=
@@ -258,8 +259,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGB
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
 github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60 h1:S2yAbl6AROAy7mp/L3ojf3wO4dHFQ7kn2opBcH9guRg=
 github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60/go.mod h1:DANTlPl++VJnjf/wFlLrFQ1GJBSNoieP5808WQJfl9o=
-github.com/dfuse-io/dgrpc v0.0.0-20210111133749-fc15e7e1784b h1:C6+Q5j0jJ8hdiArCQNt5XqhXQ5/LVV/7RQuxHu8XpUk=
-github.com/dfuse-io/dgrpc v0.0.0-20210111133749-fc15e7e1784b/go.mod h1:dY/KfFckVCwF6BY/exVNP/cbO+AH67poTy4Tg3LRkG4=
+github.com/dfuse-io/dgrpc v0.0.0-20210111211213-f155a75af593 h1:pl2eaNTb3CquF0IbZ1MylUZZnnWYXIbnAqZ82p2YOuY=
+github.com/dfuse-io/dgrpc v0.0.0-20210111211213-f155a75af593/go.mod h1:dY/KfFckVCwF6BY/exVNP/cbO+AH67poTy4Tg3LRkG4=
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulVcyLu2SFVmUVFefcUoxUHqTs0V/DUc=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=

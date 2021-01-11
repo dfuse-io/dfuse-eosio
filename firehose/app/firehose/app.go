@@ -59,6 +59,11 @@ func New(config *Config, modules *Modules) *App {
 }
 
 func (a *App) Run() error {
+	appCtx, cancel := context.WithCancel(context.Background())
+	a.Shutter.OnTerminating(func(_ error) {
+		cancel()
+	})
+
 	dmetrics.Register(metrics.MetricSet)
 
 	auth, err := dauthAuthenticator.New(a.config.AuthPlugin)
@@ -90,14 +95,9 @@ func (a *App) Run() error {
 	var start uint64
 	withLive := a.config.UpstreamBlockStreamAddr != ""
 	if withLive {
-		ctx, cancel := context.WithCancel(context.Background())
-		a.Shutter.OnTerminating(func(_ error) {
-			cancel() // prevent stalling if shutting down
-		})
-
 		zlog.Info("starting with support for live blocks")
 		for retries := 0; ; retries++ {
-			lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
+			lib, err := a.modules.Tracker.Get(appCtx, bstream.BlockStreamLIBTarget)
 			if err != nil {
 				if retries%5 == 4 {
 					zlog.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
@@ -168,8 +168,8 @@ func (a *App) Run() error {
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
 			Source:      "firehose",
-			Kind:        "eos-blocks",
-			Method:      "",
+			Kind:        "gRPC Stream",
+			Method:      "Blocks",
 			EgressBytes: int64(response.XXX_Size()),
 		}, ctx)
 		//////////////////////////////////////////////////////////////////////
@@ -177,12 +177,12 @@ func (a *App) Run() error {
 
 	a.isReady = s.IsReady
 
-	notsecure := strings.Contains(a.config.GRPCListenAddr, "*")
-	addr := strings.Replace(a.config.GRPCListenAddr, "*", "", -1)
+	insecure := strings.Contains(a.config.GRPCListenAddr, "*")
+	addr := strings.ReplaceAll(a.config.GRPCListenAddr, "*", "")
 
 	srv := newGRPCServer(s, auth, false)
 	go func() {
-		if err := startGRPCServer(srv, notsecure, addr); err != nil {
+		if err := startGRPCServer(srv, insecure, addr); err != nil {
 			a.Shutdown(err)
 		}
 	}()
@@ -193,7 +193,7 @@ func (a *App) Run() error {
 		if withLive {
 			subscriptionHub.WaitReady()
 		}
-		zlog.Info("blockstream is now ready")
+		zlog.Info("firehose is now ready")
 		s.SetReady()
 		a.ReadyFunc()
 	}()
@@ -201,7 +201,7 @@ func (a *App) Run() error {
 	return nil
 }
 
-func startGRPCServer(srv http.Server, notsecure bool, listenAddr string) error {
+func startGRPCServer(srv *http.Server, isInsecure bool, listenAddr string) error {
 	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
 	if err != nil {
 		return fmt.Errorf("unable to create logger: %w", err)
@@ -214,13 +214,13 @@ func startGRPCServer(srv http.Server, notsecure bool, listenAddr string) error {
 	}
 
 	zlog.Info("serving gRPC", zap.String("grpc_addr", listenAddr))
-
-	if notsecure {
+	if isInsecure {
 		if err := srv.Serve(grpcListener); err != nil {
 			return fmt.Errorf("error on srv.Serve: %w", err)
 		}
 		return nil
 	}
+
 	srv.TLSConfig = &tls.Config{
 		Certificates: []tls.Certificate{insecure.Cert},
 		ClientCAs:    insecure.CertPool,
@@ -232,25 +232,23 @@ func startGRPCServer(srv http.Server, notsecure bool, listenAddr string) error {
 	return nil
 }
 
-func newGRPCServer(s *blockstreamv2.Server, auth dauthAuthenticator.Authenticator, overrideTraceID bool) http.Server {
-
+func newGRPCServer(s *blockstreamv2.Server, auth dauthAuthenticator.Authenticator, overrideTraceID bool) *http.Server {
 	serverOptions := []dgrpc.ServerOption{dgrpc.WithLogger(zlog)}
 	if overrideTraceID {
 		serverOptions = append(serverOptions, dgrpc.OverrideTraceID())
 	}
 
 	if auth.IsAuthenticationTokenRequired() {
-		zlog.Debug("setting authentication requirement on grpc server")
+		zlog.Info("setting authentication requirement on grpc server")
 		serverOptions = append(serverOptions, dgrpc.WithAuthChecker(auth.Check))
 	}
 
 	zlog.Debug("configuring grpc server")
 	gs := dgrpc.NewServer(serverOptions...)
 	pbbstream.RegisterBlockStreamV2Server(gs, s)
-	//reflection.Register(gs)
 
 	grpcRouter := mux.NewRouter()
-	healthHandler := func(w http.ResponseWriter, r *http.Request) {
+	healthHandler := func(w http.ResponseWriter, _ *http.Request) {
 		if derr.IsShuttingDown() || !s.IsReady() {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			return
@@ -263,7 +261,7 @@ func newGRPCServer(s *blockstreamv2.Server, auth dauthAuthenticator.Authenticato
 		gs.ServeHTTP(w, r)
 	})
 
-	return http.Server{
+	return &http.Server{
 		Handler: grpcRouter,
 	}
 }
