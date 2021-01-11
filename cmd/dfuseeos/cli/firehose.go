@@ -45,6 +45,8 @@ func init() {
 				BlocksStoreURLs:         firehoseBlocksStoreURLs,
 				UpstreamBlockStreamAddr: blockstreamAddr,
 				GRPCListenAddr:          viper.GetString("firehose-grpc-listen-addr"),
+				AuthPlugin:              viper.GetString("common-auth-plugin"),
+				MeteringPlugin:          viper.GetString("common-metering-plugin"),
 			}, &firehoseApp.Modules{
 				Tracker: tracker,
 			}), nil

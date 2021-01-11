@@ -13,12 +13,14 @@ import (
 	"github.com/dfuse-io/bstream/blockstream"
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
+	dauthAuthenticator "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dgraphql/insecure"
 	"github.com/dfuse-io/dgraphql/metrics"
 	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dgrpc/insecure"
+	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
@@ -28,9 +30,11 @@ import (
 )
 
 type Config struct {
+	AuthPlugin              string
 	BlocksStoreURLs         []string
-	UpstreamBlockStreamAddr string
 	GRPCListenAddr          string
+	MeteringPlugin          string
+	UpstreamBlockStreamAddr string
 }
 
 type Modules struct {
@@ -57,6 +61,17 @@ func New(config *Config, modules *Modules) *App {
 func (a *App) Run() error {
 	dmetrics.Register(metrics.MetricSet)
 
+	auth, err := dauthAuthenticator.New(a.config.AuthPlugin)
+	if err != nil {
+		return fmt.Errorf("unable to initialize dauth: %w", err)
+	}
+
+	meter, err := dmetering.New(a.config.MeteringPlugin)
+	if err != nil {
+		return fmt.Errorf("unable to initialize dmetering: %w", err)
+	}
+	dmetering.SetDefaultMeter(meter)
+
 	zlog.Info("running firehose", zap.Reflect("config", a.config))
 	if len(a.config.BlocksStoreURLs) == 0 {
 		return fmt.Errorf("invalid config: no block store urls set up")
@@ -72,12 +87,14 @@ func (a *App) Run() error {
 		blockStores[i] = store
 	}
 
-	// FIXME: Replace with appCtx (from shutter)
-	ctx := context.Background()
-
 	var start uint64
 	withLive := a.config.UpstreamBlockStreamAddr != ""
 	if withLive {
+		ctx, cancel := context.WithCancel(context.Background())
+		a.Shutter.OnTerminating(func(_ error) {
+			cancel() // prevent stalling if shutting down
+		})
+
 		zlog.Info("starting with support for live blocks")
 		for retries := 0; ; retries++ {
 			lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
@@ -138,7 +155,7 @@ func (a *App) Run() error {
 	}
 
 	zlog.Info("setting up blockstream V2 server")
-	s := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, a.config.GRPCListenAddr, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
+	s := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
 	s.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
 		if err != nil {
@@ -147,14 +164,25 @@ func (a *App) Run() error {
 		preproc := &filtering.FilteringPreprocessor{Filter: filter}
 		return preproc.PreprocessBlock, nil
 	})
+	s.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
+		//////////////////////////////////////////////////////////////////////
+		dmetering.EmitWithContext(dmetering.Event{
+			Source:      "firehose",
+			Kind:        "eos-blocks",
+			Method:      "",
+			EgressBytes: int64(response.XXX_Size()),
+		}, ctx)
+		//////////////////////////////////////////////////////////////////////
+	})
 
 	a.isReady = s.IsReady
 
-	insecure := strings.Contains(a.config.GRPCListenAddr, "*")
+	notsecure := strings.Contains(a.config.GRPCListenAddr, "*")
 	addr := strings.Replace(a.config.GRPCListenAddr, "*", "", -1)
 
+	srv := newGRPCServer(s, auth, false)
 	go func() {
-		if err := startGRPCServer(s, insecure, addr); err != nil {
+		if err := startGRPCServer(srv, notsecure, addr); err != nil {
 			a.Shutdown(err)
 		}
 	}()
@@ -173,64 +201,50 @@ func (a *App) Run() error {
 	return nil
 }
 
-func startGRPCServer(s *blockstreamv2.Server, insecure bool, listenAddr string) error {
-	// TODO: this is heavily duplicated with `dgraphql`, eventually should all go to `dgrpc`
-	// so we have better exposure of gRPC services inside the mesh, and ways to
-	// expose them externally too.
-	if insecure {
-		return startGRPCServerInsecure(s, listenAddr)
+func startGRPCServer(srv http.Server, notsecure bool, listenAddr string) error {
+	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
+	if err != nil {
+		return fmt.Errorf("unable to create logger: %w", err)
 	}
-	return startGRPCServerSecure(s, listenAddr)
-}
-
-func startGRPCServerSecure(s *blockstreamv2.Server, listenAddr string) error {
-	srv := newGRPCServer(s, false)
+	srv.ErrorLog = errorLogger
 
 	grpcListener, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return fmt.Errorf("listening grpc %q: %w", listenAddr, err)
 	}
 
-	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
-	if err != nil {
-		return fmt.Errorf("unable to create logger: %w", err)
-	}
+	zlog.Info("serving gRPC", zap.String("grpc_addr", listenAddr))
 
+	if notsecure {
+		if err := srv.Serve(grpcListener); err != nil {
+			return fmt.Errorf("error on srv.Serve: %w", err)
+		}
+		return nil
+	}
 	srv.TLSConfig = &tls.Config{
 		Certificates: []tls.Certificate{insecure.Cert},
 		ClientCAs:    insecure.CertPool,
 		ClientAuth:   tls.VerifyClientCertIfGiven,
 	}
-	srv.ErrorLog = errorLogger
-
 	if err := srv.ServeTLS(grpcListener, "", ""); err != nil {
 		return fmt.Errorf("grpc server serve tls: %w", err)
 	}
 	return nil
 }
 
-func startGRPCServerInsecure(s *blockstreamv2.Server, listenAddr string) error {
-	grpcListener, err := net.Listen("tcp", listenAddr)
-	if err != nil {
-		return fmt.Errorf("listening grpc %q: %w", listenAddr, err)
-	}
+func newGRPCServer(s *blockstreamv2.Server, auth dauthAuthenticator.Authenticator, overrideTraceID bool) http.Server {
 
-	gs := newGRPCServer(s, false)
-
-	zlog.Info("serving gRPC", zap.String("grpc_addr", listenAddr))
-	if err := gs.Serve(grpcListener); err != nil {
-		return fmt.Errorf("error on gs.Serve: %w", err)
-	}
-	return nil
-}
-
-func newGRPCServer(s *blockstreamv2.Server, overrideTraceID bool) http.Server {
 	serverOptions := []dgrpc.ServerOption{dgrpc.WithLogger(zlog)}
 	if overrideTraceID {
 		serverOptions = append(serverOptions, dgrpc.OverrideTraceID())
 	}
 
-	zlog.Info("configuring grpc server")
+	if auth.IsAuthenticationTokenRequired() {
+		zlog.Debug("setting authentication requirement on grpc server")
+		serverOptions = append(serverOptions, dgrpc.WithAuthChecker(auth.Check))
+	}
+
+	zlog.Debug("configuring grpc server")
 	gs := dgrpc.NewServer(serverOptions...)
 	pbbstream.RegisterBlockStreamV2Server(gs, s)
 	//reflection.Register(gs)
