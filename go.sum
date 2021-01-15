@@ -264,8 +264,10 @@ github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGB
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
 github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60 h1:S2yAbl6AROAy7mp/L3ojf3wO4dHFQ7kn2opBcH9guRg=
 github.com/dfuse-io/dgrpc v0.0.0-20201117184322-6724bb1e1b60/go.mod h1:DANTlPl++VJnjf/wFlLrFQ1GJBSNoieP5808WQJfl9o=
-github.com/dfuse-io/dgrpc v0.0.0-20210111211213-f155a75af593 h1:pl2eaNTb3CquF0IbZ1MylUZZnnWYXIbnAqZ82p2YOuY=
-github.com/dfuse-io/dgrpc v0.0.0-20210111211213-f155a75af593/go.mod h1:dY/KfFckVCwF6BY/exVNP/cbO+AH67poTy4Tg3LRkG4=
+github.com/dfuse-io/dgrpc v0.0.0-20210115185730-dbadd473559f h1:e8D9YoWU1CUNH3749yBDXYlZCNo+B8jFyTqnSRr6I+o=
+github.com/dfuse-io/dgrpc v0.0.0-20210115185730-dbadd473559f/go.mod h1:fv+/9/DeIeJI6sxdXcOXbXtVJGFcXdpmtPdO2XWiyQw=
+github.com/dfuse-io/dgrpc v0.0.0-20210115202237-016274057496 h1:hxTCc0L7DED7w4CLjkii3wtvFYVhWXb4mECGXVG6sX4=
+github.com/dfuse-io/dgrpc v0.0.0-20210115202237-016274057496/go.mod h1:fv+/9/DeIeJI6sxdXcOXbXtVJGFcXdpmtPdO2XWiyQw=
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulVcyLu2SFVmUVFefcUoxUHqTs0V/DUc=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
@@ -279,6 +281,8 @@ github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca h1:mbpkMBmoOCLu5xyh
 github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca/go.mod h1:XhSRmGQiR+2/vOVGXpwCqnF1/FDunrZxsdkDjgxAtZs=
 github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c h1:W7m94YJYS+JMr/ZNnhATMn3tgH42p7dGyp+La2MjPWA=
 github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c/go.mod h1:Qtr0qJsu5zfOJEKxNhp+hlTB785Psam/iAR2VbMa7uA=
+github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a h1:p8UQaHbdKvVRRko0E2FFTuzbAgQhwZUtogdrfQ3C1ow=
+github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a/go.mod h1:QFR4Lo8aueGD5u+0HO2A3Un3dM+1pj6NjxYhLGKSNNI=
 github.com/dfuse-io/dmetrics v0.0.0-20200406214800-499fc7b320ab/go.mod h1:bTeE3yXvn/O8f0hw7wOstnUrKTCw9HDzC6aBtldPVRI=
 github.com/dfuse-io/dmetrics v0.0.0-20200508152325-93e7e9d576bb/go.mod h1:pbb9dPC3ir8G/h3YNhr/5bq35DwjyevEf5tUQvkax0s=
 github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68 h1:oj8z15TJAXBwpzcDIv3l40eXS8ssIz93ZPfUq/MFfUo=
@@ -325,6 +329,7 @@ github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2aka
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48 h1:nf8r2ROrv80taXLyyUXXtK2ugnn+x2Qd2nABRZAQAHA=
 github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48/go.mod h1:wsfF2LBZEXeCgvz8ic4lcDN8NlPw3TiPAWXimHXeswk=
+github.com/dfuse-io/pbgo v0.0.5/go.mod h1:DtBEUZqYoNvFsoU+TBMPznX6VzFrG8WdZ4A9fGAT6MU=
 github.com/dfuse-io/pbgo v0.0.6-0.20200407175820-b82ffcb63bf6/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
 github.com/dfuse-io/pbgo v0.0.6-0.20200602201455-99986ef5a09d/go.mod h1:thG/VHT3fqEpuhfxNA7psbzizGgJ3kSCM0rSUZ/LNaQ=
 github.com/dfuse-io/pbgo v0.0.6-0.20200722182828-c2634161d5a3/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
@@ -377,6 +382,7 @@ github.com/eoscanada/eos-go v0.9.1-0.20210115195118-6d94af7a8501 h1:n+sGjT929wJq
 github.com/eoscanada/eos-go v0.9.1-0.20210115195118-6d94af7a8501/go.mod h1:6rqBwgLY59dZN1xqoA8SoHDal0gpNvh1L1Qa3ib8QsY=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
 github.com/eoscanada/eosc v1.4.0/go.mod h1:0I+yYzRUTbIMgQsBjBYyNdE5idtbUMMkUQM4fN5A3P4=
+github.com/eoscanada/jsonpb v0.0.0-20190926194323-1de8191ec406/go.mod h1:nPQnthu2ksW1Ax+VaREuiyBgoML2UL1TG/YueXp5i9U=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39 h1:JQ7Gc43VO/HJb/mNc9otItimhUi5nGKH7ZvINbidcyg=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39/go.mod h1:s+wqQ06P9Micmjx1ejirBXVxVNiYXfZROIgQeBsAneI=
 github.com/ethereum/go-ethereum v1.9.9/go.mod h1:a9TqabFudpDu1nucId+k9S8R9whYaHnGBLKFouA5EAo=

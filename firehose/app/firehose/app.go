@@ -2,10 +2,7 @@ package firehose
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"net"
-	"net/http"
 	"strings"
 	"time"
 
@@ -14,19 +11,17 @@ import (
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
 	"github.com/dfuse-io/bstream/hub"
 	dauthAuthenticator "github.com/dfuse-io/dauth/authenticator"
-	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dgraphql/metrics"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dgrpc/insecure"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/dfuse-io/shutter"
-	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 type Config struct {
@@ -38,7 +33,9 @@ type Config struct {
 }
 
 type Modules struct {
-	Tracker *bstream.Tracker
+	Authenticator dauthAuthenticator.Authenticator
+	Meterering    dmetering.Metering
+	Tracker       *bstream.Tracker
 }
 
 type App struct {
@@ -65,17 +62,6 @@ func (a *App) Run() error {
 	})
 
 	dmetrics.Register(metrics.MetricSet)
-
-	auth, err := dauthAuthenticator.New(a.config.AuthPlugin)
-	if err != nil {
-		return fmt.Errorf("unable to initialize dauth: %w", err)
-	}
-
-	meter, err := dmetering.New(a.config.MeteringPlugin)
-	if err != nil {
-		return fmt.Errorf("unable to initialize dmetering: %w", err)
-	}
-	dmetering.SetDefaultMeter(meter)
 
 	zlog.Info("running firehose", zap.Reflect("config", a.config))
 	if len(a.config.BlocksStoreURLs) == 0 {
@@ -155,16 +141,17 @@ func (a *App) Run() error {
 	}
 
 	zlog.Info("setting up blockstream V2 server")
-	s := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
-	s.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
+	blockStreamService := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
+	blockStreamService.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
 		if err != nil {
-			return nil, fmt.Errorf("parsing: %w", err)
+			return nil, fmt.Errorf("parsing filter: %w", err)
 		}
 		preproc := &filtering.FilteringPreprocessor{Filter: filter}
 		return preproc.PreprocessBlock, nil
 	})
-	s.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
+
+	blockStreamService.SetPostHook(func(ctx context.Context, response *pbbstream.BlockResponseV2) {
 		//////////////////////////////////////////////////////////////////////
 		dmetering.EmitWithContext(dmetering.Event{
 			Source:      "firehose",
@@ -175,95 +162,56 @@ func (a *App) Run() error {
 		//////////////////////////////////////////////////////////////////////
 	})
 
-	a.isReady = s.IsReady
+	a.isReady = blockStreamService.IsReady
 
-	insecure := strings.Contains(a.config.GRPCListenAddr, "*")
-	addr := strings.ReplaceAll(a.config.GRPCListenAddr, "*", "")
+	srv := a.newGRPCServer(blockStreamService.IsReady)
 
-	srv := newGRPCServer(s, auth, false)
-	go func() {
-		if err := startGRPCServer(srv, insecure, addr); err != nil {
-			a.Shutdown(err)
-		}
-	}()
+	zlog.Info("registering grpc services")
+	srv.RegisterService(func(gs *grpc.Server) {
+		pbbstream.RegisterBlockStreamV2Server(gs, blockStreamService)
+	})
+
+	a.OnTerminating(func(_ error) { srv.Shutdown(30 * time.Second) })
+	srv.OnTerminated(a.Shutdown)
+
+	listenAddr := strings.ReplaceAll(a.config.GRPCListenAddr, "*", "")
+	zlog.Info("launching grpc server", zap.String("listening_addr", listenAddr))
+	go srv.Launch(listenAddr)
 
 	go subscriptionHub.Launch()
 
 	go func() {
 		if withLive {
-			subscriptionHub.WaitReady()
+			subscriptionHub.WaitUntilRealTime()
 		}
+
 		zlog.Info("firehose is now ready")
-		s.SetReady()
+		blockStreamService.SetReady()
 		a.ReadyFunc()
 	}()
 
 	return nil
 }
 
-func startGRPCServer(srv *http.Server, isInsecure bool, listenAddr string) error {
-	errorLogger, err := zap.NewStdLogAt(zlog, zap.ErrorLevel)
-	if err != nil {
-		return fmt.Errorf("unable to create logger: %w", err)
-	}
-	srv.ErrorLog = errorLogger
-
-	grpcListener, err := net.Listen("tcp", listenAddr)
-	if err != nil {
-		return fmt.Errorf("listening grpc %q: %w", listenAddr, err)
+func (a *App) newGRPCServer(checkIsReady func() bool) *dgrpc.Server {
+	options := []dgrpc.ServerOption{
+		dgrpc.WithLogger(zlog),
+		dgrpc.WithHealthCheck(dgrpc.HealthCheckOverGRPC|dgrpc.HealthCheckOverHTTP, func(ctx context.Context) (isReady bool, out interface{}, err error) {
+			return checkIsReady(), nil, nil
+		}),
 	}
 
-	zlog.Info("serving gRPC", zap.String("grpc_addr", listenAddr))
-	if isInsecure {
-		if err := srv.Serve(grpcListener); err != nil {
-			return fmt.Errorf("error on srv.Serve: %w", err)
-		}
-		return nil
+	if strings.Contains(a.config.GRPCListenAddr, "*") {
+		options = append(options, dgrpc.InsecureServer())
+	} else {
+		options = append(options, dgrpc.PlainTextServer())
 	}
 
-	srv.TLSConfig = &tls.Config{
-		Certificates: []tls.Certificate{insecure.Cert},
-		ClientCAs:    insecure.CertPool,
-		ClientAuth:   tls.VerifyClientCertIfGiven,
-	}
-	if err := srv.ServeTLS(grpcListener, "", ""); err != nil {
-		return fmt.Errorf("grpc server serve tls: %w", err)
-	}
-	return nil
-}
-
-func newGRPCServer(s *blockstreamv2.Server, auth dauthAuthenticator.Authenticator, overrideTraceID bool) *http.Server {
-	serverOptions := []dgrpc.ServerOption{dgrpc.WithLogger(zlog)}
-	if overrideTraceID {
-		serverOptions = append(serverOptions, dgrpc.OverrideTraceID())
+	if a.modules.Authenticator.IsAuthenticationTokenRequired() {
+		options = append(options, dgrpc.WithAuthChecker(a.modules.Authenticator.Check))
 	}
 
-	if auth.IsAuthenticationTokenRequired() {
-		zlog.Info("setting authentication requirement on grpc server")
-		serverOptions = append(serverOptions, dgrpc.WithAuthChecker(auth.Check))
-	}
-
-	zlog.Debug("configuring grpc server")
-	gs := dgrpc.NewServer(serverOptions...)
-	pbbstream.RegisterBlockStreamV2Server(gs, s)
-
-	grpcRouter := mux.NewRouter()
-	healthHandler := func(w http.ResponseWriter, _ *http.Request) {
-		if derr.IsShuttingDown() || !s.IsReady() {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			return
-		}
-		w.Write([]byte("ok"))
-	}
-	grpcRouter.Path("/").HandlerFunc(healthHandler)
-	grpcRouter.Path("/healthz").HandlerFunc(healthHandler)
-	grpcRouter.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gs.ServeHTTP(w, r)
-	})
-
-	return &http.Server{
-		Handler: grpcRouter,
-	}
+	return dgrpc.NewServer2(options...)
 }
 
 func trimBlock(blk interface{}, details pbbstream.BlockDetails) interface{} {

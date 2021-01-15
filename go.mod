@@ -22,12 +22,12 @@ require (
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98
-	github.com/dfuse-io/dgrpc v0.0.0-20210111211213-f155a75af593
+	github.com/dfuse-io/dgrpc v0.0.0-20210115203232-89037bcaf818
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
 	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
-	github.com/dfuse-io/dmetering v0.0.0-20200529171737-525c3029795c
+	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20200924172801-712ea810c87b
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
@@ -106,3 +106,5 @@ replace github.com/ShinyTrinkets/overseer => github.com/maoueh/overseer v0.2.1-0
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
+
+replace github.com/dfuse-io/dgrpc => /Users/maoueh/work/dfuse/dgrpc
