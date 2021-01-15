@@ -268,6 +268,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20210115185730-dbadd473559f h1:e8D9YoWU1CUNH374
 github.com/dfuse-io/dgrpc v0.0.0-20210115185730-dbadd473559f/go.mod h1:fv+/9/DeIeJI6sxdXcOXbXtVJGFcXdpmtPdO2XWiyQw=
 github.com/dfuse-io/dgrpc v0.0.0-20210115202237-016274057496 h1:hxTCc0L7DED7w4CLjkii3wtvFYVhWXb4mECGXVG6sX4=
 github.com/dfuse-io/dgrpc v0.0.0-20210115202237-016274057496/go.mod h1:fv+/9/DeIeJI6sxdXcOXbXtVJGFcXdpmtPdO2XWiyQw=
+github.com/dfuse-io/dgrpc v0.0.0-20210115203232-89037bcaf818 h1:APFCggNuqcwzMKQ9l2p32Xfbc3wnsQ6KH4s0M1OazA4=
+github.com/dfuse-io/dgrpc v0.0.0-20210115203232-89037bcaf818/go.mod h1:fv+/9/DeIeJI6sxdXcOXbXtVJGFcXdpmtPdO2XWiyQw=
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulVcyLu2SFVmUVFefcUoxUHqTs0V/DUc=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
