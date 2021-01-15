@@ -155,7 +155,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 				if eosToken == nil {
 					zlogger.Warn("unsupported token for contract",
 						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()))
+						zap.Stringer("symbol", symbolCode))
 					continue
 				}
 
@@ -163,7 +163,7 @@ func (t *TokenMeta) ProcessBlock(block *bstream.Block, obj interface{}) error {
 				if err != nil {
 					zlogger.Warn("could not create account balance from dbop row",
 						zap.String("token_contract", string(tokenContract)),
-						zap.String("symbol", symbolCode.String()),
+						zap.Stringer("symbol", symbolCode),
 						zap.String("scope", dbop.Scope),
 						zap.String("dbop_row", string(row)))
 					continue
