@@ -30,7 +30,9 @@ func init() {
 			dfuseDataDir := runtime.AbsDataDir
 			tracker := runtime.Tracker.Clone()
 			blockstreamAddr := viper.GetString("common-blockstream-addr")
-			tracker.AddGetter(bstream.BlockStreamLIBTarget, bstream.StreamLIBBlockRefGetter(blockstreamAddr))
+			if blockstreamAddr != "" {
+				tracker.AddGetter(bstream.BlockStreamLIBTarget, bstream.StreamLIBBlockRefGetter(blockstreamAddr))
+			}
 
 			// FIXME: That should be a shared dependencies across `dfuse for EOSIO`
 			authenticator, err := dauthAuthenticator.New(viper.GetString("common-auth-plugin"))

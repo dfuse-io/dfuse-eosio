@@ -78,70 +78,35 @@ func (a *App) Run() error {
 		blockStores[i] = store
 	}
 
-	var start uint64
 	withLive := a.config.UpstreamBlockStreamAddr != ""
+
+	var subscriptionHub *hub.SubscriptionHub
+	var serverLiveHeadTracker bstream.BlockRefGetter
+	var serverLiveSourceFactory bstream.SourceFactory
+
 	if withLive {
-		zlog.Info("starting with support for live blocks")
-		for retries := 0; ; retries++ {
-			lib, err := a.modules.Tracker.Get(appCtx, bstream.BlockStreamLIBTarget)
-			if err != nil {
-				if retries%5 == 4 {
-					zlog.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
-				}
-				time.Sleep(time.Second)
-				continue
-			}
-			start = lib.Num()
-			break
+		var err error
+		subscriptionHub, err = a.newSubscriptionHub(appCtx, blockStores)
+		if err != nil {
+			return fmt.Errorf("setting up subscription hub: %w", err)
 		}
+
+		serverLiveHeadTracker = subscriptionHub.HeadTracker
+		serverLiveSourceFactory = bstream.SourceFactory(func(h bstream.Handler) bstream.Source {
+			return subscriptionHub.NewSource(h, 250)
+		})
 	}
 
-	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return blockstream.NewSource(
-			context.Background(),
-			a.config.UpstreamBlockStreamAddr,
-			100,
-			bstream.HandlerFunc(func(blk *bstream.Block, obj interface{}) error {
-				metrics.HeadTimeDrift.SetBlockTime(blk.Time())
-				return h.ProcessBlock(blk, obj)
-			}),
-			blockstream.WithRequester("firehose"),
-		)
-	})
-
-	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		var options []bstream.FileSourceOption
-		if len(blockStores) > 1 {
-			options = append(options, bstream.FileSourceWithSecondaryBlocksStores(blockStores[1:]))
-		}
-
-		zlog.Info("creating file source", zap.String("block_store", blockStores[0].ObjectPath("")), zap.Uint64("start_block_num", startBlockNum))
-		src := bstream.NewFileSource(blockStores[0], startBlockNum, 1, nil, h, options...)
-		return src
-	})
-
-	zlog.Info("setting up subscription hub")
-
-	buffer := bstream.NewBuffer("hub-buffer", zlog.Named("hub"))
-	tailManager := bstream.NewSimpleTailManager(buffer, 350)
-	go tailManager.Launch()
-
-	subscriptionHub, err := hub.NewSubscriptionHub(
-		start,
-		buffer,
-		tailManager.TailLock,
-		fileSourceFactory,
-		liveSourceFactory,
-		hub.Withlogger(zlog),
-		hub.WithRealtimeTolerance(1*time.Minute),
-		hub.WithoutMemoization(), // This should be tweakable on the Hub, by the bstreamv2.Server
+	zlog.Info("setting up blockstream V2 server", zap.Bool("live_support", withLive))
+	blockStreamService := blockstreamv2.NewServer(
+		zlog,
+		blockStores,
+		serverLiveSourceFactory,
+		serverLiveHeadTracker,
+		a.modules.Tracker,
+		blockstreamv2.BlockTrimmerFunc(trimBlock),
 	)
-	if err != nil {
-		return fmt.Errorf("setting up subscription hub: %w", err)
-	}
 
-	zlog.Info("setting up blockstream V2 server")
-	blockStreamService := blockstreamv2.NewServer(zlog, a.modules.Tracker, blockStores, subscriptionHub, blockstreamv2.BlockTrimmerFunc(trimBlock))
 	blockStreamService.SetPreprocFactory(func(req *pbbstream.BlocksRequestV2) (bstream.PreprocessFunc, error) {
 		filter, err := filtering.NewBlockFilter([]string{req.IncludeFilterExpr}, []string{req.ExcludeFilterExpr}, nil)
 		if err != nil {
@@ -178,7 +143,9 @@ func (a *App) Run() error {
 	zlog.Info("launching grpc server", zap.String("listening_addr", listenAddr))
 	go srv.Launch(listenAddr)
 
-	go subscriptionHub.Launch()
+	if withLive {
+		go subscriptionHub.Launch()
+	}
 
 	go func() {
 		if withLive {
@@ -191,6 +158,63 @@ func (a *App) Run() error {
 	}()
 
 	return nil
+}
+
+func (a *App) newSubscriptionHub(ctx context.Context, blockStores []dstore.Store) (*hub.SubscriptionHub, error) {
+	var start uint64
+	zlog.Info("retrieving live start block")
+	for retries := 0; ; retries++ {
+		lib, err := a.modules.Tracker.Get(ctx, bstream.BlockStreamLIBTarget)
+		if err != nil {
+			if retries%5 == 4 {
+				zlog.Warn("cannot get lib num from blockstream, retrying", zap.Int("retries", retries), zap.Error(err))
+			}
+			time.Sleep(time.Second)
+			continue
+		}
+		start = lib.Num()
+		break
+	}
+
+	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
+		return blockstream.NewSource(
+			context.Background(),
+			a.config.UpstreamBlockStreamAddr,
+			100,
+			bstream.HandlerFunc(func(blk *bstream.Block, obj interface{}) error {
+				metrics.HeadTimeDrift.SetBlockTime(blk.Time())
+				return h.ProcessBlock(blk, obj)
+			}),
+			blockstream.WithRequester("firehose"),
+		)
+	})
+
+	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
+		var options []bstream.FileSourceOption
+		if len(blockStores) > 1 {
+			options = append(options, bstream.FileSourceWithSecondaryBlocksStores(blockStores[1:]))
+		}
+
+		zlog.Info("creating file source", zap.String("block_store", blockStores[0].ObjectPath("")), zap.Uint64("start_block_num", startBlockNum))
+		src := bstream.NewFileSource(blockStores[0], startBlockNum, 1, nil, h, options...)
+		return src
+	})
+
+	zlog.Info("setting up subscription hub")
+	buffer := bstream.NewBuffer("hub-buffer", zlog.Named("hub"))
+	tailManager := bstream.NewSimpleTailManager(buffer, 350)
+	go tailManager.Launch()
+
+	return hub.NewSubscriptionHub(
+		start,
+		buffer,
+		tailManager.TailLock,
+		fileSourceFactory,
+		liveSourceFactory,
+		hub.Withlogger(zlog),
+		hub.WithRealtimeTolerance(1*time.Minute),
+		hub.WithoutMemoization(), // This should be tweakable on the Hub, by the bstreamv2.Server
+	)
 }
 
 func (a *App) newGRPCServer(checkIsReady func() bool) *dgrpc.Server {
