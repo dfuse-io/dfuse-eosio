@@ -73,9 +73,10 @@ max-transaction-time = 5000
 ## Read-only Mode
 #
 # **Important**
-# The dfuse Mindreader 'nodeos' process cannot be used as API node, it must not receive
+# The dfuse Mindreader 'nodeos' process cannot be used as API node for transactions, it must not receive
 # P2P transactions nor API transactions, that will create conflicts within 'nodeos' that will
-# cause blocks to be mixed and will stop the dfuse for EOSIO process.
+# cause blocks to be mixed and will stop the dfuse for EOSIO process. It's also recommended to not use
+# it for other API purposes even if it could work.
 #
 # If you require an API node, use dfuse Node Manager which is our 'nodeos' manager (dfuse Mindreader
 # is actually a Node Manager with extra capabilities).
