@@ -144,6 +144,7 @@ var ActionTraceDeclarations = cel.Declarations(
 	decls.NewIdent("input", decls.Bool, nil),
 	decls.NewIdent("notif", decls.Bool, nil),
 	decls.NewIdent("scheduled", decls.Bool, nil),
+	decls.NewIdent("executed", decls.Bool, nil), // action has impact on chain state; it did not fail or expire or whatever (transaction status is either EXECUTED or SOFT_FAIL with a special eosio::onerror handler that succeeded)
 
 	decls.NewIdent("trx_action_count", decls.Int, nil), // Number of actions in the transaction in which this action is part of.
 	decls.NewIdent("top5_trx_actors", decls.NewListType(decls.String), nil),
@@ -334,6 +335,8 @@ func (a *ActionTraceActivation) ResolveName(name string) (interface{}, bool) {
 			receiver = a.Trace.Receipt.Receiver
 		}
 		return a.Trace.Account() != receiver, true
+	case "executed":
+		return !a.TrxTrace.TrxTrace.HasBeenReverted(), true
 	case "scheduled":
 		return a.TrxTrace.TrxTrace.Scheduled, true
 	case "input":
