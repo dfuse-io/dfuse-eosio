@@ -361,6 +361,7 @@ github.com/eosnationftw/dauth v0.0.0-20201116161103-9f322115186c h1:5XbCXJcWS374
 github.com/eosnationftw/dauth v0.0.0-20201116161103-9f322115186c/go.mod h1:sEEiT2ZkwXFNSS58XQDCxDl1/nbel7l4ZQFRK6T/Z6U=
 github.com/eosnationftw/dauth v0.0.0-20210201134704-0d5795a9e27d/go.mod h1:Io0yBO4QLlDuQnfUA9yqPz1iJaPk4h+g1FMXD0jkAg8=
 github.com/eosnationftw/dauth v0.0.0-20210201144832-bc290ac1b15a/go.mod h1:Io0yBO4QLlDuQnfUA9yqPz1iJaPk4h+g1FMXD0jkAg8=
+github.com/eosnationftw/dauth v0.0.0-20210201155849-fe48eb3b48d8/go.mod h1:Io0yBO4QLlDuQnfUA9yqPz1iJaPk4h+g1FMXD0jkAg8=
 github.com/ethereum/go-ethereum v1.9.9/go.mod h1:a9TqabFudpDu1nucId+k9S8R9whYaHnGBLKFouA5EAo=
 github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c h1:8ISkoahWXwZR41ois5lSJBSVw4D0OV19Ht/JSTzvSv0=
 github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c/go.mod h1:Yg+htXGokKKdzcwhuNDwVvN+uBxDGXJ7G/VN1d8fa64=
