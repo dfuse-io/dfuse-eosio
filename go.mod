@@ -16,20 +16,20 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
-	github.com/dfuse-io/bstream v0.0.2-0.20210125192647-167e31f99b40
+	github.com/dfuse-io/bstream v0.0.2-0.20210203184837-edf747e8a150
 	github.com/dfuse-io/client-go v0.0.0-20210111154104-a57a0b7a63fc
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98
-	github.com/dfuse-io/dgrpc v0.0.0-20210118212827-12d9d8a14c40
+	github.com/dfuse-io/dgrpc v0.0.0-20210128133958-db1ca95920e4
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
 	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
-	github.com/dfuse-io/dstore v0.1.1-0.20200924172801-712ea810c87b
+	github.com/dfuse-io/dstore v0.1.1-0.20210203172334-dec78c6098a6
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
