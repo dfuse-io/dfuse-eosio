@@ -36,7 +36,7 @@ func init() {
 		MetricsID:   "merged-filter",
 		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/dfuse-eosio/firehose.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
-			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr, "Address on which the firehose will listen")
+			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr+"*", "Address on which the firehose will listen")
 			cmd.Flags().StringSlice("firehose-blocks-store-urls", nil, "If non-empty, overrides common-blocks-store-url with a list of blocks stores")
 			return nil
 		},
@@ -45,6 +45,7 @@ func init() {
 			dfuseDataDir := runtime.AbsDataDir
 			tracker := runtime.Tracker.Clone()
 			blockstreamAddr := viper.GetString("common-blockstream-addr")
+
 			if blockstreamAddr != "" {
 				tracker.AddGetter(bstream.BlockStreamLIBTarget, bstream.StreamLIBBlockRefGetter(blockstreamAddr))
 			}
@@ -64,7 +65,7 @@ func init() {
 
 			firehoseBlocksStoreURLs := viper.GetStringSlice("firehose-blocks-store-urls")
 			if len(firehoseBlocksStoreURLs) == 0 {
-				firehoseBlocksStoreURLs = []string{viper.GetString("common-blocks-store-url")}
+				firehoseBlocksStoreURLs = []string{mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url"))}
 			} else if len(firehoseBlocksStoreURLs) == 1 && strings.Contains(firehoseBlocksStoreURLs[0], ",") {
 				// Providing multiple elements from config doesn't work with `viper.GetStringSlice`, so let's also handle the case where a single element has separator
 				firehoseBlocksStoreURLs = strings.Split(firehoseBlocksStoreURLs[0], ",")
@@ -90,10 +91,15 @@ func init() {
 				return preproc.PreprocessBlock, nil
 			}
 
+			firehoseGRPCListenAddr := viper.GetString("firehose-grpc-listen-addr")
+			if !strings.Contains(firehoseGRPCListenAddr, "*") {
+				return nil, fmt.Errorf("unsupported value for firehose-grpc-listen-addr. Address must include '*' character to indicate TLS with snakeoil (insecure) certificate")
+
+			}
 			return firehoseApp.New(appLogger, &firehoseApp.Config{
 				BlockStoreURLs:          firehoseBlocksStoreURLs,
 				BlockStreamAddr:         blockstreamAddr,
-				GRPCListenAddr:          viper.GetString("firehose-grpc-listen-addr"),
+				GRPCListenAddr:          firehoseGRPCListenAddr,
 				GRPCShutdownGracePeriod: grcpShutdownGracePeriod,
 			}, &firehoseApp.Modules{
 				Authenticator:             authenticator,
