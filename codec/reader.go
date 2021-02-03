@@ -52,11 +52,11 @@ func NewBlockReader(reader io.Reader) (out *BlockReader, err error) {
 
 func (l *BlockReader) Read() (*bstream.Block, error) {
 	message, err := l.src.ReadMessage()
-	if len(message) > 0 {
+	if len(message) > 0 && (err == nil || err == io.EOF) {
 		pbBlock := new(pbbstream.Block)
 		err = proto.Unmarshal(message, pbBlock)
 		if err != nil {
-			return nil, fmt.Errorf("unable to read block proto: %s", err)
+			return nil, fmt.Errorf("unable to read block proto: %w", err)
 		}
 
 		blk, err := bstream.BlockFromProto(pbBlock)
@@ -72,5 +72,5 @@ func (l *BlockReader) Read() (*bstream.Block, error) {
 	}
 
 	// In all other cases, we are in an error path
-	return nil, fmt.Errorf("failed reading next dbin message: %s", err)
+	return nil, fmt.Errorf("failed reading next dbin message: %w", err)
 }
