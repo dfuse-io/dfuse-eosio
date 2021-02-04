@@ -295,7 +295,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	expected = uint32(blockRange.Start)
+	expected = roundToBundleStartBlock(uint32(blockRange.Start), fileBlockSize)
 	currentStartBlk := uint32(blockRange.Start)
 	seenFilters := map[string]FilteringFilters{}
 
@@ -318,7 +318,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum+uint64(fileBlockSize) < blockRange.Start {
+		if baseNum+uint64(fileBlockSize)-1 < blockRange.Start {
 			zlog.Debug("base num lower then block range start, quitting")
 			return nil
 		}
@@ -543,7 +543,7 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 	startBlock := blockRange.Start
 	endBlock := blockRange.Stop
 
-	fmt.Printf("Checking block holes in trxdb at %s, from %d to %d\n", dsn, startBlock, endBlock)
+	fmt.Printf("Checking block holes (in reverser order) in trxdb at %s, from %d to %d\n", dsn, endBlock, startBlock)
 
 	store, err := store.New(dsn)
 	if err != nil {
@@ -574,7 +574,7 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 			blockNum := uint64(eos.BlockNum(blockID))
 
 			if blockNum%100000 == 0 {
-				fmt.Println("Reading irr block", blockNum)
+				fmt.Println("✅ Reading irr block", blockNum)
 			}
 
 			if !started {
@@ -586,7 +586,9 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 			difference := previousNum - blockNum
 
 			if difference > 1 {
-				fmt.Printf("❌ Missing blocks range %d - %d\n", blockNum+1, previousNum-1)
+				fmt.Printf("✅ Reading irr block  %d\n", previousNum)
+				fmt.Printf("❌ Missing blocks range %d - %d\n", previousNum-1, blockNum+1)
+				fmt.Printf("✅ Reading irr block %d\n", blockNum)
 				holeFound = true
 			}
 

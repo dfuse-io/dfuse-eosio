@@ -13,6 +13,7 @@ date.
 
 ### Added
 
+* Added support for looking up irreversible blocks on blockmeta (when the LIB was stuck for a while) from tokenmeta and trxdb-loader. They now use '--common-blockmeta-addr' flag if available
 * Added `--common-chain-core-symbol` flag to define actual chain core symbol in the form `<precision>,<symbol code>` defaults to `4,EOS` by default.
 * Added `--tokenmeta-readiness-max-latency` with default=5m, now tokenmeta will show as "NotServing" through grpc healthcheck if last processed block (HEAD) is older than this. Value of 0 disables that feature.
 * Added `--relayer-source-request-burst` with default=90 to allow a relayer connecting to another relayer to request a 'burst'

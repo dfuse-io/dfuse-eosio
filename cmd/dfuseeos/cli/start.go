@@ -101,16 +101,18 @@ func Start(dataDir string, args []string) (err error) {
 		if err != nil {
 			userLog.Warn("cannot get grpc connection to blockmeta, some services will not leverage it, expect rough edges", zap.Error(err), zap.String("blockmeta_addr", blockmetaAddr))
 		} else {
+			zlog.Info("adding blockmeta as a start block resolver in tracker")
 			blockMeta = pbblockmeta.NewBlockIDClient(conn)
-			tracker.AddResolver(bstream.StartBlockResolver(pbblockmeta.StartBlockResolver(blockMeta)))
+			tracker.AddResolver(pbblockmeta.StartBlockResolver(blockMeta))
 		}
 	}
 
 	blocksStoreURL := mustReplaceDataDir(dataDirAbs, viper.GetString("common-blocks-store-url"))
 	blocksStore, err := dstore.NewDBinStore(blocksStoreURL)
 	if err != nil {
-		userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver", zap.Error(err), zap.String("blocksStoreURL", blocksStoreURL))
+		userLog.Warn("cannot get setup blockstore, disabling this startBlockResolver", zap.Error(err), zap.String("blocks_store_url", blocksStoreURL))
 	} else {
+		zlog.Info("adding block store as a start block resolver in tracker")
 		tracker.AddResolver(codec.BlockstoreStartBlockResolver(blocksStore))
 	}
 

@@ -17,6 +17,7 @@ package eosws
 import (
 	"context"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/dfuse-io/derr"
@@ -55,7 +56,7 @@ func (f *DefaultIrreversibleFinder) IrreversibleIDAtBlockNum(ctx context.Context
 			if err != kvdb.ErrNotFound {
 				logging.Logger(ctx, zlog).Error("cannot get irreversible ID at blocknum", zap.Uint32("block_num", blockNum), zap.Error(err))
 			}
-			return AppUnableToGetIrreversibleBlockIDError(ctx, string(blockNum))
+			return AppUnableToGetIrreversibleBlockIDError(ctx, strconv.FormatUint(uint64(blockNum), 10))
 		}
 
 		out = blockRef.ID()

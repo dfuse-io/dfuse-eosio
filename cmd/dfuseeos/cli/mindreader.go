@@ -55,7 +55,8 @@ func init() {
 			cmd.Flags().Int("mindreader-blocks-chan-capacity", 100, "Capacity of the channel holding blocks read by the mindreader. Process will shutdown superviser/nodeos if the channel gets over 90% of that capacity to prevent horrible consequences. Raise this number when processing tiny blocks very quickly")
 			cmd.Flags().Bool("mindreader-log-to-zap", true, "Enables the deepmind logs to be outputted as debug in the zap logger")
 			cmd.Flags().StringSlice("mindreader-nodeos-args", []string{}, "Extra arguments to be passed when executing nodeos binary")
-			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL containing specific chain data used to initialized it.")
+			cmd.Flags().String("mindreader-bootstrap-data-url", "", "The bootstrap data URL that will bootstrap this node, taken in consideration only when 'nodeos' data dir is empty.")
+			cmd.Flags().String("mindreader-bootstrap-snapshot-name", "", "The bootstrap snapshot that will bootstrap this node, has precedence over bootstrap data URL, taken in consideration only when 'nodeos' data dir is empty.")
 			cmd.Flags().Bool("mindreader-debug-deep-mind", false, "Whether to print all Deepming log lines or not")
 			cmd.Flags().String("mindreader-auto-restore-source", "snapshot", "Enables restore from the latest source. Can be either, 'snapshot' or 'backup'.")
 			cmd.Flags().Duration("mindreader-auto-snapshot-period", 15*time.Minute, "If non-zero, takes state snapshots at this interval")
@@ -65,8 +66,8 @@ func init() {
 			cmd.Flags().String("mindreader-auto-snapshot-hostname-match", "", "If non-empty, auto-snapshots will only trigger if os.Hostname() return this value")
 			cmd.Flags().String("mindreader-auto-backup-hostname-match", "", "If non-empty, auto-backups will only trigger if os.Hostname() return this value")
 			cmd.Flags().Int("mindreader-number-of-snapshots-to-keep", 0, "If non-zero, after a successful snapshot, older snapshots will be deleted to only keep that number of recent snapshots")
-			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts.")
-			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts.")
+			cmd.Flags().String("mindreader-restore-backup-name", "", "If non-empty, the node will be restored from that backup every time it starts, even when 'nodeos' data dir is non-empty.")
+			cmd.Flags().String("mindreader-restore-snapshot-name", "", "If non-empty, the node will be restored from that snapshot when it starts, even when 'nodeos' data dir is non-empty.")
 			cmd.Flags().Duration("mindreader-shutdown-delay", 0, "Delay before shutting manager when sigterm received")
 			cmd.Flags().Bool("mindreader-batch-mode", false, "Always write merged-block files directly, overwriting existing files. Use this flag for reprocessing, with a stop-block-num that stops before possible chain reorgs")
 			cmd.Flags().String("mindreader-oneblock-suffix", "", "If non-empty, the oneblock files will be appended with that suffix, so that mindreaders can each write their file for a given block instead of competing for writes.")
@@ -157,6 +158,7 @@ func init() {
 				chainSuperviser,
 				metricsAndReadinessManager,
 				&operator.Options{
+					BootstrapSnapshotName:      viper.GetString("mindreader-bootstrap-snapshot-name"),
 					BootstrapDataURL:           viper.GetString("mindreader-bootstrap-data-url"),
 					BackupTag:                  viper.GetString("mindreader-backup-tag"),
 					BackupStoreURL:             mustReplaceDataDir(dfuseDataDir, viper.GetString("common-backup-store-url")),

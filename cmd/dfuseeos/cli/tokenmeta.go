@@ -45,6 +45,7 @@ func init() {
 				ReadinessMaxLatency:  viper.GetDuration("tokenmeta-readiness-max-latency"),
 			}, &tokenmetaApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
+				BlockMeta:   runtime.BlockMeta,
 			}), nil
 		},
 	})

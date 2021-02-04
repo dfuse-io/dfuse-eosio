@@ -33,6 +33,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
@@ -54,6 +55,7 @@ type Config struct {
 
 type Modules struct {
 	BlockFilter func(blk *bstream.Block) error
+	BlockMeta   pbblockmeta.BlockIDClient
 }
 
 type App struct {
@@ -122,7 +124,7 @@ func (a *App) Run() error {
 	abiCodecCli := pbabicodec.NewDecoderClient(abiCodecConn)
 
 	zlog.Info("setting tokenmeta and pipeline")
-	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock, stateClient)
+	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock, stateClient, a.modules.BlockMeta)
 
 	tmeta.OnTerminated(a.Shutdown)
 	a.OnTerminating(tmeta.Shutdown)

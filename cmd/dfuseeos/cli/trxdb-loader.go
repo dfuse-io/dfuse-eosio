@@ -51,6 +51,7 @@ func init() {
 				PurgerInterval:            viper.GetUint64("trxdb-loader-truncation-purge-interval"),
 			}, &trxdbLoaderApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,
+				BlockMeta:   runtime.BlockMeta,
 			}), nil
 		},
 	})

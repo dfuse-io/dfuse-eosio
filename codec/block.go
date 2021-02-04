@@ -50,11 +50,12 @@ func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {
 }
 
 func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockResolver {
+	var errFound = errors.New("found")
+
 	return func(ctx context.Context, targetBlockNum uint64) (uint64, string, error) {
 		var dposLibNum uint32
-		var errFound = errors.New("found")
 		num := uint32(targetBlockNum)
-		fs := bstream.NewFileSource(blocksStore, targetBlockNum, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, obj interface{}) error {
+		fs := bstream.NewFileSource(blocksStore, targetBlockNum, 1, nil, bstream.HandlerFunc(func(block *bstream.Block, _ interface{}) error {
 			if block.Number == uint64(num) {
 				dposLibNum = uint32(block.LibNum)
 				return errFound
@@ -62,13 +63,16 @@ func BlockstoreStartBlockResolver(blocksStore dstore.Store) bstream.StartBlockRe
 
 			return nil
 		}))
+
 		go fs.Run()
+
 		select {
 		case <-ctx.Done():
 			fs.Shutdown(context.Canceled)
 			return 0, "", ctx.Err()
 		case <-fs.Terminated():
 		}
+
 		if dposLibNum != 0 {
 			return uint64(dposLibNum), "", nil
 		}

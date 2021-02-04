@@ -35,7 +35,7 @@ func init() {
 
 		// Service addresses
 		cmd.Flags().String("common-search-addr", RouterServingAddr, "[COMMON] gRPC endpoint to reach the Search Router. Used by: abicodec, eosws, dgraphql")
-		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "[COMMON] gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql")
+		cmd.Flags().String("common-blockmeta-addr", BlockmetaServingAddr, "[COMMON] gRPC endpoint to reach the Blockmeta. Used by: search-indexer, search-router, search-live, eosws, dgraphql, trxdb-loader (optional) , statedb (optional), mindreader (optional), tokenmeta (optional)")
 
 		// Filtering
 		cmd.Flags().String("common-include-filter-expr", "*", "[COMMON] CEL program to determine if a given action should be included for processing purposes, can be prefixed with lowblocknum `#123;` and multiple values separated by three semi-colons `;;;`, see https://docs.dfuse.io/eosio/admin-guide/filtering/ for more information.")
