@@ -245,6 +245,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20210118170643-057893cea2ef h1:Lz735bA8IMdv
 github.com/dfuse-io/bstream v0.0.2-0.20210118170643-057893cea2ef/go.mod h1:5Ssiczg5c3tPKh1fF6Yu3n1cPcXlROJ7WEJOqOkIBGM=
 github.com/dfuse-io/bstream v0.0.2-0.20210203184837-edf747e8a150 h1:XIHzKpQ1//HWF+7LrvqkNykShouzbzq1wuOvGYas41E=
 github.com/dfuse-io/bstream v0.0.2-0.20210203184837-edf747e8a150/go.mod h1:J1YEYT36vqyoGxHKGnpV+9YjFRZmiJKqLLG3iDZgdZo=
+github.com/dfuse-io/bstream v0.0.2-0.20210203203654-afe75df13683 h1:ALJXEiSvhc8ZxcweK0ImwNu7omEoKebTP/QhpcF/tHY=
+github.com/dfuse-io/bstream v0.0.2-0.20210203203654-afe75df13683/go.mod h1:J1YEYT36vqyoGxHKGnpV+9YjFRZmiJKqLLG3iDZgdZo=
 github.com/dfuse-io/client-go v0.0.0-20210111154104-a57a0b7a63fc h1:zeW39/A5FEDFXW29aRmb1QN0OuAjzPdnxiuR+8QwgJI=
 github.com/dfuse-io/client-go v0.0.0-20210111154104-a57a0b7a63fc/go.mod h1:o2eBOFkO5d2aB1XbQT7ImIv20QFuv+Yxdn0GBZJa/HU=
 github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
