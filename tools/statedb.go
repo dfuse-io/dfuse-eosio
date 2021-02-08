@@ -38,7 +38,7 @@ var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the l
 var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
 var statedbTabletCmd = &cobra.Command{Use: "tablet", Short: "Fetch & print StateDB tablet, optionally at given height", RunE: statedbTabletE, Args: cobra.ExactArgs(1)}
 var statedbShardCmd = &cobra.Command{Use: "shard", Short: "Various operations related to sharding"}
-var statedbShardInspectCmd = &cobra.Command{Use: "inspect", Short: "Inspect given shard, printing write requests information stored in", RunE: statedbShardInspectE, Args: cobra.ExactArgs(1)}
+var statedbShardInspectCmd = &cobra.Command{Use: "inspect <shard-file>", Short: "Inspect given shard, printing write requests information stored in", RunE: statedbShardInspectE, Args: cobra.ExactArgs(1)}
 var statedbShardCleanCmd = &cobra.Command{Use: "clean", Short: "Various operations related to shard cleaning"}
 var statedbShardCleanCheckpointsCmd = &cobra.Command{Use: "checkpoints", Short: "Delete all existing shard checkpoint(s) that can exist", RunE: statedbShardCleanCheckpointsE, Args: cobra.ExactArgs((0))}
 
