@@ -123,14 +123,14 @@ func statedbScanE(cmd *cobra.Command, args []string) (err error) {
 		return fmt.Errorf("table: %w", err)
 	}
 
-	startKey, err := stringToKey(args[0])
+	startKey, err := stateDBStringToKey(args[0])
 	if err != nil {
 		return fmt.Errorf("start key: %w", err)
 	}
 
 	var endKey []byte
 	if len(args) > 1 {
-		endKey, err = stringToKey(args[1])
+		endKey, err = stateDBStringToKey(args[1])
 		if err != nil {
 			return fmt.Errorf("end key: %w", err)
 		}
@@ -161,7 +161,7 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 
 	ctx := cmd.Context()
 	for i, arg := range args {
-		prefixKey, err := stringToKey(arg)
+		prefixKey, err := stateDBStringToKey(arg)
 		if err != nil {
 			return fmt.Errorf("prefix key: %w", err)
 		}
@@ -522,7 +522,7 @@ func stringToTablet(in string) (fluxdb.Tablet, error) {
 		return nil, fmt.Errorf("invalid format, expecting at least a table prefix like 'cst:...'")
 	}
 
-	mapper := partsToTabletMap[parts[0]]
+	mapper := partsToStateDBTabletMap[parts[0]]
 	if mapper == nil {
 		return nil, fmt.Errorf("unknown (or not yet handled) prefix %q", parts[0])
 	}
@@ -534,7 +534,7 @@ func stringToTablet(in string) (fluxdb.Tablet, error) {
 	return mapper.factory(parts[1:]), nil
 }
 
-func stringToKey(in string) ([]byte, error) {
+func stateDBStringToKey(in string) ([]byte, error) {
 	// We assume it's a string key to convert
 	if strings.Contains(in, ":") {
 		parts := strings.Split(in, ":")
@@ -542,7 +542,7 @@ func stringToKey(in string) ([]byte, error) {
 			return nil, fmt.Errorf("invalid format, expecting at least a prefix and subsequent element like 'cst:...'")
 		}
 
-		transformer := partsToKeyMap[parts[0]]
+		transformer := partsToStateDBKeyMap[parts[0]]
 		if transformer == nil {
 			return nil, fmt.Errorf("unknown (or not yet handled) prefix %q", parts[0])
 		}
@@ -558,12 +558,12 @@ func stringToKey(in string) ([]byte, error) {
 	return key, nil
 }
 
-type partsToTablet struct {
+type partsToStateDBTablet struct {
 	partCount int
 	factory   func(parts []string) fluxdb.Tablet
 }
 
-var partsToTabletMap = map[string]*partsToTablet{
+var partsToStateDBTabletMap = map[string]*partsToStateDBTablet{
 	"cst": {
 		partCount: 3, factory: func(parts []string) fluxdb.Tablet {
 			return statedb.NewContractStateTablet(parts[0], parts[1], parts[2])
@@ -576,7 +576,7 @@ var partsToTabletMap = map[string]*partsToTablet{
 	},
 }
 
-var partsToKeyMap = map[string]func(parts []string) ([]byte, error){
+var partsToStateDBKeyMap = map[string]func(parts []string) ([]byte, error){
 	"cst": func(parts []string) (out []byte, err error) {
 		out = []byte{0xb0, 0x00}
 		for i, part := range parts {

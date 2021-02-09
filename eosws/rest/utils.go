@@ -59,6 +59,7 @@ func (p *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirectly bool) (written bool) {
+	begin := time.Now()
 	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
 	defer cancel()
 
@@ -69,6 +70,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 
 	var b bytes.Buffer
 	b.ReadFrom(r.Body)
+	requestReadDuration := time.Since(begin)
 	r.Body = ioutil.NopCloser(&b)
 	req.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
 
@@ -138,6 +140,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.String("status", resp.Status),
 			zap.Bool("fail_directly", failDirectly),
 			zap.Error(err),
+			zap.Duration("response_time_attempt", time.Since(begin)),
 		)
 		if failDirectly || !retryable {
 			copyHeader(w.Header(), resp.Header)
@@ -148,6 +151,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		return false
 	}
 
+	timeBeforeWrite := time.Since(begin)
 	resp.Header.Del("X-Trace-ID")
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -157,7 +161,11 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.String("path", r.URL.Path),
 			zap.String("method", r.Method),
 			zap.String("host", r.URL.Host),
+			zap.Int("response_code", resp.StatusCode),
 			zap.Bool("fail_directly", failDirectly),
+			zap.Duration("request_read_duration", requestReadDuration),
+			zap.Duration("response_time_attempt_before_write", timeBeforeWrite),
+			zap.Duration("response_time_attempt", time.Since(begin)),
 			zap.Error(err),
 		)
 		return true
@@ -170,6 +178,9 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		zap.String("host", r.URL.Host),
 		zap.Int("response_code", resp.StatusCode),
 		zap.String("response_status", resp.Status),
+		zap.Duration("request_read_duration", requestReadDuration),
+		zap.Duration("response_time_attempt_before_write", timeBeforeWrite),
+		zap.Duration("response_time_attempt", time.Since(begin)),
 	)
 
 	//////////////////////////////////////////////////////////////////////
