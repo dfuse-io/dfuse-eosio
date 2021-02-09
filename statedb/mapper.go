@@ -45,7 +45,10 @@ func (m *BlockMapper) Map(rawBlk *bstream.Block) (*fluxdb.WriteRequest, error) {
 		actionMatcher := blk.FilteringActionMatcher(trx, isRequiredSystemAction)
 
 		for _, dbOp := range trx.DbOps {
-			zlog.Debug("db op", zap.Reflect("op", dbOp))
+			if traceEnabled {
+				zlog.Debug("db op", zap.Reflect("op", dbOp))
+			}
+
 			if !actionMatcher.Matched(dbOp.ActionIndex) {
 				continue
 			}
