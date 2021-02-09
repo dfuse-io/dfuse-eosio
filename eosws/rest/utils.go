@@ -70,6 +70,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 
 	var b bytes.Buffer
 	b.ReadFrom(r.Body)
+	requestReadDuration := time.Since(begin)
 	r.Body = ioutil.NopCloser(&b)
 	req.Body = ioutil.NopCloser(bytes.NewReader(b.Bytes()))
 
@@ -150,6 +151,7 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		return false
 	}
 
+	timeBeforeWrite := time.Since(begin)
 	resp.Header.Del("X-Trace-ID")
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
@@ -161,6 +163,8 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 			zap.String("host", r.URL.Host),
 			zap.Int("response_code", resp.StatusCode),
 			zap.Bool("fail_directly", failDirectly),
+			zap.Duration("request_read_duration", requestReadDuration),
+			zap.Duration("response_time_attempt_before_write", timeBeforeWrite),
 			zap.Duration("response_time_attempt", time.Since(begin)),
 			zap.Error(err),
 		)
@@ -174,6 +178,8 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 		zap.String("host", r.URL.Host),
 		zap.Int("response_code", resp.StatusCode),
 		zap.String("response_status", resp.Status),
+		zap.Duration("request_read_duration", requestReadDuration),
+		zap.Duration("response_time_attempt_before_write", timeBeforeWrite),
 		zap.Duration("response_time_attempt", time.Since(begin)),
 	)
 
