@@ -260,6 +260,8 @@ github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 h1:8Ee802t3evsUTc7B/
 github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152/go.mod h1:8bq4KABI5QklH7a16SFIH7/R/jNCOloKu20T5VP+iTk=
 github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98 h1:Sg4d79Vj9/kxldNeOS5jlJ4GBf5YnK3GN7CM3ZXWiq8=
 github.com/dfuse-io/dgraphql v0.0.2-0.20201103185948-0b4d17b8db98/go.mod h1:tY4s9vedT5Lk5SV7x71KjfnxSI2holSTLU+defyqgKQ=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd h1:eVewYg1V08kUximAyKANP/AwPZ/OMy6Yzp2zDd+pQak=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210209213924-d46240bf855a h1:E8fYv+kaeKW8nYgvNuy9phP5CE89n682GFtnU1CGi2s=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210209213924-d46240bf855a/go.mod h1:tY4s9vedT5Lk5SV7x71KjfnxSI2holSTLU+defyqgKQ=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
@@ -314,6 +316,8 @@ github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01 h1:S5pBbEh2v/VFgcj
 github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d h1:i3mMPgEFrgBLjmfwh5YUhvHGYuL/bgICmtZ/Yr7tM1s=
 github.com/dfuse-io/graphql-go v0.0.0-20191010213351-ae758277182d/go.mod h1:Au3iQ8DvDis8hZ4q2OzRcaKYlAsPt+fYvib5q4nIqu4=
+github.com/dfuse-io/graphql-go v0.0.0-20210204202750-0e485a040a3c h1:fdYejttWe9nYkytN1G5trc4mHeWcNpdGi0o26ZUb+cM=
+github.com/dfuse-io/graphql-go v0.0.0-20210204202750-0e485a040a3c/go.mod h1:9CQHMSxwO4MprSdzoIEobiHpoLtHm77vfxsvsIN5Vuc=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
 github.com/dfuse-io/jsonpb v0.0.0-20200602171045-28535c4016a2/go.mod h1:FMug2qe6PdGRIn9e2N1ucA+Rg0FOJOgyf2F0gJJSiSw=
 github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
