@@ -421,8 +421,8 @@ func (a *App) Run() error {
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,
-		"eosws", "Chain RPC",
-		true, true,
+		"eosws", "REST API - Chain RPC",
+		false, true,
 	)
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(
