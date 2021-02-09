@@ -162,8 +162,6 @@ func (middleware *RateLimiterMiddleware) Handler(next http.Handler) http.Handler
 			method = "state"
 		}
 
-		zlog.Info("calling ratelimiter middleware", zap.Any("rate limiter", middleware.rateLimiter), zap.Any("credentials", credentials))
-
 		if !middleware.rateLimiter.Gate(credentials.GetUserID(), method) {
 			derr.WriteError(ctx, w, "request not authorized to perform this action", RateLimitTooManyRequests(ctx))
 			return
