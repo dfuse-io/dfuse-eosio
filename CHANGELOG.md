@@ -13,6 +13,8 @@ date.
 
 ### Added
 
+* Added support for environment variable `EOSWS_PUSH_V1_OUTPUT=true` that forces push-transaction (guarantee:in-block) to output the same content format as nodeos 2.0.x (with Inlines)
+* Added support for environment variable `DSTORE_S3_BUFFERED_READ=true` that forces reading S3 files (ex: blocks) ahead of processing, useful when S3 provider has trouble keeping long connections alive.
 * Added support for looking up irreversible blocks on blockmeta (when the LIB was stuck for a while) from tokenmeta and trxdb-loader. They now use '--common-blockmeta-addr' flag if available
 * Added `--common-chain-core-symbol` flag to define actual chain core symbol in the form `<precision>,<symbol code>` defaults to `4,EOS` by default.
 * Added `--tokenmeta-readiness-max-latency` with default=5m, now tokenmeta will show as "NotServing" through grpc healthcheck if last processed block (HEAD) is older than this. Value of 0 disables that feature.
