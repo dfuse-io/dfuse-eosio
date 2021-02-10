@@ -46,7 +46,7 @@ require (
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/eoscanada/eos-go v0.9.1-0.20200729231232-b7325cffe680
+	github.com/eoscanada/eos-go v0.9.1-0.20210210194318-f024d2593a4b
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
