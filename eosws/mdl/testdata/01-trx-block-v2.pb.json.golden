@@ -13,12 +13,15 @@
   "scheduled": false,
   "action_traces": [
     {
+      "action_ordinal": 1,
+      "creator_action_ordinal": 0,
+      "closest_unnotified_ancestor_action_ordinal": 0,
       "receipt": {
         "receiver": "eosio.null",
         "act_digest": "a82ac831e97682b576ca502e91cdd8e3be64e99286060667195bebf7ff579cf7",
         "global_sequence": 131,
-        "auth_sequence": [],
         "recv_sequence": 1,
+        "auth_sequence": [],
         "code_sequence": 0,
         "abi_sequence": 0
       },
@@ -37,20 +40,24 @@
       "producer_block_id": "",
       "account_ram_deltas": null,
       "except": null,
-      "inline_traces": null
+      "receiver": "eosio.null",
+      "inline_traces": []
     },
     {
+      "action_ordinal": 2,
+      "creator_action_ordinal": 0,
+      "closest_unnotified_ancestor_action_ordinal": 0,
       "receipt": {
         "receiver": "battlefield1",
         "act_digest": "220dddaebd4bdce5da987b832c6d7bb4fa1a34b16e92472cb96cf28f28987cf5",
         "global_sequence": 132,
+        "recv_sequence": 16,
         "auth_sequence": [
           [
             "battlefield1",
             27
           ]
         ],
-        "recv_sequence": 16,
         "code_sequence": 1,
         "abi_sequence": 1
       },
@@ -81,19 +88,23 @@
       "producer_block_id": "",
       "account_ram_deltas": null,
       "except": null,
+      "receiver": "battlefield1",
       "inline_traces": [
         {
+          "action_ordinal": 3,
+          "creator_action_ordinal": 2,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "notified1",
             "act_digest": "220dddaebd4bdce5da987b832c6d7bb4fa1a34b16e92472cb96cf28f28987cf5",
             "global_sequence": 133,
+            "recv_sequence": 1,
             "auth_sequence": [
               [
                 "battlefield1",
                 28
               ]
             ],
-            "recv_sequence": 1,
             "code_sequence": 1,
             "abi_sequence": 1
           },
@@ -124,20 +135,24 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "notified1",
+          "inline_traces": []
         },
         {
+          "action_ordinal": 5,
+          "creator_action_ordinal": 2,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "notified2",
             "act_digest": "220dddaebd4bdce5da987b832c6d7bb4fa1a34b16e92472cb96cf28f28987cf5",
             "global_sequence": 134,
+            "recv_sequence": 1,
             "auth_sequence": [
               [
                 "battlefield1",
                 29
               ]
             ],
-            "recv_sequence": 1,
             "code_sequence": 1,
             "abi_sequence": 1
           },
@@ -168,20 +183,24 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "notified2",
+          "inline_traces": []
         },
         {
+          "action_ordinal": 9,
+          "creator_action_ordinal": 5,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "notified3",
             "act_digest": "220dddaebd4bdce5da987b832c6d7bb4fa1a34b16e92472cb96cf28f28987cf5",
             "global_sequence": 135,
+            "recv_sequence": 1,
             "auth_sequence": [
               [
                 "battlefield1",
                 30
               ]
             ],
-            "recv_sequence": 1,
             "code_sequence": 1,
             "abi_sequence": 1
           },
@@ -212,15 +231,19 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "notified3",
+          "inline_traces": []
         },
         {
+          "action_ordinal": 6,
+          "creator_action_ordinal": 2,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "eosio.null",
             "act_digest": "495c05ccda67e6bed61f84bc24e2c672ce0f98d5793b2240c0d9729abc7737f4",
             "global_sequence": 136,
-            "auth_sequence": [],
             "recv_sequence": 2,
+            "auth_sequence": [],
             "code_sequence": 0,
             "abi_sequence": 0
           },
@@ -239,15 +262,19 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "eosio.null",
+          "inline_traces": []
         },
         {
+          "action_ordinal": 8,
+          "creator_action_ordinal": 5,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "eosio.null",
             "act_digest": "ed0112b81d9f579a190f9d7857aece63898ed8321c3cd8c7b4bf255b2c4305a5",
             "global_sequence": 137,
-            "auth_sequence": [],
             "recv_sequence": 3,
+            "auth_sequence": [],
             "code_sequence": 0,
             "abi_sequence": 0
           },
@@ -266,20 +293,24 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "eosio.null",
+          "inline_traces": []
         },
         {
+          "action_ordinal": 4,
+          "creator_action_ordinal": 2,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "battlefield1",
             "act_digest": "932f1ee2cc65381edeaf6f9a3100b1c1add2c702a4693faabd149bc77333201b",
             "global_sequence": 138,
+            "recv_sequence": 17,
             "auth_sequence": [
               [
                 "battlefield1",
                 31
               ]
             ],
-            "recv_sequence": 17,
             "code_sequence": 1,
             "abi_sequence": 1
           },
@@ -311,19 +342,23 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
+          "receiver": "battlefield1",
           "inline_traces": [
             {
+              "action_ordinal": 10,
+              "creator_action_ordinal": 4,
+              "closest_unnotified_ancestor_action_ordinal": 4,
               "receipt": {
                 "receiver": "notified4",
                 "act_digest": "932f1ee2cc65381edeaf6f9a3100b1c1add2c702a4693faabd149bc77333201b",
                 "global_sequence": 139,
+                "recv_sequence": 1,
                 "auth_sequence": [
                   [
                     "battlefield1",
                     32
                   ]
                 ],
-                "recv_sequence": 1,
                 "code_sequence": 1,
                 "abi_sequence": 1
               },
@@ -355,20 +390,24 @@
               "producer_block_id": "",
               "account_ram_deltas": null,
               "except": null,
-              "inline_traces": null
+              "receiver": "notified4",
+              "inline_traces": []
             },
             {
+              "action_ordinal": 11,
+              "creator_action_ordinal": 4,
+              "closest_unnotified_ancestor_action_ordinal": 4,
               "receipt": {
                 "receiver": "notified5",
                 "act_digest": "932f1ee2cc65381edeaf6f9a3100b1c1add2c702a4693faabd149bc77333201b",
                 "global_sequence": 140,
+                "recv_sequence": 1,
                 "auth_sequence": [
                   [
                     "battlefield1",
                     33
                   ]
                 ],
-                "recv_sequence": 1,
                 "code_sequence": 1,
                 "abi_sequence": 1
               },
@@ -400,15 +439,19 @@
               "producer_block_id": "",
               "account_ram_deltas": null,
               "except": null,
-              "inline_traces": null
+              "receiver": "notified5",
+              "inline_traces": []
             },
             {
+              "action_ordinal": 13,
+              "creator_action_ordinal": 4,
+              "closest_unnotified_ancestor_action_ordinal": 4,
               "receipt": {
                 "receiver": "eosio.null",
                 "act_digest": "569a41714bfd4f1804acb9f4fa4b7f2347164cf2e6e8672e572a067784c97148",
                 "global_sequence": 141,
-                "auth_sequence": [],
                 "recv_sequence": 4,
+                "auth_sequence": [],
                 "code_sequence": 0,
                 "abi_sequence": 0
               },
@@ -427,20 +470,24 @@
               "producer_block_id": "",
               "account_ram_deltas": null,
               "except": null,
-              "inline_traces": null
+              "receiver": "eosio.null",
+              "inline_traces": []
             },
             {
+              "action_ordinal": 12,
+              "creator_action_ordinal": 4,
+              "closest_unnotified_ancestor_action_ordinal": 4,
               "receipt": {
                 "receiver": "battlefield1",
                 "act_digest": "f3e6869568f852f126f014033b1b849db82bfc01b4ceb880b2301f6f5312bf7d",
                 "global_sequence": 142,
+                "recv_sequence": 18,
                 "auth_sequence": [
                   [
                     "battlefield1",
                     34
                   ]
                 ],
-                "recv_sequence": 18,
                 "code_sequence": 1,
                 "abi_sequence": 1
               },
@@ -468,22 +515,26 @@
               "producer_block_id": "",
               "account_ram_deltas": null,
               "except": null,
-              "inline_traces": null
+              "receiver": "battlefield1",
+              "inline_traces": []
             }
           ]
         },
         {
+          "action_ordinal": 7,
+          "creator_action_ordinal": 5,
+          "closest_unnotified_ancestor_action_ordinal": 2,
           "receipt": {
             "receiver": "battlefield1",
             "act_digest": "859bae2722be94cd2a9a073516e9119eac97d44275352c89219a85bba387a66e",
             "global_sequence": 143,
+            "recv_sequence": 19,
             "auth_sequence": [
               [
                 "notified2",
                 4
               ]
             ],
-            "recv_sequence": 19,
             "code_sequence": 1,
             "abi_sequence": 1
           },
@@ -511,7 +562,8 @@
           "producer_block_id": "",
           "account_ram_deltas": null,
           "except": null,
-          "inline_traces": null
+          "receiver": "battlefield1",
+          "inline_traces": []
         }
       ]
     }
