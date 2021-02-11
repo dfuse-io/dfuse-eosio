@@ -29,6 +29,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/kvdb"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/dfuse-io/shutter"
 	eosgo "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
@@ -57,8 +58,7 @@ type TrxDBLoader struct {
 	healthy                   bool
 	retryCnt                  int
 	truncationWindow          uint64
-
-	forkDB *forkable.ForkDB
+	blockmeta                 pbblockmeta.BlockIDClient
 }
 
 func NewTrxDBLoader(
@@ -69,6 +69,7 @@ func NewTrxDBLoader(
 	parallelFileDownloadCount int,
 	blockFilter func(blk *bstream.Block) error,
 	truncationWindow uint64,
+	blockmeta pbblockmeta.BlockIDClient,
 ) *TrxDBLoader {
 
 	loader := &TrxDBLoader{
@@ -77,12 +78,12 @@ func NewTrxDBLoader(
 		Shutter:                   shutter.New(),
 		db:                        db,
 		batchSize:                 batchSize,
-		forkDB:                    forkable.NewForkDB(forkable.ForkDBWithLogger(zlog)),
 		parallelFileDownloadCount: parallelFileDownloadCount,
 		retryCnt:                  1,
 		blockFilter:               blockFilter,
 		truncationWindow:          truncationWindow,
 		prevBlockRates:            make([]float64, 100),
+		blockmeta:                 blockmeta,
 	}
 
 	// By default, everything is assumed to be the full job, pipeline building overrides that
@@ -116,11 +117,6 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		} else {
 			return fmt.Errorf("failed getting latest written LIB: %w", err)
 		}
-	}
-
-	if startLIB != nil {
-		zlog.Info("initializing LIB", zap.Stringer("lib", startLIB))
-		l.InitLIB(startLIB.ID())
 	}
 
 	sf := bstream.SourceFromRefFactory(func(startBlockRef bstream.BlockRef, h bstream.Handler) bstream.Source {
@@ -184,11 +180,21 @@ func (l *TrxDBLoader) BuildPipelineLive(allowLiveOnEmptyTable bool) error {
 		)
 	})
 
-	forkableHandler := forkable.New(l,
+	forkableOptions := []forkable.Option{
 		forkable.WithLogger(zlog),
-		forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible),
+		forkable.WithFilters(forkable.StepNew | forkable.StepIrreversible),
 		forkable.EnsureAllBlocksTriggerLongestChain(),
-	)
+	}
+	if l.blockmeta != nil {
+		zlog.Info("configuring irreversibility checker on forkable handler")
+		forkableOptions = append(forkableOptions, forkable.WithIrreversibilityChecker(l.blockmeta, 1*time.Second))
+	}
+
+	if startLIB != nil {
+		forkableOptions = append(forkableOptions, forkable.WithExclusiveLIB(startLIB))
+	}
+
+	forkableHandler := forkable.New(l, forkableOptions...)
 
 	es := bstream.NewEternalSource(sf, forkableHandler, bstream.EternalSourceWithLogger(zlog))
 	l.source = es
@@ -209,10 +215,16 @@ func (l *TrxDBLoader) BuildPipelineJob(startBlockNum uint64, numBlocksBeforeStar
 	gate := bstream.NewBlockNumGate(startBlockNum, bstream.GateInclusive, l, bstream.GateOptionWithLogger(zlog))
 	gate.MaxHoldOff = 1000
 
-	forkableHandler := forkable.New(gate,
+	forkableOptions := []forkable.Option{
 		forkable.WithLogger(zlog),
-		forkable.WithFilters(forkable.StepNew|forkable.StepIrreversible),
-	)
+		forkable.WithFilters(forkable.StepNew | forkable.StepIrreversible),
+	}
+	if l.blockmeta != nil {
+		zlog.Info("configuring irreversibility checker on forkable handler")
+		forkableOptions = append(forkableOptions, forkable.WithIrreversibilityChecker(l.blockmeta, 1*time.Second))
+	}
+
+	forkableHandler := forkable.New(gate, forkableOptions...)
 
 	getBlocksFrom := startBlockNum
 	if getBlocksFrom > numBlocksBeforeStart {
@@ -248,11 +260,6 @@ func (l *TrxDBLoader) Launch() {
 		l.source.Shutdown(err)
 	})
 	l.source.Run()
-}
-
-func (l *TrxDBLoader) InitLIB(libID string) {
-	// Only works on EOS!
-	l.forkDB.InitLIB(bstream.NewBlockRefFromID(libID))
 }
 
 // StopBeforeBlock indicates the stop block (exclusive), means that
@@ -433,13 +440,6 @@ func (l *TrxDBLoader) ShowProgress(blockNum uint64) {
 		l.lastTickTime = now
 		l.lastTickBlock = blockNum
 	}
-}
-
-func (l *TrxDBLoader) ShouldPushLIBUpdates(dposLIBNum uint64) bool {
-	if dposLIBNum > l.forkDB.LIBNum() {
-		return true
-	}
-	return false
 }
 
 func (l *TrxDBLoader) UpdateIrreversibleData(nowIrreversibleBlocks []*bstream.PreprocessedBlock) error {

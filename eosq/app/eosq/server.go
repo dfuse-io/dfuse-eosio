@@ -57,7 +57,6 @@ func newServer(config *Config) *Server {
 }
 
 func (s *Server) Launch() error {
-
 	zlog.Info("launching eosq")
 	router := mux.NewRouter()
 
@@ -199,9 +198,9 @@ func mustGetTemplatedIndex(config *Config, box *rice.HTTPBox) []byte {
 		"dfuse_auth_endpoint": config.AuthEndpointURL,
 		"available_networks":  an,
 		"secure":              secure,
-		"current_network":     config.DefaultNetwork,
+		"network_id":          config.DefaultNetwork,
+		"chain_core_symbol":   config.ChainCoreSymbol,
 		"display_price":       config.DisplayPrice,
-		"price_ticker_name":   config.PriceTickerName,
 		"disable_segments":    config.DisableAnalytics,
 		"disable_sentry":      config.DisableAnalytics,
 	}

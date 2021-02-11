@@ -81,9 +81,10 @@ type Config struct {
 	RatelimiterPlugin        string
 	UseOpencensusStackdriver bool
 
-	FetchPrice     bool
-	FetchVoteTally bool
-	WithCompletion bool
+	ChainCoreSymbol string
+	FetchPrice      bool
+	FetchVoteTally  bool
+	WithCompletion  bool
 
 	FilesourceRateLimitPerBlock time.Duration
 	BlocksBufferSize            int
@@ -169,28 +170,6 @@ func (a *App) Run() error {
 
 	db := eosws.NewTRXDB(kdb)
 
-	blocksStore, err := dstore.NewDBinStore(a.Config.SourceStoreURL)
-	if err != nil {
-		return fmt.Errorf("setting up source blocks store: %w", err)
-	}
-
-	var preprocessor bstream.PreprocessFunc
-	if a.Modules.BlockFilter != nil {
-		preprocessor = bstream.PreprocessFunc(func(blk *bstream.Block) (interface{}, error) {
-			return nil, a.Modules.BlockFilter(blk)
-		})
-	}
-
-	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
-	})
-
-	buffer := bstream.NewBuffer("sub-hub", zlog)
-	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
-		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, preprocessor, h)
-		return src
-	})
-
 	zlog.Info("connecting to blockmeta", zap.String("addr", a.Config.BlockmetaAddr))
 	blockmetaConn, err := dgrpc.NewInternalClient(a.Config.BlockmetaAddr)
 	if err != nil {
@@ -224,7 +203,29 @@ func (a *App) Run() error {
 		hubStartBlockNum = lib.Num() - halfBufferSize
 	}
 
+	blocksStore, err := dstore.NewDBinStore(a.Config.SourceStoreURL)
+	if err != nil {
+		return fmt.Errorf("setting up source blocks store: %w", err)
+	}
+
+	var preprocessor bstream.PreprocessFunc
+	if a.Modules.BlockFilter != nil {
+		preprocessor = bstream.PreprocessFunc(func(blk *bstream.Block) (interface{}, error) {
+			return nil, a.Modules.BlockFilter(blk)
+		})
+	}
+
+	liveSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
+		return blockstream.NewSource(ctx, a.Config.BlockStreamAddr, 300, h, blockstream.WithRequester("eosws"))
+	})
+
+	fileSourceFactory := bstream.SourceFromNumFactory(func(startBlockNum uint64, h bstream.Handler) bstream.Source {
+		src := bstream.NewFileSource(blocksStore, startBlockNum, 1, preprocessor, h)
+		return src
+	})
+
 	zlog.Info("creating subscription hub", zap.Int("blocks_buffer_size", a.Config.BlocksBufferSize))
+	buffer := bstream.NewBuffer("sub-hub", zlog)
 	tailManager := bstream.NewSimpleTailManager(buffer, a.Config.BlocksBufferSize)
 	subscriptionHub, err := hub.NewSubscriptionHub(
 		hubStartBlockNum,
@@ -262,9 +263,11 @@ func (a *App) Run() error {
 	}
 
 	irrFinder := eosws.NewDBReaderBaseIrrFinder(db)
-
 	abiGetter := eosws.NewDefaultABIGetter(stateClient)
-	accountGetter := eosws.NewApiAccountGetter(api)
+	coreSymbol := eos.MustStringToSymbol(a.Config.ChainCoreSymbol)
+
+	zlog.Info("creating api account getter", zap.Stringer("core_symbol", coreSymbol))
+	accountGetter := eosws.NewApiAccountGetter(api, coreSymbol)
 
 	zlog.Info("creating blockmeta client", zap.String("addr", a.Config.BlockmetaAddr))
 	blockmetaClient, err := pbblockmeta.NewClient(a.Config.BlockmetaAddr)
@@ -418,8 +421,8 @@ func (a *App) Run() error {
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,
-		"eosws", "Chain RPC",
-		true, true,
+		"eosws", "REST API - Chain RPC",
+		false, true,
 	)
 
 	authTxPusher := dauthMiddleware.NewAuthMiddleware(auth, eosws.EOSChainErrorHandler).Handler(

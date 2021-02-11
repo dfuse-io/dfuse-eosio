@@ -13,10 +13,8 @@ import { transactionSearchResultsToTransactionInfo } from "../../helpers/legacy.
 import { ListTransactions } from "../../components/list-transactions/list-transactions.component"
 import { t } from "i18next"
 import { ListContentLoaderComponent } from "../../components/list-content-loader/list-content-loader.component"
-
 import { searchStore } from "../../stores"
 import { performStructuredSearch } from "../../services/search"
-import { SearchQueryParams, LegacySearchQueryParams } from "../../models/search"
 import { FormattedError } from "../../components/formatted-error/formatted-error"
 import { FilterModal } from "./filter-modal"
 import { FilterTypes, RangeOptions } from "../../models/search-filters"
@@ -81,7 +79,7 @@ export class TransactionSearchResultPage extends ListContentLoaderComponent<Prop
   }
 
   parseQuery() {
-    if (this.parsed.q && this.parsed.q.length > 0) {
+    if (typeof this.parsed.q === "string") {
       return decodeURIComponent(this.parsed.q)
     }
 
@@ -89,7 +87,7 @@ export class TransactionSearchResultPage extends ListContentLoaderComponent<Prop
   }
 
   parseUrlParams() {
-    searchStore.updateFromUrlParams(this.parsed as SearchQueryParams & LegacySearchQueryParams)
+    searchStore.updateFromUrlParams(this.parsed as any)
   }
 
   cursoredUrl = (cursor: string) => {

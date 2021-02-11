@@ -5,7 +5,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
+	"go.uber.org/zap/zapcore"
+
+	"github.com/paulbellamy/ratecounter"
 	"github.com/spf13/viper"
 )
 
@@ -107,4 +111,82 @@ type FilteringFilters struct {
 
 func (f *FilteringFilters) Key() string {
 	return f.System + f.Exclude + f.System
+}
+
+type stateFile struct {
+	StartBlock uint64
+	Source     string
+}
+
+type stats struct {
+	startTime        time.Time
+	timeToFirstBlock time.Duration
+	blockReceived    *counter
+	bytesReceived    *counter
+	restartCount     *counter
+}
+
+func newStats() *stats {
+	return &stats{
+		startTime:     time.Now(),
+		blockReceived: &counter{0, ratecounter.NewRateCounter(1 * time.Second), "block", "s"},
+		bytesReceived: &counter{0, ratecounter.NewRateCounter(1 * time.Second), "byte", "s"},
+		restartCount:  &counter{0, ratecounter.NewRateCounter(1 * time.Minute), "restart", "m"},
+	}
+}
+
+func (s *stats) MarshalLogObject(encoder zapcore.ObjectEncoder) error {
+	encoder.AddString("block", s.blockReceived.String())
+	encoder.AddString("bytes", s.bytesReceived.String())
+	return nil
+}
+
+func (s *stats) duration() time.Duration {
+	return time.Now().Sub(s.startTime)
+}
+
+func (s *stats) recordBlock(payloadSize int64) {
+	if s.timeToFirstBlock == 0 {
+		s.timeToFirstBlock = time.Now().Sub(s.startTime)
+	}
+
+	s.blockReceived.IncBy(1)
+	s.bytesReceived.IncBy(payloadSize)
+}
+
+type counter struct {
+	total    uint64
+	counter  *ratecounter.RateCounter
+	unit     string
+	timeUnit string
+}
+
+func (c *counter) IncBy(value int64) {
+	if value <= 0 {
+		return
+	}
+
+	c.counter.Incr(value)
+	c.total += uint64(value)
+}
+
+func (c *counter) Total() uint64 {
+	return c.total
+}
+
+func (c *counter) Rate() int64 {
+	return c.counter.Rate()
+}
+
+func (c *counter) String() string {
+	return fmt.Sprintf("%d %s/%s (%d total)", c.counter.Rate(), c.unit, c.timeUnit, c.total)
+}
+
+func (c *counter) Overall(elapsed time.Duration) string {
+	rate := float64(c.total)
+	if elapsed.Minutes() > 1 {
+		rate = rate / elapsed.Minutes()
+	}
+
+	return fmt.Sprintf("%d %s/%s (%d %s total)", uint64(rate), c.unit, "min", c.total, c.unit)
 }

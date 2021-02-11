@@ -82,34 +82,25 @@ func TestGetAccount(t *testing.T, driverFactory DriverFactory) {
 
 func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 	tests := []struct {
-		name                string
-		accounts            []string
-		concurrentReadCount uint32
-		expectAccounts      []string
-		expectErr           error
+		name           string
+		accounts       []string
+		expectAccounts []string
+		expectErr      error
 	}{
 		{
-			name:                "sunny path",
-			concurrentReadCount: 2,
-			accounts:            []string{"eoscanada1", "eoscanada2", "eoscanada3"},
-			expectAccounts:      []string{"eoscanada1", "eoscanada2", "eoscanada3"},
+			name:           "sunny path",
+			accounts:       []string{"eoscanada1", "eoscanada2", "eoscanada3"},
+			expectAccounts: []string{"eoscanada1", "eoscanada2", "eoscanada3"},
 		},
 		{
-			name:                "concurrency greater then number of accouns",
-			concurrentReadCount: 4,
-			accounts:            []string{"eoscanada1", "eoscanada2", "eoscanada3"},
-			expectAccounts:      []string{"eoscanada1", "eoscanada2", "eoscanada3"},
+			name:           "concurrency greater then number of accouns",
+			accounts:       []string{"eoscanada1", "eoscanada2", "eoscanada3"},
+			expectAccounts: []string{"eoscanada1", "eoscanada2", "eoscanada3"},
 		},
 		{
-			name:                "no accounts",
-			concurrentReadCount: 2,
-			accounts:            []string{},
-			expectAccounts:      []string{},
-		},
-		{
-			name:                "concurrency with 0",
-			concurrentReadCount: 0,
-			expectErr:           fmt.Errorf("invalid concurrent read"),
+			name:           "no accounts",
+			accounts:       []string{},
+			expectAccounts: []string{},
 		},
 	}
 
@@ -121,7 +112,7 @@ func TestListAccountNames(t *testing.T, driverFactory DriverFactory) {
 			for _, acc := range test.accounts {
 				putAccount(t, "eoscanada0", acc, db)
 			}
-			accounts, err := db.ListAccountNames(context.Background(), test.concurrentReadCount)
+			accounts, err := db.ListAccountNames(context.Background())
 			if test.expectErr != nil {
 				assert.Equal(t, test.expectErr, err)
 			} else {

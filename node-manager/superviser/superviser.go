@@ -144,7 +144,7 @@ func NewSuperviser(debugDeepMind bool, headBlockUpdateFunc nodeManager.HeadBlock
 	if options.LogToZap {
 		s.RegisterLogPlugin(newToZapLogPlugin(debugDeepMind, logger))
 	} else {
-		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind, logger))
+		s.RegisterLogPlugin(logplugin.NewToConsoleLogPlugin(debugDeepMind))
 	}
 
 	return s, nil

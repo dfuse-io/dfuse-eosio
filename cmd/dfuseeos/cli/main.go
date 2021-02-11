@@ -19,6 +19,11 @@ import (
 	"sort"
 	"strings"
 
+	// Needs to be in this file which is the main entry of wrapper binary
+	_ "github.com/dfuse-io/dauth/authenticator/null"   // auth null plugin
+	_ "github.com/dfuse-io/dauth/authenticator/secret" // auth secret/hard-coded plugin
+	_ "github.com/dfuse-io/dauth/ratelimiter/null"     // ratelimiter plugin
+
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dlauncher/flags"
 	launcher "github.com/dfuse-io/dlauncher/launcher"
@@ -33,7 +38,6 @@ var allFlags = make(map[string]bool) // used as global because of async access t
 
 func init() {
 	RootCmd.Version = version + "-" + commit
-
 }
 
 func Main() {

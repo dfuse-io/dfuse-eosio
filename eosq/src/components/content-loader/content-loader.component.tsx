@@ -1,8 +1,6 @@
 import * as React from "react"
-// temp ignore for dev
-
 import { DataLoading, DataError } from "@dfuse/explorer"
-import { log } from "../../services/logger"
+import { debugLog } from "../../services/logger"
 import { TaskStatusAware } from "mobx-task"
 import { observer } from "mobx-react"
 
@@ -14,7 +12,7 @@ export class ContentLoaderComponent<T, S = {}> extends React.Component<T, S> {
 
   renderError = (error?: Error) => {
     if (error && error.name !== "not_found") {
-      log.error("An error occurred while fetching data.", error)
+      debugLog("An error occurred while fetching data.", error)
     }
 
     return <DataError error={error} />

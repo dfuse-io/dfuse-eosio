@@ -224,7 +224,7 @@ export class AccountTitle extends ContentLoaderComponent<Props, any> {
 
 function isAccountCreatedByMykey(account: Account) {
   return (
-    Config.current_network === "eos-mainnet" &&
+    Config.network_id === "eos-mainnet" &&
     (account.account_name === "mykeymanager" ||
       (account.creator && account.creator.creator === "mykeymanager"))
   )

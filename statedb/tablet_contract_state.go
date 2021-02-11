@@ -24,7 +24,7 @@ func init() {
 }
 
 func NewContractStateTablet(contract, table string, scope string) ContractStateTablet {
-	return ContractStateTablet(nameToBytes(contract, table, scope))
+	return ContractStateTablet(extendedNameToBytes(contract, table, scope))
 }
 
 type ContractStateTablet []byte
@@ -71,7 +71,7 @@ func NewContractStateRow(blockNum uint64, op *pbcodec.DBOp) (row *ContractStateR
 	}
 
 	tablet := NewContractStateTablet(op.Code, op.TableName, op.Scope)
-	return &ContractStateRow{baseRow(tablet, blockNum, nameToBytes(op.PrimaryKey), value)}, nil
+	return &ContractStateRow{baseRow(tablet, blockNum, standardNameToBytes(op.PrimaryKey), value)}, nil
 }
 
 func (r *ContractStateRow) Info() (payer string, rowData []byte, err error) {

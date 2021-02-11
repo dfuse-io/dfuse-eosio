@@ -185,7 +185,7 @@ func getTokensFromStateDB(ctx context.Context, stateClient pbstatedb.StateClient
 
 		if err != nil {
 			if err == errInvalidContractSymbol {
-				zlog.Debug("token contract symbol is not valid", zap.String("contract", string(contract)), zap.String("symbol", string(symbol)))
+				zlog.Debug("token contract symbol is not valid", zap.String("contract", string(contract)), zap.Stringer("symbol", symbol))
 				continue
 			}
 

@@ -11,7 +11,7 @@ import { theme, styled } from "../../theme"
 import { EllipsisText, Text } from "../text/text.component"
 import { UiHrDense } from "../ui-hr/ui-hr"
 import { t } from "i18next"
-import { Spinner } from "@dfuse/explorer"
+import { LoadingOutlined } from "@ant-design/icons"
 
 type OnCloseListener = () => void
 
@@ -27,7 +27,7 @@ const SearchWrapper: React.ComponentType<any> = styled.div`
   position: relative;
 `
 
-const RoundedSpinnerCube: React.ComponentType<any> = styled(Spinner)`
+const RoundedSpinnerCube: React.ComponentType<any> = styled(LoadingOutlined)`
   width: 28px !important;
   height: 28px !important;
   margin-right: auto;

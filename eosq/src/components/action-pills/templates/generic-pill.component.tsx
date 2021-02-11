@@ -6,7 +6,7 @@ import {
   Pill,
   PillLogoProps,
   PillClickable,
-  MonospaceText
+  MonospaceText,
 } from "@dfuse/explorer"
 
 import { Cell } from "../../../atoms/ui-grid/ui-grid.component"
@@ -46,7 +46,8 @@ export interface PillComponentClass<P = any, S = any> extends React.ComponentCla
   i18n?(): { [key: string]: any }
 }
 
-export class GenericPillComponent extends React.Component<GenericPillParams, GenericPillState>
+export class GenericPillComponent
+  extends React.Component<GenericPillParams, GenericPillState>
   implements GenericPillComponentInterface {
   jsonData: any = {}
   croppedData: any = {}
@@ -54,7 +55,7 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
   dataCutOff = 200
 
   get logoParams(): PillLogoProps | undefined {
-    const availableLogos = PILL_CONTRACT_LOGOS[Config.current_network] || []
+    const availableLogos = PILL_CONTRACT_LOGOS[Config.network_id] || []
     const logoParams = availableLogos.find((ref: any) => {
       if (ref.action) {
         return ref.contract === this.props.action.account && ref.action === this.props.action.name
@@ -66,7 +67,7 @@ export class GenericPillComponent extends React.Component<GenericPillParams, Gen
     if (logoParams) {
       return {
         path: logoParams.path,
-        website: logoParams.website
+        website: logoParams.website,
       }
     }
 

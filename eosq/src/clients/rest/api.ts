@@ -1,8 +1,9 @@
 import { DfuseError } from "@dfuse/client"
+import { debugLog } from '../../services/logger'
 
 export function legacyHandleDfuseApiError(error: any) {
   if (error instanceof DfuseError) {
-    console.warn("API Error", JSON.stringify(error))
+    debugLog("API Error", error)
   }
 
   // TODO: Before, we were turning a 404 into `undefined`, not sure

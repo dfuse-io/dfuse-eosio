@@ -15,14 +15,15 @@ import {
   getAccountResources,
   getPieChartParams,
   PieChartParams,
-  StakeDetail
+  StakeDetail,
 } from "../../../helpers/account.helpers"
-
-// temp ignore for dev
-
 import { MonospaceText } from "../../../atoms/text-elements/misc"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
 import { UiToolTip } from "../../../atoms/ui-tooltip/ui-tooltip"
+import { Config } from "../../../models/config"
+
+const zeroCoreAsset =
+  "0." + "0".repeat(Config.chain_core_symbol_precision) + " " + Config.chain_core_symbol_code
 
 interface Props {
   account: Account
@@ -59,7 +60,7 @@ export class AccountPieChart extends React.Component<Props, State> {
       // eslint-disable-next-line react/no-did-update-set-state
       this.setState({
         stakeDetails: [],
-        stakeLoaded: false
+        stakeLoaded: false,
       })
 
       this.fetchDelband()
@@ -73,12 +74,12 @@ export class AccountPieChart extends React.Component<Props, State> {
       limit: -1,
       scope: this.props.account.account_name,
       table: "delband",
-      table_key: ""
+      table_key: "",
     }).then((output: any) => {
       output = output as { more: boolean; rows: StakeDetail[] }
       this.setState({
         stakeDetails: output && output.rows ? output.rows.map((row: any) => row.json) : [],
-        stakeLoaded: true
+        stakeLoaded: true,
       })
     })
   }
@@ -92,7 +93,7 @@ export class AccountPieChart extends React.Component<Props, State> {
             centerContent={pieChartParams.pieChartCenter}
             params={{
               data: pieChartParams.pieChartDataForPie,
-              colors: pieChartParams.pieChartColorsForPie
+              colors: pieChartParams.pieChartColorsForPie,
             }}
           />
         </HidableContainer>
@@ -104,21 +105,27 @@ export class AccountPieChart extends React.Component<Props, State> {
     return (
       <Cell p={[3]} width="100%">
         <Cell pb={[1]}>
-          Self Staked: {accountResources[type].selfStaked.toFixed(4)}
-          {NBSP}EOS
+          Self Staked:{" "}
+          {accountResources[type].selfStaked.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
         <Cell pb={[1]}>
-          Staked From Others: {accountResources[type].stakedFromOthers.toFixed(4)}
-          {NBSP}EOS
+          Staked From Others:{" "}
+          {accountResources[type].stakedFromOthers.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
 
         <Cell pb={[1]}>
-          Staked To Others: {accountResources[type].stakedToOthers.toFixed(4)}
-          {NBSP}EOS
+          Staked To Others:{" "}
+          {accountResources[type].stakedToOthers.toFixed(Config.chain_core_symbol_precision)}
+          {NBSP}
+          {Config.chain_core_symbol_code}
         </Cell>
         <ToolTipUl>
           {accountResources.stakes
-            .filter((stake: StakeDetail) => stake[`${type}_weight`] !== "0.0000 EOS")
+            .filter((stake: StakeDetail) => stake[`${type}_weight`] !== zeroCoreAsset)
             .map((stake: StakeDetail, index: number) => {
               if (index < 20) {
                 return (
@@ -143,7 +150,7 @@ export class AccountPieChart extends React.Component<Props, State> {
     )
   }
 
-  renderTooltipWrapper = (value: number, unit: string, toolTip?: JSX.Element) => {
+  renderTooltipWrapper = (value: number, toolTip?: JSX.Element) => {
     if (toolTip) {
       return (
         <UiToolTip>
@@ -155,7 +162,8 @@ export class AccountPieChart extends React.Component<Props, State> {
               lineHeight="20px"
               fontWeight="bold"
             >
-              {numeral(value).format("0,0.0000")} {unit}
+              {numeral(value).format(Config.chain_core_asset_format)}{" "}
+              {Config.chain_core_symbol_code}
             </Text>
           </Cell>
           {toolTip}
@@ -164,7 +172,7 @@ export class AccountPieChart extends React.Component<Props, State> {
     }
     return (
       <Text fontSize={[3, 2]} alignSelf="center" lineHeight="20px" fontWeight="bold">
-        {numeral(value).format("0,0.0000")} {unit}
+        {numeral(value).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
       </Text>
     )
   }
@@ -183,35 +191,27 @@ export class AccountPieChart extends React.Component<Props, State> {
     const accountName = this.props.account.account_name
     switch (type) {
       case "cpu":
-        contents = this.renderTooltipWrapper(
-          value,
-          accountResources.unit,
-          this.renderToolTip(accountResources, type)
-        )
+        contents = this.renderTooltipWrapper(value, this.renderToolTip(accountResources, type))
         query = `(action:delegatebw OR action:undelegatebw) receiver:eosio data.receiver:${accountName}`
         return this.renderSearchShortcutWrapper(contents, query)
       case "net":
-        contents = this.renderTooltipWrapper(
-          value,
-          accountResources.unit,
-          this.renderToolTip(accountResources, type)
-        )
+        contents = this.renderTooltipWrapper(value, this.renderToolTip(accountResources, type))
         query = `(action:delegatebw OR action:undelegatebw) receiver:eosio data.receiver:${accountName}`
         return this.renderSearchShortcutWrapper(contents, query)
       case "refund":
-        contents = this.renderTooltipWrapper(value, accountResources.unit)
+        contents = this.renderTooltipWrapper(value)
         query = `receiver:eosio action:refund data.owner:${accountName}`
         return this.renderSearchShortcutWrapper(contents, query)
       case "REX":
-        contents = this.renderTooltipWrapper(value, accountResources.unit)
+        contents = this.renderTooltipWrapper(value)
         query = `account:eosio (action:rentcpu OR action:rentnet OR action:deposit OR action:withdraw OR action:rentram OR action:updaterex OR action:buyrex OR action:sellrex OR action:cnclrexorder) (data.owner:${accountName} OR data.from:${accountName} OR data.receiver:${accountName})`
         return this.renderSearchShortcutWrapper(contents, query)
       case "REX_FUNDS":
-        contents = this.renderTooltipWrapper(value, accountResources.unit)
+        contents = this.renderTooltipWrapper(value)
         query = `account:eosio (action:rentcpu OR action:rentnet OR action:deposit OR action:withdraw OR action:rentram OR action:updaterex OR action:buyrex OR action:sellrex OR action:cnclrexorder) (data.owner:${accountName} OR data.from:${accountName} OR data.receiver:${accountName})`
         return this.renderSearchShortcutWrapper(contents, query)
       case "available_funds":
-        contents = this.renderTooltipWrapper(value, accountResources.unit)
+        contents = this.renderTooltipWrapper(value)
         query = `receiver:eosio.token action:transfer (data.from:${accountName} OR data.to:${accountName})`
         return this.renderSearchShortcutWrapper(contents, query)
       default:
@@ -250,7 +250,8 @@ export class AccountPieChart extends React.Component<Props, State> {
             justifySelf={["left", "right"]}
           >
             <Text fontSize={[4, 4]}>
-              {numeral(accountResources.totalOwnerShip).format("0,0.0000")} {accountResources.unit}
+              {numeral(accountResources.totalOwnerShip).format(Config.chain_core_asset_format)}{" "}
+              {Config.chain_core_symbol_code}
             </Text>
           </Cell>
         </Grid>
@@ -266,7 +267,7 @@ export class AccountPieChart extends React.Component<Props, State> {
             <DonutChartLegend
               id="account-pie-chart-legend"
               params={{ data: pieChartParams.pieChartData, colors: pieChartParams.pieChartColors }}
-              units={accountResources.unit}
+              units={Config.chain_core_symbol_code}
             />
           </Cell>
         </Grid>

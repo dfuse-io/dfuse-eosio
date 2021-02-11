@@ -4,7 +4,7 @@ import * as React from "react"
 import { RouteComponentProps } from "react-router-dom"
 import { ServerError } from "../../components/server-error/server-error.component"
 import { Cell, Grid } from "../../atoms/ui-grid/ui-grid.component"
-import { log } from "../../services/logger"
+import { debugLog } from "../../services/logger"
 import { metricsStore } from "../../stores"
 import { ContentLoaderComponent } from "../../components/content-loader/content-loader.component"
 import { Panel } from "../../atoms/panel/panel.component"
@@ -12,11 +12,7 @@ import { TransactionDetailHeader } from "./summary/transaction-detail-header"
 import { PanelTitleBanner } from "../../atoms/panel/panel-title-banner"
 import { Text } from "../../atoms/text/text.component"
 import { WrappingText } from "../../atoms/text-elements/misc"
-
-// temp ignore for dev
-
 import { DataLoading, DataError, BULLET, truncateString } from "@dfuse/explorer"
-
 import { PageContainer } from "../../components/page-container/page-container"
 import { TransactionLifecycle, Stream } from "@dfuse/client"
 import { TransactionContents } from "./transaction-contents"
@@ -101,7 +97,7 @@ export class TransactionDetailPage extends ContentLoaderComponent<Props, State> 
   }
 
   renderError = (error?: any) => {
-    log.info("Handling transaction stream error.", error)
+    debugLog("Handling transaction stream error.", error)
     return <ServerError />
   }
 

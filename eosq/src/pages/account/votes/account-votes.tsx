@@ -15,6 +15,7 @@ import { calculateVoteStrength } from "./vote.helpers"
 import { Stream } from "@dfuse/client"
 import { registerAccountDetailsListeners } from "../../../streams/account-listeners"
 import { metricsStore } from "../../../stores"
+import { Config } from "../../../models/config"
 
 interface Props {
   account: Account
@@ -60,13 +61,13 @@ export class AccountVotes extends React.Component<Props, State> {
             this.props.account,
             this.props.account.voter_info.staked
           ),
-          proxyAccount: account
+          proxyAccount: account,
         })
       },
       () => {
         this.setState({
           voteStrength: 0,
-          proxyAccount: undefined
+          proxyAccount: undefined,
         })
       }
     )
@@ -83,7 +84,7 @@ export class AccountVotes extends React.Component<Props, State> {
         voteStrength: calculateVoteStrength(
           this.props.account,
           this.props.account.voter_info.staked
-        )
+        ),
       })
     }
   }
@@ -100,7 +101,7 @@ export class AccountVotes extends React.Component<Props, State> {
           voteStrength: calculateVoteStrength(
             this.props.account,
             this.props.account.voter_info.staked
-          )
+          ),
         })
       }
     }
@@ -195,14 +196,16 @@ export class AccountVotes extends React.Component<Props, State> {
           variant="compact"
           label={t("account.summary.voter_info.labels.vote_weight")}
         >
-          {numeral(voteWeight).format("0,0.0000")} EOS
+          {numeral(voteWeight).format(Config.chain_core_asset_format)}{" "}
+          {Config.chain_core_symbol_code}
         </DetailLine>
         <DetailLine
           mb={2}
           variant="compact"
           label={t("account.summary.voter_info.labels.decayed_vote_weight")}
         >
-          {numeral(decayedVoteWeight).format("0,0.0000")} EOS
+          {numeral(decayedVoteWeight).format(Config.chain_core_asset_format)}{" "}
+          {Config.chain_core_symbol_code}
         </DetailLine>
       </Cell>
     )
@@ -236,7 +239,7 @@ export class AccountVotes extends React.Component<Props, State> {
                 <TextLink
                   fontSize={[3]}
                   to={Links.viewAccount({
-                    id: this.state.proxyAccount.account_name
+                    id: this.state.proxyAccount.account_name,
                   })}
                 >
                   {this.state.proxyAccount.account_name}

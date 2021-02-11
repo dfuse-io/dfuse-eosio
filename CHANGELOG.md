@@ -13,6 +13,11 @@ date.
 
 ### Added
 
+* Added support for environment variable `EOSWS_PUSH_V1_OUTPUT=true` that forces push-transaction (guarantee:in-block) to output the same content format as nodeos 2.0.x (with Inlines)
+* Added support for environment variable `DSTORE_S3_BUFFERED_READ=true` that forces reading S3 files (ex: blocks) ahead of processing, useful when S3 provider has trouble keeping long connections alive.
+* Added support for looking up irreversible blocks on blockmeta (when the LIB was stuck for a while) from tokenmeta and trxdb-loader. They now use '--common-blockmeta-addr' flag if available
+* Added `--common-chain-core-symbol` flag to define actual chain core symbol in the form `<precision>,<symbol code>` defaults to `4,EOS` by default.
+* Added `--tokenmeta-readiness-max-latency` with default=5m, now tokenmeta will show as "NotServing" through grpc healthcheck if last processed block (HEAD) is older than this. Value of 0 disables that feature.
 * Added `--relayer-source-request-burst` with default=90 to allow a relayer connecting to another relayer to request a 'burst'
 * Added `--statedb-disable-indexing` to disable indexing of tablet and injecting data into storage engine **developer option, don't use that in production**.
 * Added `--eosws-nodeos-rpc-push-extra-addresses` to allow providing a list of backup EOS addresses when push-transaction does not succeed in getting the transaction inside a block (with push_guarantee)
@@ -31,21 +36,27 @@ date.
 * Flag `--common-system-shutdown-signal-delay`, a delay that will be applied between receiving SIGTERM signal and shutting down the apps. Health-check for `eosws` and `dgraphql` will respond 'not healthy' during that period.
 
 ### Removed
+
+* **Breaking Change** Removed `--eosq-price-ticker-name` flag, if you were using this flag, please use `--common-chain-core-symbol` instead to define it.
 * Removed `dgraphql-graceful-shutdown-delay`, it was a left-over, unused. Must use `--common-system-shutdown-signal-delay` now
 * Removed `relayer-max-drift` (now dependent on a new condition of presence of a "block hole", and no new block sent for 5 seconds)
 * Removed `relayer-init-time` (no need for it with this new condition ^)
 
 ### Changed
 
+* The `--eosq-available-networks` `logo` field each network now has a maximum height of `70px`.
+* The `--eosq-available-networks` config of each network now accepts a `logo_text` that when present, is displayed alongside the `logo` field. This field is taken into consideration only when `logo` is defined. In this mode, the logo is fixed to `48px x 48px`. If the `logo_text` value is `eosq`, this is rendered like the standard `eosq` logo.
+* **Breaking Change** Changes to `--eosq-available-networks` config might be required around the `logo` field each network. You must now remove the `logo` field if it's not pointing to an existing image otherwise, the logo will not be rendered correctly.
+* Applying a block filter over previously-filtered-blocks does not panic anymore, it applies the new filter on top of it, only if that specific filter has never been applied before. Applied filters definitions are concatenated in the block metadata, separated by `;;;`
 * Default `trxdb-loader-batch-size` changed to 100, Safe to do so because it does not batch when close to head.
 * Improved relayer mechanics: replaced "max drift" detection by "block hole" detection and recovery action is now to restart the joining source (instead of shutting down the process)
 * Improved `dfuseeos tools check statedb-reproc-injector` output by showing all shard statistics (and not just most highest block).
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
-* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
-* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 ### Fixed
-* Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully 
+* Fixed a bug making search-forkresolver useless, because ignored by search-router
+* Fixed a bug on StateDB server not accepting symbol and symbol code as `scope` parameter value.
+* Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully.
 * Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.
 * Fixed a bug in `eosws` WebSocket `get_transaction_lifecycle` where a transaction not yet in the database would never stream back any message to the client.
 * Fixed a bug with `--mindreader-no-blocks-log` option actually not being picked up (always false)
@@ -55,6 +66,16 @@ date.
 * Fixed issue when reading ABI from StateDB where speculative writes were not handled correctly.
 * Fixed issue when reading Table Row from StateDB where speculative writes were not handled correctly.
 * Fixed a potential crash when reading ABI from StateDB and it does not exist in database.
+
+# [v0.1.0-beta8] 2020-08-08
+* fix **experimental** netkv implementation for statedb
+
+# [v0.1.0-beta7] 2020-12-07
+* fix **experimental** netkv implementation for trxdb
+
+# [v0.1.0-beta6] 2020-08-27
+* When using filtering capabilities, only absolutely required system actions will be indexed/processed.
+* Added missing `updateauth` and `deleteauth` as require system actions in flag `common-system-actions-include-filter-expr`.
 
 # [v0.1.0-beta5] 2020-08-24
 
@@ -137,7 +158,7 @@ Here the steps required to migrate to the new `statedb` app:
 1. We strongly recommend that you take a full backup of your data directory (while the app is shut down)
 2. Launch a stand-alone stateDB instance in 'inject-mode' that reads from your block files and writes to a new location (see '--statedb-store-dsn')
 3. Let it complete the "catch up" until it is very close to the HEAD of your network, then stop that instance.
-4. Stop your previous instance (that uses fluxdb), 
+4. Stop your previous instance (that uses fluxdb),
 5. Copy the content of your statedb database to a location accessible from there (that you will define in '--statedb-store-dsn')
 6. Launch the new version of the code, with the modified flags, over your previous data, including the new statedb database content (see below for the necessary flag and config modifications)
 

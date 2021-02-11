@@ -32,6 +32,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var transactionCursorDecoder = dgraphql.NewOpaqueProtoCursorDecoder(func() proto.Message { return &pbgraphql.TransactionCursor{} })
+
 type QueryBlockRequest struct {
 	Num *commonTypes.Uint32
 	Id  *string
@@ -179,9 +181,7 @@ func (b *Block) TransactionTraces(ctx context.Context, req *TransactionTracesReq
 		return newEmptyTransactionTraceConnection(), nil
 	}
 
-	paginator, err := dgraphql.NewPaginator(req.First, req.Last, req.Before, req.After, 100, func() proto.Message {
-		return &pbgraphql.TransactionCursor{}
-	})
+	paginator, err := dgraphql.NewPaginator(req.First, req.Last, req.Before, req.After, 100, transactionCursorDecoder)
 	if err != nil {
 		return nil, dgraphql.Errorf(ctx, "%s", err)
 	}

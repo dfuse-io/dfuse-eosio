@@ -309,10 +309,14 @@ func TestCELActivation(t *testing.T) {
 		celFilter, err := newCELFilter("test", test.code, []string{"false", ""}, false)
 		require.NoError(t, err)
 
-		activation := actionTraceActivation{
-			trace:          test.activation.actTrace,
-			trxScheduled:   test.activation.isScheduled,
-			trxActionCount: test.activation.trxActionCount,
+		activation := ActionTraceActivation{
+			Trace: test.activation.actTrace,
+			TrxTrace: &MemoizableTrxTrace{
+				TrxTrace: &pbcodec.TransactionTrace{
+					Scheduled:    test.activation.isScheduled,
+					ActionTraces: multiAction(test.activation.trxActionCount),
+				},
+			},
 		}
 
 		t.Run(test.name, func(t *testing.T) {
@@ -325,4 +329,11 @@ func TestCELActivation(t *testing.T) {
 			}
 		})
 	}
+}
+
+func multiAction(length int) (out []*pbcodec.ActionTrace) {
+	for i := 0; i < length; i++ {
+		out = append(out, &pbcodec.ActionTrace{})
+	}
+	return
 }

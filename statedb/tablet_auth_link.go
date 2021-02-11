@@ -25,7 +25,7 @@ func init() {
 }
 
 func NewAuthLinkTablet(account string) AuthLinkTablet {
-	return AuthLinkTablet(nameToBytes(account))
+	return AuthLinkTablet(standardNameToBytes(account))
 }
 
 // AuthLinkTablet tablet is composed
@@ -75,7 +75,7 @@ func NewDeleteAuthLinkRow(blockNum uint64, actionTrace *pbcodec.ActionTrace) (*A
 
 func newAuthLinkRow(blockNum uint64, account, contract, action string, permission string) (row *AuthLinkRow, err error) {
 	tablet := NewAuthLinkTablet(account)
-	primaryKey := nameToBytes(string(contract), string(action))
+	primaryKey := standardNameToBytes(string(contract), string(action))
 
 	var value []byte
 	if permission != "" {

@@ -4,6 +4,7 @@
 /eosq-build
 /eosq
 /config.json
+/.eslintcache
 
 /rice-box.go
 /app/eosq/rice-box.go

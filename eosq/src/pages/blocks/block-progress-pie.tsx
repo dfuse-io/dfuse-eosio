@@ -1,11 +1,12 @@
 import { t } from "i18next"
 import { observer } from "mobx-react"
 import * as React from "react"
-import { formatPercentage, Spinner } from "@dfuse/explorer"
+import { formatPercentage } from "@dfuse/explorer"
 import { styled } from "../../theme"
 import { computeTransactionTrustPercentage } from "../../models/transaction"
 import { Text } from "../../atoms/text/text.component"
 import { Cell } from "../../atoms/ui-grid/ui-grid.component"
+import { LoadingOutlined } from "@ant-design/icons"
 
 const MiddleChild: React.ComponentType<any> = styled(Cell)`
   position: absolute;
@@ -16,7 +17,7 @@ const MiddleChild: React.ComponentType<any> = styled(Cell)`
   fill: #eee;
 `
 
-const ProgressSpinner: React.ComponentType<any> = styled(Spinner)`
+const ProgressSpinner: React.ComponentType<any> = styled(LoadingOutlined)`
   color: rgba(0, 0, 0, 0.7) !important;
   transform: scale(0.7);
 `

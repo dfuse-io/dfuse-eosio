@@ -33,26 +33,29 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dstore"
+	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"
 )
 
 type Config struct {
-	GRPCListenAddr       string // Address to listen for incoming gRPC requests
-	StateDBGRPCAddr      string // StateDB gRPC URL
-	BlockStreamAddr      string // gRPC URL to reach a stream of blocks
-	ABICodecAddr         string // Abi Codec URL
-	ABICacheBaseURL      string // cached ABIS base URL
-	ABICacheFileName     string // cached ABIS filename
-	CacheFile            string // Path to GOB file containing tokenmeta cache. will try to Load and Save to that cache file
-	SaveEveryNBlock      uint32 // Save the cache after N blocks processed
-	BlocksStoreURL       string // GS path to read blocks archives
-	BootstrapBlockOffset uint64 // Block offset to ensure that we are not bootstrapping from StateDB on a reversible fork
+	GRPCListenAddr       string        // Address to listen for incoming gRPC requests
+	StateDBGRPCAddr      string        // StateDB gRPC URL
+	BlockStreamAddr      string        // gRPC URL to reach a stream of blocks
+	ABICodecAddr         string        // Abi Codec URL
+	ABICacheBaseURL      string        // cached ABIS base URL
+	ABICacheFileName     string        // cached ABIS filename
+	CacheFile            string        // Path to GOB file containing tokenmeta cache. will try to Load and Save to that cache file
+	SaveEveryNBlock      uint32        // Save the cache after N blocks processed
+	BlocksStoreURL       string        // GS path to read blocks archives
+	BootstrapBlockOffset uint64        // Block offset to ensure that we are not bootstrapping from StateDB on a reversible fork
+	ReadinessMaxLatency  time.Duration // we advertise as not-ready if the last processed block is older than this
 }
 
 type Modules struct {
 	BlockFilter func(blk *bstream.Block) error
+	BlockMeta   pbblockmeta.BlockIDClient
 }
 
 type App struct {
@@ -121,14 +124,14 @@ func (a *App) Run() error {
 	abiCodecCli := pbabicodec.NewDecoderClient(abiCodecConn)
 
 	zlog.Info("setting tokenmeta and pipeline")
-	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock, stateClient)
+	tmeta := tokenmeta.NewTokenMeta(tokenCache, abiCodecCli, a.config.SaveEveryNBlock, stateClient, a.modules.BlockMeta)
 
 	tmeta.OnTerminated(a.Shutdown)
 	a.OnTerminating(tmeta.Shutdown)
 
 	tmeta.SetupPipeline(startBlock, a.modules.BlockFilter, a.config.BlockStreamAddr, blocksStore)
 
-	server := tokenmeta.NewServer(tokenCache)
+	server := tokenmeta.NewServer(tokenCache, a.config.ReadinessMaxLatency)
 
 	server.OnTerminated(a.Shutdown)
 	a.OnTerminating(server.Shutdown)

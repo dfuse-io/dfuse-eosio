@@ -9,13 +9,13 @@ import { Text } from "../../atoms/text/text.component"
 import { t } from "i18next"
 import {
   getCurrentLanguageName,
-  getCurrentLanguageValue
+  getCurrentLanguageValue,
 } from "../settings-selectors/settings.helpers"
 import {
   faGlobeAmericas,
   faChevronLeft,
   faTimes,
-  faVectorSquare
+  faVectorSquare,
 } from "@fortawesome/free-solid-svg-icons"
 import { NetworkSelector } from "../settings-selectors/network-selector"
 import { LanguageSelector } from "../settings-selectors/language-selector"
@@ -76,7 +76,7 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
       </Cell>,
       <Text key="1" color={color} pl={[pl]} fontWeight="600" fontSize={[3]} width={width}>
         {t("core.menu.titles.network")}
-      </Text>
+      </Text>,
     ]
   }
 
@@ -87,13 +87,13 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
       </Cell>,
       <Text key="1" color={color} pl={[pl]} fontWeight="600" fontSize={[3]} width={width}>
         {t("core.menu.titles.language")}
-      </Text>
+      </Text>,
     ]
   }
 
   renderNetworkSummary() {
     const network = Config.available_networks.find((ref: EosqNetwork) => {
-      return ref.id === Config.current_network
+      return ref.id === Config.network_id
     })
 
     return (
@@ -106,8 +106,8 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
           fontWeight="600"
           fontSize={[2]}
         >
-          {t(`core.networkOptions.${Config.current_network.replace("-", "_")}`, {
-            defaultValue: network ? network.name : Config.current_network
+          {t(`core.networkOptions.${Config.network_id.replace("-", "_")}`, {
+            defaultValue: network ? network.name : Config.network_id,
           })}
         </Text>
       </Box>

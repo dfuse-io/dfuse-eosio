@@ -5,6 +5,7 @@ import { GenericPillComponent, PillRenderingContext } from "../generic-pill.comp
 import { Trans } from "react-i18next"
 import { Text } from "../../../../atoms/text/text.component"
 import { Cell } from "../../../../atoms/ui-grid/ui-grid.component"
+import { debugLog } from '../../../../services/logger'
 
 export class ForumPostPillComponent extends GenericPillComponent {
   static requireFields: string[] = [
@@ -56,7 +57,7 @@ export class ForumPostPillComponent extends GenericPillComponent {
     try {
       return JSON.parse(data.json_metadata)
     } catch {
-      console.warn("Couldn't parse proposal JSON")
+      debugLog("Couldn't parse post JSON")
       return {}
     }
   }

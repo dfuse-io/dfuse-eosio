@@ -32,7 +32,7 @@ export function getTokenInfoKey(info: TokenInfo): TokenInfoKey {
 
 export function getTokenInfosByKeyMap(): Record<TokenInfoKey, TokenInfo> {
   const mappings: ReturnType<typeof getTokenInfosByKeyMap> = {}
-  getTokenInfosForNetwork(Config.current_network).forEach((info) => {
+  getTokenInfosForNetwork(Config.network_id).forEach((info) => {
     mappings[getTokenInfoKey(info)] = info
   })
 
@@ -43,7 +43,7 @@ const networkToName: Record<string, TokenInfo["chain"]> = {
   "eos-mainnet": "eos",
   "eos-jungle": "jungle",
   "eos-worbli": "worbli",
-  "wax-mainnet": "wax"
+  "wax-mainnet": "wax",
 }
 
 const eosCafeList: TokenInfo[] = [
@@ -53,7 +53,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/VIG-lg.png",
     symbol: "VIG",
     account: "vig111111111",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "UPD",
@@ -62,7 +62,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/upd-symbol-icon.png",
     symbol: "UPD",
     account: "updtokenacct",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "AdderalCoin",
@@ -71,7 +71,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "ADD",
     account: "eosadddddddd",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "CADEOS.io",
@@ -81,7 +81,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/ADE-logo-225x225.jpg",
     symbol: "ADE",
     account: "cadeositoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOSNOW",
@@ -89,7 +89,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosnow-lg.png",
     symbol: "ANTE",
     account: "eosnowbpower",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ANOX",
@@ -97,7 +97,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/anx-256.png",
     symbol: "ANX",
     account: "anoxanoxanox",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Atidium",
@@ -105,7 +105,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/atidium-lg.png",
     symbol: "ATD",
     account: "eosatidiumio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ATMOS",
@@ -113,7 +113,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/atmos.png",
     symbol: "ATMOS",
     account: "novusphereio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Banker.Bet",
@@ -121,7 +121,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/BBC-lg.png",
     symbol: "BBC",
     account: "bbctokencode",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BEAN",
@@ -129,7 +129,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/bean-lg.png",
     symbol: "BEAN",
     account: "thebeantoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOS BET",
@@ -137,7 +137,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosbet-lg.png",
     symbol: "BET",
     account: "betdividends",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BetKing.io",
@@ -145,7 +145,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/betking-lg.png",
     symbol: "BKT",
     account: "betkingtoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "eosBLACK",
@@ -153,7 +153,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosblack-lg.png",
     symbol: "BLACK",
     account: "eosblackteam",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BNT",
@@ -161,7 +161,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/bancor-lg.png",
     symbol: "BNT",
     account: "bntbntbntbnt",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BNTEOS",
@@ -170,7 +170,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "BNTEOS",
     account: "bnt2eosrelay",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BNTUSDT",
@@ -179,7 +179,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "BNTUSDT",
     account: "bancorr11232",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BOID",
@@ -187,7 +187,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/BoidLogo-lg.png",
     symbol: "BOID",
     account: "boidcomtoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BOS",
@@ -195,7 +195,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/bos-lg.png",
     symbol: "BOS",
     account: "eosio.token",
-    chain: "bos"
+    chain: "bos",
   },
   {
     name: "BOS",
@@ -203,7 +203,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/bos-lg.png",
     symbol: "BOS",
     account: "bosibc.io",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Bitcoin",
@@ -211,7 +211,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosbetbtc-lg.png",
     symbol: "BTC",
     account: "eosbettokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Bitcoin Cash",
@@ -219,7 +219,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosbetbch-lg.png",
     symbol: "BCH",
     account: "eosbettokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "GrandpaBTC",
@@ -228,7 +228,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/grandpa-btc-lg.png",
     symbol: "BTC",
     account: "grandpacoins",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "The EOS Button",
@@ -237,7 +237,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "BTN",
     account: "eosbuttonbtn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "CARMEL",
@@ -245,7 +245,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/carmel-lg.png",
     symbol: "CARMEL",
     account: "carmeltokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Chaince",
@@ -254,7 +254,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "CET",
     account: "eosiochaince",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Chintai",
@@ -263,7 +263,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/chintai-chex-lg.png",
     symbol: "CHEX",
     account: "chexchexchex",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Challenge DAC",
@@ -271,7 +271,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/CHLnewPNG500.png",
     symbol: "CHL",
     account: "challengedac",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Carbon",
@@ -280,7 +280,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/carbonlogo-128.png",
     symbol: "CUSD",
     account: "stablecarbon",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DABBLE",
@@ -288,7 +288,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dabble-lg.png",
     symbol: "DAB",
     account: "eoscafekorea",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DAPP Network",
@@ -296,7 +296,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dapp-lg.png",
     symbol: "DAPP",
     account: "dappservices",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DEOS Games",
@@ -305,7 +305,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "DEOS",
     account: "thedeosgames",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DICE",
@@ -313,7 +313,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dice-lg.png",
     symbol: "DICE",
     account: "betdicetoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Dig Coin",
@@ -321,7 +321,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dig-lg.png",
     symbol: "DIG",
     account: "digcoinsmine",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Dragon Option",
@@ -329,7 +329,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dragon-lg.png",
     symbol: "DRAGON",
     account: "eosdragontkn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DS",
@@ -337,7 +337,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/DS.png",
     symbol: "DS",
     account: "dsdsdsdsdsds",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "GrandpaDOGE",
@@ -346,7 +346,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/grandpa-doge-lg.png",
     symbol: "DOGE",
     account: "grandpacoins",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOS AUCTION PLATFORM",
@@ -354,7 +354,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eap-lg.png",
     symbol: "EAP",
     account: "eosauctionpt",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EBTC",
@@ -363,7 +363,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "EBTC",
     account: "bitpietokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "eosCASH",
@@ -371,7 +371,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "",
     symbol: "ECASH",
     account: "horustokenio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EDNA",
@@ -379,7 +379,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/edna-lg.png",
     symbol: "EDNA",
     account: "ednazztokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EETH",
@@ -388,7 +388,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "EETH",
     account: "ethsidechain",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EETH",
@@ -397,7 +397,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "EETH",
     account: "bitpietokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Effect.AI",
@@ -405,7 +405,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/efx-lg.png",
     symbol: "EFX",
     account: "effecttokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Emanate MNX",
@@ -414,7 +414,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/emanate-mnx-lg.png",
     symbol: "MNX",
     account: "emanatenekot",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Emanate",
@@ -422,7 +422,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/emanate-lg.png",
     symbol: "EMT",
     account: "emanateoneos",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "eosDAC",
@@ -430,7 +430,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosdac-lg.jpg",
     symbol: "EOSDAC",
     account: "eosdactokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOSN",
@@ -438,7 +438,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosn-lg.jpg",
     symbol: "EOSN",
     account: "eosnationinc",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOX Commerce",
@@ -447,7 +447,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eoxcommerce-lg.png",
     symbol: "EOX",
     account: "eoxeoxeoxeox",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ERO",
@@ -456,7 +456,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "ERO",
     account: "eoslandadmin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOSLAND RARE ORE",
@@ -464,7 +464,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/ero-lg.png",
     symbol: "ERO",
     account: "eoslandadmin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Ethereum",
@@ -472,7 +472,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosbeteth-lg.png",
     symbol: "ETH",
     account: "eosbettokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "GrandpaETH",
@@ -481,7 +481,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/grandpa-eth-lg.png",
     symbol: "ETH",
     account: "grandpacoins",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Europechain",
@@ -489,7 +489,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/europechain.png",
     symbol: "XEC",
     account: "europe.chain",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EUSD",
@@ -498,7 +498,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "EUSD",
     account: "bitpietokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "FairEOS",
@@ -506,7 +506,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/fair-lg.jpg",
     symbol: "FAIR",
     account: "faireostoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "FastWin",
@@ -514,7 +514,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/fast-lg.png",
     symbol: "FAST",
     account: "fastecoadmin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "UXfyre",
@@ -522,7 +522,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/uxfyre-lg.png",
     symbol: "FYRE",
     account: "uxfyretoken1",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Horus Pay",
@@ -530,7 +530,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/horuspay-lg.jpg",
     symbol: "HORUS",
     account: "horustokenio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "HASHFUN",
@@ -538,7 +538,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/HFC.png",
     symbol: "HFC",
     account: "hashfuncoins",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "HireVibes",
@@ -546,7 +546,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/hvt-lg.png",
     symbol: "HVT",
     account: "hirevibeshvt",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Infinicoin",
@@ -555,7 +555,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/infiniverse-lg.png",
     symbol: "INF",
     account: "infinicoinio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "IPOS",
@@ -564,7 +564,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "IPOS",
     account: "oo1122334455",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Everipedia",
@@ -573,7 +573,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/everipedia-lg.png",
     symbol: "IQ",
     account: "everipediaiq",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOSJacks",
@@ -581,7 +581,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosjacks-lg.png",
     symbol: "JKR",
     account: "eosjackscoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "KARMA",
@@ -589,7 +589,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/karma-lg.png",
     symbol: "KARMA",
     account: "therealkarma",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "KEOS",
@@ -598,7 +598,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "KEOS",
     account: "keoskorea111",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "KROWN",
@@ -606,7 +606,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/KROWN-lg.png",
     symbol: "KROWN",
     account: "krowndactokn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "LED",
@@ -615,7 +615,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "LED",
     account: "okkkkkkkkkkk",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "LICC",
@@ -624,7 +624,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "LICC",
     account: "liccommunity",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "LuckyGo",
@@ -632,7 +632,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/lkg-lg.jpg",
     symbol: "LKG",
     account: "luckygotoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Lelego",
@@ -640,7 +640,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/lelego-lg.png",
     symbol: "LLG",
     account: "llgonebtotal",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Litecoin",
@@ -648,7 +648,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/eosbetltc-lg.png",
     symbol: "LTC",
     account: "eosbettokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "LUCKY",
@@ -657,7 +657,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "LUCKY",
     account: "eoslucktoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Lumeos",
@@ -665,7 +665,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/lumeos-lg.png",
     symbol: "LUME",
     account: "lumetokenctr",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "LYNX",
@@ -675,7 +675,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/worktokenbviLYNX-lg.png",
     symbol: "LYNX",
     account: "worktokenbvi",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "dmail",
@@ -683,7 +683,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/dmail-lg.png",
     symbol: "MAIL",
     account: "d.mail",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "MAX",
@@ -692,7 +692,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "MAX",
     account: "eosmax1token",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "MEET.ONE",
@@ -700,7 +700,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/meetone-lg.jpg",
     symbol: "MEETONE",
     account: "eosiomeetone",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Royal Online Vegas",
@@ -708,7 +708,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/mev-lg.jpg",
     symbol: "MEV",
     account: "eosvegascoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "MORTYS",
@@ -716,7 +716,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/mortys-lg.png",
     symbol: "MORTYS",
     account: "mrpoopybutt1",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Nebula",
@@ -724,7 +724,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/nebula-lg.png",
     symbol: "NEB",
     account: "nebulatokenn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Effect Network",
@@ -732,7 +732,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/nfx-lg.png",
     symbol: "NFX",
     account: "effecttokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "NUTS",
@@ -740,7 +740,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/nuts-lg.png",
     symbol: "NUTS",
     account: "nutscontract",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Oracle Chain",
@@ -749,7 +749,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/oraclechain-lg.png",
     symbol: "OCT",
     account: "octtothemoon",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "OnePlay",
@@ -757,7 +757,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/oneplay-lg.png",
     symbol: "ONE",
     account: "oneplaytoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "PEOS",
@@ -766,7 +766,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "PEOS",
     account: "thepeostoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "pixEOS",
@@ -774,7 +774,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/pixeos-lg.png",
     symbol: "PIXEOS",
     account: "pixeos1token",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "PIZZA",
@@ -782,7 +782,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/PIZZA-lg.png",
     symbol: "PIZZA",
     account: "pizzatotoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EOS Poker",
@@ -790,7 +790,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/poker-lg.jpg",
     symbol: "POKER",
     account: "eospokercoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Poorman Token",
@@ -798,7 +798,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/poorman-lg.png",
     symbol: "POOR",
     account: "poormantoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Crypto Peso",
@@ -807,7 +807,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/cryptopeso-lg.png",
     symbol: "PSO",
     account: "cryptopesosc",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "PUBLYTO",
@@ -815,7 +815,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/pub-lg.png",
     symbol: "PUB",
     account: "publytoken11",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "CryptoPIX PXS",
@@ -823,7 +823,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/pixels_lg.jpeg",
     symbol: "PXS",
     account: "pxstokensapp",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "RAMtoken",
@@ -831,7 +831,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/ramtoken-lg.png",
     symbol: "RAM",
     account: "ramtokenmoon",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "RIDL",
@@ -839,7 +839,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/ridl-lg.png",
     symbol: "RIDL",
     account: "ridlridlcoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Rocket Battles",
@@ -848,7 +848,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/rocketbattle-lg.png",
     symbol: "ROCKET",
     account: "rocketbattle",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ROJI",
@@ -856,7 +856,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/roji-lg.png",
     symbol: "ROJI",
     account: "rojirojiroji",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Real World Coupon",
@@ -865,7 +865,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "RWC",
     account: "realworldcpn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Parsl Seed",
@@ -873,7 +873,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/seed-lg.png",
     symbol: "SEED",
     account: "parslseed123",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Sense",
@@ -881,7 +881,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/sense-400.png",
     symbol: "SENSE",
     account: "sensegenesis",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Sprtshubcoin",
@@ -890,7 +890,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/sprtshubcoin-lg.png",
     symbol: "SHC",
     account: "sprtshubcoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "SOLIT",
@@ -898,7 +898,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/solit-lg.png",
     symbol: "SLT",
     account: "nblabtokenss",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Nebula Stable",
@@ -906,7 +906,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/nebula-lg.png",
     symbol: "SNEB",
     account: "nebulatokenn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "SNAX",
@@ -914,7 +914,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/SNAX.png",
     symbol: "SNAX",
     account: "snax.token",
-    chain: "snax"
+    chain: "snax",
   },
   {
     name: "SOV",
@@ -922,7 +922,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/sov-lg.png",
     symbol: "SOV",
     account: "sovmintofeos",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "eoseven",
@@ -931,7 +931,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "SVN",
     account: "eoseventoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Telos",
@@ -940,7 +940,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "TLOS",
     account: "eosio.token",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "TOOKTOOK",
@@ -948,7 +948,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/took-lg.jpg",
     symbol: "TOOK",
     account: "taketooktook",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "TokenPocket",
@@ -957,7 +957,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "TPT",
     account: "eosiotptoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "TokenPocket",
@@ -966,7 +966,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "TPT",
     account: "bosibc.io",
-    chain: "bos"
+    chain: "bos",
   },
   {
     name: "TRIV",
@@ -975,7 +975,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/triv-token-logo.png",
     symbol: "TRIV",
     account: "triviatokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "TRYBE",
@@ -983,7 +983,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/trybe-lg.png",
     symbol: "TRYBE",
     account: "trybenetwork",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "USDE",
@@ -991,7 +991,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/USDE-lg.png",
     symbol: "USDE",
     account: "usdetotokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "USDT",
@@ -1000,7 +1000,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "USDT",
     account: "tethertether",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "USDT",
@@ -1009,7 +1009,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "USDT",
     account: "bosibc.io",
-    chain: "bos"
+    chain: "bos",
   },
   {
     name: "WhaleEx",
@@ -1018,7 +1018,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "WAL",
     account: "whaleextoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "WECASH",
@@ -1027,7 +1027,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "WECASH",
     account: "weosservices",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "WiZZ",
@@ -1035,7 +1035,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/wizz-lg.png",
     symbol: "WIZZ",
     account: "wizznetwork1",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Worbli",
@@ -1044,7 +1044,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/placeholder-lg.png",
     symbol: "WBI",
     account: "eosio.token",
-    chain: "worbli"
+    chain: "worbli",
   },
   {
     name: "Gamblr",
@@ -1052,7 +1052,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/gamblr.png",
     symbol: "GAMBLR",
     account: "gamblrtokens",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "WRK",
@@ -1061,7 +1061,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/worktokenbviWRK-lg.png",
     symbol: "WRK",
     account: "worktokenbvi",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Billionaire Token",
@@ -1070,7 +1070,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/billionaire-lg.png",
     symbol: "XBL",
     account: "billionairet",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ZKS",
@@ -1078,7 +1078,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/zks-lg.png",
     symbol: "ZKS",
     account: "zkstokensr4u",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "Qubicles",
@@ -1086,7 +1086,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/qbe-lg.png",
     symbol: "QBE",
     account: "qubicletoken",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Beatitude",
@@ -1094,7 +1094,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/beatitude-lg.png",
     symbol: "HEART",
     account: "revelation21",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Cards & Tokens",
@@ -1102,7 +1102,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/cnt.png",
     symbol: "CNT",
     account: "vapaeetokens",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Viitasphere Token",
@@ -1111,7 +1111,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/viitasphere-lg.png",
     symbol: "VIITA",
     account: "viitasphere1",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "VIITA Certificate Token",
@@ -1120,7 +1120,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/viitasphere-lg.png",
     symbol: "VIICT",
     account: "viitasphere1",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Acorn UBI",
@@ -1128,7 +1128,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/acorn-lg.png",
     symbol: "ACORN",
     account: "acornaccount",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "EDNA",
@@ -1136,7 +1136,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/edna-lg.png",
     symbol: "EDNA",
     account: "ednazztokens",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Teachology",
@@ -1144,7 +1144,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/teach-lg.png",
     symbol: "TEACH",
     account: "teachology14",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Proxibots",
@@ -1152,7 +1152,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/proxibots-lg.png",
     symbol: "ROBO",
     account: "proxibotstkn",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "TelosDAC",
@@ -1160,7 +1160,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/telosdac-lg.png",
     symbol: "TLOSDAC",
     account: "telosdacdrop",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "Anudit Coin Test",
@@ -1169,7 +1169,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/anudit-test-lg.png",
     symbol: "ANT",
     account: "antestacc111",
-    chain: "jungle"
+    chain: "jungle",
   },
   {
     name: "MyCryptoVegas Token",
@@ -1177,7 +1177,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/cts-lg.png",
     symbol: "CTS",
     account: "cryptovgscts",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "WORD",
@@ -1185,7 +1185,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/word.png",
     symbol: "WORD",
     account: "wordtokeneos",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "WORD",
@@ -1193,7 +1193,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/word.png",
     symbol: "WORD",
     account: "wordtokeneos",
-    chain: "telos"
+    chain: "telos",
   },
   {
     name: "WORD",
@@ -1201,7 +1201,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/word.png",
     symbol: "WORD",
     account: "wordtokeneos",
-    chain: "jungle"
+    chain: "jungle",
   },
   {
     name: "Yakee chain",
@@ -1209,7 +1209,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/YKC.png",
     symbol: "YKC",
     account: "okkkkkkkkkkk",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "NUT",
@@ -1217,7 +1217,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/nut_424x424.png",
     symbol: "NUT",
     account: "eosdtnutoken",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "San Diego City Token",
@@ -1227,7 +1227,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/city-seal-Blue-and-Gold-small-300x300.png",
     symbol: "SAND",
     account: "sandiegocoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "POW",
@@ -1235,7 +1235,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/pow-lg.png",
     symbol: "POW",
     account: "powhcontract",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "POWX",
@@ -1243,7 +1243,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/powx-lg.png",
     symbol: "POWX",
     account: "powxtokenpow",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "GoldenChip",
@@ -1251,7 +1251,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/goldenchip.png",
     symbol: "GCHIP",
     account: "goldenchipio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "PINK",
@@ -1259,7 +1259,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/pink-lg.png",
     symbol: "PINK",
     account: "pinknettoken",
-    chain: "wax"
+    chain: "wax",
   },
   {
     name: "WAX",
@@ -1267,7 +1267,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/wax.png",
     symbol: "WAX",
     account: "eosio.token",
-    chain: "wax"
+    chain: "wax",
   },
   {
     name: "One Thousand Coin",
@@ -1275,7 +1275,7 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/OTCeoslogo1.png",
     symbol: "OTC",
     account: "thousandcoin",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "STEEMP on EOS",
@@ -1285,7 +1285,7 @@ const eosCafeList: TokenInfo[] = [
       "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/EOSSTEEMpFULLres-527x504.png",
     symbol: "STEEMP",
     account: "steemoneosio",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "SQRL",
@@ -1293,8 +1293,8 @@ const eosCafeList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/sqrl-lg.png",
     symbol: "SQRL",
     account: "sqrlwalletio",
-    chain: "telos"
-  }
+    chain: "telos",
+  },
 ]
 
 const extraList: TokenInfo[] = [
@@ -1304,63 +1304,63 @@ const extraList: TokenInfo[] = [
     logo_lg: "https://raw.githubusercontent.com/eoscafe/eos-airdrops/master/logos/edna-lg.png",
     symbol: "EDNA",
     account: "ednazztokens",
-    chain: "worbli"
+    chain: "worbli",
   },
   {
     name: "PLO",
     symbol: "PLO",
     account: "playeronetkn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BRM",
     symbol: "BRM",
     account: "openbrmeos11",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "DAPPHDL",
     symbol: "DAPPHDL",
     account: "dappairhodl1",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "EFOR",
     symbol: "EFOR",
     account: "theforcegrou",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "BITI",
     symbol: "BITI",
     account: "biteyebiteye",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "RWC",
     symbol: "RWC",
     account: "realworldcpn",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "SOV",
     symbol: "SOV",
     account: "sovmintofeos",
-    chain: "eos"
+    chain: "eos",
   },
   {
     name: "ESB",
     symbol: "ESB",
     account: "esbcointoken",
-    chain: "eos"
-  }
+    chain: "eos",
+  },
 ]
 
 // List of tokens that do not actual work correctly anymore
 const removedTokens = [
   { chain: "eos", account: "nutscontract" },
   { chain: "eos", account: "uxfyretoken1" },
-  { chain: "eos", account: "triviatokens" }
+  { chain: "eos", account: "triviatokens" },
 ]
 
 function isRemovedToken(tokenInfo: TokenInfo): boolean {

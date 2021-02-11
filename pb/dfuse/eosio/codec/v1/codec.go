@@ -227,7 +227,7 @@ func (t *TransactionTrace) HasBeenReverted() bool {
 	}
 
 	// The `eosio::onerror` transaction when in `soft_fail` status means it was actually correctly executed, so it's NOT reverted
-	if status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL && len(t.ActionTraces) >= 1 && t.ActionTraces[0].FullName() == "eosio:eosio:onerror" {
+	if status == TransactionStatus_TRANSACTIONSTATUS_SOFTFAIL && len(t.ActionTraces) >= 1 && t.ActionTraces[0].SimpleName() == "eosio:onerror" {
 		return false
 	}
 

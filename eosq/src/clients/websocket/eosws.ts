@@ -11,8 +11,7 @@ import { VoteTally } from "../../models/vote"
 import { legacyHandleDfuseApiError } from "../rest/api"
 import { BlockSummary } from "../../models/block"
 import { SuggestionSection } from "../../models/typeahead"
-import { log } from "../../services/logger"
-
+import { debugLog } from "../../services/logger"
 import { getDfuseClient } from "@dfuse/explorer"
 
 // Account
@@ -176,7 +175,7 @@ type GenesisRegisteredOmniSearchResponse = {
 }
 
 export async function omniSearch(query: string): Promise<OmniSearchResponse | undefined> {
-  log.info("Performing search query with query [%s].", query)
+  debugLog("Performing search query with query [%s].", query)
   const result = await getDfuseClient()
     .apiRequest<OmniSearchResponse>(
       "/v0/simple_search",
@@ -187,11 +186,11 @@ export async function omniSearch(query: string): Promise<OmniSearchResponse | un
     .catch(legacyHandleDfuseApiError)
 
   if (result == null) {
-    log.info("No search result found for query [%s] via API.", query)
+    debugLog("No search result found for query [%s] via API.", query)
     return undefined
   }
 
-  log.info("Search result for query [%s] found via API.", query, result)
+  debugLog("Search result for query [%s] found via API.", query, result)
   return result
 }
 

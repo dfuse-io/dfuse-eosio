@@ -19,6 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
+var traceEnabled = logging.IsTraceEnabled("statedb", "github.com/dfuse-io/dfuse-eosio/statedb")
 var zlog = zap.NewNop()
 
 func init() {

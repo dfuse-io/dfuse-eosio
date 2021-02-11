@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/dfuse-io/bstream"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
@@ -15,6 +17,8 @@ type Cache interface {
 	Apply(mutationsBatch *MutationsBatch, processedBlock bstream.BlockRef) []error
 	SaveToFile() error
 	AtBlockRef() bstream.BlockRef
+	SetHeadBlockTime(t time.Time)
+	GetHeadBlockTime() time.Time
 }
 
 const EOSTokenContract = eos.AccountName("eosio.token")

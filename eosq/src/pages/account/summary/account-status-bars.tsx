@@ -16,6 +16,7 @@ import numeral from "numeral"
 import { StatusWidget } from "../../../atoms/status-widget/status-widget"
 import { theme, styled } from "../../../theme"
 import { SearchShortcut } from "../../../components/search-shortcut/search-shortcut"
+import { Config } from '../../../models/config'
 
 const AccountStatusBarsContainer: React.ComponentType<any> = styled.div`
   margin-top: 15px;
@@ -74,7 +75,6 @@ export class AccountStatusBars extends React.Component<Props> {
     total: string,
     staked: string,
     other: number,
-    unit: string
   ): JSX.Element {
     return (
       <Grid mt={[3]} gridTemplateColumns={["1fr"]}>
@@ -89,7 +89,7 @@ export class AccountStatusBars extends React.Component<Props> {
             {t("account.summary.self")}
           </Cell>
           <Cell alignSelf="right" justifySelf="right">
-            {staked} {unit}
+            {staked} {Config.chain_core_symbol_code}
           </Cell>
         </Grid>
         {other === 0.0 ? null : (
@@ -98,7 +98,7 @@ export class AccountStatusBars extends React.Component<Props> {
               {t("account.summary.tooltip.other")}
             </Cell>
             <Cell alignSelf="right" justifySelf="right">
-              {numeral(other).format("0,0.0000")} {unit}
+              {numeral(other).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
             </Cell>
           </Grid>
         )}
@@ -107,7 +107,7 @@ export class AccountStatusBars extends React.Component<Props> {
             {title}
           </Cell>
           <Cell fontWeight={["700"]} alignSelf="right" justifySelf="right">
-            {numeral(total).format("0,0.0000")} {unit}
+            {numeral(total).format(Config.chain_core_asset_format)} {Config.chain_core_symbol_code}
           </Cell>
         </Grid>
       </Grid>
@@ -153,7 +153,6 @@ export class AccountStatusBars extends React.Component<Props> {
     totalCpu: string,
     stakedCpu: string,
     delegatedCpu: number,
-    unit: string
   ) {
     const cpuBandwidthTitle = t("account.summary.tooltip.cpuTitle")
     let amount = cpuBandwidthTotal - cpuBandwidthContent[0]
@@ -184,7 +183,7 @@ export class AccountStatusBars extends React.Component<Props> {
             <StatusBar content={cpuBandwidthContent} total={cpuBandwidthTotal} />
           </Cell>
         </Grid>
-        {this.renderStakeDetails(cpuBandwidthTitle, totalCpu, stakedCpu, delegatedCpu, unit)}
+        {this.renderStakeDetails(cpuBandwidthTitle, totalCpu, stakedCpu, delegatedCpu)}
       </Cell>
     )
   }
@@ -195,7 +194,6 @@ export class AccountStatusBars extends React.Component<Props> {
     totalNetwork: string,
     stakedNetwork: string,
     delegatedNetwork: number,
-    unit: string
   ) {
     const networkBandwidthTitle = t("account.summary.tooltip.networkTitle")
     let amount = networkBandwidthTotal - networkBandwidthContent[0]
@@ -232,7 +230,6 @@ export class AccountStatusBars extends React.Component<Props> {
           totalNetwork,
           stakedNetwork,
           delegatedNetwork,
-          unit
         )}
       </Cell>
     )
@@ -248,7 +245,7 @@ export class AccountStatusBars extends React.Component<Props> {
 
     const totalNetwork = extractValueWithUnits(account.total_resources.net_weight)[0]
     const totalCpu = extractValueWithUnits(account.total_resources.cpu_weight)[0]
-    const [stakedCpu, unit] = extractValueWithUnits(selfDelegatedBandwidth.cpu_weight)
+    const stakedCpu = extractValueWithUnits(selfDelegatedBandwidth.cpu_weight)[0]
     const stakedNetwork = extractValueWithUnits(selfDelegatedBandwidth.net_weight)[0]
     const delegatedNetwork = parseFloat(totalNetwork) - parseFloat(stakedNetwork)
     const delegatedCpu = parseFloat(totalCpu) - parseFloat(stakedCpu)
@@ -263,7 +260,6 @@ export class AccountStatusBars extends React.Component<Props> {
             totalCpu,
             stakedCpu,
             delegatedCpu,
-            unit
           )}
           {this.renderNetwork(
             networkBandwidthContent,
@@ -271,7 +267,6 @@ export class AccountStatusBars extends React.Component<Props> {
             totalNetwork,
             stakedNetwork,
             delegatedNetwork,
-            unit
           )}
         </Grid>
       </AccountStatusBarsContainer>

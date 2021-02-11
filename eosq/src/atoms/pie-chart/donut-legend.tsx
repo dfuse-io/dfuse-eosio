@@ -5,6 +5,7 @@ import { styled } from "../../theme"
 import { Text } from "../text/text.component"
 import numeral from "numeral"
 import { ColorTile } from "../color-tile/color-tile"
+import { Config } from "../../models/config"
 
 const DonutChartLegendContainer: React.ComponentType<any> = styled.div`
   margin-bottom: 5px;
@@ -17,7 +18,7 @@ const renderEntry = (entry: DonutData, units: string) => {
 
   return (
     <Text fontSize={[3, 2]} alignSelf="center" lineHeight="20px" fontWeight="bold">
-      {numeral(entry.value).format("0,0.0000")} {units}
+      {numeral(entry.value).format(Config.chain_core_asset_format)} {units}
     </Text>
   )
 }
@@ -47,7 +48,7 @@ const renderContent = (data: DonutData[], legendColors: string[], units: string)
 export const DonutChartLegend: React.SFC<{ id: string; params: DonutParams; units: string }> = ({
   id,
   params,
-  units
+  units,
 }) => {
   return (
     <DonutChartLegendContainer>

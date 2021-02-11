@@ -1,8 +1,6 @@
 import * as React from "react"
-// temp ignore for dev
-
 import { DataLoading, DataError, DataEmpty } from "@dfuse/explorer"
-import { log } from "../../services/logger"
+import { debugLog } from "../../services/logger"
 import { TaskStatusAware } from "mobx-task"
 import { observer } from "mobx-react"
 import { RouteComponentProps } from "react-router"
@@ -93,7 +91,7 @@ export class ListContentLoaderComponent<
 
   renderError = (error?: Error) => {
     if (error && error.name !== "not_found") {
-      log.error("An error occurred while fetching data.", error)
+      debugLog("An error occurred while fetching data.", error)
     }
 
     return <DataError error={error} />

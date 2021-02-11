@@ -40,20 +40,11 @@ import (
 type DB interface {
 	trxdb.DBReader
 
-	// GetLastWrittenBlockID(ctx context.Context) (out string, err error)
-	// GetBlock(ctx context.Context, id string) (*mdl.BlockRow, error)
-	//GetBlocksByNum(ctx context.Context, num uint32) ([]*mdl.BlockRow, error)
-	//ListBlocks(ctx context.Context, startBlockNum uint32, limit int) ([]*mdl.BlockRow, error)
-	//ListSiblingBlocks(ctx context.Context, blockNum uint32, spread uint32) ([]*mdl.BlockRow, error)
 	GetTransactionWithExpectedBlockID(ctx context.Context, id string, expectedBlockID string) (*pbcodec.TransactionLifecycle, error)
 	GetTransaction(ctx context.Context, id string) (*pbcodec.TransactionLifecycle, error)
 	GetTransactions(ctx context.Context, ids []string) ([]*pbcodec.TransactionLifecycle, error)
 	ListTransactionsForBlockID(ctx context.Context, blockId string, startKey string, limit int) (*mdl.TransactionList, error)
 	ListMostRecentTransactions(ctx context.Context, startKey string, limit int) (*mdl.TransactionList, error)
-	// GetIrreversibleIDAtBlockNum(ctx context.Context, num uint32) (blockID string, err error)
-	// GetIrreversibleIDAtBlockID(ctx context.Context, ID string) (blockID string, err error)
-	// GetAccount(ctx context.Context, name string) (account *mdl.AccountResponse, err error)
-	// ListAccountNames(ctx context.Context, concurrentReadCount uint32) (accountNames []eos.AccountName, err error)
 }
 
 // TRXDB
@@ -369,7 +360,7 @@ func (db *TRXDB) GetBlock(ctx context.Context, id string) (out *pbcodec.BlockWit
 func (db *TRXDB) GetBlockByNum(ctx context.Context, num uint32) (out []*pbcodec.BlockWithRefs, err error) {
 	out, err = db.DBReader.GetBlockByNum(ctx, num)
 	if err == kvdb.ErrNotFound {
-		return nil, DBBlockNotFoundError(ctx, string(num))
+		return nil, DBBlockNotFoundError(ctx, strconv.FormatUint(uint64(num), 10))
 	}
 	if err != nil {
 		logging.Logger(ctx, zlog).Error("cannot get blocks by number", zap.Uint32("block_num", num), zap.Error(err))
@@ -462,7 +453,7 @@ func (db *MockDB) GetAccount(ctx context.Context, name string) (out *pbcodec.Acc
 	}, nil
 }
 
-func (db *MockDB) ListAccountNames(ctx context.Context, concurrentReadCount uint32) (out []string, err error) {
+func (db *MockDB) ListAccountNames(ctx context.Context) (out []string, err error) {
 	return []string{"eoscanadacom"}, nil
 }
 

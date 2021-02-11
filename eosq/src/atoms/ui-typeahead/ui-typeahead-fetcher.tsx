@@ -6,13 +6,13 @@ interface Props {
   searchValue: string | null
   fetchData: (input: string, options: any) => Promise<SuggestionSection[]>
   onLoaded: (suggestions?: SuggestionSection[], error?: Error) => void
-  children: FetcherChildrenFunction<any>
+  children: FetcherChildrenFunction
 }
 
-export type FetcherControllerStateAndHelpers<Item> = State
+export type FetcherControllerStateAndHelpers = State
 
-export type FetcherChildrenFunction<Item> = (
-  options: FetcherControllerStateAndHelpers<Item>
+export type FetcherChildrenFunction = (
+  options: FetcherControllerStateAndHelpers
 ) => React.ReactNode
 
 interface State {

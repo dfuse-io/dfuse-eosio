@@ -43,7 +43,7 @@ func init() {
 				GRPCListenAddr:  viper.GetString("search-forkresolver-grpc-listen-addr"),
 				HttpListenAddr:  viper.GetString("search-forkresolver-http-listen-addr"),
 				PublishInterval: viper.GetDuration("search-common-mesh-publish-interval"),
-				IndicesPath:     viper.GetString("search-forkresolver-indices-path"),
+				IndicesPath:     mustReplaceDataDir(dfuseDataDir, viper.GetString("search-forkresolver-indices-path")),
 				BlocksStoreURL:  mustReplaceDataDir(dfuseDataDir, viper.GetString("common-blocks-store-url")),
 			}, &forkresolverApp.Modules{
 				BlockFilter: runtime.BlockFilter.TransformInPlace,

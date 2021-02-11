@@ -3,6 +3,7 @@ package filtering
 import (
 	"container/heap"
 	"fmt"
+	"strings"
 
 	"github.com/dfuse-io/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
@@ -38,6 +39,27 @@ func NewBlockFilter(includeProgramCode, excludeProgramCode, systemActionsInclude
 	}, nil
 }
 
+var includeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "include",
+	valueWhenNoop: true,
+}
+
+var excludeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "exclude",
+	valueWhenNoop: false,
+}
+
+var systemIncludeNOOP = &CELFilter{
+	code:          "",
+	program:       nil,
+	name:          "system include",
+	valueWhenNoop: false,
+}
+
 // TransformInPlace received a `bstream.Block` pointer, unpack it's native counterpart, a `pbcodec.Block` pointer
 // in our case and transforms it in place, modifiying the pointed object. This means that future `ToNative()` calls
 // on the bstream block will return a filtered version of this block.
@@ -57,25 +79,23 @@ func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 	systemActions := f.SystemActionsIncludeProgram.choose(blk.Number)
 
 	block := blk.ToNative().(*pbcodec.Block)
-	if !block.FilteringApplied {
-		transfromInPlace(block, include, exclude, systemActions)
+
+	if filterExprContains(block.FilteringIncludeFilterExpr, include.code) {
+		include = includeNOOP
+	}
+	if filterExprContains(block.FilteringExcludeFilterExpr, exclude.code) {
+		exclude = excludeNOOP
+	}
+	if include.IsNoop() && exclude.IsNoop() {
 		return nil
 	}
 
-	if block.FilteringIncludeFilterExpr != include.code ||
-		block.FilteringExcludeFilterExpr != exclude.code ||
-		block.FilteringSystemActionsIncludeFilterExpr != systemActions.code {
-		panic(fmt.Sprintf("different block filter already applied, include [applied %q, trying %q], exclude [applied %q, trying %q] and system include [applied %q, trying %q]",
-			block.FilteringIncludeFilterExpr,
-			include.code,
-			block.FilteringExcludeFilterExpr,
-			exclude.code,
-			block.FilteringSystemActionsIncludeFilterExpr,
-			systemActions.code,
-		))
+	if filterExprContains(block.FilteringSystemActionsIncludeFilterExpr, systemActions.code) {
+		systemActions = systemIncludeNOOP
 	}
-	return nil
 
+	transformInPlaceV2(block, include, exclude, systemActions)
+	return nil
 }
 
 type kv struct {
@@ -137,11 +157,15 @@ func getTop5ActorsForTrx(trx *pbcodec.TransactionTrace) (topActors []string) {
 	return
 }
 
-func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CELFilter) {
+func transformInPlaceV2(block *pbcodec.Block, include, exclude, systemActions *CELFilter) {
+	wasFiltered := block.FilteringApplied
+
 	block.FilteringApplied = true
-	block.FilteringIncludeFilterExpr = include.code
-	block.FilteringExcludeFilterExpr = exclude.code
-	block.FilteringSystemActionsIncludeFilterExpr = systemActions.code
+
+	// more explanation here https://github.com/dfuse-io/dfuse-eosio/issues/133
+	block.FilteringIncludeFilterExpr = combineFilters(block.FilteringIncludeFilterExpr, include)
+	block.FilteringExcludeFilterExpr = combineFilters(block.FilteringExcludeFilterExpr, exclude)
+	block.FilteringSystemActionsIncludeFilterExpr = combineFilters(block.FilteringSystemActionsIncludeFilterExpr, systemActions)
 
 	var filteredTrxTrace []*pbcodec.TransactionTrace
 	filteredExecutedInputActionCount := uint32(0)
@@ -149,19 +173,30 @@ func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CEL
 
 	excludedTransactionIds := map[string]bool{}
 
-	for _, trxTrace := range block.UnfilteredTransactionTraces {
+	trxTraces := block.UnfilteredTransactionTraces
+	trxs := block.UnfilteredTransactions
+	implicitTrxs := block.UnfilteredImplicitTransactionOps
+	if wasFiltered {
+		trxTraces = block.FilteredTransactionTraces
+		trxs = block.FilteredTransactions
+		implicitTrxs = block.FilteredImplicitTransactionOps
+	}
+
+	for _, trxTrace := range trxTraces {
 		trxTraceAddedToFiltered := false
 		trxTraceExcluded := true
-		var trxTop5Actors []string //per transaction
-		getTrxTop5Actors := func() []string {
-			if trxTop5Actors == nil {
-				trxTop5Actors = getTop5ActorsForTrx(trxTrace)
-			}
-			return trxTop5Actors
-		}
+
+		memoizableTrxTrace := &MemoizableTrxTrace{TrxTrace: trxTrace}
 
 		for _, actTrace := range trxTrace.ActionTraces {
-			passes, isSystem := shouldProcess(trxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
+			if wasFiltered {
+				if !actTrace.FilteringMatched { // skip previously excluded
+					continue
+				}
+				actTrace.FilteringMatched = false // expected default to be false
+			}
+
+			passes, isSystem := shouldProcess(memoizableTrxTrace, actTrace, include, exclude, systemActions)
 			if !passes {
 				continue
 			}
@@ -181,15 +216,16 @@ func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CEL
 		}
 
 		if trxTrace.FailedDtrxTrace != nil {
-			trxTop5Actors = nil
-			getTrxTop5Actors = func() []string {
-				if trxTop5Actors == nil {
-					trxTop5Actors = getTop5ActorsForTrx(trxTrace.FailedDtrxTrace)
-				}
-				return trxTop5Actors
-			}
+			memoizableFailedDTrxTrace := &MemoizableTrxTrace{TrxTrace: trxTrace.FailedDtrxTrace}
 			for _, actTrace := range trxTrace.FailedDtrxTrace.ActionTraces {
-				passes, isSystem := shouldProcess(trxTrace.FailedDtrxTrace, actTrace, getTrxTop5Actors, include, exclude, systemActions)
+				if wasFiltered {
+					if !actTrace.FilteringMatched { // skip previously excluded
+						continue
+					}
+					actTrace.FilteringMatched = false // expected default to be false
+				}
+
+				passes, isSystem := shouldProcess(memoizableFailedDTrxTrace, actTrace, include, exclude, systemActions)
 				if !passes {
 					continue
 				}
@@ -218,13 +254,13 @@ func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CEL
 			zlog.Debug("filtering excluded transaction traces, let's filter out excluded one from transaction arrays", zap.Int("excluded_count", len(excludedTransactionIds)))
 		}
 
-		for _, trx := range block.UnfilteredTransactions {
+		for _, trx := range trxs {
 			if _, isExcluded := excludedTransactionIds[trx.Id]; !isExcluded {
 				filteredTrx = append(filteredTrx, trx)
 			}
 		}
 
-		for _, trxOp := range block.UnfilteredImplicitTransactionOps {
+		for _, trxOp := range implicitTrxs {
 			if _, isExcluded := excludedTransactionIds[trxOp.TransactionId]; !isExcluded {
 				filteredImplicitTrxOp = append(filteredImplicitTrxOp, trxOp)
 			}
@@ -232,15 +268,15 @@ func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CEL
 
 		if traceEnabled {
 			zlog.Debug("filtered transactions",
-				zap.Int("original_trx", len(block.UnfilteredTransactions)),
-				zap.Int("original_implicit_trx", len(block.UnfilteredImplicitTransactionOps)),
+				zap.Int("original_trx", len(trxs)),
+				zap.Int("original_implicit_trx", len(implicitTrxs)),
 				zap.Int("filtered_trx", len(filteredTrx)),
 				zap.Int("filtered_implicit_trx", len(filteredImplicitTrxOp)),
 			)
 		}
 	} else {
-		filteredTrx = block.UnfilteredTransactions
-		filteredImplicitTrxOp = block.UnfilteredImplicitTransactionOps
+		filteredTrx = trxs
+		filteredImplicitTrxOp = implicitTrxs
 	}
 
 	block.UnfilteredTransactions = nil
@@ -258,19 +294,42 @@ func transfromInPlace(block *pbcodec.Block, include, exclude, systemActions *CEL
 	block.FilteredImplicitTransactionOps = filteredImplicitTrxOp
 }
 
-func shouldProcess(trxTrace *pbcodec.TransactionTrace, actTrace *pbcodec.ActionTrace, trxTop5ActorsGetter func() []string, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
-	activation := actionTraceActivation{trace: actTrace, trxScheduled: trxTrace.Scheduled, trxActionCount: len(trxTrace.ActionTraces), trxTop5ActorsGetter: trxTop5ActorsGetter}
+func filterExprContains(appliedFilters, newFilter string) bool {
+	if newFilter == "" {
+		return true
+	}
+	applied := strings.Split(appliedFilters, ";;;")
+	for _, x := range applied {
+		if newFilter == x {
+			return true
+		}
+	}
+	return false
+}
+
+func combineFilters(prev string, next *CELFilter) string {
+	if prev == "" {
+		return next.code
+	}
+	if next.IsNoop() {
+		return prev
+	}
+	return fmt.Sprintf("%s;;;%s", prev, next.code)
+}
+
+func shouldProcess(trxTrace *MemoizableTrxTrace, actTrace *pbcodec.ActionTrace, include, exclude, systemActions *CELFilter) (pass bool, isSystem bool) {
+	activation := NewActionTraceActivation(actTrace, trxTrace, "")
 	// If the include program does not match, there is nothing more to do here
-	if !include.match(&activation) {
-		if systemActions.match(&activation) {
+	if !include.match(activation) {
+		if systemActions.match(activation) {
 			return true, true
 		}
 		return false, false
 	}
 
 	// At this point, the inclusion expr matched, let's check it was included but should be now excluded based on the exclusion filter
-	if exclude.match(&activation) {
-		if systemActions.match(&activation) {
+	if exclude.match(activation) {
+		if systemActions.match(activation) {
 			return true, true
 		}
 		return false, false

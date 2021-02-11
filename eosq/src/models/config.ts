@@ -1,4 +1,38 @@
-const windowTS = window as any
+import { debugLog } from "../services/logger"
+
+export interface EosqNetwork {
+  id: string
+  name: string
+  url: string
+  is_test?: boolean
+  logo?: string
+  logo_text?: string
+  page_title?: string
+  favicon_template?: string
+}
+
+interface EosqConfig {
+  version: number
+  isLocalhost: boolean
+
+  dfuse_io_endpoint: string
+  dfuse_io_api_key: string
+  dfuse_auth_endpoint: string
+  secure: boolean
+
+  network_id: string
+  network?: EosqNetwork
+  available_networks: EosqNetwork[]
+
+  chain_core_symbol: string
+  chain_core_symbol_code: string
+  chain_core_symbol_precision: number
+  chain_core_asset_format: string
+
+  display_price: boolean
+  disable_segments: boolean
+  disable_sentry: boolean
+}
 
 // Extracted from React register service worker part to detect localhost
 const isLocalhost = Boolean(
@@ -13,58 +47,42 @@ const isEnvSet = (value: string | undefined): boolean => value != null && value 
 
 const newDefaultConfig = () => {
   const core = {
-    current_network: process.env.REACT_APP_EOSQ_CURRENT_NETWORK || "local",
+    version: 1,
+    network_id:
+      process.env.REACT_APP_EOSQ_NETWORK_ID ||
+      process.env.REACT_APP_EOSQ_CURRENT_NETWORK ||
+      "local",
+    chain_core_symbol: "4,EOS",
     dfuse_auth_endpoint: process.env.REACT_APP_DFUSE_AUTH_URL || "null://",
     dfuse_io_api_key: process.env.REACT_APP_DFUSE_API_KEY || "web_1234567890abc",
     dfuse_io_endpoint: process.env.REACT_APP_DFUSE_API_NETWORK || "localhost:8080",
     secure: process.env.REACT_APP_DFUSE_API_NETWORK_SECURE === "true",
     display_price: false,
-    price_ticker_name: "EOS",
-    version: 1,
+
     available_networks: [
       {
         id: "local",
         is_test: true,
-        logo: "/images/eos-mainnet.png",
         name: "Local Network",
-        url: "http://localhost:8080"
-      },
-      {
-        id: "eos-mainnet",
-        is_test: false,
-        logo: "/images/eos-mainnet.png",
-        name: "EOS Mainnet",
-        url: "https://eosq.app"
+        url: "http://localhost:8080",
       },
       {
         id: "eos-kylin",
         is_test: true,
-        logo: "/images/eos-kylin.png",
         name: "Kylin Testnet",
-        url: "https://kylin.eosq.app"
-      },
-      {
-        id: "eos-eosio",
-        is_test: true,
-        logo: "/images/eos-eosio.png",
-        name: "EOSIO Testnet",
-        url: "https://eosio.eosq.app"
-      },
-      {
-        id: "eos-worbli",
-        is_test: false,
-        logo: "/images/eos-worbli.png",
-        name: "Worbli",
-        url: "https://worbli.eosq.app"
+        url: "https://kylin.eosq.app",
       },
       {
         id: "wax-mainnet",
-        is_test: true,
-        logo: "/images/wax-mainnet.png",
+        is_test: false,
         name: "WAX Mainnet",
-        url: "https://wax.eosq.app"
-      }
-    ]
+        url: "https://wax.eosq.app",
+      },
+    ],
+  }
+
+  if (isEnvSet(process.env.REACT_APP_EOSQ_CHAIN_CORE_SYMBOL)) {
+    core.chain_core_symbol = process.env.REACT_APP_EOSQ_CHAIN_CORE_SYMBOL!
   }
 
   if (isEnvSet(process.env.REACT_APP_EOSQ_DISPLAY_PRICE)) {
@@ -82,34 +100,30 @@ const newDefaultConfig = () => {
   return core
 }
 
-if (!windowTS.TopLevelConfig) {
-  windowTS.TopLevelConfig = newDefaultConfig()
+function newConfig() {
+  let baseConfig = (window as any).TopLevelConfig
+  if (!baseConfig) {
+    baseConfig = newDefaultConfig()
+  } else {
+    debugLog("Migrating config received from server", baseConfig)
+  }
+
+  const coreSymbolParts = baseConfig.chain_core_symbol.split(",")
+  const coreSymbolPrecision = parseInt(coreSymbolParts[0])
+  const coreSymbolCode = coreSymbolParts[1]
+
+  const config = {
+    ...baseConfig,
+    chain_core_symbol_precision: coreSymbolPrecision,
+    chain_core_symbol_code: coreSymbolCode,
+    chain_core_asset_format: "0,0." + "0".repeat(coreSymbolPrecision),
+    isLocalhost,
+  } as EosqConfig
+
+  config.network = config.available_networks.find((network) => network.id === config.network_id)
+
+  debugLog("Loaded config %O", config)
+  return config
 }
 
-export interface EosqNetwork {
-  id: string
-  name: string
-  is_test: false
-  logo: string
-  url: string
-}
-
-interface EosqConfig {
-  version: number
-  isLocalhost: boolean
-
-  dfuse_io_endpoint: string
-  dfuse_io_api_key: string
-  dfuse_auth_endpoint: string
-
-  current_network: string
-  available_networks: EosqNetwork[]
-  display_price: boolean
-  price_ticker_name: string
-
-  secure: boolean
-  disable_segments: boolean
-  disable_sentry: boolean
-}
-
-export const Config = { ...windowTS.TopLevelConfig, isLocalhost } as EosqConfig
+export const Config = newConfig()

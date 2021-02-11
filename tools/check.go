@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -34,7 +35,7 @@ var errStopWalk = errors.New("stop walk")
 var checkCmd = &cobra.Command{Use: "check", Short: "Various checks for deployment, data integrity & debugging"}
 
 var checkAccounthistShardsCmd = &cobra.Command{
-	Use:   "accounthist-shards {accounthist-mode} {dsn}",
+	Use:   "accounthist-shards <accounthist-mode> <store-dsn>",
 	Short: "Checks to see if all Accounthist shard are contiguous",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkAccounthistShardE,
@@ -43,25 +44,31 @@ var checkMergedBlocksCmd = &cobra.Command{
 	// TODO: Not sure, it's now a required thing, but we could probably use the same logic as `start`
 	//       and avoid altogether passing the args. If this would also load the config and everything else,
 	//       that would be much more seamless!
-	Use:   "merged-blocks {store-url}",
+	Use:   "merged-blocks <store-url>",
 	Short: "Checks for any holes in merged blocks as well as ensuring merged blocks integrity",
 	Args:  cobra.ExactArgs(1),
 	RunE:  checkMergedBlocksE,
 }
 var checkTrxdbBlocksCmd = &cobra.Command{
-	Use:   "trxdb-blocks {database-dsn}",
+	Use:   "trxdb-blocks <store-dsn>",
 	Short: "Checks for any holes in the trxdb database",
 	Args:  cobra.ExactArgs(1),
 	RunE:  checkTrxdbBlocksE,
 }
+var checkStateDBConsistencyCmd = &cobra.Command{
+	Use:   "statedb-consistency <store-dsn> <keys>...",
+	Short: "Check if all received StateDB storage keys (taken from another store or from sharding write requests) have been correctly comitted to the storage engine",
+	Args:  cobra.MinimumNArgs(2),
+	RunE:  checkStateDBConsistencyE,
+}
 var checkStateDBReprocSharderCmd = &cobra.Command{
-	Use:   "statedb-reproc-sharder {store} {shard-count}",
+	Use:   "statedb-reproc-sharder <store-dsn> <shard-count>",
 	Short: "Checks to see if all StateDB reprocessing shards are present in the store",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkStateDBReprocSharderE,
 }
 var checkStateDBReprocInjectorCmd = &cobra.Command{
-	Use:   "statedb-reproc-injector {dsn} {shard-count}",
+	Use:   "statedb-reproc-injector <store-dsn> <shard-count>",
 	Short: "Checks to see if all StateDB reprocessing injector are aligned in database",
 	Args:  cobra.ExactArgs(2),
 	RunE:  checkStateDBReprocInjectorE,
@@ -71,6 +78,7 @@ func init() {
 	Cmd.AddCommand(checkCmd)
 	checkCmd.AddCommand(checkMergedBlocksCmd)
 	checkCmd.AddCommand(checkTrxdbBlocksCmd)
+	checkCmd.AddCommand(checkStateDBConsistencyCmd)
 	checkCmd.AddCommand(checkStateDBReprocSharderCmd)
 	checkCmd.AddCommand(checkStateDBReprocInjectorCmd)
 	checkCmd.AddCommand(checkAccounthistShardsCmd)
@@ -134,6 +142,87 @@ type blockNum uint64
 
 func (b blockNum) String() string {
 	return "#" + strings.ReplaceAll(humanize.Comma(int64(b)), ",", " ")
+}
+
+func checkStateDBConsistencyE(cmd *cobra.Command, args []string) error {
+	kv, err := store.New(args[0], store.WithEmptyValue())
+	if err != nil {
+		return err
+	}
+
+	keys := args[1:]
+
+	var missingKeys []string
+	var foundKeys []string
+	var duplicateKeys []string
+
+	for _, key := range keys {
+		prefixKey, err := stateDBStringToKey(key)
+		if err != nil {
+			return fmt.Errorf("prefix key: %w", err)
+		}
+
+		err = func() error {
+			prefixCtx, cancelScan := context.WithCancel(cmd.Context())
+			defer cancelScan()
+
+			prefix := append([]byte{0x00}, prefixKey...)
+			it := kv.Prefix(prefixCtx, prefix, math.MaxInt64, store.KeyOnly())
+
+			count := 0
+			for it.Next() {
+				count++
+			}
+
+			if it.Err() != nil {
+				return fmt.Errorf("prefix scan %x: %w", prefix, err)
+			}
+
+			if count == 0 {
+				missingKeys = append(missingKeys, key)
+			} else {
+				foundKeys = append(foundKeys, key)
+				if count > 1 {
+					duplicateKeys = append(duplicateKeys, key)
+				}
+			}
+
+			return nil
+		}()
+		if err != nil {
+			return err
+		}
+
+		fmt.Print(".")
+	}
+
+	printRateStats := func(field string, count int, total int) {
+		fmt.Printf("%s keys %.2f%% (%d/%d)\n", field, (float64(count) * 100.0 / float64(total)), count, total)
+	}
+
+	fmt.Print("\n", "\n")
+	fmt.Println("Consistency Stats")
+	printRateStats("Found", len(foundKeys), len(keys))
+	printRateStats("Missing", len(missingKeys), len(keys))
+	printRateStats("Duplicate", len(duplicateKeys), len(keys))
+
+	if len(missingKeys) > 0 {
+		fmt.Println()
+		fmt.Println("Missing keys")
+		for _, missingKey := range missingKeys {
+			fmt.Println("- ", missingKey)
+		}
+	}
+
+	if len(duplicateKeys) > 0 {
+		fmt.Println()
+		fmt.Println("Duplicate keys")
+		for _, duplicateKey := range duplicateKeys {
+			fmt.Println("- ", duplicateKey)
+		}
+	}
+
+	return nil
 }
 
 func checkStateDBReprocSharderE(cmd *cobra.Command, args []string) error {
@@ -295,7 +384,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	expected = uint32(blockRange.Start)
+	expected = roundToBundleStartBlock(uint32(blockRange.Start), fileBlockSize)
 	currentStartBlk := uint32(blockRange.Start)
 	seenFilters := map[string]FilteringFilters{}
 
@@ -318,7 +407,7 @@ func checkMergedBlocksE(cmd *cobra.Command, args []string) error {
 
 		count++
 		baseNum, _ := strconv.ParseUint(match[1], 10, 32)
-		if baseNum+uint64(fileBlockSize) < blockRange.Start {
+		if baseNum+uint64(fileBlockSize)-1 < blockRange.Start {
 			zlog.Debug("base num lower then block range start, quitting")
 			return nil
 		}
@@ -543,7 +632,7 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 	startBlock := blockRange.Start
 	endBlock := blockRange.Stop
 
-	fmt.Printf("Checking block holes in trxdb at %s, from %d to %d\n", dsn, startBlock, endBlock)
+	fmt.Printf("Checking block holes (in reverser order) in trxdb at %s, from %d to %d\n", dsn, endBlock, startBlock)
 
 	store, err := store.New(dsn)
 	if err != nil {
@@ -574,7 +663,7 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 			blockNum := uint64(eos.BlockNum(blockID))
 
 			if blockNum%100000 == 0 {
-				fmt.Println("Reading irr block", blockNum)
+				fmt.Println("✅ Reading irr block", blockNum)
 			}
 
 			if !started {
@@ -586,7 +675,9 @@ func checkTrxdbBlocksE(cmd *cobra.Command, args []string) error {
 			difference := previousNum - blockNum
 
 			if difference > 1 {
-				fmt.Printf("❌ Missing blocks range %d - %d\n", blockNum+1, previousNum-1)
+				fmt.Printf("✅ Reading irr block  %d\n", previousNum)
+				fmt.Printf("❌ Missing blocks range %d - %d\n", previousNum-1, blockNum+1)
+				fmt.Printf("✅ Reading irr block %d\n", blockNum)
 				holeFound = true
 			}
 
