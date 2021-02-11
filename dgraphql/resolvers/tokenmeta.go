@@ -15,6 +15,9 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+var accountBalanceCursorDecoder = dgraphql.NewOpaqueProtoCursorDecoder(func() proto.Message { return &pbtokenmeta.AccountBalanceCursor{} })
+var tokenCursorDecoder = dgraphql.NewOpaqueProtoCursorDecoder(func() proto.Message { return &pbtokenmeta.TokenCursor{} })
+
 type SortOrder string
 
 const (
@@ -77,9 +80,7 @@ func (r *Root) QueryTokens(ctx context.Context, args *TokensRequest) (*TokenConn
 		return newEmptyTokenConnection(), nil
 	}
 
-	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
-		return &pbtokenmeta.TokenCursor{}
-	})
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, tokenCursorDecoder)
 	if err != nil {
 		return nil, dgraphql.Errorf(ctx, "%s", err)
 	}
@@ -208,9 +209,7 @@ func (r *Root) QueryAccountBalances(ctx context.Context, args *AccountBalancesRe
 		return newEmptyAccountBalanceConnection(), nil
 	}
 
-	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
-		return &pbtokenmeta.AccountBalanceCursor{}
-	})
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, accountBalanceCursorDecoder)
 	if err != nil {
 		return nil, dgraphql.Errorf(ctx, "%s", err)
 	}
@@ -332,9 +331,7 @@ func (r *Root) QueryTokenBalances(ctx context.Context, args *TokenBalancesReques
 		return newEmptyAccountBalanceConnection(), nil
 	}
 
-	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, func() proto.Message {
-		return &pbtokenmeta.AccountBalanceCursor{}
-	})
+	paginator, err := dgraphql.NewPaginator(args.Limit, nil, nil, args.Cursor, 100, accountBalanceCursorDecoder)
 	if err != nil {
 		return nil, dgraphql.Errorf(ctx, "%s", err)
 	}

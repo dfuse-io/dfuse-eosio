@@ -427,7 +427,13 @@ func ToV1ActionTrace(in *pbcodec.ActionTrace) (*v1.ActionTrace, error) {
 		return nil, fmt.Errorf("marshaling action exception %v: %w", in.Exception, err)
 	}
 
-	out := &v1.ActionTrace{}
+	out := &v1.ActionTrace{
+		InlineTraces:                           []*v1.ActionTrace{},
+		Receiver:                               eos.AN(in.Receiver),
+		ClosestUnnotifiedAncestorActionOrdinal: in.ClosestUnnotifiedAncestorActionOrdinal,
+		CreatorActionOrdinal:                   in.CreatorActionOrdinal,
+		ActionOrdinal:                          in.ActionOrdinal,
+	}
 	out.Receipt = ToV1ActionReceipt(string(in.Receiver), in.Receipt)
 	if in.Action != nil {
 		out.Action = *(codec.ActionToEOS(in.Action))

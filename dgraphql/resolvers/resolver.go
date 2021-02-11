@@ -36,7 +36,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgraphql"
 	"github.com/dfuse-io/dgraphql/analytics"
-	"github.com/dfuse-io/dgraphql/metrics"
 	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/dmetering"
@@ -439,8 +438,6 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 	zl := logging.Logger(ctx, zlog)
 	c := make(chan *SearchTransactionForwardResponse) // FIXME: should be buffered at least a bit
 
-	metrics.InflightSubscriptionCount.Inc()
-
 	// TODO: if HighBlockNum is not there.. we pass HighBlockUnbounded = true
 	// EVENTUALLY
 
@@ -550,7 +547,6 @@ func (r *Root) streamSearchTracesBoth(forward bool, ctx context.Context, args St
 
 	// search results -> Hammer
 	go func() {
-		defer metrics.InflightSubscriptionCount.Dec()
 		defer hammer.Close()
 		for {
 			match, err := streamCli.Recv()

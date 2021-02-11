@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -30,6 +31,7 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
+	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
@@ -81,10 +83,10 @@ type TxPusher struct {
 }
 
 type PushResponse struct {
-	TransactionID string                `json:"transaction_id"`
-	BlockID       string                `json:"block_id"`
-	BlockNum      uint32                `json:"block_num"`
-	Processed     *eos.TransactionTrace `json:"processed"`
+	TransactionID string          `json:"transaction_id"`
+	BlockID       string          `json:"block_id"`
+	BlockNum      uint32          `json:"block_num"`
+	Processed     json.RawMessage `json:"processed"`
 }
 
 func NewTxPusher(API *eos.API, subscriptionHub *hub.SubscriptionHub, headInfoHub *eosws.HeadInfoHub, retries int, extraAPIs []*eos.API) *TxPusher {
@@ -314,12 +316,30 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case trxTrace := <-trxTraceFoundChan:
 			blockID := trxTrace.ProducerBlockId
 
-			eosTrace := codec.TransactionTraceToEOS(trxTrace)
+			var processed json.RawMessage
+			if os.Getenv("EOSWS_PUSH_V1_OUTPUT") == "true" {
+				v1tr, err := mdl.ToV1TransactionTrace(trxTrace)
+				if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
+					return
+				}
+				out, err := json.Marshal(v1tr)
+				if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
+					return
+				}
+				processed = out
+			} else {
+				eosTrace := codec.TransactionTraceToEOS(trxTrace)
+				out, err := json.Marshal(eosTrace)
+				if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
+					return
+				}
+				processed = out
+			}
 
 			resp := &PushResponse{
 				BlockID:       blockID,
 				BlockNum:      eos.BlockNum(blockID),
-				Processed:     eosTrace,
+				Processed:     processed,
 				TransactionID: trxID,
 			}
 
