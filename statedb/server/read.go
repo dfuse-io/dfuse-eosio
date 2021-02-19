@@ -17,6 +17,7 @@ package server
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/dfuse-io/bstream"
@@ -116,6 +117,11 @@ func (srv *EOSServer) readContractStateTable(
 		speculativeWrites,
 	)
 	if err != nil {
+		if errors.Is(err, fluxdb.ErrTemporarlyExcludedRange) {
+			contract, table, scope := tablet.Explode()
+			return nil, nil, statedb.HackDataTableExcludedError(ctx, eos.AccountName(contract), eos.TableName(table), eos.AccountName(scope))
+		}
+
 		return nil, nil, fmt.Errorf("read tablet at: %w", err)
 	}
 

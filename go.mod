@@ -34,7 +34,7 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20200520155921-64414618efaf
 	github.com/dfuse-io/firehose v0.1.1-0.20210118213034-5bdcff6a14a7
-	github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01
+	github.com/dfuse-io/fluxdb v0.0.0-20210219153931-e9858e0af276
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
 	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70

@@ -78,3 +78,11 @@ func DataRowNotFoundError(ctx context.Context, account eos.AccountName, table eo
 		"primary_key", primaryKey,
 	)
 }
+
+func HackDataTableExcludedError(ctx context.Context, account eos.AccountName, table eos.TableName, scope eos.AccountName) *derr.ErrorResponse {
+	return derr.HTTPBadRequestError(ctx, nil, derr.C("data_table_excluded_error"), "This table has been temporarly excluded from being readable.",
+		"account", account,
+		"scope", scope,
+		"table", table,
+	)
+}
