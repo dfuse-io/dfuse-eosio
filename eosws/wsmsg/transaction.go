@@ -39,10 +39,20 @@ type GetTransaction struct {
 }
 
 func (m *GetTransaction) Validate(ctx context.Context) error {
-	// CHECK if the tx data is appropriate.
+	// We must support between 8,64 characters because we search by prefix
 	if len(m.Data.ID) < 8 {
 		return fmt.Errorf("transaction id too short")
 	}
+
+	if len(m.Data.ID) > 64 {
+		return fmt.Errorf("transaction id too long")
+	}
+
+	// Odd length transaction id cannot be used as prefix for simplicity since we turned them into []byte later on
+	if len(m.Data.ID)%2 != 0 {
+		return fmt.Errorf("transaction id odd length")
+	}
+
 	if !m.Fetch && !m.Listen {
 		return fmt.Errorf("one of 'listen' or 'fetch' required (both supported)")
 	}

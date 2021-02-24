@@ -54,7 +54,8 @@ date.
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
 
 ### Fixed
-* Fixed a bug making search-forkresolver useless, because ignored by search-router
+* Fixed validation of transaction ID passed to WebSocket `get_transaction` API, the prior validation was too permissive.
+* Fixed a bug making search-forkresolver useless, because ignored by search-router.
 * Fixed a bug on StateDB server not accepting symbol and symbol code as `scope` parameter value.
 * Fixed shutdown on dgraphql (grpc/http) so it closes the active connections a little bit more gracefully.
 * Fixed a bug in `TiKV` store implementation preventing it to delete keys correctly.

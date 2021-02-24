@@ -56,7 +56,8 @@ func (ws *WSConn) onGetTransaction(ctx context.Context, msg *wsmsg.GetTransactio
 		ws.EmitReply(ctx, msg, wsmsg.NewTransactionLifecycle(lc))
 	}
 
-	if msg.Listen {
+	// If the user specified to listen but with a prefix transaction, too bad as for now we do not support prefix on listen
+	if msg.Listen && len(msg.Data.ID) == 64 {
 		var source bstream.Source
 
 		libRef, err := ws.db.GetLastWrittenIrreversibleBlockRef(ctx)
