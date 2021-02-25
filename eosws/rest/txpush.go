@@ -145,6 +145,16 @@ func isRetryable(err eos.APIError) bool {
 	return true
 }
 
+type fakePackedTrx struct {
+	Signatures        []string `json:"signatures"`
+	PackedTransaction string   `json:"packed_trx"`
+}
+
+func isValidJSON(payload []byte) bool {
+	var fakePacked *fakePackedTrx
+	return json.Unmarshal(payload, &fakePacked) == nil
+}
+
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	guarantee := r.Header.Get("X-Eos-Push-Guarantee")
 
@@ -167,14 +177,21 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.Unmarshal(incomingContent, &tx)
-	if checkHTTPError(err, "couldn't decode incoming json", eoserr.ErrParseErrorException, w, zap.String("body", string(incomingContent))) {
+	if err != nil {
+		if isValidJSON(incomingContent) {
+			writeDetailedAPIError(err, "Internal Service Error", 3010010, "packed_transaction_type_exception", "Invalid packed transaction", "Invalid packed transaction", w)
+			return
+		}
+		writeDetailedAPIError(err, "Internal Service Error", 4, "parse_error_exception", "Parse Error", err.Error(), w)
 		return
 	}
 
 	trxIDCheckSum, err := tx.ID()
-	if checkHTTPError(err, "cannot compute transaction ID", eoserr.ErrUnhandledException, w) {
+	if err != nil {
+		writeDetailedAPIError(err, "Internal Service Error", 3010010, "packed_transaction_type_exception", "Invalid packed transaction", "Invalid packed transaction", w)
 		return
 	}
+
 	trxID := trxIDCheckSum.String()
 
 	liveSourceFactory := bstream.SourceFactory(func(handler bstream.Handler) bstream.Source {
@@ -354,6 +371,39 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+}
+
+func writeDetailedAPIError(err error, msg string, errorCode int, errorName, errorWhat, detailMessage string, w http.ResponseWriter) {
+	fields := []zap.Field{
+		zap.Error(err),
+		zap.Int("errorCode", errorCode),
+		zap.String("errorName", errorName),
+		zap.String("errorWhat", errorWhat),
+	}
+
+	zlog.Info("push transaction error, "+msg, fields...)
+
+	apiError := &eos.APIError{
+		Code:    500,
+		Message: msg,
+	}
+	apiError.ErrorStruct.Code = errorCode
+	apiError.ErrorStruct.Name = errorName
+	apiError.ErrorStruct.What = errorWhat
+	apiError.ErrorStruct.Details = []eos.APIErrorDetail{
+		eos.APIErrorDetail{
+			File:       "",
+			LineNumber: 0,
+			Message:    detailMessage,
+			Method:     "proxied_by_dfuse",
+		},
+	}
+
+	out, _ := json.Marshal(apiError)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+	w.Write([]byte(out))
+
 }
 
 func checkHTTPError(err error, msg string, errorCode eoserr.Error, w http.ResponseWriter, logFields ...zap.Field) bool {
