@@ -163,7 +163,8 @@ type ActionTrace {
   """A list of table mutation operations (creation or deletion of a _table_, not a _row_)."""
   tableOps: [TableOp!]!
 
-  """A list of database operations produced by this action. Insertions, modifications and deletions of any table _rows_ in the scope of this action's `receiver`."""
+  """
+  A list of database operations produced by this action. Insertions, modifications and deletions of any table _rows_ in the scope of this action's `receiver`."""
   dbOps(code:String table: String): [DBOp!]!
 
   """Output of the action's `print()` statements from within the smart contract."""
@@ -358,8 +359,37 @@ enum TABLE_OPERATION {
   REM
 }
 
-"""Represents the mutation of a row, in a contract table."""
+"""
+Represents the change delta of a row, in a contract table.
+
+The `operation` field can be used to determine what happened
+to the row. Was is just inserted, modified or deleted?
+"""
 type DBOp {
+  """
+  The `operation` type should be referred to when inspecting the `oldData`, `oldJSON`, `newData`, `newJSON`
+  fields. The `operation`'s value will determine what those value will contain.
+
+  Assume the following example fields values (for brievity and clarity, we show the `oldJSON`
+  and the `newJSON` fields, but the concept applies equally to `oldData` and `newData` which
+  are the Hexadecimal binary version of the JSON):
+
+  ```
+     { operation: "INS", newJSON: { "id":1, "name": "john" }, oldJSON: <nil> } }
+     { operation: UPD, newJSON: { "id":1, "name": "johnny"}, oldJSON: { "id":1, "name": "john" } }
+     { operation: REM, newJSON: <nil>, oldJSON: { "id":1, "name": "johnny" } }
+  ```
+
+  When the `operation` type is `"INS"`, the `oldJSON` will be `null`, since it's a new row,
+  it cannot have a previous state, the `newJSON` will be set with the new value just inserted.
+
+  When the `operation` type is `"UPD"`, the `newJSON` will contain the new row's value after
+  the update while the `oldJSON` will be set with the value the row had before being updated.
+
+  When the `operation` type is `"REM"`, the `newJSON` will be `null`, since it's a deleted row,
+  no new state exists, the `oldJSON` will be set with the value the row had before being
+  deleted.
+  """
   operation: DB_OPERATION!
 
   """Previous paying account.  This is null in the case of an insertion."""
