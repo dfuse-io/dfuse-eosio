@@ -16,13 +16,13 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
-	github.com/dfuse-io/bstream v0.0.2-0.20210203203654-afe75df13683
+	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
 	github.com/dfuse-io/client-go v0.0.0-20210111154104-a57a0b7a63fc
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd
-	github.com/dfuse-io/dgrpc v0.0.0-20210308164047-90522c94d404
+	github.com/dfuse-io/dgrpc v0.0.0-20210309152232-10776c4e5ec1
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
@@ -33,7 +33,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/firehose v0.1.1-0.20210118213034-5bdcff6a14a7
+	github.com/dfuse-io/firehose v0.1.1-0.20210309154954-8f7fa80bca42
 	github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
