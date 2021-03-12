@@ -40,6 +40,9 @@ build() {
       yarn install && yarn build
     popd > /dev/null
   fi
+  if [[ ! -e eosq/app/eosq/rice-box.go ]]; then
+      go generate ./eosq/...
+  fi
 
   dlauncher_hash=`grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1`
   pushd .. > /dev/null
