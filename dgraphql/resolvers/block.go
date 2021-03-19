@@ -161,6 +161,10 @@ func (b *Block) Header() *BlockHeader {
 	return newBlockHeader(b.blkWithRefs.Block.Id, commonTypes.Uint32(b.blkWithRefs.Block.Number), b.blkWithRefs.Block.Header)
 }
 
+func (b *Block) MerkleRoot() *BlockRootMerkle {
+	return newBlockRootMerkle(b.blkWithRefs.Block.BlockrootMerkle)
+}
+
 func (b *Block) ExecutedTransactionCount() commonTypes.Uint32 {
 	return commonTypes.Uint32(b.blkWithRefs.Block.UnfilteredTransactionCount)
 }

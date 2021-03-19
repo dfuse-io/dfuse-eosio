@@ -820,6 +820,24 @@ func (t *TransactionTrace) ExceptJSON() (*commonTypes.JSON, error) {
 	return nil, nil
 }
 
+type BlockRootMerkle struct {
+	m *pbcodec.BlockRootMerkle
+}
+
+func newBlockRootMerkle(merkleRoot *pbcodec.BlockRootMerkle) *BlockRootMerkle {
+	return &BlockRootMerkle{
+		m:  merkleRoot,
+	}
+}
+
+func (b BlockRootMerkle) NodeCount() commonTypes.Uint32                    { return commonTypes.Uint32(b.m.NodeCount) }
+func (b BlockRootMerkle) ActiveNodes() (out []string){
+	for _, n := range b.m.ActiveNodes{
+		out = append(out, hex.EncodeToString(n))
+	}
+	return
+}
+
 type BlockHeader struct {
 	blockID  string
 	blockNum commonTypes.Uint32
