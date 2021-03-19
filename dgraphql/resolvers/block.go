@@ -161,7 +161,7 @@ func (b *Block) Header() *BlockHeader {
 	return newBlockHeader(b.blkWithRefs.Block.Id, commonTypes.Uint32(b.blkWithRefs.Block.Number), b.blkWithRefs.Block.Header)
 }
 
-func (b *Block) MerkleRoot() *BlockRootMerkle {
+func (b *Block) MerkleRoot() BlockRootMerkle {
 	return newBlockRootMerkle(b.blkWithRefs.Block.BlockrootMerkle)
 }
 

@@ -824,8 +824,8 @@ type BlockRootMerkle struct {
 	m *pbcodec.BlockRootMerkle
 }
 
-func newBlockRootMerkle(merkleRoot *pbcodec.BlockRootMerkle) *BlockRootMerkle {
-	return &BlockRootMerkle{
+func newBlockRootMerkle(merkleRoot *pbcodec.BlockRootMerkle) BlockRootMerkle {
+	return BlockRootMerkle{
 		m:  merkleRoot,
 	}
 }
