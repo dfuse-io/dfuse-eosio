@@ -14,6 +14,9 @@ type Block {
     """Header . It is a unique pointer to this block."""
     header: BlockHeader!
 
+    """Pointer to the incremental merkle root data structure for this block"""
+    merkleRoot: BlockRootMerkle!
+
     """Number of transaction found in this blocks, this is the number of 'executed' transaction count."""
     executedTransactionCount: Uint32!
 
@@ -52,6 +55,15 @@ type BlockHeader {
     """The producer schedule version this block is based on. The schedule is the list of active producer and their assigned block production slot."""
     scheduleVersion: Uint32!
     newProducers: ProducerSchedule
+}
+
+"""
+BlockRootMerkle
+"""
+type BlockRootMerkle {
+    """The ID of this block in the chain."""
+    nodeCount: Uint32!
+    activeNodes: [String!]!
 }
 
 type ProducerSchedule {
