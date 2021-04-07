@@ -5,6 +5,7 @@ start:
   - blockmeta
   - booter
   - dashboard
+  - firehose
   - dgraphql
   - eosq
   - eosws
