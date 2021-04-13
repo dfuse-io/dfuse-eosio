@@ -1,6 +1,7 @@
 package search
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -59,7 +60,7 @@ func Test_validateQueryFields(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("index %d", idx+1), func(t *testing.T) {
-			_, err := search.NewParsedQuery(test.in)
+			_, err := search.NewParsedQuery(context.Background(), test.in)
 			if test.expectedError == nil {
 				assert.NoError(t, err)
 			} else {
