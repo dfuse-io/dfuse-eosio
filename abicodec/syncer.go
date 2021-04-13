@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"time"
 
@@ -83,7 +82,7 @@ func (s *ABISyncer) Sync() {
 		zlog.Info("abi codec stream abi changes", zap.Error(err))
 		if err != nil {
 			if !errors.Is(err, context.Canceled) {
-				zlog.Info("the search stream ended with error", zap.Error(err))
+				zlog.Info("streamABIChanges interrupted", zap.Error(err))
 			}
 		}
 
@@ -112,18 +111,13 @@ func (s *ABISyncer) streamABIChanges() error {
 		Mode:               pbsearch.RouterRequest_STREAMING,
 	})
 	if err != nil {
-		return fmt.Errorf("unable to init search query for all ABIs: %w", err)
+		return fmt.Errorf("connecting to search service: %w", err)
 	}
 
 	for {
 		match, err := stream.Recv()
 		if err != nil {
-			if err == io.EOF {
-				zlog.Error("received end of stream marker, but this should never happen")
-				return nil
-			}
-
-			return fmt.Errorf("search stream terminated with error: %w", err)
+			return fmt.Errorf("received the following error from the search service: %w", err)
 		}
 
 		if traceEnabled {
