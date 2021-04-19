@@ -267,6 +267,8 @@ github.com/dfuse-io/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd h1:eVewYg1V08k
 github.com/dfuse-io/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210412200810-081b8535f415 h1:VrReQGtYwIp0qc2Td+E6Ik9zgtFEthEEImubXbCId8g=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210412200810-081b8535f415/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210419180229-1a7aa43fb666 h1:MckLZF7OG+2upuDyUsfy5Wo4GYne/IcqAw4H82Cj4XQ=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210419180229-1a7aa43fb666/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
@@ -369,6 +371,8 @@ github.com/dfuse-io/search v0.0.2-0.20210412202018-74f156a3fbed h1:ENrwtHr+tNqg6
 github.com/dfuse-io/search v0.0.2-0.20210412202018-74f156a3fbed/go.mod h1:mKSf+fJmFkum7i3don5KLB15VDF8jGbp1u7lW1CsYnE=
 github.com/dfuse-io/search v0.0.2-0.20210413183144-1078f4b41956 h1:HjQTeteW0cB4VoQkpBFOFgM3uoamzRWue6oPdoInqCM=
 github.com/dfuse-io/search v0.0.2-0.20210413183144-1078f4b41956/go.mod h1:W+S7B/ndx5uT6UkZHDTduzeQGd99CTkeroKC73KYbM4=
+github.com/dfuse-io/search v0.0.2-0.20210419180107-1cc7385bf5f4 h1:wPmIooAhTGhvz6Gz5uTv9vA288hQsMwnpOJh4KVeHYI=
+github.com/dfuse-io/search v0.0.2-0.20210419180107-1cc7385bf5f4/go.mod h1:W+S7B/ndx5uT6UkZHDTduzeQGd99CTkeroKC73KYbM4=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2 h1:epRDGOCi8YAqcI3cZdXgbFowZh8L/rSENwi2hQqzipo=
 github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2/go.mod h1:TY7lgsDrNonQ7nUtwGK4En08cuG7eRrV743DZozvehk=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
