@@ -83,7 +83,7 @@ func Test_forwardProcessBlock(t *testing.T) {
 				Obj: preprocessObj.(*search.SingleIndex),
 			}
 
-			bleveQuery, err := search.NewParsedQuery("account:eosio.token")
+			bleveQuery, err := search.NewParsedQuery(context.Background(), "account:eosio.token")
 			matchCollector := search.GetMatchCollector
 			if matchCollector == nil {
 				panic(fmt.Errorf("no match collector set, should not happen, you should define a collector"))

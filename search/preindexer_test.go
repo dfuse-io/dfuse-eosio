@@ -51,7 +51,7 @@ func TestPreIndexerRunSingleIndexQuery(t *testing.T) {
 	highBlockNum := uint64(1)
 	releaseFunc := func() {}
 	metrics := search.NewQueryMetrics(zap.NewNop(), sortDesc, "", 1, 0, 0)
-	bleveQuery, err := search.NewParsedQuery("account:eosio.token")
+	bleveQuery, err := search.NewParsedQuery(ctx, "account:eosio.token")
 
 	matches, err := search.RunSingleIndexQuery(ctx, sortDesc, lowBlockNum, highBlockNum, matchCollector, bleveQuery, index.Index, releaseFunc, metrics)
 	require.NoError(t, err)
