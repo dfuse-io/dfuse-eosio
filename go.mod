@@ -21,8 +21,8 @@ require (
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
-	github.com/dfuse-io/dgraphql v0.0.2-0.20210419180229-1a7aa43fb666
-	github.com/dfuse-io/dgrpc v0.0.0-20210309152232-10776c4e5ec1
+	github.com/dfuse-io/dgraphql v0.0.2-0.20210424025433-72a47ab3263b
+	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
@@ -33,7 +33,7 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/firehose v0.1.1-0.20210309154954-8f7fa80bca42
+	github.com/dfuse-io/firehose v0.1.1-0.20210424034522-6e5c05a23323
 	github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
