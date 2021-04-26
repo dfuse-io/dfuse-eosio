@@ -13,7 +13,6 @@ require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blevesearch/bleve v1.0.9
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
-	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
@@ -69,7 +68,6 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.6.2
 	github.com/stretchr/testify v1.6.1
@@ -77,7 +75,6 @@ require (
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.6.7
 	github.com/tidwall/sjson v1.0.4
-	github.com/urfave/negroni v1.0.0 // indirect
 	go.opencensus.io v0.22.5
 	go.uber.org/atomic v1.7.0
 	go.uber.org/multierr v1.6.0 // indirect
@@ -108,4 +105,4 @@ replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-202104
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
 
-replace github.com/dfuse-io/firehose => github.com/EOS-Nation/firehose v0.1.1-0.20210316133238-f1cd1c6e6d80
+replace github.com/dfuse-io/firehose => github.com/EOS-Nation/firehose v0.1.1-0.20210426155532-5a1d8ef07d8d
