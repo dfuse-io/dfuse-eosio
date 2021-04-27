@@ -305,7 +305,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
 	}
 
-	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries)
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries, time.Second*600)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -401,7 +401,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse api-addr: %w", err)
 	}
 
-	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries)
+	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries, 30*time.Second)
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,
