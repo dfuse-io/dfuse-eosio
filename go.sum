@@ -271,6 +271,8 @@ github.com/dfuse-io/dgraphql v0.0.2-0.20210419180229-1a7aa43fb666 h1:MckLZF7OG+2
 github.com/dfuse-io/dgraphql v0.0.2-0.20210419180229-1a7aa43fb666/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210424025433-72a47ab3263b h1:SKeejGeaB79QFQoymMu8Stko4f5gg5acgxwGwL/FE9o=
 github.com/dfuse-io/dgraphql v0.0.2-0.20210424025433-72a47ab3263b/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210506024839-da408de168b1 h1:nG5FooLOas5NK5FHdSCjbFUSeDkDYGVIJwKxgYLVFvs=
+github.com/dfuse-io/dgraphql v0.0.2-0.20210506024839-da408de168b1/go.mod h1:VXMflpeId/G6j7eiIbvMswWIomVV+Synsqp23TQqkVk=
 github.com/dfuse-io/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/dfuse-io/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
