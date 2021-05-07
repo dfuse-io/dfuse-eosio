@@ -479,7 +479,7 @@ func (t *Token) MaximumSupply(args *AssetArgs) string {
 	return assetToString(t.t.MaximumSupply, t.t.Precision, t.t.Symbol, args)
 }
 func (t *Token) TotalSupply(args *AssetArgs) string {
-	return assetToString(t.t.MaximumSupply, t.t.Precision, t.t.Symbol, args)
+	return assetToString(t.t.TotalSupply, t.t.Precision, t.t.Symbol, args)
 }
 
 //---------------------------
