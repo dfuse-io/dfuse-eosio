@@ -53,7 +53,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210222170049-21697b8969f6
 	github.com/eoscanada/eosc v1.4.0
-	github.com/eoscanada/jsonpb v0.0.0-20190926194323-1de8191ec406 // indirect
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
