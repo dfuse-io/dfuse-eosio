@@ -17,24 +17,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/dstore"
-
-	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dgrpc"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	"github.com/golang/protobuf/ptypes"
-	"golang.org/x/oauth2"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/oauth"
-
 	"github.com/dfuse-io/bstream"
 	dfuse "github.com/dfuse-io/client-go"
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
+	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/dfuse-io/dgrpc"
+	"github.com/dfuse-io/dstore"
+	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/eoscanada/eos-go"
 	eossnapshot "github.com/eoscanada/eos-go/snapshot"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/oauth"
 )
 
 var statusFrequency = 15 * time.Second

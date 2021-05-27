@@ -13,11 +13,14 @@ require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/blevesearch/bleve v1.0.9
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/coreos/etcd v3.3.25+incompatible // indirect
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
-	github.com/dfuse-io/client-go v0.0.0-20210111154104-a57a0b7a63fc
+	github.com/dfuse-io/cli v0.0.2
+	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
@@ -26,7 +29,7 @@ require (
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
-	github.com/dfuse-io/dmesh v0.0.0-20201117184409-6a094bb91fca
+	github.com/dfuse-io/dmesh v0.0.0-20210526183400-53c814798369
 	github.com/dfuse-io/dmetering v0.0.0-20210208201314-50d9add52005
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f
@@ -34,15 +37,15 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
 	github.com/dfuse-io/firehose v0.1.1-0.20210424034522-6e5c05a23323
-	github.com/dfuse-io/fluxdb v0.0.0-20210104215519-ac781957af01
+	github.com/dfuse-io/fluxdb v0.0.0-20210526211450-e6a91ed426d7
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201125184722-e565bbbcc32e
-	github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70
+	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
 	github.com/dfuse-io/merger v0.0.3-0.20210218184002-6b3b6ba94465
 	github.com/dfuse-io/node-manager v0.0.2-0.20210413133800-b1893707a2f6
 	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48
-	github.com/dfuse-io/pbgo v0.0.6-0.20210125181705-b17235518132
-	github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7
+	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
+	github.com/dfuse-io/relayer v0.0.2-0.20210525190602-eeec872ddedf
 	github.com/dfuse-io/search v0.0.2-0.20210506151819-66f981913d7f
 	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
@@ -50,49 +53,53 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210222170049-21697b8969f6
 	github.com/eoscanada/eosc v1.4.0
+	github.com/eoscanada/jsonpb v0.0.0-20190926194323-1de8191ec406 // indirect
 	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.5.2
 	github.com/google/cel-go v0.4.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
-	github.com/gorilla/websocket v1.4.1
+	github.com/gorilla/websocket v1.4.2
 	github.com/graph-gophers/graphql-go v0.0.0-20191115155744-f33e81362277
 	github.com/klauspost/compress v1.10.2
 	github.com/lithammer/dedent v1.1.0
 	github.com/logrusorgru/aurora v2.0.3+incompatible
 	github.com/lytics/lifecycle v0.0.0-20130117214539-7b4c4028d422 // indirect
 	github.com/lytics/ordpool v0.0.0-20130426221837-8d833f097fe7
-	github.com/manifoldco/promptui v0.7.0
+	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/onsi/ginkgo v1.11.0 // indirect
 	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
-	github.com/spf13/cobra v1.0.0
-	github.com/spf13/viper v1.6.2
-	github.com/stretchr/testify v1.6.1
+	github.com/spf13/cobra v1.1.3
+	github.com/spf13/viper v1.7.0
+	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.6.7
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0 // indirect
+	go.etcd.io/etcd v0.5.0-alpha.5.0.20200425165423-262c93980547 // indirect
+	go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0 // indirect
 	go.opencensus.io v0.22.5
 	go.uber.org/atomic v1.7.0
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.16.0
-	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
+	go.uber.org/zap v1.16.1-0.20210329175301-c23abee72d19
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/sys v0.0.0-20210113181707-4bcb84eeeb78 // indirect
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.29.1
+	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc/examples v0.0.0-20210526223527-2de42fcbbce3 // indirect
 	gopkg.in/olivere/elastic.v3 v3.0.75
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible
+	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
 
 // to solve "github.com/ugorji/go/codec: ambiguous import: found package github.com/ugorji/go/codec in multiple modules:"
