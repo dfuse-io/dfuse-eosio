@@ -8,13 +8,11 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/eoscanada/eos-go/system"
-
+	rice "github.com/GeertJohan/go.rice"
 	bootops "github.com/dfuse-io/eosio-boot/ops"
 	"github.com/eoscanada/eos-go"
-
-	rice "github.com/GeertJohan/go.rice"
 	"github.com/eoscanada/eos-go/ecc"
+	"github.com/eoscanada/eos-go/system"
 	"go.uber.org/zap"
 )
 

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"strings"
 	"time"
 
 	"github.com/dfuse-io/dlauncher/launcher"
@@ -30,8 +31,13 @@ func init() {
 		FactoryFunc: func(runtime *launcher.Runtime) (launcher.App, error) {
 			dfuseDataDir := runtime.AbsDataDir
 
+			sourcesAddr := viper.GetStringSlice("relayer-source")
+			if len(sourcesAddr) == 1 {
+				sourcesAddr = strings.Split(sourcesAddr[0], ",")
+			}
+
 			return relayerApp.New(&relayerApp.Config{
-				SourcesAddr:        viper.GetStringSlice("relayer-source"),
+				SourcesAddr:        sourcesAddr,
 				GRPCListenAddr:     viper.GetString("relayer-grpc-listen-addr"),
 				MergerAddr:         viper.GetString("relayer-merger-addr"),
 				BufferSize:         viper.GetInt("relayer-buffer-size"),
