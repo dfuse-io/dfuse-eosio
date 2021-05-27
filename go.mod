@@ -70,8 +70,6 @@ require (
 	github.com/lytics/ordpool v0.0.0-20130426221837-8d833f097fe7
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-testing-interface v1.14.1
-	github.com/onsi/ginkgo v1.11.0 // indirect
-	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
