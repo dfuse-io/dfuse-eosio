@@ -38,6 +38,7 @@ func init() {
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr+"*", "Address on which the firehose will listen")
 			cmd.Flags().StringSlice("firehose-blocks-store-urls", nil, "If non-empty, overrides common-blocks-store-url with a list of blocks stores")
+			cmd.Flags().Int("firehose-rate-limit", 100, "Number of blocks to stream per second at maximum, set to 0 to allow unlimited access")
 			return nil
 		},
 
@@ -94,13 +95,16 @@ func init() {
 			firehoseGRPCListenAddr := viper.GetString("firehose-grpc-listen-addr")
 			if !strings.Contains(firehoseGRPCListenAddr, "*") {
 				return nil, fmt.Errorf("unsupported value for firehose-grpc-listen-addr. Address must include '*' character to indicate TLS with snakeoil (insecure) certificate")
-
 			}
+
+			firehoseRateLimit := viper.GetInt("firehose-rate-limit")
+
 			return firehoseApp.New(appLogger, &firehoseApp.Config{
 				BlockStoreURLs:          firehoseBlocksStoreURLs,
 				BlockStreamAddr:         blockstreamAddr,
 				GRPCListenAddr:          firehoseGRPCListenAddr,
 				GRPCShutdownGracePeriod: grcpShutdownGracePeriod,
+				RateLimit:               firehoseRateLimit,
 			}, &firehoseApp.Modules{
 				Authenticator:             authenticator,
 				BlockTrimmer:              blockstreamv2.BlockTrimmerFunc(trimBlock),
