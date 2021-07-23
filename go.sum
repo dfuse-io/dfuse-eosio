@@ -600,6 +600,7 @@ github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39 h1:JQ7Gc43VO/H
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39/go.mod h1:s+wqQ06P9Micmjx1ejirBXVxVNiYXfZROIgQeBsAneI=
 github.com/eosnationftw/dauth v0.0.0-20210406080351-e5d205e2c2fb h1:Ofc2lwUVvOn/nEZcx6OiO+2/vm5pNk40kZSr6xbK4fE=
 github.com/eosnationftw/dauth v0.0.0-20210406080351-e5d205e2c2fb/go.mod h1:Io0yBO4QLlDuQnfUA9yqPz1iJaPk4h+g1FMXD0jkAg8=
+github.com/eosnationftw/dauth v0.0.0-20210723152901-b4ab4f4a6d11/go.mod h1:Io0yBO4QLlDuQnfUA9yqPz1iJaPk4h+g1FMXD0jkAg8=
 github.com/ethereum/go-ethereum v1.9.9 h1:jnoBvjH8aMH++iH14XmiJdAsnRcmZUM+B5fsnEZBVE0=
 github.com/ethereum/go-ethereum v1.9.9/go.mod h1:a9TqabFudpDu1nucId+k9S8R9whYaHnGBLKFouA5EAo=
 github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c h1:8ISkoahWXwZR41ois5lSJBSVw4D0OV19Ht/JSTzvSv0=
