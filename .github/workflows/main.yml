@@ -21,6 +21,14 @@ jobs:
         with:
           go-version: 1.14
 
+      - name: Setup SSH Keys and known_hosts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SSH_EOSN_DEPLOY_KEY }}"
+          git config --global url."git@github.com:eosnationftw".insteadOf "https://github.com/eosnationftw"
+
       - name: Check out code
         uses: actions/checkout@v1
 
@@ -33,9 +41,15 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Run Unit tests.
+        env:
+          GOPRIVATE: github.com/eosnationftw
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: go test ./...
 
       - name: Build dfuseeos
+        env:
+          GOPRIVATE: github.com/eosnationftw
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: go build -o dfuseeos ./cmd/dfuseeos
 
       # This one might be a bit more complicated... Unsure how this will behave in Github's workflow environment.
