@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"os"
 	"sync/atomic"
 	"time"
 
@@ -157,6 +156,7 @@ func isValidJSON(payload []byte) bool {
 
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	guarantee := r.Header.Get("X-Eos-Push-Guarantee")
+	pushOutput := r.Header.Get("X-Eos-Push-Guarantee-Output-Inline-Traces")
 
 	ctx := r.Context()
 
@@ -334,7 +334,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			blockID := trxTrace.ProducerBlockId
 
 			var processed json.RawMessage
-			if os.Getenv("EOSWS_PUSH_V1_OUTPUT") == "true" {
+			if pushOutput == "true" {
 				v1tr, err := mdl.ToV1TransactionTrace(trxTrace)
 				if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
 					return
