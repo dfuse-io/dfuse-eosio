@@ -6,9 +6,9 @@ import (
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
-	archiveApp "github.com/dfuse-io/search/app/archive"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	archiveApp "github.com/streamingfast/search/app/archive"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 		Title:       "Search archive",
 		Description: "Serves historical search queries",
 		MetricsID:   "archive",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(archive|app/archive).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/search/(archive|app/archive).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// These flags are scoped to search, since they are shared betwween search-router, search-live, search-archive, etc....
 			cmd.Flags().String("search-archive-grpc-listen-addr", ArchiveServingAddr, "Address to listen for incoming gRPC requests")

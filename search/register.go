@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dfuse-io/search"
-	searchArchive "github.com/dfuse-io/search/archive"
-	"github.com/dfuse-io/search/sqe"
+	"github.com/streamingfast/search"
+	searchArchive "github.com/streamingfast/search/archive"
+	"github.com/streamingfast/search/sqe"
 )
 
 func RegisterDefaultHandlers() {

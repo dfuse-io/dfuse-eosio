@@ -5,9 +5,9 @@ import (
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
-	forkresolverApp "github.com/dfuse-io/search/app/forkresolver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	forkresolverApp "github.com/streamingfast/search/app/forkresolver"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		Title:       "Search fork resolver",
 		Description: "Search forks",
 		MetricsID:   "forkresolver",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(forkresolver|app/forkresolver).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/search/(forkresolver|app/forkresolver).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-forkresolver-grpc-listen-addr", ForkResolverServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-forkresolver-http-listen-addr", ForkResolverHTTPServingAddr, "Address to listen for incoming HTTP requests")

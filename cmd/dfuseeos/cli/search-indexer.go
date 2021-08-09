@@ -6,9 +6,9 @@ import (
 	"github.com/dfuse-io/bstream"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/dfuse-io/dlauncher/launcher"
-	indexerApp "github.com/dfuse-io/search/app/indexer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	indexerApp "github.com/streamingfast/search/app/indexer"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 		Title:       "Search indexer",
 		Description: "Indexes transactions for search",
 		MetricsID:   "indexer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(indexer|app/indexer).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/search/(indexer|app/indexer).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("search-indexer-grpc-listen-addr", IndexerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().String("search-indexer-http-listen-addr", IndexerHTTPServingAddr, "Address to listen for incoming http requests")

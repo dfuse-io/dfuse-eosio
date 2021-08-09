@@ -40,8 +40,6 @@ require (
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
 	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48
 	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
-	github.com/dfuse-io/search v0.0.2-0.20210506151819-66f981913d7f
-	github.com/dfuse-io/search-client v0.0.0-20200602205137-71b300d129d2
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
@@ -79,6 +77,8 @@ require (
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
 	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
 	github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083
+	github.com/streamingfast/search v0.0.2-0.20210809201943-c29e7667a7cf
+	github.com/streamingfast/search-client v0.0.0-20210809202359-fed38884d2b4
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9
