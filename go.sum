@@ -390,10 +390,6 @@ github.com/dfuse-io/pbgo v0.0.6-0.20210125181705-b17235518132 h1:xjkqVo6at6RDdkR
 github.com/dfuse-io/pbgo v0.0.6-0.20210125181705-b17235518132/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3 h1:ehPpHr7Fj6Ai/PzL3Owjtga600MRRtRx0TvLv3b0pX4=
 github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
-github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7 h1:YkmUBTK1z/oafnjr6b4MW5irpDAmhuSavJGUG+a4u7Y=
-github.com/dfuse-io/relayer v0.0.2-0.20201029161257-ec97edca50d7/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
-github.com/dfuse-io/relayer v0.0.2-0.20210525190602-eeec872ddedf h1:V7zao5ppUzvtAlYaHFfh7FU/gOYK/W5ZWOk9GLGujKc=
-github.com/dfuse-io/relayer v0.0.2-0.20210525190602-eeec872ddedf/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/dfuse-io/search v0.0.2-0.20210118185225-30a29e7e9467 h1:7h8qpEBc3OMOkgSe60J3KbQO45O0N5arXMXE7PcW7ao=
 github.com/dfuse-io/search v0.0.2-0.20210118185225-30a29e7e9467/go.mod h1:mKSf+fJmFkum7i3don5KLB15VDF8jGbp1u7lW1CsYnE=
 github.com/dfuse-io/search v0.0.2-0.20210412202018-74f156a3fbed h1:ENrwtHr+tNqg688pEo2POCwwcApT0YVMwa6WW+cUL5c=
@@ -1042,6 +1038,12 @@ github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6 h1:1h
 github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e h1:aEJWc2z+iz3GSa2LKCjSstEiQ78I6iKrVcX5MrDnzuQ=
 github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e/go.mod h1:FpJg9rTpw8scRegq7gSFDD12bd6ou24Yg6GCAQF8G8I=
+github.com/streamingfast/relayer v0.0.2-0.20201029161257-ec97edca50d7 h1:YkmUBTK1z/oafnjr6b4MW5irpDAmhuSavJGUG+a4u7Y=
+github.com/streamingfast/relayer v0.0.2-0.20201029161257-ec97edca50d7/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
+github.com/streamingfast/relayer v0.0.2-0.20210525190602-eeec872ddedf h1:V7zao5ppUzvtAlYaHFfh7FU/gOYK/W5ZWOk9GLGujKc=
+github.com/streamingfast/relayer v0.0.2-0.20210525190602-eeec872ddedf/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
+github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083 h1:qUAVTFadmJYrvSY3UXVaF74xCfYYdB969cVARQYCS7E=
+github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083/go.mod h1:sOb0kAsUd7NWCaetp0az8Djh6wZNJFyNlB+3lZvvcmw=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
