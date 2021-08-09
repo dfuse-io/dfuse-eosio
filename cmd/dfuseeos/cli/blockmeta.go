@@ -5,11 +5,11 @@ import (
 
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	blockmetaApp "github.com/streamingfast/blockmeta/app/blockmeta"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 func init() {

@@ -5,9 +5,9 @@ import (
 	"time"
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
 	liveApp "github.com/streamingfast/search/app/live"
 )
 

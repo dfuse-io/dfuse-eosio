@@ -22,10 +22,10 @@ import (
 	"runtime"
 	"strings"
 
-	launcher "github.com/dfuse-io/dlauncher/launcher"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	launcher "github.com/streamingfast/dlauncher/launcher"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 )

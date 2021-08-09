@@ -26,7 +26,6 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
 	github.com/dfuse-io/dmesh v0.0.0-20210526183400-53c814798369
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
@@ -72,6 +71,7 @@ require (
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809170453-5a8cfa32b1ff
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
 	github.com/streamingfast/dgraphql v0.0.2-0.20210809190503-b735aa2ad5fc
+	github.com/streamingfast/dlauncher v0.0.0-20210809203103-fe27d137acc7
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
 	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
