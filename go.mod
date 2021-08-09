@@ -36,7 +36,6 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
-	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48
 	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
 	github.com/dfuse-io/shutter v1.4.1
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
@@ -77,6 +76,7 @@ require (
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
 	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
+	github.com/streamingfast/opaque v0.0.0-20210809205334-b750026cb590
 	github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083
 	github.com/streamingfast/search v0.0.2-0.20210809201943-c29e7667a7cf
 	github.com/streamingfast/search-client v0.0.0-20210809202359-fed38884d2b4

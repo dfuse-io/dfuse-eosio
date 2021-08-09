@@ -31,9 +31,9 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
-	"github.com/dfuse-io/opaque"
 	"github.com/eoscanada/eos-go"
 	"github.com/streamingfast/kvdb"
+	"github.com/streamingfast/opaque"
 	"go.uber.org/zap"
 )
 

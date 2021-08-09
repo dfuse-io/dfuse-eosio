@@ -35,7 +35,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/logging"
-	"github.com/dfuse-io/opaque"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"github.com/eoscanada/eos-go"
@@ -46,6 +45,7 @@ import (
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/opaque"
 	"go.uber.org/zap"
 )
 
