@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
@@ -30,6 +29,7 @@ import (
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

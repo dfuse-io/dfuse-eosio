@@ -27,8 +27,6 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/blockstream"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth/authenticator"
-	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
@@ -38,7 +36,6 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/dstore"
 	"github.com/dfuse-io/logging"
@@ -48,6 +45,9 @@ import (
 	"github.com/dfuse-io/shutter"
 	"github.com/eoscanada/eos-go"
 	"github.com/gorilla/mux"
+	"github.com/streamingfast/dauth/authenticator"
+	dauthMiddleware "github.com/streamingfast/dauth/authenticator/middleware"
+	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 

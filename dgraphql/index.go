@@ -17,7 +17,6 @@ package dgraphql
 import (
 	"fmt"
 
-	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
@@ -27,6 +26,7 @@ import (
 	"github.com/dfuse-io/dgrpc"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	drateLimiter "github.com/streamingfast/dauth/ratelimiter"
 	"github.com/streamingfast/dgraphql"
 	dgraphqlApp "github.com/streamingfast/dgraphql/app/dgraphql"
 	"go.uber.org/zap"

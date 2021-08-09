@@ -20,7 +20,7 @@ require (
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
-	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665
+	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
@@ -28,7 +28,7 @@ require (
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dlauncher v0.0.0-20201112212422-91f62bcef971
 	github.com/dfuse-io/dmesh v0.0.0-20210526183400-53c814798369
-	github.com/dfuse-io/dmetering v0.0.0-20210208201314-50d9add52005
+	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
@@ -73,8 +73,10 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809170453-5a8cfa32b1ff
+	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
 	github.com/streamingfast/dgraphql v0.0.2-0.20210809190503-b735aa2ad5fc
-	github.com/streamingfast/firehose v0.1.1-0.20210809172230-12665dcfb713
+	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
+	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
 	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
 	github.com/stretchr/testify v1.7.0

@@ -7,16 +7,16 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
-	dauthAuthenticator "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dlauncher/launcher"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dmetrics"
 	"github.com/dfuse-io/logging"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	dauthAuthenticator "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dmetering"
 	firehoseApp "github.com/streamingfast/firehose/app/firehose"
 	"go.uber.org/zap"
 )

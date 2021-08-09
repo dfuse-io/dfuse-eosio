@@ -29,7 +29,6 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
@@ -37,6 +36,7 @@ import (
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/websocket"
+	"github.com/streamingfast/dauth/authenticator"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 )

@@ -20,7 +20,7 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
-	"github.com/dfuse-io/dmetering"
+	"github.com/streamingfast/dmetering"
 )
 
 func ListTransactionsHandler(db eosws.DB) http.Handler {

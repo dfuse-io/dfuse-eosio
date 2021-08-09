@@ -25,7 +25,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	rateLimiter "github.com/dfuse-io/dauth/ratelimiter"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
@@ -35,7 +34,6 @@ import (
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dhammer"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/opaque"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
@@ -43,9 +41,11 @@ import (
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/graph-gophers/graphql-go"
+	rateLimiter "github.com/streamingfast/dauth/ratelimiter"
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 

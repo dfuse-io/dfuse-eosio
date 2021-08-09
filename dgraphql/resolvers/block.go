@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/kvdb"
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
@@ -29,6 +28,7 @@ import (
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 
