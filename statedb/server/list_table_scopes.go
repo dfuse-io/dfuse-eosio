@@ -23,10 +23,10 @@ import (
 
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/fluxdb"
 	"go.uber.org/zap"
 )
 

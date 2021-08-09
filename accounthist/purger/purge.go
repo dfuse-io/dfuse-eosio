@@ -8,7 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 )
 
 type LogFunc func(facet accounthist.Facet, belowShardNum int, currentCount uint64)

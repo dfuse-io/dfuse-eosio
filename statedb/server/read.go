@@ -22,9 +22,9 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dtracing"
-	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/logging"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/fluxdb"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 )

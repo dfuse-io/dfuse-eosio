@@ -30,13 +30,13 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	dmeshClient "github.com/dfuse-io/dmesh/client"
-	_ "github.com/dfuse-io/kvdb/store/badger"
-	_ "github.com/dfuse-io/kvdb/store/bigkv"
-	_ "github.com/dfuse-io/kvdb/store/netkv"
-	_ "github.com/dfuse-io/kvdb/store/tikv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/dlauncher/launcher"
+	_ "github.com/streamingfast/kvdb/store/badger"
+	_ "github.com/streamingfast/kvdb/store/bigkv"
+	_ "github.com/streamingfast/kvdb/store/netkv"
+	_ "github.com/streamingfast/kvdb/store/tikv"
 	"go.uber.org/zap"
 )
 

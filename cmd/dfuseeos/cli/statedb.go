@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	statedbApp "github.com/dfuse-io/dfuse-eosio/statedb/app/statedb"
-	fluxdbApp "github.com/dfuse-io/fluxdb/app/fluxdb"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/dlauncher/launcher"
+	fluxdbApp "github.com/streamingfast/fluxdb/app/fluxdb"
 )
 
 func init() {

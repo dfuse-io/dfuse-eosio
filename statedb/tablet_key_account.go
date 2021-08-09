@@ -6,9 +6,9 @@ import (
 	"math"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
-	"github.com/dfuse-io/fluxdb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/fluxdb"
 )
 
 const kaCollection = 0xB300

@@ -8,7 +8,7 @@ import (
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/golang/protobuf/proto"
 
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

@@ -15,13 +15,13 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/fluxdb"
-	"github.com/dfuse-io/kvdb/store"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/klauspost/compress/zstd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/kvdb/store"
 )
 
 var showValue = false

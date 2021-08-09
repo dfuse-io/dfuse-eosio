@@ -20,10 +20,10 @@ import (
 
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/fluxdb"
 	"github.com/dfuse-io/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/fluxdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

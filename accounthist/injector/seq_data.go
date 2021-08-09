@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
 )
 

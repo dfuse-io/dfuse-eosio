@@ -22,8 +22,8 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	kvdbstore "github.com/dfuse-io/kvdb/store"
 	"github.com/golang/protobuf/ptypes"
+	kvdbstore "github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
 )
 

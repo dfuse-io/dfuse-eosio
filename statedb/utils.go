@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/dfuse-io/fluxdb"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/fluxdb"
 )
 
 var bigEndian = binary.BigEndian

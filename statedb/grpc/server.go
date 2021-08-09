@@ -8,7 +8,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/fluxdb"
+	"github.com/streamingfast/fluxdb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )

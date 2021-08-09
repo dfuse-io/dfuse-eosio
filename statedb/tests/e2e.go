@@ -25,8 +25,8 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/server"
-	"github.com/dfuse-io/fluxdb"
 	"github.com/gavv/httpexpect/v2"
+	"github.com/streamingfast/fluxdb"
 	"github.com/stretchr/testify/require"
 )
 

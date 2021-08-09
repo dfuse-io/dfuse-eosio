@@ -27,10 +27,10 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/kvdb"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/dfuse-io/shutter"
 	eosgo "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/kvdb"
 	"go.uber.org/zap"
 )
 

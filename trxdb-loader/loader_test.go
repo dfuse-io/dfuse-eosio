@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
-	_ "github.com/dfuse-io/kvdb/store/badger"
+	_ "github.com/streamingfast/kvdb/store/badger"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/jsonpb"
