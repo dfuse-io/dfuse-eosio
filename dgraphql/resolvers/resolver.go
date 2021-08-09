@@ -34,9 +34,6 @@ import (
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/dgraphql"
-	"github.com/dfuse-io/dgraphql/analytics"
-	commonTypes "github.com/dfuse-io/dgraphql/types"
 	"github.com/dfuse-io/dhammer"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/logging"
@@ -46,6 +43,9 @@ import (
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/graph-gophers/graphql-go"
+	"github.com/streamingfast/dgraphql"
+	"github.com/streamingfast/dgraphql/analytics"
+	commonTypes "github.com/streamingfast/dgraphql/types"
 	"go.uber.org/zap"
 )
 
@@ -826,14 +826,14 @@ type BlockRootMerkle struct {
 
 func newBlockRootMerkle(merkleRoot *pbcodec.BlockRootMerkle) BlockRootMerkle {
 	return BlockRootMerkle{
-		m:  merkleRoot,
+		m: merkleRoot,
 	}
 }
 
-func (b BlockRootMerkle) NodeCount() commonTypes.Uint32                    { return commonTypes.Uint32(b.m.NodeCount) }
-func (b BlockRootMerkle) ActiveNodes() (out []string){
-  out = make([]string, len(b.m.ActiveNodes))
-	for i, n := range b.m.ActiveNodes{
+func (b BlockRootMerkle) NodeCount() commonTypes.Uint32 { return commonTypes.Uint32(b.m.NodeCount) }
+func (b BlockRootMerkle) ActiveNodes() (out []string) {
+	out = make([]string, len(b.m.ActiveNodes))
+	for i, n := range b.m.ActiveNodes {
 		out[i] = hex.EncodeToString(n)
 	}
 	return

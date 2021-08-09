@@ -9,13 +9,13 @@ import (
 	"github.com/dfuse-io/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/dfuse-io/dgraphql"
-	"github.com/dfuse-io/dgraphql/analytics"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/opaque"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/dgraphql"
+	"github.com/streamingfast/dgraphql/analytics"
 	"go.uber.org/zap"
 )
 
