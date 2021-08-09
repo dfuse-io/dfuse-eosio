@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dlauncher/launcher"
-	mergerApp "github.com/dfuse-io/merger/app/merger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	mergerApp "github.com/streamingfast/merger/app/merger"
 )
 
 func init() {
@@ -15,7 +15,7 @@ func init() {
 		Title:       "Merger",
 		Description: "Produces merged block files from single-block files",
 		MetricsID:   "merger",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/merger.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/merger.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().Duration("merger-time-between-store-lookups", 5*time.Second, "delay between source store polling (should be higher for remote storage)")
 			cmd.Flags().String("merger-state-file", "{dfuse-data-dir}/merger/merger.seen.gob", "Path to file containing last written block number, as well as a map of all 'seen blocks' in the 'max-fixable-fork' range")

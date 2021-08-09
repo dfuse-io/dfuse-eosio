@@ -396,8 +396,6 @@ github.com/dfuse-io/logging v0.0.0-20210505184759-bd624da6cda5 h1:sLTJICB4R7buZI
 github.com/dfuse-io/logging v0.0.0-20210505184759-bd624da6cda5/go.mod h1:EoK/8RFbMEteaCaz89uessDTnCWjbbcr+DXcBh4el5o=
 github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2 h1:UESSYlCW/yF5xIoGV8azG0G3CQ2oMIKrB7Xp/egPfV0=
 github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2/go.mod h1:EoK/8RFbMEteaCaz89uessDTnCWjbbcr+DXcBh4el5o=
-github.com/dfuse-io/merger v0.0.3-0.20210218184002-6b3b6ba94465 h1:+Oey/6YZpOut30YoeAu3LCgeywiSwKmFUcFm0aoyPaU=
-github.com/dfuse-io/merger v0.0.3-0.20210218184002-6b3b6ba94465/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/dfuse-io/node-manager v0.0.2-0.20210116001407-5faa4551f66d h1:yO+19RrFTfXNhPYLWqmHf9nb6Y4R8nHVKHoYEMrmbtA=
 github.com/dfuse-io/node-manager v0.0.2-0.20210116001407-5faa4551f66d/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/dfuse-io/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1 h1:1H3K6B/jFDkzgTQuYDzWThClBvTw06c65tcJDquqtwM=
@@ -1014,6 +1012,10 @@ github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570/go.mod h1:8
 github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3/go.mod h1:hpGUWaI9xL8pRQCTXQgocU38Qw1g0Us7n5PxxTwTCYU=
 github.com/steveyen/gtreap v0.1.0 h1:CjhzTa274PyJLJuMZwIzCO1PfC00oRa8d1Kc78bFXJM=
 github.com/steveyen/gtreap v0.1.0/go.mod h1:kl/5J7XbrOmlIbYIXdRHDDE5QxHqpk0cmkT7Z4dM9/Y=
+github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465 h1:+Oey/6YZpOut30YoeAu3LCgeywiSwKmFUcFm0aoyPaU=
+github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
+github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b h1:2TZK549dvo9W+o0RyIkYw42f6ny9H/ntxRZC/8yTJzs=
+github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b/go.mod h1:JZUuGTibm1hYfzlLpezr2XRN4gExndNOTv+D/NBNQCE=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
