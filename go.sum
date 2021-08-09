@@ -388,12 +388,6 @@ github.com/dfuse-io/logging v0.0.0-20210505184759-bd624da6cda5 h1:sLTJICB4R7buZI
 github.com/dfuse-io/logging v0.0.0-20210505184759-bd624da6cda5/go.mod h1:EoK/8RFbMEteaCaz89uessDTnCWjbbcr+DXcBh4el5o=
 github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2 h1:UESSYlCW/yF5xIoGV8azG0G3CQ2oMIKrB7Xp/egPfV0=
 github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2/go.mod h1:EoK/8RFbMEteaCaz89uessDTnCWjbbcr+DXcBh4el5o=
-github.com/dfuse-io/node-manager v0.0.2-0.20210116001407-5faa4551f66d h1:yO+19RrFTfXNhPYLWqmHf9nb6Y4R8nHVKHoYEMrmbtA=
-github.com/dfuse-io/node-manager v0.0.2-0.20210116001407-5faa4551f66d/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
-github.com/dfuse-io/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1 h1:1H3K6B/jFDkzgTQuYDzWThClBvTw06c65tcJDquqtwM=
-github.com/dfuse-io/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
-github.com/dfuse-io/node-manager v0.0.2-0.20210413133800-b1893707a2f6 h1:1hUAOd28dXd/v5C+X8d9DNgSDxYYbjqckZJiKCUpDNM=
-github.com/dfuse-io/node-manager v0.0.2-0.20210413133800-b1893707a2f6/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48 h1:nf8r2ROrv80taXLyyUXXtK2ugnn+x2Qd2nABRZAQAHA=
@@ -468,6 +462,7 @@ github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5 h1:adxk5zxtAbda
 github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5/go.mod h1:j+tTXkGNu094KcquTwf5i6KBq4M0G9xugwf/8EZKYxQ=
 github.com/eoscanada/eosc v1.4.0 h1:wqlRNjrKFwX9Y30sgJfgdNxLol2WuEstYP30wr6jyoc=
 github.com/eoscanada/eosc v1.4.0/go.mod h1:0I+yYzRUTbIMgQsBjBYyNdE5idtbUMMkUQM4fN5A3P4=
+github.com/eoscanada/pitreos v1.1.0/go.mod h1:WIRNAZJRZeRXTUEWnDtApMA0WdtKH8egW1O9W23IPvg=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39 h1:JQ7Gc43VO/HJb/mNc9otItimhUi5nGKH7ZvINbidcyg=
 github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39/go.mod h1:s+wqQ06P9Micmjx1ejirBXVxVNiYXfZROIgQeBsAneI=
 github.com/ethereum/go-ethereum v1.9.9/go.mod h1:a9TqabFudpDu1nucId+k9S8R9whYaHnGBLKFouA5EAo=
@@ -752,6 +747,8 @@ github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f h1:5G1KYNmPLySs2
 github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f/go.mod h1:E0cqa1dK90ii2fglIk+u4K3LYXpkb9ZFWVDfbS2++Xk=
 github.com/matishsiao/goInfo v0.0.0-20170803142006-617e6440957e h1:Y+GY+bv5vf1gssphFsGiq6R8qdHxnpDZvYljFnXfhD8=
 github.com/matishsiao/goInfo v0.0.0-20170803142006-617e6440957e/go.mod h1:yLZrFIhv+Z20hxHvcZpEyKVQp9HMsOJkXAxx7yDqtvg=
+github.com/matishsiao/goInfo v0.0.0-20200404012835-b5f882ee2288 h1:cdM7et8/VlNnSBpq3KbyQWsYLCY0WsB7tvV8Fr0DUNE=
+github.com/matishsiao/goInfo v0.0.0-20200404012835-b5f882ee2288/go.mod h1:yLZrFIhv+Z20hxHvcZpEyKVQp9HMsOJkXAxx7yDqtvg=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.0/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.2 h1:/bC9yWikZXAL9uJdulbSfyVNIR3n3trXl+v8+1sx8mU=
@@ -1020,6 +1017,14 @@ github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465 h1:+Oey/6YZ
 github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b h1:2TZK549dvo9W+o0RyIkYw42f6ny9H/ntxRZC/8yTJzs=
 github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b/go.mod h1:JZUuGTibm1hYfzlLpezr2XRN4gExndNOTv+D/NBNQCE=
+github.com/streamingfast/node-manager v0.0.2-0.20210116001407-5faa4551f66d h1:yO+19RrFTfXNhPYLWqmHf9nb6Y4R8nHVKHoYEMrmbtA=
+github.com/streamingfast/node-manager v0.0.2-0.20210116001407-5faa4551f66d/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
+github.com/streamingfast/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1 h1:1H3K6B/jFDkzgTQuYDzWThClBvTw06c65tcJDquqtwM=
+github.com/streamingfast/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
+github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6 h1:1hUAOd28dXd/v5C+X8d9DNgSDxYYbjqckZJiKCUpDNM=
+github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
+github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e h1:aEJWc2z+iz3GSa2LKCjSstEiQ78I6iKrVcX5MrDnzuQ=
+github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e/go.mod h1:FpJg9rTpw8scRegq7gSFDD12bd6ou24Yg6GCAQF8G8I=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=

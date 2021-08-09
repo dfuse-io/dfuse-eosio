@@ -39,7 +39,6 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20210712145411-a765c572fce7
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
-	github.com/dfuse-io/node-manager v0.0.2-0.20210413133800-b1893707a2f6
 	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48
 	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
 	github.com/dfuse-io/relayer v0.0.2-0.20210525190602-eeec872ddedf
@@ -77,6 +76,7 @@ require (
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809170453-5a8cfa32b1ff
 	github.com/streamingfast/firehose v0.1.1-0.20210809172230-12665dcfb713
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
+	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9
