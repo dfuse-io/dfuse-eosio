@@ -90,7 +90,7 @@ date.
 ### Changed
 * **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
-* `merger` startblock behavior changed, now relies on state-file, see https://github.com/dfuse-io/merger/issues/1
+* `merger` startblock behavior changed, now relies on state-file, see https://github.com/streamingfast/merger/issues/1
 * Changed `merger-seen-blocks-file` flag to `merger-state-file` to reflect this change.
 * `merger` now properly handles storage backend errors when looking for where to start
 * `mindreader` now automatically produces "merged blocks" instead of "one-block-files" when catching up (based on blocktime or if a blockmeta is reachable at `--common-blockmeta-addr`)

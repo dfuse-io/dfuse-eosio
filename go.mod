@@ -17,7 +17,6 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/blockmeta v0.0.2-0.20200818234314-2ad05605ed8d
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
@@ -36,7 +35,6 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/firehose v0.1.1-0.20210424034522-6e5c05a23323
 	github.com/dfuse-io/fluxdb v0.0.0-20210528171211-9df379b9a4e1
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20210712145411-a765c572fce7
@@ -76,6 +74,8 @@ require (
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
+	github.com/streamingfast/blockmeta v0.0.2-0.20210809170453-5a8cfa32b1ff
+	github.com/streamingfast/firehose v0.1.1-0.20210809172230-12665dcfb713
 	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125

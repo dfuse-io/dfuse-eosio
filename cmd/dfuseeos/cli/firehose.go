@@ -13,11 +13,11 @@ import (
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/dfuse-io/dmetering"
 	"github.com/dfuse-io/dmetrics"
-	firehoseApp "github.com/dfuse-io/firehose/app/firehose"
 	"github.com/dfuse-io/logging"
 	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	firehoseApp "github.com/streamingfast/firehose/app/firehose"
 	"go.uber.org/zap"
 )
 

@@ -3,13 +3,13 @@ package cli
 import (
 	"strings"
 
-	blockmetaApp "github.com/dfuse-io/blockmeta/app/blockmeta"
 	dblockmeta "github.com/dfuse-io/dfuse-eosio/blockmeta"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	blockmetaApp "github.com/streamingfast/blockmeta/app/blockmeta"
 )
 
 func init() {
@@ -19,7 +19,7 @@ func init() {
 		Title:       "Blockmeta",
 		Description: "Serves information about blocks",
 		MetricsID:   "blockmeta",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/blockmeta.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/blockmeta.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("blockmeta-grpc-listen-addr", BlockmetaServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().Bool("blockmeta-live-source", true, "Whether we want to connect to a live block source or not.")
