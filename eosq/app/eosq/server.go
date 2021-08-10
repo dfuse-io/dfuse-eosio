@@ -30,7 +30,7 @@ import (
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/streamingfast/derr"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"

@@ -8,7 +8,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	mergedFilter "github.com/dfuse-io/dfuse-eosio/merged-filter"
 	"github.com/streamingfast/dstore"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 )
 

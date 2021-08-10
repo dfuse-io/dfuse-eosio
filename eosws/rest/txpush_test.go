@@ -24,7 +24,7 @@ import (
 	"github.com/dfuse-io/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/stretchr/testify/require"

@@ -17,7 +17,7 @@ package apiproxy
 import (
 	"fmt"
 
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	"github.com/streamingfast/dlauncher/launcher"
 )
 

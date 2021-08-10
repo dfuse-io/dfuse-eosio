@@ -24,7 +24,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 )
 
 type CommonHub struct {

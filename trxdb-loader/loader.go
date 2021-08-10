@@ -28,7 +28,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
 	"github.com/streamingfast/dstore"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	eosgo "github.com/eoscanada/eos-go"
 	"github.com/streamingfast/kvdb"
 	"go.uber.org/zap"

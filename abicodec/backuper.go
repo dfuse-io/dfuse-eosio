@@ -19,7 +19,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 )
 
 type Backuper struct {
