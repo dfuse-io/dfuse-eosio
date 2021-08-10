@@ -22,7 +22,7 @@ import (
 	"sort"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/dhammer"
+	"github.com/streamingfast/dhammer"
 	eos "github.com/eoscanada/eos-go"
 
 	"github.com/dfuse-io/logging"

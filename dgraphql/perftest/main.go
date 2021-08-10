@@ -24,7 +24,7 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dhammer"
+	"github.com/streamingfast/dhammer"
 )
 
 var concurrentBatches = flag.Int("concurrent-batches", 2, "concurrent threads")

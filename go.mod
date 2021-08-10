@@ -18,13 +18,12 @@ require (
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/bstream v0.0.2-0.20210810125844-72912424b968
+	github.com/dfuse-io/bstream v0.0.2-0.20210810184055-243c376da8d5
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
 	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c
-	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
@@ -68,6 +67,7 @@ require (
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
 	github.com/streamingfast/dgraphql v0.0.2-0.20210810131157-f404ee68d22f
+	github.com/streamingfast/dhammer v0.0.0-20210810183918-d5d2313b80a7 // indirect
 	github.com/streamingfast/dlauncher v0.0.0-20210810131630-23dbc8cfc9a6
 	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
@@ -81,7 +81,7 @@ require (
 	github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d
 	github.com/streamingfast/relayer v0.0.2-0.20210810132245-14bdf79d136c
 	github.com/streamingfast/search v0.0.2-0.20210810132343-b54c99a6b77b
-	github.com/streamingfast/search-client v0.0.0-20210809202359-fed38884d2b4
+	github.com/streamingfast/search-client v0.0.0-20210810184115-1714dd3512a9
 	github.com/streamingfast/shutter v1.5.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
