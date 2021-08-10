@@ -17,7 +17,7 @@ package metrics
 import (
 	"time"
 
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 )
 
 var headBlockTime time.Time

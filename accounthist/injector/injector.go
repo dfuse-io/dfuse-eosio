@@ -8,7 +8,7 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist/metrics"
 
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 

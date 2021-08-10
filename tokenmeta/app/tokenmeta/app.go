@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 
 	"github.com/streamingfast/derr"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"

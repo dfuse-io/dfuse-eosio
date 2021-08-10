@@ -25,7 +25,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/streamingfast/shutter"

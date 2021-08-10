@@ -18,27 +18,30 @@ require (
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/bstream v0.0.2-0.20210810184055-243c376da8d5
+	github.com/dfuse-io/bstream v0.0.2-0.20210810200727-06a4c4aaeb99
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
 	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c
+	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd // indirect
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
-	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
+	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68 // indirect
+	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f // indirect
+	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c // indirect
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
-	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3
+	github.com/dfuse-io/pbgo v0.0.6-0.20210810190312-2053a3b38779
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5
 	github.com/eoscanada/eosc v1.4.0
-	github.com/eoscanada/pitreos v1.1.1-0.20200721154110-fb345999fa39
+	github.com/eoscanada/pitreos v1.1.1-0.20210810174831-3e4668dcda56
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
@@ -62,25 +65,26 @@ require (
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
-	github.com/streamingfast/blockmeta v0.0.2-0.20210810130353-f51d8b9b2748
+	github.com/streamingfast/blockmeta v0.0.2-0.20210810200809-9cf9dff77535
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
-	github.com/streamingfast/dgraphql v0.0.2-0.20210810131157-f404ee68d22f
+	github.com/streamingfast/dgraphql v0.0.2-0.20210810194021-e343b2730c32
 	github.com/streamingfast/dhammer v0.0.0-20210810183918-d5d2313b80a7 // indirect
-	github.com/streamingfast/dlauncher v0.0.0-20210810131630-23dbc8cfc9a6
-	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89
+	github.com/streamingfast/dlauncher v0.0.0-20210810201623-b4bad04a0782
+	github.com/streamingfast/dmesh v0.0.0-20210810194153-7e56f639d42f
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
+	github.com/streamingfast/dmetrics v0.0.0-20210810172555-564d623b116f // indirect
 	github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
-	github.com/streamingfast/firehose v0.1.1-0.20210810131806-b34fb83d91f1
-	github.com/streamingfast/fluxdb v0.0.0-20210810131937-d8b60d6f0de1
+	github.com/streamingfast/firehose v0.1.1-0.20210810201729-f4f65f7bc597
+	github.com/streamingfast/fluxdb v0.0.0-20210810195359-748b15076010
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
-	github.com/streamingfast/merger v0.0.3-0.20210810132028-152c4bb1c034
-	github.com/streamingfast/node-manager v0.0.2-0.20210810172626-0812ea8d9123
+	github.com/streamingfast/merger v0.0.3-0.20210810201721-8308c7731ce1
+	github.com/streamingfast/node-manager v0.0.2-0.20210810201803-d07d31a2f254
 	github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d
-	github.com/streamingfast/relayer v0.0.2-0.20210810132245-14bdf79d136c
-	github.com/streamingfast/search v0.0.2-0.20210810132343-b54c99a6b77b
+	github.com/streamingfast/relayer v0.0.2-0.20210810201213-52e46787d413
+	github.com/streamingfast/search v0.0.2-0.20210810201932-35eabdd80bbc
 	github.com/streamingfast/search-client v0.0.0-20210810184115-1714dd3512a9
 	github.com/streamingfast/shutter v1.5.0 // indirect
 	github.com/stretchr/testify v1.7.0

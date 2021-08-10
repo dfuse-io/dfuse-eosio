@@ -24,7 +24,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"
 	"github.com/dfuse-io/dfuse-eosio/statedb/metrics"
 	"github.com/dfuse-io/dfuse-eosio/statedb/server"
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	"github.com/streamingfast/fluxdb"
 	appFluxdb "github.com/streamingfast/fluxdb/app/fluxdb"
