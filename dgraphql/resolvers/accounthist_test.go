@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/dfuse-io/dgrpc"
+	"github.com/streamingfast/dgrpc"
 	"github.com/stretchr/testify/require"
 )
 

@@ -34,7 +34,7 @@ import (
 	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/dgrpc"
+	"github.com/streamingfast/dgrpc"
 	"github.com/dfuse-io/dipp"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"

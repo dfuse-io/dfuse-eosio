@@ -23,7 +23,6 @@ require (
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
-	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c
 	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd // indirect
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
@@ -70,6 +69,7 @@ require (
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
 	github.com/streamingfast/dgraphql v0.0.2-0.20210810194021-e343b2730c32
+	github.com/streamingfast/dgrpc v0.0.0-20210810185305-905172f728e8 // indirect
 	github.com/streamingfast/dhammer v0.0.0-20210810183918-d5d2313b80a7 // indirect
 	github.com/streamingfast/dlauncher v0.0.0-20210810201623-b4bad04a0782
 	github.com/streamingfast/dmesh v0.0.0-20210810194153-7e56f639d42f

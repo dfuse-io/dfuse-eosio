@@ -20,7 +20,7 @@ import (
 	"net"
 
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
-	"github.com/dfuse-io/dgrpc"
+	"github.com/streamingfast/dgrpc"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
