@@ -267,6 +267,8 @@ github.com/dfuse-io/bstream v0.0.2-0.20210203203654-afe75df13683 h1:ALJXEiSvhc8Z
 github.com/dfuse-io/bstream v0.0.2-0.20210203203654-afe75df13683/go.mod h1:J1YEYT36vqyoGxHKGnpV+9YjFRZmiJKqLLG3iDZgdZo=
 github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219 h1:Fb7p63RuP2X3dWBOHUPusoldvJtGuWtFHrCpYG2tvEw=
 github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219/go.mod h1:J1YEYT36vqyoGxHKGnpV+9YjFRZmiJKqLLG3iDZgdZo=
+github.com/dfuse-io/bstream v0.0.2-0.20210810055526-1c2b722f0cf6 h1:hCiylSdlf6eAOpIYBd6mDBHVSoJD2q6fyWACIvXizUM=
+github.com/dfuse-io/bstream v0.0.2-0.20210810055526-1c2b722f0cf6/go.mod h1:Kfpy3FIy/Qe01H5xuDRMCpkgXpDdHpc9IY5CdFLRzGk=
 github.com/dfuse-io/cli v0.0.2-0.20210505184833-be3717303721 h1:lfBnWX0gIKjEJQ+mtiaVw6SDl2nUfeoAFGzSZpkexe8=
 github.com/dfuse-io/cli v0.0.2-0.20210505184833-be3717303721/go.mod h1:Oq3bTX3762gLGKKbA+YboBIjlGB/gSro/Pp9Dkw01BE=
 github.com/dfuse-io/cli v0.0.2 h1:wj0RrFeoaYxDvUoLdoJTSxegX5xjlsnDrUqYyuaYZXY=
@@ -283,8 +285,6 @@ github.com/dfuse-io/dauth v0.0.0-20200529171443-21c0e2d262c2/go.mod h1:tab5biQg5
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDplzlDIBtDq+Hf7EgLUEt4bi9QQLCIiMTQ=
 github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/dfuse-io/dbin v0.0.0-20200406215642-ec7f22e794eb/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
-github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643 h1:EKyGTIJeybbjDLXZf4W3gh+KQZm5XE/nXK/L2RwI0K4=
-github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
 github.com/dfuse-io/derr v0.0.0-20200406214256-c690655246a1/go.mod h1:JW/hUKChGd6ytDtvwx4JFo57m1pnFvMxaq9WbDAb2fQ=
 github.com/dfuse-io/derr v0.0.0-20200417132224-d333cfd0e9a0/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
 github.com/dfuse-io/derr v0.0.0-20200730183817-a747f6f333ad/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
@@ -309,6 +309,8 @@ github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c/go.mod h1:SQUqYjDen
 github.com/dfuse-io/dhammer v0.0.0-20200407040847-5fb1dcc749e1/go.mod h1:7NpM9VIxbrn4UygbhQt735BXs+BktEtv0YrLSXlgDQA=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64 h1:yAxP/9sNL8uulVcyLu2SFVmUVFefcUoxUHqTs0V/DUc=
 github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64/go.mod h1:oMDmMjK+thNJi8TgUgqEx5PkpW9GFlGfrWy9Id1zDiA=
+github.com/dfuse-io/dhammer v0.0.0-20201127174908-667b90585063 h1:p7QgOjq+ZAbXmNmDlVQ+h+sKBD18tbeiSwOTaatiZrk=
+github.com/dfuse-io/dhammer v0.0.0-20201127174908-667b90585063/go.mod h1:oZddPdIkulFkFWxsxyOY0cavd2+kSjpxLOYgtZAZeNE=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4 h1:2y5Tbm8RPbhCSutKgJwa328F/bJ23rpWC8clt5LhCiA=
 github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4/go.mod h1:4OSkJC9kCEQMw9f79Kl4Dl2vQZxQLknn0W7hZlZLsPM=
 github.com/dfuse-io/dmesh v0.0.0-20200427143025-f55305fa4b95/go.mod h1:xUkrTebUXPRjO5wm565eEQluow9nzb6NYl42aeupllQ=
@@ -351,6 +353,7 @@ github.com/dfuse-io/logging v0.0.0-20200417143534-5e26069a5e39/go.mod h1:80YyilH
 github.com/dfuse-io/logging v0.0.0-20200908182738-02ce9b245eeb/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20201005173513-5e47a07b5a56/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
 github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79/go.mod h1:V+ED4kT/t/lKtH99JQmKIb0v9WL3VaYkJ36CfHlVECI=
+github.com/dfuse-io/logging v0.0.0-20201120222745-9988f63324bc/go.mod h1:n0Np6Dr/Yv56l8Rq2wgDZpv4vfjT8qlvY34pb3dcI0k=
 github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42 h1:WGgtwEYdpKdgsrabHF1FcjhfPehjgAzB8NGEUK3jhfE=
 github.com/dfuse-io/logging v0.0.0-20201125153217-f29c382faa42/go.mod h1:n0Np6Dr/Yv56l8Rq2wgDZpv4vfjT8qlvY34pb3dcI0k=
 github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 h1:CuJS05R9jmNlUK8GOxrEELPbfXm0EuGh/30LjkjN5vo=
@@ -967,6 +970,13 @@ github.com/streamingfast/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDp
 github.com/streamingfast/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac h1:/FOjEkm9/di7wWos1rKGtSBUDWWwO5ebKJntRdNcw48=
 github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac/go.mod h1:x7pFMAim8Tesn45YwdLV+yZdg0ItQE2DXtEFQhn1U/Q=
+github.com/streamingfast/dbin v0.0.0-20200406215642-ec7f22e794eb/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
+github.com/streamingfast/dbin v0.0.0-20200406215642-ec7f22e794eb/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
+github.com/streamingfast/dbin v0.0.0-20200406215642-ec7f22e794eb/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
+github.com/streamingfast/dbin v0.0.0-20200417174747-9a3806ff5643 h1:EKyGTIJeybbjDLXZf4W3gh+KQZm5XE/nXK/L2RwI0K4=
+github.com/streamingfast/dbin v0.0.0-20200417174747-9a3806ff5643/go.mod h1:yMMhO8IdiSS+R/961s9Ac1oyAx3MdAO0OneSZ9Wt/Wg=
+github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5 h1:m/3aIPNXCwZ9m/dfYdOs8ftrS7GJl82ipVr6K2aZiBs=
+github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5/go.mod h1:YStE7K5/GH47JsWpY7LMKsDaXXpMLU/M26vYFzXHYRk=
 github.com/streamingfast/derr v0.0.0-20200406214256-c690655246a1/go.mod h1:JW/hUKChGd6ytDtvwx4JFo57m1pnFvMxaq9WbDAb2fQ=
 github.com/streamingfast/derr v0.0.0-20200417132224-d333cfd0e9a0/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
 github.com/streamingfast/derr v0.0.0-20200730183817-a747f6f333ad/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
@@ -1042,6 +1052,8 @@ github.com/streamingfast/fluxdb v0.0.0-20210809203830-43b1c4fa9a42 h1:3eEv6BWQzN
 github.com/streamingfast/fluxdb v0.0.0-20210809203830-43b1c4fa9a42/go.mod h1:si7zbZcapaI2ZboQejbygN/L4EAIpH14pKer4elTp6A=
 github.com/streamingfast/fluxdb v0.0.0-20210809204656-0a33d1ab6d3d h1:EvLCmoBOb44KaxsIVUJit4kPggfgEbrJGoF5S8LdI90=
 github.com/streamingfast/fluxdb v0.0.0-20210809204656-0a33d1ab6d3d/go.mod h1:QuOw8PeYDC+9vXRmZ6WbgKupNw0GGw7629cODrgBG6A=
+github.com/streamingfast/fluxdb v0.0.0-20210810060234-5ea7c9248765 h1:T2fOkeuu6RHK0pRs4X5Vmk/DIZV73r2a3hsKVMCluE0=
+github.com/streamingfast/fluxdb v0.0.0-20210810060234-5ea7c9248765/go.mod h1:AEdOfkYlyPguAS3DMdoqk/HmCIdnoM+OywuB7UzMXtU=
 github.com/streamingfast/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/streamingfast/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/streamingfast/kvdb v0.0.2-0.20201125184722-e565bbbcc32e h1:m8gvEKunk9hGq2gG2MebWflSKWcILzFc6Hob44m9+8E=
@@ -1054,6 +1066,8 @@ github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465 h1:+Oey/6YZ
 github.com/streamingfast/merger v0.0.3-0.20210218184002-6b3b6ba94465/go.mod h1:Dp769aARRjBQ9Ur3K5Rl8cQmB29XWueudFa9JOH2f8Q=
 github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b h1:2TZK549dvo9W+o0RyIkYw42f6ny9H/ntxRZC/8yTJzs=
 github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b/go.mod h1:JZUuGTibm1hYfzlLpezr2XRN4gExndNOTv+D/NBNQCE=
+github.com/streamingfast/merger v0.0.3-0.20210810060447-9dbf5a0ab9e9 h1:cx6IwIO0C8tmdmEHs48ZzwvfZ98z5ars7+566gShYpM=
+github.com/streamingfast/merger v0.0.3-0.20210810060447-9dbf5a0ab9e9/go.mod h1:I3s3UsdCZRelZeR5UQiQQ4W1ijnge4LKe0J2PRr9cFI=
 github.com/streamingfast/node-manager v0.0.2-0.20210116001407-5faa4551f66d h1:yO+19RrFTfXNhPYLWqmHf9nb6Y4R8nHVKHoYEMrmbtA=
 github.com/streamingfast/node-manager v0.0.2-0.20210116001407-5faa4551f66d/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/streamingfast/node-manager v0.0.2-0.20210412191825-b4fd774f4cb1 h1:1H3K6B/jFDkzgTQuYDzWThClBvTw06c65tcJDquqtwM=
@@ -1062,6 +1076,8 @@ github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6 h1:1h
 github.com/streamingfast/node-manager v0.0.2-0.20210413133800-b1893707a2f6/go.mod h1:41xyeLWKtU90QH1uBvfDWAJzZbP+gmDmrxR3Dh5n+gU=
 github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e h1:aEJWc2z+iz3GSa2LKCjSstEiQ78I6iKrVcX5MrDnzuQ=
 github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e/go.mod h1:FpJg9rTpw8scRegq7gSFDD12bd6ou24Yg6GCAQF8G8I=
+github.com/streamingfast/node-manager v0.0.2-0.20210810032242-ae3626980a23 h1:8C78UX5ueZIs6nMFlO9AWxGa7PfmGwxCZFoV2hj0RrI=
+github.com/streamingfast/node-manager v0.0.2-0.20210810032242-ae3626980a23/go.mod h1:s/JuVAIwhg8zkmDIRBSt2jHDRtXDtGD5pn8nR7PU3PE=
 github.com/streamingfast/opaque v0.0.0-20200407012705-75c4ca372d71 h1:4sHaW1PpyHN2akafVagucu/t+4RqCJQ3WEuowxhdudk=
 github.com/streamingfast/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/streamingfast/opaque v0.0.0-20210108174126-bc02ec905d48 h1:nf8r2ROrv80taXLyyUXXtK2ugnn+x2Qd2nABRZAQAHA=

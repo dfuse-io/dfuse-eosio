@@ -25,9 +25,9 @@ import (
 	"github.com/dfuse-io/dhammer"
 	eos "github.com/eoscanada/eos-go"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )
 
@@ -101,7 +101,7 @@ func (srv *EOSServer) listTablesRowsForAccountsHandler(w http.ResponseWriter, r 
 		}
 
 		return resp, nil
-	}, zlog)
+	}, dhammer.NailerLogger(zlog))
 
 	nailer.PushAll(ctx, accounts)
 

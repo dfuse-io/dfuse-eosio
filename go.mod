@@ -18,13 +18,12 @@ require (
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
+	github.com/dfuse-io/bstream v0.0.2-0.20210810055526-1c2b722f0cf6
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
-	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
-	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
+	github.com/dfuse-io/dhammer v0.0.0-20201127174908-667b90585063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
@@ -67,6 +66,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809204651-ce70ba8613a7
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
+	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
 	github.com/streamingfast/dgraphql v0.0.2-0.20210809190503-b735aa2ad5fc
 	github.com/streamingfast/dlauncher v0.0.0-20210810011220-6b48a1226560
@@ -74,10 +74,10 @@ require (
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
 	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
 	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
-	github.com/streamingfast/fluxdb v0.0.0-20210809204656-0a33d1ab6d3d
+	github.com/streamingfast/fluxdb v0.0.0-20210810060234-5ea7c9248765
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
-	github.com/streamingfast/merger v0.0.3-0.20210809165038-14f85d21b69b
-	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
+	github.com/streamingfast/merger v0.0.3-0.20210810060447-9dbf5a0ab9e9
+	github.com/streamingfast/node-manager v0.0.2-0.20210810032242-ae3626980a23
 	github.com/streamingfast/opaque v0.0.0-20210809205334-b750026cb590
 	github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083
 	github.com/streamingfast/search v0.0.2-0.20210810011552-967a0b6b671e
