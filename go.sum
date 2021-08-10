@@ -1012,6 +1012,16 @@ github.com/streamingfast/dmetering v0.0.0-20210208201314-50d9add52005 h1:wE3Bsmv
 github.com/streamingfast/dmetering v0.0.0-20210208201314-50d9add52005/go.mod h1:QFR4Lo8aueGD5u+0HO2A3Un3dM+1pj6NjxYhLGKSNNI=
 github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843 h1:2n/ex44O140RSBuMCshtCbq5grMyIVvayT7fS9nrrIU=
 github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843/go.mod h1:oZESKnHkWdCRng9ds6bELIZo+49dRIR2Z9VF4FRZYVo=
+github.com/streamingfast/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
+github.com/streamingfast/dtracing v0.0.0-20200406213603-4b0c0063b125/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
+github.com/streamingfast/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGYuyB5fpkLybwlzDRoOFOHfpQehyxNUw=
+github.com/streamingfast/dtracing v0.0.0-20200417133307-c09302668d0c h1:G/qxKHQXz8OGYuyB5fpkLybwlzDRoOFOHfpQehyxNUw=
+github.com/streamingfast/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
+github.com/streamingfast/dtracing v0.0.0-20200417133307-c09302668d0c/go.mod h1:SA/v5q2RIuah2W5uvVldEUwfFprEhGiw66Id0j68rtw=
+github.com/streamingfast/dtracing v0.0.0-20210810035915-473055fed32a h1:f2z0hl0EzhIkzErTPGf6ntF1kdOUZTWAz/DajsTgu9s=
+github.com/streamingfast/dtracing v0.0.0-20210810035915-473055fed32a/go.mod h1:z8WI8Y2sVfFZQQewUC40hE3TgISt3K4n5RwKzXG65Pg=
+github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7 h1:QTexpFX7NUpLdS3+qAWQGajnKt6nFcbGlvKGjk961wU=
+github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7/go.mod h1:z8WI8Y2sVfFZQQewUC40hE3TgISt3K4n5RwKzXG65Pg=
 github.com/streamingfast/firehose v0.1.1-0.20210118213034-5bdcff6a14a7 h1:RH19Qjop+rITdOasI5+F5KD21jPpRHMasMwj4I69EJI=
 github.com/streamingfast/firehose v0.1.1-0.20210118213034-5bdcff6a14a7/go.mod h1:FY+UL1dIu+ZUZXn0kGTKQe2tt7KFB3pKZlU3BLdGIdk=
 github.com/streamingfast/firehose v0.1.1-0.20210309154954-8f7fa80bca42 h1:myO7c9Laf8Wmi5cA4W1sLUJayZ7lW06UVMvmYIhpff8=

@@ -20,7 +20,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/dfuse-io/dtracing"
+	"github.com/streamingfast/dtracing"
 	"github.com/dfuse-io/logging"
 	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
 	"go.uber.org/atomic"

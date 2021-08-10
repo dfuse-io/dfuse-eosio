@@ -30,7 +30,6 @@ require (
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f
-	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
@@ -73,6 +72,7 @@ require (
 	github.com/streamingfast/dlauncher v0.0.0-20210810011220-6b48a1226560
 	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
+	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
 	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
 	github.com/streamingfast/fluxdb v0.0.0-20210809204656-0a33d1ab6d3d
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
