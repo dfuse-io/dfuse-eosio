@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/klauspost/compress/zstd"

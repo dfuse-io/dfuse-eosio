@@ -19,7 +19,7 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/dfuse-io/jsonpb"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"

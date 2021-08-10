@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"

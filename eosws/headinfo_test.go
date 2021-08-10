@@ -20,7 +20,7 @@ import (
 	"time"
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/stretchr/testify/assert"
 )
 

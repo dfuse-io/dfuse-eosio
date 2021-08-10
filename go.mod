@@ -18,17 +18,17 @@ require (
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/bstream v0.0.2-0.20210810055526-1c2b722f0cf6
+	github.com/dfuse-io/bstream v0.0.2-0.20210810112308-458fdfd5441b
 	github.com/dfuse-io/cli v0.0.2
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
+	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
 	github.com/dfuse-io/dhammer v0.0.0-20201127174908-667b90585063
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
-	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
 	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
@@ -72,15 +72,16 @@ require (
 	github.com/streamingfast/dlauncher v0.0.0-20210810011220-6b48a1226560
 	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
+	github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
-	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
+	github.com/streamingfast/firehose v0.1.1-0.20210810113056-a3a9485e646d
 	github.com/streamingfast/fluxdb v0.0.0-20210810060234-5ea7c9248765
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
 	github.com/streamingfast/merger v0.0.3-0.20210810060447-9dbf5a0ab9e9
 	github.com/streamingfast/node-manager v0.0.2-0.20210810032242-ae3626980a23
-	github.com/streamingfast/opaque v0.0.0-20210809205334-b750026cb590
-	github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083
-	github.com/streamingfast/search v0.0.2-0.20210810011552-967a0b6b671e
+	github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d
+	github.com/streamingfast/relayer v0.0.2-0.20210810115400-583b20cd0525
+	github.com/streamingfast/search v0.0.2-0.20210810115518-e3d245abd6d2
 	github.com/streamingfast/search-client v0.0.0-20210809202359-fed38884d2b4
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125

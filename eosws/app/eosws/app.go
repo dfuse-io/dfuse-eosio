@@ -37,7 +37,7 @@ import (
 	"github.com/dfuse-io/dgrpc"
 	"github.com/dfuse-io/dipp"
 	"github.com/dfuse-io/dmetrics"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/dfuse-io/logging"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"

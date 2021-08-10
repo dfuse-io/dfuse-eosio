@@ -22,7 +22,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
 	"github.com/dfuse-io/shutter"
 	"go.uber.org/zap"

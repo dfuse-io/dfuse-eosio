@@ -14,7 +14,7 @@ import (
 
 	"github.com/dfuse-io/bstream"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/dfuse-io/shutter"
 	"github.com/golang/protobuf/proto"
 	"github.com/streamingfast/kvdb/store"

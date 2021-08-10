@@ -8,7 +8,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/dfuse-io/shutter"
 	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
