@@ -17,7 +17,7 @@ package statedb
 import (
 	"context"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	eos "github.com/eoscanada/eos-go"
 )
 

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	strackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"
 	"github.com/francoispqt/gojay"

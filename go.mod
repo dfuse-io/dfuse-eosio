@@ -23,7 +23,6 @@ require (
 	github.com/dfuse-io/client-go v0.0.0-20210526205821-9a3731282240
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/dbin v0.0.0-20200417174747-9a3806ff5643
-	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
@@ -69,6 +68,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809204651-ce70ba8613a7
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
+	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
 	github.com/streamingfast/dgraphql v0.0.2-0.20210809190503-b735aa2ad5fc
 	github.com/streamingfast/dlauncher v0.0.0-20210810011220-6b48a1226560
 	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89

@@ -967,6 +967,13 @@ github.com/streamingfast/dauth v0.0.0-20200601190857-60bc6a4b4665 h1:A92uTFTkaDp
 github.com/streamingfast/dauth v0.0.0-20200601190857-60bc6a4b4665/go.mod h1:tab5biQg59hbrHjaXTjaLcsP3zblx6B0I0Keu03xB44=
 github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac h1:/FOjEkm9/di7wWos1rKGtSBUDWWwO5ebKJntRdNcw48=
 github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac/go.mod h1:x7pFMAim8Tesn45YwdLV+yZdg0ItQE2DXtEFQhn1U/Q=
+github.com/streamingfast/derr v0.0.0-20200406214256-c690655246a1/go.mod h1:JW/hUKChGd6ytDtvwx4JFo57m1pnFvMxaq9WbDAb2fQ=
+github.com/streamingfast/derr v0.0.0-20200417132224-d333cfd0e9a0/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
+github.com/streamingfast/derr v0.0.0-20200730183817-a747f6f333ad/go.mod h1:/DjjRCyTi/KIiI1E1hnhvfWwg+K06jo+qM4VcjHvHq4=
+github.com/streamingfast/derr v0.0.0-20201001203637-4dc9d8014152 h1:8Ee802t3evsUTc7B/W9Lf1pavPje2dtYWEpMtMnE7TY=
+github.com/streamingfast/derr v0.0.0-20201001203637-4dc9d8014152/go.mod h1:8bq4KABI5QklH7a16SFIH7/R/jNCOloKu20T5VP+iTk=
+github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb h1:aZzRC5HbJpQZICZnQDWCZxcbeHYZ8vWGv5yLmWvtaW8=
+github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb/go.mod h1:zL7vriSdKmvbNntPVlXzPDizifaTwUv6+1TGp6KdO88=
 github.com/streamingfast/dgraphql v0.0.1 h1:BsUa00b2iKvLRjNwb1DbM+dkCj32bRNQcAcuk9z3eQk=
 github.com/streamingfast/dgraphql v0.0.1/go.mod h1:/VVsS8/b2hi4Xj07wVfqk+kgx/EEAiVDytLQ5wGPWYM=
 github.com/streamingfast/dgraphql v0.0.2-0.20210209213422-0c203cf6bcfd h1:eVewYg1V08kUximAyKANP/AwPZ/OMy6Yzp2zDd+pQak=

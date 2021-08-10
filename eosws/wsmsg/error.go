@@ -14,7 +14,7 @@
 
 package wsmsg
 
-import "github.com/dfuse-io/derr"
+import "github.com/streamingfast/derr"
 
 func init() {
 	RegisterOutgoingMessage("error", Error{})

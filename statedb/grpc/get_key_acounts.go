@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/streamingfast/fluxdb"
 	"go.uber.org/zap"

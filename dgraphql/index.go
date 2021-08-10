@@ -17,7 +17,7 @@ package dgraphql
 import (
 	"fmt"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"

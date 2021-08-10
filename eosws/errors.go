@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 )
 
 // Authentication/Authorization Errors

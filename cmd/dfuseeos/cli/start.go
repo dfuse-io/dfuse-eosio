@@ -26,7 +26,7 @@ import (
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/spf13/cobra"

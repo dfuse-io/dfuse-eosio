@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"
 	"github.com/dfuse-io/dfuse-eosio/statedb/metrics"

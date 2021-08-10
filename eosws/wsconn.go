@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"github.com/dfuse-io/dtracing"
 	"github.com/dfuse-io/logging"

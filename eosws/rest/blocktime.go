@@ -19,7 +19,7 @@ import (
 	"net/url"
 
 	"github.com/araddon/dateparse"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
 	eos "github.com/eoscanada/eos-go"

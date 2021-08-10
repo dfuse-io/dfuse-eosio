@@ -23,7 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

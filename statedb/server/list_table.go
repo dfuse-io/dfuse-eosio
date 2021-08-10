@@ -22,7 +22,7 @@ import (
 
 	"github.com/eoscanada/eos-go"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/logging"
 	"github.com/dfuse-io/validator"

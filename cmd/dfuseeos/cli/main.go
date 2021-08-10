@@ -24,7 +24,7 @@ import (
 	_ "github.com/streamingfast/dauth/authenticator/secret" // auth secret/hard-coded plugin
 	_ "github.com/streamingfast/dauth/ratelimiter/null"     // ratelimiter plugin
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/spf13/cobra"
 	"github.com/streamingfast/dlauncher/flags"
 	launcher "github.com/streamingfast/dlauncher/launcher"

@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/eoserr"

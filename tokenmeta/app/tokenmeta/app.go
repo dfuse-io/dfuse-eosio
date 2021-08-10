@@ -26,7 +26,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	"github.com/dfuse-io/dmetrics"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta"
