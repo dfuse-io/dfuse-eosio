@@ -15,6 +15,7 @@ require (
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/bstream v0.0.2-0.20210218150906-c8e1b835d219
@@ -26,7 +27,7 @@ require (
 	github.com/dfuse-io/dgrpc v0.0.0-20210424033943-10e04dd5b19c
 	github.com/dfuse-io/dhammer v0.0.0-20200723173708-b7e52c540f64
 	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
-	github.com/dfuse-io/dmesh v0.0.0-20210526183400-53c814798369
+	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68
 	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f
@@ -69,7 +70,8 @@ require (
 	github.com/streamingfast/blockmeta v0.0.2-0.20210809204651-ce70ba8613a7
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
 	github.com/streamingfast/dgraphql v0.0.2-0.20210809190503-b735aa2ad5fc
-	github.com/streamingfast/dlauncher v0.0.0-20210809203103-fe27d137acc7
+	github.com/streamingfast/dlauncher v0.0.0-20210810011220-6b48a1226560
+	github.com/streamingfast/dmesh v0.0.0-20210809214524-5f9d6b7ebe89
 	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
 	github.com/streamingfast/firehose v0.1.1-0.20210809193802-776cf9f9942e
 	github.com/streamingfast/fluxdb v0.0.0-20210809204656-0a33d1ab6d3d
@@ -78,7 +80,7 @@ require (
 	github.com/streamingfast/node-manager v0.0.2-0.20210809185653-d49c9b7e799e
 	github.com/streamingfast/opaque v0.0.0-20210809205334-b750026cb590
 	github.com/streamingfast/relayer v0.0.2-0.20210809195208-c686bf91e083
-	github.com/streamingfast/search v0.0.2-0.20210809201943-c29e7667a7cf
+	github.com/streamingfast/search v0.0.2-0.20210810011552-967a0b6b671e
 	github.com/streamingfast/search-client v0.0.0-20210809202359-fed38884d2b4
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125

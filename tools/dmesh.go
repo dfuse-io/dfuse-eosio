@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	dmeshClient "github.com/dfuse-io/dmesh/client"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	pbdashboard "github.com/streamingfast/dlauncher/dashboard/pb"
+	dmeshClient "github.com/streamingfast/dmesh/client"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
