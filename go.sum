@@ -331,8 +331,6 @@ github.com/dfuse-io/graphql-go v0.0.0-20210204202750-0e485a040a3c h1:fdYejttWe9n
 github.com/dfuse-io/graphql-go v0.0.0-20210204202750-0e485a040a3c/go.mod h1:9CQHMSxwO4MprSdzoIEobiHpoLtHm77vfxsvsIN5Vuc=
 github.com/dfuse-io/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
 github.com/dfuse-io/jsonpb v0.0.0-20200602171045-28535c4016a2/go.mod h1:FMug2qe6PdGRIn9e2N1ucA+Rg0FOJOgyf2F0gJJSiSw=
-github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
-github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
 github.com/dfuse-io/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 h1:z6nXNo1jBz/QZ+9/NkzKBTPxaUxrnE81Dmy/MO+uvMI=
 github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
@@ -999,6 +997,8 @@ github.com/streamingfast/dgraphql v0.0.2-0.20210810131157-f404ee68d22f h1:qrpHOh
 github.com/streamingfast/dgraphql v0.0.2-0.20210810131157-f404ee68d22f/go.mod h1:AKbHOIuYCO10Ojql3Fv8WbQnOawUA7ufsGqchzq3bZA=
 github.com/streamingfast/dgraphql v0.0.2-0.20210810194021-e343b2730c32 h1:aoD/WTo+3Q7Vw9YSUVevHnKOPE+AIu4tZtTiZb+obsA=
 github.com/streamingfast/dgraphql v0.0.2-0.20210810194021-e343b2730c32/go.mod h1:F5yrAsB8JuSZ1HgEle/ibLCYUIBPiMH3UDUTijfT5O0=
+github.com/streamingfast/dgraphql v0.0.2-0.20210811021502-1213c203cbbb h1:i1N31i6uHh0Fdbb9zJYOvuseWKOdDfPh9vQjC/VB+o0=
+github.com/streamingfast/dgraphql v0.0.2-0.20210811021502-1213c203cbbb/go.mod h1:4OOsS27MNjKPs5fdw56DfEQtBebsxPtuURg0vO8eDjc=
 github.com/streamingfast/dgrpc v0.0.0-20200406214416-6271093e544c/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/streamingfast/dgrpc v0.0.0-20200417124327-c8f215bc4ce5/go.mod h1:n7pQV0mGBMBgJChGKp5gfRLkP2jSCkT+to7fPxKvQPA=
 github.com/streamingfast/dgrpc v0.0.0-20200615163546-b8380f15f7d8/go.mod h1:LJXocN3Yp8Kir8nhx0I65V9Qyw5g/NvXN+Wg7aF5Ujk=
@@ -1122,6 +1122,12 @@ github.com/streamingfast/fluxdb v0.0.0-20210810131937-d8b60d6f0de1 h1:DmcTXt4G/D
 github.com/streamingfast/fluxdb v0.0.0-20210810131937-d8b60d6f0de1/go.mod h1:fD8Zrb8PQubiUuKioWaS+w1R+7tDeW7g/6BI6FUYBkk=
 github.com/streamingfast/fluxdb v0.0.0-20210810195359-748b15076010 h1:VlozNL9mqfCw9ilWPVpG/5N/wUxAdutm4ZbNT/bizQc=
 github.com/streamingfast/fluxdb v0.0.0-20210810195359-748b15076010/go.mod h1:GjBUKJAaJnNIgFl02P1mpRFKn/cl2lF5MtlLjJouPH4=
+github.com/streamingfast/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
+github.com/streamingfast/jsonpb v0.0.0-20200602171045-28535c4016a2/go.mod h1:FMug2qe6PdGRIn9e2N1ucA+Rg0FOJOgyf2F0gJJSiSw=
+github.com/streamingfast/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
+github.com/streamingfast/jsonpb v0.0.0-20200819202948-831ad3282037/go.mod h1:MkvDx1uQogPmFnwHkNns+ryqp7/BPx93XtsUTnWYltE=
+github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 h1:g8eEYbFSykyzIyuxNMmHEUGGUvJE0ivmqZagLDK42gw=
+github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0/go.mod h1:cTNObq2Uofb330y05JbbZZ6RwE6QUXw5iVcHk1Fx3fk=
 github.com/streamingfast/kvdb v0.0.0-20200520211319-cbf4776ac2a3/go.mod h1:0fof33gPhbtGXKNYHZCYxKBWD+aogZreeWisJ5t5buE=
 github.com/streamingfast/kvdb v0.0.2-0.20201013164626-89b668e6bd69/go.mod h1:rHS75h2foCE5RHrWs3d5dSTCVATz3Rm6eHAWA+TncnU=
 github.com/streamingfast/kvdb v0.0.2-0.20201125184722-e565bbbcc32e h1:m8gvEKunk9hGq2gG2MebWflSKWcILzFc6Hob44m9+8E=

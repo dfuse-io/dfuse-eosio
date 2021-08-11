@@ -32,7 +32,6 @@ require (
 	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c // indirect
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/jsonpb v0.0.0-20200819202948-831ad3282037
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
 	github.com/dfuse-io/pbgo v0.0.6-0.20210810190312-2053a3b38779
@@ -68,7 +67,7 @@ require (
 	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
-	github.com/streamingfast/dgraphql v0.0.2-0.20210810194021-e343b2730c32
+	github.com/streamingfast/dgraphql v0.0.2-0.20210811021502-1213c203cbbb
 	github.com/streamingfast/dgrpc v0.0.0-20210810185305-905172f728e8 // indirect
 	github.com/streamingfast/dhammer v0.0.0-20210810183918-d5d2313b80a7 // indirect
 	github.com/streamingfast/dlauncher v0.0.0-20210810201623-b4bad04a0782
@@ -79,6 +78,7 @@ require (
 	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
 	github.com/streamingfast/firehose v0.1.1-0.20210810201729-f4f65f7bc597
 	github.com/streamingfast/fluxdb v0.0.0-20210810195359-748b15076010
+	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 // indirect
 	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
 	github.com/streamingfast/merger v0.0.3-0.20210810201721-8308c7731ce1
 	github.com/streamingfast/node-manager v0.0.2-0.20210810201803-d07d31a2f254

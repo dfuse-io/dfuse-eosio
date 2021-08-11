@@ -28,7 +28,7 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/streamingfast/dstore"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/assert"

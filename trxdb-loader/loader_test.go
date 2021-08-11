@@ -31,7 +31,7 @@ import (
 	_ "github.com/streamingfast/kvdb/store/badger"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"

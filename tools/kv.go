@@ -9,7 +9,7 @@ import (
 
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	trxdb "github.com/dfuse-io/dfuse-eosio/trxdb/kv"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

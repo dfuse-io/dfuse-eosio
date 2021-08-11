@@ -20,7 +20,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/kv"
 	"github.com/streamingfast/dstore"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/spf13/cobra"
