@@ -25,7 +25,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/streamingfast/dtracing"
 	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/streamingfast/dgraphql"
 	"github.com/stretchr/testify/assert"

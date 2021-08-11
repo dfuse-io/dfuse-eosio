@@ -22,7 +22,7 @@ import (
 
 	"github.com/streamingfast/dtracing"
 	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

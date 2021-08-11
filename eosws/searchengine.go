@@ -30,7 +30,7 @@ import (
 	"github.com/streamingfast/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/opaque"

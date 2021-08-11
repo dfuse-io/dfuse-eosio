@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dstore"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 
 	"github.com/dfuse-io/bstream"
 	"github.com/streamingfast/derr"

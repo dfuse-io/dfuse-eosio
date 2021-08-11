@@ -32,7 +32,7 @@ import (
 	"github.com/blevesearch/bleve/index"
 	"github.com/blevesearch/bleve/index/scorch"
 	eosioSearch "github.com/dfuse-io/dfuse-eosio/search"
-	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pb "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/streamingfast/dmesh"
 	"github.com/streamingfast/search"
 	searchArchive "github.com/streamingfast/search/archive"

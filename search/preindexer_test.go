@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/bstream"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"

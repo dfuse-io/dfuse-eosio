@@ -25,7 +25,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/streamingfast/dmetering"
 )

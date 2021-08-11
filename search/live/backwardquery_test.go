@@ -24,7 +24,7 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pb "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/streamingfast/search"
 	searchLive "github.com/streamingfast/search/live"
 	"github.com/stretchr/testify/assert"

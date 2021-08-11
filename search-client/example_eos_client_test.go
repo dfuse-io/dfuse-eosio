@@ -10,7 +10,7 @@ import (
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
 	"github.com/streamingfast/dgrpc"
 	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"go.uber.org/zap"
 )
 

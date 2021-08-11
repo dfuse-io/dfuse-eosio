@@ -31,7 +31,7 @@ import (
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/streamingfast/dstore"
 	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
