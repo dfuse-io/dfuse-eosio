@@ -1,6 +1,6 @@
 package codec
 
-import "github.com/dfuse-io/bstream"
+import "github.com/streamingfast/bstream"
 
 func init() {
 	bstream.GetBlockWriterFactory = bstream.BlockWriterFactoryFunc(BlockWriterFactory)

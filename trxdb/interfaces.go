@@ -18,7 +18,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 

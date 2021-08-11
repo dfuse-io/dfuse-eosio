@@ -19,8 +19,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"

@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"

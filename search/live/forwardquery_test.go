@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"

@@ -20,8 +20,8 @@ import (
 
 	"context"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/hub"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/streamingfast/shutter"

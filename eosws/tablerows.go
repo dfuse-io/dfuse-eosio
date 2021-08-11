@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"

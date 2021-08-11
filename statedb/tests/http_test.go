@@ -29,7 +29,7 @@ import (
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/streamingfast/kvdb/store/badger"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/logging"

@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream/forkable"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	eos "github.com/eoscanada/eos-go"
 )

@@ -19,7 +19,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/streamingfast/dtracing"
 	"github.com/dfuse-io/logging"

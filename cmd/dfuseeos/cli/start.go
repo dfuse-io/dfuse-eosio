@@ -25,7 +25,7 @@ import (
 	"github.com/streamingfast/dstore"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb/kv"

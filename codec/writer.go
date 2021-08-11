@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dbin"
 	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/proto"

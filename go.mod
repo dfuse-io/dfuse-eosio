@@ -3,7 +3,7 @@ module github.com/dfuse-io/dfuse-eosio
 go 1.14
 
 require (
-	contrib.go.opencensus.io/exporter/stackdriver v0.13.4
+	contrib.go.opencensus.io/exporter/stackdriver v0.13.8
 	github.com/GeertJohan/go.rice v1.0.0
 	github.com/ShinyTrinkets/overseer v0.3.0
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d
@@ -11,20 +11,17 @@ require (
 	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/arpitbbhayani/tripod v0.0.0-20170425181942-66807adce3a5
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
-	github.com/blevesearch/bleve v1.0.9
+	github.com/blevesearch/bleve v1.0.14
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/bstream v0.0.2-0.20210811160908-fc6cb0861d48
-	github.com/dfuse-io/cli v0.0.2
-	github.com/dfuse-io/client-go v0.0.0-20210811162547-fcd8819c7b54
 	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
 	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
+	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c // indirect
 	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd // indirect
-	github.com/dfuse-io/dipp v1.0.1-0.20200407033930-5c17c531c3c4
 	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
 	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
 	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68 // indirect
@@ -35,11 +32,13 @@ require (
 	github.com/dfuse-io/jsonpb v0.0.0-20200602171045-28535c4016a2 // indirect
 	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 // indirect
 	github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2
+	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48 // indirect
+	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3 // indirect
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5
 	github.com/eoscanada/eosc v1.4.0
-	github.com/eoscanada/pitreos v1.1.1-0.20210810174831-3e4668dcda56
+	github.com/eoscanada/pitreos v1.1.1-0.20210811185752-fa06394508d0
 	github.com/francoispqt/gojay v1.2.13
 	github.com/gavv/httpexpect/v2 v2.0.3
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
@@ -64,30 +63,34 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
-	github.com/streamingfast/blockmeta v0.0.2-0.20210811161334-967c90d4078e
-	github.com/streamingfast/dauth v0.0.0-20210809192433-4c758fd333ac
+	github.com/streamingfast/blockmeta v0.0.2-0.20210811194956-90dc4202afda
+	github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3 // indirect
+	github.com/streamingfast/cli v0.0.3-0.20210811201236-5c00ec55462d // indirect
+	github.com/streamingfast/client-go v0.0.0-20210811201850-a359c7648d44 // indirect
+	github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
-	github.com/streamingfast/derr v0.0.0-20210810022442-32249850a4fb
-	github.com/streamingfast/dgraphql v0.0.2-0.20210811161358-f5917b1a4d0c
-	github.com/streamingfast/dgrpc v0.0.0-20210811160823-a39dfa7fff0d // indirect
-	github.com/streamingfast/dhammer v0.0.0-20210810183918-d5d2313b80a7 // indirect
-	github.com/streamingfast/dlauncher v0.0.0-20210811161440-94594c7afba7
-	github.com/streamingfast/dmesh v0.0.0-20210810205752-f210f374556e
-	github.com/streamingfast/dmetering v0.0.0-20210809193048-81d008c90843
-	github.com/streamingfast/dmetrics v0.0.0-20210810205551-6071d7bae2cd // indirect
-	github.com/streamingfast/dstore v0.1.1-0.20210810110932-928f221474e4 // indirect
-	github.com/streamingfast/dtracing v0.0.0-20210810040633-7c6259bea4a7
-	github.com/streamingfast/firehose v0.1.1-0.20210811161507-6ef87dfb1994
-	github.com/streamingfast/fluxdb v0.0.0-20210811161244-742c932141cb
+	github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec
+	github.com/streamingfast/dgraphql v0.0.2-0.20210811200910-e1966c29c473
+	github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2 // indirect
+	github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840 // indirect
+	github.com/streamingfast/dipp v1.0.1-0.20210811200841-d2cca4e058e6 // indirect
+	github.com/streamingfast/dlauncher v0.0.0-20210811194929-f06e488e63da
+	github.com/streamingfast/dmesh v0.0.0-20210811181323-5a37ad73216b
+	github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817
+	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447 // indirect
+	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22 // indirect
+	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a
+	github.com/streamingfast/firehose v0.1.1-0.20210811195158-d4b116b4b447
+	github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298
 	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 // indirect
-	github.com/streamingfast/kvdb v0.0.2-0.20210809203849-c1762028eb64
-	github.com/streamingfast/merger v0.0.3-0.20210811161627-c8a7ecb1c83c
-	github.com/streamingfast/node-manager v0.0.2-0.20210810201803-d07d31a2f254
-	github.com/streamingfast/opaque v0.0.0-20210809210154-b964592beb5d
+	github.com/streamingfast/kvdb v0.0.2-0.20210811194032-09bf862bd2e3
+	github.com/streamingfast/merger v0.0.3-0.20210811195536-1011c89f0a67
+	github.com/streamingfast/node-manager v0.0.2-0.20210811195732-ccdf9f70dd0b
+	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308
 	github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc // indirect
-	github.com/streamingfast/relayer v0.0.2-0.20210811161650-ef273a836f29
-	github.com/streamingfast/search v0.0.2-0.20210811161724-7914a610555d
-	github.com/streamingfast/search-client v0.0.0-20210811161208-ca111eaee943
+	github.com/streamingfast/relayer v0.0.2-0.20210811200014-6e0e8bc2814f
+	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
+	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
 	github.com/streamingfast/shutter v1.5.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
@@ -97,15 +100,15 @@ require (
 	github.com/urfave/negroni v1.0.0 // indirect
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200425165423-262c93980547 // indirect
 	go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0 // indirect
-	go.opencensus.io v0.22.5
+	go.opencensus.io v0.23.0
 	go.uber.org/atomic v1.7.0
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.38.0
+	google.golang.org/grpc v1.39.1
 	google.golang.org/grpc/examples v0.0.0-20210526223527-2de42fcbbce3 // indirect
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.4.0

@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream/forkable"
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"

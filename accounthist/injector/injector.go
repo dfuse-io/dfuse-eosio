@@ -12,7 +12,7 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/shutter"

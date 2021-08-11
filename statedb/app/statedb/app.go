@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/golang/protobuf/proto"

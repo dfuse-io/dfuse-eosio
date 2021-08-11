@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"

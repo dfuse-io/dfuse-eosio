@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	mergedFilter "github.com/dfuse-io/dfuse-eosio/merged-filter"
 	"github.com/streamingfast/dstore"

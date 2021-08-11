@@ -22,7 +22,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"

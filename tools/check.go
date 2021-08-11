@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"

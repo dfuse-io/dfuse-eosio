@@ -5,7 +5,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/fluxdb"

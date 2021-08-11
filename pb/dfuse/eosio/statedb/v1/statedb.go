@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	grpc "google.golang.org/grpc"
 )
 
