@@ -44,6 +44,7 @@ require (
 	github.com/onsi/gomega v1.8.1 // indirect
 	github.com/paulbellamy/ratecounter v0.2.0
 	github.com/pkg/errors v0.9.1
+	github.com/rs/xid v1.2.1 // indirect
 	github.com/sergi/go-diff v1.0.1-0.20180205163309-da645544ed44 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.1.3
@@ -51,17 +52,17 @@ require (
 	github.com/streamingfast/blockmeta v0.0.2-0.20210811194956-90dc4202afda
 	github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3 // indirect
 	github.com/streamingfast/cli v0.0.3-0.20210811201236-5c00ec55462d // indirect
-	github.com/streamingfast/client-go v0.0.0-20210811201850-a359c7648d44 // indirect
+	github.com/streamingfast/client-go v0.0.0-20210812010037-2ae1ded7ca05 // indirect
 	github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec
-	github.com/streamingfast/dgraphql v0.0.2-0.20210811200910-e1966c29c473
+	github.com/streamingfast/dgraphql v0.0.2-0.20210812004103-ce9976b66675
 	github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2 // indirect
 	github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840 // indirect
 	github.com/streamingfast/dipp v1.0.1-0.20210811200841-d2cca4e058e6 // indirect
 	github.com/streamingfast/dlauncher v0.0.0-20210811194929-f06e488e63da
 	github.com/streamingfast/dmesh v0.0.0-20210811181323-5a37ad73216b
-	github.com/streamingfast/dmetering v0.0.0-20210811181351-eef120cfb817
+	github.com/streamingfast/dmetering v0.0.0-20210812002943-aa53fa1ce172
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447 // indirect
 	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a
@@ -74,7 +75,7 @@ require (
 	github.com/streamingfast/node-manager v0.0.2-0.20210811195732-ccdf9f70dd0b
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308
 	github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc // indirect
-	github.com/streamingfast/relayer v0.0.2-0.20210811200014-6e0e8bc2814f
+	github.com/streamingfast/relayer v0.0.2-0.20210812020310-adcf15941b23
 	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
 	github.com/streamingfast/shutter v1.5.0 // indirect
