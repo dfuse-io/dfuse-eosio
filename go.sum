@@ -353,6 +353,8 @@ github.com/dfuse-io/logging v0.0.0-20210518215502-2d920b2ad1f2/go.mod h1:EoK/8RF
 github.com/dfuse-io/opaque v0.0.0-20200407012705-75c4ca372d71/go.mod h1:X6Ib6YZlRUabwo4Elw7u1YOLBEiU93r1MwxL3zwY6RE=
 github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48 h1:nf8r2ROrv80taXLyyUXXtK2ugnn+x2Qd2nABRZAQAHA=
 github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48/go.mod h1:wsfF2LBZEXeCgvz8ic4lcDN8NlPw3TiPAWXimHXeswk=
+github.com/dfuse-io/overseer v0.2.1-0.20210326144022-ee491780e3ef h1:WxHxSPrlZyIVajMLPVBSGJqdJjhxpvu9nNxKu2neOtc=
+github.com/dfuse-io/overseer v0.2.1-0.20210326144022-ee491780e3ef/go.mod h1:cq8CvbZ3ioFmGrHokSAJalS0lC+pVXLKhITScItUGXY=
 github.com/dfuse-io/pbgo v0.0.6-0.20210108215028-712d6889e94a/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3/go.mod h1:dbo6DfMDndlPjbJSTZ7Vw/25oKfKg3zzuia+RseeMkU=
 github.com/dfuse-io/shutter v1.4.1-0.20200319040708-c809eec458e6/go.mod h1:2mLf0v+n8J8NI7F6L6avYaRNfa6XECB6CP3WO8rRx88=
@@ -1258,6 +1260,8 @@ github.com/streamingfast/fluxdb v0.0.0-20210811161244-742c932141cb h1:gbyQ6RZ75J
 github.com/streamingfast/fluxdb v0.0.0-20210811161244-742c932141cb/go.mod h1:JX6jP/otYIDj6nWHDdE2U/mUGJy/UZGdlcFPxY1ujes=
 github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298 h1:r19r7hvD1+Iou/eGEf50ZvNMRTIc6yHTP2fkhAIl/gk=
 github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298/go.mod h1:4nAMvYjDQN0tfnnfBdnSoMCTivXDM4xPdZpROFF7U64=
+github.com/streamingfast/graphql-go v0.0.0-20210204202750-0e485a040a3c h1:myR0e7b9irsMsRHs42+Oo6ZVuHfGTDHjQhlI1Tk/9/U=
+github.com/streamingfast/graphql-go v0.0.0-20210204202750-0e485a040a3c/go.mod h1:9CQHMSxwO4MprSdzoIEobiHpoLtHm77vfxsvsIN5Vuc=
 github.com/streamingfast/jsonpb v0.0.0-20200406211248-c5cf83f0e0c0/go.mod h1:Qt4EPDfP8T2d/eN96nonFDEyJDMUD3oa/C8LQBX2OAs=
 github.com/streamingfast/jsonpb v0.0.0-20200602171045-28535c4016a2/go.mod h1:FMug2qe6PdGRIn9e2N1ucA+Rg0FOJOgyf2F0gJJSiSw=
 github.com/streamingfast/jsonpb v0.0.0-20200819202948-831ad3282037 h1:mCUwRuMhFNj9vuf7JO6nkYzyzxXbxnKMW2Ia5tbU5fg=
