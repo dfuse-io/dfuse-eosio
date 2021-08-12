@@ -23,7 +23,7 @@ import (
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/streamingfast/jsonpb"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
 	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"

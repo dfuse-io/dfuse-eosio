@@ -22,7 +22,7 @@ import (
 	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/streamingfast/dtracing"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/streamingfast/fluxdb"
 	"go.opencensus.io/trace"

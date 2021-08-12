@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/streamingfast/derr"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/olivere/elastic.v3/backoff"

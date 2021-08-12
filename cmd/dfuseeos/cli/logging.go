@@ -16,7 +16,7 @@ package cli
 
 import (
 	_ "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/dlauncher/launcher"
 	"go.uber.org/zap"
 )

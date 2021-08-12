@@ -25,7 +25,7 @@ import (
 	"github.com/streamingfast/dhammer"
 	eos "github.com/eoscanada/eos-go"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/dfuse-io/validator"
 	"github.com/streamingfast/derr"
 	"go.uber.org/zap"

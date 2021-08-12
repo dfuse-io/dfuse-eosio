@@ -38,7 +38,7 @@ import (
 	"github.com/streamingfast/dipp"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"

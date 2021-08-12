@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/dlauncher/launcher"

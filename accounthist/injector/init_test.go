@@ -16,7 +16,7 @@ import (
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/streamingfast/kvdb/store"
 	_ "github.com/streamingfast/kvdb/store/badger"

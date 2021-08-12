@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"

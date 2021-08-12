@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	pbgraphql "github.com/streamingfast/pbgo/dfuse/graphql/v1"
 	"github.com/golang/protobuf/proto"

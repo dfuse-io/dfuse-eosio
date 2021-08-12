@@ -29,7 +29,7 @@ import (
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	"github.com/streamingfast/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/streamingfast/dmetering"

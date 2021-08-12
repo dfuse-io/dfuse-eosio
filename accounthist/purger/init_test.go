@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 

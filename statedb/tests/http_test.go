@@ -32,7 +32,7 @@ import (
 	"github.com/streamingfast/bstream"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/gavv/httpexpect/v2"
 	"github.com/streamingfast/fluxdb/store"
 	fluxdbKV "github.com/streamingfast/fluxdb/store/kv"

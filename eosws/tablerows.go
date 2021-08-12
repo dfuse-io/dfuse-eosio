@@ -30,7 +30,7 @@ import (
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/streamingfast/dtracing"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )

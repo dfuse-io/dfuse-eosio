@@ -30,7 +30,7 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/streamingfast/kvdb"
 	"github.com/streamingfast/opaque"

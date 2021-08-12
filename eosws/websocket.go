@@ -24,7 +24,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/gorilla/websocket"
 	"github.com/streamingfast/dauth/authenticator"
 	"github.com/teris-io/shortid"

@@ -23,7 +23,7 @@ import (
 
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/dfuse-io/validator"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/francoispqt/gojay"

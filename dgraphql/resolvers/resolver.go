@@ -34,7 +34,7 @@ import (
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/streamingfast/dhammer"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/eoscanada/eos-go"

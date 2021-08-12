@@ -25,7 +25,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"github.com/streamingfast/dtracing"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/shutter"
 	"github.com/gorilla/websocket"
 	"github.com/streamingfast/dauth/authenticator"

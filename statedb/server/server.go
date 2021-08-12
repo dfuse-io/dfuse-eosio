@@ -28,7 +28,7 @@ import (
 	strackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
 	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dtracing"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/francoispqt/gojay"
 	"github.com/gorilla/mux"
 	"github.com/streamingfast/fluxdb"
