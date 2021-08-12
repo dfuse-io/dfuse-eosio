@@ -20,7 +20,6 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5
 	github.com/eoscanada/eosc v1.4.0
@@ -79,6 +78,7 @@ require (
 	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
 	github.com/streamingfast/shutter v1.5.0 // indirect
+	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9

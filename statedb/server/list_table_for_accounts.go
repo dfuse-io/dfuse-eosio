@@ -26,7 +26,7 @@ import (
 	eos "github.com/eoscanada/eos-go"
 
 	"github.com/streamingfast/logging"
-	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/validator"
 	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )

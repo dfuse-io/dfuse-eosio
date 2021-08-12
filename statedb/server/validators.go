@@ -17,7 +17,7 @@ package server
 import (
 	"fmt"
 
-	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/validator"
 	"github.com/eoscanada/eos-go/ecc"
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
@@ -36,7 +36,7 @@ func init() {
 	govalidator.AddCustomRule("fluxdb.eos.scopesList", validator.EOSExtendedNamesListRuleFactory("|", maxScopeCount))
 }
 
-// FIXME: Extract to `github.com/dfuse-io/validator` library (with associated tests)
+// FIXME: Extract to `github.com/streamingfast/validator` library (with associated tests)
 func eosPublicKeyRule(field string, rule string, message string, value interface{}) error {
 	switch v := value.(type) {
 	case string:

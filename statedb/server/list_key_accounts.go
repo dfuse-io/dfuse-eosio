@@ -24,7 +24,7 @@ import (
 	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/streamingfast/logging"
-	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/validator"
 	"github.com/streamingfast/fluxdb"
 	"go.uber.org/zap"
 )

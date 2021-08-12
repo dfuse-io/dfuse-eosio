@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/validator"
 	"github.com/thedevsaddam/govalidator"
 )
 

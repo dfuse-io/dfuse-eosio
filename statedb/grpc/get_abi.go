@@ -10,7 +10,7 @@ import (
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/streamingfast/logging"
-	"github.com/dfuse-io/validator"
+	"github.com/streamingfast/validator"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
