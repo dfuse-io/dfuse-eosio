@@ -18,21 +18,8 @@ require (
 	github.com/coreos/license-bill-of-materials v0.0.0-20190913234955-13baff47494e // indirect
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
-	github.com/dfuse-io/dauth v0.0.0-20200601190857-60bc6a4b4665 // indirect
-	github.com/dfuse-io/derr v0.0.0-20201001203637-4dc9d8014152 // indirect
-	github.com/dfuse-io/dgrpc v0.0.0-20210810125735-867cc255530c // indirect
-	github.com/dfuse-io/dhammer v0.0.0-20210810131337-dad508927fdd // indirect
-	github.com/dfuse-io/dmesh v0.0.0-20210224224128-9a9ef510dce1 // indirect
-	github.com/dfuse-io/dmetering v0.0.0-20210112023524-c3ddadbc0d6a // indirect
-	github.com/dfuse-io/dmetrics v0.0.0-20200508170817-3b8cb01fee68 // indirect
-	github.com/dfuse-io/dstore v0.1.1-0.20210507180120-88a95674809f // indirect
-	github.com/dfuse-io/dtracing v0.0.0-20200417133307-c09302668d0c // indirect
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
-	github.com/dfuse-io/jsonpb v0.0.0-20200602171045-28535c4016a2 // indirect
-	github.com/dfuse-io/kvdb v0.0.2-0.20201013164626-89b668e6bd69 // indirect
-	github.com/dfuse-io/opaque v0.0.0-20210108174126-bc02ec905d48 // indirect
-	github.com/dfuse-io/pbgo v0.0.6-0.20210429181308-d54fc7723ad3 // indirect
 	github.com/dfuse-io/validator v0.0.0-20200407012817-82c55c634c7a
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210802215146-d4a45e07e9b5
