@@ -229,27 +229,6 @@ export class HeaderMenuMobile extends React.Component<Props, State> {
               {this.renderLanguageSummary()}
             </Cell>
           </Cell>
-          <Cell
-            pt={[4]}
-            style={{ position: "absolute", bottom: "20px", textAlign: "center", width: "100%" }}
-          >
-            <a
-              href={`https://dfuse.io/${getCurrentLanguageValue()}`}
-              title="The dfuse Blockchain Data Platform"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src={`/images/built-with-dfuse${
-                  getCurrentLanguageValue() === "zh" ? "-CN" : ""
-                }-01.png`}
-                title="The dfuse Blockchain Data Platform"
-                alt="built-with-dfuse"
-                width="210"
-                height="auto"
-              />
-            </a>
-          </Cell>
         </Cell>
       </HeaderWrapper>
     )

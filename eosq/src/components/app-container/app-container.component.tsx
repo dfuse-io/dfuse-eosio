@@ -75,15 +75,7 @@ const HeaderWrapper: React.ComponentType<any> = styled(Cell)`
   width: 100%;
   top: 0px;
 
-  background: #474793; /* Old browsers */
-  background: -moz-linear-gradient(left, #474793 8%, #5e5ec2 93%); /* FF3.6-15 */
-  background: -webkit-linear-gradient(left, #474793 8%, #5e5ec2 93%); /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(
-    to right,
-    #474793 8%,
-    #5e5ec2 93%
-  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#474793', endColorstr='#5e5ec2',GradientType=1 ); /* IE6-9 */
+  background: #7650C7; /* Old browsers */
 `
 
 const PageWrapper: React.ComponentType<any> = styled.div`

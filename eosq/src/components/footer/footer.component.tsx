@@ -52,66 +52,7 @@ const StyledFont: React.ComponentType<any> = styled(FontAwesomeIcon)`
 
 const BaseFooter = () => (
   <Cell height="auto" bg={theme.colors.bleu11} mt="10px">
-    <Cell
-      maxWidth={["1800px"]}
-      px={[4]}
-      mx="auto"
-      lineHeight={[2]}
-      pt={[1]}
-      pb={[2]}
-      my={[4]}
-      width="100%"
-    >
-      <Grid height="auto" gridTemplateColumns={["1fr", "1fr 1fr"]} alignItems="left">
-        <Cell pt={[4]} justifySelf="left" textAlign="left" alignSelf="left">
-          <LogoLink pt={[3]} to={Links.home()}>
-            <LogoFirst px={[0]} fontSize={[6, 6, 6]}>
-              eos
-            </LogoFirst>
-            <LogoSecond px={[0]} fontSize={[6, 6, 6]}>
-              q
-            </LogoSecond>
-          </LogoLink>
-        </Cell>
-        <Cell justifySelf="right" textAlign="right" alignSelf="right" pt={[4]}>
-          <ExternalTextLink to="https://t.me/dfuseAPI">
-            <StyledText pr={[2]} display="inline-block" color={theme.colors.bleu6}>
-              {t("footer.telegram")}
-            </StyledText>
-            <StyledFont color={theme.colors.bleu6} icon={faTelegramPlane} size="lg" />
-          </ExternalTextLink>
-        </Cell>
-      </Grid>
-    </Cell>
-    <Cell
-      maxWidth={["1800px"]}
-      px={[4]}
-      mx="auto"
-      lineHeight={[2]}
-      pt={[1]}
-      pb={[2]}
-      my={[4]}
-      width="100%"
-      textAlign="center"
-    >
-      <a
-        href={`https://dfuse.io/${getCurrentLanguageValue()}`}
-        title="The dfuse Blockchain Data Platform"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img
-          src={`/images/built-with-dfuse${getCurrentLanguageValue() === "zh" ? "-CN" : ""}-01.png`}
-          title="The dfuse Blockchain Data Platform"
-          alt="built-with-dfuse"
-          width="210"
-          height="auto"
-        />
-        <Text color={theme.colors.bleu6} fontSize={[1]}>
-          {t("footer.aboutDfuse")}
-        </Text>
-      </a>
-    </Cell>
+    
     <Cell p={[3]} mt={[3]} borderTop={`1px solid ${theme.colors.bleu10}`} textAlign="center">
       <Text color={theme.colors.primary} fontSize={[1]}>
         {t("footer.copyright", { year: new Date().getFullYear() })}

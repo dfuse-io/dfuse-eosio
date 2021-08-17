@@ -12,15 +12,7 @@ import { getCurrentLanguageValue } from "../settings-selectors/settings.helpers"
 const HeaderWrapper: React.ComponentType<any> = styled(Cell)`
   width: 100%;
 
-  background: #474793; /* Old browsers */
-  background: -moz-linear-gradient(left, #474793 8%, #5e5ec2 93%); /* FF3.6-15 */
-  background: -webkit-linear-gradient(left, #474793 8%, #5e5ec2 93%); /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(
-    to right,
-    #474793 8%,
-    #5e5ec2 93%
-  ); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#474793', endColorstr='#5e5ec2',GradientType=1 ); /* IE6-9 */
+  background: #1E1F23; /* Old browsers */
 `
 
 export class HeaderMenu extends React.Component {
@@ -45,24 +37,6 @@ export class HeaderMenu extends React.Component {
           >
             <Cell height="100%" py={[2]}>
               <HeaderLogo variant="light" />
-              <Cell pt={[4]}>
-                <a
-                  href={`https://dfuse.io/${getCurrentLanguageValue()}`}
-                  title="The dfuse Blockchain Data Platform"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img
-                    src={`/images/built-with-dfuse${
-                      getCurrentLanguageValue() === "zh" ? "-CN" : ""
-                    }-01.png`}
-                    title="The dfuse Blockchain Data Platform"
-                    alt="built-with-dfuse"
-                    width="210"
-                    height="auto"
-                  />
-                </a>
-              </Cell>
             </Cell>
 
             <Cell
