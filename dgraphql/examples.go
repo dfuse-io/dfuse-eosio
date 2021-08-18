@@ -6,7 +6,7 @@ import (
 	"time"
 
 	rice "github.com/GeertJohan/go.rice"
-	"github.com/dfuse-io/dgraphql/static"
+	"github.com/streamingfast/dgraphql/static"
 )
 
 //go:generate rice embed-go

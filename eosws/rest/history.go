@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/tidwall/gjson"

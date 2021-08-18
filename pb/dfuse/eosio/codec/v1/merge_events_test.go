@@ -18,7 +18,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 
 	"github.com/stretchr/testify/assert"

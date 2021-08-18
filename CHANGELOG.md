@@ -88,9 +88,9 @@ date.
 ## System Administration Changes
 
 ### Changed
-* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/dfuse-io/fluxdb) with complete re-architecture design.
+* **Breaking Change** FluxDB has been extracted to a dedicated library (github.com/streamingfast/fluxdb) with complete re-architecture design.
 * **Breaking Change** FluxDB has been renamed to StateDB and is incompatible with previous written data. See [FluxDB Migration](#fluxdb-to-statedb-migration) section below for more details on how to migrate.
-* `merger` startblock behavior changed, now relies on state-file, see https://github.com/dfuse-io/merger/issues/1
+* `merger` startblock behavior changed, now relies on state-file, see https://github.com/streamingfast/merger/issues/1
 * Changed `merger-seen-blocks-file` flag to `merger-state-file` to reflect this change.
 * `merger` now properly handles storage backend errors when looking for where to start
 * `mindreader` now automatically produces "merged blocks" instead of "one-block-files" when catching up (based on blocktime or if a blockmeta is reachable at `--common-blockmeta-addr`)
@@ -142,7 +142,7 @@ date.
 FluxDB required an architecture re-design to fit with our vision about the tool and make it chain agnostic (so
 it is easier to re-use on our other supported chain).
 
-The code that was previously found here has been extracted to its own library (https://github.com/dfuse-io/fluxdb).
+The code that was previously found here has been extracted to its own library (https://github.com/streamingfast/fluxdb).
 There is now a new app named StateDB (`statedb` is the app identifier) in dfuse for EOSIO that uses FluxDB to
 support all previous API endpoints served by the FluxDB app as well as now offering a gRPC interface.
 

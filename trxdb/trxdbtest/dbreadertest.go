@@ -20,7 +20,7 @@ import (
 
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/kvdb"
+	"github.com/streamingfast/kvdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

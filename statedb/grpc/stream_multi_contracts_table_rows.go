@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/dfuse-io/derr"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/dhammer"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/dhammer"
+	"github.com/streamingfast/logging"
+	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )
@@ -69,7 +69,7 @@ func (s *Server) StreamMultiContractsTableRows(request *pbstatedb.StreamMultiCon
 		}
 
 		return resp, nil
-	}, zlog)
+	}, dhammer.NailerLogger(zlog))
 
 	nailer.PushAll(ctx, contracts)
 

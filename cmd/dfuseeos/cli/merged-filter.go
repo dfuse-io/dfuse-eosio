@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	mergedFilterApp "github.com/dfuse-io/dfuse-eosio/merged-filter/app/merged-filter"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 func init() {

@@ -12,8 +12,8 @@ import (
 
 	"github.com/acarl005/stripansi"
 	"github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos/cli"
-	"github.com/dfuse-io/dgrpc"
-	dashboard "github.com/dfuse-io/dlauncher/dashboard/pb"
+	"github.com/streamingfast/dgrpc"
+	dashboard "github.com/streamingfast/dlauncher/dashboard/pb"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"

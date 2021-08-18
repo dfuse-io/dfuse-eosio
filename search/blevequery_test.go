@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/search"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/search"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"

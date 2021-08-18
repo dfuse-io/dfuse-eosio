@@ -15,7 +15,7 @@
 package eosq
 
 import (
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 )
 
 type Config struct {

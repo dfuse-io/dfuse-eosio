@@ -6,7 +6,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"

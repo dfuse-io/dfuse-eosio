@@ -7,10 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 )
 
 func init() {

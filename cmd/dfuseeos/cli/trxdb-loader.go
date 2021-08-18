@@ -4,9 +4,9 @@ import (
 	"math"
 
 	trxdbLoaderApp "github.com/dfuse-io/dfuse-eosio/trxdb-loader/app/trxdb-loader"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 func init() {

@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
-	"github.com/dfuse-io/dgraphql"
+	"github.com/streamingfast/dgraphql"
 	"github.com/stretchr/testify/require"
 )
 

@@ -5,11 +5,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/dfuse-io/dgrpc"
+	"github.com/streamingfast/dgrpc"
 
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/dfuse-io/kvdb/store"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
+	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

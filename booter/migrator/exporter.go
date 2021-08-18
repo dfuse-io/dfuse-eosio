@@ -80,8 +80,8 @@ func (e *exporter) Export() error {
 			e.logger.Debug("new section",
 				zap.String("section_name", string(currentSection.Name)),
 				zap.Uint64("row_count", currentSection.RowCount),
-				zap.Uint64("bytes_count", currentSection.BufferSize),
-				zap.Uint64("bytes_count", currentSection.Offset),
+				zap.Uint64("buffer_size", currentSection.BufferSize),
+				zap.Uint64("offset", currentSection.Offset),
 			)
 		}
 
@@ -106,7 +106,7 @@ func (e *exporter) Export() error {
 			err = reader.ProcessCurrentSection(e.processContractTable)
 		}
 
-		if err == eossnapshot.SectionHandlerNotFound {
+		if err == eossnapshot.ErrSectionHandlerNotFound {
 			e.logger.Warn("section handler not found",
 				zap.String("section_name", string(currentSection.Name)),
 			)
@@ -130,7 +130,7 @@ func (e *exporter) Export() error {
 	for accountName, account := range e.accounts {
 		err = e.exportAccount(accountName, account)
 		if err != nil {
-			fmt.Errorf("failed to export account %q: %w", string(accountName), err)
+			return fmt.Errorf("failed to export account %q: %w", string(accountName), err)
 		}
 	}
 
@@ -138,7 +138,7 @@ func (e *exporter) Export() error {
 	for key, tblScope := range e.tableScopes {
 		err = e.exportTableScope(tblScope)
 		if err != nil {
-			fmt.Errorf("failed to export table-scope %s : %w", key, err)
+			return fmt.Errorf("failed to export table-scope %s : %w", key, err)
 		}
 	}
 	return nil
@@ -429,7 +429,7 @@ func (e *exporter) processTableID(obj *eossnapshot.TableIDObject) error {
 func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
 	account, found := e.accounts[AN(e.currentTable.Code)]
 	if !found {
-		fmt.Errorf("unable to process contract row: unknown account %q", AN(e.currentTable.Code))
+		return fmt.Errorf("unable to process contract row: unknown account %q", AN(e.currentTable.Code))
 	}
 
 	tableScopeKey := tableScopeKey(e.currentTable.Code, e.currentTable.TableName, e.currentTable.Scope)

@@ -1,7 +1,7 @@
 package filtering
 
 import (
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 )
 
 type FilteringPreprocessor struct {

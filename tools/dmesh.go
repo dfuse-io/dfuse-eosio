@@ -7,16 +7,16 @@ import (
 	"strings"
 	"time"
 
-	pbdashboard "github.com/dfuse-io/dlauncher/dashboard/pb"
-	dmeshClient "github.com/dfuse-io/dmesh/client"
 	"github.com/golang/protobuf/ptypes"
 	tspb "github.com/golang/protobuf/ptypes/timestamp"
+	pbdashboard "github.com/streamingfast/dlauncher/dashboard/pb"
+	dmeshClient "github.com/streamingfast/dmesh/client"
 
-	_ "github.com/dfuse-io/kvdb/store/badger"
-	_ "github.com/dfuse-io/kvdb/store/bigkv"
-	_ "github.com/dfuse-io/kvdb/store/tikv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	_ "github.com/streamingfast/kvdb/store/badger"
+	_ "github.com/streamingfast/kvdb/store/bigkv"
+	_ "github.com/streamingfast/kvdb/store/tikv"
 )
 
 var dmeshCmd = &cobra.Command{Use: "dmesh", Short: "List current search peers in dmesh etcd only", RunE: dmeshE}

@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 )
 
 type CommonHub struct {

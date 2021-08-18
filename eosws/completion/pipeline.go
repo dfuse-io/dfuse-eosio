@@ -15,9 +15,9 @@
 package completion
 
 import (
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/bstream/hub"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/bstream/hub"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"

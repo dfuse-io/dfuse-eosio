@@ -14,7 +14,7 @@
 
 package rest
 
-import "github.com/dfuse-io/opaque"
+import "github.com/streamingfast/opaque"
 
 func parseCursor(opaqueStartID string) (string, error) {
 	if opaqueStartID == "" {

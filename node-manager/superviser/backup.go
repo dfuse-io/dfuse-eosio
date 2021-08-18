@@ -18,9 +18,9 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/dfuse-io/node-manager/metrics"
-	"github.com/dfuse-io/node-manager/superviser"
 	"github.com/eoscanada/pitreos"
+	"github.com/streamingfast/node-manager/metrics"
+	"github.com/streamingfast/node-manager/superviser"
 	"go.uber.org/zap"
 )
 

@@ -4,8 +4,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dfuse-io/derr"
-	search "github.com/dfuse-io/search"
+	"github.com/streamingfast/derr"
+	search "github.com/streamingfast/search"
 	"google.golang.org/grpc/codes"
 )
 

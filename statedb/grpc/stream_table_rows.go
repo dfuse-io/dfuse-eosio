@@ -1,10 +1,10 @@
 package grpc
 
 import (
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )

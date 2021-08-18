@@ -18,8 +18,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/dfuse-io/node-manager/metrics"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/node-manager/metrics"
 	"go.uber.org/zap"
 )
 

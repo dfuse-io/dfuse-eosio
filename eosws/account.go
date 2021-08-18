@@ -18,12 +18,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
-	"github.com/dfuse-io/kvdb"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/kvdb"
 )
 
 var AccountGetterInstance AccountGetter

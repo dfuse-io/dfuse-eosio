@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	eos "github.com/eoscanada/eos-go"
 )

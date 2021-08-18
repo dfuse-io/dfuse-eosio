@@ -6,7 +6,7 @@ package pbstatedb
 import (
 	context "context"
 	fmt "fmt"
-	v1 "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	v1 "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

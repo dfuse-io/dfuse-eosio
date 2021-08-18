@@ -22,10 +22,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 
-	"github.com/dfuse-io/node-manager/metrics"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/node-manager/metrics"
 	"go.uber.org/zap"
 )
 

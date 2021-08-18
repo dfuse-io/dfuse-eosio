@@ -14,7 +14,7 @@
 
 package tests
 
-import "github.com/dfuse-io/fluxdb/store"
+import "github.com/streamingfast/fluxdb/store"
 
 type StoreCleanupFunc func()
 type StoreFactory func() (store.KVStore, StoreCleanupFunc)

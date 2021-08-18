@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	bsearch "github.com/blevesearch/bleve/search"
-	"github.com/dfuse-io/search"
+	"github.com/streamingfast/search"
 	"go.uber.org/zap"
 )
 

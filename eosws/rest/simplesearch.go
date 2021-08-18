@@ -22,12 +22,12 @@ import (
 	"strings"
 
 	"github.com/araddon/dateparse"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dmetering"
-	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/dmetering"
 )
 
 func SimpleSearchHandler(db eosws.DB, blockmetaClient *pbblockmeta.Client) http.Handler {

@@ -5,10 +5,10 @@ import (
 	"time"
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	"github.com/dfuse-io/dlauncher/launcher"
-	liveApp "github.com/dfuse-io/search/app/live"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
+	liveApp "github.com/streamingfast/search/app/live"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 		Title:       "Search live",
 		Description: "Serves live search queries",
 		MetricsID:   "live",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(live|app/live).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/search/(live|app/live).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 
 			cmd.Flags().Uint32("search-live-tier-level", 100, "Level of the search tier")

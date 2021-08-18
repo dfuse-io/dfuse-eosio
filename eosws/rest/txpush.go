@@ -25,9 +25,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/bstream/hub"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"

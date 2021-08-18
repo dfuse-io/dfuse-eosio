@@ -22,14 +22,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/abicodec/metrics"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/dgrpc"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/dgrpc"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
+	"github.com/streamingfast/shutter"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )

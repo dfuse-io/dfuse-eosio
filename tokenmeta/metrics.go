@@ -15,7 +15,7 @@
 package tokenmeta
 
 import (
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/dmetrics"
 )
 
 var MetricsSet = dmetrics.NewSet()

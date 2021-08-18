@@ -4,10 +4,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/dlauncher/launcher"
-	relayerApp "github.com/dfuse-io/relayer/app/relayer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
+	relayerApp "github.com/streamingfast/relayer/app/relayer"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		Title:       "Relayer",
 		Description: "Serves blocks as a stream, with a buffer",
 		MetricsID:   "relayer",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/relayer.*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/relayer.*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			cmd.Flags().String("relayer-grpc-listen-addr", RelayerServingAddr, "Address to listen for incoming gRPC requests")
 			cmd.Flags().StringSlice("relayer-source", []string{MindreaderGRPCAddr}, "List of Blockstream sources (mindreaders) to connect to for live block feeds (repeat flag as needed)")

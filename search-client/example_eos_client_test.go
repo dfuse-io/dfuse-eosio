@@ -8,9 +8,9 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/logging"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/logging"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"go.uber.org/zap"
 )
 

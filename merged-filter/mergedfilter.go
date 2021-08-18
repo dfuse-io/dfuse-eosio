@@ -21,12 +21,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )

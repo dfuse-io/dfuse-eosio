@@ -4,13 +4,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/grpc"
 	"github.com/dfuse-io/dfuse-eosio/accounthist/injector"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/kvdb/store"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/shutter"
+	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"
 )
 

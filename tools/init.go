@@ -1,6 +1,6 @@
 package tools
 
-import "github.com/dfuse-io/cli"
+import "github.com/streamingfast/cli"
 
 var Example = func(in string) string {
 	return string(cli.Example(in))

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	logplugin "github.com/dfuse-io/node-manager/log_plugin"
+	logplugin "github.com/streamingfast/node-manager/log_plugin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
