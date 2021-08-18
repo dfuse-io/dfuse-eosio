@@ -992,6 +992,8 @@ github.com/streamingfast/bstream v0.0.2-0.20210811160908-fc6cb0861d48 h1:sy1PxFO
 github.com/streamingfast/bstream v0.0.2-0.20210811160908-fc6cb0861d48/go.mod h1:IIJqLGYn2hYpLHFfZ63gAA5djd9Qt9QMRAhSqCByzG8=
 github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3 h1:hZwUF3uoZW2xMKUkrGFaXJQ32UygMB7CRRY82Ei6vEk=
 github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3/go.mod h1:0Ucl6SRmqAcXa0vYhSAnX8sscejfPhpwuW5Pgz9Ndp4=
+github.com/streamingfast/bstream v0.0.2-0.20210818195539-2295a96e0c68 h1:FtDg2wG4mw//iQyniLhdfKmBxFALxuzrIn2YQIw4tPQ=
+github.com/streamingfast/bstream v0.0.2-0.20210818195539-2295a96e0c68/go.mod h1:RcG/aJ2i6laxXVvRotAcQ97WK4nPhEzStrcoj9usX5s=
 github.com/streamingfast/cli v0.0.2-0.20210505184833-be3717303721 h1:lfBnWX0gIKjEJQ+mtiaVw6SDl2nUfeoAFGzSZpkexe8=
 github.com/streamingfast/cli v0.0.2-0.20210505184833-be3717303721/go.mod h1:Oq3bTX3762gLGKKbA+YboBIjlGB/gSro/Pp9Dkw01BE=
 github.com/streamingfast/cli v0.0.2 h1:wj0RrFeoaYxDvUoLdoJTSxegX5xjlsnDrUqYyuaYZXY=
@@ -1203,6 +1205,8 @@ github.com/streamingfast/firehose v0.1.1-0.20210811161507-6ef87dfb1994 h1:D0Zt9t
 github.com/streamingfast/firehose v0.1.1-0.20210811161507-6ef87dfb1994/go.mod h1:ZOjFA7vp1JnGmdU6phspVImaF2clR/gLPyPrWTSBbq8=
 github.com/streamingfast/firehose v0.1.1-0.20210811195158-d4b116b4b447 h1:NyPvk6EvC8ubQbrha5WeoZd6xsPTv8W9RwR84jk199k=
 github.com/streamingfast/firehose v0.1.1-0.20210811195158-d4b116b4b447/go.mod h1:6eaJVhbrxfEf+LSfr1Bw7bTn5CHXn2Japqv8dQByYEM=
+github.com/streamingfast/firehose v0.1.1-0.20210818195906-078fa21b2cda h1:vKOR693jMVu0LpgbDI4Pqhf6BaAAr7z5I4wiR+p1T50=
+github.com/streamingfast/firehose v0.1.1-0.20210818195906-078fa21b2cda/go.mod h1:Us68Iihhh9q/X0VI7cDpNDBctKGSHx1mDrnBOnmwxBY=
 github.com/streamingfast/fluxdb v0.0.0-20210104215519-ac781957af01 h1:S5pBbEh2v/VFgcjyGeA5eNS8PEwHyt6UioLMSNRkoWg=
 github.com/streamingfast/fluxdb v0.0.0-20210104215519-ac781957af01/go.mod h1:YhalQTwlihbnBBA3lRgnFsVyK5WV5uRfOd1rZKv/h20=
 github.com/streamingfast/fluxdb v0.0.0-20210526211450-e6a91ed426d7 h1:6SQBY5FqPxonj6K6hXgRZZjxa28ptzR7ISRZyfIHtTQ=
@@ -1330,6 +1334,8 @@ github.com/streamingfast/pbgo v0.0.6-0.20210810190312-2053a3b38779 h1:7doKh2Nocg
 github.com/streamingfast/pbgo v0.0.6-0.20210810190312-2053a3b38779/go.mod h1:wbR0a49W0gWiysxiN44db1DHIgIH9FtTUz7w/0I4UVw=
 github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc h1:8tTREe7R7ornjEwjeYpLfkk8AdCN+ZAxPuLp0KPL9WI=
 github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc/go.mod h1:mSi3+mIAffPq/McZ3TqLSmDr8f1v3mi5RHE+zmBHJGk=
+github.com/streamingfast/pbgo v0.0.6-0.20210812023556-e996f9c4fb86 h1:zPDLwkGSdW41KqQsGJu4Q5Qs9c+C82JeqY4oULJY0ro=
+github.com/streamingfast/pbgo v0.0.6-0.20210812023556-e996f9c4fb86/go.mod h1:XKLPtwRtO9JRVfcymM8IIHiJTVIERR+O8uBbdOol3l0=
 github.com/streamingfast/relayer v0.0.2-0.20201029161257-ec97edca50d7 h1:YkmUBTK1z/oafnjr6b4MW5irpDAmhuSavJGUG+a4u7Y=
 github.com/streamingfast/relayer v0.0.2-0.20201029161257-ec97edca50d7/go.mod h1:JGO5ezLG44L5B1j8g5oGH9E7RGWkFI5hPGNFcCLYqLQ=
 github.com/streamingfast/relayer v0.0.2-0.20210525190602-eeec872ddedf h1:V7zao5ppUzvtAlYaHFfh7FU/gOYK/W5ZWOk9GLGujKc=
