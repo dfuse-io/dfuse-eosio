@@ -18,23 +18,14 @@ package eosws
 import (
 	"context"
 	"fmt"
-	drateLimiter "github.com/dfuse-io/dauth/ratelimiter"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
+	drateLimiter "github.com/streamingfast/dauth/ratelimiter"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/dfuse-io/dauth/authenticator"
-	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
-	_ "github.com/dfuse-io/dauth/authenticator/null" // auth plugin
-	_ "github.com/dfuse-io/dauth/authenticator/redis"
-	_ "github.com/dfuse-io/dauth/metering/redis"
-	_ "github.com/dfuse-io/dauth/ratelimiter/null" // ratelimiter plugin
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/blockstream"
-	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
@@ -42,8 +33,20 @@ import (
 	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
+	"github.com/eoscanada/eos-go"
+	"github.com/gorilla/mux"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/blockstream"
+	"github.com/streamingfast/bstream/hub"
+	"github.com/streamingfast/dauth/authenticator"
+	dauthMiddleware "github.com/streamingfast/dauth/authenticator/middleware"
+	_ "github.com/streamingfast/dauth/authenticator/null" // auth plugin
+	_ "github.com/streamingfast/dauth/authenticator/redis"
+	_ "github.com/streamingfast/dauth/metering/redis"
+	_ "github.com/streamingfast/dauth/ratelimiter/null" // ratelimiter plugin
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dipp"
+	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/logging"
@@ -51,10 +54,6 @@ import (
 	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/streamingfast/shutter"
-	"github.com/eoscanada/eos-go"
-	"github.com/gorilla/mux"
-	"github.com/streamingfast/dauth/authenticator"
-	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 

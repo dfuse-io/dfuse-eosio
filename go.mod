@@ -48,36 +48,36 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
 	github.com/streamingfast/blockmeta v0.0.2-0.20210811194956-90dc4202afda
-	github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3 // indirect
-	github.com/streamingfast/cli v0.0.3-0.20210811201236-5c00ec55462d // indirect
-	github.com/streamingfast/client-go v0.0.0-20210812010037-2ae1ded7ca05 // indirect
+	github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3
+	github.com/streamingfast/cli v0.0.3-0.20210811201236-5c00ec55462d
+	github.com/streamingfast/client-go v0.0.0-20210812010037-2ae1ded7ca05
 	github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec
 	github.com/streamingfast/dgraphql v0.0.2-0.20210812004103-ce9976b66675
-	github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2 // indirect
-	github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840 // indirect
-	github.com/streamingfast/dipp v1.0.1-0.20210811200841-d2cca4e058e6 // indirect
+	github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2
+	github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840
+	github.com/streamingfast/dipp v1.0.1-0.20210811200841-d2cca4e058e6
 	github.com/streamingfast/dlauncher v0.0.0-20210811194929-f06e488e63da
 	github.com/streamingfast/dmesh v0.0.0-20210811181323-5a37ad73216b
 	github.com/streamingfast/dmetering v0.0.0-20210812002943-aa53fa1ce172
-	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447 // indirect
-	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22 // indirect
+	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
+	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a
 	github.com/streamingfast/firehose v0.1.1-0.20210811195158-d4b116b4b447
 	github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298
-	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 // indirect
+	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0
 	github.com/streamingfast/kvdb v0.0.2-0.20210811194032-09bf862bd2e3
-	github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a // indirect
+	github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a
 	github.com/streamingfast/merger v0.0.3-0.20210811195536-1011c89f0a67
 	github.com/streamingfast/node-manager v0.0.2-0.20210811195732-ccdf9f70dd0b
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308
-	github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc // indirect
+	github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc
 	github.com/streamingfast/relayer v0.0.2-0.20210812020310-adcf15941b23
 	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
-	github.com/streamingfast/shutter v1.5.0 // indirect
-	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14 // indirect
+	github.com/streamingfast/shutter v1.5.0
+	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14
 	github.com/stretchr/testify v1.7.0
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9
@@ -87,14 +87,14 @@ require (
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200425165423-262c93980547 // indirect
 	go.etcd.io/etcd/pkg/v3 v3.5.0-alpha.0 // indirect
 	go.opencensus.io v0.23.0
-	go.uber.org/atomic v1.7.0
+	go.uber.org/atomic v1.9.0
 	go.uber.org/multierr v1.6.0 // indirect
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.19.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.39.1
+	google.golang.org/grpc v1.40.0
 	google.golang.org/grpc/examples v0.0.0-20210526223527-2de42fcbbce3 // indirect
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.4.0
@@ -111,10 +111,11 @@ replace github.com/census-instrumentation/opencensus-proto v0.1.0-0.201812141439
 
 replace github.com/ShinyTrinkets/overseer => github.com/dfuse-io/overseer v0.2.1-0.20210326144022-ee491780e3ef
 
-replace github.com/dfuse-io/dauth => github.com/eosnationftw/dauth v0.0.0-20210726151717-768692231b3b
-
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
-replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
 
-replace github.com/dfuse-io/firehose => github.com/EOS-Nation/firehose v0.1.1-0.20210726152155-6271fd6882bc
+//replace github.com/streamingfast/dauth => github.com/eosnationftw/dauth v0.0.0-20210726151717-768692231b3b
+replace github.com/streamingfast/dauth => /Users/Work/GoLand/dauth
+
+// replace github.com/streamingfast/firehose => github.com/EOS-Nation/firehose v0.1.1-0.20210726152155-6271fd6882bc
+replace github.com/streamingfast/firehose => /Users/Work/GoLand/firehose

@@ -18,7 +18,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	rateLimiter "github.com/dfuse-io/dauth/ratelimiter"
+	rateLimiter "github.com/streamingfast/dauth/ratelimiter"
 	"net/http"
 	"strings"
 
