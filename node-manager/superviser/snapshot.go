@@ -22,12 +22,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/streamingfast/dstore"
-
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/dstore"
+	node_manager "github.com/streamingfast/node-manager"
 	"github.com/streamingfast/node-manager/metrics"
 	"go.uber.org/zap"
 )
+
+var _ node_manager.SnapshotableChainSuperviser = (*NodeosSuperviser)(nil)
 
 func (s *NodeosSuperviser) TakeSnapshot(snapshotStore dstore.Store, numberOfSnapshotsToKeep int) error {
 	s.Logger.Info("asking nodeos API to create a snapshot")
