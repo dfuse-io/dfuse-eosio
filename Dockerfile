@@ -1,3 +1,5 @@
+ARG VERSION="-"
+ARG COMMIT = ""
 ARG EOSIO_TAG="v2.0.6-dm-12.0"
 ARG DEB_PKG="eosio_2.0.6-dm.12.0-1-ubuntu-18.04_amd64.deb"
 
@@ -15,7 +17,7 @@ WORKDIR /work
 ADD go.mod /work
 RUN apt update && apt-get -y install git
 RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlauncher &&\
-	grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
+    grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
     cd dlauncher &&\
     git checkout "$(cat ../dlauncher.hash)" &&\
     cd dashboard/client &&\
@@ -27,6 +29,8 @@ WORKDIR /work
 RUN yarn install && yarn build
 
 FROM golang:1.14 as dfuse
+ARG COMMIT
+ARG VERSION
 RUN go get -u github.com/GeertJohan/go.rice/rice && export PATH=$PATH:$HOME/bin:/work/go/bin
 RUN mkdir -p /work/build
 ADD . /work
@@ -39,7 +43,7 @@ RUN cd /work/eosq/app/eosq && go generate
 RUN cd /work/dashboard && go generate
 RUN cd /work/dgraphql && go generate
 RUN go test ./...
-RUN go build -v -o /work/build/dfuseeos ./cmd/dfuseeos
+RUN go build -ldflags "-s -w -X main.version=\"${VERSION}\" -X main.commit=\"${COMMIT}\"" -v -o /work/build/dfuseeos ./cmd/dfuseeos
 
 FROM base
 RUN mkdir -p /app/ && curl -Lo /app/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.2.2/grpc_health_probe-linux-amd64 && chmod +x /app/grpc_health_probe
