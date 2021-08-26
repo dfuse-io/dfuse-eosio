@@ -1,5 +1,5 @@
 ARG VERSION="-"
-ARG COMMIT = ""
+ARG COMMIT=""
 ARG EOSIO_TAG="v2.0.6-dm-12.0"
 ARG DEB_PKG="eosio_2.0.6-dm.12.0-1-ubuntu-18.04_amd64.deb"
 
