@@ -54,6 +54,7 @@ date.
 * **Breaking Change** Changed `--statedb-enable-pipeline` flag to `--statedb-disable-pipeline` to make it clearer that it should not be disable, if you were using the flag, change the name and invert the logical value (i.e. `--state-enable-pipeline=false` becomes `--state-disable-pipeline=true`)
 
 ### Fixed
+* Fixed Firehose gRPC listening address over plain text.
 * Fixed validation of transaction ID passed to WebSocket `get_transaction` API, the prior validation was too permissive.
 * Fixed a bug making search-forkresolver useless, because ignored by search-router.
 * Fixed a bug on StateDB server not accepting symbol and symbol code as `scope` parameter value.
