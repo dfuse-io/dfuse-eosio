@@ -29,7 +29,7 @@ func init() {
 	migrateCmd.Flags().StringP("snapshot-path", "s", "", "The path to the snapshot file used to export the data")
 }
 
-func dfuseMigrateE(cmd *cobra.Command, args []string) error {
+func dfuseMigrateE(cmd *cobra.Command, _ []string) error {
 	cmd.SilenceUsage = true
 
 	exportDir := viper.GetString("export-dir")

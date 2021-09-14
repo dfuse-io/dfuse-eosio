@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/dauth/authenticator"
-	"github.com/dfuse-io/dauth/ratelimiter"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
+	"github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dauth/ratelimiter"
 	"go.uber.org/zap"
 )
 

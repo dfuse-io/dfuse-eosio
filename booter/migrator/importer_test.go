@@ -11,7 +11,7 @@ import (
 	bootops "github.com/dfuse-io/eosio-boot/ops"
 	"github.com/eoscanada/eos-go/ecc"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"

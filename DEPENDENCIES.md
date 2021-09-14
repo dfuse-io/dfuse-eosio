@@ -21,7 +21,7 @@ and building the `dashboard` from dlauncher, copying the ricebox to this repo:
 
 ```
 pushd ..
-  git clone git@github.com/dfuse-io/dlauncher
+  git clone git@github.com/streamingfast/dlauncher
   pushd dashboard
     pushd client
       yarn install

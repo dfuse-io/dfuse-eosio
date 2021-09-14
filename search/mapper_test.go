@@ -13,7 +13,7 @@ import (
 
 	"github.com/andreyvit/diff"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/jsonpb"
+	"github.com/streamingfast/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"

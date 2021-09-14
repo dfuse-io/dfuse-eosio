@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )

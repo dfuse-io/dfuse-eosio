@@ -1,11 +1,12 @@
 package search
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/dfuse-io/search"
-	searchArchive "github.com/dfuse-io/search/archive"
-	"github.com/dfuse-io/search/querylang"
+	"github.com/streamingfast/search"
+	searchArchive "github.com/streamingfast/search/archive"
+	"github.com/streamingfast/search/sqe"
 )
 
 func RegisterDefaultHandlers() {
@@ -27,10 +28,10 @@ func RegisterHandlers(terms *IndexedTerms) {
 	search.GetBleveQueryFactory = func(rawQuery string) *search.BleveQuery {
 		return &search.BleveQuery{
 			Raw:              rawQuery,
-			FieldTransformer: querylang.NoOpFieldTransformer,
+			FieldTransformer: sqe.NoOpFieldTransformer,
 			Validator:        validator,
 		}
 	}
-	livenessQuery, _ := search.NewParsedQuery("receiver:999")
+	livenessQuery, _ := search.NewParsedQuery(context.Background(), "receiver:999")
 	searchArchive.LivenessQuery = livenessQuery
 }

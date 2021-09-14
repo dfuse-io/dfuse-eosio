@@ -3,8 +3,8 @@ package blockmeta
 import (
 	"context"
 
-	"github.com/dfuse-io/blockmeta"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/blockmeta"
 )
 
 func init() {

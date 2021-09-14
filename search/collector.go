@@ -5,7 +5,7 @@ import (
 	"sort"
 
 	bsearch "github.com/blevesearch/bleve/search"
-	search "github.com/dfuse-io/search"
+	search "github.com/streamingfast/search"
 )
 
 type trxResult struct {

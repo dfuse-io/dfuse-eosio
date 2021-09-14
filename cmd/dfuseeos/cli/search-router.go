@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	"github.com/dfuse-io/dlauncher/launcher"
-	routerApp "github.com/dfuse-io/search/app/router"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
+	routerApp "github.com/streamingfast/search/app/router"
 )
 
 func init() {
@@ -17,7 +17,7 @@ func init() {
 		Title:       "Search router",
 		Description: "Routes search queries to archiver, live",
 		MetricsID:   "router",
-		Logger:      launcher.NewLoggingDef("github.com/dfuse-io/search/(router|app/router).*", nil),
+		Logger:      launcher.NewLoggingDef("github.com/streamingfast/search/(router|app/router).*", nil),
 		RegisterFlags: func(cmd *cobra.Command) error {
 			// Router-specific flags
 			cmd.Flags().String("search-router-grpc-listen-addr", RouterServingAddr, "Address to listen for incoming gRPC requests")

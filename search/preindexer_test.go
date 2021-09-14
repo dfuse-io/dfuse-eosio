@@ -20,15 +20,15 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
-	"github.com/dfuse-io/search"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/streamingfast/search"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
@@ -51,7 +51,7 @@ func TestPreIndexerRunSingleIndexQuery(t *testing.T) {
 	highBlockNum := uint64(1)
 	releaseFunc := func() {}
 	metrics := search.NewQueryMetrics(zap.NewNop(), sortDesc, "", 1, 0, 0)
-	bleveQuery, err := search.NewParsedQuery("account:eosio.token")
+	bleveQuery, err := search.NewParsedQuery(ctx, "account:eosio.token")
 
 	matches, err := search.RunSingleIndexQuery(ctx, sortDesc, lowBlockNum, highBlockNum, matchCollector, bleveQuery, index.Index, releaseFunc, metrics)
 	require.NoError(t, err)

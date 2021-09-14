@@ -20,14 +20,14 @@ import (
 	"strings"
 
 	// Needs to be in this file which is the main entry of wrapper binary
-	_ "github.com/dfuse-io/dauth/authenticator/null"   // auth null plugin
-	_ "github.com/dfuse-io/dauth/authenticator/secret" // auth secret/hard-coded plugin
-	_ "github.com/dfuse-io/dauth/ratelimiter/null"     // ratelimiter plugin
+	_ "github.com/streamingfast/dauth/authenticator/null"   // auth null plugin
+	_ "github.com/streamingfast/dauth/authenticator/secret" // auth secret/hard-coded plugin
+	_ "github.com/streamingfast/dauth/ratelimiter/null"     // ratelimiter plugin
 
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/dlauncher/flags"
-	launcher "github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/dlauncher/flags"
+	launcher "github.com/streamingfast/dlauncher/launcher"
 )
 
 // Root of the `dfuseeos` command
@@ -73,6 +73,24 @@ func Main() {
 	}
 
 	derr.Check("dfuse", RootCmd.Execute())
+}
+
+func Version(version, commit, isDirty string) string {
+	shortCommit := commit
+	if len(shortCommit) >= 15 {
+		shortCommit = shortCommit[0:15]
+	}
+
+	if len(shortCommit) == 0 {
+		shortCommit = "adhoc"
+	}
+
+	out := version + "-" + shortCommit
+	if isDirty != "" {
+		out += "-dirty"
+	}
+
+	return out
 }
 
 var startCmdExample = `dfuseeos start relayer merger --merger-grpc-serving-addr=localhost:12345 --relayer-merger-addr=localhost:12345`

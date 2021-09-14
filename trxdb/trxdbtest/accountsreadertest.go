@@ -22,9 +22,9 @@ import (
 
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/kvdb"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
+	"github.com/streamingfast/kvdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

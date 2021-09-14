@@ -41,11 +41,11 @@ build() {
     popd > /dev/null
   fi
 
-  dlauncher_hash=`grep -w github.com/dfuse-io/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1`
+  dlauncher_hash=`grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1`
   pushd .. > /dev/null
     if [[ ! -d dlauncher ]]; then
       echo "Cloning dlauncher dependency"
-      git clone https://github.com/dfuse-io/dlauncher
+      git clone https://github.com/streamingfast/dlauncher
       git checkout $dlauncher_hash
     elif [[ $force_build == true ]]; then
       pushd dlauncher > /dev/null

@@ -5,19 +5,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	blockstreamv2 "github.com/dfuse-io/bstream/blockstream/v2"
-	dauthAuthenticator "github.com/dfuse-io/dauth/authenticator"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dlauncher/launcher"
-	"github.com/dfuse-io/dmetering"
-	"github.com/dfuse-io/dmetrics"
-	firehoseApp "github.com/dfuse-io/firehose/app/firehose"
-	"github.com/dfuse-io/logging"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
+	blockstreamv2 "github.com/streamingfast/bstream/blockstream/v2"
+	dauthAuthenticator "github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/dlauncher/launcher"
+	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/dmetrics"
+	firehoseApp "github.com/streamingfast/firehose/app/firehose"
+	"github.com/streamingfast/logging"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 )
 
@@ -91,15 +91,10 @@ func init() {
 				return preproc.PreprocessBlock, nil
 			}
 
-			firehoseGRPCListenAddr := viper.GetString("firehose-grpc-listen-addr")
-			if !strings.Contains(firehoseGRPCListenAddr, "*") {
-				return nil, fmt.Errorf("unsupported value for firehose-grpc-listen-addr. Address must include '*' character to indicate TLS with snakeoil (insecure) certificate")
-
-			}
 			return firehoseApp.New(appLogger, &firehoseApp.Config{
 				BlockStoreURLs:          firehoseBlocksStoreURLs,
 				BlockStreamAddr:         blockstreamAddr,
-				GRPCListenAddr:          firehoseGRPCListenAddr,
+				GRPCListenAddr:          viper.GetString("firehose-grpc-listen-addr"),
 				GRPCShutdownGracePeriod: grcpShutdownGracePeriod,
 			}, &firehoseApp.Modules{
 				Authenticator:             authenticator,

@@ -18,9 +18,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/fluxdb"
+	"github.com/streamingfast/bstream"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/fluxdb"
 	"github.com/stretchr/testify/require"
 )
 

@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	"github.com/eoscanada/eos-go"
 	"github.com/stretchr/testify/require"
 )

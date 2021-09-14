@@ -3,7 +3,7 @@ package purger
 import (
 	"os"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

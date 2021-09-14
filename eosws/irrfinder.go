@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/kvdb"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/logging"
+	"github.com/streamingfast/kvdb"
 	"go.uber.org/zap"
 )
 

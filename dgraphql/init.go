@@ -16,7 +16,7 @@ package dgraphql
 
 import (
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/schema"
-	"github.com/dfuse-io/dgraphql"
+	"github.com/streamingfast/dgraphql"
 )
 
 func init() {

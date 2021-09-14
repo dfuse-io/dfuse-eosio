@@ -1,7 +1,7 @@
 package cli
 
 import (
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 )
 
 const (

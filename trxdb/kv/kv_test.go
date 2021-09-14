@@ -9,8 +9,8 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/dfuse-io/dfuse-eosio/trxdb/trxdbtest"
-	_ "github.com/dfuse-io/kvdb/store/badger"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
+	_ "github.com/streamingfast/kvdb/store/badger"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )

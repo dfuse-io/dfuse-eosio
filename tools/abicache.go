@@ -17,24 +17,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/dstore"
-
+	"github.com/dfuse-io/dfuse-eosio/abicodec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/dgrpc"
-	pbbstream "github.com/dfuse-io/pbgo/dfuse/bstream/v1"
+	"github.com/eoscanada/eos-go"
+	eossnapshot "github.com/eoscanada/eos-go/snapshot"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
+	dfuse "github.com/streamingfast/client-go"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/dstore"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/oauth"
-
-	"github.com/dfuse-io/bstream"
-	dfuse "github.com/dfuse-io/client-go"
-	"github.com/dfuse-io/dfuse-eosio/abicodec"
-	"github.com/eoscanada/eos-go"
-	eossnapshot "github.com/eoscanada/eos-go/snapshot"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 var statusFrequency = 15 * time.Second
@@ -51,8 +50,8 @@ func init() {
 	Cmd.AddCommand(abicacheCmd)
 
 	abicacheCmd.AddCommand(exportCmd)
-	exportCmd.Flags().String("snapshot-store-url", "", "If not snapshot path is provided,we will attempt to find the closest snapshot to the desired block")
-	exportCmd.Flags().String("snapshot-path", "", "Snapshot path to start from")
+	exportCmd.Flags().String("abi-snapshot-store-url", "", "If not snapshot path is provided,we will attempt to find the closest snapshot to the desired block")
+	exportCmd.Flags().String("abi-snapshot-path", "", "Snapshot path to start from")
 	exportCmd.Flags().String("firehose-grpc-addr", "blocks.mainnet.eos.dfuse.io:443/", "Firehose GRPC serving address")
 	exportCmd.Flags().Bool("secure", false, "When set, skips certification verification")
 }
@@ -67,11 +66,11 @@ func exportE(cmd *cobra.Command, args []string) (err error) {
 	}
 
 	snapshotURL := ""
-	if viper.GetString("snapshot-path") != "" {
-		snapshotURL = viper.GetString("snapshot-path")
+	if viper.GetString("abi-snapshot-path") != "" {
+		snapshotURL = viper.GetString("abi-snapshot-path")
 		fmt.Printf("Starting ABI export from given snapshot: %q\n", snapshotURL)
-	} else if viper.GetString("snapshot-store-url") != "" {
-		snapshotStoreURL := viper.GetString("snapshot-store-url")
+	} else if viper.GetString("abi-snapshot-store-url") != "" {
+		snapshotStoreURL := viper.GetString("abi-snapshot-store-url")
 		fmt.Printf("Searching for closest snapshot to block number %d from store: %q\n", blockNum, snapshotStoreURL)
 		file, err := getSnapshotPath(blockNum, snapshotStoreURL)
 		if err != nil {
@@ -85,7 +84,7 @@ func exportE(cmd *cobra.Command, args []string) (err error) {
 		}
 		snapshotURL += file.Source
 	} else {
-		return fmt.Errorf("You must either specify a snapshot path (--snapshot-path) or a snapthost store URL to proceed (--snapshot-store-url)")
+		return fmt.Errorf("You must either specify a snapshot path (--abi-snapshot-path) or a snapthost store URL to proceed (--abi-snapshot-store-url)")
 	}
 
 	e := &exporter{
@@ -225,7 +224,7 @@ func (e *exporter) firehose(ctx context.Context, startBlockNum, stopBlockNum uin
 				fmt.Printf("> Stream blocks progress at block %d -> blocks: %s, bytes: %s\n", block.Number, stats.blockReceived.String(), stats.bytesReceived.String())
 				nextStatus = now.Add(statusFrequency)
 			}
-			stats.recordBlock(int64(response.XXX_Size()))
+			stats.recordBlock(int64(proto.Size(response)))
 		}
 	}
 	return nil, fmt.Errorf("unable to run firehose")

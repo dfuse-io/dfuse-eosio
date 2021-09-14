@@ -22,9 +22,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/dstore"
+	node_manager "github.com/streamingfast/node-manager"
 	"go.uber.org/zap"
 )
+
+var _ node_manager.BootstrapableChainSuperviser = (*NodeosSuperviser)(nil)
 
 func (s *NodeosSuperviser) Bootstrap(bootstrapDataURL string) error {
 	s.Logger.Info("bootstrapping blocks.log from pre-built data", zap.String("bootstrap_data_url", bootstrapDataURL))

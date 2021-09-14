@@ -2,9 +2,9 @@ package cli
 
 import (
 	eosqApp "github.com/dfuse-io/dfuse-eosio/eosq/app/eosq"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 const defaultEosqAvailableNetworks = `[{ "id": "local", "is_test": true, "logo": "/images/eos-mainnet.png", "name": "Local Network", "url": "http://localhost:8080" }]`

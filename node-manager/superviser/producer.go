@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"time"
 
-	nodeManager "github.com/dfuse-io/node-manager"
+	nodeManager "github.com/streamingfast/node-manager"
 	"go.uber.org/zap"
 )
 

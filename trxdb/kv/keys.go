@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dfuse-io/kvdb"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/kvdb"
 )
 
 const (

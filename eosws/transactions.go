@@ -18,14 +18,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

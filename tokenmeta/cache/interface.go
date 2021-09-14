@@ -3,7 +3,7 @@ package cache
 import (
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
 )

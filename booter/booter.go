@@ -12,7 +12,7 @@ import (
 
 	_ "github.com/dfuse-io/dfuse-eosio/booter/migrator"
 	eosboot "github.com/dfuse-io/eosio-boot"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/shutter"
 	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )

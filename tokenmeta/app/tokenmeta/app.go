@@ -23,19 +23,19 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/dmetrics"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/dmetrics"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dstore"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	pbhealth "github.com/dfuse-io/pbgo/grpc/health/v1"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/dstore"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	pbhealth "github.com/streamingfast/pbgo/grpc/health/v1"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 )
 

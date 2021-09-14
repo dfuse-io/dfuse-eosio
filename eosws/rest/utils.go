@@ -24,8 +24,8 @@ import (
 	"time"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	"github.com/dfuse-io/dmetering"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/dmetering"
 	"go.opencensus.io/plugin/ochttp"
 	"go.uber.org/zap"
 )
@@ -43,6 +43,7 @@ func deleteCORSHeaders(r *http.Request) {
 }
 
 type ReverseProxy struct {
+	timeoutPerReq    time.Duration
 	retries          int
 	target           *url.URL
 	stripQuerystring bool
@@ -60,7 +61,7 @@ func (p *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirectly bool) (written bool) {
 	begin := time.Now()
-	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), p.timeoutPerReq)
 	defer cancel()
 
 	req := r.Clone(ctx)
@@ -201,8 +202,9 @@ func (p *ReverseProxy) tryReq(w http.ResponseWriter, r *http.Request, failDirect
 
 }
 
-func NewReverseProxy(target *url.URL, stripQuerystring bool, dmeteringKind string, retries int) http.Handler {
+func NewReverseProxy(target *url.URL, stripQuerystring bool, dmeteringKind string, retries int, timeoutPerReq time.Duration) http.Handler {
 	return &ReverseProxy{
+		timeoutPerReq:    timeoutPerReq,
 		retries:          retries,
 		target:           target,
 		stripQuerystring: stripQuerystring,

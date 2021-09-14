@@ -4,8 +4,8 @@ import (
 	"time"
 
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	"github.com/dfuse-io/dlauncher/launcher"
 	"github.com/spf13/cobra"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 func init() {

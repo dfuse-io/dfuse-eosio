@@ -8,9 +8,9 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/dfuse-io/search"
+	"github.com/streamingfast/search"
 	"go.uber.org/zap"
 )
 
@@ -105,6 +105,10 @@ func (m *BlockMapper) Map(block *bstream.Block) ([]*document.Document, error) {
 	var docsList []*document.Document
 	batchActionUpdater := func(trxID string, idx int, data map[string]interface{}) error {
 		doc := document.NewDocument(newDocumentID(blk.Num(), trxID, idx))
+		if traceEnabled {
+			zlog.Debug("adding document to docs list", zap.String("id", doc.ID), zap.Int("size", doc.Size()), zap.Reflect("data", data))
+		}
+
 		err := m.MapDocument(doc, data)
 		if err != nil {
 			return err
@@ -209,6 +213,10 @@ func (m *BlockMapper) prepareBatchDocuments(blk *pbcodec.Block, batchUpdater Bat
 		}
 
 		// Loop and batch update all the actions
+		if traceEnabled {
+			zlog.Debug("mapped block to documents", zap.Int("action_count", len(tokenizedActions)), zap.Stringer("block", blk.AsRef()))
+		}
+
 		for _, doc := range tokenizedActions {
 			err := batchUpdater(doc.trxID, doc.idx, doc.data)
 			if err != nil {

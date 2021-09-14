@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/tidwall/gjson"
 )

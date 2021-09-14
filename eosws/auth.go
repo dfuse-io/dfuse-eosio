@@ -17,7 +17,7 @@ package eosws
 import (
 	"context"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"go.uber.org/zap"

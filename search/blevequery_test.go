@@ -1,13 +1,14 @@
 package search
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"testing"
 
-	"github.com/dfuse-io/derr"
-	"github.com/dfuse-io/search"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/search"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opencensus.io/trace"
@@ -59,7 +60,7 @@ func Test_validateQueryFields(t *testing.T) {
 
 	for idx, test := range tests {
 		t.Run(fmt.Sprintf("index %d", idx+1), func(t *testing.T) {
-			_, err := search.NewParsedQuery(test.in)
+			_, err := search.NewParsedQuery(context.Background(), test.in)
 			if test.expectedError == nil {
 				assert.NoError(t, err)
 			} else {

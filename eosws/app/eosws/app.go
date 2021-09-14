@@ -24,11 +24,9 @@ import (
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream"
-	"github.com/dfuse-io/bstream/hub"
-	"github.com/dfuse-io/dauth/authenticator"
-	dauthMiddleware "github.com/dfuse-io/dauth/authenticator/middleware"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/blockstream"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
@@ -36,18 +34,20 @@ import (
 	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dipp"
-	"github.com/dfuse-io/dmetering"
-	"github.com/dfuse-io/dmetrics"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/logging"
-	pbblockmeta "github.com/dfuse-io/pbgo/dfuse/blockmeta/v1"
-	pbheadinfo "github.com/dfuse-io/pbgo/dfuse/headinfo/v1"
-	pbsearch "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/dfuse-io/shutter"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/dipp"
+	"github.com/streamingfast/dmetrics"
+	"github.com/streamingfast/dstore"
+	"github.com/streamingfast/logging"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
+	"github.com/streamingfast/shutter"
 	"github.com/eoscanada/eos-go"
 	"github.com/gorilla/mux"
+	"github.com/streamingfast/dauth/authenticator"
+	dauthMiddleware "github.com/streamingfast/dauth/authenticator/middleware"
+	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 
@@ -305,7 +305,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse statedb HTTP address: %w", err)
 	}
 
-	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries)
+	statedbProxy := rest.NewReverseProxy(stateHTTPURL, false, "REST API - Chain State", a.Config.StateDBHTTPProxyRetries, time.Second*600)
 
 	var searchRouterClient pbsearch.RouterClient
 
@@ -401,7 +401,7 @@ func (a *App) Run() error {
 		return fmt.Errorf("cannot parse api-addr: %w", err)
 	}
 
-	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries)
+	dumbAPIProxy := rest.NewReverseProxy(apiURL, true, "REST API - Chain RPC", a.Config.NodeosRPCProxyRetries, 30*time.Second)
 	billedDumbAPIProxy := dmetering.NewMeteringMiddleware(
 		dumbAPIProxy,
 		meter,

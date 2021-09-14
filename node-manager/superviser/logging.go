@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	logplugin "github.com/dfuse-io/node-manager/log_plugin"
+	logplugin "github.com/streamingfast/node-manager/log_plugin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -15,12 +15,13 @@ func newToZapLogPlugin(debugDeepMind bool, logger *zap.Logger) *logplugin.ToZapL
 	return logplugin.NewToZapLogPlugin(debugDeepMind, logger, logplugin.ToZapLogPluginLogLevel(logLevelExtractor))
 }
 
-var discardRegex = regexp.MustCompile("wabt.hpp:.*misaligned reference")
-var toInfoRegex = regexp.MustCompile("(" +
+var discardRegex = regexp.MustCompile("(?i)" + "wabt.hpp:.*misaligned reference")
+var toInfoRegex = regexp.MustCompile("(?i)" + "(" +
 	strings.Join([]string{
-		"net_plugin.cpp:.*Closing connection to:",
 		"controller.cpp:.*(No existing chain state or fork database|Initializing new blockchain with genesis state)",
 		"platform_timer_accurac:.*Checktime timer",
+		"net_plugin.cpp:.*closing connection to:",
+		"net_plugin.cpp:.*connection failed to:",
 	}, "|") +
 	")")
 

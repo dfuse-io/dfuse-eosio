@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist/keyer"
 
@@ -17,7 +17,7 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )

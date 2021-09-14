@@ -20,13 +20,13 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/dfuse-io/derr"
+	"github.com/streamingfast/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
-	pb "github.com/dfuse-io/pbgo/dfuse/search/v1"
-	"github.com/dfuse-io/search"
-	searchLive "github.com/dfuse-io/search/live"
+	pb "github.com/streamingfast/pbgo/dfuse/search/v1"
+	"github.com/streamingfast/search"
+	searchLive "github.com/streamingfast/search/live"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -72,7 +72,7 @@ func Test_processSingleBlocks(t *testing.T) {
 				Blk: block,
 			}
 
-			bleveQuery, err := search.NewParsedQuery("account:eosio.token")
+			bleveQuery, err := search.NewParsedQuery(context.Background(), "account:eosio.token")
 			matchCollector := search.GetMatchCollector
 			if matchCollector == nil {
 				panic(fmt.Errorf("no match collector set, should not happen, you should define a collector"))

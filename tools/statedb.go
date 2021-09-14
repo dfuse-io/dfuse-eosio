@@ -14,14 +14,14 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/dfuse-io/dstore"
-	"github.com/dfuse-io/fluxdb"
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/dstore"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/klauspost/compress/zstd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/kvdb/store"
 )
 
 var showValue = false
@@ -34,8 +34,21 @@ var statedbScanCmd = &cobra.Command{Use: "scan", Short: "Scan read from StateDB 
 var statedbPrefixCmd = &cobra.Command{Use: "prefix", Short: "Prefix read from StateDB store", RunE: statedbPrefixE, Args: cobra.MinimumNArgs(1)}
 
 // Higher-level (model) calls
-var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Query and print the latest effective index for a given StateDB tablet", RunE: statedbIndexE, Args: cobra.ExactArgs(1)}
-var statedbReindexCmd = &cobra.Command{Use: "reindex", Short: "Re-index a given StateDB tablet", RunE: statedbReindexE, Args: cobra.ExactArgs(1)}
+var statedbIndexCmd = &cobra.Command{Use: "index", Short: "Various operations related to StateDB Tablet Indexes"}
+var statedbIndexPruneCmd = &cobra.Command{
+	Use:   "prune",
+	Short: "Prune all StateDB Tablet Index(es) before the given height (or HEAD)",
+	Args:  cobra.ExactArgs(1),
+	RunE:  statedbIndexPruneE,
+	Example: ExamplePrefixed("dfuseeos tools state index", `
+		prune --dsn="badger://./dfuse-data/storage/statedb-v1" all --frequency 3
+		prune --dsn="bigkv://gcp_project.gcp_bt_instance/eos-kylin-v1" all --frequency 3
+		prune --dsn="tikv://hostname.local:2379/eos-kylin-v1" all --frequency 3
+	`),
+}
+
+var statedbIndexFetchCmd = &cobra.Command{Use: "fetch", Short: "Fetch and print the latest effective index for a given StateDB tablet", RunE: statedbIndexFetchE, Args: cobra.ExactArgs(1)}
+var statedbIndexRegenerateCmd = &cobra.Command{Use: "regenerate", Short: "Re-index a given StateDB tablet", RunE: statedbIndexRegenerateE, Args: cobra.ExactArgs(1)}
 var statedbTabletCmd = &cobra.Command{Use: "tablet", Short: "Fetch & print StateDB tablet, optionally at given height", RunE: statedbTabletE, Args: cobra.ExactArgs(1)}
 var statedbShardCmd = &cobra.Command{Use: "shard", Short: "Various operations related to sharding"}
 var statedbShardInspectCmd = &cobra.Command{Use: "inspect <shard-file>", Short: "Inspect given shard, printing write requests information stored in", RunE: statedbShardInspectE, Args: cobra.ExactArgs(1)}
@@ -61,9 +74,12 @@ func init() {
 
 	statedbIndexCmd.PersistentFlags().Uint64("height", 0, "Block height where to look for the index, 0 means use latest block")
 
-	statedbReindexCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
-	statedbReindexCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
-	statedbReindexCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start re-indexing from, will skip any index for which the tablet is before this boundary")
+	statedbIndexPruneCmd.PersistentFlags().Uint64("frequency", 0, "Pruning frequency, 1/N indexes will be pruned from the storage engine to reclaim space, never deleted most recent and least recent indexes")
+	statedbIndexPruneCmd.PersistentFlags().Bool("write", false, "Write deleted entries to storage engine and not just print it")
+	statedbIndexPruneCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start pruning from, will skip any index for which the tablet is before this boundary")
+
+	statedbIndexRegenerateCmd.PersistentFlags().Bool("write", false, "Write back index to storage engine and not just print it")
+	statedbIndexRegenerateCmd.PersistentFlags().String("lower-bound", "", "Lower bound tablet where to start re-indexing from, will skip any index for which the tablet is before this boundary")
 
 	statedbTabletCmd.PersistentFlags().Uint64("height", 0, "Block height where to create the index at, 0 means use latest block")
 
@@ -74,9 +90,12 @@ func init() {
 	statedbCmd.AddCommand(statedbScanCmd)
 	statedbCmd.AddCommand(statedbPrefixCmd)
 	statedbCmd.AddCommand(statedbIndexCmd)
-	statedbCmd.AddCommand(statedbReindexCmd)
 	statedbCmd.AddCommand(statedbTabletCmd)
 	statedbCmd.AddCommand(statedbShardCmd)
+
+	statedbIndexCmd.AddCommand(statedbIndexFetchCmd)
+	statedbIndexCmd.AddCommand(statedbIndexPruneCmd)
+	statedbIndexCmd.AddCommand(statedbIndexRegenerateCmd)
 
 	statedbShardCmd.AddCommand(statedbShardCleanCmd)
 	statedbShardCmd.AddCommand(statedbShardInspectCmd)
@@ -181,7 +200,7 @@ func statedbPrefixE(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
+func statedbIndexFetchE(cmd *cobra.Command, args []string) (err error) {
 	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
 	if err != nil {
 		return fmt.Errorf("new kv store: %w", err)
@@ -235,7 +254,52 @@ func statedbIndexE(cmd *cobra.Command, args []string) (err error) {
 	return nil
 }
 
-func statedbReindexE(cmd *cobra.Command, args []string) (err error) {
+func statedbIndexPruneE(cmd *cobra.Command, args []string) (err error) {
+	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
+	if err != nil {
+		return fmt.Errorf("new kv store: %w", err)
+	}
+
+	ctx := cmd.Context()
+	fdb := fluxdb.New(store, nil, &statedb.BlockMapper{}, false)
+
+	height := viper.GetUint64("height")
+	dryRun := !viper.GetBool("write")
+	lowerBound := viper.GetString("lower-bound")
+	pruneFrequency := viper.GetUint64("frequency")
+
+	if args[0] == "all" {
+		var lowerBoundTablet fluxdb.Tablet
+		if lowerBound != "" {
+			lowerBoundTablet, err = stringToTablet(lowerBound)
+			if err != nil {
+				return fmt.Errorf("invalid lower-bound argument %q: %w", lowerBound, err)
+			}
+		}
+
+		fmt.Printf("Pruning tablet indexes (dry run: %t)\n", dryRun)
+		if dryRun {
+			fmt.Println("You are doing a dry run, use --write flag to perform actual deletion of indexes")
+		}
+
+		tabletCount, indexCount, deletedCount, err := fdb.PruneTabletIndexes(ctx, int(pruneFrequency), height, lowerBoundTablet, dryRun)
+		if err != nil {
+			return fmt.Errorf("pruning failed: %w", err)
+		}
+
+		if dryRun {
+			fmt.Printf("Tablet indexes NOT deleted, would have deleted %d out of %d indexes across %d tablets\n", deletedCount, indexCount, tabletCount)
+		} else {
+			fmt.Printf("Deleted %d out of %d indexes across %d tablets\n", deletedCount, indexCount, tabletCount)
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf(`only "all" argument is accepted for now`)
+}
+
+func statedbIndexRegenerateE(cmd *cobra.Command, args []string) (err error) {
 	store, err := fluxdb.NewKVStore(viper.GetString("dsn"))
 	if err != nil {
 		return fmt.Errorf("new kv store: %w", err)
@@ -299,7 +363,7 @@ func statedbReindexAll(ctx context.Context, fdb *fluxdb.FluxDB, height uint64, l
 	fmt.Printf("Re-indexing all tablets (dry run: %t)\n", !write)
 	tabletCount, indexCount, err := fdb.ReindexTablets(ctx, height, lowerBoundTablet, !write)
 	if !write {
-		fmt.Printf("Not re-writing indexes, would have affeted %d tablet and %d overall indexes\n", tabletCount, indexCount)
+		fmt.Printf("Not re-writing indexes, would have affected %d tablet and %d overall indexes\n", tabletCount, indexCount)
 	}
 
 	return nil

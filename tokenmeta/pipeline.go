@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/dfuse-io/bstream"
-	"github.com/dfuse-io/bstream/blockstream"
-	"github.com/dfuse-io/bstream/forkable"
-	"github.com/dfuse-io/dstore"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/blockstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/dstore"
 	"go.uber.org/zap"
 )
 

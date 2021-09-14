@@ -5,9 +5,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/dfuse-io/kvdb/store"
+	"github.com/streamingfast/kvdb/store"
 
-	"github.com/dfuse-io/bstream"
+	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 )
 

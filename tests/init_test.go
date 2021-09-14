@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"github.com/dfuse-io/logging"
+	"github.com/streamingfast/logging"
 )
 
 func init() {

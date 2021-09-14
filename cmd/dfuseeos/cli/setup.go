@@ -20,10 +20,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dfuse-io/dgrpc"
-	"github.com/dfuse-io/dlauncher/launcher"
+	"github.com/streamingfast/dgrpc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dlauncher/launcher"
 )
 
 func init() {
