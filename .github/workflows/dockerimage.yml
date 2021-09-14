@@ -10,25 +10,36 @@ on:
 
 jobs:
   build:
+    name: Build image
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Branch name
-      id: branch_name
-      run: |
-        echo ::set-output name=VERSION::$([[ $GITHUB_REF =~ "refs/tags" ]] && echo ${GITHUB_REF#refs/tags/} || echo "${GITHUB_SHA:0:7}")
+      - name: Branch name
+        id: branch_name
+        run: |
+          echo ::set-output name=VERSION::$([[ $GITHUB_REF =~ "refs/tags" ]] && echo ${GITHUB_REF#refs/tags/} || echo "${GITHUB_SHA:0:7}")
 
-    - name: Build the Docker image
-      run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u USERNAME --password-stdin
+      # Setup gcloud CLI
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_KEY }}
+          project_id: dfuse-302310
+          export_default_credentials: true
 
-        docker build . -t docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest -t docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
-        docker push       docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest
+      # Build docker image
+      - name: Image
+        run: |-
+          docker build . -t eu.gcr.io/dfuse-302310/test_dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/test_dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
 
-        echo ${{ secrets.docker_hub_token }} | docker login -u ${{ secrets.docker_hub_username }} --password-stdin
-        docker image tag docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest dfuse/dfuse-eosio:latest
-        docker image tag docker.pkg.github.com/dfuse-io/dfuse-eosio/dfuse-eosio:latest dfuse/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - run: |
+          gcloud auth configure-docker -q
 
-        docker push      dfuse/dfuse-eosio:latest
-        docker push      dfuse/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+      # Push image to Google Container Registry
+      - name: Build
+        run: |-
+          docker push eu.gcr.io/dfuse-302310/test_dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker push eu.gcr.io/dfuse-302310/test_dfuse-eosio:latest
