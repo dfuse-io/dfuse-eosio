@@ -17,12 +17,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Branch name
+      - name: Get branch name
         id: branch_name
         run: |
           echo ::set-output name=VERSION::$([[ $GITHUB_REF =~ "refs/tags" ]] && echo ${GITHUB_REF#refs/tags/} || echo "${GITHUB_SHA:0:7}")
 
-      - name: Setup Gcloud CLI
+      - name: Setup gcloud cli
         uses: google-github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCR_KEY }}
@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Image
         run: |-
-          docker build . -t eu.gcr.io/dfuse-302310/test_dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/test_dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
 
       - name: Docker config
         run: |
@@ -40,5 +40,5 @@ jobs:
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
-          docker push eu.gcr.io/dfuse-302310/test_dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
-          docker push eu.gcr.io/dfuse-302310/test_dfuse-eosio:latest
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:latest
