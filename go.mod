@@ -21,7 +21,7 @@ require (
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
 	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
 	github.com/dustin/go-humanize v1.0.0
-	github.com/eoscanada/eos-go v0.9.1-0.20210812015252-984fc96878b6
+	github.com/eoscanada/eos-go v0.9.1-0.20210812211611-bc6364238cf2
 	github.com/eoscanada/eosc v1.4.0
 	github.com/eoscanada/pitreos v1.1.1-0.20210811185752-fa06394508d0
 	github.com/francoispqt/gojay v1.2.13
@@ -116,3 +116,5 @@ replace github.com/ShinyTrinkets/overseer => github.com/dfuse-io/overseer v0.2.1
 // The go-testing-interface version matches the Golang version to compile against, in this case, we want
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
+
+replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20211001070510-82a8e47e7df3

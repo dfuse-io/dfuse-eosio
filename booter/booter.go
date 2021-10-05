@@ -11,9 +11,10 @@ import (
 	"time"
 
 	_ "github.com/dfuse-io/dfuse-eosio/booter/migrator"
+	_ "github.com/dfuse-io/dfuse-eosio/booter/ultraops"
 	eosboot "github.com/dfuse-io/eosio-boot"
-	"github.com/streamingfast/shutter"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 )
 

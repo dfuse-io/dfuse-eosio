@@ -37,21 +37,23 @@ func NewContract(abi []byte, code []byte) *Contract {
 type importer struct {
 	common
 
-	opPublicKey ecc.PublicKey
-	actionChan  chan interface{}
-	ctr         *Contract
-	logger      *zap.Logger
+	opPublicKey   ecc.PublicKey
+	actionChan    chan interface{}
+	ctr           *Contract
+	logger        *zap.Logger
+	bootupAccount []string
 }
 
-func newImporter(opPublicKey ecc.PublicKey, dataDir string, actionChan chan interface{}, logger *zap.Logger) *importer {
+func newImporter(opPublicKey ecc.PublicKey, dataDir string, bootupAccount []string, actionChan chan interface{}, logger *zap.Logger) *importer {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &importer{
-		common:      common{dataDir: dataDir},
-		opPublicKey: opPublicKey,
-		actionChan:  actionChan,
-		logger:      logger,
+		common:        common{dataDir: dataDir},
+		opPublicKey:   opPublicKey,
+		actionChan:    actionChan,
+		logger:        logger,
+		bootupAccount: bootupAccount,
 	}
 }
 
@@ -75,7 +77,7 @@ func (i *importer) init() error {
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
-		if isNativeChainAccount(account) {
+		if isNativeChainAccount(account) || i.isBootupAccount(account) {
 			i.logger.Info("skipping the creation of native account",
 				zap.String("account", account.name),
 			)
@@ -211,13 +213,21 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 }
 
 func (i *importer) createAccount(account *Account) {
-	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
-	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
+	// ultra-duncan---UB-1339 Any account created after bootup will need to use ultra.eosio
+	var isUltraBoot = len(i.bootupAccount) > 0
+	var creator = eos.AccountName("eosio")
+	if isUltraBoot {
+		creator = eos.AccountName("ultra.eosio")
+	}
+	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount(creator, account.getAccountName(), i.opPublicKey))
+	if !isUltraBoot {
+		i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
+	}
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 }
 
 func (i *importer) createPermissions(account *Account) error {
-	if isNativeChainAccount(account) {
+	if isNativeChainAccount(account) || i.isBootupAccount(account) {
 		i.logger.Info("skipping permission creation for native account",
 			zap.String("account", account.name),
 		)
@@ -245,7 +255,7 @@ func (i *importer) createPermissions(account *Account) error {
 }
 
 func (i *importer) setPermissions(account *Account, importerAuthority *eos.Authority) error {
-	if isNativeChainAccount(account) {
+	if isNativeChainAccount(account) || i.isBootupAccount(account) {
 		i.logger.Info("skipping permission setting for native account",
 			zap.String("account", account.name),
 		)
@@ -334,6 +344,16 @@ func generateRandomNonce() []byte {
 func isNativeChainAccount(account *Account) bool {
 	nativeAccount := []string{"eosio", "eosio.null", "eosio.prods"}
 	for _, acc := range nativeAccount {
+		if acc == account.name {
+			return true
+		}
+	}
+	return false
+}
+
+// ultra-duncan---UB-1339 account created in bootup process
+func (i *importer) isBootupAccount(account *Account) bool {
+	for _, acc := range i.bootupAccount {
 		if acc == account.name {
 			return true
 		}
