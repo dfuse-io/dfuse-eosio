@@ -50,14 +50,14 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
 	github.com/streamingfast/blockmeta v0.0.2-0.20210811194956-90dc4202afda
-	github.com/streamingfast/bstream v0.0.2-0.20210811181043-4c1920a7e3e3 // indirect
+	github.com/streamingfast/bstream v0.0.2-0.20210901144836-9a626db444c5 // indirect
 	github.com/streamingfast/cli v0.0.3-0.20210811201236-5c00ec55462d // indirect
 	github.com/streamingfast/client-go v0.0.0-20210812010037-2ae1ded7ca05 // indirect
 	github.com/streamingfast/dauth v0.0.0-20210811181149-e8fd545948cc
 	github.com/streamingfast/dbin v0.0.0-20210809205249-73d5eca35dc5
 	github.com/streamingfast/derr v0.0.0-20210811180100-9138d738bcec
-	github.com/streamingfast/dgraphql v0.0.2-0.20210812004103-ce9976b66675
-	github.com/streamingfast/dgrpc v0.0.0-20210811180351-8646818518b2 // indirect
+	github.com/streamingfast/dgraphql v0.0.2-0.20210908222456-ff1f58e7afcc
+	github.com/streamingfast/dgrpc v0.0.0-20210901144702-c57c3701768b // indirect
 	github.com/streamingfast/dhammer v0.0.0-20210811180702-456c4cf0a840 // indirect
 	github.com/streamingfast/dipp v1.0.1-0.20210811200841-d2cca4e058e6 // indirect
 	github.com/streamingfast/dlauncher v0.0.0-20210811194929-f06e488e63da
@@ -66,15 +66,15 @@ require (
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447 // indirect
 	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22 // indirect
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a
-	github.com/streamingfast/firehose v0.1.1-0.20210811195158-d4b116b4b447
+	github.com/streamingfast/firehose v0.1.1-0.20210901164748-403e4d029276
 	github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298
 	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0 // indirect
 	github.com/streamingfast/kvdb v0.0.2-0.20210811194032-09bf862bd2e3
 	github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a // indirect
 	github.com/streamingfast/merger v0.0.3-0.20210811195536-1011c89f0a67
-	github.com/streamingfast/node-manager v0.0.2-0.20210811195732-ccdf9f70dd0b
+	github.com/streamingfast/node-manager v0.0.2-0.20210830135731-4b00105a1479
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308
-	github.com/streamingfast/pbgo v0.0.6-0.20210811160400-7c146c2db8cc // indirect
+	github.com/streamingfast/pbgo v0.0.6-0.20210820205306-ba5335146052 // indirect
 	github.com/streamingfast/relayer v0.0.2-0.20210812020310-adcf15941b23
 	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
@@ -98,6 +98,7 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/grpc v1.39.1
 	google.golang.org/grpc/examples v0.0.0-20210526223527-2de42fcbbce3 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible

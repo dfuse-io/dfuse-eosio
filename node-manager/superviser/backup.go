@@ -19,6 +19,7 @@ import (
 	"errors"
 
 	"github.com/eoscanada/pitreos"
+	node_manager "github.com/streamingfast/node-manager"
 	"github.com/streamingfast/node-manager/metrics"
 	"github.com/streamingfast/node-manager/superviser"
 	"go.uber.org/zap"
@@ -30,6 +31,8 @@ type NodeosBackupInfo struct {
 	LastBlockSeen       uint32 `yaml:"lastBlockSeen"`
 	ServerVersionString string `yaml:"serverVersionString"`
 }
+
+var _ node_manager.BackupableChainSuperviser = (*NodeosSuperviser)(nil)
 
 func (s *NodeosSuperviser) TakeBackup(backupTag string, backupStoreURL string) error {
 	if s.options.NoBlocksLog {

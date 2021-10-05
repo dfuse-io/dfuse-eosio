@@ -24,8 +24,8 @@ import (
 	_ "github.com/streamingfast/dauth/authenticator/secret" // auth secret/hard-coded plugin
 	_ "github.com/streamingfast/dauth/ratelimiter/null"     // ratelimiter plugin
 
-	"github.com/streamingfast/derr"
 	"github.com/spf13/cobra"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dlauncher/flags"
 	launcher "github.com/streamingfast/dlauncher/launcher"
 )
@@ -73,6 +73,24 @@ func Main() {
 	}
 
 	derr.Check("dfuse", RootCmd.Execute())
+}
+
+func Version(version, commit, isDirty string) string {
+	shortCommit := commit
+	if len(shortCommit) >= 15 {
+		shortCommit = shortCommit[0:15]
+	}
+
+	if len(shortCommit) == 0 {
+		shortCommit = "adhoc"
+	}
+
+	out := version + "-" + shortCommit
+	if isDirty != "" {
+		out += "-dirty"
+	}
+
+	return out
 }
 
 var startCmdExample = `dfuseeos start relayer merger --merger-grpc-serving-addr=localhost:12345 --relayer-merger-addr=localhost:12345`
