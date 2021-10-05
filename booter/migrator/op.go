@@ -13,7 +13,8 @@ func init() {
 }
 
 type OpMigration struct {
-	DataDir string `json:"data_dir"`
+	DataDir       string   `json:"data_dir"`
+	BootupAccount []string `json:"bootup_accounts,omitempty"`
 }
 
 func (op *OpMigration) RequireValidation() bool {
@@ -21,7 +22,7 @@ func (op *OpMigration) RequireValidation() bool {
 }
 
 func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in chan interface{}) error {
-	impt := newImporter(opPubkey, op.DataDir, in, c.Logger)
+	impt := newImporter(opPubkey, op.DataDir, op.BootupAccount, in, c.Logger)
 
 	err := impt.init()
 	if err != nil {
