@@ -37,23 +37,25 @@ func NewContract(abi []byte, code []byte) *Contract {
 type importer struct {
 	common
 
-	opPublicKey   ecc.PublicKey
-	actionChan    chan interface{}
-	ctr           *Contract
-	logger        *zap.Logger
-	bootupAccount []string
+	opPublicKey     ecc.PublicKey
+	actionChan      chan interface{}
+	ctr             *Contract
+	logger          *zap.Logger
+	skipAuth        []string
+	includeContract []string
 }
 
-func newImporter(opPublicKey ecc.PublicKey, dataDir string, bootupAccount []string, actionChan chan interface{}, logger *zap.Logger) *importer {
+func newImporter(opPublicKey ecc.PublicKey, dataDir string, skipAuth []string, includeContract []string, actionChan chan interface{}, logger *zap.Logger) *importer {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
 	return &importer{
-		common:        common{dataDir: dataDir},
-		opPublicKey:   opPublicKey,
-		actionChan:    actionChan,
-		logger:        logger,
-		bootupAccount: bootupAccount,
+		common:          common{dataDir: dataDir},
+		opPublicKey:     opPublicKey,
+		actionChan:      actionChan,
+		logger:          logger,
+		skipAuth:        skipAuth,
+		includeContract: includeContract,
 	}
 }
 
@@ -77,7 +79,7 @@ func (i *importer) init() error {
 // TODO: cannot call this import :(
 func (i *importer) inject() error {
 	accounts, err := i.retrieveAccounts(func(account *Account) error {
-		if isNativeChainAccount(account) || i.isBootupAccount(account) {
+		if isNativeChainAccount(account) {
 			i.logger.Info("skipping the creation of native account",
 				zap.String("account", account.name),
 			)
@@ -146,6 +148,12 @@ func (i *importer) migrateContract(accountData *Account) error {
 	}
 
 	for _, table := range tables {
+		if i.isExceptionTable(accountData) {
+			i.logger.Info("skipping the migrating table",
+				zap.String("account", accountData.name),
+			)
+			continue
+		}
 		// we need to create the payers account first before we can create the table rows
 		i.logger.Debug("migrating table",
 			zap.String("account", accountData.name),
@@ -213,21 +221,13 @@ func (i *importer) setImporterContract(account eos.AccountName) error {
 }
 
 func (i *importer) createAccount(account *Account) {
-	// ultra-duncan---UB-1339 Any account created after bootup will need to use ultra.eosio
-	var isUltraBoot = len(i.bootupAccount) > 0
-	var creator = eos.AccountName("eosio")
-	if isUltraBoot {
-		creator = eos.AccountName("ultra.eosio")
-	}
-	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount(creator, account.getAccountName(), i.opPublicKey))
-	if !isUltraBoot {
-		i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
-	}
+	i.actionChan <- (*bootops.TransactionAction)(system.NewNewAccount("eosio", account.getAccountName(), i.opPublicKey))
+	i.actionChan <- (*bootops.TransactionAction)(system.NewSetalimits(account.getAccountName(), -1, -1, -1))
 	i.actionChan <- bootops.EndTransaction(i.opPublicKey) // end transaction
 }
 
 func (i *importer) createPermissions(account *Account) error {
-	if isNativeChainAccount(account) || i.isBootupAccount(account) {
+	if isNativeChainAccount(account) || i.skipUpdateAuth(account) {
 		i.logger.Info("skipping permission creation for native account",
 			zap.String("account", account.name),
 		)
@@ -255,7 +255,7 @@ func (i *importer) createPermissions(account *Account) error {
 }
 
 func (i *importer) setPermissions(account *Account, importerAuthority *eos.Authority) error {
-	if isNativeChainAccount(account) || i.isBootupAccount(account) {
+	if isNativeChainAccount(account) || i.skipUpdateAuth(account) {
 		i.logger.Info("skipping permission setting for native account",
 			zap.String("account", account.name),
 		)
@@ -352,11 +352,26 @@ func isNativeChainAccount(account *Account) bool {
 }
 
 // ultra-duncan---UB-1339 account created in bootup process
-func (i *importer) isBootupAccount(account *Account) bool {
-	for _, acc := range i.bootupAccount {
+func (i *importer) skipUpdateAuth(account *Account) bool {
+	for _, acc := range i.skipAuth {
 		if acc == account.name {
 			return true
 		}
 	}
 	return false
+}
+
+func (i *importer) isExceptionTable(account *Account) bool {
+	// No include table so skip
+	if len(i.includeContract) == 0 {
+		return false
+	}
+
+	for _, acc := range i.includeContract {
+		if acc == account.name {
+			return false
+		}
+	}
+
+	return true
 }
