@@ -24,6 +24,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
+	eosio_v2_0 "github.com/dfuse-io/dfuse-eosio/codec/eosio/v2.0"
+	eosio_v2_1 "github.com/dfuse-io/dfuse-eosio/codec/eosio/v2.1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
@@ -50,7 +53,7 @@ func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
 func LimitConsoleLength(maxByteCount int) ConsoleReaderOption {
 	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
 		if maxByteCount > 0 {
-			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, limitConsoleLengthConversionOption(maxByteCount))
+			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, eosio.LimitConsoleLengthConversionOption(maxByteCount))
 		}
 	})
 }
@@ -76,8 +79,13 @@ func NewConsoleReader(reader io.Reader, opts ...ConsoleReaderOption) (*ConsoleRe
 	l := &ConsoleReader{
 		src:   reader,
 		close: func() {},
-		ctx:   newParseCtx(),
-		done:  make(chan interface{}),
+		ctx: &parseCtx{
+			hydrator:   eosio_v2_0.NewHydrator(zlog),
+			abiDecoder: newABIDecoder(),
+			block:      &pbcodec.Block{},
+			trx:        &pbcodec.TransactionTrace{},
+		},
+		done: make(chan interface{}),
 	}
 
 	for _, opt := range opts {
@@ -133,6 +141,8 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
+	hydrator eosio.Hydrator
+
 	abiDecoder     *ABIDecoder
 	block          *pbcodec.Block
 	activeBlockNum int64
@@ -140,15 +150,7 @@ type parseCtx struct {
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
 
-	conversionOptions []conversionOption
-}
-
-func newParseCtx() *parseCtx {
-	return &parseCtx{
-		abiDecoder: newABIDecoder(),
-		block:      &pbcodec.Block{},
-		trx:        &pbcodec.TransactionTrace{},
-	}
+	conversionOptions []eosio.ConversionOption
 }
 
 func (l *ConsoleReader) Read() (out interface{}, err error) {
@@ -237,7 +239,11 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			//noop
 
 		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
-			err = ctx.readDeepmindVersion(line)
+			var hydrator eosio.Hydrator
+			hydrator, err = ctx.readDeepmindVersion(line)
+			if err == nil {
+				ctx.hydrator = hydrator
+			}
 
 		default:
 			zlog.Info("unknown log line", zap.String("line", line))
@@ -373,7 +379,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		return fmt.Errorf("compute creation tree: %s", err)
 	}
 
-	trace.CreationTree = CreationTreeToDEOS(toFlatTree(creationTreeRoots...))
+	trace.CreationTree = eosio.CreationTreeToDEOS(toFlatTree(creationTreeRoots...))
 	trace.DtrxOps = ctx.trx.DtrxOps
 	trace.DbOps = ctx.trx.DbOps
 	trace.FeatureOps = ctx.trx.FeatureOps
@@ -470,86 +476,8 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		return nil, fmt.Errorf("unable to decode block %d state hex: %w", blockNum, err)
 	}
 
-	blockState := &eos.BlockState{}
-	err = unmarshalBinary(blockStateHex, blockState)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling binary block state: %w", err)
-	}
-
-	signedBlock := blockState.SignedBlock
-
-	ctx.block.Id = blockState.BlockID.String()
-	ctx.block.Number = blockState.BlockNum
-	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
-	// TransactionCount, TransactionTraceCount)
-	ctx.block.Version = 1
-	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
-	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
-	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
-	ctx.block.DposProposedIrreversibleBlocknum = blockState.DPoSProposedIrreversibleBlockNum
-	ctx.block.Validated = blockState.Validated
-	ctx.block.BlockrootMerkle = BlockrootMerkleToDEOS(blockState.BlockrootMerkle)
-	ctx.block.ProducerToLastProduced = ProducerToLastProducedToDEOS(blockState.ProducerToLastProduced)
-	ctx.block.ProducerToLastImpliedIrb = ProducerToLastImpliedIrbToDEOS(blockState.ProducerToLastImpliedIRB)
-	ctx.block.ActivatedProtocolFeatures = ActivatedProtocolFeaturesToDEOS(blockState.ActivatedProtocolFeatures)
-	ctx.block.ProducerSignature = signedBlock.ProducerSignature.String()
-
-	ctx.block.ConfirmCount = make([]uint32, len(blockState.ConfirmCount))
-	for i, count := range blockState.ConfirmCount {
-		ctx.block.ConfirmCount[i] = uint32(count)
-	}
-
-	if blockState.PendingSchedule != nil {
-		ctx.block.PendingSchedule = PendingScheduleToDEOS(blockState.PendingSchedule)
-	}
-
-	/// Specific versions handling
-
-	blockSigningKey := blockState.BlockSigningKeyV1
-	schedule := blockState.ActiveSchedule
-	signingAuthority := blockState.ValidBlockSigningAuthorityV2
-
-	// Only in EOSIO 1.x
-	if blockSigningKey != nil {
-		ctx.block.BlockSigningKey = blockSigningKey.String()
-	}
-
-	if schedule.V1 != nil {
-		ctx.block.ActiveScheduleV1 = ProducerScheduleToDEOS(schedule.V1)
-	}
-
-	// Only in EOSIO 2.x
-	if signingAuthority != nil {
-		ctx.block.ValidBlockSigningAuthorityV2 = BlockSigningAuthorityToDEOS(signingAuthority)
-	}
-
-	if schedule.V2 != nil {
-		ctx.block.ActiveScheduleV2 = ProducerAuthorityScheduleToDEOS(schedule.V2)
-	}
-
-	// End (versions)
-
-	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
-	for idx, transaction := range signedBlock.Transactions {
-		deosTransaction := TransactionReceiptToDEOS(&transaction)
-		deosTransaction.Index = uint64(idx)
-
-		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
-	}
-
-	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
-	for idx, t := range ctx.block.UnfilteredTransactionTraces {
-		t.Index = uint64(idx)
-		t.BlockTime = ctx.block.Header.Timestamp
-		t.ProducerBlockId = ctx.block.Id
-		t.BlockNum = uint64(ctx.block.Number)
-
-		for _, actionTrace := range t.ActionTraces {
-			ctx.block.UnfilteredExecutedTotalActionCount++
-			if actionTrace.IsInput() {
-				ctx.block.UnfilteredExecutedInputActionCount++
-			}
-		}
+	if err := ctx.hydrator.HydrateBlock(ctx.block, blockStateHex); err != nil {
+		return nil, fmt.Errorf("hydrate block %d: %w", blockNum, err)
 	}
 
 	block := ctx.block
@@ -587,13 +515,12 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unable to decode transaction trace hex at block num %d: %w", blockNum, err)
 	}
 
-	trxTrace := &eos.TransactionTrace{}
-	err = unmarshalBinary(trxTraceHex, trxTrace)
+	trxTrace, err := ctx.hydrator.DecodeTransactionTrace(trxTraceHex)
 	if err != nil {
-		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
+		return fmt.Errorf("decode transaction trace %d: %w", blockNum, err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, ctx.conversionOptions...))
+	return ctx.recordTransaction(trxTrace)
 }
 
 // Line formats:
@@ -770,7 +697,7 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 		DelayUntil:    chunks[7],
 		ExpirationAt:  chunks[8],
 		TransactionId: chunks[9],
-		Transaction:   SignedTransactionToDEOS(signedTrx),
+		Transaction:   eosio.SignedTransactionToDEOS(signedTrx),
 	})
 
 	return nil
@@ -1002,20 +929,23 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 //
 //  Version 13
 //    DEEP_MIND_VERSION ${major_version} ${minor_version}
-func (ctx *parseCtx) readDeepmindVersion(line string) error {
+func (ctx *parseCtx) readDeepmindVersion(line string) (eosio.Hydrator, error) {
 	chunks, err := splitNToM(line, 2, 3)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	majorVersion := chunks[1]
 	if !inSupportedVersion(majorVersion) {
-		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
+		return nil, fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
 	}
 
 	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
+	if majorVersion == "13" {
+		return eosio_v2_1.NewHydrator(zlog), nil
+	}
 
-	return nil
+	return eosio_v2_0.NewHydrator(zlog), nil
 }
 
 func inSupportedVersion(majorVersion string) bool {
@@ -1265,7 +1195,7 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 		Operation:     op,
 		Name:          name,  // "onblock" or "onerror"
 		TransactionId: trxID, // the hash of the transaction
-		Transaction:   SignedTransactionToDEOS(trx),
+		Transaction:   eosio.SignedTransactionToDEOS(trx),
 	})
 
 	return nil

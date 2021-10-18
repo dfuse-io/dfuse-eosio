@@ -26,6 +26,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
@@ -33,10 +34,6 @@ import (
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/streamingfast/dhammer"
-	"github.com/streamingfast/logging"
-	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
-	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/graph-gophers/graphql-go"
@@ -44,8 +41,12 @@ import (
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/dhammer"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/opaque"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"go.uber.org/zap"
 )
 
@@ -873,7 +874,7 @@ func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 		}
 
 		if extension != nil {
-			return &ProducerSchedule{s: codec.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
+			return &ProducerSchedule{s: eosio.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
 		}
 
 		// We really don't have any schedule change for this

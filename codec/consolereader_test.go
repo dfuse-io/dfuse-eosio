@@ -30,9 +30,10 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/andreyvit/diff"
+	eosio_v2_0 "github.com/dfuse-io/dfuse-eosio/codec/eosio/v2.0"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -83,6 +84,7 @@ func TestParseFromFile(t *testing.T) {
 		readerOptions []ConsoleReaderOption
 	}{
 		{"full", "testdata/deep-mind.dmlog", nil, nil},
+		{"full-2.1.x", "testdata/deep-mind-2.1.x.dmlog", nil, nil},
 		{"max-console-log", "testdata/deep-mind.dmlog", blockWithConsole, []ConsoleReaderOption{LimitConsoleLength(10)}},
 	}
 
@@ -110,6 +112,13 @@ func TestParseFromFile(t *testing.T) {
 					break
 				}
 
+				if err != nil {
+					// It appears that since our error can be quite large, the `require.NoError`
+					// seems to not print it in full when an error occurred. In fact, it only
+					// prints an unexpected error occurred. To ensure the error is debuggable,
+					// we print it first when an error is present.
+					fmt.Println(err)
+				}
 				require.NoError(t, err)
 			}
 
@@ -566,7 +575,7 @@ func Test_readDeepMindVersion(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := newParseCtx()
-			err := ctx.readDeepmindVersion(test.line)
+			_, err := ctx.readDeepmindVersion(test.line)
 
 			require.Equal(t, test.expectedErr, err)
 		})
@@ -653,4 +662,13 @@ func blockWithConsole(block *pbcodec.Block) bool {
 	}
 
 	return false
+}
+
+func newParseCtx() *parseCtx {
+	return &parseCtx{
+		hydrator:   eosio_v2_0.NewHydrator(zlog),
+		abiDecoder: newABIDecoder(),
+		block:      &pbcodec.Block{},
+		trx:        &pbcodec.TransactionTrace{},
+	}
 }

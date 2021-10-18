@@ -1,3 +1,3 @@
-generate.sh - Sun 13 Sep 2020 13:35:42 EDT - julien
-dfuse-io/proto revision: ef66837f403a517d99068686f446708c9a04eb3a
-dfuse-io/proto-eosio revision: 6e8632d67a83918eb4cfc5e99ac51fc15c301b3a
+generate.sh - Mon Oct 18 01:04:49 EDT 2021 - maoueh
+streamingfast/proto revision: a2215dd82a69e1205b25aee016013e9feedce0bf
+streamingfast/proto-eosio revision: 5c2bd5ed4f7d38f53b29b8e56d3c9bcb2c15172c

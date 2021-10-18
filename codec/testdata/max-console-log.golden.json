@@ -251,7 +251,7 @@
             "rawData": "1052546ea998b339"
           },
           "elapsed": "193",
-          "console": "dbins ran ",
+          "console": "dbins ran and you're authenticated",
           "transactionId": "bfb5ea8af87b1bbe4203a76263dbda999ed2dac37e86849f108008555a41e78a",
           "blockNum": "19",
           "producerBlockId": "00000013b286ec1cb1b715bd6da7aed46359d7fe7fdf920938a4695530aeb69c",
@@ -658,7 +658,7 @@
             "rawData": "1052546ea998b33900000132"
           },
           "elapsed": "63",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "45be66f4e626a72dbef7da656a0c1c81f9efe5e50073d3335a50f897522ce4fa",
           "blockNum": "30",
           "producerBlockId": "0000001efdbb2e352bb1f5c0de02858b922062695b9fb2b408c93e36dcd828e6",
@@ -694,7 +694,7 @@
             "rawData": "00"
           },
           "elapsed": "9",
-          "console": "Nested inl",
+          "console": "Nested inline within dtrxexec",
           "transactionId": "45be66f4e626a72dbef7da656a0c1c81f9efe5e50073d3335a50f897522ce4fa",
           "blockNum": "30",
           "producerBlockId": "0000001efdbb2e352bb1f5c0de02858b922062695b9fb2b408c93e36dcd828e6",
@@ -1162,7 +1162,7 @@
             "rawData": "1052546ea998b33901000131"
           },
           "elapsed": "115",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "d7d32319da744c13fd389e9d6a4ff298687793948303a94a495f161032dc5b9c",
           "blockNum": "32",
           "producerBlockId": "0000002025806a84353affbf701c455ee90a0c3c30d4d4b37f535fb22b279d0f",
@@ -1339,7 +1339,7 @@
               "rawData": "1052546ea998b33901000131"
             },
             "elapsed": "115",
-            "console": "dtrxexec s",
+            "console": "dtrxexec start console log, before failing",
             "transactionId": "d7d32319da744c13fd389e9d6a4ff298687793948303a94a495f161032dc5b9c",
             "blockNum": "32",
             "producerBlockId": "0000002025806a84353affbf701c455ee90a0c3c30d4d4b37f535fb22b279d0f",
@@ -1778,7 +1778,7 @@
             "rawData": "1052546ea998b33900010132"
           },
           "elapsed": "35",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "1340db53d3a431951d51deea6709ba4bcca55a26daa687e841f15f7f502ec4dd",
           "blockNum": "35",
           "producerBlockId": "00000023973dd88833b6f2fbca03cbfce1c148bcd838816ed2d96fe9e8b32ae2",
@@ -1800,7 +1800,7 @@
             "rawData": "01"
           },
           "elapsed": "37",
-          "console": "Nested inl",
+          "console": "Nested inline within dtrxexec",
           "transactionId": "1340db53d3a431951d51deea6709ba4bcca55a26daa687e841f15f7f502ec4dd",
           "blockNum": "35",
           "producerBlockId": "00000023973dd88833b6f2fbca03cbfce1c148bcd838816ed2d96fe9e8b32ae2",
@@ -1994,7 +1994,7 @@
               "rawData": "1052546ea998b33900010132"
             },
             "elapsed": "35",
-            "console": "dtrxexec s",
+            "console": "dtrxexec start console log, before failing",
             "transactionId": "1340db53d3a431951d51deea6709ba4bcca55a26daa687e841f15f7f502ec4dd",
             "blockNum": "35",
             "producerBlockId": "00000023973dd88833b6f2fbca03cbfce1c148bcd838816ed2d96fe9e8b32ae2",
@@ -2016,7 +2016,7 @@
               "rawData": "01"
             },
             "elapsed": "37",
-            "console": "Nested inl",
+            "console": "Nested inline within dtrxexec",
             "transactionId": "1340db53d3a431951d51deea6709ba4bcca55a26daa687e841f15f7f502ec4dd",
             "blockNum": "35",
             "producerBlockId": "00000023973dd88833b6f2fbca03cbfce1c148bcd838816ed2d96fe9e8b32ae2",
@@ -2459,7 +2459,7 @@
             "rawData": "3052546ea998b33901000131"
           },
           "elapsed": "61",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "3d3142026a6cb4c87842e6635e4e1c5bbc4cf2f5fe3288e5e92ba3016135a726",
           "blockNum": "38",
           "producerBlockId": "00000026063681ed230b0b89b88396a090c2671ae9cb24e2885cc38d7c4578eb",
@@ -2584,7 +2584,7 @@
             "rawData": "887766554433221188776655443322113e085e305e230033b6f2fb00000100013052546ea998b3390000004875d56f4e013052546ea998b33900000000a8ed32320c3052546ea998b3390100013100"
           },
           "elapsed": "293",
-          "console": "Called on ",
+          "console": "Called on error handler\nExtracted 1 \nData nonce was not f\n",
           "transactionId": "926d0a0ebd227f89e6ea95c0c91a96e3f3f2a9478bb429de80df80875836a4d0",
           "blockNum": "38",
           "producerBlockId": "00000026063681ed230b0b89b88396a090c2671ae9cb24e2885cc38d7c4578eb",
@@ -2802,7 +2802,7 @@
             "rawData": "00"
           },
           "elapsed": "71",
-          "console": "Nested inl",
+          "console": "Nested inline within onerror handler",
           "transactionId": "926d0a0ebd227f89e6ea95c0c91a96e3f3f2a9478bb429de80df80875836a4d0",
           "blockNum": "38",
           "producerBlockId": "00000026063681ed230b0b89b88396a090c2671ae9cb24e2885cc38d7c4578eb",
@@ -2846,7 +2846,7 @@
               "rawData": "3052546ea998b33901000131"
             },
             "elapsed": "61",
-            "console": "dtrxexec s",
+            "console": "dtrxexec start console log, before failing",
             "transactionId": "3d3142026a6cb4c87842e6635e4e1c5bbc4cf2f5fe3288e5e92ba3016135a726",
             "blockNum": "38",
             "producerBlockId": "00000026063681ed230b0b89b88396a090c2671ae9cb24e2885cc38d7c4578eb",
@@ -3472,7 +3472,7 @@
             "rawData": "3052546ea998b33901000166"
           },
           "elapsed": "51",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "15ffb918f691f48016ae7c5f6dae482d45af8a5249b2deb38018a1315f801648",
           "blockNum": "40",
           "producerBlockId": "00000028fb51dffe1828ed2477f14e3980a55ed95082c01b37d5029d7be95460",
@@ -3583,7 +3583,7 @@
             "rawData": "887766554433221188776655443322113e095e305e2500789ceaa000000100013052546ea998b3390000004875d56f4e013052546ea998b33900000000a8ed32320c3052546ea998b3390100016600"
           },
           "elapsed": "119",
-          "console": "Called on ",
+          "console": "Called on error handler\nExtracted f \n",
           "transactionId": "434148477be34078a11cfce4bed0e1b6d8f47eed701b0313ddd191e900c3377a",
           "blockNum": "40",
           "producerBlockId": "00000028fb51dffe1828ed2477f14e3980a55ed95082c01b37d5029d7be95460",
@@ -3656,7 +3656,7 @@
               "rawData": "3052546ea998b33901000166"
             },
             "elapsed": "51",
-            "console": "dtrxexec s",
+            "console": "dtrxexec start console log, before failing",
             "transactionId": "15ffb918f691f48016ae7c5f6dae482d45af8a5249b2deb38018a1315f801648",
             "blockNum": "40",
             "producerBlockId": "00000028fb51dffe1828ed2477f14e3980a55ed95082c01b37d5029d7be95460",
@@ -4082,7 +4082,7 @@
             "rawData": "3052546ea998b3390100026e66"
           },
           "elapsed": "44",
-          "console": "dtrxexec s",
+          "console": "dtrxexec start console log, before failing",
           "transactionId": "1f96c3d5ef2f34e3643ad5407772dbc0ff7f2e41b230f005eca33b8081428af1",
           "blockNum": "43",
           "producerBlockId": "0000002bfc7fc198c228f65954335dd7654cc1fc950889e656c05cf2ed83a18a",
@@ -4207,7 +4207,7 @@
             "rawData": "887766554433221188776655443322113f0a5e305e28001828ed2400000100013052546ea998b3390000004875d56f4e013052546ea998b33900000000a8ed32320d3052546ea998b3390100026e6600"
           },
           "elapsed": "153",
-          "console": "Called on ",
+          "console": "Called on error handler\nExtracted nf \nData nonce was not f\n",
           "transactionId": "32496450d19148f8308fd0cb187b854861a5368730710edca7a36c480b70973a",
           "blockNum": "43",
           "producerBlockId": "0000002bfc7fc198c228f65954335dd7654cc1fc950889e656c05cf2ed83a18a",
@@ -4425,7 +4425,7 @@
             "rawData": "00"
           },
           "elapsed": "135",
-          "console": "Nested inl",
+          "console": "Nested inline within onerror handler",
           "transactionId": "32496450d19148f8308fd0cb187b854861a5368730710edca7a36c480b70973a",
           "blockNum": "43",
           "producerBlockId": "0000002bfc7fc198c228f65954335dd7654cc1fc950889e656c05cf2ed83a18a",
@@ -4456,7 +4456,7 @@
             "rawData": "01"
           },
           "elapsed": "111",
-          "console": "Nested inl",
+          "console": "Nested inline within onerror handler",
           "transactionId": "32496450d19148f8308fd0cb187b854861a5368730710edca7a36c480b70973a",
           "blockNum": "43",
           "producerBlockId": "0000002bfc7fc198c228f65954335dd7654cc1fc950889e656c05cf2ed83a18a",
@@ -4532,7 +4532,7 @@
               "rawData": "3052546ea998b3390100026e66"
             },
             "elapsed": "44",
-            "console": "dtrxexec s",
+            "console": "dtrxexec start console log, before failing",
             "transactionId": "1f96c3d5ef2f34e3643ad5407772dbc0ff7f2e41b230f005eca33b8081428af1",
             "blockNum": "43",
             "producerBlockId": "0000002bfc7fc198c228f65954335dd7654cc1fc950889e656c05cf2ed83a18a",

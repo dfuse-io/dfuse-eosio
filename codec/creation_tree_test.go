@@ -18,9 +18,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_computeCreationTree_empty(t *testing.T) {
@@ -283,22 +283,22 @@ func Test_toFlatTree(t *testing.T) {
 		&node{"NOTIFY", 12, nil},
 	}}
 
-	assert.Equal(t, CreationFlatTree{
-		CreationFlatNode{0, -1, 0},
-		CreationFlatNode{1, 0, 1},
-		CreationFlatNode{2, 0, 2},
-		CreationFlatNode{3, 2, 4},
-		CreationFlatNode{4, 2, 6},
-		CreationFlatNode{5, 4, 7},
-		CreationFlatNode{6, 4, 8},
-		CreationFlatNode{7, 2, 5},
-		CreationFlatNode{8, 0, 3},
-		CreationFlatNode{9, -1, 9},
-		CreationFlatNode{10, 9, 10},
-		CreationFlatNode{11, 9, 11},
-		CreationFlatNode{12, 11, 13},
-		CreationFlatNode{13, 11, 14},
-		CreationFlatNode{14, 9, 12},
+	assert.Equal(t, eosio.CreationFlatTree{
+		eosio.CreationFlatNode{0, -1, 0},
+		eosio.CreationFlatNode{1, 0, 1},
+		eosio.CreationFlatNode{2, 0, 2},
+		eosio.CreationFlatNode{3, 2, 4},
+		eosio.CreationFlatNode{4, 2, 6},
+		eosio.CreationFlatNode{5, 4, 7},
+		eosio.CreationFlatNode{6, 4, 8},
+		eosio.CreationFlatNode{7, 2, 5},
+		eosio.CreationFlatNode{8, 0, 3},
+		eosio.CreationFlatNode{9, -1, 9},
+		eosio.CreationFlatNode{10, 9, 10},
+		eosio.CreationFlatNode{11, 9, 11},
+		eosio.CreationFlatNode{12, 11, 13},
+		eosio.CreationFlatNode{13, 11, 14},
+		eosio.CreationFlatNode{14, 9, 12},
 	}, toFlatTree(root1, root2))
 }
 
