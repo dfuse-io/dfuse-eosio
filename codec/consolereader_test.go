@@ -16,6 +16,7 @@ package codec
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -348,6 +349,87 @@ func Test_TraceRlimitOp(t *testing.T) {
 
 				expected := protoJSONMarshalIndent(t, test.expected)
 				actual := protoJSONMarshalIndent(t, ctx.trx.RlimitOps[0])
+
+				assert.JSONEq(t, expected, actual, diff.LineDiff(expected, actual))
+			}
+		})
+	}
+}
+
+func Test_readKvOp(t *testing.T) {
+	toBytes := func(in string) []byte {
+		out, err := hex.DecodeString(in)
+		require.NoError(t, err)
+
+		return out
+	}
+
+	tests := []struct {
+		name        string
+		line        string
+		expected    *pbcodec.KVOp
+		expectedErr error
+	}{
+		{
+			"insert standard",
+			`KV_OP INS 0 battlefield john b6876876616c7565 78c159f95d672d640539`,
+			&pbcodec.KVOp{
+				Operation:   pbcodec.KVOp_OPERATION_INSERT,
+				ActionIndex: 0,
+				Code:        "battlefield",
+				OldPayer:    "",
+				NewPayer:    "john",
+				Key:         toBytes("b6876876616c7565"),
+				OldData:     nil,
+				NewData:     toBytes("78c159f95d672d640539"),
+			},
+			nil,
+		},
+		{
+			"update standard",
+			`KV_OP UPD 1 battlefield jane b6876876616c7565 78c159f95d672d640539:78c159f95d672d640561`,
+			&pbcodec.KVOp{
+				Operation:   pbcodec.KVOp_OPERATION_UPDATE,
+				ActionIndex: 1,
+				Code:        "battlefield",
+				// Unavailable in data ...
+				OldPayer: "",
+				NewPayer: "jane",
+				Key:      toBytes("b6876876616c7565"),
+				OldData:  toBytes("78c159f95d672d640539"),
+				NewData:  toBytes("78c159f95d672d640561"),
+			},
+			nil,
+		},
+		{
+			"remove standard",
+			`KV_OP REM 2 battlefield jane b6876876616c7565 78c159f95d672d640561`,
+			&pbcodec.KVOp{
+				Operation:   pbcodec.KVOp_OPERATION_REMOVE,
+				ActionIndex: 2,
+				Code:        "battlefield",
+				OldPayer:    "jane",
+				NewPayer:    "",
+				Key:         toBytes("b6876876616c7565"),
+				OldData:     toBytes("78c159f95d672d640561"),
+				NewData:     nil,
+			},
+			nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := newParseCtx()
+			err := ctx.readKVOp(test.line)
+
+			require.Equal(t, test.expectedErr, err)
+
+			if test.expectedErr == nil {
+				require.Len(t, ctx.trx.KvOps, 1)
+
+				expected := protoJSONMarshalIndent(t, test.expected)
+				actual := protoJSONMarshalIndent(t, ctx.trx.KvOps[0])
 
 				assert.JSONEq(t, expected, actual, diff.LineDiff(expected, actual))
 			}

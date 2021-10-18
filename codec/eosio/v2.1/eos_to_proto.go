@@ -156,6 +156,7 @@ func ActionTraceToDEOS(in *ActionTrace, execIndex uint32, opts ...eosio.Conversi
 		CreatorActionOrdinal: uint32(in.CreatorActionOrdinal),
 		ExecutionIndex:       execIndex,
 		ErrorCode:            eosio.ErrorCodeToDEOS(in.ErrorCode),
+		ReturnValue:          in.ReturnValue,
 	}
 	out.ClosestUnnotifiedAncestorActionOrdinal = uint32(in.ClosestUnnotifiedAncestorActionOrdinal) // freaking long line, stay away from me
 

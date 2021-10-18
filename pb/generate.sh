@@ -28,14 +28,14 @@ function main() {
   trap "cd \"$current_dir\"" EXIT
   pushd "$ROOT/pb" &> /dev/null
 
-  # generate "dfuse/eosio/abicodec/v1/abicodec.proto"
+  generate "dfuse/eosio/abicodec/v1/abicodec.proto"
   generate "dfuse/eosio/codec/v1/codec.proto"
-  # generate "dfuse/eosio/statedb/v1/" "statedb.proto" "tablet.proto" "singlet.proto"
-  # generate "dfuse/eosio/trxdb/v1/trxdb.proto"
-  # generate "dfuse/eosio/funnel/v1/funnel.proto"
-  # generate "dfuse/eosio/search/v1/search.proto"
-  # generate "dfuse/eosio/tokenmeta/v1/tokenmeta.proto"
-  # generate "dfuse/eosio/accounthist/v1/accounthist.proto"
+  generate "dfuse/eosio/statedb/v1/" "statedb.proto" "tablet.proto" "singlet.proto"
+  generate "dfuse/eosio/trxdb/v1/trxdb.proto"
+  generate "dfuse/eosio/funnel/v1/funnel.proto"
+  generate "dfuse/eosio/search/v1/search.proto"
+  generate "dfuse/eosio/tokenmeta/v1/tokenmeta.proto"
+  generate "dfuse/eosio/accounthist/v1/accounthist.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
   echo "streamingfast/proto revision: `GIT_DIR=$PROTO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt

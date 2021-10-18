@@ -189,6 +189,9 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 		case strings.HasPrefix(line, "PERM_OP"):
 			err = ctx.readPermOp(line)
 
+		case strings.HasPrefix(line, "KV_OP"):
+			err = ctx.readKVOp(line)
+
 		case strings.HasPrefix(line, "DTRX_OP CREATE"):
 			err = ctx.readCreateOrCancelDTrxOp("CREATE", line)
 
@@ -295,6 +298,10 @@ func (ctx *parseCtx) recordDBOp(operation *pbcodec.DBOp) {
 	ctx.trx.DbOps = append(ctx.trx.DbOps, operation)
 }
 
+func (ctx *parseCtx) recordKVOp(operation *pbcodec.KVOp) {
+	ctx.trx.KvOps = append(ctx.trx.KvOps, operation)
+}
+
 func (ctx *parseCtx) recordDTrxOp(transaction *pbcodec.DTrxOp) {
 	ctx.trx.DtrxOps = append(ctx.trx.DtrxOps, transaction)
 
@@ -382,6 +389,7 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 	trace.CreationTree = eosio.CreationTreeToDEOS(toFlatTree(creationTreeRoots...))
 	trace.DtrxOps = ctx.trx.DtrxOps
 	trace.DbOps = ctx.trx.DbOps
+	trace.KvOps = ctx.trx.KvOps
 	trace.FeatureOps = ctx.trx.FeatureOps
 	trace.PermOps = ctx.trx.PermOps
 	trace.RamOps = ctx.trx.RamOps
@@ -631,6 +639,86 @@ func (ctx *parseCtx) readDBOp(line string) error {
 		Scope:       chunks[5],
 		TableName:   chunks[6],
 		PrimaryKey:  chunks[7],
+		OldData:     oldBytes,
+		NewData:     newBytes,
+	})
+
+	return nil
+}
+
+// Line formats:
+//   KV_OP INS ${action_id} ${code} ${npayer} ${key} ${ndata}
+//   KV_OP UPD ${action_id} ${code} ${npayer} ${key} ${odata}:${ndata}
+//   KV_OP REM ${action_id} ${code} ${opayer} ${key} ${odata}
+func (ctx *parseCtx) readKVOp(line string) error {
+	chunks := strings.SplitN(line, " ", 7)
+	if len(chunks) != 7 {
+		return fmt.Errorf("expected 7 fields, got %d", len(chunks))
+	}
+
+	actionIndex, err := strconv.Atoi(chunks[2])
+	if err != nil {
+		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
+	}
+
+	opString := chunks[1]
+
+	op := pbcodec.KVOp_OPERATION_UNKNOWN
+	var oldData, newData string
+	var oldPayer, newPayer string
+	switch opString {
+	case "INS":
+		op = pbcodec.KVOp_OPERATION_INSERT
+		newData = chunks[6]
+		newPayer = chunks[4]
+	case "UPD":
+		op = pbcodec.KVOp_OPERATION_UPDATE
+
+		dataChunks := strings.SplitN(chunks[6], ":", 2)
+		if len(dataChunks) != 2 {
+			return fmt.Errorf("should have old and new data in field 6, found only one")
+		}
+
+		oldData = dataChunks[0]
+		newData = dataChunks[1]
+
+		// Sadly, instrumentation in stock 2.1.0 is wrong and old_payer was forgotten
+		newPayer = chunks[4]
+	case "REM":
+		op = pbcodec.KVOp_OPERATION_REMOVE
+		oldData = chunks[6]
+		oldPayer = chunks[4]
+	default:
+		return fmt.Errorf("unknown operation: %q", opString)
+	}
+
+	key, err := hex.DecodeString(chunks[5])
+	if err != nil {
+		return fmt.Errorf("couldn't decode key: %w", err)
+	}
+
+	var oldBytes, newBytes []byte
+	if len(oldData) != 0 {
+		oldBytes, err = hex.DecodeString(oldData)
+		if err != nil {
+			return fmt.Errorf("couldn't decode old_data: %w", err)
+		}
+	}
+
+	if len(newData) != 0 {
+		newBytes, err = hex.DecodeString(newData)
+		if err != nil {
+			return fmt.Errorf("couldn't decode new_data: %w", err)
+		}
+	}
+
+	ctx.recordKVOp(&pbcodec.KVOp{
+		Operation:   op,
+		ActionIndex: uint32(actionIndex),
+		OldPayer:    oldPayer,
+		NewPayer:    newPayer,
+		Code:        chunks[3],
+		Key:         key,
 		OldData:     oldBytes,
 		NewData:     newBytes,
 	})
