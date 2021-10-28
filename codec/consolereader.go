@@ -33,7 +33,8 @@ import (
 	"go.uber.org/zap"
 )
 
-var supportedVersions = []string{"12", "13"}
+var supportedVersions = []uint64{12, 13}
+var supportedVersionStrings = []string{"12", "13"}
 
 type ConsoleReaderOption interface {
 	apply(reader *ConsoleReader)
@@ -141,7 +142,9 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
-	hydrator eosio.Hydrator
+	majorVersion uint64
+	minorVersion uint64
+	hydrator     eosio.Hydrator
 
 	abiDecoder     *ABIDecoder
 	block          *pbcodec.Block
@@ -242,11 +245,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			//noop
 
 		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
-			var hydrator eosio.Hydrator
-			hydrator, err = ctx.readDeepmindVersion(line)
-			if err == nil {
-				ctx.hydrator = hydrator
-			}
+			ctx.majorVersion, ctx.minorVersion, ctx.hydrator, err = ctx.readDeepmindVersion(line)
 
 		default:
 			zlog.Info("unknown log line", zap.String("line", line))
@@ -650,6 +649,8 @@ func (ctx *parseCtx) readDBOp(line string) error {
 //   KV_OP INS ${action_id} ${code} ${npayer} ${key} ${ndata}
 //   KV_OP UPD ${action_id} ${code} ${npayer} ${key} ${odata}:${ndata}
 //   KV_OP REM ${action_id} ${code} ${opayer} ${key} ${odata}
+//
+// **Note** Added in deep mind log version 13
 func (ctx *parseCtx) readKVOp(line string) error {
 	chunks := strings.SplitN(line, " ", 7)
 	if len(chunks) != 7 {
@@ -674,6 +675,18 @@ func (ctx *parseCtx) readKVOp(line string) error {
 	case "UPD":
 		op = pbcodec.KVOp_OPERATION_UPDATE
 
+		payerChunks := strings.SplitN(chunks[4], ":", 2)
+		if len(payerChunks) != 2 {
+			if ctx.majorVersion == 13 {
+				return fmt.Errorf("upgrade to EOSIO >= 2.1.1 as the 2.1.0 version did not had old payer value in it")
+			}
+
+			return fmt.Errorf("should have old and new payer in field 4, found only one")
+		}
+
+		oldPayer = payerChunks[0]
+		newPayer = payerChunks[1]
+
 		dataChunks := strings.SplitN(chunks[6], ":", 2)
 		if len(dataChunks) != 2 {
 			return fmt.Errorf("should have old and new data in field 6, found only one")
@@ -681,9 +694,6 @@ func (ctx *parseCtx) readKVOp(line string) error {
 
 		oldData = dataChunks[0]
 		newData = dataChunks[1]
-
-		// Sadly, instrumentation in stock 2.1.0 is wrong and old_payer was forgotten
-		newPayer = chunks[4]
 	case "REM":
 		op = pbcodec.KVOp_OPERATION_REMOVE
 		oldData = chunks[6]
@@ -976,16 +986,19 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		return fmt.Errorf("namespace %q unknown", namespaceString)
 	}
 
-	actionString := chunks[4]
+	actionString := normalizeRAMOpAction(chunks[4])
 	action, ok := pbcodec.RAMOp_Action_value["ACTION_"+strings.ToUpper(actionString)]
 	if !ok {
 		return fmt.Errorf("action %q unknown", actionString)
 	}
 
+	operation := int32(pbcodec.RAMOp_OPERATION_DEPRECATED)
 	operationString := chunks[5]
-	operation, ok := pbcodec.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
-	if !ok {
-		return fmt.Errorf("operation %q unknown", operationString)
+	if operationString != "." {
+		operation, ok = pbcodec.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
+		if !ok {
+			return fmt.Errorf("operation %q unknown", operationString)
+		}
 	}
 
 	usage, err := strconv.ParseInt(chunks[7], 10, 64)
@@ -1011,32 +1024,54 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 	return nil
 }
 
+func normalizeRAMOpAction(input string) string {
+	switch input {
+	case "create":
+		return "add"
+	case "erase":
+		return "remove"
+	default:
+		return input
+	}
+}
+
 // Line format:
 //  Version 12
 //    DEEP_MIND_VERSION ${major_version}
 //
 //  Version 13
 //    DEEP_MIND_VERSION ${major_version} ${minor_version}
-func (ctx *parseCtx) readDeepmindVersion(line string) (eosio.Hydrator, error) {
+func (ctx *parseCtx) readDeepmindVersion(line string) (majorVersion uint64, minorVersion uint64, hydrator eosio.Hydrator, err error) {
 	chunks, err := splitNToM(line, 2, 3)
 	if err != nil {
-		return nil, err
+		return 0, 0, nil, err
 	}
 
-	majorVersion := chunks[1]
+	majorVersion, err = strconv.ParseUint(chunks[1], 10, 64)
+	if err != nil {
+		return majorVersion, minorVersion, nil, fmt.Errorf("invalid major version %q: %w", chunks[1], err)
+	}
+
+	if len(chunks) == 3 {
+		minorVersion, err = strconv.ParseUint(chunks[2], 10, 64)
+		if err != nil {
+			return majorVersion, minorVersion, nil, fmt.Errorf("invalid minor version %q: %w", chunks[2], err)
+		}
+	}
+
 	if !inSupportedVersion(majorVersion) {
-		return nil, fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
+		return majorVersion, minorVersion, nil, fmt.Errorf("deep mind reported version %d, but this reader supports only %s", majorVersion, strings.Join(supportedVersionStrings, ", "))
 	}
 
-	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
-	if majorVersion == "13" {
-		return eosio_v2_1.NewHydrator(zlog), nil
+	zlog.Info("read deep mind version", zap.Uint64("major_version", majorVersion))
+	if majorVersion == 13 {
+		return majorVersion, minorVersion, eosio_v2_1.NewHydrator(zlog), nil
 	}
 
-	return eosio_v2_0.NewHydrator(zlog), nil
+	return majorVersion, minorVersion, eosio_v2_0.NewHydrator(zlog), nil
 }
 
-func inSupportedVersion(majorVersion string) bool {
+func inSupportedVersion(majorVersion uint64) bool {
 	for _, supportedVersion := range supportedVersions {
 		if majorVersion == supportedVersion {
 			return true

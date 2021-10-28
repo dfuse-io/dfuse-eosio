@@ -1,7 +1,6 @@
 package eosio
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
@@ -89,11 +88,6 @@ func (h *Hydrator) DecodeTransactionTrace(input []byte, opts ...eosio.Conversion
 	trxTrace := &TransactionTrace{}
 	if err := unmarshalBinary(input, trxTrace); err != nil {
 		return nil, fmt.Errorf("unmarshalling binary transaction trace: %w", err)
-	}
-
-	if trxTrace.ID.String() == "6c3e20aa385f33696db04faba45bcfeddb1f76ab2623d2a7c315f0eea6be7f39" {
-		out, _ := json.MarshalIndent(trxTrace, "", "  ")
-		fmt.Println(string(out))
 	}
 
 	return TransactionTraceToDEOS(h.logger, trxTrace, opts...), nil

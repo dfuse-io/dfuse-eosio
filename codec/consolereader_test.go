@@ -356,6 +356,83 @@ func Test_TraceRlimitOp(t *testing.T) {
 	}
 }
 
+func Test_readRAMOp(t *testing.T) {
+	tests := []struct {
+		name            string
+		line            string
+		parseCtxFactory func() *parseCtx
+		expected        *pbcodec.RAMOp
+		expectedErr     error
+	}{
+		{
+			"kv create standard",
+			`RAM_OP 0 0186e46a800000000091aa074d2ae8000080000001 kv create . ultra.test 645533 148`,
+			newParseCtx,
+			&pbcodec.RAMOp{
+				Operation:   pbcodec.RAMOp_OPERATION_DEPRECATED,
+				ActionIndex: 0,
+				Payer:       "ultra.test",
+				Delta:       148,
+				Usage:       645533,
+				Namespace:   pbcodec.RAMOp_NAMESPACE_KV,
+				UniqueKey:   "0186e46a800000000091aa074d2ae8000080000001",
+				Action:      pbcodec.RAMOp_ACTION_ADD,
+			},
+			nil,
+		},
+		{
+			"kv update standard",
+			`RAM_OP 0 0186e46a800000000091aa074d2ae8000080000001 kv update . ultra.test 645533 148`,
+			newParseCtx,
+			&pbcodec.RAMOp{
+				Operation:   pbcodec.RAMOp_OPERATION_DEPRECATED,
+				ActionIndex: 0,
+				Payer:       "ultra.test",
+				Delta:       148,
+				Usage:       645533,
+				Namespace:   pbcodec.RAMOp_NAMESPACE_KV,
+				UniqueKey:   "0186e46a800000000091aa074d2ae8000080000001",
+				Action:      pbcodec.RAMOp_ACTION_UPDATE,
+			},
+			nil,
+		},
+		{
+			"kv erase standard",
+			`RAM_OP 0 0186e46a800000000091aa074d2ae8000080000001 kv erase . ultra.test 645533 148`,
+			newParseCtx,
+			&pbcodec.RAMOp{
+				Operation:   pbcodec.RAMOp_OPERATION_DEPRECATED,
+				ActionIndex: 0,
+				Payer:       "ultra.test",
+				Delta:       148,
+				Usage:       645533,
+				Namespace:   pbcodec.RAMOp_NAMESPACE_KV,
+				UniqueKey:   "0186e46a800000000091aa074d2ae8000080000001",
+				Action:      pbcodec.RAMOp_ACTION_REMOVE,
+			},
+			nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := test.parseCtxFactory()
+			err := ctx.readRAMOp(test.line)
+
+			require.Equal(t, test.expectedErr, err)
+
+			if test.expectedErr == nil {
+				require.Len(t, ctx.trx.RamOps, 1)
+
+				expected := protoJSONMarshalIndent(t, test.expected)
+				actual := protoJSONMarshalIndent(t, ctx.trx.RamOps[0])
+
+				assert.JSONEq(t, expected, actual, diff.LineDiff(expected, actual))
+			}
+		})
+	}
+}
+
 func Test_readKvOp(t *testing.T) {
 	toBytes := func(in string) []byte {
 		out, err := hex.DecodeString(in)
@@ -365,14 +442,16 @@ func Test_readKvOp(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		line        string
-		expected    *pbcodec.KVOp
-		expectedErr error
+		name            string
+		line            string
+		parseCtxFactory func() *parseCtx
+		expected        *pbcodec.KVOp
+		expectedErr     error
 	}{
 		{
 			"insert standard",
 			`KV_OP INS 0 battlefield john b6876876616c7565 78c159f95d672d640539`,
+			newParseCtx,
 			&pbcodec.KVOp{
 				Operation:   pbcodec.KVOp_OPERATION_INSERT,
 				ActionIndex: 0,
@@ -387,23 +466,35 @@ func Test_readKvOp(t *testing.T) {
 		},
 		{
 			"update standard",
-			`KV_OP UPD 1 battlefield jane b6876876616c7565 78c159f95d672d640539:78c159f95d672d640561`,
+			`KV_OP UPD 1 battlefield john:jane b6876876616c7565 78c159f95d672d640539:78c159f95d672d640561`,
+			newParseCtx,
 			&pbcodec.KVOp{
 				Operation:   pbcodec.KVOp_OPERATION_UPDATE,
 				ActionIndex: 1,
 				Code:        "battlefield",
-				// Unavailable in data ...
-				OldPayer: "",
-				NewPayer: "jane",
-				Key:      toBytes("b6876876616c7565"),
-				OldData:  toBytes("78c159f95d672d640539"),
-				NewData:  toBytes("78c159f95d672d640561"),
+				OldPayer:    "john",
+				NewPayer:    "jane",
+				Key:         toBytes("b6876876616c7565"),
+				OldData:     toBytes("78c159f95d672d640539"),
+				NewData:     toBytes("78c159f95d672d640561"),
 			},
 			nil,
 		},
 		{
+			"update no old_payer on deep_mind version 13",
+			`KV_OP UPD 1 battlefield jane b6876876616c7565 78c159f95d672d640539:78c159f95d672d640561`,
+			func() *parseCtx {
+				ctx := newParseCtx()
+				ctx.majorVersion = 13
+				return ctx
+			},
+			nil,
+			errors.New("upgrade to EOSIO >= 2.1.1 as the 2.1.0 version did not had old payer value in it"),
+		},
+		{
 			"remove standard",
 			`KV_OP REM 2 battlefield jane b6876876616c7565 78c159f95d672d640561`,
+			newParseCtx,
 			&pbcodec.KVOp{
 				Operation:   pbcodec.KVOp_OPERATION_REMOVE,
 				ActionIndex: 2,
@@ -420,7 +511,7 @@ func Test_readKvOp(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			ctx := newParseCtx()
+			ctx := test.parseCtxFactory()
 			err := ctx.readKVOp(test.line)
 
 			require.Equal(t, test.expectedErr, err)
@@ -635,21 +726,32 @@ func Test_readDeepMindVersion(t *testing.T) {
 	tests := []struct {
 		name        string
 		line        string
+		major       uint64
+		minor       uint64
 		expectedErr error
 	}{
 		{
 			"version 12",
 			`DEEP_MIND_VERSION 12`,
+			12, 0,
 			nil,
 		},
 		{
 			"version 13",
 			`DEEP_MIND_VERSION 13 0`,
+			13, 0,
+			nil,
+		},
+		{
+			"version 13.1",
+			`DEEP_MIND_VERSION 13 1`,
+			13, 1,
 			nil,
 		},
 		{
 			"version 13, unsupported",
 			`DEEP_MIND_VERSION 14 0`,
+			14, 0,
 			errors.New("deep mind reported version 14, but this reader supports only 12, 13"),
 		},
 	}
@@ -657,8 +759,10 @@ func Test_readDeepMindVersion(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := newParseCtx()
-			_, err := ctx.readDeepmindVersion(test.line)
+			major, minor, _, err := ctx.readDeepmindVersion(test.line)
 
+			require.Equal(t, test.major, major)
+			require.Equal(t, test.minor, minor)
 			require.Equal(t, test.expectedErr, err)
 		})
 	}

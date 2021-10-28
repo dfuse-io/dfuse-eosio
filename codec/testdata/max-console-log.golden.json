@@ -292,8 +292,8 @@
           "delta": "112",
           "usage": "333127",
           "namespace": "NAMESPACE_TABLE",
-          "uniqueKey": "battlefield1:battlefield1:member",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield1:battlefield1:member"
         },
         {
           "operation": "OPERATION_PRIMARY_INDEX_ADD",
@@ -301,8 +301,8 @@
           "delta": "187",
           "usage": "333314",
           "namespace": "NAMESPACE_TABLE_ROW",
-          "uniqueKey": "battlefield1:battlefield1:member:............1",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield1:battlefield1:member:............1"
         },
         {
           "operation": "OPERATION_SECONDARY_INDEX_ADD",
@@ -310,8 +310,8 @@
           "delta": "128",
           "usage": "333442",
           "namespace": "NAMESPACE_SECONDARY_INDEX",
-          "uniqueKey": "battlefield1:battlefield1:member:............1",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield1:battlefield1:member:............1"
         },
         {
           "operation": "OPERATION_PRIMARY_INDEX_ADD",
@@ -319,8 +319,8 @@
           "delta": "176",
           "usage": "333618",
           "namespace": "NAMESPACE_TABLE_ROW",
-          "uniqueKey": "battlefield1:battlefield1:member:............2",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield1:battlefield1:member:............2"
         },
         {
           "operation": "OPERATION_SECONDARY_INDEX_ADD",
@@ -328,8 +328,8 @@
           "delta": "128",
           "usage": "333746",
           "namespace": "NAMESPACE_SECONDARY_INDEX",
-          "uniqueKey": "battlefield1:battlefield1:member:............2",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield1:battlefield1:member:............2"
         }
       ],
       "rlimitOps": [
@@ -712,8 +712,8 @@
           "delta": "-334",
           "usage": "333349",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "2",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "2"
         }
       ],
       "rlimitOps": [
@@ -841,8 +841,8 @@
           "delta": "334",
           "usage": "333683",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "3",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "3"
         }
       ],
       "rlimitOps": [
@@ -1241,8 +1241,8 @@
           "delta": "-334",
           "usage": "333349",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "3",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "3"
         }
       ]
     },
@@ -1418,8 +1418,8 @@
             "delta": "-334",
             "usage": "333349",
             "namespace": "NAMESPACE_DEFERRED_TRX",
-            "uniqueKey": "3",
-            "action": "ACTION_REMOVE"
+            "action": "ACTION_REMOVE",
+            "uniqueKey": "3"
           }
         ]
       },
@@ -1882,8 +1882,8 @@
           "delta": "-334",
           "usage": "333349",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "4",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "4"
         }
       ]
     },
@@ -2098,8 +2098,8 @@
             "delta": "-334",
             "usage": "333349",
             "namespace": "NAMESPACE_DEFERRED_TRX",
-            "uniqueKey": "4",
-            "action": "ACTION_REMOVE"
+            "action": "ACTION_REMOVE",
+            "uniqueKey": "4"
           }
         ]
       },
@@ -2538,8 +2538,8 @@
           "delta": "-334",
           "usage": "420317",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "5",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "5"
         }
       ]
     },
@@ -2925,8 +2925,8 @@
             "delta": "-334",
             "usage": "420317",
             "namespace": "NAMESPACE_DEFERRED_TRX",
-            "uniqueKey": "5",
-            "action": "ACTION_REMOVE"
+            "action": "ACTION_REMOVE",
+            "uniqueKey": "5"
           }
         ]
       },
@@ -2957,8 +2957,8 @@
           "delta": "112",
           "usage": "420429",
           "namespace": "NAMESPACE_TABLE",
-          "uniqueKey": "battlefield3:battlefield3:member",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield3:battlefield3:member"
         },
         {
           "operation": "OPERATION_PRIMARY_INDEX_ADD",
@@ -2966,8 +2966,8 @@
           "delta": "173",
           "usage": "420602",
           "namespace": "NAMESPACE_TABLE_ROW",
-          "uniqueKey": "battlefield3:battlefield3:member:",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield3:battlefield3:member:"
         },
         {
           "operation": "OPERATION_SECONDARY_INDEX_ADD",
@@ -2975,8 +2975,8 @@
           "delta": "128",
           "usage": "420730",
           "namespace": "NAMESPACE_SECONDARY_INDEX",
-          "uniqueKey": "battlefield3:battlefield3:member:",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield3:battlefield3:member:"
         },
         {
           "operation": "OPERATION_PRIMARY_INDEX_ADD",
@@ -2985,8 +2985,8 @@
           "delta": "180",
           "usage": "420910",
           "namespace": "NAMESPACE_TABLE_ROW",
-          "uniqueKey": "battlefield3:battlefield3:member:............1",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield3:battlefield3:member:............1"
         },
         {
           "operation": "OPERATION_SECONDARY_INDEX_ADD",
@@ -2995,8 +2995,8 @@
           "delta": "128",
           "usage": "421038",
           "namespace": "NAMESPACE_SECONDARY_INDEX",
-          "uniqueKey": "battlefield3:battlefield3:member:............1",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "battlefield3:battlefield3:member:............1"
         }
       ],
       "rlimitOps": [
@@ -3152,8 +3152,8 @@
           "delta": "334",
           "usage": "421372",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "6",
-          "action": "ACTION_ADD"
+          "action": "ACTION_ADD",
+          "uniqueKey": "6"
         }
       ],
       "rlimitOps": [
@@ -3551,8 +3551,8 @@
           "delta": "-334",
           "usage": "421038",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "6",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "6"
         }
       ]
     },
@@ -3735,8 +3735,8 @@
             "delta": "-334",
             "usage": "421038",
             "namespace": "NAMESPACE_DEFERRED_TRX",
-            "uniqueKey": "6",
-            "action": "ACTION_REMOVE"
+            "action": "ACTION_REMOVE",
+            "uniqueKey": "6"
           }
         ]
       },
@@ -4161,8 +4161,8 @@
           "delta": "-335",
           "usage": "421038",
           "namespace": "NAMESPACE_DEFERRED_TRX",
-          "uniqueKey": "7",
-          "action": "ACTION_REMOVE"
+          "action": "ACTION_REMOVE",
+          "uniqueKey": "7"
         }
       ]
     },
@@ -4611,8 +4611,8 @@
             "delta": "-335",
             "usage": "421038",
             "namespace": "NAMESPACE_DEFERRED_TRX",
-            "uniqueKey": "7",
-            "action": "ACTION_REMOVE"
+            "action": "ACTION_REMOVE",
+            "uniqueKey": "7"
           }
         ]
       },
