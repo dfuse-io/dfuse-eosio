@@ -408,9 +408,7 @@ func init() {
 	proto.RegisterType((*AccountRow)(nil), "dfuse.eosio.trxdb.v1.AccountRow")
 }
 
-func init() {
-	proto.RegisterFile("dfuse/eosio/trxdb/v1/trxdb.proto", fileDescriptor_014579ff7d302fea)
-}
+func init() { proto.RegisterFile("dfuse/eosio/trxdb/v1/trxdb.proto", fileDescriptor_014579ff7d302fea) }
 
 var fileDescriptor_014579ff7d302fea = []byte{
 	// 658 bytes of a gzipped FileDescriptorProto

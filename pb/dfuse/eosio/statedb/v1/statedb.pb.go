@@ -6,8 +6,8 @@ package pbstatedb
 import (
 	context "context"
 	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
 	v1 "github.com/streamingfast/pbgo/dfuse/bstream/v1"
+	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -1190,11 +1190,11 @@ var fileDescriptor_7eba888d47f0653d = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConnInterface
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+const _ = grpc.SupportPackageIsVersion4
 
 // StateClient is the client API for State service.
 //
@@ -1219,10 +1219,10 @@ type StateClient interface {
 }
 
 type stateClient struct {
-	cc grpc.ClientConnInterface
+	cc *grpc.ClientConn
 }
 
-func NewStateClient(cc grpc.ClientConnInterface) StateClient {
+func NewStateClient(cc *grpc.ClientConn) StateClient {
 	return &stateClient{cc}
 }
 
