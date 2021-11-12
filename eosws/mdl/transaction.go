@@ -145,6 +145,8 @@ func ToV1RAMOps(in []*pbcodec.RAMOp) (out []*v1.RAMOp) {
 func ToV1RAMOp(in *pbcodec.RAMOp) *v1.RAMOp {
 	out := &v1.RAMOp{
 		Operation:   in.LegacyOperation(),
+		Family:      namespaceToFamily(in.Namespace),
+		Action:      strings.ToLower(strings.TrimPrefix(in.Action.String(), "ACTION_")),
 		ActionIndex: int(in.ActionIndex),
 		Payer:       in.Payer,
 		Delta:       in.Delta,

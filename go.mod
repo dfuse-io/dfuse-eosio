@@ -19,7 +19,7 @@ require (
 	github.com/daaku/go.zipexe v1.0.1 // indirect
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2
-	github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a
+	github.com/dfuse-io/eosws-go v0.0.0-20211029134651-1e4090163784
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eoscanada/eos-go v0.9.1-0.20210812015252-984fc96878b6
 	github.com/eoscanada/eosc v1.4.0

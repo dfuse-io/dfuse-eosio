@@ -24,10 +24,10 @@ export class RamUsage extends React.Component<Props> {
         {
           type: "accountLink",
           value: ramop.payer,
-          name: "accountName"
+          name: "accountName",
         },
         { type: "bold", value: formatBytes(Math.abs(ramop.delta)), name: "bytes" },
-        { type: "bold", value: formatBytes(ramop.usage, 21000), name: "totalBytes" }
+        { type: "bold", value: formatBytes(ramop.usage, 21000), name: "totalBytes" },
       ]
 
       return (
@@ -52,19 +52,26 @@ export class RamUsage extends React.Component<Props> {
           ? "transaction.ramUsage.releasedDetail"
           : "transaction.ramUsage.consumedDetail"
 
+      let opKey = "transaction.ramUsage.operations.unknown"
+      if (ramop.op !== "deprecated") {
+        opKey = `transaction.ramUsage.operations.${ramop.op}`
+      } else {
+        opKey = `transaction.ramUsage.operations.${ramop.family}_${ramop.action}`
+      }
+
       const fields = [
         {
           type: "accountLink",
           value: ramop.payer,
           name: "accountName",
-          link: Links.viewAccount({ id: ramop.payer })
+          link: Links.viewAccount({ id: ramop.payer }),
         },
         { type: "bold", value: formatBytes(Math.abs(ramop.delta)), name: "bytes" },
         {
           type: "plain",
-          value: t(`transaction.ramUsage.operations.${ramop.op}`),
-          name: "operation"
-        }
+          value: t(opKey),
+          name: "operation",
+        },
       ]
 
       return (

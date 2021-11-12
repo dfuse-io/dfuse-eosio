@@ -1374,28 +1374,20 @@
   resolved "https://registry.yarnpkg.com/@csstools/normalize.css/-/normalize.css-10.1.0.tgz#f0950bba18819512d42f7197e56c518aa491cf18"
   integrity sha512-ij4wRiunFfaJxjB0BdrYHIH8FxBJpOwNPhhAcunlmPdXudL1WQV1qoP9un6JsEBAgQH+7UXyyjh0g7jTxXK6tg==
 
-"@dfuse/client@^0.3.10":
-  version "0.3.10"
-  resolved "https://registry.yarnpkg.com/@dfuse/client/-/client-0.3.10.tgz#b644808ffe6a4023e0a668a43a2fcda8af406451"
-  integrity sha512-nNI1sG6QpyEefY3lJPOCX/tOGFHd4Y9nqudNb9P2a05E5Y7UvR5/qaloSe1NteddyKv68fpTFEodYjg6HJj0uA==
+"@dfuse/client@^0.3.21":
+  version "0.3.21"
+  resolved "https://registry.yarnpkg.com/@dfuse/client/-/client-0.3.21.tgz#4c292337bfa72e98a63dba621a923bc1f6992850"
+  integrity sha512-pJu+XEzBx8gEVaZaYNnUnwSMohKEQkpV9Iiz4w5myS80Vm/NAwcUcDaG/csqRpWTIw/tlD6VrHZDXoevPFgtsg==
   dependencies:
     "@types/debug" "^0.0.31"
     debug "^4.1.0"
 
-"@dfuse/client@^0.3.14":
-  version "0.3.14"
-  resolved "https://registry.yarnpkg.com/@dfuse/client/-/client-0.3.14.tgz#dccd0bab9bdc06a982d5f335ea20be362689fcf6"
-  integrity sha512-64hBulFtB3sHt9lepK4Hmc6s2VG65J46PR0H+5WTIcmGJyu+yt3y0mDk70bCrbp57nSQfWYC3nrFbyHCDh/SnA==
+"@dfuse/explorer@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@dfuse/explorer/-/explorer-0.0.7.tgz#79f2f2b795a32bc0ba892bd30387ce65c81bb7f4"
+  integrity sha512-Q1tDs3YbdlCYgDU9kGuvZjh2KViFrC9YofXNd5fX8rg/mYOn/D1LB4cWW4WBOi4DKMlQCkwlKXqR0QrJ04aJlg==
   dependencies:
-    "@types/debug" "^0.0.31"
-    debug "^4.1.0"
-
-"@dfuse/explorer@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@dfuse/explorer/-/explorer-0.0.6.tgz#02d1eb76b6f94eaae74707562665dbe3682ca6b9"
-  integrity sha512-RCAviH2esHN5Tz0aBQwGHyIC+iK6gtFhZdNNr8uU9KNhYBM+scmnvP/WQBD8pSx6EuDQwO2MRcnHAk7BFsktjQ==
-  dependencies:
-    "@dfuse/client" "^0.3.10"
+    "@dfuse/client" "^0.3.21"
     "@fortawesome/fontawesome-svg-core" "^1.2.29"
     "@fortawesome/free-brands-svg-icons" "^5.13.1"
     "@fortawesome/free-solid-svg-icons" "^5.13.1"

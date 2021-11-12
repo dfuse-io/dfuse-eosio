@@ -476,11 +476,11 @@ var fileDescriptor_4c22ddb60199ece6 = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // AccountHistoryClient is the client API for AccountHistory service.
 //
@@ -490,10 +490,10 @@ type AccountHistoryClient interface {
 }
 
 type accountHistoryClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewAccountHistoryClient(cc *grpc.ClientConn) AccountHistoryClient {
+func NewAccountHistoryClient(cc grpc.ClientConnInterface) AccountHistoryClient {
 	return &accountHistoryClient{cc}
 }
 
@@ -589,10 +589,10 @@ type AccountContractHistoryClient interface {
 }
 
 type accountContractHistoryClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewAccountContractHistoryClient(cc *grpc.ClientConn) AccountContractHistoryClient {
+func NewAccountContractHistoryClient(cc grpc.ClientConnInterface) AccountContractHistoryClient {
 	return &accountContractHistoryClient{cc}
 }
 

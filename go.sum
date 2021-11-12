@@ -362,6 +362,8 @@ github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2 h1:D6bUAFWeAyl
 github.com/dfuse-io/eosio-boot v0.0.0-20201007140702-70b54b34c7a2/go.mod h1:D5ZOOlvI5OmSwfLHNMdVmQFIH3hDmnk/3N3WHQuxwPc=
 github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a h1:UnGZrxDVDsTf81xrYiCQE7jETNyk/TtNNZpmpSevBBY=
 github.com/dfuse-io/eosws-go v0.0.0-20210210152811-b72cc007d60a/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
+github.com/dfuse-io/eosws-go v0.0.0-20211029134651-1e4090163784 h1:G3znUNVj+0xf9VgBO0/y0PpTBmWVGwBGuazIAIE6MP4=
+github.com/dfuse-io/eosws-go v0.0.0-20211029134651-1e4090163784/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/dfuse-io/logging v0.0.0-20200406213449-45fc25dc6a8d/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20200407175011-14021b7a79af/go.mod h1:80YyilHcgoqrnoIeeJKgcsOw6Y/0/bQzDO/XzNIrIdM=
 github.com/dfuse-io/logging v0.0.0-20210109005628-b97a57253f70 h1:CuJS05R9jmNlUK8GOxrEELPbfXm0EuGh/30LjkjN5vo=
@@ -810,6 +812,8 @@ github.com/manifoldco/promptui v0.7.0 h1:3l11YT8tm9MnwGFQ4kETwkzpAwY2Jt9lCrumCUW
 github.com/manifoldco/promptui v0.7.0/go.mod h1:n4zTdgP0vr0S3w7/O/g98U+e0gwLScEXGwov2nIKuGQ=
 github.com/manifoldco/promptui v0.8.0 h1:R95mMF+McvXZQ7j1g8ucVZE1gLP3Sv6j9vlF9kyRqQo=
 github.com/manifoldco/promptui v0.8.0/go.mod h1:n4zTdgP0vr0S3w7/O/g98U+e0gwLScEXGwov2nIKuGQ=
+github.com/maoueh/eosws-go v0.0.0-20211029134651-1e4090163784 h1:wOQDv9ePyQuEdTIamk1bsPJNU7W029pfvKSc9nxm/G0=
+github.com/maoueh/eosws-go v0.0.0-20211029134651-1e4090163784/go.mod h1:tNAkcl+/JpMfoS5lh1dyTJzAi6Z3qjYuUVNpq8wdKWY=
 github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f h1:5G1KYNmPLySs20X29A8rwGDfod9/zJPU9mCyD2DjMWA=
 github.com/maoueh/overseer v0.2.1-0.20191024193921-39856397cf3f/go.mod h1:E0cqa1dK90ii2fglIk+u4K3LYXpkb9ZFWVDfbS2++Xk=
 github.com/matishsiao/goInfo v0.0.0-20170803142006-617e6440957e h1:Y+GY+bv5vf1gssphFsGiq6R8qdHxnpDZvYljFnXfhD8=
