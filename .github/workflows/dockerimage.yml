@@ -17,14 +17,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-    - name: Download DM patch
-      uses: Legion2/download-release-action@v2.1.0
-      with:
-        repository: ultraio/eosio
-        tag: '2.0.9-1.13.0-dm'
-        path: .
-        file:  eosio-2.0.9-1.13.0-dm.deb
-        token: '${{ secrets.DEVOPS_SECRET }}'
+      - name: Download DM patch
+        uses: Legion2/download-release-action@v2.1.0
+        with:
+          repository: ultraio/eosio
+          tag: '2.0.9-1.13.0-dm'
+          path: .
+          file:  eosio-2.0.9-1.13.0-dm.deb
+          token: '${{ secrets.DEVOPS_SECRET }}'
 
       - name: Get branch name
         id: branch_name
