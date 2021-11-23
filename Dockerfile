@@ -40,6 +40,8 @@ COPY --from=dlauncher /work/dlauncher /dlauncher
 RUN cd /dlauncher/dashboard && go generate
 RUN cd /work/eosq/app/eosq && go generate
 RUN cd /work/dashboard && go generate
+# adding booter migrator for migration
+RUN cd /work/booter/migrator && go generate
 RUN cd /work/dgraphql && go generate
 RUN go test ./...
 RUN go build -ldflags "-s -w -X main.version=\"${VERSION}\" -X main.commit=\"${COMMIT}\"" -v -o /work/build/dfuseeos ./cmd/dfuseeos
@@ -53,3 +55,5 @@ RUN curl https://cmake.org/files/v3.13/cmake-3.13.4-Linux-x86_64.tar.gz | tar --
 
 RUN apt-get update && apt install -y librdkafka-dev
 RUN echo cat /etc/motd >> /root/.bashrc
+
+ENV PATH=$PATH:/app
