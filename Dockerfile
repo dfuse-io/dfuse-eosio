@@ -20,12 +20,12 @@ RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlaunch
     cd dlauncher &&\
     git checkout "$(cat ../dlauncher.hash)" &&\
     cd dashboard/client &&\
-    yarn install && yarn build
+    yarn install --frozen-lockfile && yarn build
 
 FROM node:12 AS eosq
 ADD eosq /work
 WORKDIR /work
-RUN yarn install && yarn build
+RUN yarn install --frozen-lockfile && yarn build
 
 FROM golang:1.14 as dfuse
 ARG COMMIT
