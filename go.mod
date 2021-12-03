@@ -64,15 +64,15 @@ require (
 	github.com/streamingfast/dmetrics v0.0.0-20210811180524-8494aeb34447
 	github.com/streamingfast/dstore v0.1.1-0.20210811180812-4db13e99cc22
 	github.com/streamingfast/dtracing v0.0.0-20210811175635-d55665d3622a
-	github.com/streamingfast/firehose v0.1.1-0.20210901164748-403e4d029276
+	github.com/streamingfast/firehose v0.1.1-0.20211202153816-44577bee52dd
 	github.com/streamingfast/fluxdb v0.0.0-20210811195408-0515ef659298
 	github.com/streamingfast/jsonpb v0.0.0-20210811021341-3670f0aa02d0
 	github.com/streamingfast/kvdb v0.0.2-0.20210811194032-09bf862bd2e3
 	github.com/streamingfast/logging v0.0.0-20210811175431-f3b44b61606a
-	github.com/streamingfast/merger v0.0.3-0.20210811195536-1011c89f0a67
+	github.com/streamingfast/merger v0.0.3-0.20210820210545-ca8b1a40ae2a
 	github.com/streamingfast/node-manager v0.0.2-0.20210830135731-4b00105a1479
 	github.com/streamingfast/opaque v0.0.0-20210811180740-0c01d37ea308
-	github.com/streamingfast/pbgo v0.0.6-0.20210820205306-ba5335146052
+	github.com/streamingfast/pbgo v0.0.6-0.20211029044348-267c903ccb21
 	github.com/streamingfast/relayer v0.0.2-0.20210812020310-adcf15941b23
 	github.com/streamingfast/search v0.0.2-0.20210811200310-ec8d3b03e104
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
