@@ -80,7 +80,18 @@ func (a *Account) migrateTable(table string, sendAction sendActionFunc, endTrans
 	walkScopes(a.tablePath(table), func(scope string) error {
 		tableScope, err := a.readTableScope(table, scope)
 		if err != nil {
-			return fmt.Errorf("unable to retrieve table scope %q:%q: %w", table, scope, err)
+			//ultra-duncan --- UB-1517 fix empty scope import
+			//In case of scope is an empty string, it will assume the scope will be same as table name
+			//So if this case fail, will assume scope is empty and do an additional read
+			//NOTE: if scope = table data is existed, this will ignore empty scope. Need better solution in future.
+			if table == scope {
+				scope = ""
+				tableScope, err = a.readTableScope(table, scope)
+			}
+
+			if err != nil {
+				return fmt.Errorf("unable to retrieve table scope %q:%q: %w", table, scope, err)
+			}
 		}
 
 		if len(tableScope.rows) == 0 {
