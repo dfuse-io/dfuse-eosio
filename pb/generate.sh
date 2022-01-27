@@ -36,8 +36,8 @@ function main() {
   generate "dfuse/eosio/accounthist/v1/accounthist.proto"
 
   echo "generate.sh - `date` - `whoami`" > $ROOT/pb/last_generate.txt
-  echo "dfuse-io/proto revision: `GIT_DIR=$PROTO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
-  echo "dfuse-io/proto-eosio revision: `GIT_DIR=$PROTO_EOSIO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+  echo "streamingfast/proto revision: `GIT_DIR=$PROTO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
+  echo "streamingfast/proto-eosio revision: `GIT_DIR=$PROTO_EOSIO/.git git rev-parse HEAD`" >> $ROOT/pb/last_generate.txt
 }
 
 # usage:
