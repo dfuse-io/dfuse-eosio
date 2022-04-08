@@ -15,16 +15,16 @@ package codec
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math"
-
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 	"github.com/lytics/ordpool"
+	"github.com/streamingfast/bstream"
 	"go.uber.org/zap"
+	"math"
 )
 
 var mostRecentActiveABI uint64 = math.MaxUint64
@@ -506,6 +506,14 @@ func (d *ABIDecoder) decodeAction(action *pbcodec.Action, globalSequence uint64,
 		return nil
 	}
 
+	//ultra-andrey-bezrukov --- BLOCK-178 Dfuse cannot produce JSON data for migration
+	if action.Name == "inject" {
+		jsonData, err = DecodeTableInject(jsonData, abi)
+		if err != nil {
+			zlog.Debug("skipping the table inject with error: ", zap.Error(err))
+		}
+	}
+
 	action.JsonData = string(jsonData)
 
 	return nil
@@ -568,4 +576,55 @@ func decodeTransfer(data []byte) (string, error) {
 	}
 
 	return string(serialized), nil
+}
+
+type InjectDataMap map[string]interface{}
+
+type InjectData struct {
+	Id    string `json:"id"`
+	Payer string `json:"payer"`
+	Scope string `json:"scope"`
+	Table string `json:"table"`
+}
+type InjectDataRead struct {
+	Data  string `json:"data"`
+	InjectData
+}
+type InjectDataWrite struct {
+	Data  InjectDataMap `json:"data"`
+	InjectData
+}
+
+//ultra-andrey-bezrukov --- BLOCK-178 Dfuse cannot produce JSON data for migration
+func DecodeTableInject(data []byte, abi *eos.ABI) ([]byte, error) {
+	dataRd := InjectDataRead{}
+	err := json.Unmarshal(data, &dataRd)
+	if err != nil {
+		return nil, err
+	}
+
+	rowData, err := hex.DecodeString(dataRd.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	subactionData, err := abi.DecodeTableRow(eos.TableName(dataRd.Table), rowData)
+	if err != nil {
+		return nil, err
+	}
+
+	subactionDataMap := InjectDataMap{}
+	err = json.Unmarshal([]byte(subactionData), &subactionDataMap)
+	if err != nil {
+		return nil, err
+	}
+
+	dataWr := InjectDataWrite{InjectData: dataRd.InjectData, Data: subactionDataMap}
+
+	jsonData, err := json.Marshal(dataWr)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }

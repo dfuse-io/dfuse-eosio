@@ -180,6 +180,140 @@
                     "type": "bytes"
                 }
             ]
+        },
+        {
+            "name": "resale_share",
+            "base": "",
+            "fields": [
+                {
+                    "name": "receiver",
+                    "type": "name"
+                },
+                {
+                    "name": "basis_point",
+                    "type": "uint16"
+                }
+            ]
+        },
+        {
+            "name": "token_factory_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "asset_manager",
+                    "type": "name"
+                },
+                {
+                    "name": "asset_creator",
+                    "type": "name"
+                },
+                {
+                    "name": "conversion_rate_oracle_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "chosen_rate",
+                    "type": "asset[]"
+                },
+                {
+                    "name": "minimum_resell_price",
+                    "type": "asset"
+                },
+                {
+                    "name": "resale_shares",
+                    "type": "resale_share[]"
+                },
+                {
+                    "name": "mintable_window_start",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "mintable_window_end",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "trading_window_start",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "trading_window_end",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "recall_window_start",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "recall_window_end",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "lockup_time",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "conditionless_receivers",
+                    "type": "name[]"
+                },
+                {
+                    "name": "stat",
+                    "type": "uint8"
+                },
+                {
+                    "name": "meta_uris",
+                    "type": "string[]"
+                },
+                {
+                    "name": "meta_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "max_mintable_tokens",
+                    "type": "uint32?"
+                },
+                {
+                    "name": "minted_tokens_no",
+                    "type": "uint32"
+                },
+                {
+                    "name": "existing_tokens_no",
+                    "type": "uint32"
+                },
+                {
+                    "name": "authorized_tokens_no",
+                    "type": "uint32?$"
+                },
+                {
+                    "name": "account_minting_limit",
+                    "type": "uint32?$"
+                }
+            ]
+        },
+        {
+            "name": "token_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "token_factory_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "mint_date",
+                    "type": "time_point_sec"
+                },
+                {
+                    "name": "serial_number",
+                    "type": "uint32"
+                }
+            ]
         }
     ],
     "actions": [
@@ -219,7 +353,22 @@
             "ricardian_contract": ""
         }
     ],
-    "tables": [],
+    "tables": [
+        {
+            "name": "factory.a",
+            "type": "token_factory_v0",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "token.a",
+            "type": "token_v0",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
     "ricardian_clauses": [],
     "variants": []
 }

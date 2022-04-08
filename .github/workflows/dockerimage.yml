@@ -33,7 +33,7 @@ jobs:
           echo ::set-output name=VERSION::$([[ $GITHUB_REF =~ "refs/tags" ]] && echo ${GITHUB_REF#refs/tags/} || echo "${GITHUB_SHA:0:7}")
 
       - name: Setup gcloud cli
-        uses: google-github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@v0
         with:
           service_account_key: ${{ secrets.GCR_KEY }}
           project_id: dfuse-302310
