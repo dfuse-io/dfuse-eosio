@@ -21,6 +21,8 @@ export interface StakeDetail {
   to: string
   cpu_weight: string
   net_weight: string
+//  UB-1438 Account fails to display after delegatebw call
+  power_weight?: string
 }
 
 export function assignHierarchy(

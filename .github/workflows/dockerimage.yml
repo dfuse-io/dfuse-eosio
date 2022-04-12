@@ -50,4 +50,5 @@ jobs:
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
-          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:migration-support
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:latest
