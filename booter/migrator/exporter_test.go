@@ -53,7 +53,7 @@ func TestSnapshotRead(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			outputDir := testOutputDir(test.testFile)
 			testFile := testData(test.testFile)
-			e, err := NewExporter(testFile, outputDir, WithLogger(zlog))
+			e, err := NewExporter(testFile, outputDir, "", WithLogger(zlog))
 			require.NoError(t, err)
 			err = e.Export()
 			require.NoError(t, err)

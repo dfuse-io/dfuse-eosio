@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/eoscanada/eos-go"
@@ -12,10 +13,22 @@ import (
 	"go.uber.org/zap"
 )
 
+// fall back config struct
+type FallbackConfig struct {
+	Account string `json:"account"`
+	ABI     string `json:"abi"`
+}
+
+type FallbackConfigs struct {
+	Configs []FallbackConfig `json:configs`
+}
+
 type exporter struct {
 	snapshotPath  string
 	logger        *zap.Logger
 	outputDataDir string
+
+	decodeFallbackConfig map[string]*eos.ABI
 
 	accounts      map[eos.AccountName]*Account
 	codeSequences map[string][]eos.AccountName
@@ -33,17 +46,53 @@ func WithLogger(logger *zap.Logger) Option {
 	}
 }
 
-func NewExporter(snapshotPath, dataDir string, opts ...Option) (*exporter, error) {
+func NewExporter(snapshotPath, dataDir string, fallbackConfig string, opts ...Option) (*exporter, error) {
 	if !fileExists(snapshotPath) {
 		return nil, fmt.Errorf("snapshot file not found %q", snapshotPath)
 	}
 
+	// Check for fallback config file and loaded abi according account name
+	var configs FallbackConfigs
+	abiConfigs := make(map[string]*eos.ABI)
+
+	if fileExists(fallbackConfig) {
+		jsonFile, err := os.Open(fallbackConfig)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			defer jsonFile.Close()
+			byteValue, _ := ioutil.ReadAll(jsonFile)
+			json.Unmarshal(byteValue, &configs)
+
+			// Loop through config and load ABI file
+			for i := 0; i < len(configs.Configs); i++ {
+				jsonFile, err = os.Open(configs.Configs[i].ABI)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+				defer jsonFile.Close()
+				byteValue, _ = ioutil.ReadAll(jsonFile)
+
+				var abi *eos.ABI
+				err = json.Unmarshal(byteValue, &abi)
+				if err != nil {
+					fmt.Println(err)
+					continue
+				}
+
+				abiConfigs[configs.Configs[i].Account] = abi
+			}
+		}
+	}
+
 	e := &exporter{
-		snapshotPath:  snapshotPath,
-		outputDataDir: dataDir,
-		accounts:      map[eos.AccountName]*Account{},
-		codeSequences: map[string][]eos.AccountName{},
-		tableScopes:   map[string]*tableScope{},
+		snapshotPath:         snapshotPath,
+		outputDataDir:        dataDir,
+		decodeFallbackConfig: abiConfigs,
+		accounts:             map[eos.AccountName]*Account{},
+		codeSequences:        map[string][]eos.AccountName{},
+		tableScopes:          map[string]*tableScope{},
 	}
 
 	for _, opt := range opts {
@@ -450,6 +499,22 @@ func (e *exporter) processContractRow(obj *eossnapshot.KeyValueObject) error {
 
 	if account.abi != nil {
 		data, err := e.decodeTableRow(account.abi, obj)
+
+		// If error check for fallback ABI
+		if err != nil {
+			if abi, existed := e.decodeFallbackConfig[account.name]; existed {
+				data, err = e.decodeTableRow(abi, obj)
+				if err == nil {
+					e.logger.Debug("Fallback decode",
+						zap.String("account", e.currentTable.Code),
+						zap.String("table", e.currentTable.TableName),
+						zap.String("scope", e.currentTable.Scope),
+						zap.String("primary_key", obj.PrimKey),
+					)
+				}
+			}
+		}
+
 		if err != nil {
 			e.logger.Debug("unable to decode table row",
 				zap.String("account", e.currentTable.Code),

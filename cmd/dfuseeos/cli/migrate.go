@@ -27,6 +27,7 @@ func init() {
 
 	migrateCmd.Flags().StringP("export-dir", "e", "migration-data", "The directory where to export all the migration data.")
 	migrateCmd.Flags().StringP("snapshot-path", "s", "", "The path to the snapshot file used to export the data")
+	migrateCmd.Flags().StringP("fallback-config", "f", "", "The path to config file for table decoding to fall back to old abi when failing.")
 }
 
 func dfuseMigrateE(cmd *cobra.Command, _ []string) error {
@@ -42,9 +43,11 @@ func dfuseMigrateE(cmd *cobra.Command, _ []string) error {
 		cliErrorAndExit("The snapshot-path flag must be set")
 	}
 
+	fallbackConfig := viper.GetString("fallback-config")
+
 	userLog.Printf("Starting migration with snapshot %q into directory %q", snapshotPath, exportDir)
 
-	exporter, err := migrator.NewExporter(snapshotPath, exportDir, migrator.WithLogger(zlog))
+	exporter, err := migrator.NewExporter(snapshotPath, exportDir, fallbackConfig, migrator.WithLogger(zlog))
 	if err != nil {
 		cliErrorAndExit("Started migration failed: %s", err)
 	}

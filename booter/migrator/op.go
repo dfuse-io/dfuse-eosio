@@ -13,7 +13,9 @@ func init() {
 }
 
 type OpMigration struct {
-	DataDir string `json:"data_dir"`
+	DataDir         string   `json:"data_dir"`
+	SkipAuth        []string `json:"skip_auth,omitempty"`
+	IncludeContract []string `json:"include_contract,omitempty"`
 }
 
 func (op *OpMigration) RequireValidation() bool {
@@ -21,7 +23,7 @@ func (op *OpMigration) RequireValidation() bool {
 }
 
 func (op *OpMigration) Actions(opPubkey ecc.PublicKey, c *config.OpConfig, in chan interface{}) error {
-	impt := newImporter(opPubkey, op.DataDir, in, c.Logger)
+	impt := newImporter(opPubkey, op.DataDir, op.SkipAuth, op.IncludeContract, in, c.Logger)
 
 	err := impt.init()
 	if err != nil {

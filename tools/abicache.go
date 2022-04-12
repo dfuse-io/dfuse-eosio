@@ -17,22 +17,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/streamingfast/bstream"
-	dfuse "github.com/streamingfast/client-go"
 	"github.com/dfuse-io/dfuse-eosio/abicodec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/dgrpc"
-	"github.com/streamingfast/dstore"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"github.com/eoscanada/eos-go"
 	eossnapshot "github.com/eoscanada/eos-go/snapshot"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
+	dfuse "github.com/streamingfast/client-go"
+	"github.com/streamingfast/dgrpc"
+	"github.com/streamingfast/dstore"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/oauth"
+	"google.golang.org/protobuf/proto"
 )
 
 var statusFrequency = 15 * time.Second
@@ -223,7 +224,7 @@ func (e *exporter) firehose(ctx context.Context, startBlockNum, stopBlockNum uin
 				fmt.Printf("> Stream blocks progress at block %d -> blocks: %s, bytes: %s\n", block.Number, stats.blockReceived.String(), stats.bytesReceived.String())
 				nextStatus = now.Add(statusFrequency)
 			}
-			stats.recordBlock(int64(response.XXX_Size()))
+			stats.recordBlock(int64(proto.Size(response)))
 		}
 	}
 	return nil, fmt.Errorf("unable to run firehose")
