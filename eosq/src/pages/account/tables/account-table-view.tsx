@@ -99,8 +99,7 @@ export class AccountTableView extends ContentLoaderComponent<Props, State> {
     return <UiTableRowAlternated key={index}>{this.renderRowCells(row)}</UiTableRowAlternated>
   }
 
-  renderCellContent(row: any, field: AbiStructField) {
-    const value = row[field.name]
+  renderCellContent(value: any, field: AbiStructField) {
     if (value === null) {
       return <Text>null</Text>
     }
@@ -119,10 +118,14 @@ export class AccountTableView extends ContentLoaderComponent<Props, State> {
 
   renderRowCells(row: any) {
     return this.tableFields.map((field: AbiStructField, index: number) => {
-      if (row[field.name]) {
+      /*ultra-duncan---BLOCK-154 Fix display for 0 value field --- */
+      let value = row[field.name]
+      if (value === 0 || value === null)
+        value = `${value}`
+      if (value) {
         return (
           <UiTableCell fontSize={[2]} key={index}>
-            {this.renderCellContent(row, field)}
+            {this.renderCellContent(value, field)}
             {NBSP}
           </UiTableCell>
         )
