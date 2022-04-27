@@ -1,0 +1,1838 @@
+{
+      "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+  "version": "eosio::abi/1.1",
+  "types": [
+    {
+      "new_type_name": "block_signing_authority",
+      "type": "variant_block_signing_authority_v0"
+    }
+  ],
+  "structs": [
+    {
+      "name": "eject",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        },
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "idxc",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "secondary",
+          "type": "checksum256"
+        }
+      ]
+    },
+    {
+      "name": "idxdbl",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "secondary",
+          "type": "float64"
+        }
+      ]
+    },
+    {
+      "name": "idxi",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "secondary",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "idxii",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "secondary",
+          "type": "uint128"
+        }
+      ]
+    },
+    {
+      "name": "idxldbl",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "secondary",
+          "type": "float128"
+        }
+      ]
+    },
+    {
+      "name": "inject",
+      "base": "",
+      "fields": [
+        {
+          "name": "table",
+          "type": "name"
+        },
+        {
+          "name": "scope",
+          "type": "name"
+        },
+        {
+          "name": "payer",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "name"
+        },
+        {
+          "name": "data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "old_approvals_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "proposal_name",
+          "type": "name"
+        },
+        {
+          "name": "requested_approvals",
+          "type": "permission_level[]"
+        },
+        {
+          "name": "provided_approvals",
+          "type": "permission_level[]"
+        }
+      ]
+    },
+    {
+      "name": "permission_level",
+      "base": "",
+      "fields": [
+        {
+          "name": "actor",
+          "type": "name"
+        },
+        {
+          "name": "permission",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "approvals_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "version",
+          "type": "uint8"
+        },
+        {
+          "name": "proposal_name",
+          "type": "name"
+        },
+        {
+          "name": "requested_approvals",
+          "type": "approval[]"
+        },
+        {
+          "name": "provided_approvals",
+          "type": "approval[]"
+        }
+      ]
+    },
+    {
+      "name": "approval",
+      "base": "",
+      "fields": [
+        {
+          "name": "level",
+          "type": "permission_level"
+        },
+        {
+          "name": "time",
+          "type": "time_point"
+        }
+      ]
+    },
+    {
+      "name": "invalidation",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        },
+        {
+          "name": "last_invalidation_time",
+          "type": "time_point"
+        }
+      ]
+    },
+    {
+      "name": "migrated_table",
+      "base": "",
+      "fields": [
+        {
+          "name": "done",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "proposal",
+      "base": "",
+      "fields": [
+        {
+          "name": "proposal_name",
+          "type": "name"
+        },
+        {
+          "name": "packed_transaction",
+          "type": "bytes"
+        },
+        {
+          "name": "earliest_exec_time",
+          "type": "time_point?"
+        },
+        {
+          "name": "exec_proposer_or_requested",
+          "type": "bool$"
+        }
+      ]
+    },
+    {
+      "name": "request",
+      "base": "",
+      "fields": [
+        {
+          "name": "proposer",
+          "type": "name"
+        },
+        {
+          "name": "request_infos",
+          "type": "request_info[]"
+        }
+      ]
+    },
+    {
+      "name": "request_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "proposal_name",
+          "type": "name"
+        },
+        {
+          "name": "required_approvals_no",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "name": "feed_completion_data",
+      "base": "",
+      "fields": [
+        {
+          "name": "intervals",
+          "type": "feed_completion_element[]"
+        }
+      ]
+    },
+    {
+      "name": "feed_completion_element",
+      "base": "",
+      "fields": [
+        {
+          "name": "sources_pushed",
+          "type": "uint64"
+        },
+        {
+          "name": "timestamp",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "feed_data",
+      "base": "",
+      "fields": [
+        {
+          "name": "source",
+          "type": "name"
+        },
+        {
+          "name": "rates",
+          "type": "uint64[]"
+        },
+        {
+          "name": "weight",
+          "type": "uint64"
+        },
+        {
+          "name": "source_type",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "name": "moving_average_impl",
+      "base": "",
+      "fields": [
+        {
+          "name": "average",
+          "type": "rate"
+        },
+        {
+          "name": "is_valid",
+          "type": "bool"
+        },
+        {
+          "name": "param",
+          "type": "uint64"
+        },
+        {
+          "name": "moving_window_counter",
+          "type": "uint8"
+        },
+        {
+          "name": "unit",
+          "type": "uint8"
+        }
+      ]
+    },
+    {
+      "name": "rate",
+      "base": "",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": "uint64"
+        },
+        {
+          "name": "price",
+          "type": "asset"
+        }
+      ]
+    },
+    {
+      "name": "final_rates_data",
+      "base": "",
+      "fields": [
+        {
+          "name": "index",
+          "type": "uint64"
+        },
+        {
+          "name": "rates",
+          "type": "urate[]"
+        },
+        {
+          "name": "rolling_moving_average",
+          "type": "moving_average_impl"
+        }
+      ]
+    },
+    {
+      "name": "urate",
+      "base": "",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": "uint64"
+        },
+        {
+          "name": "price",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "oracle_state_data",
+      "base": "",
+      "fields": [
+        {
+          "name": "conversion_rate_symbol",
+          "type": "symbol"
+        },
+        {
+          "name": "trading_volume_symbol",
+          "type": "symbol"
+        },
+        {
+          "name": "latest_timestamp",
+          "type": "uint64"
+        },
+        {
+          "name": "interval",
+          "type": "uint8"
+        },
+        {
+          "name": "cache_window",
+          "type": "uint8"
+        },
+        {
+          "name": "registered_sources",
+          "type": "uint32"
+        },
+        {
+          "name": "ultra_comprehensive_rate_weight",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "account",
+      "base": "",
+      "fields": [
+        {
+          "name": "balance",
+          "type": "asset"
+        }
+      ]
+    },
+    {
+      "name": "currency_stats",
+      "base": "",
+      "fields": [
+        {
+          "name": "supply",
+          "type": "asset"
+        },
+        {
+          "name": "max_supply",
+          "type": "asset"
+        },
+        {
+          "name": "issuer",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "abi_hash",
+      "base": "",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "hash",
+          "type": "checksum256"
+        }
+      ]
+    },
+    {
+      "name": "account_tier",
+      "base": "",
+      "fields": [
+        {
+          "name": "current_tier",
+          "type": "name"
+        },
+        {
+          "name": "is_eligible",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "blacklist_ultra",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        },
+        {
+          "name": "level",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "buy_quote",
+      "base": "",
+      "fields": [
+        {
+          "name": "timestamp",
+          "type": "block_timestamp_type"
+        },
+        {
+          "name": "cost",
+          "type": "int64"
+        },
+        {
+          "name": "fee",
+          "type": "int64"
+        },
+        {
+          "name": "bytes",
+          "type": "int64"
+        }
+      ]
+    },
+    {
+      "name": "chain_state",
+      "base": "",
+      "fields": [
+        {
+          "name": "flags",
+          "type": "uint32"
+        },
+        {
+          "name": "scheduled_producers",
+          "type": "name[]"
+        },
+        {
+          "name": "chain_activated_time",
+          "type": "time_point"
+        },
+        {
+          "name": "next_producer_claim_time",
+          "type": "time_point"
+        },
+        {
+          "name": "active_schedule_version",
+          "type": "uint32"
+        },
+        {
+          "name": "active_schedule_size",
+          "type": "uint8"
+        },
+        {
+          "name": "last_schedule_elapsed_update",
+          "type": "time_point"
+        },
+        {
+          "name": "schedule_elapsed",
+          "type": "pair_uint8_uint32[]"
+        }
+      ]
+    },
+    {
+      "name": "pair_uint8_uint32",
+      "base": "",
+      "fields": [
+        {
+          "name": "key",
+          "type": "uint8"
+        },
+        {
+          "name": "value",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "contracts_actions_counter",
+      "base": "",
+      "fields": [
+        {
+          "name": "count",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "default_sponsored_tier",
+      "base": "",
+      "fields": [
+        {
+          "name": "tier",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "delegated_bandwidth",
+      "base": "",
+      "fields": [
+        {
+          "name": "from",
+          "type": "name"
+        },
+        {
+          "name": "to",
+          "type": "name"
+        },
+        {
+          "name": "power_weight",
+          "type": "asset"
+        }
+      ]
+    },
+    {
+      "name": "free_actions_tier",
+      "base": "",
+      "fields": [
+        {
+          "name": "max_free_permission_objects",
+          "type": "uint64"
+        },
+        {
+          "name": "max_free_shared_keys",
+          "type": "uint64"
+        },
+        {
+          "name": "max_free_permission_levels",
+          "type": "uint64"
+        },
+        {
+          "name": "max_free_waits",
+          "type": "uint64"
+        },
+        {
+          "name": "max_free_permission_link_objects",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "eosio_global_state",
+      "base": "blockchain_parameters",
+      "fields": [
+        {
+          "name": "max_ram_size",
+          "type": "uint64"
+        },
+        {
+          "name": "total_ram_bytes_reserved",
+          "type": "uint64"
+        },
+        {
+          "name": "total_ram_stake",
+          "type": "int64"
+        },
+        {
+          "name": "perblock_bucket",
+          "type": "int64"
+        },
+        {
+          "name": "new_ram_per_block",
+          "type": "uint16"
+        },
+        {
+          "name": "last_ram_increase",
+          "type": "block_timestamp_type"
+        }
+      ]
+    },
+    {
+      "name": "blockchain_parameters",
+      "base": "",
+      "fields": [
+        {
+          "name": "max_block_net_usage",
+          "type": "uint64"
+        },
+        {
+          "name": "target_block_net_usage_pct",
+          "type": "uint32"
+        },
+        {
+          "name": "max_transaction_net_usage",
+          "type": "uint32"
+        },
+        {
+          "name": "base_per_transaction_net_usage",
+          "type": "uint32"
+        },
+        {
+          "name": "net_usage_leeway",
+          "type": "uint32"
+        },
+        {
+          "name": "context_free_discount_net_usage_num",
+          "type": "uint32"
+        },
+        {
+          "name": "context_free_discount_net_usage_den",
+          "type": "uint32"
+        },
+        {
+          "name": "max_block_cpu_usage",
+          "type": "uint32"
+        },
+        {
+          "name": "target_block_cpu_usage_pct",
+          "type": "uint32"
+        },
+        {
+          "name": "max_transaction_cpu_usage",
+          "type": "uint32"
+        },
+        {
+          "name": "min_transaction_cpu_usage",
+          "type": "uint32"
+        },
+        {
+          "name": "ultra_veto_enabled",
+          "type": "uint8"
+        },
+        {
+          "name": "max_transaction_lifetime",
+          "type": "uint32"
+        },
+        {
+          "name": "deferred_trx_expiration_window",
+          "type": "uint32"
+        },
+        {
+          "name": "max_transaction_delay",
+          "type": "uint32"
+        },
+        {
+          "name": "max_inline_action_size",
+          "type": "uint32"
+        },
+        {
+          "name": "max_inline_action_depth",
+          "type": "uint16"
+        },
+        {
+          "name": "max_authority_depth",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "name": "next_eba_num",
+      "base": "",
+      "fields": [
+        {
+          "name": "num",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "next_non_eba_num",
+      "base": "",
+      "fields": [
+        {
+          "name": "num",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "non_eba_config",
+      "base": "",
+      "fields": [
+        {
+          "name": "cost",
+          "type": "asset"
+        },
+        {
+          "name": "oracle",
+          "type": "name"
+        },
+        {
+          "name": "ma_settings",
+          "type": "asset[]"
+        }
+      ]
+    },
+    {
+      "name": "payer_contract_action_id",
+      "base": "",
+      "fields": [
+        {
+          "name": "paid_action",
+          "type": "name"
+        },
+        {
+          "name": "paid_contract_action_id",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "payer_predicate",
+      "base": "",
+      "fields": [
+        {
+          "name": "paid_contract_action_id",
+          "type": "uint64"
+        },
+        {
+          "name": "maximum_power_usage",
+          "type": "uint64"
+        },
+        {
+          "name": "predicate_contract",
+          "type": "name?"
+        },
+        {
+          "name": "predicate_action",
+          "type": "name?"
+        }
+      ]
+    },
+    {
+      "name": "producer_info",
+      "base": "",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "producer_key",
+          "type": "public_key"
+        },
+        {
+          "name": "is_active",
+          "type": "bool"
+        },
+        {
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "name": "last_claim_time",
+          "type": "time_point"
+        },
+        {
+          "name": "location",
+          "type": "uint16"
+        },
+        {
+          "name": "producer_authority",
+          "type": "block_signing_authority$"
+        },
+        {
+          "name": "activate_time",
+          "type": "time_point"
+        },
+        {
+          "name": "unclaimed_blocks",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "block_signing_authority_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "threshold",
+          "type": "uint32"
+        },
+        {
+          "name": "keys",
+          "type": "key_weight[]"
+        }
+      ]
+    },
+    {
+      "name": "key_weight",
+      "base": "",
+      "fields": [
+        {
+          "name": "key",
+          "type": "public_key"
+        },
+        {
+          "name": "weight",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "name": "exchange_state",
+      "base": "",
+      "fields": [
+        {
+          "name": "ram_supply",
+          "type": "asset"
+        },
+        {
+          "name": "ram_reserved",
+          "type": "asset"
+        },
+        {
+          "name": "ram_total_non_kyc",
+          "type": "asset"
+        },
+        {
+          "name": "ram_threshold_kyc",
+          "type": "asset"
+        },
+        {
+          "name": "ram_purchase_limit",
+          "type": "asset"
+        },
+        {
+          "name": "core_reserve",
+          "type": "asset"
+        },
+        {
+          "name": "connector_weight",
+          "type": "float64"
+        },
+        {
+          "name": "ram_fee_rate",
+          "type": "float64"
+        },
+        {
+          "name": "is_trade_enabled",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "ram_offer",
+      "base": "",
+      "fields": [
+        {
+          "name": "total_ram_gifted",
+          "type": "int64"
+        }
+      ]
+    },
+    {
+      "name": "ram_payment",
+      "base": "",
+      "fields": [
+        {
+          "name": "total_uos",
+          "type": "int64"
+        }
+      ]
+    },
+    {
+      "name": "ram_purchase",
+      "base": "",
+      "fields": [
+        {
+          "name": "total_ram_bought",
+          "type": "int64"
+        }
+      ]
+    },
+    {
+      "name": "ram_sponsor_account",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        }
+      ]
+    },
+    {
+      "name": "ram_whitelist",
+      "base": "",
+      "fields": [
+        {
+          "name": "ram_threshold",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "refund_request",
+      "base": "",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "request_time",
+          "type": "time_point_sec"
+        },
+        {
+          "name": "power_amount",
+          "type": "asset"
+        }
+      ]
+    },
+    {
+      "name": "taxes",
+      "base": "",
+      "fields": [
+        {
+          "name": "percentage",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "user_resources",
+      "base": "",
+      "fields": [
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "power_weight",
+          "type": "asset"
+        },
+        {
+          "name": "ram_bytes",
+          "type": "int64"
+        },
+        {
+          "name": "flags",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "kyc_data",
+      "base": "",
+      "fields": [
+        {
+          "name": "provider",
+          "type": "name"
+        },
+        {
+          "name": "cert_id",
+          "type": "checksum256"
+        },
+        {
+          "name": "req_signature",
+          "type": "signature"
+        },
+        {
+          "name": "pro_signature",
+          "type": "signature"
+        }
+      ]
+    },
+    {
+      "name": "authorized_minters_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "authorized_minter",
+          "type": "name"
+        },
+        {
+          "name": "quantity",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "token_factory_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "name": "asset_manager",
+          "type": "name"
+        },
+        {
+          "name": "asset_creator",
+          "type": "name"
+        },
+        {
+          "name": "conversion_rate_oracle_contract",
+          "type": "name"
+        },
+        {
+          "name": "chosen_rate",
+          "type": "asset[]"
+        },
+        {
+          "name": "minimum_resell_price",
+          "type": "asset"
+        },
+        {
+          "name": "resale_shares",
+          "type": "resale_share[]"
+        },
+        {
+          "name": "mintable_window_start",
+          "type": "uint32?"
+        },
+        {
+          "name": "mintable_window_end",
+          "type": "uint32?"
+        },
+        {
+          "name": "trading_window_start",
+          "type": "uint32?"
+        },
+        {
+          "name": "trading_window_end",
+          "type": "uint32?"
+        },
+        {
+          "name": "recall_window_start",
+          "type": "uint32?"
+        },
+        {
+          "name": "recall_window_end",
+          "type": "uint32?"
+        },
+        {
+          "name": "lockup_time",
+          "type": "uint32?"
+        },
+        {
+          "name": "conditionless_receivers",
+          "type": "name[]"
+        },
+        {
+          "name": "stat",
+          "type": "uint8"
+        },
+        {
+          "name": "meta_uris",
+          "type": "string[]"
+        },
+        {
+          "name": "meta_hash",
+          "type": "checksum256"
+        },
+        {
+          "name": "max_mintable_tokens",
+          "type": "uint32?"
+        },
+        {
+          "name": "minted_tokens_no",
+          "type": "uint32"
+        },
+        {
+          "name": "existing_tokens_no",
+          "type": "uint32"
+        },
+        {
+          "name": "authorized_tokens_no",
+          "type": "uint32?$"
+        },
+        {
+          "name": "account_minting_limit",
+          "type": "uint32?$"
+        }
+      ]
+    },
+    {
+      "name": "resale_share",
+      "base": "",
+      "fields": [
+        {
+          "name": "receiver",
+          "type": "name"
+        },
+        {
+          "name": "basis_point",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "name": "global_resale_share",
+      "base": "",
+      "fields": [
+        {
+          "name": "receiver",
+          "type": "name"
+        },
+        {
+          "name": "basis_point",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "name": "mintstat_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "user",
+          "type": "name"
+        },
+        {
+          "name": "minted",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "next_token_factory_number",
+      "base": "",
+      "fields": [
+        {
+          "name": "value",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "next_token_number",
+      "base": "",
+      "fields": [
+        {
+          "name": "value",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "resale_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "token_id",
+          "type": "uint64"
+        },
+        {
+          "name": "owner",
+          "type": "name"
+        },
+        {
+          "name": "price",
+          "type": "asset"
+        },
+        {
+          "name": "promoter_basis_point",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "name": "token_v0",
+      "base": "",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "name": "token_factory_id",
+          "type": "uint64"
+        },
+        {
+          "name": "mint_date",
+          "type": "time_point_sec"
+        },
+        {
+          "name": "serial_number",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "correlation_id",
+      "base": "",
+      "fields": [
+        {
+          "name": "sid",
+          "type": "uint64"
+        },
+        {
+          "name": "combined_id",
+          "type": "string"
+        },
+        {
+          "name": "block_time",
+          "type": "block_timestamp_type"
+        }
+      ]
+    },
+    {
+      "name": "correlation_id_setting",
+      "base": "",
+      "fields": [
+        {
+          "name": "length",
+          "type": "uint8"
+        },
+        {
+          "name": "expiration_limit",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "name": "eba_setup",
+      "base": "",
+      "fields": [
+        {
+          "name": "ids",
+          "type": "identity[]"
+        },
+        {
+          "name": "required_no",
+          "type": "uint8"
+        },
+        {
+          "name": "counter",
+          "type": "uint64"
+        }
+      ]
+    },
+    {
+      "name": "identity",
+      "base": "",
+      "fields": [
+        {
+          "name": "id_provider",
+          "type": "name"
+        },
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "providers",
+      "base": "",
+      "fields": [
+        {
+          "name": "id_providers",
+          "type": "provider[]"
+        }
+      ]
+    },
+    {
+      "name": "provider",
+      "base": "",
+      "fields": [
+        {
+          "name": "account",
+          "type": "name"
+        },
+        {
+          "name": "key",
+          "type": "public_key"
+        }
+      ]
+    },
+    {
+        "name": "setabi",
+        "base": "",
+        "fields": [
+            {
+                "name": "account",
+                "type": "name"
+            },
+            {
+                "name": "abi",
+                "type": "bytes"
+            }
+        ]
+    }
+  ],
+  "actions": [
+    {
+      "name": "eject",
+      "type": "eject",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "idxc",
+      "type": "idxc",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "idxdbl",
+      "type": "idxdbl",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "idxi",
+      "type": "idxi",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "idxii",
+      "type": "idxii",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "idxldbl",
+      "type": "idxldbl",
+      "ricardian_contract": ""
+    },
+    {
+      "name": "inject",
+      "type": "inject",
+      "ricardian_contract": ""
+    },
+    {
+        "name": "setabi",
+        "type": "setabi",
+        "ricardian_contract": ""
+    }
+  ],
+  "tables": [
+    {
+      "name": "approvals",
+      "type": "old_approvals_info",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "approvals2",
+      "type": "approvals_info",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "invals",
+      "type": "invalidation",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "migrated",
+      "type": "migrated_table",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "proposal",
+      "type": "proposal",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "requests",
+      "type": "request",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "feedcompl",
+      "type": "feed_completion_data",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "feeddata",
+      "type": "feed_data",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "finalaverage",
+      "type": "moving_average_impl",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "finalrates",
+      "type": "final_rates_data",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "oraclestate",
+      "type": "oracle_state_data",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "accounts",
+      "type": "account",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "stat",
+      "type": "currency_stats",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "abihash",
+      "type": "abi_hash",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "accounttier",
+      "type": "account_tier",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "blcklstultra",
+      "type": "blacklist_ultra",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "buyquote",
+      "type": "buy_quote",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "chainstate",
+      "type": "chain_state",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "contactcntr",
+      "type": "contracts_actions_counter",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "defaulttier",
+      "type": "default_sponsored_tier",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "delband",
+      "type": "delegated_bandwidth",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "freeacttier",
+      "type": "free_actions_tier",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "global",
+      "type": "eosio_global_state",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "next.eba",
+      "type": "next_eba_num",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "next.noneba",
+      "type": "next_non_eba_num",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "nonebaconfig",
+      "type": "non_eba_config",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "paycntactid",
+      "type": "payer_contract_action_id",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "payerpred",
+      "type": "payer_predicate",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "producers",
+      "type": "producer_info",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "rammarket",
+      "type": "exchange_state",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "ramoffer",
+      "type": "ram_offer",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "rampayment",
+      "type": "ram_payment",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "rampurchase",
+      "type": "ram_purchase",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "ramsponsor",
+      "type": "ram_sponsor_account",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "ramwhitelist",
+      "type": "ram_whitelist",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "refunds",
+      "type": "refund_request",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "tax",
+      "type": "taxes",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "userres",
+      "type": "user_resources",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "kyc",
+      "type": "kyc_data",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "authmintrs.a",
+      "type": "authorized_minters_v0",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "factory.a",
+      "type": "token_factory_v0",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "global.share",
+      "type": "global_resale_share",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "mintstat.a",
+      "type": "mintstat_v0",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "next.factory",
+      "type": "next_token_factory_number",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "next.token",
+      "type": "next_token_number",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "resale.a",
+      "type": "resale_v0",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "token.a",
+      "type": "token_v0",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "corrids",
+      "type": "correlation_id",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "corridsetngs",
+      "type": "correlation_id_setting",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "ebasetup",
+      "type": "eba_setup",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    },
+    {
+      "name": "idproviders",
+      "type": "providers",
+      "index_type": "i64",
+      "key_names": [],
+      "key_types": []
+    }
+  ],
+  "ricardian_clauses": [],
+  "variants": [
+    {
+      "name": "variant_block_signing_authority_v0",
+      "types": [
+        "block_signing_authority_v0"
+      ]
+    }
+  ]
+}
