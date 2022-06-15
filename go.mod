@@ -119,4 +119,4 @@ replace github.com/ShinyTrinkets/overseer => github.com/dfuse-io/overseer v0.2.1
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
 
 //ultra-andrey-bezrukov --- BLOCK-178 Dfuse cannot produce JSON data for migration
-replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20220407134914-e24802e8606f
+replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20220615050227-4b5b8bcd73e8
