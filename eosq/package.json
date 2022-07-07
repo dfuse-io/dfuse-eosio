@@ -49,7 +49,7 @@
     "mobx-react": "^5.0.0",
     "mobx-react-router": "^4.0.2",
     "mobx-task": "^1.0.0-alpha.0",
-    "moment": "^2.22.1",
+    "moment": "^2.29.4",
     "moment-duration-format": "^2.2.2",
     "moment-timezone": "^0.5.21",
     "numeral": "^2.0.6",
