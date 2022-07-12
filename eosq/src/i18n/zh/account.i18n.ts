@@ -31,8 +31,10 @@ export default {
       self: "账户本身",
       tooltip: {
         other: "其他",
-        networkTitle: "网络带宽总计",
-        cpuTitle: "CPU带宽总计"
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//        networkTitle: "网络带宽总计",
+//        cpuTitle: "CPU带宽总计",
+        powerTitle: "POWER带宽总计"
       },
       voter_info: {
         noVotes: "此帐户目前没有对任何BP节点投票。",
@@ -76,14 +78,15 @@ export default {
     pie_chart: {
       legendTitle: "总余额",
       labels: {
-        staked_cpu: "CPU抵押数量",
-        staked_network: "网络带宽抵押数量",
+//        staked_cpu: "CPU抵押数量",
+//        staked_network: "网络带宽抵押数量",
+        staked_power: "POWER抵押数量",
         delegated_cpu: "CPU委托数量",
         delegated_network: "网络带宽委托数量",
         pending_refund: "待退款",
         available_funds: "可用资金",
-        rex: "REX",
-        rex_funds: "REX FUNDS"
+//        rex: "REX",
+//        rex_funds: "REX FUNDS"
       }
     },
     banner: {
@@ -102,8 +105,9 @@ export default {
       titles: {
         available: "目前可用",
         memory: "RAM",
-        cpu_bandwidth: "CPU",
-        network_bandwidth: "网络带宽"
+        cpu_bandwidth: "POWER@CPU",
+        network_bandwidth: "POWER@网络带宽",
+        power_bandwidth: "POWER"
       }
     },
     tabs: {

@@ -19,7 +19,7 @@ func init() {
 		// Network config
 		// TODO: eventually, pluck that from somewhere instead of asking for it here (!). You risk noticing its missing very late, and it'll require reprocessing if you want the pubkeys.
 		cmd.Flags().String("common-chain-id", "", "[COMMON] Chain ID in hex. Used by: trxdb-loader (to reverse the signatures and extract public keys)")
-		cmd.Flags().String("common-chain-core-symbol", "4,EOS", "[COMMON] The defined core symbol of the chain which is the precision and symbol string of the chain of the form <precision>,<SYMBOL>. Used by eosws, eosq")
+		cmd.Flags().String("common-chain-core-symbol", "8,UOS", "[COMMON] The defined core symbol of the chain which is the precision and symbol string of the chain of the form <precision>,<SYMBOL>. Used by eosws, eosq")
 		cmd.Flags().String("common-network-id", NetworkID, "[COMMON] Short network identifier, for billing purposes (usually maps namespaces on deployments). Used by: dgraphql")
 
 		// Authentication, metering and rate limiter plugins

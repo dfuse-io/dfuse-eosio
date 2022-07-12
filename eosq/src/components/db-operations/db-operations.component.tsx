@@ -71,6 +71,14 @@ export class DBOperations extends React.Component<Props> {
 
   renderDBOps() {
     return this.props.dbops.map((dbop: DbOp, index: number) => {
+      //ultra-andrey-bezrukov --- BLOCK-516-Fix Dfuse explorer not display primary key correctly in DB Operations
+      const zeroName = ".............";
+      let dbopScope = zeroName;
+      if(dbop.scope !== undefined && dbop.scope.trim().length !== 0) dbopScope = dbop.scope;
+
+      let dbopKey = zeroName;
+      if(dbop.key !== undefined && dbop.key.trim().length !== 0) dbopKey = dbop.key;
+
       const fields = [
         { name: "operation", type: "bold", value: t(`transaction.dbops.operations.${dbop.op}`) },
         {
@@ -82,12 +90,12 @@ export class DBOperations extends React.Component<Props> {
         {
           name: "scope",
           type: "bold",
-          value: dbop.scope
+          value: dbopScope
         },
         {
           name: "primaryKey",
           type: "bold",
-          value: dbop.key
+          value: dbopKey
         }
       ]
 

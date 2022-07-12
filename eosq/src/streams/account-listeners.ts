@@ -6,13 +6,16 @@ import {
 } from "../clients/websocket/eosws"
 import { InboundMessage, InboundMessageType, ErrorData } from "@dfuse/client"
 import { voteStore } from "../stores"
-import { Account, RexFunds, RexBalance, RexLoan, BlockProducerInfo } from "../models/account"
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//import { Account, RexFunds, RexBalance, RexLoan, BlockProducerInfo } from "../models/account"
+import { Account, BlockProducerInfo } from "../models/account"
 import {
   requestAccountLinkedPermissions,
   requestContractTableRows,
   requestProducerAccountTableRows
 } from "../clients/rest/account"
-import { extractValueWithUnits, getDfuseClient } from "@dfuse/explorer"
+//import { extractValueWithUnits, getDfuseClient } from "@dfuse/explorer"
+import { getDfuseClient } from "@dfuse/explorer"
 
 export async function registerAccountDetailsListeners(
   accountName: string,
@@ -45,28 +48,28 @@ export async function registerAccountDetailsListeners(
 
       let { account } = message.data as { account: Account }
       let producerInfo: any
-
-      const rexParams: GetTableRowParams = {
-        json: true,
-        scope: "eosio",
-        table: "rexbal",
-        code: "eosio",
-        table_key: "",
-        lower_bound: accountName,
-        upper_bound: "",
-        limit: 10
-      }
-
-      const rexfundsParams: GetTableRowParams = {
-        json: true,
-        scope: "eosio",
-        table: "rexfund",
-        code: "eosio",
-        table_key: "",
-        lower_bound: accountName,
-        upper_bound: "",
-        limit: 10
-      }
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//      const rexParams: GetTableRowParams = {
+//        json: true,
+//        scope: "eosio",
+//        table: "rexbal",
+//        code: "eosio",
+//        table_key: "",
+//        lower_bound: accountName,
+//        upper_bound: "",
+//        limit: 10
+//      }
+//
+//      const rexfundsParams: GetTableRowParams = {
+//        json: true,
+//        scope: "eosio",
+//        table: "rexfund",
+//        code: "eosio",
+//        table_key: "",
+//        lower_bound: accountName,
+//        upper_bound: "",
+//        limit: 10
+//      }
 
       const cpuLoans: any = {
         code: "eosio",
@@ -96,8 +99,8 @@ export async function registerAccountDetailsListeners(
         Promise.all([
           requestProducerAccountTableRows(accountName),
           requestAccountLinkedPermissions(accountName, blockNum),
-          requestContractTableRows(rexParams),
-          requestContractTableRows(rexfundsParams),
+//          requestContractTableRows(rexParams),
+//          requestContractTableRows(rexfundsParams),
           requestContractTableRows(cpuLoans),
           requestContractTableRows(netLoans)
         ])
@@ -111,22 +114,27 @@ export async function registerAccountDetailsListeners(
                 account.linked_permissions = response[1].linked_permissions
               }
 
+              if(account.cpu_weight)
+                account.power_weight = account.cpu_weight;
+
               successCallback(account)
-              if (response.length >= 3 && response[2]) {
-                account = addRexTokensToAccount(account, response[2])
-              }
-
-              if (response.length >= 4 && response[3]) {
-                account = addRexFundsToAccount(account, response[3])
-              }
-
-              if (response.length >= 5 && response[4]) {
-                account = addRexCpuLoanToAccount(account, response[4])
-              }
-
-              if (response.length >= 6 && response[5]) {
-                account = addRexNetLoanToAccount(account, response[5])
-              }
+ 
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//              if (response.length >= 3 && response[2]) {
+//                account = addRexTokensToAccount(account, response[2])
+//              }
+//
+//              if (response.length >= 4 && response[3]) {
+//                account = addRexFundsToAccount(account, response[3])
+//              }
+//
+//              if (response.length >= 5 && response[4]) {
+//                account = addRexCpuLoanToAccount(account, response[4])
+//              }
+//
+//              if (response.length >= 6 && response[5]) {
+//                account = addRexNetLoanToAccount(account, response[5])
+//              }
             }
           })
           .catch(() => {
@@ -163,50 +171,51 @@ function addProducerInfoToAccount(account: Account, producerInfo: any): Account 
   return account
 }
 
-function addRexTokensToAccount(account: Account, rexTokens: any): Account {
-  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
-    const rexTokensData = rexTokens.rows.find((row: RexBalance) => {
-      return account.account_name === row.owner
-    })
-    account.rex_balance = rexTokensData
-    return account
-  }
-  return account
-}
-
-function addRexFundsToAccount(account: Account, rexTokens: any): Account {
-  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
-    const rexTokensData = rexTokens.rows.find((row: RexFunds) => {
-      return account.account_name === row.owner
-    })
-    account.rex_funds = rexTokensData
-    return account
-  }
-  return account
-}
-
-function addRexCpuLoanToAccount(account: Account, rexTokens: any): Account {
-  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
-    const rexTokensData = rexTokens.rows.filter((row: RexLoan) => {
-      return account.account_name === row.from
-    })
-    account.cpu_loans = rexTokensData.reduce((sum: number, row: RexLoan) => {
-      return sum + parseFloat(extractValueWithUnits(row.balance)[0])
-    }, 0)
-    return account
-  }
-  return account
-}
-
-function addRexNetLoanToAccount(account: Account, rexTokens: any): Account {
-  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
-    const rexTokensData = rexTokens.rows.filter((row: RexLoan) => {
-      return account.account_name === row.from
-    })
-    account.net_loans = rexTokensData.reduce((sum: number, row: RexLoan) => {
-      return sum + parseFloat(extractValueWithUnits(row.balance)[0])
-    }, 0)
-    return account
-  }
-  return account
-}
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//function addRexTokensToAccount(account: Account, rexTokens: any): Account {
+//  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
+//    const rexTokensData = rexTokens.rows.find((row: RexBalance) => {
+//      return account.account_name === row.owner
+//    })
+//    account.rex_balance = rexTokensData
+//    return account
+//  }
+//  return account
+//}
+//
+//function addRexFundsToAccount(account: Account, rexTokens: any): Account {
+//  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
+//    const rexTokensData = rexTokens.rows.find((row: RexFunds) => {
+//      return account.account_name === row.owner
+//    })
+//    account.rex_funds = rexTokensData
+//    return account
+//  }
+//  return account
+//}
+//
+//function addRexCpuLoanToAccount(account: Account, rexTokens: any): Account {
+//  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
+//    const rexTokensData = rexTokens.rows.filter((row: RexLoan) => {
+//      return account.account_name === row.from
+//    })
+//    account.cpu_loans = rexTokensData.reduce((sum: number, row: RexLoan) => {
+//      return sum + parseFloat(extractValueWithUnits(row.balance)[0])
+//    }, 0)
+//    return account
+//  }
+//  return account
+//}
+//
+//function addRexNetLoanToAccount(account: Account, rexTokens: any): Account {
+//  if (rexTokens && rexTokens.rows && rexTokens.rows[0]) {
+//    const rexTokensData = rexTokens.rows.filter((row: RexLoan) => {
+//      return account.account_name === row.from
+//    })
+//    account.net_loans = rexTokensData.reduce((sum: number, row: RexLoan) => {
+//      return sum + parseFloat(extractValueWithUnits(row.balance)[0])
+//    }, 0)
+//    return account
+//  }
+//  return account
+//}

@@ -19,10 +19,10 @@ export interface HierarchyData {
 export interface StakeDetail {
   from: string
   to: string
-  cpu_weight: string
-  net_weight: string
-//  UB-1438 Account fails to display after delegatebw call
-  power_weight?: string
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  cpu_weight: string
+//  net_weight: string
+  power_weight: string
 }
 
 export function assignHierarchy(
@@ -172,39 +172,58 @@ export function getRankBgColor(rankInfo: { rank: number; votePercent: number; we
   return rank % 2 ? "#bfbfbf" : "#d0d0d0"
 }
 
-export function sumCPUStakes(stakes: StakeDetail[], accountName: string): number {
-  return stakes.reduce((a: number, b: StakeDetail) => {
-    if (b.to !== accountName) {
-      a += parseFloat(b.cpu_weight.split(" ")[0])
-    }
-    return a
-  }, 0.0)
-}
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  cpu_weight: string
+//export function sumCPUStakes(stakes: StakeDetail[], accountName: string): number {
+//  return stakes.reduce((a: number, b: StakeDetail) => {
+//    if (b.to !== accountName) {
+//      a += parseFloat(b.cpu_weight.split(" ")[0])
+//    }
+//    return a
+//  }, 0.0)
+//}
+//
+//export function sumNETStakes(stakes: StakeDetail[], accountName: string): number {
+//  return stakes.reduce((a: number, b: StakeDetail) => {
+//    if (b.to !== accountName) {
+//      a += parseFloat(b.net_weight.split(" ")[0])
+//    }
+//    return a
+//  }, 0.0)
+//}
 
-export function sumNETStakes(stakes: StakeDetail[], accountName: string): number {
+export function sumPowerStakes(stakes: StakeDetail[], accountName: string): number {
   return stakes.reduce((a: number, b: StakeDetail) => {
     if (b.to !== accountName) {
-      a += parseFloat(b.net_weight.split(" ")[0])
+      a += parseFloat(b.power_weight.split(" ")[0])
     }
     return a
   }, 0.0)
 }
 
 export interface AccountResources {
-  cpu: {
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  cpu_weight: string
+//  cpu: {
+//    stakedTotal: number
+//    stakedFromOthers: number
+//    selfStaked: number
+//    stakedToOthers: number
+//  }
+//  net: {
+//    stakedTotal: number
+//    stakedFromOthers: number
+//    selfStaked: number
+//    stakedToOthers: number
+//  }
+  power: {
     stakedTotal: number
     stakedFromOthers: number
     selfStaked: number
     stakedToOthers: number
   }
-  net: {
-    stakedTotal: number
-    stakedFromOthers: number
-    selfStaked: number
-    stakedToOthers: number
-  }
-  rexLiquid: number
-  rexFunds: number
+//  rexLiquid: number
+//  rexFunds: number
   availableFunds: number
   pendingRefund: number
   totalOwnerShip: number
@@ -215,66 +234,91 @@ export function getAccountResources(account: Account, stakes: StakeDetail[]): Ac
   const totalResources = account.total_resources
   const selfDelegated = account.self_delegated_bandwidth
   const refundRequest = account.refund_request
-  const rexTokens = account.rex_balance
-    ? account.rex_balance.vote_stake
-    : `0.0000 ${Config.chain_core_symbol_code}`
-  const rexFunds = account.rex_funds
-    ? account.rex_funds.balance
-    : `0.0000 ${Config.chain_core_symbol_code}`
-  const rexCpuLoans = account.cpu_loans ? account.cpu_loans : 0
-  const rexNetLoans = account.net_loans ? account.net_loans : 0
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  cpu_weight: string
+//  const rexTokens = account.rex_balance
+//    ? account.rex_balance.vote_stake
+//    : `0.0000 ${Config.chain_core_symbol_code}`
+//  const rexFunds = account.rex_funds
+//    ? account.rex_funds.balance
+//    : `0.0000 ${Config.chain_core_symbol_code}`
+//  const rexCpuLoans = account.cpu_loans ? account.cpu_loans : 0
+//  const rexNetLoans = account.net_loans ? account.net_loans : 0
 
-  let stakedCpu = parseFloat(extractValueWithUnits(totalResources.cpu_weight)[0])
+//  let stakedCpu = parseFloat(extractValueWithUnits(totalResources.cpu_weight)[0])
   const availableFunds = parseFloat(extractValueWithUnits(account.core_liquid_balance)[0])
-  const selfStakedCpu = parseFloat(extractValueWithUnits(selfDelegated.cpu_weight)[0])
-  const rexStake = parseFloat(extractValueWithUnits(rexTokens)[0])
-  const rexFundsAmount = parseFloat(extractValueWithUnits(rexFunds)[0])
-  const stakedCpuFromOthers = stakedCpu - selfStakedCpu
+//  const selfStakedCpu = parseFloat(extractValueWithUnits(selfDelegated.cpu_weight)[0])
+//  const rexStake = parseFloat(extractValueWithUnits(rexTokens)[0])
+//  const rexFundsAmount = parseFloat(extractValueWithUnits(rexFunds)[0])
+//  const stakedCpuFromOthers = stakedCpu - selfStakedCpu
+//
+//  if (stakes.length > 0) {
+//    stakedCpu += sumCPUStakes(stakes, account.account_name)
+//  }
+//
+//  let stakedNetwork = parseFloat(extractValueWithUnits(totalResources.net_weight)[0])
+//  const selfStakedNet = parseFloat(extractValueWithUnits(selfDelegated.net_weight)[0])
+//  const stakedNetworkFromOthers = stakedNetwork - selfStakedNet
+//  if (stakes.length > 0) {
+//    stakedNetwork += sumNETStakes(stakes, account.account_name)
+//  }
 
+  let stakedPower = parseFloat(extractValueWithUnits(totalResources.power_weight)[0])
+  const selfStakedPower = parseFloat(extractValueWithUnits(selfDelegated.power_weight)[0])
+  const stakedPowerFromOthers = stakedPower - selfStakedPower
   if (stakes.length > 0) {
-    stakedCpu += sumCPUStakes(stakes, account.account_name)
+    stakedPower += sumPowerStakes(stakes, account.account_name)
   }
 
-  let stakedNetwork = parseFloat(extractValueWithUnits(totalResources.net_weight)[0])
-  const selfStakedNet = parseFloat(extractValueWithUnits(selfDelegated.net_weight)[0])
-  const stakedNetworkFromOthers = stakedNetwork - selfStakedNet
-  if (stakes.length > 0) {
-    stakedNetwork += sumNETStakes(stakes, account.account_name)
-  }
 
   let pendingRefund = 0.0
   if (refundRequest) {
-    pendingRefund = parseFloat(extractValueWithUnits(refundRequest.net_amount)[0])
-    pendingRefund += parseFloat(extractValueWithUnits(refundRequest.cpu_amount)[0])
+//    pendingRefund = parseFloat(extractValueWithUnits(refundRequest.net_amount)[0])
+//    pendingRefund += parseFloat(extractValueWithUnits(refundRequest.cpu_amount)[0])
+    pendingRefund += parseFloat(extractValueWithUnits(refundRequest.power_amount)[0])
   }
 
+//  const totalOwnerShip =
+//    stakedCpu +
+//    stakedNetwork +
+//    rexStake +
+//    rexFundsAmount +
+//    rexCpuLoans +
+//    rexNetLoans +
+//    pendingRefund +
+//    availableFunds -
+//    stakedNetworkFromOthers -
+//    stakedCpuFromOthers
+
   const totalOwnerShip =
-    stakedCpu +
-    stakedNetwork +
-    rexStake +
-    rexFundsAmount +
-    rexCpuLoans +
-    rexNetLoans +
+    stakedPower +
     pendingRefund +
     availableFunds -
-    stakedNetworkFromOthers -
-    stakedCpuFromOthers
+    stakedPowerFromOthers;
 
   return {
-    net: {
-      stakedTotal: stakedNetwork,
-      stakedFromOthers: stakedNetworkFromOthers,
-      selfStaked: selfStakedNet,
-      stakedToOthers: stakedNetwork - selfStakedNet - stakedNetworkFromOthers,
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  cpu_weight: string
+//    net: {
+//      stakedTotal: stakedNetwork,
+//      stakedFromOthers: stakedNetworkFromOthers,
+//      selfStaked: selfStakedNet,
+//      stakedToOthers: stakedNetwork - selfStakedNet - stakedNetworkFromOthers,
+//    },
+//    cpu: {
+//      stakedTotal: stakedCpu,
+//      stakedFromOthers: stakedCpuFromOthers,
+//      selfStaked: selfStakedCpu,
+//      stakedToOthers: stakedCpu - selfStakedCpu - stakedCpuFromOthers,
+//    },
+    power: {
+      stakedTotal: stakedPower,
+      stakedFromOthers: stakedPowerFromOthers,
+      selfStaked: selfStakedPower,
+      stakedToOthers: stakedPower - selfStakedPower - stakedPowerFromOthers,
     },
-    cpu: {
-      stakedTotal: stakedCpu,
-      stakedFromOthers: stakedCpuFromOthers,
-      selfStaked: selfStakedCpu,
-      stakedToOthers: stakedCpu - selfStakedCpu - stakedCpuFromOthers,
-    },
-    rexLiquid: rexStake,
-    rexFunds: rexNetLoans + rexCpuLoans + rexFundsAmount,
+//    rexLiquid: rexStake,
+//    rexFunds: rexNetLoans + rexCpuLoans + rexFundsAmount,
     availableFunds,
     pendingRefund,
     totalOwnerShip,
@@ -295,26 +339,31 @@ export function getPieChartParams(
   wrapperRenderer: (accountResources: AccountResources, type: string, value: number) => JSX.Element
 ): PieChartParams {
   const pieChartData: DonutData[] = [
+//    {
+//      label: t("account.pie_chart.labels.staked_cpu"),
+//      value: accountResources.cpu.stakedTotal,
+//      renderWrapper: (value: any) => wrapperRenderer(accountResources, "cpu", value),
+//    },
+//    {
+//      label: t("account.pie_chart.labels.staked_network"),
+//      value: accountResources.net.stakedTotal,
+//      renderWrapper: (value: any) => wrapperRenderer(accountResources, "net", value),
+//    },
     {
-      label: t("account.pie_chart.labels.staked_cpu"),
-      value: accountResources.cpu.stakedTotal,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "cpu", value),
+      label: t("account.pie_chart.labels.staked_power"),
+      value: accountResources.power.stakedTotal,
+      renderWrapper: (value: any) => wrapperRenderer(accountResources, "power", value),
     },
-    {
-      label: t("account.pie_chart.labels.staked_network"),
-      value: accountResources.net.stakedTotal,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "net", value),
-    },
-    {
-      label: t("account.pie_chart.labels.rex"),
-      value: accountResources.rexLiquid,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX", value),
-    },
-    {
-      label: t("account.pie_chart.labels.rex_funds"),
-      value: accountResources.rexFunds,
-      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX_FUNDS", value),
-    },
+//    {
+//      label: t("account.pie_chart.labels.rex"),
+//      value: accountResources.rexLiquid,
+//      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX", value),
+//    },
+//    {
+//      label: t("account.pie_chart.labels.rex_funds"),
+//      value: accountResources.rexFunds,
+//      renderWrapper: (value: any) => wrapperRenderer(accountResources, "REX_FUNDS", value),
+//    },
     {
       label: t("account.pie_chart.labels.pending_refund"),
       value: accountResources.pendingRefund,

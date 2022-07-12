@@ -9,8 +9,10 @@ import {
   getWebsiteInfo,
   getRankBgColor,
   StakeDetail,
-  sumCPUStakes,
-  sumNETStakes,
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  sumCPUStakes,
+//  sumNETStakes,
+  sumPowerStakes,
   getAccountResources
 } from "../account.helpers"
 import { Permission } from "../../models/account"
@@ -210,57 +212,82 @@ describe("getRankBgColor", () => {
   })
 })
 
-describe("sumCPUStakes", () => {
-  it("should add the cpu stakes", () => {
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//describe("sumCPUStakes", () => {
+//  it("should add the cpu stakes", () => {
+//    const stakeDetails: StakeDetail[] = [
+//      {
+//        from: "from",
+//        to: "to",
+//        cpu_weight: "3.0000 EOS",
+//        net_weight: "4.5000 EOS"
+//      },
+//      {
+//        from: "from",
+//        to: "to",
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+//      },
+//      {
+//        from: "foo",
+//        to: "target",
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+//      }
+//    ]
+//
+//    expect(sumCPUStakes(stakeDetails, "target")).toEqual(11.0)
+//  })
+//})
+
+//describe("sumNETStakes", () => {
+//  it("should add the net stakes", () => {
+//    const stakeDetails: StakeDetail[] = [
+//      {
+//        from: "from",
+//        to: "to",
+//        cpu_weight: "3.0000 EOS",
+//        net_weight: "4.5000 EOS"
+//      },
+//      {
+//        from: "from",
+//        to: "to",
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+//      },
+//      {
+//        from: "foo",
+//        to: "target",
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+//      }
+//    ]
+//
+//    expect(sumNETStakes(stakeDetails, "target")).toEqual(6.0)
+//  })
+//})
+
+describe("sumPowerStakes", () => {
+  it("should add the power stakes", () => {
     const stakeDetails: StakeDetail[] = [
       {
         from: "from",
         to: "to",
-        cpu_weight: "3.0000 EOS",
-        net_weight: "4.5000 EOS"
+        power_weight: "7.5000 EOS"
       },
       {
         from: "from",
         to: "to",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
+        power_weight: "9.5000 EOS"
       },
       {
         from: "foo",
         to: "target",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
+        power_weight: "9.5000 EOS"
       }
     ]
 
-    expect(sumCPUStakes(stakeDetails, "target")).toEqual(11.0)
-  })
-})
-
-describe("sumNETStakes", () => {
-  it("should add the net stakes", () => {
-    const stakeDetails: StakeDetail[] = [
-      {
-        from: "from",
-        to: "to",
-        cpu_weight: "3.0000 EOS",
-        net_weight: "4.5000 EOS"
-      },
-      {
-        from: "from",
-        to: "to",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
-      },
-      {
-        from: "foo",
-        to: "target",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
-      }
-    ]
-
-    expect(sumNETStakes(stakeDetails, "target")).toEqual(6.0)
+    expect(sumPowerStakes(stakeDetails, "target")).toEqual(17.0)
   })
 })
 
@@ -272,40 +299,47 @@ describe("getAccountResources", () => {
       {
         from: "from",
         to: "to",
-        cpu_weight: "3.0000 EOS",
-        net_weight: "4.5000 EOS"
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//        cpu_weight: "3.0000 EOS",
+//        net_weight: "4.5000 EOS"
+        power_weight: "7.5000 EOS"
       },
       {
         from: "eoscanadacom",
         to: "to",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+        power_weight: "9.5000 EOS"
       },
       {
         from: "foo",
         to: "eoscanadacom",
-        cpu_weight: "8.0000 EOS",
-        net_weight: "1.5000 EOS"
+//        cpu_weight: "8.0000 EOS",
+//        net_weight: "1.5000 EOS"
+        power_weight: "9.5000 EOS"
       }
     ]
     expect(getAccountResources(account, stakeDetails)).toEqual({
       availableFunds: 16,
-      cpu: { selfStaked: 1.3, stakedFromOthers: 4, stakedToOthers: 11, stakedTotal: 16.3 },
-      net: {
-        selfStaked: 2.2,
-        stakedFromOthers: 2,
-        stakedToOthers: 5.999999999999999,
-        stakedTotal: 10.2
-      },
-      rexFunds: 0,
-      rexLiquid: 0,
+//      cpu: { selfStaked: 1.3, stakedFromOthers: 4, stakedToOthers: 11, stakedTotal: 16.3 },
+//      net: {
+//        selfStaked: 2.2,
+//        stakedFromOthers: 2,
+//        stakedToOthers: 5.999999999999999,
+//        stakedTotal: 10.2
+//      },
+      power: { selfStaked: 3.5, stakedFromOthers: 6, stakedToOthers: 17, stakedTotal: 26.5 },
+//      rexFunds: 0,
+//      rexLiquid: 0,
       pendingRefund: 0,
       stakes: [
-        { cpu_weight: "3.0000 EOS", from: "from", net_weight: "4.5000 EOS", to: "to" },
-        { cpu_weight: "8.0000 EOS", from: "eoscanadacom", net_weight: "1.5000 EOS", to: "to" }
+//        { cpu_weight: "3.0000 EOS", from: "from", net_weight: "4.5000 EOS", to: "to" },
+//        { cpu_weight: "8.0000 EOS", from: "eoscanadacom", net_weight: "1.5000 EOS", to: "to" }
+        { from: "from", power_weight: "7.5000 EOS", to: "to" },
+        { from: "eoscanadacom", power_weight: "9.5000 EOS", to: "to" }
       ],
       totalOwnerShip: 36.5,
-      unit: "EOS"
+//      unit: "EOS"
     })
   })
 })

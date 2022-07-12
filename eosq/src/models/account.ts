@@ -14,15 +14,18 @@ export interface Account {
   cpu_limit: AccountResourceLimit
   self_delegated_bandwidth: SelfDelegatedBandwidth
   refund_request?: RefundRequest
-  cpu_weight: number
-  net_weight: number
+  cpu_weight?: number
+//  net_weight: number
+  power_weight: number
   total_resources: AccountTotalResources
   voter_info: VoterInfo
   block_producer_info?: BlockProducerInfo
-  rex_balance?: RexBalance
-  rex_funds?: RexFunds
-  net_loans?: number
-  cpu_loans?: number
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  rex_balance?: RexBalance
+//  rex_funds?: RexFunds
+//  net_loans?: number
+//  cpu_loans?: number
+  power_loans?: number
 }
 
 export interface LinkedPermission {
@@ -57,30 +60,31 @@ export interface AccountCreator {
   trx_id: string
 }
 
-export interface RexBalance {
-  matured_rex: number
-  owner: string
-  rex_balance: string
-  rex_maturities: { first: string; second: string }[]
-  version: number
-  vote_stake: string
-}
-
-export interface RexFunds {
-  version: number
-  owner: string
-  balance: string
-}
-
-export interface RexLoan {
-  balance: string
-  from: string
-  loan_num: number
-  payment: string
-  receiver: string
-  total_staked: string
-  version: 0
-}
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//export interface RexBalance {
+//  matured_rex: number
+//  owner: string
+//  rex_balance: string
+//  rex_maturities: { first: string; second: string }[]
+//  version: number
+//  vote_stake: string
+//}
+//
+//export interface RexFunds {
+//  version: number
+//  owner: string
+//  balance: string
+//}
+//
+//export interface RexLoan {
+//  balance: string
+//  from: string
+//  loan_num: number
+//  payment: string
+//  receiver: string
+//  total_staked: string
+//  version: 0
+//}
 
 export interface BlockProducerInfo {
   org: {
@@ -109,8 +113,9 @@ export interface BrandingLogos {
 }
 
 export interface AccountTotalResources {
-  cpu_weight: string
-  net_weight: string
+//  cpu_weight: string
+//  net_weight: string
+  power_weight: string
   owner: string
   ram_bytes: number
 }
@@ -118,15 +123,17 @@ export interface AccountTotalResources {
 export interface RefundRequest {
   owner: string
   request_time: Date
-  net_amount: string
-  cpu_amount: string
+//  net_amount: string
+//  cpu_amount: string
+  power_amount: string
 }
 
 export interface SelfDelegatedBandwidth {
   from: string
   to: string
-  net_weight: string
-  cpu_weight: string
+//  net_weight: string
+//  cpu_weight: string
+  power_weight: string
 }
 
 export interface AccountResourceLimit {
@@ -184,6 +191,8 @@ export interface VoterInfo {
 export interface DelegatedBandwidth {
   from: string
   to: string
-  net_weight: string
-  cpu_weight: string
+//ultra-andrey-bezrukov --- BLOCK-80 Integrate ultra power into dfuse and remove rex related tables
+//  net_weight: string
+//  cpu_weight: string
+  power_weight: string
 }
