@@ -51,7 +51,7 @@
     "mobx-task": "^1.0.0-alpha.0",
     "moment": "^2.22.1",
     "moment-duration-format": "^2.2.2",
-    "moment-timezone": "^0.5.21",
+    "moment-timezone": "^0.5.35",
     "numeral": "^2.0.6",
     "nvd3": "^1.8.6",
     "path-to-regexp": "^2.2.1",
