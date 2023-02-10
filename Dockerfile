@@ -30,10 +30,12 @@ RUN yarn install --frozen-lockfile && yarn build
 FROM golang:1.14 as dfuse
 ARG COMMIT
 ARG VERSION
-RUN go get -u github.com/GeertJohan/go.rice/rice && export PATH=$PATH:$HOME/bin:/work/go/bin
 RUN mkdir -p /work/build
+RUN mkdir -p /work/go/bin
 ADD . /work
 WORKDIR /work
+RUN cp /work/go.rice/rice /work/go/bin/rice
+ENV PATH="${PATH}:$HOME/bin:/work/go/bin"
 COPY --from=eosq      /work/ /work/eosq
 # The copy needs to be one level higher than work, the dashboard generates expects this file layout
 COPY --from=dlauncher /work/dlauncher /dlauncher
