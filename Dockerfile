@@ -27,7 +27,7 @@ ADD eosq /work
 WORKDIR /work
 RUN yarn install --frozen-lockfile && yarn build
 
-FROM golang:1.14 as dfuse
+FROM golang:1.20 as dfuse
 ARG COMMIT
 ARG VERSION
 RUN mkdir -p /work/build
@@ -36,6 +36,7 @@ ADD . /work
 WORKDIR /work
 RUN cp /work/go.rice/rice /work/go/bin/rice
 ENV PATH="${PATH}:$HOME/bin:/work/go/bin"
+RUN go install github.com/GeertJohan/go.rice/rice@latest
 COPY --from=eosq      /work/ /work/eosq
 # The copy needs to be one level higher than work, the dashboard generates expects this file layout
 COPY --from=dlauncher /work/dlauncher /dlauncher

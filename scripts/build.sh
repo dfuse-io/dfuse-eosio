@@ -1,26 +1,31 @@
 #!/usr/bin/env bash
+set -e
 
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)"
 
 force_build=
 prepare_only=
 skip_checks=
 yes=
+exclude_dlauncher=
+exclude_eosq=
 
 main() {
-  pushd "$ROOT" &> /dev/null
+  pushd "$ROOT" &>/dev/null
 
-  while getopts "hsyfp" opt; do
+  while getopts "hsyfpde" opt; do
     case $opt in
-      h) usage && exit 0;;
-      f) force_build=true;;
-      s) skip_checks=true;;
-      p) prepare_only=true;;
-      y) yes=true;;
-      \?) usage_error "Invalid option: -$OPTARG";;
+    h) usage && exit 0 ;;
+    f) force_build=true ;;
+    s) skip_checks=true ;;
+    p) prepare_only=true ;;
+    y) yes=true ;;
+    d) exclude_dlauncher=true ;;
+    e) exclude_eosq=true ;;
+    \?) usage_error "Invalid option: -$OPTARG" ;;
     esac
   done
-  shift $((OPTIND-1))
+  shift $((OPTIND - 1))
 
   if [[ $skip_checks != true ]]; then
     if ! checks; then
@@ -34,77 +39,87 @@ main() {
 }
 
 build() {
-  if [[ ! -d eosq/eosq-build || $force_build == true ]]; then
-    pushd eosq > /dev/null
-      echo "Building eosq"
-      yarn install && yarn build
-    popd > /dev/null
+  if [[ $exclude_eosq != true && (! -d eosq/eosq-build || $force_build == true) ]]; then
+    pushd eosq >/dev/null
+    echo "** Building eosq **"
+    yarn install && yarn build
+    popd >/dev/null
   fi
 
-  dlauncher_hash=`grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1`
-  pushd .. > /dev/null
+  if [[ $exclude_dlauncher != true ]]; then
+    echo "** Building dlauncher **"
+    dlauncher_hash=$(grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' | head -n 1)
+    pushd .. >/dev/null
     if [[ ! -d dlauncher ]]; then
-      echo "Cloning dlauncher dependency"
-      git clone https://github.com/streamingfast/dlauncher
-      git checkout $dlauncher_hash
+      echo "** Cloning dlauncher dependency **"
+      git clone https://github.com/streamingfast/dlauncher.git
     elif [[ $force_build == true ]]; then
-      pushd dlauncher > /dev/null
-        git pull
-        git checkout $dlauncher_hash
-      popd > /dev/null
+      pushd dlauncher >/dev/null
+      git checkout develop
+      git pull
+      git checkout $dlauncher_hash
+      popd >/dev/null
     fi
     pushd dlauncher
-      git checkout $DLAUNCHER
+    git checkout $dlauncher_hash
     popd >/dev/null
 
     if [[ ! -d dlauncher/dashboard/dashboard-build || $force_build == true ]]; then
-      pushd dlauncher/dashboard > /dev/null
-        pushd client > /dev/null
-          echo "Building dashboard"
-          yarn install && yarn build
-        popd > /dev/null
+      pushd dlauncher/dashboard >/dev/null
+      pushd client >/dev/null
+      echo "** Building dashboard **"
+      yarn install && yarn build
+      popd >/dev/null
 
-        go generate .
-      popd > /dev/null
+      go generate .
+      popd >/dev/null
     fi
-  popd > /dev/null
+    popd >/dev/null
+  fi
 
   if [[ $force_build == true ]]; then
-    echo "Generating static assets"
-    go generate ./...
+    echo "** Generating static assets **"
+    # todo replace this with go generate -skip '' ./... whenever the skip flag has been released for go generate (go 1.20 probably)
+    go generate ./dgraphql/schema/generate.go
+
+    if [[ $exclude_eosq != true ]]; then
+      go generate ./eosq/app/eosq/server.go
+    fi
   fi
 
   if ! [[ $prepare_only == true ]]; then
     GIT_COMMIT="$(git describe --match=NeVeRmAtCh --always --abbrev=7 --dirty)"
 
-    echo "Building & installing dfuseeos binary for $GIT_COMMIT"
+    echo "** Building & installing dfuseeos binary for $GIT_COMMIT **"
     go install -ldflags "-X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
   fi
 }
 
 checks() {
+  echo "** Running checks **"
+
   found_error=
-  if ! command -v go &> /dev/null; then
-    echo "The 'go' command (version 1.14+) is required to build a version locally, install it following https://golang.org/doc/install#install"
+  if ! command -v go &>/dev/null; then
+    echo "The 'go' command (version 1.18+) is required to build a version locally, install it following https://golang.org/doc/install#install"
     found_error=true
   else
-    if ! (go version | grep -qE 'go1\.(1[456789]|[2-9][0-9]+)'); then
-      echo "Your 'go' version (`go version`) is too low, requires go 1.14+, if you think it's a mistake, use '-s' flag to skip checks"
+    if ! (go version | grep -qE 'go1\.(1[89]|[2-9][0-9]+)'); then
+      echo "Your 'go' version ($(go version)) is too low, requires go 1.18+, if you think it's a mistake, use '-s' flag to skip checks"
       found_error=true
     fi
   fi
 
-  if ! command -v yarn &> /dev/null; then
+  if ! command -v yarn &>/dev/null; then
     echo "The 'yarn' command (version 1.10+) is required to build a version locally, install it following https://classic.yarnpkg.com/en/docs/install"
     found_error=true
   else
     if ! (yarn --version | grep -qE '1\.(1[[0-9]|[2-9][0-9])'); then
-      echo "Your 'yarn' version (`yarn --version`) is too low, requires Yarn 1.12+, if you think it's a mistake, use '-s' flag to skip checks"
+      echo "Your 'yarn' version ($(yarn --version)) is too low, requires Yarn 1.12+, if you think it's a mistake, use '-s' flag to skip checks"
       found_error=true
     fi
   fi
 
-  if ! command -v rice &> /dev/null; then
+  if ! command -v rice &>/dev/null; then
     install_rice=$yes
     if [[ $yes != true ]]; then
       if [ ! -t 0 ]; then
@@ -118,13 +133,11 @@ checks() {
     fi
 
     if [[ $install_rice == true ]]; then
-      pushd /tmp > /dev/null
-        set -e
-        echo "Installing 'rice' executable"
-        go get github.com/GeertJohan/go.rice
-        go get github.com/GeertJohan/go.rice/rice
-        set +e
-      popd > /dev/null
+      pushd /tmp >/dev/null
+      echo "** Installing 'rice' executable **"
+      go install github.com/GeertJohan/go.rice@latest
+      go install github.com/GeertJohan/go.rice/rice@latest
+      popd >/dev/null
     else
       echo "The 'rice' executable is required to build a version locally, install it following https://github.com/GeertJohan/go.rice#installation"
       found_error=true
@@ -147,7 +160,7 @@ usage_error() {
 }
 
 usage() {
-  echo "usage: ./scripts/build.sh [-f] [-s] [-y] [-p]"
+  echo "usage: ./scripts/build.sh [-f] [-s] [-y] [-p] [-d] [-e]"
   echo ""
   echo "Checks build requirements and build a development local version of the"
   echo "'dfuseeos' binary."
@@ -157,6 +170,8 @@ usage() {
   echo "   -s          Skip all checks usually performed by this script"
   echo "   -y          Answers yes to all question asked by this script"
   echo "   -p          Prepare only all required artifacts for build, but don't run the build actually"
+  echo "   -d          Exclude dlauncher when building dfuse"
+  echo "   -e          Exclude eosq when building dfuse"
 }
 
 main "$@"
