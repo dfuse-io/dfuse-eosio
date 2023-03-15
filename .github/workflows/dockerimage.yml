@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Download DM patch
         uses: Legion2/download-release-action@v2.1.0
@@ -27,25 +27,24 @@ jobs:
           file:  eosio-2.0.9-1.25.0.deb
           token: '${{ secrets.DEVOPS_SECRET }}'
 
-      - name: Get branch name
-        id: branch_name
-        run: |
-          echo ::set-output name=VERSION::$([[ $GITHUB_REF =~ "refs/tags" ]] && echo ${GITHUB_REF#refs/tags/} || echo "${GITHUB_SHA:0:7}")
-      - name: Setup gcloud cli
-        uses: google-github-actions/setup-gcloud@v0
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
         with:
-          service_account_key: ${{ secrets.GCR_KEY }}
+          credentials_json: '${{ secrets.GCR_KEY }}'
+
+      - name: Setup gcloud cli
+        uses: google-github-actions/setup-gcloud@v1
+        with:
           project_id: dfuse-302310
-          export_default_credentials: true
 
       - name: Build Image
         run: |-
-          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{  github.ref_name }}
       - name: Docker config
         run: |
           gcloud auth configure-docker -q
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
-          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ steps.branch_name.outputs.VERSION }}
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ github.ref_name }}
           #docker push eu.gcr.io/dfuse-302310/dfuse-eosio:latest
