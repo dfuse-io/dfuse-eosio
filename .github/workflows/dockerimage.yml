@@ -22,9 +22,9 @@ jobs:
         uses: Legion2/download-release-action@v2.1.0
         with:
           repository: ultraio/eosio
-          tag: '2.0.9-1.25.0'
+          tag: '2.0.9-1.27.2'
           path: .
-          file:  eosio-2.0.9-1.25.0.deb
+          file:  eosio-2.0.9-1.27.2.deb
           token: '${{ secrets.DEVOPS_SECRET }}'
 
       - id: 'auth'
