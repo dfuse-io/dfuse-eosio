@@ -58,9 +58,9 @@ jobs:
                 --build-arg EOSIO_TAG=${{ env.EOSIO_VERSION }} \
                 --build-arg DEB_PKG=eosio-${{ env.EOSIO_VERSION }}.deb \
                 --build-arg VERSION=${{ env.RELEASE_VERSION }}
-      - name: Docker config
-        run: |
-          gcloud auth configure-docker -q
+      # - name: Docker config
+      #   run: |
+      #     gcloud auth configure-docker -q
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
