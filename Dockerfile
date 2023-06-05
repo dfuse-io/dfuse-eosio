@@ -12,15 +12,10 @@ RUN dpkg -i /var/cache/apt/archives/${DEB_PKG}
 
 RUN rm -rf /var/cache/apt/*
 
-FROM node:12 AS dlauncher
+FROM node:14 AS dlauncher
 WORKDIR /work
 ADD go.mod /work
-
-# Update GIT
-RUN add-apt-repository ppa:git-core/ppa -y \
-    && apt-get update -y \
-    && apt-get install git -y
-
+RUN apt update && apt-get -y install git
 RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlauncher &&\
     grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
     cd dlauncher &&\
@@ -28,12 +23,12 @@ RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlaunch
     cd dashboard/client &&\
     yarn install --frozen-lockfile && yarn build
 
-FROM node:12 AS eosq
+FROM node:14 AS eosq
 ADD eosq /work
 WORKDIR /work
 RUN yarn install --frozen-lockfile && yarn build
 
-FROM golang:1.20 as dfuse
+FROM golang:1.80 as dfuse
 ARG COMMIT
 ARG VERSION
 RUN mkdir -p /work/build
