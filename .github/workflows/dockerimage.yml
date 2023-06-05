@@ -24,6 +24,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: "${{ env.RELEASE_VERSION }}"
 
       - name: Download EOSIO Debian package
         uses: Legion2/download-release-action@v2.1.0
@@ -39,10 +41,16 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCR_KEY }}'
 
-      - name: Setup gcloud cli
-        uses: google-github-actions/setup-gcloud@v1
+      - name: Read credentials file
+        id: getcred
+        run: echo "cred=$(cat ${{ env.CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE }})" >> $GITHUB_OUTPUT
+
+      - name: 'Login to GCR'
+        uses: docker/login-action@v2
         with:
-          project_id: dfuse-302310
+          registry: eu.gcr.io
+          username: _json_key
+          password: ${{ steps.getcred.outputs.cred }}
 
       - name: Build Image
         run: |-
