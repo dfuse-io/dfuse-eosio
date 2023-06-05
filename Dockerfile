@@ -28,7 +28,7 @@ ADD eosq /work
 WORKDIR /work
 RUN yarn install --frozen-lockfile && yarn build
 
-FROM golang:1.80 as dfuse
+FROM golang:1.20 as dfuse
 ARG COMMIT
 ARG VERSION
 RUN mkdir -p /work/build
