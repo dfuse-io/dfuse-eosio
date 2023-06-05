@@ -46,14 +46,14 @@ jobs:
 
       - name: Build Image
         run: |-
-          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{  RELEASE_VERSION }} \
-                --build-arg EOSIO_TAG=${{ EOSIO_VERSION }} \
+          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }} \
+                --build-arg EOSIO_TAG=${{ env.EOSIO_VERSION }} \
                 --build-arg DEB_PKG=eosio-${{ env.EOSIO_VERSION }}.deb \
-                --build-arg VERSION=${{ RELEASE_VERSION }}
+                --build-arg VERSION=${{ env.RELEASE_VERSION }}
       - name: Docker config
         run: |
           gcloud auth configure-docker -q
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
-          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ RELEASE_VERSION }}
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }}
