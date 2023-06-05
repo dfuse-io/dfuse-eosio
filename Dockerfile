@@ -15,7 +15,12 @@ RUN rm -rf /var/cache/apt/*
 FROM node:12 AS dlauncher
 WORKDIR /work
 ADD go.mod /work
-RUN apt update && apt-get -y install git
+
+# Update GIT
+RUN add-apt-repository ppa:git-core/ppa -y \
+    && apt-get update -y \
+    && apt-get install git -y
+
 RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlauncher &&\
     grep -w github.com/streamingfast/dlauncher go.mod | sed 's/.*-\([a-f0-9]*$\)/\1/' |head -n 1 > dlauncher.hash &&\
     cd dlauncher &&\
