@@ -1,13 +1,15 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches:
-      - develop
-  create:
-    tags:
-      - v*
-      - test*
+  # Only allows triggering through the Github Workflow UI
+  workflow_dispatch:
+    inputs:
+      release:
+        description: A release version tag
+        required: true
+      eosio:
+        description: A tag for the eosio release
+        required: true
 
 jobs:
   build:
@@ -15,16 +17,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: "Set ENV"
+        run: |
+          echo "RELEASE_VERSION=${{ github.event.inputs.release }}" >> $GITHUB_ENV
+          echo "EOSIO_VERSION=${{ github.event.inputs.eosio }}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Download DM patch
+      - name: Download EOSIO Debian package
         uses: Legion2/download-release-action@v2.1.0
         with:
           repository: ultraio/eosio
-          tag: '2.0.9-1.27.2'
+          tag: '${{ github.event.inputs.eosio }}'
           path: .
-          file:  eosio-2.0.9-1.27.2.deb
+          file:  eosio-${{ env.EOSIO_VERSION }}.deb
           token: '${{ secrets.DEVOPS_SECRET }}'
 
       - id: 'auth'
@@ -39,12 +46,14 @@ jobs:
 
       - name: Build Image
         run: |-
-          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:latest -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{  github.ref_name }}
+          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }} \
+                --build-arg EOSIO_TAG=${{ env.EOSIO_VERSION }} \
+                --build-arg DEB_PKG=eosio-${{ env.EOSIO_VERSION }}.deb \
+                --build-arg VERSION=${{ env.RELEASE_VERSION }}
       - name: Docker config
         run: |
           gcloud auth configure-docker -q
       # Push image to Google Container Registry
       - name: Push Image
         run: |-
-          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ github.ref_name }}
-          #docker push eu.gcr.io/dfuse-302310/dfuse-eosio:latest
+          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }}
