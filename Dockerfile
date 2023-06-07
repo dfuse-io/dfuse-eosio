@@ -12,7 +12,7 @@ RUN dpkg -i /var/cache/apt/archives/${DEB_PKG}
 
 RUN rm -rf /var/cache/apt/*
 
-FROM node:12 AS dlauncher
+FROM node:14 AS dlauncher
 WORKDIR /work
 ADD go.mod /work
 RUN apt update && apt-get -y install git
@@ -23,7 +23,7 @@ RUN cd /work && git clone https://github.com/streamingfast/dlauncher.git dlaunch
     cd dashboard/client &&\
     yarn install --frozen-lockfile && yarn build
 
-FROM node:12 AS eosq
+FROM node:14 AS eosq
 ADD eosq /work
 WORKDIR /work
 RUN yarn install --frozen-lockfile && yarn build
