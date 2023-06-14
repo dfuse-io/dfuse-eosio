@@ -27,6 +27,10 @@ jobs:
         with:
           ref: "${{ env.RELEASE_VERSION }}"
 
+      - name: Set outputs
+        run: |
+          echo "RELEASE_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
       - name: Download EOSIO Debian package
         uses: Legion2/download-release-action@v2.1.0
         with:
@@ -51,7 +55,9 @@ jobs:
           docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }} \
                 --build-arg EOSIO_TAG=${{ env.EOSIO_VERSION }} \
                 --build-arg DEB_PKG=eosio-${{ env.EOSIO_VERSION }}.deb \
-                --build-arg VERSION=${{ env.RELEASE_VERSION }}
+                --build-arg VERSION=${{ env.RELEASE_VERSION }} \
+                --build-arg COMMIT=${{ env.RELEASE_COMMIT }}
+
 
       - name: Docker config
         run: |

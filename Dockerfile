@@ -1,3 +1,4 @@
+ARG COMMIT=""
 ARG VERSION=""
 ARG EOSIO_TAG=""
 ARG DEB_PKG=""
@@ -48,7 +49,7 @@ RUN cd /work/dashboard && go generate
 RUN cd /work/booter/migrator && go generate
 RUN cd /work/dgraphql && go generate
 RUN go test ./...
-RUN go build -ldflags "-s -w -X main.version=\"${VERSION}\" -X main.commit=\"${COMMIT}\"" -v -o /work/build/dfuseeos ./cmd/dfuseeos
+RUN go build -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -v -o /work/build/dfuseeos ./cmd/dfuseeos
 
 FROM base
 RUN mkdir -p /app/ && curl -Lo /app/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.2.2/grpc_health_probe-linux-amd64 && chmod +x /app/grpc_health_probe

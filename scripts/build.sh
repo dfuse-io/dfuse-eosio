@@ -9,11 +9,12 @@ skip_checks=
 yes=
 exclude_dlauncher=
 exclude_eosq=
+enable_symbol_table=
 
 main() {
   pushd "$ROOT" &>/dev/null
 
-  while getopts "hsyfpde" opt; do
+  while getopts "hsyfpdet" opt; do
     case $opt in
     h) usage && exit 0 ;;
     f) force_build=true ;;
@@ -22,6 +23,7 @@ main() {
     y) yes=true ;;
     d) exclude_dlauncher=true ;;
     e) exclude_eosq=true ;;
+    t) enable_symbol_table=true ;;
     \?) usage_error "Invalid option: -$OPTARG" ;;
     esac
   done
@@ -91,7 +93,13 @@ build() {
     GIT_COMMIT="$(git describe --match=NeVeRmAtCh --always --abbrev=7 --dirty)"
 
     echo "** Building & installing dfuseeos binary for $GIT_COMMIT **"
-    go install -ldflags "-X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
+    # ultra-duncan --- disable symbol table by default
+    if [[ $enable_symbol_table == true ]]; then
+      echo "** Enable symbol table only work with go lang version is < 1.20. **"
+      go install -ldflags "-X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
+    else
+      go install -ldflags "-s -X main.commit=$GIT_COMMIT" ./cmd/dfuseeos
+    fi
   fi
 }
 
@@ -172,6 +180,7 @@ usage() {
   echo "   -p          Prepare only all required artifacts for build, but don't run the build actually"
   echo "   -d          Exclude dlauncher when building dfuse"
   echo "   -e          Exclude eosq when building dfuse"
+  echo "   -t          Enable symbol table with build. It is disabled by default."
 }
 
 main "$@"
