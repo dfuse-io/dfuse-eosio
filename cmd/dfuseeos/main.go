@@ -14,7 +14,7 @@ var version = "dev"
 var isDirty = ""
 
 func init() {
-	cli.RootCmd.Version = cli.Version(commit, version, isDirty)
+	cli.RootCmd.Version = cli.Version(version, commit, isDirty)
 }
 
 func main() {
