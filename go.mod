@@ -78,22 +78,21 @@ require (
 	github.com/streamingfast/search-client v0.0.0-20210811200417-677bdb765983
 	github.com/streamingfast/shutter v1.5.0
 	github.com/streamingfast/validator v0.0.0-20210812013448-b9da5752ce14
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.1
 	github.com/teris-io/shortid v0.0.0-20201117134242-e59966efd125
 	github.com/thedevsaddam/govalidator v1.9.9
 	github.com/tidwall/gjson v1.9.3
 	github.com/tidwall/sjson v1.0.4
 	github.com/urfave/negroni v1.0.0 // indirect
-	go.opencensus.io v0.23.0
+	go.opencensus.io v0.24.0
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.17.0
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/oauth2 v0.0.0-20210805134026-6f1e6394065a
-	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf // indirect
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
-	google.golang.org/grpc v1.39.1
+	golang.org/x/crypto v0.0.0-20211108221036-ceb1ce70b4fa
+	golang.org/x/oauth2 v0.4.0
+	golang.org/x/time v0.1.0
+	google.golang.org/grpc v1.53.0
 	google.golang.org/grpc/examples v0.0.0-20210526223527-2de42fcbbce3 // indirect
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/olivere/elastic.v3 v3.0.75
 	gopkg.in/yaml.v2 v2.4.0
 	gotest.tools v2.2.0+incompatible
