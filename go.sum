@@ -917,8 +917,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/tsenart/deadcode v0.0.0-20160724212837-210d2dc333e9/go.mod h1:q+QjxYvZ+fpjMXqs+XEriussHjSYqeXVnAdSV1tkMYk=
 github.com/ugorji/go v1.1.2/go.mod h1:hnLbHMwcvSihnDhEfx2/BzKp2xb0Y+ErdfYcrs9tkJQ=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
-github.com/ultraio/eos-go v0.9.1-0.20230704022514-cb8db2310f67 h1:D5TPKRASIFiN9OdRwFoGe4xQKcnn9xOxwksZ17HJKbs=
-github.com/ultraio/eos-go v0.9.1-0.20230704022514-cb8db2310f67/go.mod h1:dKlu/HXNPI4I5yD7cITTwzfYLNfVaaFt9Y4VngtnhrY=
+github.com/ultraio/eos-go v0.9.1-0.20230720081855-545522deaa0c h1:MYjAUnw8SQrdFvvMHZtcVoaPmrN6PxQCoMKxA/QcL6U=
+github.com/ultraio/eos-go v0.9.1-0.20230720081855-545522deaa0c/go.mod h1:dKlu/HXNPI4I5yD7cITTwzfYLNfVaaFt9Y4VngtnhrY=
 github.com/unrolled/render v1.0.0 h1:XYtvhA3UkpB7PqkvhUFYmpKD55OudoIeygcfus4vcd4=
 github.com/unrolled/render v1.0.0/go.mod h1:tu82oB5W2ykJRVioYsB+IQKcft7ryBr7w12qMBUPyXg=
 github.com/urfave/negroni v1.0.0 h1:kIimOitoypq34K7TG7DUaJ9kq/N4Ofuwi1sjz0KipXc=

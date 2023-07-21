@@ -113,4 +113,4 @@ replace github.com/ShinyTrinkets/overseer => github.com/dfuse-io/overseer v0.2.1
 // compatibility with 1.14 which is our minimum version. So we enforce a strict version to v1.14.1 now.
 replace github.com/mitchellh/go-testing-interface => github.com/mitchellh/go-testing-interface v1.14.1
 
-replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20230704022514-cb8db2310f67
+replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20230720081855-545522deaa0c
