@@ -6,12 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/jsonpb"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/ecc"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/streamingfast/jsonpb"
 )
 
 func testBlock1() *pbcodec.Block {
@@ -61,7 +61,7 @@ func testBlock1() *pbcodec.Block {
 			Timestamp: blockTimestamp,
 		},
 		UnfilteredTransactions: []*pbcodec.TransactionReceipt{
-			codec.TransactionReceiptToDEOS(receipt),
+			eosio.TransactionReceiptToDEOS(receipt),
 		},
 		UnfilteredImplicitTransactionOps: []*pbcodec.TrxOp{
 			{

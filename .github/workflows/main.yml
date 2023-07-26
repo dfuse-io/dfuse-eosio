@@ -14,15 +14,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-20.04, ubuntu-22.04]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v1
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.14
+          go-version: 1.18
 
       - name: Check out code
         uses: actions/checkout@v3
+
+      - name: Format
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
 
       - name: Cache Go modules
         uses: actions/cache@v2
@@ -32,14 +35,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y go-bindata
+
       - name: Run Unit tests.
         run: go test ./...
 
       - name: Build dfuseeos
         run: go build -o dfuseeos ./cmd/dfuseeos
 
-      # This one might be a bit more complicated... Unsure how this will behave in Github's workflow environment.
-      # - name: Smoke Test
-      #   working-directory: tests
-      #   run: DEBUG=true E2E_TESTS=true go test
-
+#      - name: Run build script
+#        run: ./scripts/build.sh -f -y

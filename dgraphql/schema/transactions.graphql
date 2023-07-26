@@ -146,6 +146,11 @@ type ActionTrace {
   Shorthand for action.json"""
   json: JSON
 
+  """Hex-encoded string representing the return value of the action.
+
+  Shorthand for `act.return_value_hex_data` in `nodeos` traces."""
+  returnValueHexData: String
+
   """Hex-encoded string representing the raw data for the action.
 
   Shorthand for `act.hex_data` in `nodeos` traces."""

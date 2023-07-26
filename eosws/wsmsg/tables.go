@@ -19,9 +19,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/streamingfast/bstream/forkable"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream/forkable"
 )
 
 func init() {

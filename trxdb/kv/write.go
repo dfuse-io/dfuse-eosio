@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
@@ -47,6 +48,9 @@ func (db *DB) purgeSetupAndAttempt(ctx context.Context, s kvdbstore.KVStore, blk
 			}
 		}
 	}
+	/*else {
+		db.logger.Info("store is not purgeable, not setting height")
+	}*/
 	return nil
 }
 
@@ -104,9 +108,9 @@ func (db *DB) putTransactions(ctx context.Context, blk *pbcodec.Block) error {
 			return fmt.Errorf("unable to extract EOS signed transaction from transaction receipt: %w", err)
 		}
 
-		signedTrx := codec.SignedTransactionToDEOS(signedTransaction)
+		signedTrx := eosio.SignedTransactionToDEOS(signedTransaction)
 		pubKeyProto := &pbcodec.PublicKeys{
-			PublicKeys: codec.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
+			PublicKeys: eosio.GetPublicKeysFromSignedTransaction(db.writerChainID, signedTransaction),
 		}
 
 		trxRow := &pbtrxdb.TrxRow{

@@ -17,8 +17,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/streamingfast/validator"
 	"github.com/eoscanada/eos-go/ecc"
+	"github.com/streamingfast/validator"
 	"github.com/thedevsaddam/govalidator"
 	"go.uber.org/zap"
 )

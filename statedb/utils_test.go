@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"testing"
 
-	pbfluxdb "github.com/streamingfast/pbgo/dfuse/fluxdb/v1"
 	"github.com/golang/protobuf/proto"
+	pbfluxdb "github.com/streamingfast/pbgo/dfuse/fluxdb/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

@@ -17,10 +17,10 @@ package codec
 import (
 	"fmt"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/bstream"
+	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 )
 
 // BlockDecoder transforms a `bstream.Block` payload into a proper `deth.Block` value

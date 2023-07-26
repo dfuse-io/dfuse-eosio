@@ -19,12 +19,12 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
-	"github.com/streamingfast/validator"
 	"github.com/gorilla/mux"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/validator"
 )
 
 func GetBlocksHandler(db eosws.DB) http.Handler {

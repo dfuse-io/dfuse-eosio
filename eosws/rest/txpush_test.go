@@ -20,13 +20,13 @@ import (
 
 	"context"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/shutter"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/hub"
+	"github.com/streamingfast/shutter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )

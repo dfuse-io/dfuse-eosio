@@ -308,15 +308,15 @@ func suggestSQEDefaultSuggestions(prefix string) []*mdl.Suggestion {
 	fuzzyTokenSearch := fmt.Sprintf("data.to:%s", prefix)
 
 	return []*mdl.Suggestion{
-		&mdl.Suggestion{Key: accountHistory, Label: accountHistory, Summary: "account_history"},
-		&mdl.Suggestion{Key: signedBy, Label: signedBy, Summary: "signed_by"},
-		&mdl.Suggestion{Key: eosTokenTransfer, Label: eosTokenTransfer, Summary: "eos_token_transfer"},
-		&mdl.Suggestion{Key: fuzzyTokenSearch, Label: fuzzyTokenSearch, Summary: "fuzzy_token_search"},
+		{Key: accountHistory, Label: accountHistory, Summary: "account_history"},
+		{Key: signedBy, Label: signedBy, Summary: "signed_by"},
+		{Key: eosTokenTransfer, Label: eosTokenTransfer, Summary: "eos_token_transfer"},
+		{Key: fuzzyTokenSearch, Label: fuzzyTokenSearch, Summary: "fuzzy_token_search"},
 	}
 }
 
 func suggestSQEPrefixOnly(prefix string) []*mdl.Suggestion {
-	return []*mdl.Suggestion{&mdl.Suggestion{Key: prefix, Label: prefix}}
+	return []*mdl.Suggestion{{Key: prefix, Label: prefix}}
 }
 
 func (completion *defaultCompletion) searchAccountNamesByPrefix(prefix string, limit int) []string {

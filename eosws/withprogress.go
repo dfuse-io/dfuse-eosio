@@ -18,9 +18,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/forkable"
-	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 )
 
 type ProgressHandler struct {

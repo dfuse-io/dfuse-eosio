@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 
-	"github.com/streamingfast/derr"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/logging"
 	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
 	"go.uber.org/zap"

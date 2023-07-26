@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/streamingfast/shutter"
 	"github.com/streamingfast/dlauncher/launcher"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 )
 

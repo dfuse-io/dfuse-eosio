@@ -102,7 +102,7 @@ func (a *Account) migrateTable(table string, sendAction sendActionFunc, endTrans
 		var preActs []*eos.Action
 		var postActs []*eos.Action
 		var exclPrimKey *string
-		for primKey, _ := range tableScope.rows {
+		for primKey := range tableScope.rows {
 			if !hasInjectedFirstRow {
 				exclPrimKey, preActs, postActs, err = tableScope.payerActions(primKey, a.abi, a.logger)
 				if err != nil {

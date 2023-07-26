@@ -21,13 +21,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	abicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/logging"
 	"github.com/graph-gophers/graphql-go"
+	"github.com/streamingfast/derr"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

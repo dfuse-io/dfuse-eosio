@@ -20,10 +20,10 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/streamingfast/derr"
 	_ "github.com/dfuse-io/dfuse-eosio/codec"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
+	"github.com/streamingfast/derr"
 	pb "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/streamingfast/search"
 	searchLive "github.com/streamingfast/search/live"

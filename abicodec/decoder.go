@@ -18,9 +18,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/streamingfast/derr"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )

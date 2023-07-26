@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/streamingfast/bstream"
 	"go.uber.org/zap"
 )
 
@@ -65,7 +65,8 @@ var systemIncludeNOOP = &CELFilter{
 // on the bstream block will return a filtered version of this block.
 //
 // *Important* This method expect that the caller will peform the transformation in lock step, there is no lock
-//             performed by this method. It's the caller responsibility to deal with concurrency issues.
+//
+//	performed by this method. It's the caller responsibility to deal with concurrency issues.
 func (f *BlockFilter) TransformInPlace(blk *bstream.Block) error {
 
 	include := f.IncludeProgram.choose(blk.Number)

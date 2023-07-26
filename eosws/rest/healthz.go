@@ -24,15 +24,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dfuse-io/dfuse-eosio/eosws"
+	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
+	eos "github.com/eoscanada/eos-go"
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/derr"
-	"github.com/dfuse-io/dfuse-eosio/eosws"
-	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/logging"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
-	eos "github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 

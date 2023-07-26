@@ -17,13 +17,13 @@ package eosws
 import (
 	"context"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/forkable"
-	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/bstream/hub"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )

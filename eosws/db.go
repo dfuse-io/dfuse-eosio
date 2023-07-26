@@ -25,14 +25,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	v1 "github.com/dfuse-io/eosws-go/mdl/v1"
-	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/kvdb"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/opaque"
 	"go.uber.org/zap"
 )

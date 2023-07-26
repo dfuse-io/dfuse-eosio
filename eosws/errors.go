@@ -78,6 +78,14 @@ func streamingInvalidBlockMessage(actualBlockNum uint32, requestedStartBlock uin
 	)
 }
 
+// todo add rate limits as response
+func RateLimitTooManyRequests(ctx context.Context) *derr.ErrorResponse {
+	return derr.HTTPTooManyRequestsError(ctx, nil,
+		derr.C("ratelimiter_too_many_requests"),
+		"You exceeded your rate limit.",
+	)
+}
+
 // Database Errors
 
 func DBAccountNotFoundError(ctx context.Context, account string) *derr.ErrorResponse {

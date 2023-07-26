@@ -19,11 +19,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dstore"
 	pbbstream "github.com/streamingfast/pbgo/dfuse/bstream/v1"
-	"github.com/golang/protobuf/proto"
 )
 
 func BlockFromProto(b *pbcodec.Block) (*bstream.Block, error) {

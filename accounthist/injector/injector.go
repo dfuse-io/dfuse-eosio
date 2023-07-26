@@ -12,12 +12,12 @@ import (
 
 	"github.com/dfuse-io/dfuse-eosio/accounthist"
 
-	"github.com/streamingfast/bstream"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/streamingfast/dstore"
-	"github.com/streamingfast/shutter"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/kvdb/store"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 )
 

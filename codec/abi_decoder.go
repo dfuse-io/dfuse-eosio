@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,13 +18,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
+
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/system"
 	"github.com/lytics/ordpool"
 	"github.com/streamingfast/bstream"
 	"go.uber.org/zap"
-	"math"
 )
 
 var mostRecentActiveABI uint64 = math.MaxUint64
@@ -587,11 +588,11 @@ type InjectData struct {
 	Table string `json:"table"`
 }
 type InjectDataRead struct {
-	Data  string `json:"data"`
+	Data string `json:"data"`
 	InjectData
 }
 type InjectDataWrite struct {
-	Data  InjectDataMap `json:"data"`
+	Data InjectDataMap `json:"data"`
 	InjectData
 }
 

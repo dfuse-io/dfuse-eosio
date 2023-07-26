@@ -18,9 +18,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_computeCreationTree_empty(t *testing.T) {
@@ -35,7 +35,7 @@ func Test_computeCreationTree_empty(t *testing.T) {
 
 func Test_computeCreationTree_singleRoot(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
+		{"ROOT", 0},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -45,13 +45,13 @@ func Test_computeCreationTree_singleRoot(t *testing.T) {
 
 func Test_computeCreationTree_singleRoot_oneLevel(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"INLINE", 0},
+		{"ROOT", 0},
+		{"NOTIFY", 0},
+		{"CFA_INLINE", 0},
+		{"INLINE", 0},
+		{"CFA_INLINE", 0},
+		{"NOTIFY", 0},
+		{"INLINE", 0},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -67,16 +67,16 @@ func Test_computeCreationTree_singleRoot_oneLevel(t *testing.T) {
 
 func Test_computeCreationTree_singleRoot_multiLevel_inline(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"NOTIFY", 5},
-		&creationOp{"CFA_INLINE", 5},
-		&creationOp{"INLINE", 5},
+		{"ROOT", 0},
+		{"NOTIFY", 0},
+		{"CFA_INLINE", 0},
+		{"INLINE", 0},
+		{"CFA_INLINE", 0},
+		{"NOTIFY", 0},
+		{"INLINE", 0},
+		{"NOTIFY", 5},
+		{"CFA_INLINE", 5},
+		{"INLINE", 5},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -95,16 +95,16 @@ func Test_computeCreationTree_singleRoot_multiLevel_inline(t *testing.T) {
 
 func Test_computeCreationTree_singleRoot_multiLevel_notify(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"NOTIFY", 2},
-		&creationOp{"CFA_INLINE", 2},
-		&creationOp{"INLINE", 2},
+		{"ROOT", 0},
+		{"NOTIFY", 0},
+		{"CFA_INLINE", 0},
+		{"INLINE", 0},
+		{"CFA_INLINE", 0},
+		{"NOTIFY", 0},
+		{"INLINE", 0},
+		{"NOTIFY", 2},
+		{"CFA_INLINE", 2},
+		{"INLINE", 2},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -123,23 +123,23 @@ func Test_computeCreationTree_singleRoot_multiLevel_notify(t *testing.T) {
 
 func Test_computeCreationTree_singleRoot_multiLevel(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"INLINE", 2},
-		&creationOp{"CFA_INLINE", 2},
-		&creationOp{"NOTIFY", 2},
-		&creationOp{"NOTIFY", 4},
-		&creationOp{"NOTIFY", 8},
-		&creationOp{"NOTIFY", 8},
-		&creationOp{"INLINE", 8},
-		&creationOp{"CFA_INLINE", 8},
-		&creationOp{"NOTIFY", 13},
-		&creationOp{"CFA_INLINE", 13},
-		&creationOp{"NOTIFY", 13},
+		{"ROOT", 0},
+		{"NOTIFY", 0},
+		{"NOTIFY", 0},
+		{"NOTIFY", 0},
+		{"CFA_INLINE", 0},
+		{"INLINE", 0},
+		{"INLINE", 2},
+		{"CFA_INLINE", 2},
+		{"NOTIFY", 2},
+		{"NOTIFY", 4},
+		{"NOTIFY", 8},
+		{"NOTIFY", 8},
+		{"INLINE", 8},
+		{"CFA_INLINE", 8},
+		{"NOTIFY", 13},
+		{"CFA_INLINE", 13},
+		{"NOTIFY", 13},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -165,8 +165,8 @@ func Test_computeCreationTree_singleRoot_multiLevel(t *testing.T) {
 
 func Test_computeCreationTree_multiRoot_allEmpty(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"ROOT", 1},
+		{"ROOT", 0},
+		{"ROOT", 1},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -177,16 +177,16 @@ func Test_computeCreationTree_multiRoot_allEmpty(t *testing.T) {
 
 func Test_computeCreationTree_multiRoot_allSingle(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"ROOT", 4},
-		&creationOp{"INLINE", 4},
-		&creationOp{"ROOT", 6},
-		&creationOp{"NOTIFY", 6},
-		&creationOp{"CFA_INLINE", 6},
-		&creationOp{"INLINE", 6},
+		{"ROOT", 0},
+		{"CFA_INLINE", 0},
+		{"NOTIFY", 0},
+		{"INLINE", 0},
+		{"ROOT", 4},
+		{"INLINE", 4},
+		{"ROOT", 6},
+		{"NOTIFY", 6},
+		{"CFA_INLINE", 6},
+		{"INLINE", 6},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -204,31 +204,31 @@ func Test_computeCreationTree_multiRoot_allSingle(t *testing.T) {
 }
 func Test_computeCreationTree_multiRoot_allMulti(t *testing.T) {
 	ops := []*creationOp{
-		&creationOp{"ROOT", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"NOTIFY", 0},
-		&creationOp{"CFA_INLINE", 0},
-		&creationOp{"INLINE", 0},
-		&creationOp{"INLINE", 2},
-		&creationOp{"CFA_INLINE", 2},
-		&creationOp{"NOTIFY", 2},
-		&creationOp{"NOTIFY", 4},
-		&creationOp{"NOTIFY", 8},
-		&creationOp{"NOTIFY", 8},
-		&creationOp{"INLINE", 8},
-		&creationOp{"CFA_INLINE", 8},
-		&creationOp{"NOTIFY", 13},
-		&creationOp{"CFA_INLINE", 13},
-		&creationOp{"NOTIFY", 13},
-		&creationOp{"ROOT", 17},
-		&creationOp{"NOTIFY", 17},
-		&creationOp{"NOTIFY", 18},
-		&creationOp{"INLINE", 19},
-		&creationOp{"CFA_INLINE", 19},
-		&creationOp{"CFA_INLINE", 21},
-		&creationOp{"NOTIFY", 21},
-		&creationOp{"CFA_INLINE", 21},
+		{"ROOT", 0},
+		{"NOTIFY", 0},
+		{"NOTIFY", 0},
+		{"NOTIFY", 0},
+		{"CFA_INLINE", 0},
+		{"INLINE", 0},
+		{"INLINE", 2},
+		{"CFA_INLINE", 2},
+		{"NOTIFY", 2},
+		{"NOTIFY", 4},
+		{"NOTIFY", 8},
+		{"NOTIFY", 8},
+		{"INLINE", 8},
+		{"CFA_INLINE", 8},
+		{"NOTIFY", 13},
+		{"CFA_INLINE", 13},
+		{"NOTIFY", 13},
+		{"ROOT", 17},
+		{"NOTIFY", 17},
+		{"NOTIFY", 18},
+		{"INLINE", 19},
+		{"CFA_INLINE", 19},
+		{"CFA_INLINE", 21},
+		{"NOTIFY", 21},
+		{"CFA_INLINE", 21},
 	}
 
 	assertCreationTreeForOps(t, ops, `
@@ -262,43 +262,43 @@ func Test_computeCreationTree_multiRoot_allMulti(t *testing.T) {
 
 func Test_toFlatTree(t *testing.T) {
 	root1 := &node{"ROOT", 0, []*node{
-		&node{"NOTIFY", 1, nil},
-		&node{"NOTIFY", 2, []*node{
-			&node{"NOTIFY", 4, nil},
-			&node{"INLINE", 6, []*node{
-				&node{"NOTIFY", 7, nil},
-				&node{"CFA_INLINE", 8, nil},
+		{"NOTIFY", 1, nil},
+		{"NOTIFY", 2, []*node{
+			{"NOTIFY", 4, nil},
+			{"INLINE", 6, []*node{
+				{"NOTIFY", 7, nil},
+				{"CFA_INLINE", 8, nil},
 			}},
-			&node{"CFA_INLINE", 5, nil},
+			{"CFA_INLINE", 5, nil},
 		}},
-		&node{"NOTIFY", 3, nil},
+		{"NOTIFY", 3, nil},
 	}}
 
 	root2 := &node{"ROOT", 9, []*node{
-		&node{"NOTIFY", 10, nil},
-		&node{"NOTIFY", 11, []*node{
-			&node{"NOTIFY", 13, nil},
-			&node{"CFA_INLINE", 14, nil},
+		{"NOTIFY", 10, nil},
+		{"NOTIFY", 11, []*node{
+			{"NOTIFY", 13, nil},
+			{"CFA_INLINE", 14, nil},
 		}},
-		&node{"NOTIFY", 12, nil},
+		{"NOTIFY", 12, nil},
 	}}
 
-	assert.Equal(t, CreationFlatTree{
-		CreationFlatNode{0, -1, 0},
-		CreationFlatNode{1, 0, 1},
-		CreationFlatNode{2, 0, 2},
-		CreationFlatNode{3, 2, 4},
-		CreationFlatNode{4, 2, 6},
-		CreationFlatNode{5, 4, 7},
-		CreationFlatNode{6, 4, 8},
-		CreationFlatNode{7, 2, 5},
-		CreationFlatNode{8, 0, 3},
-		CreationFlatNode{9, -1, 9},
-		CreationFlatNode{10, 9, 10},
-		CreationFlatNode{11, 9, 11},
-		CreationFlatNode{12, 11, 13},
-		CreationFlatNode{13, 11, 14},
-		CreationFlatNode{14, 9, 12},
+	assert.Equal(t, eosio.CreationFlatTree{
+		eosio.CreationFlatNode{0, -1, 0},
+		eosio.CreationFlatNode{1, 0, 1},
+		eosio.CreationFlatNode{2, 0, 2},
+		eosio.CreationFlatNode{3, 2, 4},
+		eosio.CreationFlatNode{4, 2, 6},
+		eosio.CreationFlatNode{5, 4, 7},
+		eosio.CreationFlatNode{6, 4, 8},
+		eosio.CreationFlatNode{7, 2, 5},
+		eosio.CreationFlatNode{8, 0, 3},
+		eosio.CreationFlatNode{9, -1, 9},
+		eosio.CreationFlatNode{10, 9, 10},
+		eosio.CreationFlatNode{11, 9, 11},
+		eosio.CreationFlatNode{12, 11, 13},
+		eosio.CreationFlatNode{13, 11, 14},
+		eosio.CreationFlatNode{14, 9, 12},
 	}, toFlatTree(root1, root2))
 }
 

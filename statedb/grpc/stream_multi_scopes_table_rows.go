@@ -7,9 +7,9 @@ import (
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dhammer"
 	"github.com/streamingfast/logging"
-	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )

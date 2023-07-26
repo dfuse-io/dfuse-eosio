@@ -19,9 +19,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
+	"github.com/streamingfast/derr"
 	"github.com/tidwall/gjson"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -8,8 +8,8 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/document"
 	"github.com/blevesearch/bleve/mapping"
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/search"
 	"go.uber.org/zap"
 )

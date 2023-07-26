@@ -17,18 +17,20 @@ package dgraphql
 import (
 	"fmt"
 
-	"github.com/streamingfast/derr"
 	eosResolver "github.com/dfuse-io/dfuse-eosio/dgraphql/resolvers"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
+	_ "github.com/streamingfast/dauth/authenticator/redis"
+	_ "github.com/streamingfast/dauth/metering/redis"
+	drateLimiter "github.com/streamingfast/dauth/ratelimiter"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/dgraphql"
+	dgraphqlApp "github.com/streamingfast/dgraphql/app/dgraphql"
 	"github.com/streamingfast/dgrpc"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
-	drateLimiter "github.com/streamingfast/dauth/ratelimiter"
-	"github.com/streamingfast/dgraphql"
-	dgraphqlApp "github.com/streamingfast/dgraphql/app/dgraphql"
 	"go.uber.org/zap"
 )
 

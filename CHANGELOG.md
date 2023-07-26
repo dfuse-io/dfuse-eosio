@@ -13,6 +13,7 @@ date.
 
 ### Added
 
+* Added support for EOSIO 2.1.x (requires 2.1.1 to have full data since some data where bogus in 2.1.0)
 * Added support for environment variable `EOSWS_PUSH_V1_OUTPUT=true` that forces push-transaction (guarantee:in-block) to output the same content format as nodeos 2.0.x (with Inlines)
 * Added support for environment variable `DSTORE_S3_BUFFERED_READ=true` that forces reading S3 files (ex: blocks) ahead of processing, useful when S3 provider has trouble keeping long connections alive.
 * Added support for looking up irreversible blocks on blockmeta (when the LIB was stuck for a while) from tokenmeta and trxdb-loader. They now use '--common-blockmeta-addr' flag if available

@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/streamingfast/bstream"
 	"github.com/tidwall/gjson"
 )
 
@@ -357,9 +357,7 @@ func (a *Action) UnmarshalData(into interface{}) error {
 	return json.Unmarshal([]byte(a.JsonData), into)
 }
 
-//
-/// DTrxOp
-//
+// / DTrxOp
 func (op *DTrxOp) IsCreateOperation() bool {
 	return op.Operation == DTrxOp_OPERATION_MODIFY_CREATE ||
 		op.Operation == DTrxOp_OPERATION_CREATE ||

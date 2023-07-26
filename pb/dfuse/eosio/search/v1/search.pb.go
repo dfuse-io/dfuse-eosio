@@ -192,7 +192,9 @@ func init() {
 	proto.RegisterType((*BlockTrxPayload)(nil), "dfuse.eosio.search.v1.BlockTrxPayload")
 }
 
-func init() { proto.RegisterFile("dfuse/eosio/search/v1/search.proto", fileDescriptor_f6416b04c85aeead) }
+func init() {
+	proto.RegisterFile("dfuse/eosio/search/v1/search.proto", fileDescriptor_f6416b04c85aeead)
+}
 
 var fileDescriptor_f6416b04c85aeead = []byte{
 	// 335 bytes of a gzipped FileDescriptorProto

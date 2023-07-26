@@ -48,7 +48,11 @@ export default {
         setcode: "updating contract for account",
         unlinkauth: "unlinking authority",
         updateauth_create: "creating new permission",
-        updateauth_update: "updating permission"
+        updateauth_update: "updating permission",
+        kv_add: "storing a key/value pair",
+        kv_update: "updating a key/value pair",
+        kv_remove: "removing a key/value pair",
+        unknown: "unknown",
       },
       title: "Ram Usage Summary",
       consumed: "<0>{{accountName}}</0> consumed <1>{{bytes}}</1> (now has <2>{{totalBytes}}</2>)",

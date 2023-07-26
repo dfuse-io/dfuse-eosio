@@ -121,8 +121,9 @@ func ForEachTableScopes(ctx context.Context, client StateClient, blockNum uint64
 // was currently at when served the streaming request.
 //
 // **Important** The last irreversible block will always be set but the
-//               up to block value can be `nil`, for example if irreversible
-//               only was set.
+//
+//	up to block value can be `nil`, for example if irreversible
+//	only was set.
 type StreamReference struct {
 	UpToBlock             bstream.BlockRef
 	LastIrreversibleBlock bstream.BlockRef

@@ -1,15 +1,33 @@
 name: Docker Image CI
+run-name: Build image with dfuse-esoio:'${{ github.event.inputs.dfuse-eosio }}' and eosio:'${{ github.event.inputs.eosio }}'
 
 on:
   # Only allows triggering through the Github Workflow UI
   workflow_dispatch:
     inputs:
-      release:
-        description: A release version tag
+      dfuse-eosio:
+        description: Tag from dfuse-eosio
         required: true
+        type: string
       eosio:
-        description: A tag for the eosio release
-        required: true
+        description: Tag from eosio
+        default: 'null'
+        required: false
+        type: string
+      overwrite-dfuse:
+        description: Overwrite existed dfuse Image.
+        default: false
+        type: boolean
+      ubuntu-version:
+        description: Specific Ubuntu version.
+        default: '22.04'
+        type: choice
+        options:
+          - '22.04'
+          - '18.04'
+
+env:
+  DOCKER_IMAGE: eu.gcr.io/dfuse-302310/dfuse-eosio
 
 jobs:
   build:
@@ -17,29 +35,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Set ENV"
+      - name: Set Dfuse Version
         run: |
-          echo "RELEASE_VERSION=${{ github.event.inputs.release }}" >> $GITHUB_ENV
-          echo "EOSIO_VERSION=${{ github.event.inputs.eosio }}" >> $GITHUB_ENV
+          echo "DFUSE_TAG=${{ github.event.inputs.dfuse-eosio }}" >> $GITHUB_ENV
+          echo "UBUNTU_VERSION=${{ github.event.inputs.ubuntu-version }}" >> $GITHUB_ENV
 
-      - name: Checkout
+      - name: Set Nodeos Version
+        if: ${{ github.event.inputs.eosio != 'null' }}
+        run: |
+          echo "EOSIO_TAG=${{ github.event.inputs.eosio }}" >> $GITHUB_ENV
+          echo "DFUSE_NODEOS_TAG=${{ github.event.inputs.dfuse-eosio }}-nodeos${{ github.event.inputs.eosio }}" >> $GITHUB_ENV
+
+      # checkout based on dfuse tag
+      - name: Checkout dfuse-eosio
         uses: actions/checkout@v3
         with:
-          ref: "${{ env.RELEASE_VERSION }}"
+          ref: "${{ env.DFUSE_TAG }}"
 
-      - name: Set outputs
+      # check release commit
+      - name: Update Commit Hash
         run: |
           echo "RELEASE_COMMIT=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
+      # Only download eosio if set
       - name: Download EOSIO Debian package
+        if: ${{ github.event.inputs.eosio != 'null' }}
         uses: Legion2/download-release-action@v2.1.0
         with:
           repository: ultraio/eosio
           tag: '${{ github.event.inputs.eosio }}'
           path: .
-          file:  eosio-${{ env.EOSIO_VERSION }}.deb
+          file:  eosio-${{ env.EOSIO_TAG }}.deb
           token: '${{ secrets.DEVOPS_SECRET }}'
 
+      # gcloud authorization
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
@@ -50,20 +79,34 @@ jobs:
         with:
           project_id: dfuse-302310
 
-      - name: Build Image
-        run: |-
-          docker build . -t eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }} \
-                --build-arg EOSIO_TAG=${{ env.EOSIO_VERSION }} \
-                --build-arg DEB_PKG=eosio-${{ env.EOSIO_VERSION }}.deb \
-                --build-arg VERSION=${{ env.RELEASE_VERSION }} \
-                --build-arg COMMIT=${{ env.RELEASE_COMMIT }}
-
-
+      # docker gcloud config
       - name: Docker config
         run: |
           gcloud auth configure-docker -q
+
+      # Check if dfuse image is existed. Failed if not existed
+      - name: Check Dfuse Image
+        id: dfuse-check
+        continue-on-error: true
+        run: |
+          docker manifest inspect ${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_TAG }}
+
+      # Only build dfuse image if not existed or overwrite is set
+      - name: Build Dfuse Image Without Nodeos
+        if: ${{  (steps.dfuse-check.outcome == 'failure' || github.event.inputs.overwrite-dfuse == 'true') }}
+        run: |
+          docker build -f dfuse.Dockerfile . -t ${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_TAG }} \
+                --build-arg VERSION=${{ env.DFUSE_TAG }} \
+                --build-arg COMMIT=${{ env.RELEASE_COMMIT }} \
+                --build-arg UBUNTU_VERSION=${{ env.UBUNTU_VERSION }}
+          docker push ${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_TAG }}
+      
+      # Only build dfuse with nodeos if eosio is set and dfuse image are exist
+      - name: Build Dfuse Image With Nodeos
+        if: ${{ github.event.inputs.eosio != 'null' }}
+        run: |
+          docker build -f nodeos.Dockerfile . -t ${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_NODEOS_TAG }} \
+                --build-arg DFUSE_IMAGE=${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_TAG }} \
+                --build-arg DEB_PKG=eosio-${{ env.EOSIO_TAG }}.deb
+          docker push ${{ env.DOCKER_IMAGE }}:${{ env.DFUSE_NODEOS_TAG }}
           
-      # Push image to Google Container Registry
-      - name: Push Image
-        run: |-
-          docker push eu.gcr.io/dfuse-302310/dfuse-eosio:${{ env.RELEASE_VERSION }}

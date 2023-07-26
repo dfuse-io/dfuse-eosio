@@ -1,13 +1,12 @@
-# EOSIO on StreamingFast
-[![reference](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=flat-square)](https://pkg.go.dev/github.com/dfuse-io/dfuse-eosio)
+# dfuse for leap
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-All **[dfuse.io services](https://dfuse.io/technology)** for EOSIO,
-running from your laptop or from a container, released as a single
-statically linked binary: `dfuseeos`.
+This is a fork of [dfuse for EOSIO](https://github.com/dfuse-io/dfuse-eosio), including basic support for running on the
+leap blockchain software. 
 
-See the general [dfuse repository](https://github.com/dfuse-io/dfuse)
-for other blockchain protocols implementations.
+_**Please note** that this fork does not (yet) implement new features added with leap 3.1. That means it will not include 
+decoded action results in dgraphql, websocket or rest endpoints. But it enables the current feature set of dfuse on the
+updated leap 3.1 code._
 
 ## Getting started
 
@@ -23,21 +22,13 @@ development chain by also managing the block producing node for you.
 ### Operating System
 * Linux or macOS (no Windows support for now, should work through WSL2 (**untested**))
 
-### dfuse Instrumented nodeos (deep-mind)
-* See [DEPENDENCIES.md](DEPENDENCIES.md) for instructions on how to get an instrumented `nodeos` binary.
-
 ## Installing
-
-### From a pre-built release
-
-* Download a tarball from the [GitHub Releases Tab](https://github.com/dfuse-io/dfuse-eosio/releases).
-* Put the binary `dfuseeos` in your `PATH`.
 
 ### From source
 
 Build requirements:
 * `Git`
-* `Go` 1.14 or higher ([installation](https://golang.org/doc/install#install))
+* `Go` 1.18 or higher ([installation](https://golang.org/doc/install#install))
 * `yarn` 1.15 or higher ([installation](https://classic.yarnpkg.com/en/docs/install))
 
 ```bash
@@ -93,12 +84,12 @@ If you chose to sync to an existing chain, only the mindreader node will launch.
 * See the following issue about the complexity of [syncing a large chain](https://github.com/dfuse-io/dfuse-eosio/issues/26)
 
 You should also take a look at our Docs:
-* [System Admin Guide](https://docs.dfuse.io/eosio/admin-guide/)
-* [Large Chains Preparation](https://docs.dfuse.io/eosio/admin-guide/large-chains-preparation/)
+* [System Admin Guide](https://docs.dfuse.eosnation.io/eosio/admin-guide/)
+* [Large Chains Preparation](https://docs.dfuse.eosnation.io/eosio/admin-guide/large-chains-preparation/)
 
 ## Filtering
 
-* See [Filtering](https://docs.dfuse.io/eosio/admin-guide/filtering/)
+* See [Filtering](https://docs.dfuse.eosnation.io/eosio/admin-guide/filtering/)
 
 ## Overview - Repository Map
 
@@ -137,5 +128,5 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our Code of Conduc
 
 ## References
 
-- [dfuse Docs](https://docs.dfuse.io)
-- [dfuse on Telegram](https://t.me/dfuseAPI) - Community & Team Support
+- [dfuse Docs](https://docs.dfuse.eosnation.io)
+- [dfuse on Telegram](https://t.me/dfusece) - Community & Team Support

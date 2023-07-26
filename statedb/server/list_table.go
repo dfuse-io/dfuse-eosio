@@ -22,8 +22,8 @@ import (
 
 	"github.com/eoscanada/eos-go"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/logging"
 	"github.com/streamingfast/validator"
 	"go.uber.org/zap"

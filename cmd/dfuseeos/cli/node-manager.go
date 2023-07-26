@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/node-manager/superviser"
-	"github.com/streamingfast/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/streamingfast/dlauncher/launcher"
+	"github.com/streamingfast/logging"
 	nodeManager "github.com/streamingfast/node-manager"
 	nodeManagerApp "github.com/streamingfast/node-manager/app/node_manager"
 	"github.com/streamingfast/node-manager/metrics"

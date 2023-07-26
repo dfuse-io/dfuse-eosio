@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dgraphql"
 	commonTypes "github.com/streamingfast/dgraphql/types"
 	"github.com/streamingfast/dmetering"
@@ -389,9 +389,9 @@ func (r *Root) QueryTokenBalances(ctx context.Context, args *TokenBalancesReques
 	return newAccountBalanceConnection(edges, pageInfo, newBlockRef(resp.AtBlockId, resp.AtBlockNum)), nil
 }
 
-//---------------------------
+// ---------------------------
 // Token Connection
-//----------------------------
+// ----------------------------
 type TokenConnection struct {
 	Edges    []*TokenEdge
 	PageInfo *PageInfo
@@ -414,9 +414,9 @@ func newTokenConnection(edges []*TokenEdge, pageInfo *PageInfo, blockRef *BlockR
 	}
 }
 
-//---------------------------
+// ---------------------------
 // Token Edge
-//----------------------------
+// ----------------------------
 type TokenEdge struct {
 	cursor string
 	node   *Token
@@ -432,9 +432,9 @@ func newTokenEdge(node *Token, cursor string) *TokenEdge {
 func (e *TokenEdge) Cursor() string { return e.cursor }
 func (e *TokenEdge) Node() *Token   { return e.node }
 
-//----------------------------
+// ----------------------------
 // BlockRef
-//----------------------------
+// ----------------------------
 type BlockRef struct {
 	blk bstream.BlockRef
 }
@@ -457,9 +457,9 @@ func (b *BlockRef) Id() string {
 	return ""
 }
 
-//----------------------------
+// ----------------------------
 // Token
-//----------------------------
+// ----------------------------
 type Token struct {
 	t *pbtokenmeta.Token
 }
@@ -482,9 +482,9 @@ func (t *Token) TotalSupply(args *AssetArgs) string {
 	return assetToString(t.t.TotalSupply, t.t.Precision, t.t.Symbol, args)
 }
 
-//---------------------------
+// ---------------------------
 // Account Balance Connection
-//----------------------------
+// ----------------------------
 type AccountBalanceConnection struct {
 	Edges    []*AccountBalanceEdge
 	PageInfo *PageInfo
@@ -507,9 +507,9 @@ func newAccountBalanceConnection(edges []*AccountBalanceEdge, pageInfo *PageInfo
 	}
 }
 
-//---------------------------
+// ---------------------------
 // Account Balance Edge
-//----------------------------
+// ----------------------------
 type AccountBalanceEdge struct {
 	cursor string
 	node   *AccountBalance
@@ -525,9 +525,9 @@ func newAccountBalanceEdge(node *AccountBalance, cursor string) *AccountBalanceE
 func (e *AccountBalanceEdge) Cursor() string        { return e.cursor }
 func (e *AccountBalanceEdge) Node() *AccountBalance { return e.node }
 
-//----------------------------
+// ----------------------------
 // Account Balance
-//----------------------------
+// ----------------------------
 type AccountBalance struct {
 	a *pbtokenmeta.AccountBalance
 }
@@ -547,9 +547,9 @@ func (a *AccountBalance) Balance(args *AssetArgs) string {
 	return assetToString(a.a.Amount, a.a.Precision, a.a.Symbol, args)
 }
 
-//----------------------------
+// ----------------------------
 // EOS Token Collection
-//----------------------------
+// ----------------------------
 type PagineableTokens []*pbtokenmeta.Token
 
 func (e PagineableTokens) IsEqual(index int, key string) bool {

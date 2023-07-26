@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/streamingfast/logging"
 	"github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

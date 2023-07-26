@@ -21,10 +21,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"

@@ -18,16 +18,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/grpc"
 	"github.com/dfuse-io/dfuse-eosio/statedb/metrics"
 	"github.com/dfuse-io/dfuse-eosio/statedb/server"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dmetrics"
-	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	"github.com/streamingfast/fluxdb"
 	appFluxdb "github.com/streamingfast/fluxdb/app/fluxdb"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	"go.uber.org/zap"
 )
 

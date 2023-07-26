@@ -18,15 +18,14 @@ package eosws
 import (
 	"context"
 	"fmt"
+	drateLimiter "github.com/streamingfast/dauth/ratelimiter"
+	"github.com/streamingfast/derr"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/blockstream"
-	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
@@ -34,8 +33,20 @@ import (
 	stateHelper "github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
+	"github.com/eoscanada/eos-go"
+	"github.com/gorilla/mux"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/blockstream"
+	"github.com/streamingfast/bstream/hub"
+	"github.com/streamingfast/dauth/authenticator"
+	dauthMiddleware "github.com/streamingfast/dauth/authenticator/middleware"
+	_ "github.com/streamingfast/dauth/authenticator/null" // auth plugin
+	_ "github.com/streamingfast/dauth/authenticator/redis"
+	_ "github.com/streamingfast/dauth/metering/redis"
+	_ "github.com/streamingfast/dauth/ratelimiter/null" // ratelimiter plugin
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dipp"
+	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/logging"
@@ -43,11 +54,6 @@ import (
 	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/streamingfast/shutter"
-	"github.com/eoscanada/eos-go"
-	"github.com/gorilla/mux"
-	"github.com/streamingfast/dauth/authenticator"
-	dauthMiddleware "github.com/streamingfast/dauth/authenticator/middleware"
-	"github.com/streamingfast/dmetering"
 	"go.uber.org/zap"
 )
 
@@ -72,6 +78,7 @@ type Config struct {
 
 	MeteringPlugin           string
 	AuthPlugin               string
+	RatelimiterPlugin        string
 	UseOpencensusStackdriver bool
 
 	ChainCoreSymbol string
@@ -100,6 +107,11 @@ type App struct {
 	*shutter.Shutter
 	Config  *Config
 	Modules *Modules
+}
+
+func init() {
+	services := []string{"stream", "rest", "state"}
+	drateLimiter.RegisterServices(services)
 }
 
 // Deprecated: The features in the eosws package will be moved to other packages like Dgraphql
@@ -132,6 +144,9 @@ func (a *App) Run() error {
 		apiURLStr = "http://" + apiURLStr
 	}
 	api := eos.New(apiURLStr)
+
+	rateLimiter, err := drateLimiter.New(a.Config.RatelimiterPlugin)
+	derr.Check("unable to initialize rate limiter", err)
 
 	var extraAPIs []*eos.API
 	for _, extraAPIURL := range a.Config.NodeosRPCPushExtraEndpoints {
@@ -282,6 +297,7 @@ func (a *App) Run() error {
 	authMiddleware := dauthMiddleware.NewAuthMiddleware(auth, eosws.DfuseErrorHandler).Handler
 	corsMiddleware := eosws.NewCORSMiddleware()
 	compressionMiddleware := mux.MiddlewareFunc(eosws.CompressionMiddleware)
+	rateLimiterMiddleware := eosws.NewRateLimiterMiddleware(rateLimiter).Handler
 	hasEosqTierMiddleware := eosws.NewAuthFeatureMiddleware(func(ctx context.Context, credentials authenticator.Credentials) error {
 		type authTier interface {
 			AuthenticatedTier() string
@@ -422,11 +438,13 @@ func (a *App) Run() error {
 
 	/// WebSocket endpoints
 	wsRouter.Use(authMiddleware)
+	wsRouter.Use(rateLimiterMiddleware)
 	wsRouter.Path("/v1/stream").Handler(wsHandler)
 
 	/// Primary REST API endpoints
 	restRouter.Use(compressionMiddleware)
 	restRouter.Use(authMiddleware)
+	restRouter.Use(rateLimiterMiddleware)
 	restRouter.Use(eosws.RESTTrackingMiddleware)
 	restRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
@@ -448,6 +466,7 @@ func (a *App) Run() error {
 	// FluxDB (Chain State) REST API endpoints
 	statedbRestRouter.Use(compressionMiddleware)
 	statedbRestRouter.Use(authMiddleware)
+	statedbRestRouter.Use(rateLimiterMiddleware)
 	statedbRestRouter.Use(eosws.RESTTrackingMiddleware)
 	statedbRestRouter.Use(dipp.NewProofMiddlewareFunc(a.Config.DataIntegrityProofSecret))
 	//////////////////////////////////////////////////////////////////////
@@ -478,6 +497,7 @@ func (a *App) Run() error {
 	/// Rest routes (Eosq accessible only)
 	eosqRestRouter.Use(compressionMiddleware)
 	eosqRestRouter.Use(authMiddleware)
+	eosqRestRouter.Use(rateLimiterMiddleware)
 	eosqRestRouter.Use(hasEosqTierMiddleware)
 	eosqRestRouter.Use(eosws.RESTTrackingMiddleware)
 

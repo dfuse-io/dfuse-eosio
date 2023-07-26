@@ -18,8 +18,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/fluxdb"
 	"go.uber.org/zap"
 )

@@ -26,9 +26,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/forkable"
-	"github.com/streamingfast/bstream/hub"
 	"github.com/dfuse-io/dfuse-eosio/codec"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
@@ -36,6 +33,9 @@ import (
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/eoserr"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )
@@ -157,6 +157,7 @@ func isValidJSON(payload []byte) bool {
 
 func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	guarantee := r.Header.Get("X-Eos-Push-Guarantee")
+	pushOutput := r.Header.Get("X-Eos-Push-Guarantee-Output-Inline-Traces")
 
 	ctx := r.Context()
 
@@ -225,6 +226,11 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		checkHTTPError(fmt.Errorf(msg), msg, eoserr.ErrUnhandledException, w)
 		return
 	}
+
+	if os.Getenv("DFUSE_LOG_HEADER") == "true" {
+		zlog.Info("logging header", zap.String("X-Eos-Push-Guarantee", guarantee), zap.String("X-Eos-Push-Guarantee-Output-Inline-Traces", pushOutput))
+	}
+
 	metrics.IncListeners("push_transaction")
 	metrics.PushTrxCount.Inc(normalizedGuarantee)
 	defer metrics.CurrentListeners.Dec("push_transaction")
@@ -334,7 +340,7 @@ func (t *TxPusher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			blockID := trxTrace.ProducerBlockId
 
 			var processed json.RawMessage
-			if os.Getenv("EOSWS_PUSH_V1_OUTPUT") == "true" {
+			if pushOutput == "true" {
 				v1tr, err := mdl.ToV1TransactionTrace(trxTrace)
 				if checkHTTPError(err, "cannot marshal response", eoserr.ErrUnhandledException, w) {
 					return
@@ -391,7 +397,7 @@ func writeDetailedAPIError(err error, msg string, errorCode int, errorName, erro
 	apiError.ErrorStruct.Name = errorName
 	apiError.ErrorStruct.What = errorWhat
 	apiError.ErrorStruct.Details = []eos.APIErrorDetail{
-		eos.APIErrorDetail{
+		{
 			File:       "",
 			LineNumber: 0,
 			Message:    detailMessage,

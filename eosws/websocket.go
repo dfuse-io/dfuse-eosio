@@ -20,13 +20,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/streamingfast/bstream/hub"
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
-	"github.com/streamingfast/logging"
 	"github.com/gorilla/websocket"
+	"github.com/streamingfast/bstream/hub"
 	"github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/logging"
 	"github.com/teris-io/shortid"
 	"go.uber.org/zap"
 )

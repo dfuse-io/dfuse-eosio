@@ -19,13 +19,13 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/forkable"
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
 	"github.com/dfuse-io/dfuse-eosio/statedb/server"
 	"github.com/gavv/httpexpect/v2"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
 	"github.com/streamingfast/fluxdb"
 	"github.com/stretchr/testify/require"
 )

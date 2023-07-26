@@ -18,16 +18,18 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	rateLimiter "github.com/streamingfast/dauth/ratelimiter"
 	"net/http"
+	"strings"
 
 	stackdriverPropagation "contrib.go.opencensus.io/exporter/stackdriver/propagation"
-	"github.com/streamingfast/derr"
-	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/eoscanada/eos-go/eoserr"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/streamingfast/dauth/authenticator"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/logging"
 	"go.opencensus.io/plugin/ochttp"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
@@ -37,6 +39,10 @@ type AuthFeatureChecker = func(ctx context.Context, credentials authenticator.Cr
 
 type AuthFeatureMiddleware struct {
 	checker AuthFeatureChecker
+}
+
+type RateLimiterMiddleware struct {
+	rateLimiter rateLimiter.RateLimiter
 }
 
 func CompressionMiddleware(next http.Handler) http.Handler {
@@ -126,6 +132,38 @@ func (middleware *AuthFeatureMiddleware) Handler(next http.Handler) http.Handler
 		err := middleware.checker(ctx, credentials)
 		if err != nil {
 			derr.WriteError(ctx, w, "request not authorized to perform this action", err)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func NewRateLimiterMiddleware(rateLimiter rateLimiter.RateLimiter) *RateLimiterMiddleware {
+	return &RateLimiterMiddleware{
+		rateLimiter: rateLimiter,
+	}
+}
+
+func (middleware *RateLimiterMiddleware) Handler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		credentials := authenticator.GetCredentials(ctx)
+		if credentials == nil {
+			derr.WriteError(ctx, w, "credentials unavailable from context but should have been", derr.UnexpectedError(ctx, nil))
+			return
+		}
+
+		method := "rest"
+
+		if strings.Contains(r.URL.Path, "/v1/stream") {
+			method = "eosws"
+		} else if strings.Contains(r.URL.Path, "/v0/state") {
+			method = "state"
+		}
+
+		if !middleware.rateLimiter.Gate(credentials.GetUserID(), method) {
+			derr.WriteError(ctx, w, "request not authorized to perform this action", RateLimitTooManyRequests(ctx))
 			return
 		}
 

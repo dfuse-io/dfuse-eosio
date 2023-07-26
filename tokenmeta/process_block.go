@@ -3,10 +3,10 @@ package tokenmeta
 import (
 	"encoding/hex"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	"go.uber.org/zap"
 )
 

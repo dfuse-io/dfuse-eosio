@@ -6,8 +6,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	searchclient "github.com/dfuse-io/dfuse-eosio/search-client"
+	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/logging"
 	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"

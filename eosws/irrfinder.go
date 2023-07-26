@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/streamingfast/derr"
-	"github.com/streamingfast/logging"
 	"github.com/streamingfast/kvdb"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

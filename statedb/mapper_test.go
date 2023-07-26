@@ -20,10 +20,10 @@ import (
 
 	ct "github.com/dfuse-io/dfuse-eosio/codec/testing"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/jsonpb"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
 	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/jsonpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -132,7 +132,7 @@ func TestBlockMapper(t *testing.T) {
 				ct.ActionTraceSetABI(t, "eosio", validABI),
 			)),
 			expectedEntries: []string{
-				`abi:eosio:fffffffffffffffe => {"rawAbi":"000000000000000000"}`,
+				`abi:eosio:fffffffffffffffe => {"rawAbi":"00000000000000000000"}`,
 			},
 		},
 		{

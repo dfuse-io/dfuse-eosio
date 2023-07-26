@@ -17,8 +17,8 @@ package eosws
 import (
 	"context"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
+	"github.com/streamingfast/derr"
 )
 
 type Emitter interface {

@@ -10,8 +10,8 @@ import (
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
-	"github.com/streamingfast/dhammer"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/dhammer"
 	"go.uber.org/zap"
 )
 

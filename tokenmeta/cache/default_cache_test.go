@@ -3,9 +3,9 @@ package cache
 import (
 	"testing"
 
-	"github.com/streamingfast/bstream"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -479,7 +479,7 @@ func TestDefaultCache_IsTokenContract(t *testing.T) {
 			name:     "contract is cached",
 			contract: eos.AccountName("eosio.token"),
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{},
+				eos.AccountName("eosio.token"): {},
 			},
 			expectValue: true,
 		},
@@ -508,7 +508,7 @@ func TestDefaultCache_hasSymbolForContract(t *testing.T) {
 			contract: eos.AccountName("eosio.token"),
 			symbol:   "EOS",
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol: "EOS",
 					},
@@ -526,7 +526,7 @@ func TestDefaultCache_hasSymbolForContract(t *testing.T) {
 			name:     "contract exists but symbol does not exists",
 			contract: eos.AccountName("eosio.token"),
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol: "WAX",
 					},
@@ -566,7 +566,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol: "EOS",
 					},
@@ -587,7 +587,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -605,7 +605,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 0,
@@ -631,7 +631,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -664,12 +664,12 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{},
+				eos.AccountName("eosio.token"): {},
 			},
 			balances:       map[eos.AccountName]map[eos.AccountName][]*OwnedAsset{},
 			expectBalances: map[eos.AccountName]map[eos.AccountName][]*OwnedAsset{},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{},
+				eos.AccountName("eosio.token"): {},
 			},
 			expectError: true,
 		},
@@ -683,7 +683,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -717,7 +717,7 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -735,10 +735,10 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{Symbol: "EOS", Holders: 1},
 				},
-				eos.AccountName("eidosonecoin"): []*pbtokenmeta.Token{
+				eos.AccountName("eidosonecoin"): {
 					{Symbol: "EOS", Holders: 1},
 				},
 			},
@@ -791,10 +791,10 @@ func TestDefaultCache_setBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{Symbol: "EOS", Holders: 1},
 				},
-				eos.AccountName("eidosonecoin"): []*pbtokenmeta.Token{
+				eos.AccountName("eidosonecoin"): {
 					{Symbol: "EOS", Holders: 1},
 				},
 			},
@@ -840,7 +840,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -864,7 +864,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				"eosio.token": {},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 0,
@@ -882,7 +882,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -927,7 +927,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 0,
@@ -949,7 +949,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -983,7 +983,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1002,13 +1002,13 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
 					},
 				},
-				eos.AccountName("eidosonecoin"): []*pbtokenmeta.Token{
+				eos.AccountName("eidosonecoin"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1054,13 +1054,13 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				"eidosonecoin": {},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
 					},
 				},
-				eos.AccountName("eidosonecoin"): []*pbtokenmeta.Token{
+				eos.AccountName("eidosonecoin"): {
 					{
 						Symbol:  "EOS",
 						Holders: 0,
@@ -1078,7 +1078,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1112,7 +1112,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1131,7 +1131,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1165,7 +1165,7 @@ func TestDefaultCache_removeBalance(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Symbol:  "EOS",
 						Holders: 1,
@@ -1215,7 +1215,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1238,7 +1238,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				TotalSupply:   uint64(biggerAsset.Amount),
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1251,7 +1251,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1275,7 +1275,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				TotalSupply:   uint64(biggerAsset.Amount),
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1288,7 +1288,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1321,7 +1321,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				TotalSupply:   uint64(biggerAsset.Amount),
 			},
 			tokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1334,7 +1334,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 				},
 			},
 			expectTokens: map[eos.AccountName][]*pbtokenmeta.Token{
-				eos.AccountName("eidosonecoin"): []*pbtokenmeta.Token{
+				eos.AccountName("eidosonecoin"): {
 					{
 						Contract:      "eidosonecoin",
 						Symbol:        "EIDOS",
@@ -1345,7 +1345,7 @@ func TestDefaultCache_setToken(t *testing.T) {
 						Holders:       0,
 					},
 				},
-				eos.AccountName("eosio.token"): []*pbtokenmeta.Token{
+				eos.AccountName("eosio.token"): {
 					{
 						Contract:      "eosio.token",
 						Symbol:        "EOS",
@@ -1405,13 +1405,13 @@ func TestDefaultCache_Stake(t *testing.T) {
 					TotalNet: 17000,
 					TotalCpu: 28000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  10000,
 							Cpu:  15000,
 						},
-						eos.AccountName("b3"): &EOSStakeEntry{
+						eos.AccountName("b3"): {
 							To:   "b3",
 							From: "b1",
 							Net:  7000,
@@ -1423,7 +1423,7 @@ func TestDefaultCache_Stake(t *testing.T) {
 					TotalNet: 20000,
 					TotalCpu: 25000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b2",
 							Net:  20000,
@@ -1460,7 +1460,7 @@ func TestDefaultCache_Stake(t *testing.T) {
 					TotalNet: 0,
 					TotalCpu: 13000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  0,
@@ -1472,7 +1472,7 @@ func TestDefaultCache_Stake(t *testing.T) {
 					TotalNet: 20000,
 					TotalCpu: 25000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b2",
 							Net:  20000,
@@ -1513,13 +1513,13 @@ func TestDefaultCache_getStakeForAccount(t *testing.T) {
 					TotalNet: 1700,
 					TotalCpu: 2800,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  10000,
 							Cpu:  15000,
 						},
-						eos.AccountName("b3"): &EOSStakeEntry{
+						eos.AccountName("b3"): {
 							To:   "b3",
 							From: "b1",
 							Net:  7000,
@@ -1531,7 +1531,7 @@ func TestDefaultCache_getStakeForAccount(t *testing.T) {
 					TotalNet: 20000,
 					TotalCpu: 25000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b2",
 							Net:  20000,
@@ -1574,7 +1574,7 @@ func TestDefaultCache_setStake(t *testing.T) {
 					TotalNet: 1200,
 					TotalCpu: 2400,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b1",
 							Net:  1200,
@@ -1597,7 +1597,7 @@ func TestDefaultCache_setStake(t *testing.T) {
 					TotalNet: 1200,
 					TotalCpu: 2400,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b1",
 							Net:  1200,
@@ -1611,13 +1611,13 @@ func TestDefaultCache_setStake(t *testing.T) {
 					TotalNet: 71200,
 					TotalCpu: 142400,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b2"): &EOSStakeEntry{
+						eos.AccountName("b2"): {
 							To:   "b2",
 							From: "b1",
 							Net:  1200,
 							Cpu:  2400,
 						},
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  70000,
@@ -1640,7 +1640,7 @@ func TestDefaultCache_setStake(t *testing.T) {
 					TotalNet: 1200,
 					TotalCpu: 2400,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  1200,
@@ -1654,7 +1654,7 @@ func TestDefaultCache_setStake(t *testing.T) {
 					TotalNet: 70000,
 					TotalCpu: 140000,
 					Entries: map[eos.AccountName]*EOSStakeEntry{
-						eos.AccountName("b1"): &EOSStakeEntry{
+						eos.AccountName("b1"): {
 							To:   "b1",
 							From: "b1",
 							Net:  70000,

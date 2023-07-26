@@ -26,13 +26,13 @@ import (
 
 func TestSort(t *testing.T) {
 	evs := []*TransactionEvent{
-		&TransactionEvent{Id: "trx1", Irreversible: false},
-		&TransactionEvent{Id: "trx2", Irreversible: true},
-		&TransactionEvent{Id: "trx3", Irreversible: false},
-		&TransactionEvent{Id: "trx4", Irreversible: true},
-		&TransactionEvent{Id: "trx5", Irreversible: false},
-		&TransactionEvent{Id: "trx6", Irreversible: true},
-		&TransactionEvent{Id: "trx7", Irreversible: true},
+		{Id: "trx1", Irreversible: false},
+		{Id: "trx2", Irreversible: true},
+		{Id: "trx3", Irreversible: false},
+		{Id: "trx4", Irreversible: true},
+		{Id: "trx5", Irreversible: false},
+		{Id: "trx6", Irreversible: true},
+		{Id: "trx7", Irreversible: true},
 	}
 
 	evs = sortEvents(evs)

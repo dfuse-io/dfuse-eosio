@@ -3,11 +3,11 @@ package search
 import (
 	"strings"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
-	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/streamingfast/bstream"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 )
 
 type SearchMatch struct {

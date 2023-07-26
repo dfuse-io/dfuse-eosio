@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/streamingfast/bstream"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/fluxdb"
 	"github.com/stretchr/testify/require"
 )

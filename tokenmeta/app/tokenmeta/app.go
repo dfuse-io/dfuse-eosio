@@ -26,11 +26,11 @@ import (
 	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dmetrics"
 
-	"github.com/streamingfast/derr"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dstore"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"

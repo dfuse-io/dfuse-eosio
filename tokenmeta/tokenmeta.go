@@ -6,14 +6,14 @@ import (
 
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 
-	"github.com/streamingfast/bstream"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/tokenmeta/cache"
+	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
 	"github.com/streamingfast/shutter"
-	"github.com/eoscanada/eos-go"
 	"go.uber.org/zap"
 )
 

@@ -124,7 +124,9 @@ func init() {
 	proto.RegisterType((*StreamBlockResponse)(nil), "dfuse.eosio.funnel.v1.StreamBlockResponse")
 }
 
-func init() { proto.RegisterFile("dfuse/eosio/funnel/v1/funnel.proto", fileDescriptor_477a415e0c40d59c) }
+func init() {
+	proto.RegisterFile("dfuse/eosio/funnel/v1/funnel.proto", fileDescriptor_477a415e0c40d59c)
+}
 
 var fileDescriptor_477a415e0c40d59c = []byte{
 	// 268 bytes of a gzipped FileDescriptorProto
@@ -149,11 +151,11 @@ var fileDescriptor_477a415e0c40d59c = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConn
+var _ grpc.ClientConnInterface
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion4
+const _ = grpc.SupportPackageIsVersion6
 
 // FunnelClient is the client API for Funnel service.
 //
@@ -163,10 +165,10 @@ type FunnelClient interface {
 }
 
 type funnelClient struct {
-	cc *grpc.ClientConn
+	cc grpc.ClientConnInterface
 }
 
-func NewFunnelClient(cc *grpc.ClientConn) FunnelClient {
+func NewFunnelClient(cc grpc.ClientConnInterface) FunnelClient {
 	return &funnelClient{cc}
 }
 

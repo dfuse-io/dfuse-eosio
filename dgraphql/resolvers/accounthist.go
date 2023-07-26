@@ -6,15 +6,15 @@ import (
 	"io"
 	"time"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/streamingfast/logging"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/proto"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/opaque"
 	"go.uber.org/zap"
 )

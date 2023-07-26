@@ -21,10 +21,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	trxdbloader "github.com/dfuse-io/dfuse-eosio/trxdb-loader"
 	"github.com/dfuse-io/dfuse-eosio/trxdb-loader/metrics"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dmetrics"
 	"github.com/streamingfast/dstore"
 	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"

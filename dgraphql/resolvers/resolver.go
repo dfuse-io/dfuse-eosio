@@ -26,6 +26,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/dfuse-io/dfuse-eosio/codec"
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	"github.com/dfuse-io/dfuse-eosio/dgraphql/types"
 	pbabicodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/abicodec/v1"
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
@@ -33,10 +34,6 @@ import (
 	pbsearcheos "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/search/v1"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
-	"github.com/streamingfast/dhammer"
-	"github.com/streamingfast/logging"
-	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
-	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/graph-gophers/graphql-go"
@@ -44,8 +41,12 @@ import (
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
+	"github.com/streamingfast/dhammer"
 	"github.com/streamingfast/dmetering"
+	"github.com/streamingfast/logging"
 	"github.com/streamingfast/opaque"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	pbsearch "github.com/streamingfast/pbgo/dfuse/search/v1"
 	"go.uber.org/zap"
 )
 
@@ -873,7 +874,7 @@ func (t BlockHeader) NewProducers() (out *ProducerSchedule, err error) {
 		}
 
 		if extension != nil {
-			return &ProducerSchedule{s: codec.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
+			return &ProducerSchedule{s: eosio.ProducerAuthorityScheduleToDEOS(&extension.ProducerAuthoritySchedule)}, nil
 		}
 
 		// We really don't have any schedule change for this
@@ -1014,9 +1015,17 @@ func (t *ActionTrace) Data() *commonTypes.JSON                 { return t.Action
 func (t *ActionTrace) JSON() *commonTypes.JSON                 { return t.Action().JSON() }
 func (t *ActionTrace) HexData() string                         { return t.Action().HexData() }
 func (t *ActionTrace) TrxID() string                           { return t.actionTrace.TransactionId }
-func (t *ActionTrace) BlockNum() types.Uint64                  { return types.Uint64(t.actionTrace.BlockNum) }
-func (t *ActionTrace) BlockID() string                         { return t.actionTrace.ProducerBlockId }
-func (t *ActionTrace) BlockTime() graphql.Time                 { return toTime(t.actionTrace.BlockTime) }
+func (t *ActionTrace) ReturnValueHexData() *string {
+	if len(t.actionTrace.ReturnValue) == 0 {
+		return nil
+	} else {
+		res := hex.EncodeToString(t.actionTrace.ReturnValue)
+		return &res
+	}
+}
+func (t *ActionTrace) BlockNum() types.Uint64  { return types.Uint64(t.actionTrace.BlockNum) }
+func (t *ActionTrace) BlockID() string         { return t.actionTrace.ProducerBlockId }
+func (t *ActionTrace) BlockTime() graphql.Time { return toTime(t.actionTrace.BlockTime) }
 
 func (t *ActionTrace) Console() string       { return t.actionTrace.Console }
 func (t *ActionTrace) ContextFree() bool     { return t.actionTrace.ContextFree }

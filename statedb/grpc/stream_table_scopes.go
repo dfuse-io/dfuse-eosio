@@ -4,11 +4,11 @@ import (
 	"context"
 	"sort"
 
-	"github.com/streamingfast/derr"
 	pbstatedb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/statedb/v1"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/streamingfast/logging"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 )

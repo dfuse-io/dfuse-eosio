@@ -17,8 +17,8 @@ package apiproxy
 import (
 	"fmt"
 
-	"github.com/streamingfast/shutter"
 	"github.com/streamingfast/dlauncher/launcher"
+	"github.com/streamingfast/shutter"
 )
 
 type Config struct {

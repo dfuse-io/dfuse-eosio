@@ -18,9 +18,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/trxdb"
 	"github.com/streamingfast/blockmeta"
+	"github.com/streamingfast/bstream"
 	"go.uber.org/zap"
 )
 

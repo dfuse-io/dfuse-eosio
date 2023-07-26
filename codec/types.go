@@ -15,55 +15,10 @@
 package codec
 
 import (
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 )
-
-//
-// CreationFlatTree represents the creation order tree
-// in a flatten manners. The flat list is built by doing
-// a deep-first walk of the creational tree, outputting
-// at each traversal the `CreationNode` triplet
-// `(index, creatorParentIndex, executionIndex)` where a parent of
-// `-1` represents a root node.
-//
-// For example, assuming a `CreationFlatTree` of the form:
-//
-// [
-//   [0, -1, 0],
-//   [1, 0, 1],
-//   [2, 0, 2],
-//   [3, 2, 3],
-// ]
-//
-// Represents the following creational tree:
-//
-// ```
-//   0
-//   ├── 1
-//   └── 2
-//       └── 3
-// ```
-//
-// The tree can be reconstructed using the following quick Python.
-//
-type CreationFlatTree = []CreationFlatNode
-
-// CreationFlatNode represents a flat node in a flat tree.
-// It's a triplet slice where elements reprensents the following
-// values, assuming `(<depthFirstWalkIndex>, <parentDepthFirstWalkIndex>, <executionActionIndex>)`:
-//
-// The first value of the node is it's id, derived by doing a depth-first walk
-// of the creation tree and incrementing an index at each node visited.
-//
-// The second value is the parent index of the current node, the index is the
-// index of the initial element of the `CreationFlatNode` slice.
-//
-// The third value is the execution action index to get the actual execution traces
-// from the actual execution tree (deep-first walking index in the execution
-// tree).
-//
-type CreationFlatNode = [3]int
 
 type Specification struct {
 	Name  string `json:"name"`
@@ -102,7 +57,7 @@ func (p *permissionObject) ToProto() *pbcodec.PermissionObject {
 		Owner:       string(p.Owner),
 		Name:        p.Name,
 		LastUpdated: mustProtoTimestamp(p.LastUpdated.Time),
-		Authority:   AuthoritiesToDEOS(p.Auth),
+		Authority:   eosio.AuthoritiesToDEOS(p.Auth),
 	}
 }
 

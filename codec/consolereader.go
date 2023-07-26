@@ -24,13 +24,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
+	eosio_v2_0 "github.com/dfuse-io/dfuse-eosio/codec/eosio/v2.0"
+	eosio_v2_1 "github.com/dfuse-io/dfuse-eosio/codec/eosio/v2.1"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 )
 
-var supportedVersions = []string{"12", "13"}
+var supportedVersions = []uint64{12, 13}
+var supportedVersionStrings = []string{"12", "13"}
 
 type ConsoleReaderOption interface {
 	apply(reader *ConsoleReader)
@@ -50,7 +54,7 @@ func (f consoleReaderOptionFunc) apply(reader *ConsoleReader) {
 func LimitConsoleLength(maxByteCount int) ConsoleReaderOption {
 	return consoleReaderOptionFunc(func(reader *ConsoleReader) {
 		if maxByteCount > 0 {
-			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, limitConsoleLengthConversionOption(maxByteCount))
+			reader.ctx.conversionOptions = append(reader.ctx.conversionOptions, eosio.LimitConsoleLengthConversionOption(maxByteCount))
 		}
 	})
 }
@@ -68,16 +72,22 @@ type ConsoleReader struct {
 }
 
 // TODO: At some point, the interface of a ConsoleReader should be re-done.
-//       Indeed, the `ConsoleReader` could simply receive each line already split
-//       since the upstream caller is already doing this job it self. This way, we
-//       would have a single split job instead of two. Only the upstream would split
-//       the line and the console reader would simply process each line, one at a time.
+//
+//	Indeed, the `ConsoleReader` could simply receive each line already split
+//	since the upstream caller is already doing this job it self. This way, we
+//	would have a single split job instead of two. Only the upstream would split
+//	the line and the console reader would simply process each line, one at a time.
 func NewConsoleReader(reader io.Reader, opts ...ConsoleReaderOption) (*ConsoleReader, error) {
 	l := &ConsoleReader{
 		src:   reader,
 		close: func() {},
-		ctx:   newParseCtx(),
-		done:  make(chan interface{}),
+		ctx: &parseCtx{
+			hydrator:   eosio_v2_0.NewHydrator(zlog),
+			abiDecoder: newABIDecoder(),
+			block:      &pbcodec.Block{},
+			trx:        &pbcodec.TransactionTrace{},
+		},
+		done: make(chan interface{}),
 	}
 
 	for _, opt := range opts {
@@ -133,6 +143,10 @@ func (l *ConsoleReader) Close() {
 }
 
 type parseCtx struct {
+	majorVersion uint64
+	minorVersion uint64
+	hydrator     eosio.Hydrator
+
 	abiDecoder     *ABIDecoder
 	block          *pbcodec.Block
 	activeBlockNum int64
@@ -140,15 +154,7 @@ type parseCtx struct {
 	trx         *pbcodec.TransactionTrace
 	creationOps []*creationOp
 
-	conversionOptions []conversionOption
-}
-
-func newParseCtx() *parseCtx {
-	return &parseCtx{
-		abiDecoder: newABIDecoder(),
-		block:      &pbcodec.Block{},
-		trx:        &pbcodec.TransactionTrace{},
-	}
+	conversionOptions []eosio.ConversionOption
 }
 
 func (l *ConsoleReader) Read() (out interface{}, err error) {
@@ -186,6 +192,9 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 
 		case strings.HasPrefix(line, "PERM_OP"):
 			err = ctx.readPermOp(line)
+
+		case strings.HasPrefix(line, "KV_OP"):
+			err = ctx.readKVOp(line)
 
 		case strings.HasPrefix(line, "DTRX_OP CREATE"):
 			err = ctx.readCreateOrCancelDTrxOp("CREATE", line)
@@ -237,7 +246,7 @@ func (l *ConsoleReader) Read() (out interface{}, err error) {
 			//noop
 
 		case strings.HasPrefix(line, "DEEP_MIND_VERSION"):
-			err = ctx.readDeepmindVersion(line)
+			ctx.majorVersion, ctx.minorVersion, ctx.hydrator, err = ctx.readDeepmindVersion(line)
 
 		default:
 			zlog.Info("unknown log line", zap.String("line", line))
@@ -287,6 +296,10 @@ func (ctx *parseCtx) recordCreationOp(operation *creationOp) {
 
 func (ctx *parseCtx) recordDBOp(operation *pbcodec.DBOp) {
 	ctx.trx.DbOps = append(ctx.trx.DbOps, operation)
+}
+
+func (ctx *parseCtx) recordKVOp(operation *pbcodec.KVOp) {
+	ctx.trx.KvOps = append(ctx.trx.KvOps, operation)
 }
 
 func (ctx *parseCtx) recordDTrxOp(transaction *pbcodec.DTrxOp) {
@@ -373,9 +386,10 @@ func (ctx *parseCtx) recordTransaction(trace *pbcodec.TransactionTrace) error {
 		return fmt.Errorf("compute creation tree: %s", err)
 	}
 
-	trace.CreationTree = CreationTreeToDEOS(toFlatTree(creationTreeRoots...))
+	trace.CreationTree = eosio.CreationTreeToDEOS(toFlatTree(creationTreeRoots...))
 	trace.DtrxOps = ctx.trx.DtrxOps
 	trace.DbOps = ctx.trx.DbOps
+	trace.KvOps = ctx.trx.KvOps
 	trace.FeatureOps = ctx.trx.FeatureOps
 	trace.PermOps = ctx.trx.PermOps
 	trace.RamOps = ctx.trx.RamOps
@@ -426,7 +440,8 @@ func (ctx *parseCtx) transferDeferredRemovedRAMOp(initialRAMOps []*pbcodec.RAMOp
 }
 
 // Line format:
-//   START_BLOCK ${block_num}
+//
+//	START_BLOCK ${block_num}
 func (ctx *parseCtx) readStartBlock(line string) error {
 	chunks := strings.Split(line, " ")
 	if len(chunks) != 2 {
@@ -449,7 +464,8 @@ func (ctx *parseCtx) readStartBlock(line string) error {
 }
 
 // Line format:
-//   ACCEPTED_BLOCK ${block_num} ${block_state_hex}
+//
+//	ACCEPTED_BLOCK ${block_num} ${block_state_hex}
 func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -470,86 +486,8 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 		return nil, fmt.Errorf("unable to decode block %d state hex: %w", blockNum, err)
 	}
 
-	blockState := &eos.BlockState{}
-	err = unmarshalBinary(blockStateHex, blockState)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling binary block state: %w", err)
-	}
-
-	signedBlock := blockState.SignedBlock
-
-	ctx.block.Id = blockState.BlockID.String()
-	ctx.block.Number = blockState.BlockNum
-	// Version 1: Added the total counts (ExecutedInputActionCount, ExecutedTotalActionCount,
-	// TransactionCount, TransactionTraceCount)
-	ctx.block.Version = 1
-	ctx.block.Header = BlockHeaderToDEOS(&signedBlock.BlockHeader)
-	ctx.block.BlockExtensions = ExtensionsToDEOS(signedBlock.BlockExtensions)
-	ctx.block.DposIrreversibleBlocknum = blockState.DPoSIrreversibleBlockNum
-	ctx.block.DposProposedIrreversibleBlocknum = blockState.DPoSProposedIrreversibleBlockNum
-	ctx.block.Validated = blockState.Validated
-	ctx.block.BlockrootMerkle = BlockrootMerkleToDEOS(blockState.BlockrootMerkle)
-	ctx.block.ProducerToLastProduced = ProducerToLastProducedToDEOS(blockState.ProducerToLastProduced)
-	ctx.block.ProducerToLastImpliedIrb = ProducerToLastImpliedIrbToDEOS(blockState.ProducerToLastImpliedIRB)
-	ctx.block.ActivatedProtocolFeatures = ActivatedProtocolFeaturesToDEOS(blockState.ActivatedProtocolFeatures)
-	ctx.block.ProducerSignature = signedBlock.ProducerSignature.String()
-
-	ctx.block.ConfirmCount = make([]uint32, len(blockState.ConfirmCount))
-	for i, count := range blockState.ConfirmCount {
-		ctx.block.ConfirmCount[i] = uint32(count)
-	}
-
-	if blockState.PendingSchedule != nil {
-		ctx.block.PendingSchedule = PendingScheduleToDEOS(blockState.PendingSchedule)
-	}
-
-	/// Specific versions handling
-
-	blockSigningKey := blockState.BlockSigningKeyV1
-	schedule := blockState.ActiveSchedule
-	signingAuthority := blockState.ValidBlockSigningAuthorityV2
-
-	// Only in EOSIO 1.x
-	if blockSigningKey != nil {
-		ctx.block.BlockSigningKey = blockSigningKey.String()
-	}
-
-	if schedule.V1 != nil {
-		ctx.block.ActiveScheduleV1 = ProducerScheduleToDEOS(schedule.V1)
-	}
-
-	// Only in EOSIO 2.x
-	if signingAuthority != nil {
-		ctx.block.ValidBlockSigningAuthorityV2 = BlockSigningAuthorityToDEOS(signingAuthority)
-	}
-
-	if schedule.V2 != nil {
-		ctx.block.ActiveScheduleV2 = ProducerAuthorityScheduleToDEOS(schedule.V2)
-	}
-
-	// End (versions)
-
-	ctx.block.UnfilteredTransactionCount = uint32(len(signedBlock.Transactions))
-	for idx, transaction := range signedBlock.Transactions {
-		deosTransaction := TransactionReceiptToDEOS(&transaction)
-		deosTransaction.Index = uint64(idx)
-
-		ctx.block.UnfilteredTransactions = append(ctx.block.UnfilteredTransactions, deosTransaction)
-	}
-
-	ctx.block.UnfilteredTransactionTraceCount = uint32(len(ctx.block.UnfilteredTransactionTraces))
-	for idx, t := range ctx.block.UnfilteredTransactionTraces {
-		t.Index = uint64(idx)
-		t.BlockTime = ctx.block.Header.Timestamp
-		t.ProducerBlockId = ctx.block.Id
-		t.BlockNum = uint64(ctx.block.Number)
-
-		for _, actionTrace := range t.ActionTraces {
-			ctx.block.UnfilteredExecutedTotalActionCount++
-			if actionTrace.IsInput() {
-				ctx.block.UnfilteredExecutedInputActionCount++
-			}
-		}
+	if err := ctx.hydrator.HydrateBlock(ctx.block, blockStateHex); err != nil {
+		return nil, fmt.Errorf("hydrate block %d: %w", blockNum, err)
 	}
 
 	block := ctx.block
@@ -566,7 +504,8 @@ func (ctx *parseCtx) readAcceptedBlock(line string) (*pbcodec.Block, error) {
 }
 
 // Line format:
-//   APPLIED_TRANSACTION ${block_num} ${trace_hex}
+//
+//	APPLIED_TRANSACTION ${block_num} ${trace_hex}
 func (ctx *parseCtx) readAppliedTransaction(line string) error {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -587,20 +526,20 @@ func (ctx *parseCtx) readAppliedTransaction(line string) error {
 		return fmt.Errorf("unable to decode transaction trace hex at block num %d: %w", blockNum, err)
 	}
 
-	trxTrace := &eos.TransactionTrace{}
-	err = unmarshalBinary(trxTraceHex, trxTrace)
+	trxTrace, err := ctx.hydrator.DecodeTransactionTrace(trxTraceHex)
 	if err != nil {
-		return fmt.Errorf("unmarshalling binary transaction trace: %w", err)
+		return fmt.Errorf("decode transaction trace %d: %w", blockNum, err)
 	}
 
-	return ctx.recordTransaction(TransactionTraceToDEOS(trxTrace, ctx.conversionOptions...))
+	return ctx.recordTransaction(trxTrace)
 }
 
 // Line formats:
-//  CREATION_OP ROOT ${action_id}
-//  CREATION_OP NOTIFY ${action_id}
-//  CREATION_OP INLINE ${action_id}
-//  CREATION_OP CFA_INLINE ${action_id}
+//
+//	CREATION_OP ROOT ${action_id}
+//	CREATION_OP NOTIFY ${action_id}
+//	CREATION_OP INLINE ${action_id}
+//	CREATION_OP CFA_INLINE ${action_id}
 func (ctx *parseCtx) readCreationOp(line string) error {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -630,9 +569,10 @@ func (ctx *parseCtx) readCreationOp(line string) error {
 }
 
 // Line formats:
-//   DB_OP INS ${action_id} ${payer} ${table_code} ${scope} ${table_name} ${primkey} ${ndata}
-//   DB_OP UPD ${action_id} ${opayer}:${npayer} ${table_code} ${scope} ${table_name} ${primkey} ${odata}:${ndata}
-//   DB_OP REM ${action_id} ${payer} ${table_code} ${scope} ${table_name} ${primkey} ${odata}
+//
+//	DB_OP INS ${action_id} ${payer} ${table_code} ${scope} ${table_name} ${primkey} ${ndata}
+//	DB_OP UPD ${action_id} ${opayer}:${npayer} ${table_code} ${scope} ${table_name} ${primkey} ${odata}:${ndata}
+//	DB_OP REM ${action_id} ${payer} ${table_code} ${scope} ${table_name} ${primkey} ${odata}
 func (ctx *parseCtx) readDBOp(line string) error {
 	chunks := strings.SplitN(line, " ", 9)
 	if len(chunks) != 9 {
@@ -712,11 +652,104 @@ func (ctx *parseCtx) readDBOp(line string) error {
 }
 
 // Line formats:
-//   DTRX_OP MODIFY_CANCEL ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
-//   DTRX_OP MODIFY_CREATE ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
-//   DTRX_OP CREATE        ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
-//   DTRX_OP CANCEL        ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
-//   DTRX_OP PUSH_CREATE   ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
+//
+//	KV_OP INS ${action_id} ${code} ${npayer} ${key} ${ndata}
+//	KV_OP UPD ${action_id} ${code} ${npayer} ${key} ${odata}:${ndata}
+//	KV_OP REM ${action_id} ${code} ${opayer} ${key} ${odata}
+//
+// **Note** Added in deep mind log version 13
+func (ctx *parseCtx) readKVOp(line string) error {
+	chunks := strings.SplitN(line, " ", 7)
+	if len(chunks) != 7 {
+		return fmt.Errorf("expected 7 fields, got %d", len(chunks))
+	}
+
+	actionIndex, err := strconv.Atoi(chunks[2])
+	if err != nil {
+		return fmt.Errorf("action_index is not a valid number, got: %q", chunks[2])
+	}
+
+	opString := chunks[1]
+
+	op := pbcodec.KVOp_OPERATION_UNKNOWN
+	var oldData, newData string
+	var oldPayer, newPayer string
+	switch opString {
+	case "INS":
+		op = pbcodec.KVOp_OPERATION_INSERT
+		newData = chunks[6]
+		newPayer = chunks[4]
+	case "UPD":
+		op = pbcodec.KVOp_OPERATION_UPDATE
+
+		payerChunks := strings.SplitN(chunks[4], ":", 2)
+		if len(payerChunks) != 2 {
+			if ctx.majorVersion == 13 {
+				return fmt.Errorf("upgrade to EOSIO >= 2.1.1 as the 2.1.0 version did not had old payer value in it")
+			}
+
+			return fmt.Errorf("should have old and new payer in field 4, found only one")
+		}
+
+		oldPayer = payerChunks[0]
+		newPayer = payerChunks[1]
+
+		dataChunks := strings.SplitN(chunks[6], ":", 2)
+		if len(dataChunks) != 2 {
+			return fmt.Errorf("should have old and new data in field 6, found only one")
+		}
+
+		oldData = dataChunks[0]
+		newData = dataChunks[1]
+	case "REM":
+		op = pbcodec.KVOp_OPERATION_REMOVE
+		oldData = chunks[6]
+		oldPayer = chunks[4]
+	default:
+		return fmt.Errorf("unknown operation: %q", opString)
+	}
+
+	key, err := hex.DecodeString(chunks[5])
+	if err != nil {
+		return fmt.Errorf("couldn't decode key: %w", err)
+	}
+
+	var oldBytes, newBytes []byte
+	if len(oldData) != 0 {
+		oldBytes, err = hex.DecodeString(oldData)
+		if err != nil {
+			return fmt.Errorf("couldn't decode old_data: %w", err)
+		}
+	}
+
+	if len(newData) != 0 {
+		newBytes, err = hex.DecodeString(newData)
+		if err != nil {
+			return fmt.Errorf("couldn't decode new_data: %w", err)
+		}
+	}
+
+	ctx.recordKVOp(&pbcodec.KVOp{
+		Operation:   op,
+		ActionIndex: uint32(actionIndex),
+		OldPayer:    oldPayer,
+		NewPayer:    newPayer,
+		Code:        chunks[3],
+		Key:         key,
+		OldData:     oldBytes,
+		NewData:     newBytes,
+	})
+
+	return nil
+}
+
+// Line formats:
+//
+//	DTRX_OP MODIFY_CANCEL ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
+//	DTRX_OP MODIFY_CREATE ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
+//	DTRX_OP CREATE        ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
+//	DTRX_OP CANCEL        ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
+//	DTRX_OP PUSH_CREATE   ${action_id} ${sender} ${sender_id} ${payer} ${published} ${delay} ${expiration} ${trx_id} ${trx}
 func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 	chunks := strings.SplitN(line, " ", 11)
 	if len(chunks) != 11 {
@@ -770,14 +803,15 @@ func (ctx *parseCtx) readCreateOrCancelDTrxOp(tag string, line string) error {
 		DelayUntil:    chunks[7],
 		ExpirationAt:  chunks[8],
 		TransactionId: chunks[9],
-		Transaction:   SignedTransactionToDEOS(signedTrx),
+		Transaction:   eosio.SignedTransactionToDEOS(signedTrx),
 	})
 
 	return nil
 }
 
 // Line format:
-//   DTRX_OP FAILED ${action_id}
+//
+//	DTRX_OP FAILED ${action_id}
 func (ctx *parseCtx) readFailedDTrxOp(line string) error {
 	chunks := strings.SplitN(line, " ", 3)
 	if len(chunks) != 3 {
@@ -798,7 +832,8 @@ func (ctx *parseCtx) readFailedDTrxOp(line string) error {
 }
 
 // Line formats:
-//   FEATURE_OP ACTIVATE ${feature_digest} ${feature}
+//
+//	FEATURE_OP ACTIVATE ${feature_digest} ${feature}
 func (ctx *parseCtx) readFeatureOpActivate(line string) error {
 	chunks := strings.SplitN(line, " ", 4)
 	if len(chunks) != 4 {
@@ -821,7 +856,8 @@ func (ctx *parseCtx) readFeatureOpActivate(line string) error {
 }
 
 // Line formats:
-//   FEATURE_OP PRE_ACTIVATE ${action_id} ${feature_digest} ${feature}
+//
+//	FEATURE_OP PRE_ACTIVATE ${action_id} ${feature_digest} ${feature}
 func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 	chunks := strings.SplitN(line, " ", 5)
 	if len(chunks) != 5 {
@@ -849,9 +885,10 @@ func (ctx *parseCtx) readFeatureOpPreActivate(line string) error {
 }
 
 // Line formats: (the `[...]` represents optional fields)
-//   PERM_OP INS ${action_id} [${permission_id}] ${data}
-//   PERM_OP UPD ${action_id} [${permission_id}] ${data}
-//   PERM_OP REM ${action_id} [${permission_id}] ${data} <-- {"old": <old>, "new": <new>}
+//
+//	PERM_OP INS ${action_id} [${permission_id}] ${data}
+//	PERM_OP UPD ${action_id} [${permission_id}] ${data}
+//	PERM_OP REM ${action_id} [${permission_id}] ${data} <-- {"old": <old>, "new": <new>}
 func (ctx *parseCtx) readPermOp(line string) error {
 	chunks, err := splitNToM(line, 4, 5)
 	if err != nil {
@@ -943,7 +980,8 @@ func (ctx *parseCtx) readPermOp(line string) error {
 }
 
 // Line format:
-//   RAM_OP ${action_index} ${unique_key} ${namespace} ${action} ${legacy_tag} ${payer} ${new_usage} ${delta}
+//
+//	RAM_OP ${action_index} ${unique_key} ${namespace} ${action} ${legacy_tag} ${payer} ${new_usage} ${delta}
 func (ctx *parseCtx) readRAMOp(line string) error {
 	chunks := strings.SplitN(line, " ", 9)
 	if len(chunks) != 9 {
@@ -961,16 +999,19 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 		return fmt.Errorf("namespace %q unknown", namespaceString)
 	}
 
-	actionString := chunks[4]
+	actionString := normalizeRAMOpAction(chunks[4])
 	action, ok := pbcodec.RAMOp_Action_value["ACTION_"+strings.ToUpper(actionString)]
 	if !ok {
 		return fmt.Errorf("action %q unknown", actionString)
 	}
 
+	operation := int32(pbcodec.RAMOp_OPERATION_DEPRECATED)
 	operationString := chunks[5]
-	operation, ok := pbcodec.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
-	if !ok {
-		return fmt.Errorf("operation %q unknown", operationString)
+	if operationString != "." {
+		operation, ok = pbcodec.RAMOp_Operation_value["OPERATION_"+strings.ToUpper(operationString)]
+		if !ok {
+			return fmt.Errorf("operation %q unknown", operationString)
+		}
 	}
 
 	usage, err := strconv.ParseInt(chunks[7], 10, 64)
@@ -996,29 +1037,67 @@ func (ctx *parseCtx) readRAMOp(line string) error {
 	return nil
 }
 
-// Line format:
-//  Version 12
-//    DEEP_MIND_VERSION ${major_version}
-//
-//  Version 13
-//    DEEP_MIND_VERSION ${major_version} ${minor_version}
-func (ctx *parseCtx) readDeepmindVersion(line string) error {
-	chunks, err := splitNToM(line, 2, 3)
-	if err != nil {
-		return err
+func normalizeRAMOpAction(input string) string {
+	switch input {
+	case "create":
+		return "add"
+	case "erase":
+		return "remove"
+	default:
+		return input
 	}
-
-	majorVersion := chunks[1]
-	if !inSupportedVersion(majorVersion) {
-		return fmt.Errorf("deep mind reported version %s, but this reader supports only %s", majorVersion, strings.Join(supportedVersions, ", "))
-	}
-
-	zlog.Info("read deep mind version", zap.String("major_version", majorVersion))
-
-	return nil
 }
 
-func inSupportedVersion(majorVersion string) bool {
+// Line format:
+//
+//	Version 12
+//	  DEEP_MIND_VERSION ${major_version}
+//
+//	Version 13
+//	  DEEP_MIND_VERSION ${major_version} ${minor_version}
+func (ctx *parseCtx) readDeepmindVersion(line string) (majorVersion uint64, minorVersion uint64, hydrator eosio.Hydrator, err error) {
+	chunks, err := splitNToM(line, 2, 4)
+	if err != nil {
+		return 0, 0, nil, err
+	}
+
+	if len(chunks) < 4 {
+		majorVersion, err = strconv.ParseUint(chunks[1], 10, 64)
+		if err != nil {
+			return majorVersion, minorVersion, nil, fmt.Errorf("invalid major version %q: %w", chunks[1], err)
+		}
+	} else {
+		majorVersion, err = strconv.ParseUint(chunks[2], 10, 64)
+		if err != nil {
+			return majorVersion, minorVersion, nil, fmt.Errorf("invalid major version %q: %w", chunks[1], err)
+		}
+	}
+
+	if len(chunks) == 3 {
+		minorVersion, err = strconv.ParseUint(chunks[2], 10, 64)
+		if err != nil {
+			return majorVersion, minorVersion, nil, fmt.Errorf("invalid minor version %q: %w", chunks[2], err)
+		}
+	} else if len(chunks) == 4 {
+		minorVersion, err = strconv.ParseUint(chunks[3], 10, 64)
+		if err != nil {
+			return majorVersion, minorVersion, nil, fmt.Errorf("invalid minor version %q: %w", chunks[2], err)
+		}
+	}
+
+	if !inSupportedVersion(majorVersion) {
+		return majorVersion, minorVersion, nil, fmt.Errorf("deep mind reported version %d, but this reader supports only %s", majorVersion, strings.Join(supportedVersionStrings, ", "))
+	}
+
+	zlog.Info("read deep mind version", zap.Uint64("major_version", majorVersion))
+	if majorVersion == 13 {
+		return majorVersion, minorVersion, eosio_v2_1.NewHydrator(zlog), nil
+	}
+
+	return majorVersion, minorVersion, eosio_v2_0.NewHydrator(zlog), nil
+}
+
+func inSupportedVersion(majorVersion uint64) bool {
 	for _, supportedVersion := range supportedVersions {
 		if majorVersion == supportedVersion {
 			return true
@@ -1029,11 +1108,12 @@ func inSupportedVersion(majorVersion string) bool {
 }
 
 // Line format:
-//  Version 12
-//    ABIDUMP START
 //
-//  Version 13
-//    ABIDUMP START ${block_num} ${global_sequence_num}
+//	Version 12
+//	  ABIDUMP START
+//
+//	Version 13
+//	  ABIDUMP START ${block_num} ${global_sequence_num}
 func (ctx *parseCtx) readABIStart(line string) error {
 	chunks := strings.SplitN(line, " ", -1)
 
@@ -1063,11 +1143,12 @@ func (ctx *parseCtx) readABIStart(line string) error {
 }
 
 // Line format:
-//  Version 12
-//    ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
 //
-//  Version 13
-//    ABIDUMP ABI ${contract} ${base64_abi}
+//	Version 12
+//	  ABIDUMP ABI ${block_num} ${contract} ${base64_abi}
+//
+//	Version 13
+//	  ABIDUMP ABI ${contract} ${base64_abi}
 func (ctx *parseCtx) readABIDump(line string) error {
 	chunks, err := splitNToM(line, 4, 5)
 	if err != nil {
@@ -1093,7 +1174,8 @@ func (ctx *parseCtx) readABIDump(line string) error {
 }
 
 // Line format:
-//   RAM_CORRECTION_OP ${action_id} ${correction_id} ${unique_key} ${payer} ${delta}
+//
+//	RAM_CORRECTION_OP ${action_id} ${correction_id} ${unique_key} ${payer} ${delta}
 func (ctx *parseCtx) readRAMCorrectionOp(line string) error {
 	chunks := strings.SplitN(line, " ", 6)
 	if len(chunks) != 6 {
@@ -1117,14 +1199,15 @@ func (ctx *parseCtx) readRAMCorrectionOp(line string) error {
 }
 
 // Line formats:
-//   RLIMIT_OP CONFIG         INS ${data}
-//   RLIMIT_OP CONFIG         UPD ${data}
-//   RLIMIT_OP STATE          INS ${data}
-//   RLIMIT_OP STATE          UPD ${data}
-//   RLIMIT_OP ACCOUNT_LIMITS INS ${data}
-//   RLIMIT_OP ACCOUNT_LIMITS UPD ${data}
-//   RLIMIT_OP ACCOUNT_USAGE  INS ${data}
-//   RLIMIT_OP ACCOUNT_USAGE  UPD ${data}
+//
+//	RLIMIT_OP CONFIG         INS ${data}
+//	RLIMIT_OP CONFIG         UPD ${data}
+//	RLIMIT_OP STATE          INS ${data}
+//	RLIMIT_OP STATE          UPD ${data}
+//	RLIMIT_OP ACCOUNT_LIMITS INS ${data}
+//	RLIMIT_OP ACCOUNT_LIMITS UPD ${data}
+//	RLIMIT_OP ACCOUNT_USAGE  INS ${data}
+//	RLIMIT_OP ACCOUNT_USAGE  UPD ${data}
 func (ctx *parseCtx) readRlimitOp(line string) error {
 	chunks := strings.SplitN(line, " ", 4)
 	if len(chunks) != 4 {
@@ -1194,8 +1277,9 @@ func (ctx *parseCtx) readRlimitOp(line string) error {
 }
 
 // Line formats:
-//   TBL_OP INS ${action_id} ${code} ${scope} ${table} ${payer}
-//   TBL_OP REM ${action_id} ${code} ${scope} ${table} ${payer}
+//
+//	TBL_OP INS ${action_id} ${code} ${scope} ${table} ${payer}
+//	TBL_OP REM ${action_id} ${code} ${scope} ${table} ${payer}
 func (ctx *parseCtx) readTableOp(line string) error {
 	chunks := strings.SplitN(line, " ", 7)
 	if len(chunks) != 7 {
@@ -1231,7 +1315,8 @@ func (ctx *parseCtx) readTableOp(line string) error {
 }
 
 // Line formats:
-//   TRX_OP CREATE onblock|onerror ${id} ${trx}
+//
+//	TRX_OP CREATE onblock|onerror ${id} ${trx}
 func (ctx *parseCtx) readTrxOp(line string) error {
 	chunks := strings.SplitN(line, " ", 5)
 	if len(chunks) != 5 {
@@ -1265,7 +1350,7 @@ func (ctx *parseCtx) readTrxOp(line string) error {
 		Operation:     op,
 		Name:          name,  // "onblock" or "onerror"
 		TransactionId: trxID, // the hash of the transaction
-		Transaction:   SignedTransactionToDEOS(trx),
+		Transaction:   eosio.SignedTransactionToDEOS(trx),
 	})
 
 	return nil

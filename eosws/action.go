@@ -18,15 +18,15 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/streamingfast/bstream"
-	"github.com/streamingfast/bstream/forkable"
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/mdl"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	_ "github.com/eoscanada/eos-go/forum"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/bstream/forkable"
+	"github.com/streamingfast/derr"
 )
 
 func (ws *WSConn) onGetActionTraces(ctx context.Context, msg *wsmsg.GetActionTraces) {

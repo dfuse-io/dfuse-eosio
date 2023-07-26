@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/streamingfast/logging"
 	"github.com/streamingfast/dauth/authenticator"
 	"github.com/streamingfast/dauth/ratelimiter"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 )
 

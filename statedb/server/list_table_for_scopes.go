@@ -22,12 +22,12 @@ import (
 	"sort"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/streamingfast/dhammer"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/dhammer"
 
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/logging"
 	"github.com/streamingfast/validator"
-	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )
 

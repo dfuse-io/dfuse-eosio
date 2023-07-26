@@ -20,15 +20,15 @@ import (
 	"strings"
 
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
-	"github.com/streamingfast/logging"
-	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
-	pbgraphql "github.com/streamingfast/pbgo/dfuse/graphql/v1"
 	"github.com/golang/protobuf/proto"
 	"github.com/streamingfast/dgraphql"
 	"github.com/streamingfast/dgraphql/analytics"
 	commonTypes "github.com/streamingfast/dgraphql/types"
 	"github.com/streamingfast/dmetering"
 	"github.com/streamingfast/kvdb"
+	"github.com/streamingfast/logging"
+	pbblockmeta "github.com/streamingfast/pbgo/dfuse/blockmeta/v1"
+	pbgraphql "github.com/streamingfast/pbgo/dfuse/graphql/v1"
 	"go.uber.org/zap"
 )
 
@@ -125,9 +125,9 @@ func (r *Root) QueryBlock(ctx context.Context, req QueryBlockRequest) (*Block, e
 	return newBlock(block, r), nil
 }
 
-//---------------------------
+// ---------------------------
 // Block
-//----------------------------
+// ----------------------------
 type Block struct {
 	root        *Root
 	blkWithRefs *pbcodec.BlockWithRefs
@@ -272,9 +272,9 @@ type TransactionTraceEdge struct {
 func (t *TransactionTraceEdge) Cursor() string          { return t.cursor }
 func (t *TransactionTraceEdge) Node() *TransactionTrace { return t.node }
 
-//---------------------------
+// ---------------------------
 // Pageneable Resource
-//----------------------------
+// ----------------------------
 type PagineableTransactionTraceRefs [][]byte
 
 func (p PagineableTransactionTraceRefs) Length() int {

@@ -19,12 +19,12 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/streamingfast/dtracing"
-	"github.com/streamingfast/logging"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
+	"github.com/streamingfast/dtracing"
 	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/logging"
 	"go.opencensus.io/trace"
 	"go.uber.org/zap"
 )

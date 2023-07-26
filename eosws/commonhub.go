@@ -21,9 +21,9 @@ import (
 
 	"github.com/streamingfast/logging"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
+	"github.com/streamingfast/derr"
 	"github.com/streamingfast/shutter"
 )
 

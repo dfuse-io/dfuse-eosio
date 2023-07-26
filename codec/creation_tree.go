@@ -17,6 +17,8 @@ package codec
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dfuse-io/dfuse-eosio/codec/eosio"
 )
 
 type nodes []*node
@@ -130,8 +132,8 @@ func creationOpsToMap(ops []*creationOp) map[int][]string {
 	return mapping
 }
 
-func toFlatTree(roots ...*node) CreationFlatTree {
-	var tree CreationFlatTree
+func toFlatTree(roots ...*node) eosio.CreationFlatTree {
+	var tree eosio.CreationFlatTree
 
 	walkIndex := -1
 	for _, root := range roots {
@@ -142,7 +144,7 @@ func toFlatTree(roots ...*node) CreationFlatTree {
 	return tree
 }
 
-func _toFlatTree(root *node, parentIndex int, walkIndex *int) (tree CreationFlatTree) {
+func _toFlatTree(root *node, parentIndex int, walkIndex *int) (tree eosio.CreationFlatTree) {
 	tree = append(tree, [3]int{*walkIndex, parentIndex, root.actionIndex})
 	childRootIndex := *walkIndex
 

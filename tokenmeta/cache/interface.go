@@ -3,9 +3,9 @@ package cache
 import (
 	"time"
 
-	"github.com/streamingfast/bstream"
 	pbtokenmeta "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/tokenmeta/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 )
 
 type Cache interface {

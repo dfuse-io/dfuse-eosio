@@ -21,12 +21,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/streamingfast/logging"
-	"github.com/streamingfast/validator"
 	eos "github.com/eoscanada/eos-go"
 	"github.com/francoispqt/gojay"
+	"github.com/streamingfast/derr"
+	"github.com/streamingfast/logging"
+	"github.com/streamingfast/validator"
 	"go.uber.org/zap"
 )
 

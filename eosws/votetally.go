@@ -19,10 +19,10 @@ import (
 	"math"
 	"time"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws/metrics"
 	"github.com/dfuse-io/dfuse-eosio/eosws/statedb"
 	"github.com/dfuse-io/dfuse-eosio/eosws/wsmsg"
+	"github.com/streamingfast/derr"
 	"go.uber.org/zap"
 )
 

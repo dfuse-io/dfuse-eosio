@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	"github.com/dfuse-io/dfuse-eosio/filtering"
 	mergedFilter "github.com/dfuse-io/dfuse-eosio/merged-filter"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"

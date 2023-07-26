@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/streamingfast/bstream"
 	eosSearch "github.com/dfuse-io/dfuse-eosio/search"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/dlauncher/launcher"
 	indexerApp "github.com/streamingfast/search/app/indexer"
 )

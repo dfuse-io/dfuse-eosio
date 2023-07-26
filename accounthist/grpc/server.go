@@ -8,8 +8,8 @@ import (
 	"github.com/streamingfast/dgrpc"
 
 	pbaccounthist "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/accounthist/v1"
-	"github.com/streamingfast/shutter"
 	"github.com/streamingfast/kvdb/store"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )

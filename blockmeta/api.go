@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
 	"github.com/eoscanada/eos-go"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/streamingfast/blockmeta"
+	pbheadinfo "github.com/streamingfast/pbgo/dfuse/headinfo/v1"
 	"go.uber.org/zap"
 )
 

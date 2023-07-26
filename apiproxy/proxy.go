@@ -6,9 +6,9 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	"github.com/streamingfast/shutter"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/streamingfast/shutter"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/acme/autocert"
 )

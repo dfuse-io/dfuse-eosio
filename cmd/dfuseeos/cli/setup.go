@@ -20,9 +20,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/streamingfast/dgrpc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dgrpc"
 	"github.com/streamingfast/dlauncher/launcher"
 )
 

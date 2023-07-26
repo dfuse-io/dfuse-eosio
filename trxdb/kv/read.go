@@ -20,10 +20,10 @@ import (
 	"math"
 	"time"
 
-	"github.com/streamingfast/bstream"
 	pbcodec "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/codec/v1"
 	pbtrxdb "github.com/dfuse-io/dfuse-eosio/pb/dfuse/eosio/trxdb/v1"
 	"github.com/eoscanada/eos-go"
+	"github.com/streamingfast/bstream"
 	"github.com/streamingfast/kvdb"
 	"github.com/streamingfast/kvdb/store"
 	"go.uber.org/zap"

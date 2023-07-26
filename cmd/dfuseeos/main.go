@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/dfuse-io/dfuse-eosio/cmd/dfuseeos/cli"
+
+	_ "github.com/streamingfast/dauth/ratelimiter/null"
 )
 
 // commit sha1 value, injected via go build `ldflags` at build time

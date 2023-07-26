@@ -17,8 +17,8 @@ package statedb
 import (
 	"context"
 
-	"github.com/streamingfast/derr"
 	eos "github.com/eoscanada/eos-go"
+	"github.com/streamingfast/derr"
 )
 
 // App Errors

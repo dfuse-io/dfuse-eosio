@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	"github.com/streamingfast/derr"
-	"github.com/streamingfast/logging"
 	"github.com/streamingfast/fluxdb"
+	"github.com/streamingfast/logging"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 

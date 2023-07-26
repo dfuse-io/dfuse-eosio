@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/streamingfast/derr"
 	"github.com/dfuse-io/dfuse-eosio/eosws"
 	"github.com/dfuse-io/dfuse-eosio/eosws/completion"
+	"github.com/streamingfast/derr"
 )
 
 const minPrefixLength = 1

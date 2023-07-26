@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"github.com/dfuse-io/dfuse-eosio/statedb"
-	"github.com/streamingfast/dstore"
 	"github.com/dustin/go-humanize"
 	"github.com/eoscanada/eos-go"
 	"github.com/klauspost/compress/zstd"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/streamingfast/dstore"
 	"github.com/streamingfast/fluxdb"
 	"github.com/streamingfast/kvdb/store"
 )
