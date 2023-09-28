@@ -232,7 +232,7 @@ replace (
 	github.com/streamingfast/dauth => github.com/EOS-Nation/dauth v0.0.0-20221005084741-e79ebf7b78e8
 	github.com/streamingfast/dgrpc => github.com/EOS-Nation/dgrpc v0.0.0-20221108170744-d0c2d8abe98f
 	github.com/streamingfast/dstore => github.com/EOS-Nation/dstore v0.0.0-20220908095022-20cd13d5dc4c
-	github.com/streamingfast/firehose => github.com/ultraio/firehose v0.0.0-20230927074823-9da35c5630d1
+	github.com/streamingfast/firehose => github.com/ultraio/firehose v0.0.0-20230928055645-1f99a6d31876
 )
 
 // replace github.com/eoscanada/eos-go => github.com/EOS-Nation/eos-go v0.10.3-0.20230328111622-b58e29c1532e
