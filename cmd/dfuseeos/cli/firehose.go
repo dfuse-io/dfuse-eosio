@@ -40,6 +40,8 @@ func init() {
 			cmd.Flags().String("common-network-name", "ultra", "Common network name such as eos, wax, ...")
 			cmd.Flags().String("firehose-grpc-listen-addr", FirehoseGRPCServingAddr+"*", "Address on which the firehose will listen")
 			cmd.Flags().StringSlice("firehose-blocks-store-urls", nil, "If non-empty, overrides common-blocks-store-url with a list of blocks stores")
+			/*ultra-duncan --- BLOCK-1845 --- set default rate limit for firehose*/
+			cmd.Flags().Int("firehose-ratelimit", 1000, "Rate limit for how many doc can be processed per second")
 			return nil
 		},
 
@@ -103,12 +105,19 @@ func init() {
 				return nil, fmt.Errorf("missing common-network-name")
 			}
 
+			/*ultra-duncan --- BLOCK-1845 --- set default rate limit for firehose*/
+			ratelimit := viper.GetInt("firehose-ratelimit")
+			if ratelimit <= 0 {
+				return nil, fmt.Errorf("firehose-ratelimit must be positive")
+			}
+
 			return firehoseApp.New(appLogger, &firehoseApp.Config{
 				BlockStoreURLs:          firehoseBlocksStoreURLs,
 				BlockStreamAddr:         blockstreamAddr,
 				GRPCListenAddr:          viper.GetString("firehose-grpc-listen-addr"),
 				GRPCShutdownGracePeriod: grcpShutdownGracePeriod,
 				Network:                 networkName,
+				RateLimit:               ratelimit,
 			}, &firehoseApp.Modules{
 				Authenticator:             authenticator,
 				BlockTrimmer:              blockstreamv2.BlockTrimmerFunc(trimBlock),
