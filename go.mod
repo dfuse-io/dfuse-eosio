@@ -236,4 +236,4 @@ replace (
 )
 
 // replace github.com/eoscanada/eos-go => github.com/EOS-Nation/eos-go v0.10.3-0.20230328111622-b58e29c1532e
-replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20230721092210-7ab11fa47e4f
+replace github.com/eoscanada/eos-go => github.com/ultraio/eos-go v0.9.1-0.20231212140710-b5580eae489a
